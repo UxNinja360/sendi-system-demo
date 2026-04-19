@@ -1,0 +1,72 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { Search, X } from 'lucide-react';
+
+interface RestaurantsToolbarProps {
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  stats: { total: number; filtered: number; active: number; inactive: number };
+  onExport: () => void;
+  onAddRestaurant: () => void;
+  onClearAll: () => void;
+  hasActiveFilters: boolean;
+}
+
+export const RestaurantsToolbar: React.FC<RestaurantsToolbarProps> = ({
+  searchQuery,
+  onSearchChange,
+}) => {
+  const [searchOpen, setSearchOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (searchOpen) inputRef.current?.focus();
+  }, [searchOpen]);
+
+  return (
+    <div className="relative flex items-center">
+      {searchOpen ? (
+        <div className="flex items-center gap-1">
+          <div className="relative">
+            <Search className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#a3a3a3]" />
+            <input
+              ref={inputRef}
+              type="text"
+              placeholder="חפש מסעדה, עיר או איש קשר..."
+              value={searchQuery}
+              onChange={e => onSearchChange(e.target.value)}
+              className="w-52 h-9 rounded-[4px] border border-transparent bg-[#f5f5f5] pl-6 pr-8 text-sm text-[#0d0d12] outline-none transition-all placeholder:text-[#a3a3a3] focus:border-[#9fe870]/50 dark:bg-[#262626] dark:text-[#fafafa]"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => onSearchChange('')}
+                className="absolute left-2 top-1/2 -translate-y-1/2 rounded p-0.5 transition-colors hover:bg-[#e5e5e5] dark:hover:bg-[#333333]"
+              >
+                <X className="h-3 w-3 text-[#a3a3a3]" />
+              </button>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => { setSearchOpen(false); onSearchChange(''); }}
+            className="flex items-center justify-center w-9 h-9 rounded-[4px] border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] hover:bg-[#f5f5f5] dark:hover:bg-[#202020] transition-colors"
+          >
+            <X className="w-3.5 h-3.5 text-[#a3a3a3]" />
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setSearchOpen(true)}
+          className={`flex items-center justify-center w-9 h-9 rounded-[4px] border text-sm font-medium transition-colors ${
+            searchQuery
+              ? 'bg-[#9fe870]/15 border-[#9fe870]/40 text-[#6bc84a]'
+              : 'bg-white dark:bg-[#171717] border-[#e5e5e5] dark:border-[#262626] text-[#525252] dark:text-[#a3a3a3] hover:bg-[#f5f5f5] dark:hover:bg-[#202020]'
+          }`}
+        >
+          <Search className="w-4 h-4" />
+        </button>
+      )}
+    </div>
+  );
+};
