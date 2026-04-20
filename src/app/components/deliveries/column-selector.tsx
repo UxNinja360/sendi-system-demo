@@ -10,12 +10,18 @@ interface ColumnSelectorProps {
   isEmbedded?: boolean;
   searchQuery?: string;
   onSearchChange?: (q: string) => void;
+  categories?: ColumnCategory[];
+  defaultVisibleColumns?: string[];
+  title?: string;
+  description?: string;
+  presetsKey?: string;
+  allowPresets?: boolean;
 }
 
 interface ColumnCategory {
   id: string;
   label: string;
-  emoji: string;
+  emoji?: string;
   columns: Array<{ id: string; label: string }>;
 }
 
@@ -205,8 +211,8 @@ const PRESETS_KEY = 'column_presets_v1';
 function loadColumnPresets(): SavedColumnPreset[] {
   try { return JSON.parse(localStorage.getItem(PRESETS_KEY) ?? '[]'); } catch { return []; }
 }
-function saveColumnPresets(presets: SavedColumnPreset[]) {
-  localStorage.setItem(PRESETS_KEY, JSON.stringify(presets));
+function saveColumnPresets(presets: SavedColumnPreset[], storageKey: string = PRESETS_KEY) {
+  localStorage.setItem(storageKey, JSON.stringify(presets));
 }
 
 export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
@@ -217,6 +223,12 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
   isEmbedded = false,
   searchQuery: externalSearchQuery,
   onSearchChange,
+  categories = COLUMN_CATEGORIES,
+  defaultVisibleColumns = DEFAULT_VISIBLE_COLUMNS,
+  title = 'עמודות',
+  description = 'בחר אילו פרטים יופיעו בטבלת המשלוחים',
+  presetsKey = PRESETS_KEY,
+  allowPresets = true,
 }) => {
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
   const searchQuery = externalSearchQuery !== undefined ? externalSearchQuery : internalSearchQuery;
@@ -225,12 +237,22 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
   // Accordion: expanded categories
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => new Set(['core']));
 
-  const [savedPresets, setSavedPresets] = useState<SavedColumnPreset[]>(loadColumnPresets);
+  const [savedPresets, setSavedPresets] = useState<SavedColumnPreset[]>(() => {
+    try { return JSON.parse(localStorage.getItem(presetsKey) ?? '[]'); } catch { return []; }
+  });
   const [showSaveForm, setShowSaveForm] = useState(false);
   const [newPresetName, setNewPresetName] = useState('');
 
   const panelRef = useRef<HTMLDivElement>(null);
   const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    try {
+      setSavedPresets(JSON.parse(localStorage.getItem(presetsKey) ?? '[]'));
+    } catch {
+      setSavedPresets([]);
+    }
+  }, [presetsKey]);
 
   useEffect(() => { if (isOpen) setIsAnimating(true); }, [isOpen]);
 
@@ -255,7 +277,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
   const toggleColumn = useCallback((columnId: string) => {
     const newSet = new Set(visibleColumns);
     let label = columnId;
-    for (const cat of COLUMN_CATEGORIES) {
+    for (const cat of categories) {
       const col = cat.columns.find(c => c.id === columnId);
       if (col) { label = col.label; break; }
     }
@@ -357,18 +379,22 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
           </div>
           <div className="flex items-center gap-1.5">
             <button
-              onClick={() => setVisibleColumns(new Set(DEFAULT_VISIBLE_COLUMNS))}
+              onClick={() => setVisibleColumns(new Set(defaultVisibleColumns))}
               className="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium text-[#e5e7eb] hover:text-[#fafafa] transition-colors"
             >
               ברירת מחדל
             </button>
-            <span className="h-3.5 w-px bg-[#2a2a2a]" />
-            <button
-              onClick={() => { setShowSaveForm(v => !v); setNewPresetName(''); }}
-              className="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium text-[#9fe870] hover:text-[#b5f27d] transition-colors"
-            >
-              + שמור פריסט
-            </button>
+            {allowPresets && (
+              <>
+                <span className="h-3.5 w-px bg-[#2a2a2a]" />
+                <button
+                  onClick={() => { setShowSaveForm(v => !v); setNewPresetName(''); }}
+                  className="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium text-[#9fe870] hover:text-[#b5f27d] transition-colors"
+                >
+                  + שמור פריסט
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -380,7 +406,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
           <div className="p-3">
             {(() => {
               const q = searchQuery.trim().toLowerCase();
-              const matches = COLUMN_CATEGORIES.flatMap(cat =>
+              const matches = categories.flatMap(cat =>
                 cat.columns.filter(col => col.label.toLowerCase().includes(q) || col.id.toLowerCase().includes(q))
               );
               if (matches.length === 0) {
@@ -392,7 +418,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
         ) : (
           // â”€â”€ Accordion mode â”€â”€
           <div>
-            {COLUMN_CATEGORIES.map(cat => {
+            {categories.map(cat => {
               const selected = cat.columns.filter(c => visibleColumns.has(c.id)).length;
               const allSelected = selected === cat.columns.length;
               const isExpanded = expandedCategories.has(cat.id);
@@ -403,7 +429,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
                     onClick={() => toggleExpanded(cat.id)}
                     className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#131313] transition-colors text-right"
                   >
-                    <span className="text-sm shrink-0 opacity-90">{cat.emoji}</span>
+                    {cat.emoji && <span className="text-sm shrink-0 opacity-90">{cat.emoji}</span>}
                     <span className="flex-1 text-sm font-semibold tracking-tight text-[#fafafa]">{cat.label}</span>
                     {selected > 0 && (
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-transparent text-[#9fe870] shrink-0">
@@ -441,7 +467,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
       {/* Footer */}
       <div className="shrink-0 border-t border-[#222222] bg-[#111111]">
         {/* Presets section */}
-        {savedPresets.length > 0 && (
+        {allowPresets && savedPresets.length > 0 && (
           <div className="px-4 py-3 border-b border-[#222222]">
             <p className="text-[11px] font-semibold text-[#6b7280] mb-2">פריסטים שמורים</p>
             <div className="space-y-1.5">
@@ -457,7 +483,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
                     onClick={() => {
                       const next = savedPresets.filter(p => p.id !== preset.id);
                       setSavedPresets(next);
-                      saveColumnPresets(next);
+                      saveColumnPresets(next, presetsKey);
                     }}
                     className="p-1 text-[#d4d4d4] hover:text-[#a3a3a3] dark:text-[#404040] dark:hover:text-[#737373] transition-colors"
                   >
@@ -470,7 +496,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
         )}
 
         {/* Save form */}
-        {showSaveForm && (
+        {allowPresets && showSaveForm && (
           <div className="px-4 py-3 border-b border-[#222222]">
             <div className="flex items-center gap-1.5">
               <input
@@ -489,7 +515,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
                     };
                     const next = [...savedPresets, preset];
                     setSavedPresets(next);
-                    saveColumnPresets(next);
+                    saveColumnPresets(next, presetsKey);
                     setNewPresetName('');
                     setShowSaveForm(false);
                   }
@@ -509,7 +535,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
                     };
                     const next = [...savedPresets, preset];
                     setSavedPresets(next);
-                    saveColumnPresets(next);
+                    saveColumnPresets(next, presetsKey);
                     setNewPresetName('');
                     setShowSaveForm(false);
                   }
@@ -546,8 +572,8 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
               <Columns className="w-4 h-4 text-[#9fe870]" />
             </div>
             <div className="text-right">
-              <h3 className="text-sm font-semibold text-[#fafafa]">עמודות</h3>
-              <p className="text-[11px] text-[#6b7280]">בחר אילו פרטים יופיעו בטבלת המשלוחים</p>
+              <h3 className="text-sm font-semibold text-[#fafafa]">{title}</h3>
+              <p className="text-[11px] text-[#6b7280]">{description}</p>
             </div>
           </div>
           <button onClick={handleClose} className="p-2 hover:bg-[#171717] rounded-xl transition-colors">

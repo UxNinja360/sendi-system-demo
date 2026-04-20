@@ -1,11 +1,27 @@
 ﻿import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { FileText, Filter, GripVertical, Menu, MoreVertical, Package, Phone, Plus, Power, Search, Sparkles, Star, Trash2, User, X, Clock, LogOut } from 'lucide-react';
+import { Download, FileSpreadsheet, FileText, Filter, GripVertical, Menu, MoreVertical, Package, Phone, Plus, Power, Search, Sparkles, Star, Trash2, User, X, Clock, LogOut, SlidersHorizontal } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 import { useDelivery } from '../../../context/delivery.context';
 import { Courier } from '../../../types/delivery.types';
+import { ColumnSelector } from '../../deliveries/column-selector';
 import { CouriersInlineFilters } from './couriers-inline-filters';
 import { CouriersToolbar } from './couriers-toolbar';
+import {
+  ENTITY_TABLE_ACTIONS_BODY_CLASS,
+  ENTITY_TABLE_ACTIONS_HEAD_CLASS,
+  ENTITY_TABLE_CHECKBOX_BODY_CLASS,
+  ENTITY_TABLE_CHECKBOX_BODY_LABEL_CLASS,
+  ENTITY_TABLE_CHECKBOX_HEAD_CLASS,
+  ENTITY_TABLE_CHECKBOX_HEAD_LABEL_CLASS,
+  ENTITY_TABLE_DATA_CELL_CLASS,
+  ENTITY_TABLE_HEAD_CLASS,
+  ENTITY_TABLE_HEADER_CELL_BASE_CLASS,
+  ENTITY_TABLE_WIDTHS,
+} from './entity-table-shared';
 
 const TEXT = {
   pageTitle: '\u05e9\u05dc\u05d9\u05d7\u05d9\u05dd',
@@ -50,6 +66,69 @@ const TEXT = {
 } as const;
 
 const VEHICLE_TYPES: Courier['vehicleType'][] = ['אופנוע', 'רכב', 'קורקינט'];
+const COURIER_VISIBLE_COLUMNS_KEY = 'couriers-visible-columns-v1';
+const COURIER_COLUMNS = [
+  { id: 'name', label: 'שם שליח' },
+  { id: 'connection', label: 'חיבור' },
+  { id: 'shift', label: 'משמרת' },
+  { id: 'availability', label: 'זמינות' },
+  { id: 'vehicleType', label: 'סוג רכב' },
+  { id: 'phone', label: 'טלפון' },
+  { id: 'rating', label: 'דירוג' },
+  { id: 'totalDeliveries', label: 'סך משלוחים' },
+  { id: 'currentDelivery', label: 'משלוח נוכחי' },
+  { id: 'actions', label: 'פעולות' },
+] as const;
+const COURIER_COLUMN_CATEGORIES = [
+  {
+    id: 'core',
+    label: 'ליבה',
+    columns: [
+      { id: 'name', label: 'שם שליח' },
+      { id: 'connection', label: 'חיבור' },
+      { id: 'shift', label: 'משמרת' },
+      { id: 'availability', label: 'זמינות' },
+      { id: 'currentDelivery', label: 'משלוח נוכחי' },
+    ],
+  },
+  {
+    id: 'profile',
+    label: 'פרופיל',
+    columns: [
+      { id: 'vehicleType', label: 'סוג רכב' },
+      { id: 'phone', label: 'טלפון' },
+      { id: 'rating', label: 'דירוג' },
+      { id: 'totalDeliveries', label: 'סך משלוחים' },
+    ],
+  },
+] as const;
+
+const getCourierColumnWidth = (columnId: (typeof COURIER_COLUMNS)[number]['id']) => {
+  switch (columnId) {
+    case 'name':
+      return ENTITY_TABLE_WIDTHS.name;
+    case 'connection':
+      return ENTITY_TABLE_WIDTHS.sm;
+    case 'shift':
+      return ENTITY_TABLE_WIDTHS.sm;
+    case 'availability':
+      return ENTITY_TABLE_WIDTHS.sm;
+    case 'vehicleType':
+      return ENTITY_TABLE_WIDTHS.sm;
+    case 'phone':
+      return ENTITY_TABLE_WIDTHS.phone;
+    case 'rating':
+      return ENTITY_TABLE_WIDTHS.xs;
+    case 'totalDeliveries':
+      return ENTITY_TABLE_WIDTHS.sm;
+    case 'currentDelivery':
+      return ENTITY_TABLE_WIDTHS.md;
+    case 'actions':
+      return ENTITY_TABLE_WIDTHS.actions;
+    default:
+      return ENTITY_TABLE_WIDTHS.lg;
+  }
+};
 
 export const CouriersListPage: React.FC = () => {
   const { state, dispatch } = useDelivery();
@@ -58,7 +137,6 @@ export const CouriersListPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
-  const [openActionsCourierId, setOpenActionsCourierId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'busy' | 'offline'>('all');
   const [deliveryFilter, setDeliveryFilter] = useState<'all' | 'with_delivery' | 'without_delivery'>('all');
   const [sortBy, setSortBy] = useState<'name' | 'rating' | 'deliveries' | 'status'>('name');
@@ -66,6 +144,20 @@ export const CouriersListPage: React.FC = () => {
     name: '',
     phone: '',
     vehicleType: 'אופנוע',
+  });
+  const [isExportOpen, setIsExportOpen] = useState(false);
+  const [columnsOpen, setColumnsOpen] = useState(false);
+  const [visibleColumns, setVisibleColumns] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem(COURIER_VISIBLE_COLUMNS_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as string[];
+        const valid = new Set(COURIER_COLUMNS.map((column) => column.id));
+        const filtered = parsed.filter((id) => valid.has(id));
+        if (filtered.length > 0) return new Set(filtered);
+      }
+    } catch {}
+    return new Set(COURIER_COLUMNS.map((column) => column.id));
   });
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; courier: Courier } | null>(null);
   const [selectedCourierIds, setSelectedCourierIds] = useState<Set<string>>(new Set());
@@ -82,6 +174,12 @@ export const CouriersListPage: React.FC = () => {
     window.addEventListener('pointerdown', handleClick);
     return () => { window.removeEventListener('keydown', handleKey); window.removeEventListener('pointerdown', handleClick); };
   }, [contextMenu]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(COURIER_VISIBLE_COLUMNS_KEY, JSON.stringify(Array.from(visibleColumns)));
+    } catch {}
+  }, [visibleColumns]);
 
   const filteredCouriers = useMemo(() => {
     let filtered = state.couriers;
@@ -126,6 +224,10 @@ export const CouriersListPage: React.FC = () => {
       return 0;
     });
   }, [deliveryFilter, searchQuery, sortBy, state.couriers, state.deliveries, statusFilter]);
+  const visibleCourierColumns = useMemo(
+    () => COURIER_COLUMNS.filter((column) => visibleColumns.has(column.id)),
+    [visibleColumns],
+  );
 
   const stats = useMemo(
     () => ({
@@ -188,6 +290,83 @@ export const CouriersListPage: React.FC = () => {
         delivery.status !== 'delivered' &&
         delivery.status !== 'cancelled',
     );
+
+  const getCourierExportCellValue = (
+    courier: Courier,
+    columnId: (typeof COURIER_COLUMNS)[number]['id'],
+  ) => {
+    const currentDelivery = getCurrentDelivery(courier.id);
+
+    switch (columnId) {
+      case 'name':
+        return courier.name;
+      case 'connection':
+        return courier.status === 'offline' ? 'לא מחובר' : 'מחובר';
+      case 'shift':
+        return courier.isOnShift ? 'במשמרת' : 'לא במשמרת';
+      case 'availability':
+        return courier.status === 'busy'
+          ? 'במשלוח'
+          : courier.status === 'offline' || !courier.isOnShift
+            ? '-'
+            : 'פנוי';
+      case 'vehicleType':
+        return courier.vehicleType;
+      case 'phone':
+        return courier.phone;
+      case 'rating':
+        return courier.rating.toFixed(1);
+      case 'totalDeliveries':
+        return courier.totalDeliveries;
+      case 'currentDelivery':
+        return currentDelivery
+          ? currentDelivery.api_short_order_id || currentDelivery.id.slice(0, 6)
+          : '-';
+      case 'actions':
+        return '';
+      default:
+        return '';
+    }
+  };
+
+  const handleExportVisibleCouriers = () => {
+    const couriersToExport = selectedCourierIds.size > 0
+      ? filteredCouriers.filter((courier) => selectedCourierIds.has(courier.id))
+      : filteredCouriers;
+
+    if (couriersToExport.length === 0) {
+      toast.error('אין שליחים לייצוא');
+      return;
+    }
+
+    const exportColumns = visibleCourierColumns.filter((column) => column.id !== 'actions');
+    const rows = couriersToExport.map((courier) => {
+      const row: Record<string, string | number> = {};
+
+      exportColumns.forEach((column) => {
+        row[column.label] = getCourierExportCellValue(courier, column.id);
+      });
+
+      return row;
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(rows, { skipHeader: false });
+    const workbook = XLSX.utils.book_new();
+    workbook.Workbook = {
+      Views: [{ RTL: true }],
+    };
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'שליחים');
+
+    const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+
+    saveAs(blob, `שליחים_${format(new Date(), 'dd-MM-yyyy_HH-mm')}.xlsx`);
+    setIsExportOpen(false);
+    toast.success(`יוצאו ${couriersToExport.length} שליחים ל-Excel`);
+  };
 
   const handleToggleSelectCourier = (courierId: string) => {
     setSelectedCourierIds(prev => {
@@ -277,7 +456,7 @@ export const CouriersListPage: React.FC = () => {
 
   const handleRemoveCourier = (courier: Courier, event: React.MouseEvent) => {
     event.stopPropagation();
-    setOpenActionsCourierId(null);
+    setContextMenu(null);
 
     if (courier.activeDeliveryIds.length > 0) {
       toast.error(TEXT.cannotDelete);
@@ -288,9 +467,220 @@ export const CouriersListPage: React.FC = () => {
     toast.success(`${TEXT.deleted} ${courier.name} ${TEXT.deletedSuffix}`);
   };
 
+  const openCourierActionsMenu = (
+    courier: Courier,
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    event.stopPropagation();
+    const triggerRect = event.currentTarget.getBoundingClientRect();
+    const nextX = Math.max(8, triggerRect.left - 132);
+    const nextY = triggerRect.bottom + 8;
+
+    setContextMenu((prev) => {
+      if (
+        prev &&
+        prev.courier.id === courier.id &&
+        Math.abs(prev.x - nextX) < 2 &&
+        Math.abs(prev.y - nextY) < 2
+      ) {
+        return null;
+      }
+
+      return { x: nextX, y: nextY, courier };
+    });
+  };
+
+  const renderCourierCell = (
+    columnId: (typeof COURIER_COLUMNS)[number]['id'],
+    courier: Courier,
+    currentDelivery: ReturnType<typeof getCurrentDelivery>,
+  ) => {
+    switch (columnId) {
+      case 'name':
+        return (
+          <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
+            <span className="block truncate whitespace-nowrap text-xs font-medium text-[#0d0d12] dark:text-[#fafafa]">
+              {courier.name}
+            </span>
+          </td>
+        );
+      case 'connection':
+        return (
+          <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
+            <span className={`whitespace-nowrap text-xs font-medium ${courier.status === 'offline' ? 'text-[#737373] dark:text-[#a3a3a3]' : 'text-[#16a34a] dark:text-[#9fe870]'}`}>
+              {courier.status === 'offline' ? 'לא מחובר' : 'מחובר'}
+            </span>
+          </td>
+        );
+      case 'shift':
+        return (
+          <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
+            <span className={`whitespace-nowrap text-xs font-medium ${courier.isOnShift ? 'text-[#a78bfa] dark:text-[#c4b5fd]' : 'text-[#737373] dark:text-[#525252]'}`}>
+              {courier.isOnShift ? 'במשמרת' : 'לא במשמרת'}
+            </span>
+          </td>
+        );
+      case 'availability':
+        return (
+          <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
+            <span className={`whitespace-nowrap text-xs font-medium ${
+              courier.status === 'busy'
+                ? 'text-[#f97316] dark:text-[#ffa94d]'
+                : courier.status === 'offline' || !courier.isOnShift
+                  ? 'text-[#737373] dark:text-[#a3a3a3]'
+                  : 'text-[#16a34a] dark:text-[#9fe870]'
+            }`}>
+              {courier.status === 'busy' ? 'במשלוח' : courier.status === 'offline' || !courier.isOnShift ? '-' : 'פנוי'}
+            </span>
+          </td>
+        );
+      case 'vehicleType':
+        return (
+          <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
+            <span className="whitespace-nowrap text-xs text-[#666d80] dark:text-[#a3a3a3]">{courier.vehicleType}</span>
+          </td>
+        );
+      case 'phone':
+        return (
+          <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
+            <span className="block truncate direction-ltr whitespace-nowrap text-xs text-[#666d80] dark:text-[#a3a3a3]">{courier.phone}</span>
+          </td>
+        );
+      case 'rating':
+        return (
+          <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
+            <div className="flex items-center gap-1">
+              <Star className="h-3.5 w-3.5 shrink-0 fill-amber-400 text-amber-400" />
+              <span className="whitespace-nowrap text-xs font-medium text-[#0d0d12] dark:text-[#fafafa]">{courier.rating.toFixed(1)}</span>
+            </div>
+          </td>
+        );
+      case 'totalDeliveries':
+        return (
+          <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
+            <span className="whitespace-nowrap text-xs font-medium text-[#0d0d12] dark:text-[#fafafa]">{courier.totalDeliveries}</span>
+          </td>
+        );
+      case 'currentDelivery':
+        return (
+          <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
+            {currentDelivery ? (
+              <div className="flex items-center gap-1.5">
+                <Package className="h-3.5 w-3.5 shrink-0 text-blue-500" />
+                <span className="block truncate whitespace-nowrap text-xs text-blue-600 dark:text-blue-400">
+                  {currentDelivery.api_short_order_id || currentDelivery.id.slice(0, 6)}
+                </span>
+              </div>
+            ) : (
+              <span className="text-xs text-[#a3a3a3]">-</span>
+            )}
+          </td>
+        );
+      case 'actions':
+        return (
+          <td key={columnId} className={ENTITY_TABLE_ACTIONS_BODY_CLASS}>
+            <div className="flex justify-center gap-1">
+              <button
+                onClick={event => {
+                  event.stopPropagation();
+                  toggleCourierPower(courier.id, courier.status);
+                }}
+                className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all ${
+                  courier.status !== 'offline'
+                    ? 'bg-[#ecfae2] text-[#16a34a] hover:bg-[#dcf5d2] dark:bg-[#163300] dark:text-[#9fe870] dark:hover:bg-[#1f4500]'
+                    : 'bg-[#f5f5f5] text-[#737373] hover:bg-[#e5e5e5] dark:bg-[#262626] dark:text-[#a3a3a3] dark:hover:bg-[#404040]'
+                }`}
+                title={courier.status === 'offline' ? TEXT.activateCourier : TEXT.disableCourier}
+              >
+                <Power className="h-3.5 w-3.5" />
+              </button>
+              <div className="relative">
+                <button
+                  onClick={event => openCourierActionsMenu(courier, event)}
+                  className="inline-flex items-center justify-center rounded-lg p-1.5 text-[#737373] transition-colors hover:bg-[#f5f5f5] dark:text-[#a3a3a3] dark:hover:bg-[#262626]"
+                  title={TEXT.more}
+                >
+                  <MoreVertical className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          </td>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <>
-      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]" dir="rtl">
+      <div className="flex flex-row h-full overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]" dir="ltr">
+        <div className={`shrink-0 transition-[width] duration-200 overflow-hidden border-l border-[#e5e5e5] dark:border-[#1f1f1f] ${(isExportOpen || columnsOpen) ? 'w-[380px]' : 'w-0'}`}>
+          <div className="w-[380px] h-full flex flex-col bg-white dark:bg-[#0a0a0a]" dir="rtl">
+            {isExportOpen && (
+              <>
+                <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-[#e5e5e5] dark:border-[#262626] bg-[#fafafa] dark:bg-[#141414]">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-[#0d0d12] dark:text-[#fafafa]" />
+                    <span className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">ייצוא</span>
+                  </div>
+                  <button onClick={() => setIsExportOpen(false)} className="p-1.5 hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] rounded-lg transition-colors">
+                    <X className="w-4 h-4 text-[#737373] dark:text-[#a3a3a3]" />
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                  <button
+                    type="button"
+                    onClick={handleExportVisibleCouriers}
+                    className="w-full text-right rounded-2xl border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#0f0f0f] p-4 transition-all hover:border-[#9fe870]/50 hover:bg-[#f8fff2] dark:hover:bg-[#11180c]"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-xl bg-[#9fe870]/15 text-[#6bc84a]">
+                        <FileSpreadsheet className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">ייצוא טבלת השליחים</div>
+                        <div className="mt-1 text-xs text-[#737373] dark:text-[#a3a3a3]">Excel עם העמודות המוצגות כרגע בטבלה</div>
+                        <div className="mt-3 flex items-center gap-2 text-[11px] text-[#a3a3a3]">
+                          <span>{selectedCourierIds.size > 0 ? selectedCourierIds.size : filteredCouriers.length} שליחים</span>
+                          <span>•</span>
+                          <span>{visibleCourierColumns.filter((column) => column.id !== 'actions').length} עמודות</span>
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </>
+            )}
+            {columnsOpen && (
+              <>
+                <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-[#e5e5e5] dark:border-[#262626] bg-[#fafafa] dark:bg-[#141414]">
+                  <div className="flex items-center gap-2">
+                    <SlidersHorizontal className="w-4 h-4 text-[#0d0d12] dark:text-[#fafafa]" />
+                    <span className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">עמודות</span>
+                  </div>
+                  <button onClick={() => setColumnsOpen(false)} className="p-1.5 hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] rounded-lg transition-colors">
+                    <X className="w-4 h-4 text-[#737373] dark:text-[#a3a3a3]" />
+                  </button>
+                </div>
+                <ColumnSelector
+                  visibleColumns={visibleColumns}
+                  setVisibleColumns={setVisibleColumns}
+                  isOpen={columnsOpen}
+                  setIsOpen={setColumnsOpen}
+                  isEmbedded={true}
+                  categories={[...COURIER_COLUMN_CATEGORIES]}
+                  defaultVisibleColumns={COURIER_COLUMNS.map((column) => column.id)}
+                  title="עמודות שליחים"
+                  description="בחר אילו פרטים יופיעו בטבלת השליחים"
+                  presetsKey="couriers-column-presets-v1"
+                />
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="flex-1 min-w-0 overflow-hidden flex flex-col" dir="rtl">
         <div className="sticky top-0 z-20 shrink-0 h-16 flex items-center justify-between border-b border-[#e5e5e5] bg-white dark:border-[#1f1f1f] dark:bg-[#171717] px-5">
           <div className="flex items-center gap-2.5">
             <button
@@ -332,18 +722,28 @@ export const CouriersListPage: React.FC = () => {
             <CouriersToolbar
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
+              columnsOpen={columnsOpen}
               stats={stats}
               onAddCourier={() => setIsModalOpen(true)}
               onClearAll={handleClearAll}
               hasActiveFilters={hasActiveFilters}
               viewMode={viewMode}
               onViewModeChange={setViewMode}
+              onToggleColumns={() => { setColumnsOpen(true); setIsExportOpen(false); }}
             />
+            <button
+              type="button"
+              onClick={() => { setIsExportOpen((v) => !v); setColumnsOpen(false); }}
+              className="h-9 flex items-center gap-1.5 px-3 rounded-[4px] border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] text-sm font-medium text-[#525252] dark:text-[#a3a3a3] hover:bg-[#f5f5f5] dark:hover:bg-[#202020] transition-colors"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">ייצוא</span>
+            </button>
           </div>
 
           <div className="shrink-0 px-4 py-1 border-b border-[#e5e5e5] dark:border-[#1f1f1f] bg-white dark:bg-[#171717]">
             <span className="text-xs text-[#a3a3a3] dark:text-[#737373]">
-              {filteredCouriers.length} שליחים • {state.deliveries.length} משלוחים • {state.restaurants.length} מסעדות
+              {filteredCouriers.length} שליחים
             </span>
           </div>
 
@@ -401,12 +801,18 @@ export const CouriersListPage: React.FC = () => {
                 </div>
               ) : (
                 <div className="overflow-auto relative flex-1">
-                  <table className="w-full text-sm">
-                    <thead className="sticky top-0 z-10 border-b border-[#e5e5e5] bg-[#fafafa] dark:border-[#262626] dark:bg-[#0a0a0a]">
+                  <table className="w-full" role="grid" aria-label="טבלת שליחים">
+                    <colgroup>
+                      <col style={{ width: ENTITY_TABLE_WIDTHS.checkbox }} />
+                      {visibleCourierColumns.map((column) => (
+                        <col key={column.id} style={{ width: getCourierColumnWidth(column.id) }} />
+                      ))}
+                    </colgroup>
+                    <thead className={ENTITY_TABLE_HEAD_CLASS}>
                       <tr>
-                        <th className="pr-5 pl-0">
+                        <th className={ENTITY_TABLE_CHECKBOX_HEAD_CLASS}>
                           <label
-                            className="flex min-h-[48px] cursor-pointer touch-manipulation items-center justify-start"
+                            className={ENTITY_TABLE_CHECKBOX_HEAD_LABEL_CLASS}
                             style={{ touchAction: 'manipulation' }}
                           >
                             <input
@@ -418,19 +824,21 @@ export const CouriersListPage: React.FC = () => {
                             />
                           </label>
                         </th>
-                        {TEXT.headers.map(header => (
+                        {visibleCourierColumns.map(column => (
                           <th
-                            key={header}
-                            className={`group/col py-3 text-right transition-all ${header === TEXT.headers[TEXT.headers.length - 1] ? 'px-1 w-10 text-center' : 'pr-2 pl-2'}`}
+                            key={column.id}
+                            className={`${ENTITY_TABLE_HEADER_CELL_BASE_CLASS} ${column.id === 'actions' ? ENTITY_TABLE_ACTIONS_HEAD_CLASS : 'pr-2 pl-2'}`}
                           >
-                            <div className={`flex items-center gap-1 ${header === TEXT.headers[TEXT.headers.length - 1] ? 'justify-center' : ''}`}>
-                              <span className="whitespace-nowrap text-xs font-medium text-[#666d80] dark:text-[#a3a3a3]">
-                                {header}
-                              </span>
-                              {header !== TEXT.headers[TEXT.headers.length - 1] && (
+                            {column.id === 'actions' ? (
+                              <span className="sr-only">{column.label}</span>
+                            ) : (
+                              <div className="flex items-center gap-1">
+                                <span className="whitespace-nowrap text-xs font-medium text-[#666d80] dark:text-[#a3a3a3]">
+                                  {column.label}
+                                </span>
                                 <GripVertical className="h-3 w-3 shrink-0 cursor-grab text-[#d4d4d4] opacity-0 transition-opacity group-hover/col:opacity-100 active:cursor-grabbing dark:text-[#404040]" />
-                              )}
-                            </div>
+                              </div>
+                            )}
                           </th>
                         ))}
                       </tr>
@@ -449,9 +857,9 @@ export const CouriersListPage: React.FC = () => {
                             }}
                             className="cursor-pointer border-b border-[#f5f5f5] bg-white transition-colors hover:bg-[#fafafa] dark:border-[#1f1f1f] dark:bg-[#171717] dark:hover:bg-[#111111]"
                           >
-                            <td className="pr-5 pl-0" onClick={event => event.stopPropagation()}>
+                            <td className={ENTITY_TABLE_CHECKBOX_BODY_CLASS} onClick={event => event.stopPropagation()}>
                               <label
-                                className="flex min-h-[40px] cursor-pointer items-center justify-start"
+                                className={ENTITY_TABLE_CHECKBOX_BODY_LABEL_CLASS}
                                 style={{ touchAction: 'manipulation' }}
                               >
                                 <input
@@ -462,111 +870,7 @@ export const CouriersListPage: React.FC = () => {
                                 />
                               </label>
                             </td>
-                            <td className="px-4 py-2.5">
-                              <div className="flex items-center gap-2">
-                                <User className="h-4 w-4 shrink-0 text-[#16a34a] dark:text-[#22c55e]" />
-                                <span className="whitespace-nowrap text-xs font-medium text-[#0d0d12] dark:text-[#fafafa]">
-                                  {courier.name}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-4 py-2.5">
-                              <span className={`whitespace-nowrap text-xs font-medium ${courier.status === 'offline' ? 'text-[#737373] dark:text-[#a3a3a3]' : 'text-[#16a34a] dark:text-[#9fe870]'}`}>
-                                {courier.status === 'offline' ? 'לא מחובר' : 'מחובר'}
-                              </span>
-                            </td>
-                            <td className="px-4 py-2.5">
-                              <span className={`whitespace-nowrap text-xs font-medium ${courier.isOnShift ? 'text-[#a78bfa] dark:text-[#c4b5fd]' : 'text-[#737373] dark:text-[#525252]'}`}>
-                                {courier.isOnShift ? 'במשמרת' : 'לא במשמרת'}
-                              </span>
-                            </td>
-                            <td className="px-4 py-2.5">
-                              <span className={`whitespace-nowrap text-xs font-medium ${
-                                courier.status === 'busy'
-                                  ? 'text-[#f97316] dark:text-[#ffa94d]'
-                                  : courier.status === 'offline' || !courier.isOnShift
-                                    ? 'text-[#737373] dark:text-[#a3a3a3]'
-                                    : 'text-[#16a34a] dark:text-[#9fe870]'
-                              }`}>
-                                {courier.status === 'busy' ? 'במשלוח' : courier.status === 'offline' || !courier.isOnShift ? '-' : 'פנוי'}
-                              </span>
-                            </td>
-                            <td className="px-4 py-2.5">
-                              <span className="whitespace-nowrap text-xs text-[#666d80] dark:text-[#a3a3a3]">
-                                {courier.vehicleType}
-                              </span>
-                            </td>
-                            <td className="px-4 py-2.5">
-                              <span className="direction-ltr whitespace-nowrap text-xs text-[#666d80] dark:text-[#a3a3a3]">
-                                {courier.phone}
-                              </span>
-                            </td>
-                            <td className="px-4 py-2.5">
-                              <div className="flex items-center gap-1">
-                                <Star className="h-3.5 w-3.5 shrink-0 fill-amber-400 text-amber-400" />
-                                <span className="whitespace-nowrap text-xs font-medium text-[#0d0d12] dark:text-[#fafafa]">
-                                  {courier.rating.toFixed(1)}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-4 py-2.5">
-                              <span className="whitespace-nowrap text-xs font-medium text-[#0d0d12] dark:text-[#fafafa]">
-                                {courier.totalDeliveries}
-                              </span>
-                            </td>
-                            <td className="px-4 py-2.5">
-                              {currentDelivery ? (
-                                <div className="flex items-center gap-1.5">
-                                  <Package className="h-3.5 w-3.5 shrink-0 text-blue-500" />
-                                  <span className="whitespace-nowrap text-xs text-blue-600 dark:text-blue-400">
-                                    {currentDelivery.api_short_order_id || currentDelivery.id.slice(0, 6)}
-                                  </span>
-                                </div>
-                              ) : (
-                                <span className="text-xs text-[#a3a3a3]">-</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-2.5">
-                              <div className="flex justify-center gap-1">
-                                <button
-                                  onClick={event => {
-                                    event.stopPropagation();
-                                    toggleCourierPower(courier.id, courier.status);
-                                  }}
-                                  className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all ${
-                                    courier.status !== 'offline'
-                                      ? 'bg-[#ecfae2] text-[#16a34a] hover:bg-[#dcf5d2] dark:bg-[#163300] dark:text-[#9fe870] dark:hover:bg-[#1f4500]'
-                                      : 'bg-[#f5f5f5] text-[#737373] hover:bg-[#e5e5e5] dark:bg-[#262626] dark:text-[#a3a3a3] dark:hover:bg-[#404040]'
-                                  }`}
-                                  title={courier.status === 'offline' ? TEXT.activateCourier : TEXT.disableCourier}
-                                >
-                                  <Power className="h-3.5 w-3.5" />
-                                </button>
-                                <div className="relative">
-                                  <button
-                                    onClick={event => {
-                                      event.stopPropagation();
-                                      setOpenActionsCourierId(prev => (prev === courier.id ? null : courier.id));
-                                    }}
-                                    className="inline-flex items-center justify-center rounded-lg p-1.5 text-[#737373] transition-colors hover:bg-[#f5f5f5] dark:text-[#a3a3a3] dark:hover:bg-[#262626]"
-                                    title={TEXT.more}
-                                  >
-                                    <MoreVertical className="h-3.5 w-3.5" />
-                                  </button>
-                                  {openActionsCourierId === courier.id && (
-                                    <div className="absolute left-0 mt-1 z-20 min-w-[140px] overflow-hidden rounded-xl border border-[#e5e5e5] bg-white shadow-xl dark:border-[#262626] dark:bg-[#171717]">
-                                      <button
-                                        onClick={event => handleRemoveCourier(courier, event)}
-                                        className="flex w-full items-center gap-2 px-3 py-2 text-xs text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
-                                      >
-                                        <Trash2 className="h-3.5 w-3.5" />
-                                        <span>{TEXT.deleteCourier}</span>
-                                      </button>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </td>
+                            {visibleCourierColumns.map((column) => renderCourierCell(column.id, courier, currentDelivery))}
                           </tr>
                         );
                       })}
@@ -680,26 +984,12 @@ export const CouriersListPage: React.FC = () => {
                         </button>
                         <div className="relative self-end sm:self-auto">
                           <button
-                            onClick={event => {
-                              event.stopPropagation();
-                              setOpenActionsCourierId(prev => (prev === courier.id ? null : courier.id));
-                            }}
+                            onClick={event => openCourierActionsMenu(courier, event)}
                             className="inline-flex items-center justify-center rounded-lg p-2 text-[#737373] transition-colors hover:bg-[#f5f5f5] dark:text-[#a3a3a3] dark:hover:bg-[#262626]"
                             title={TEXT.more}
                           >
                             <MoreVertical className="h-4 w-4" />
                           </button>
-                          {openActionsCourierId === courier.id && (
-                            <div className="absolute bottom-full left-0 mb-2 z-20 min-w-[140px] overflow-hidden rounded-xl border border-[#e5e5e5] bg-white shadow-xl dark:border-[#262626] dark:bg-[#171717]">
-                              <button
-                                onClick={event => handleRemoveCourier(courier, event)}
-                                className="flex w-full items-center gap-2 px-3 py-2 text-xs text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                                <span>{TEXT.deleteCourier}</span>
-                              </button>
-                            </div>
-                          )}
                         </div>
                       </div>
                     </div>
@@ -710,6 +1000,7 @@ export const CouriersListPage: React.FC = () => {
             </div>
           )}
         </div>
+      </div>
       </div>
 
       {isModalOpen && (

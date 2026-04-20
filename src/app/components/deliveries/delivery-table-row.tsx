@@ -61,7 +61,6 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
   const [menuOpen, setMenuOpen] = useState(false);
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const statusRef = useRef<HTMLDivElement>(null);
 
@@ -88,9 +87,9 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
 
   // Row height configuration
   const rowHeightConfig = {
-    compact: { py: 'py-2', text: 'text-[11px]', iconSize: 'w-3 h-3', gap: 'gap-1' },
-    normal: { py: 'py-3', text: 'text-xs', iconSize: 'w-3.5 h-3.5', gap: 'gap-1.5' },
-    comfortable: { py: 'py-4', text: 'text-sm', iconSize: 'w-4 h-4', gap: 'gap-2' },
+    compact: { py: 'py-1.5', text: 'text-[11px]', iconSize: 'w-3 h-3', gap: 'gap-1' },
+    normal: { py: 'py-2.5', text: 'text-xs', iconSize: 'w-3.5 h-3.5', gap: 'gap-1.5' },
+    comfortable: { py: 'py-3.5', text: 'text-sm', iconSize: 'w-4 h-4', gap: 'gap-2' },
   };
   const heightClasses = rowHeightConfig[rowHeight];
 
@@ -200,8 +199,6 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
 
   return (
     <tr
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       onContextMenu={(e) => {
         e.preventDefault();
         setStatusDropdownOpen(false);
@@ -217,9 +214,9 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
       }`}
     >
       {/* Checkbox */}
-      <td className="pr-5 pl-0" onClick={(e) => e.stopPropagation()}>
+      <td className="pr-4 pl-0" onClick={(e) => e.stopPropagation()}>
         <label
-          className="flex items-center justify-start min-h-[48px] cursor-pointer touch-manipulation"
+          className="flex items-center justify-start min-h-[42px] cursor-pointer touch-manipulation"
           style={{ touchAction: 'manipulation' }}
         >
           <input
@@ -260,12 +257,12 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
       })}
 
       {/* Actions column */}
-      <td className={`relative px-1 ${heightClasses.py} w-24 text-center ${stickyBg}`} onClick={(e) => e.stopPropagation()}>
+      <td className={`relative px-1 ${heightClasses.py} w-10 text-center ${stickyBg}`} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-end gap-0.5" data-no-row-click>
           {/* Quick actions — visible on row hover */}
           <button
             onClick={() => onOpenDrawer(delivery.id)}
-            style={{ opacity: isHovered ? 1 : 0 }}
+            style={{ display: 'none' }}
             className="p-1 rounded-lg hover:bg-[#f0fdf4] dark:hover:bg-[#052e16] text-[#16a34a] dark:text-[#9fe870] transition-opacity"
             title="פרטים מלאים"
           >
@@ -274,7 +271,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
           {onEditDelivery && (
             <button
               onClick={() => onEditDelivery(delivery.id)}
-              style={{ opacity: isHovered ? 1 : 0 }}
+              style={{ display: 'none' }}
               className="p-1 rounded-lg hover:bg-[#f0fdf4] dark:hover:bg-[#052e16] text-[#16a34a] dark:text-[#9fe870] transition-opacity"
               title="ערוך משלוח"
             >

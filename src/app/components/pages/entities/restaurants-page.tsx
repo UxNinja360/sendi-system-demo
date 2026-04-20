@@ -1,5 +1,5 @@
-import React, { useState, useRef, useMemo, useCallback } from 'react';
-import { Power, Download, GripVertical, Store as StoreIcon, Menu, Plus, MoreVertical, Trash2, X, Sparkles, Search, Filter, FileText } from 'lucide-react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { Power, Download, GripVertical, Store as StoreIcon, Menu, Plus, MoreVertical, Trash2, X, Sparkles, Search, Filter, FileText, FileSpreadsheet, SlidersHorizontal } from 'lucide-react';
 import { useDelivery } from '../../../context/delivery.context';
 import { useNavigate } from 'react-router';
 import { Delivery, Restaurant } from '../../../types/delivery.types';
@@ -9,9 +9,22 @@ import * as XLSX from 'xlsx';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { toast } from 'sonner';
+import { ColumnSelector } from '../../deliveries/column-selector';
 import { RestaurantsToolbar } from './restaurants-toolbar';
 import { RestaurantsInlineFilters } from './restaurants-inline-filters';
 import { getRestaurantChainId, isMcDonaldsRestaurant } from '../../../utils/restaurant-branding';
+import {
+  ENTITY_TABLE_ACTIONS_BODY_CLASS,
+  ENTITY_TABLE_ACTIONS_HEAD_CLASS,
+  ENTITY_TABLE_CHECKBOX_BODY_CLASS,
+  ENTITY_TABLE_CHECKBOX_BODY_LABEL_CLASS,
+  ENTITY_TABLE_CHECKBOX_HEAD_CLASS,
+  ENTITY_TABLE_CHECKBOX_HEAD_LABEL_CLASS,
+  ENTITY_TABLE_DATA_CELL_CLASS,
+  ENTITY_TABLE_HEAD_CLASS,
+  ENTITY_TABLE_HEADER_CELL_BASE_CLASS,
+  ENTITY_TABLE_WIDTHS,
+} from './entity-table-shared';
 
 // ═══════════════════════════════════════
 // Types
@@ -57,8 +70,54 @@ const RESTAURANT_COLS = [
   { id: 'contact',   label: 'איש קשר' },
   { id: 'deliveries',label: 'סך משלוחים' },
 ] as const;
+
+const getRestaurantColumnWidth = (columnId: RestaurantColId) => {
+  switch (columnId) {
+    case 'name':
+      return ENTITY_TABLE_WIDTHS.name;
+    case 'chainId':
+      return ENTITY_TABLE_WIDTHS.md;
+    case 'type':
+      return ENTITY_TABLE_WIDTHS.sm;
+    case 'status':
+      return ENTITY_TABLE_WIDTHS.sm;
+    case 'address':
+      return ENTITY_TABLE_WIDTHS.address;
+    case 'phone':
+      return ENTITY_TABLE_WIDTHS.phone;
+    case 'contact':
+      return ENTITY_TABLE_WIDTHS.lg;
+    case 'deliveries':
+      return ENTITY_TABLE_WIDTHS.sm;
+    default:
+      return ENTITY_TABLE_WIDTHS.lg;
+  }
+};
 type RestaurantColId = typeof RESTAURANT_COLS[number]['id'];
 const COL_ORDER_KEY = 'restaurants-column-order-v3';
+const RESTAURANT_VISIBLE_COLUMNS_KEY = 'restaurants-visible-columns-v1';
+const RESTAURANT_COLUMN_CATEGORIES = [
+  {
+    id: 'core',
+    label: 'ליבה',
+    columns: [
+      { id: 'name', label: 'מסעדה' },
+      { id: 'status', label: 'סטטוס' },
+      { id: 'type', label: 'סוג' },
+      { id: 'chainId', label: 'מזהה רשת' },
+      { id: 'deliveries', label: 'סך משלוחים' },
+    ],
+  },
+  {
+    id: 'contact',
+    label: 'קשר וכתובת',
+    columns: [
+      { id: 'address', label: 'כתובת' },
+      { id: 'phone', label: 'טלפון' },
+      { id: 'contact', label: 'איש קשר' },
+    ],
+  },
+] as const;
 
 // ═══════════════════════════════════════
 // Component
@@ -78,7 +137,7 @@ export const RestaurantsPage: React.FC = () => {
   const [openActionsRestaurantId, setOpenActionsRestaurantId] = useState<string | null>(null);
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [selectedRestaurantIds, setSelectedRestaurantIds] = useState<Set<string>>(new Set());
-  const exportRef = useRef<HTMLDivElement>(null);
+  const [columnsOpen, setColumnsOpen] = useState(false);
 
   // ── Column drag-and-drop ──
   const [columnOrder, setColumnOrder] = useState<string[]>(() => {
@@ -96,11 +155,33 @@ export const RestaurantsPage: React.FC = () => {
   });
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverId, setDragOverId]   = useState<string | null>(null);
+  const [visibleColumns, setVisibleColumns] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem(RESTAURANT_VISIBLE_COLUMNS_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as string[];
+        const valid = new Set(RESTAURANT_COLS.map((col) => col.id));
+        const filtered = parsed.filter((id) => valid.has(id as RestaurantColId));
+        if (filtered.length > 0) return new Set(filtered);
+      }
+    } catch {}
+    return new Set(RESTAURANT_COLS.map((col) => col.id));
+  });
 
   const orderedCols = useMemo(() => {
     const map = new Map(RESTAURANT_COLS.map(c => [c.id, c]));
     return columnOrder.map(id => map.get(id as RestaurantColId)!).filter(Boolean);
   }, [columnOrder]);
+  const visibleOrderedCols = useMemo(
+    () => orderedCols.filter((col) => visibleColumns.has(col.id)),
+    [orderedCols, visibleColumns],
+  );
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(RESTAURANT_VISIBLE_COLUMNS_KEY, JSON.stringify(Array.from(visibleColumns)));
+    } catch {}
+  }, [visibleColumns]);
 
   const handleColumnReorder = useCallback((fromId: string, toId: string) => {
     setColumnOrder(prev => {
@@ -384,12 +465,167 @@ export const RestaurantsPage: React.FC = () => {
     toast.success(`דוח ${restaurantName} הורד`);
   };
 
+  const getRestaurantExportCellValue = useCallback((restaurant: RestaurantRow, columnId: RestaurantColId) => {
+    switch (columnId) {
+      case 'name':
+        return restaurant.name;
+      case 'chainId':
+        return restaurant.chainId || '-';
+      case 'type':
+        return restaurant.type;
+      case 'status':
+        return restaurant.status;
+      case 'address':
+        return `${restaurant.street}, ${restaurant.city}`;
+      case 'phone':
+        return restaurant.phone;
+      case 'contact':
+        return restaurant.contactPerson;
+      case 'deliveries':
+        return restaurant.totalDeliveries;
+      default:
+        return '';
+    }
+  }, []);
+
+  const handleExportVisibleRestaurants = useCallback(() => {
+    const restaurantsToExport = selectedRestaurantIds.size > 0
+      ? filteredRestaurants.filter((restaurant) => selectedRestaurantIds.has(restaurant.restaurantId))
+      : filteredRestaurants;
+
+    if (restaurantsToExport.length === 0) {
+      toast.error('אין מסעדות לייצוא');
+      return;
+    }
+
+    const rows = restaurantsToExport.map((restaurant) =>
+      Object.fromEntries(
+        visibleOrderedCols.map((column) => [
+          column.label,
+          getRestaurantExportCellValue(restaurant, column.id),
+        ]),
+      ),
+    );
+
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    worksheet['!cols'] = visibleOrderedCols.map((column) => ({
+      wch: Math.max(12, column.label.length + 4),
+    }));
+
+    const workbook = XLSX.utils.book_new();
+    workbook.Workbook = workbook.Workbook || {};
+    workbook.Workbook.Views = [{ RTL: true }];
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'מסעדות');
+
+    const buffer = XLSX.write(workbook, {
+      bookType: 'xlsx',
+      type: 'array',
+    });
+
+    const blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+
+    saveAs(blob, `מסעדות_${format(new Date(), 'dd-MM-yyyy_HH-mm')}.xlsx`);
+    setIsExportOpen(false);
+    toast.success(`יוצאו ${restaurantsToExport.length} מסעדות ל-Excel`);
+  }, [filteredRestaurants, getRestaurantExportCellValue, selectedRestaurantIds, visibleOrderedCols]);
+
   // ═══════════════════════════════════════
   // Render
   // ═══════════════════════════════════════
   return (
     <>
-      <div className="flex flex-col h-full overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]" dir="rtl">
+      <div className="flex flex-row h-full overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]" dir="ltr">
+        <div className={`shrink-0 transition-[width] duration-200 overflow-hidden border-l border-[#e5e5e5] dark:border-[#1f1f1f] ${(isExportOpen || columnsOpen) ? 'w-[380px]' : 'w-0'}`}>
+          <div className="w-[380px] h-full flex flex-col bg-white dark:bg-[#0a0a0a]" dir="rtl">
+            {isExportOpen && (
+              <>
+                <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-[#e5e5e5] dark:border-[#262626] bg-[#fafafa] dark:bg-[#141414]">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-[#0d0d12] dark:text-[#fafafa]" />
+                    <span className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">ייצוא</span>
+                  </div>
+                  <button onClick={() => setIsExportOpen(false)} className="p-1.5 hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] rounded-lg transition-colors">
+                    <X className="w-4 h-4 text-[#737373] dark:text-[#a3a3a3]" />
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                  <button
+                    type="button"
+                    onClick={handleExportVisibleRestaurants}
+                    className="w-full text-right rounded-2xl border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#0f0f0f] p-4 transition-all hover:border-[#9fe870]/50 hover:bg-[#f8fff2] dark:hover:bg-[#11180c]"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-xl bg-[#9fe870]/15 text-[#6bc84a]">
+                        <FileSpreadsheet className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">ייצוא טבלת המסעדות</div>
+                        <div className="mt-1 text-xs text-[#737373] dark:text-[#a3a3a3]">Excel עם העמודות המוצגות כרגע בטבלה</div>
+                        <div className="mt-3 flex items-center gap-2 text-[11px] text-[#a3a3a3]">
+                          <span>{selectedRestaurantIds.size > 0 ? selectedRestaurantIds.size : filteredRestaurants.length} מסעדות</span>
+                          <span>·</span>
+                          <span>{visibleOrderedCols.length} עמודות</span>
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleExportZipPerRestaurant}
+                    className="w-full text-right rounded-2xl border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#0f0f0f] p-4 transition-all hover:border-[#9fe870]/50 hover:bg-[#f8fff2] dark:hover:bg-[#11180c]"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-xl bg-[#9fe870]/15 text-[#6bc84a]">
+                        <Download className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">ייצוא ZIP לכל המסעדות</div>
+                        <div className="mt-1 text-xs text-[#737373] dark:text-[#a3a3a3]">קובץ Excel נפרד לכל מסעדה עם הדוחות שלה</div>
+                        <div className="mt-3 flex items-center gap-2 text-[11px] text-[#a3a3a3]">
+                          <span>{stats.total} מסעדות</span>
+                          <span>·</span>
+                          <span>{state.deliveries.length} משלוחים</span>
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </>
+            )}
+
+            {columnsOpen && (
+              <>
+                <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-[#e5e5e5] dark:border-[#262626] bg-[#fafafa] dark:bg-[#141414]">
+                  <div className="flex items-center gap-2">
+                    <SlidersHorizontal className="w-4 h-4 text-[#0d0d12] dark:text-[#fafafa]" />
+                    <span className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">עמודות</span>
+                  </div>
+                  <button onClick={() => setColumnsOpen(false)} className="p-1.5 hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] rounded-lg transition-colors">
+                    <X className="w-4 h-4 text-[#737373] dark:text-[#a3a3a3]" />
+                  </button>
+                </div>
+                <ColumnSelector
+                  visibleColumns={visibleColumns}
+                  setVisibleColumns={setVisibleColumns}
+                  isOpen={columnsOpen}
+                  setIsOpen={setColumnsOpen}
+                  isEmbedded={true}
+                  categories={[...RESTAURANT_COLUMN_CATEGORIES]}
+                  defaultVisibleColumns={RESTAURANT_COLS.map((column) => column.id)}
+                  title="עמודות מסעדות"
+                  description="בחר אילו פרטים יופיעו בטבלת המסעדות"
+                  presetsKey="restaurants-column-presets-v1"
+                />
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="flex-1 min-w-0 overflow-hidden flex flex-col" dir="rtl">
 
         {/* Header */}
         <div className="sticky top-0 z-20 shrink-0 h-16 flex items-center justify-between px-5 border-b border-[#e5e5e5] dark:border-[#1f1f1f] bg-white dark:bg-[#171717]">
@@ -432,15 +668,17 @@ export const RestaurantsPage: React.FC = () => {
               <RestaurantsToolbar
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
+                columnsOpen={columnsOpen}
                 stats={stats}
-                onExport={() => setIsExportOpen(!isExportOpen)}
+                onExport={() => { setIsExportOpen((v) => !v); setColumnsOpen(false); }}
                 onAddRestaurant={() => setIsAddModalOpen(true)}
                 onClearAll={handleClearAll}
                 hasActiveFilters={!!hasActiveFilters}
+                onToggleColumns={() => { setColumnsOpen(true); setIsExportOpen(false); }}
               />
               <button
                 type="button"
-                onClick={() => setIsExportOpen(!isExportOpen)}
+                onClick={() => { setIsExportOpen((v) => !v); setColumnsOpen(false); }}
                 className="h-9 flex items-center gap-1.5 px-3 rounded-[4px] border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] text-sm font-medium text-[#525252] dark:text-[#a3a3a3] hover:bg-[#f5f5f5] dark:hover:bg-[#202020] transition-colors"
               >
                 <Download className="w-3.5 h-3.5" />
@@ -450,7 +688,7 @@ export const RestaurantsPage: React.FC = () => {
 
             <div className="shrink-0 px-4 py-1 border-b border-[#e5e5e5] dark:border-[#1f1f1f] bg-white dark:bg-[#171717]">
               <span className="text-xs text-[#a3a3a3] dark:text-[#737373]">
-                {filteredRestaurants.length} מסעדות • {state.deliveries.length} משלוחים • {state.couriers.length} שליחים
+                {filteredRestaurants.length} מסעדות
               </span>
             </div>
 
@@ -508,13 +746,20 @@ export const RestaurantsPage: React.FC = () => {
                 </div>
               ) : (
                 <div className="overflow-auto relative flex-1">
-                  <table className="w-full">
+                  <table className="w-full" role="grid" aria-label="טבלת מסעדות">
+                    <colgroup>
+                      <col style={{ width: ENTITY_TABLE_WIDTHS.checkbox }} />
+                      {visibleOrderedCols.map((col) => (
+                        <col key={col.id} style={{ width: getRestaurantColumnWidth(col.id) }} />
+                      ))}
+                      <col style={{ width: ENTITY_TABLE_WIDTHS.actions }} />
+                    </colgroup>
                     {/* ── Header ── */}
-                    <thead className="sticky top-0 z-10 border-b border-[#e5e5e5] bg-[#fafafa] dark:border-[#262626] dark:bg-[#0a0a0a]">
+                    <thead className={ENTITY_TABLE_HEAD_CLASS}>
                       <tr>
-                        <th className="pr-5 pl-0">
+                        <th className={ENTITY_TABLE_CHECKBOX_HEAD_CLASS}>
                           <label
-                            className="flex min-h-[48px] cursor-pointer touch-manipulation items-center justify-start"
+                            className={ENTITY_TABLE_CHECKBOX_HEAD_LABEL_CLASS}
                             style={{ touchAction: 'manipulation' }}
                           >
                             <input
@@ -527,7 +772,7 @@ export const RestaurantsPage: React.FC = () => {
                           </label>
                         </th>
                         {/* Draggable data columns */}
-                        {orderedCols.map(col => (
+                        {visibleOrderedCols.map(col => (
                           <th
                             key={col.id}
                             draggable
@@ -536,7 +781,7 @@ export const RestaurantsPage: React.FC = () => {
                             onDragLeave={() => setDragOverId(null)}
                             onDrop={e => { e.preventDefault(); const from = e.dataTransfer.getData('text/plain'); handleColumnReorder(from, col.id); setDragOverId(null); setDraggingId(null); }}
                             onDragEnd={() => { setDraggingId(null); setDragOverId(null); }}
-                            className={`group/col pr-2 pl-2 py-3 text-right whitespace-nowrap select-none transition-all cursor-grab
+                            className={`${ENTITY_TABLE_HEADER_CELL_BASE_CLASS} pr-2 pl-2 whitespace-nowrap select-none cursor-grab
                               ${draggingId === col.id ? 'opacity-40' : ''}
                               ${dragOverId === col.id && draggingId !== col.id ? 'bg-[#dbeafe] ring-2 ring-inset ring-[#3b82f6]/40 dark:bg-[#1e3a8a]/40' : ''}`}
                           >
@@ -548,7 +793,9 @@ export const RestaurantsPage: React.FC = () => {
                         ))}
 
                         {/* Actions (fixed, not draggable) */}
-                        <th className="px-4 py-2.5 text-center text-xs font-medium text-[#666d80] dark:text-[#a3a3a3] whitespace-nowrap">פעולות</th>
+                        <th className={ENTITY_TABLE_ACTIONS_HEAD_CLASS}>
+                          <span className="sr-only">פעולות</span>
+                        </th>
                       </tr>
                     </thead>
 
@@ -565,9 +812,9 @@ export const RestaurantsPage: React.FC = () => {
                             }}
                             className="border-b border-[#f5f5f5] dark:border-[#1f1f1f] transition-colors cursor-pointer bg-white dark:bg-[#171717] hover:bg-[#fafafa] dark:hover:bg-[#111111]"
                           >
-                            <td className="pr-5 pl-0" onClick={e => e.stopPropagation()}>
+                            <td className={ENTITY_TABLE_CHECKBOX_BODY_CLASS} onClick={e => e.stopPropagation()}>
                               <label
-                                className="flex min-h-[40px] cursor-pointer items-center justify-start"
+                                className={ENTITY_TABLE_CHECKBOX_BODY_LABEL_CLASS}
                                 style={{ touchAction: 'manipulation' }}
                               >
                                 <input
@@ -579,25 +826,16 @@ export const RestaurantsPage: React.FC = () => {
                               </label>
                             </td>
                             {/* Data cells in column order */}
-                            {orderedCols.map(col => (
-                              <td key={col.id} className="px-4 py-2">
+                            {visibleOrderedCols.map(col => (
+                              <td key={col.id} className={ENTITY_TABLE_DATA_CELL_CLASS}>
                                 {col.id === 'name' && (
-                                  <div className="flex items-center gap-2">
-                                    {isMcDonaldsRestaurant(restaurant.name) ? (
-                                      <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] bg-[#da291c] text-[10px] font-black leading-none text-[#ffc72c] shadow-sm">
-                                        M
-                                      </div>
-                                    ) : (
-                                      <StoreIcon className="h-4 w-4 shrink-0 text-[#16a34a] dark:text-[#22c55e]" />
-                                    )}
-                                    <span className="font-medium text-xs text-[#0d0d12] dark:text-[#fafafa] whitespace-nowrap">{restaurant.name}</span>
-                                  </div>
+                                  <span className="block truncate font-medium text-xs text-[#0d0d12] dark:text-[#fafafa] whitespace-nowrap">{restaurant.name}</span>
                                 )}
                                 {col.id === 'type' && (
-                                  <span className="text-xs text-[#737373] dark:text-[#a3a3a3] whitespace-nowrap">{restaurant.type}</span>
+                                  <span className="block truncate text-xs text-[#737373] dark:text-[#a3a3a3] whitespace-nowrap">{restaurant.type}</span>
                                 )}
                                 {col.id === 'chainId' && (
-                                  <span className="text-xs text-[#666d80] dark:text-[#a3a3a3] whitespace-nowrap">{restaurant.chainId}</span>
+                                  <span className="block truncate text-xs text-[#666d80] dark:text-[#a3a3a3] whitespace-nowrap">{restaurant.chainId}</span>
                                 )}
                                 {col.id === 'status' && (
                                   <span className={`text-xs font-medium whitespace-nowrap ${restaurant.isActive ? 'text-[#16a34a] dark:text-[#9fe870]' : 'text-[#737373] dark:text-[#a3a3a3]'}`}>
@@ -605,13 +843,13 @@ export const RestaurantsPage: React.FC = () => {
                                   </span>
                                 )}
                                 {col.id === 'address' && (
-                                  <span className="text-xs text-[#666d80] dark:text-[#a3a3a3] whitespace-nowrap">{restaurant.street}, {restaurant.city}</span>
+                                  <span className="block truncate text-xs text-[#666d80] dark:text-[#a3a3a3] whitespace-nowrap">{restaurant.street}, {restaurant.city}</span>
                                 )}
                                 {col.id === 'phone' && (
-                                  <span className="text-xs text-[#666d80] dark:text-[#a3a3a3] whitespace-nowrap">{restaurant.phone}</span>
+                                  <span className="block truncate text-xs text-[#666d80] dark:text-[#a3a3a3] whitespace-nowrap">{restaurant.phone}</span>
                                 )}
                                 {col.id === 'contact' && (
-                                  <span className="text-xs text-[#666d80] dark:text-[#a3a3a3] whitespace-nowrap">{restaurant.contactPerson}</span>
+                                  <span className="block truncate text-xs text-[#666d80] dark:text-[#a3a3a3] whitespace-nowrap">{restaurant.contactPerson}</span>
                                 )}
                                 {col.id === 'deliveries' && (
                                   <span className="text-xs text-[#0d0d12] dark:text-[#fafafa] font-medium whitespace-nowrap">{restaurant.totalDeliveries}</span>
@@ -620,7 +858,7 @@ export const RestaurantsPage: React.FC = () => {
                             ))}
 
                             {/* Actions */}
-                            <td className="px-4 py-2.5" onClick={e => e.stopPropagation()}>
+                            <td className={ENTITY_TABLE_ACTIONS_BODY_CLASS} onClick={e => e.stopPropagation()}>
                               <div className="flex justify-center gap-1">
                                 <button
                                   data-onboarding={idx === 0 ? 'restaurant-toggle' : undefined}
@@ -657,6 +895,7 @@ export const RestaurantsPage: React.FC = () => {
             </div>
 
           </div>
+        </div>
       </div>
 
       {/* Context menu (right-click) */}
@@ -787,33 +1026,6 @@ export const RestaurantsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Export modal */}
-      {isExportOpen && (
-        <div
-          ref={exportRef}
-          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={() => setIsExportOpen(false)}
-        >
-          <div
-            className="bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] w-full max-w-md p-6 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-lg font-bold text-[#0d0d12] dark:text-[#fafafa] mb-4">בחר סוג ייצוא</h3>
-            <div className="space-y-2">
-              <button
-                onClick={handleExportZipPerRestaurant}
-                className="w-full flex items-center gap-3 px-4 py-3 bg-[#fafafa] dark:bg-[#0a0a0a] hover:bg-[#9fe870]/10 dark:hover:bg-[#9fe870]/5 rounded-xl text-right transition-all border border-transparent hover:border-[#9fe870]/40"
-              >
-                <Download className="w-5 h-5 text-[#16a34a] dark:text-[#22c55e]" />
-                <div>
-                  <div className="font-medium text-[#0d0d12] dark:text-[#fafafa]">ייצוא ZIP לכל המסעדות</div>
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">קובץ נפרד לכל מסעדה</div>
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 };

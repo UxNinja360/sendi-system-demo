@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Search, X } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Columns3, Search, X } from 'lucide-react';
 
 interface RestaurantsToolbarProps {
   searchQuery: string;
@@ -9,11 +9,15 @@ interface RestaurantsToolbarProps {
   onAddRestaurant: () => void;
   onClearAll: () => void;
   hasActiveFilters: boolean;
+  onToggleColumns: () => void;
+  columnsOpen: boolean;
 }
 
 export const RestaurantsToolbar: React.FC<RestaurantsToolbarProps> = ({
   searchQuery,
   onSearchChange,
+  onToggleColumns,
+  columnsOpen,
 }) => {
   const [searchOpen, setSearchOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -23,7 +27,7 @@ export const RestaurantsToolbar: React.FC<RestaurantsToolbarProps> = ({
   }, [searchOpen]);
 
   return (
-    <div className="relative flex items-center">
+    <div className="relative flex items-center gap-1.5">
       {searchOpen ? (
         <div className="flex items-center gap-1">
           <div className="relative">
@@ -48,7 +52,10 @@ export const RestaurantsToolbar: React.FC<RestaurantsToolbarProps> = ({
           </div>
           <button
             type="button"
-            onClick={() => { setSearchOpen(false); onSearchChange(''); }}
+            onClick={() => {
+              setSearchOpen(false);
+              onSearchChange('');
+            }}
             className="flex items-center justify-center w-9 h-9 rounded-[4px] border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] hover:bg-[#f5f5f5] dark:hover:bg-[#202020] transition-colors"
           >
             <X className="w-3.5 h-3.5 text-[#a3a3a3]" />
@@ -67,6 +74,20 @@ export const RestaurantsToolbar: React.FC<RestaurantsToolbarProps> = ({
           <Search className="w-4 h-4" />
         </button>
       )}
+
+      <button
+        type="button"
+        onClick={onToggleColumns}
+        className={`h-9 flex items-center gap-1.5 px-3 rounded-[4px] border text-sm font-medium transition-colors ${
+          columnsOpen
+            ? 'bg-[#f5f5f5] dark:bg-[#262626] border-[#e5e5e5] dark:border-[#262626] text-[#0d0d12] dark:text-[#fafafa]'
+            : 'bg-white dark:bg-[#171717] border-[#e5e5e5] dark:border-[#262626] text-[#525252] dark:text-[#a3a3a3] hover:bg-[#f5f5f5] dark:hover:bg-[#202020]'
+        }`}
+        title="הצג/הסתר עמודות"
+      >
+        <Columns3 className="w-3.5 h-3.5" />
+        <span>עמודות</span>
+      </button>
     </div>
   );
 };

@@ -74,9 +74,9 @@ export const DeliveryTableHeader: React.FC<DeliveryTableHeaderProps> = ({
     <thead className="bg-[#fafafa] dark:bg-[#0a0a0a] border-b border-[#e5e5e5] dark:border-[#262626] sticky top-0 z-10">
       <tr>
         {/* Checkbox column */}
-        <th className="pr-5 pl-0">
+        <th className="pr-4 pl-0">
           <label
-            className="flex items-center justify-start min-h-[48px] cursor-pointer touch-manipulation"
+            className="flex items-center justify-start min-h-[42px] cursor-pointer touch-manipulation"
             style={{ touchAction: 'manipulation' }}
           >
             <input
@@ -105,7 +105,7 @@ export const DeliveryTableHeader: React.FC<DeliveryTableHeaderProps> = ({
             return (
               <th
                 key={col.id}
-                className={`group/col pr-2 pl-2 py-3 text-right transition-all ${dragClasses}`}
+                className={`group/col pr-2 pl-2 py-2.5 text-right transition-all ${dragClasses}`}
                 draggable
                 onDragStart={e => handleDragStart(e, col.id)}
                 onDragOver={e => handleDragOver(e, col.id)}
@@ -130,7 +130,7 @@ export const DeliveryTableHeader: React.FC<DeliveryTableHeaderProps> = ({
           return (
             <th
               key={col.id}
-              className={`group/col pr-2 pl-2 py-3 text-right transition-all ${dragClasses}`}
+              className={`group/col pr-2 pl-2 py-2.5 text-right transition-all ${dragClasses}`}
               draggable
               onDragStart={e => handleDragStart(e, col.id)}
               onDragOver={e => handleDragOver(e, col.id)}
@@ -149,7 +149,7 @@ export const DeliveryTableHeader: React.FC<DeliveryTableHeaderProps> = ({
         })}
 
         {/* Actions column */}
-        <th className="px-1 py-3 w-10 text-center">
+        <th className="px-1 py-2.5 w-10 text-center">
           <span className="sr-only">פעולות</span>
         </th>
       </tr>

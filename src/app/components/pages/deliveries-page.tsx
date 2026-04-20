@@ -13,6 +13,7 @@ import {
   AlignVerticalSpaceAround,
   Plus,
   Package,
+  Columns3,
   ChevronDown,
   Check,
   Users,
@@ -29,7 +30,7 @@ import { DeliveryTableRow } from '../deliveries/delivery-table-row';
 import { DeliveryDetailSidePanel } from '../deliveries/delivery-detail-side-panel';
 import { DeliveryEditDialog } from '../deliveries/delivery-edit-dialog';
 import { STATUS_LABELS, DEFAULT_VISIBLE_COLUMNS } from '../deliveries/status-config';
-import { ALL_COLUMNS } from '../deliveries/column-defs';
+import { ALL_COLUMNS, COLUMN_MAP } from '../deliveries/column-defs';
 import { ColumnSelector } from '../deliveries/column-selector';
 import type { ColumnDef } from '../deliveries/column-defs';
 import { EnhancedEmptyState } from '../deliveries/enhanced-empty-state';
@@ -86,6 +87,58 @@ const STATUS_CHIP_CONFIG = [
   { status: 'delivered'  as DeliveryStatus, label: 'נמסר',  dot: 'bg-green-500',  active: 'bg-green-500/10 text-green-600 dark:text-green-400' },
   { status: 'cancelled'  as DeliveryStatus, label: 'בוטל',  dot: 'bg-red-500',    active: 'bg-red-500/10 text-red-600 dark:text-red-400' },
 ];
+
+const getDeliveryColumnWidth = (columnId: string) => {
+  switch (columnId) {
+    case 'orderNumber':
+      return '118px';
+    case 'creation_time':
+    case 'coupled_time':
+    case 'arrived_at_rest':
+    case 'took_it_time':
+    case 'started_pickup':
+    case 'started_dropoff':
+    case 'arrived_at_client':
+    case 'delivered_time':
+      return '132px';
+    case 'status':
+      return '86px';
+    case 'courier':
+      return '148px';
+    case 'rest_name':
+      return '190px';
+    case 'client_name':
+      return '150px';
+    case 'client_full_address':
+    case 'restaurantAddress':
+      return '220px';
+    case 'timeRemaining':
+      return '108px';
+    case 'price':
+      return '96px';
+    default: {
+      const column = COLUMN_MAP.get(columnId);
+      if (!column) return '128px';
+      switch (column.type) {
+        case 'boolean':
+          return '88px';
+        case 'number':
+          return '96px';
+        case 'money':
+          return '104px';
+        case 'date':
+          return '132px';
+        case 'coord':
+          return '156px';
+        case 'custom':
+          return '120px';
+        case 'text':
+        default:
+          return '140px';
+      }
+    }
+  }
+};
 
 export const DeliveriesPage: React.FC = () => {
   const { state, updateDelivery, dispatch, unassignCourier, assignCourier } = useDelivery();
@@ -700,6 +753,44 @@ export const DeliveriesPage: React.FC = () => {
               })()}
             </div>
 
+            {/* Search */}
+            <div className="hidden relative flex items-center">
+              {searchOpen ? (
+                <div className="flex items-center gap-1">
+                  <div className="relative">
+                    <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#a3a3a3] pointer-events-none" />
+                    <input
+                      autoFocus
+                      type="text"
+                      placeholder="חפש משלוח..."
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      className="w-48 h-9 pr-8 pl-6 bg-[#f5f5f5] dark:bg-[#262626] border border-transparent focus:border-[#9fe870]/50 rounded-[4px] text-sm text-[#0d0d12] dark:text-[#fafafa] placeholder-[#a3a3a3] outline-none transition-all"
+                    />
+                    {searchQuery && (
+                      <button onClick={() => setSearchQuery('')} className="absolute left-2 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-[#e5e5e5] dark:hover:bg-[#262626] transition-colors">
+                        <X className="w-3 h-3 text-[#a3a3a3]" />
+                      </button>
+                    )}
+                  </div>
+                  <button onClick={() => { setSearchOpen(false); setSearchQuery(''); }} className="p-1 rounded hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors">
+                    <X className="w-3.5 h-3.5 text-[#a3a3a3]" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setSearchOpen(true)}
+                  className={`flex items-center justify-center w-9 h-9 rounded-[4px] border text-sm font-medium transition-colors ${
+                    searchQuery
+                      ? 'bg-[#9fe870]/15 border-[#9fe870]/40 text-[#6bc84a]'
+                      : 'bg-white dark:bg-[#171717] border-[#e5e5e5] dark:border-[#262626] text-[#525252] dark:text-[#a3a3a3] hover:bg-[#f5f5f5] dark:hover:bg-[#202020]'
+                  }`}
+                >
+                  <Search className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
 
             {/* Desktop filters — hidden on mobile */}
             <div className="hidden md:contents">
@@ -1128,9 +1219,7 @@ export const DeliveriesPage: React.FC = () => {
             {/* Spacer */}
             <div className="flex-1" />
 
-
-
-            {/* Search — expandable */}
+            {/* Search */}
             <div className="relative flex items-center" ref={searchRef}>
               {searchOpen ? (
                 <div className="flex items-center gap-1">
@@ -1168,6 +1257,9 @@ export const DeliveriesPage: React.FC = () => {
               )}
             </div>
 
+
+
+
             {/* Columns visibility */}
             <div className="relative">
               <button
@@ -1179,8 +1271,8 @@ export const DeliveriesPage: React.FC = () => {
                 }`}
                 title="הצג/הסתר עמודות"
               >
-                <SlidersHorizontal className="w-3.5 h-3.5" />
-                <span className="hidden md:inline">עמודות</span>
+                <Columns3 className="w-3.5 h-3.5" />
+                <span>עמודות</span>
               </button>
             </div>
 
@@ -1197,7 +1289,7 @@ export const DeliveriesPage: React.FC = () => {
           {/* ── Summary strip ── */}
           <div className="shrink-0 px-4 py-1 border-b border-[#e5e5e5] dark:border-[#1f1f1f] bg-white dark:bg-[#171717]">
             <span className="text-xs text-[#a3a3a3] dark:text-[#737373]">
-              {filteredDeliveries.length} משלוחים • {courierOptions.length} שליחים • {restaurantOptions.length} מסעדות
+              {filteredDeliveries.length} משלוחים
             </span>
           </div>
 
@@ -1499,6 +1591,15 @@ export const DeliveriesPage: React.FC = () => {
                     onMouseLeave={handleMouseUp}
                   >
               <table className="w-full" role="grid" aria-label="טבלת משלוחים">
+                      <colgroup>
+                        <col style={{ width: '44px' }} />
+                        {orderedColumns
+                          .filter((column) => visibleColumns.has(column.id))
+                          .map((column) => (
+                            <col key={column.id} style={{ width: getDeliveryColumnWidth(column.id) }} />
+                          ))}
+                        <col style={{ width: '40px' }} />
+                      </colgroup>
                       <DeliveryTableHeader
                         visibleColumns={visibleColumns}
                         sortColumn={sortColumn}

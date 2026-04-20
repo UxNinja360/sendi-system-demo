@@ -1,9 +1,26 @@
-import React, { useMemo, useState } from 'react';
-import { ChevronLeft, Mail, Menu, Phone, Plus, Power, Shield, Star, UserCog, X } from 'lucide-react';
+import React, { useMemo, useState, useEffect } from 'react';
+import { ChevronLeft, Download, FileSpreadsheet, FileText, GripVertical, Mail, Menu, Phone, Plus, Power, Shield, Star, UserCog, X, SlidersHorizontal } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import { format } from 'date-fns';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
+import { toast } from 'sonner';
+import { ColumnSelector } from '../../deliveries/column-selector';
 import { ManagersToolbar } from './managers-toolbar';
 import { ManagersInlineFilters } from './managers-inline-filters';
 import { ManagersFilterChips } from './managers-filter-chips';
+import {
+  ENTITY_TABLE_ACTIONS_BODY_CLASS,
+  ENTITY_TABLE_ACTIONS_HEAD_CLASS,
+  ENTITY_TABLE_CHECKBOX_BODY_CLASS,
+  ENTITY_TABLE_CHECKBOX_BODY_LABEL_CLASS,
+  ENTITY_TABLE_CHECKBOX_HEAD_CLASS,
+  ENTITY_TABLE_CHECKBOX_HEAD_LABEL_CLASS,
+  ENTITY_TABLE_DATA_CELL_CLASS,
+  ENTITY_TABLE_HEAD_CLASS,
+  ENTITY_TABLE_HEADER_CELL_BASE_CLASS,
+  ENTITY_TABLE_WIDTHS,
+} from './entity-table-shared';
 
 interface Manager {
   id: string;
@@ -26,9 +43,86 @@ const initialManagers: Manager[] = [
   { id: 'm5', name: 'עמית דהן', email: 'amit@example.com', phone: '050-3334444', role: 'support', status: 'inactive', rating: 4.4, totalActions: 320, joinedDate: '2024-01-25', permissions: ['support'] },
 ];
 
+const MANAGER_VISIBLE_COLUMNS_KEY = 'managers-visible-columns-v1';
+const MANAGER_COLUMNS = [
+  { id: 'name', label: 'שם מנהל' },
+  { id: 'role', label: 'תפקיד' },
+  { id: 'status', label: 'סטטוס' },
+  { id: 'email', label: 'אימייל' },
+  { id: 'phone', label: 'טלפון' },
+  { id: 'rating', label: 'דירוג' },
+  { id: 'totalActions', label: 'סך פעולות' },
+  { id: 'actions', label: 'פעולות' },
+] as const;
+
+const getManagerColumnWidth = (columnId: (typeof MANAGER_COLUMNS)[number]['id']) => {
+  switch (columnId) {
+    case 'name':
+      return ENTITY_TABLE_WIDTHS.name;
+    case 'role':
+      return ENTITY_TABLE_WIDTHS.sm;
+    case 'status':
+      return ENTITY_TABLE_WIDTHS.sm;
+    case 'email':
+      return ENTITY_TABLE_WIDTHS.email;
+    case 'phone':
+      return ENTITY_TABLE_WIDTHS.phone;
+    case 'rating':
+      return ENTITY_TABLE_WIDTHS.xs;
+    case 'totalActions':
+      return ENTITY_TABLE_WIDTHS.sm;
+    case 'actions':
+      return ENTITY_TABLE_WIDTHS.actions;
+    default:
+      return ENTITY_TABLE_WIDTHS.lg;
+  }
+};
+const MANAGER_COLUMN_CATEGORIES = [
+  {
+    id: 'core',
+    label: 'ליבה',
+    columns: [
+      { id: 'name', label: 'שם מנהל' },
+      { id: 'role', label: 'תפקיד' },
+      { id: 'status', label: 'סטטוס' },
+    ],
+  },
+  {
+    id: 'contact',
+    label: 'קשר',
+    columns: [
+      { id: 'email', label: 'אימייל' },
+      { id: 'phone', label: 'טלפון' },
+    ],
+  },
+  {
+    id: 'performance',
+    label: 'ביצועים',
+    columns: [
+      { id: 'rating', label: 'דירוג' },
+      { id: 'totalActions', label: 'סך פעולות' },
+    ],
+  },
+] as const;
+
 export const ManagersPage: React.FC = () => {
   const navigate = useNavigate();
   const [managers, setManagers] = useState<Manager[]>(initialManagers);
+  const [selectedManagerIds, setSelectedManagerIds] = useState<Set<string>>(new Set());
+  const [isExportOpen, setIsExportOpen] = useState(false);
+  const [columnsOpen, setColumnsOpen] = useState(false);
+  const [visibleColumns, setVisibleColumns] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem(MANAGER_VISIBLE_COLUMNS_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as string[];
+        const valid = new Set(MANAGER_COLUMNS.map((column) => column.id));
+        const filtered = parsed.filter((id) => valid.has(id));
+        if (filtered.length > 0) return new Set(filtered);
+      }
+    } catch {}
+    return new Set(MANAGER_COLUMNS.map((column) => column.id));
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
@@ -40,6 +134,12 @@ export const ManagersPage: React.FC = () => {
     phone: '',
     role: 'support' as 'admin' | 'supervisor' | 'support',
   });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(MANAGER_VISIBLE_COLUMNS_KEY, JSON.stringify(Array.from(visibleColumns)));
+    } catch {}
+  }, [visibleColumns]);
 
   const filteredManagers = useMemo(() => {
     let filtered = managers;
@@ -60,6 +160,10 @@ export const ManagersPage: React.FC = () => {
       return b.totalActions - a.totalActions;
     });
   }, [managers, roleFilter, searchQuery, sortBy, statusFilter]);
+  const visibleManagerColumns = useMemo(
+    () => MANAGER_COLUMNS.filter((column) => visibleColumns.has(column.id)),
+    [visibleColumns],
+  );
 
   const stats = useMemo(() => ({
     total: managers.length,
@@ -82,12 +186,35 @@ export const ManagersPage: React.FC = () => {
   }), [managers]);
 
   const hasActiveFilters = !!searchQuery || statusFilter !== 'all' || roleFilter !== 'all';
+  const allVisibleManagersSelected = filteredManagers.length > 0 && filteredManagers.every((manager) => selectedManagerIds.has(manager.id));
+  const someVisibleManagersSelected = filteredManagers.some((manager) => selectedManagerIds.has(manager.id));
 
   const handleClearAll = () => {
     setSearchQuery('');
     setStatusFilter('all');
     setRoleFilter('all');
     setSortBy('name');
+  };
+
+  const handleToggleSelectManager = (managerId: string) => {
+    setSelectedManagerIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(managerId)) next.delete(managerId);
+      else next.add(managerId);
+      return next;
+    });
+  };
+
+  const handleToggleSelectAllManagers = () => {
+    setSelectedManagerIds((prev) => {
+      const next = new Set(prev);
+      if (allVisibleManagersSelected) {
+        filteredManagers.forEach((manager) => next.delete(manager.id));
+      } else {
+        filteredManagers.forEach((manager) => next.add(manager.id));
+      }
+      return next;
+    });
   };
 
   const getRoleLabel = (role: string) => role === 'admin' ? 'מנהל ראשי' : role === 'supervisor' ? 'מפקח' : 'תמיכה';
@@ -130,8 +257,208 @@ export const ManagersPage: React.FC = () => {
     ));
   };
 
+  const getManagerExportCellValue = (
+    manager: Manager,
+    columnId: (typeof MANAGER_COLUMNS)[number]['id'],
+  ) => {
+    switch (columnId) {
+      case 'name':
+        return manager.name;
+      case 'role':
+        return getRoleLabel(manager.role);
+      case 'status':
+        return getStatusLabel(manager.status);
+      case 'email':
+        return manager.email;
+      case 'phone':
+        return manager.phone;
+      case 'rating':
+        return manager.rating.toFixed(1);
+      case 'totalActions':
+        return manager.totalActions;
+      case 'actions':
+        return '';
+      default:
+        return '';
+    }
+  };
+
+  const handleExportVisibleManagers = () => {
+    const managersToExport = selectedManagerIds.size > 0
+      ? filteredManagers.filter((manager) => selectedManagerIds.has(manager.id))
+      : filteredManagers;
+
+    if (managersToExport.length === 0) {
+      toast.error('אין מנהלים לייצוא');
+      return;
+    }
+
+    const exportColumns = visibleManagerColumns.filter((column) => column.id !== 'actions');
+    const rows = managersToExport.map((manager) => {
+      const row: Record<string, string | number> = {};
+
+      exportColumns.forEach((column) => {
+        row[column.label] = getManagerExportCellValue(manager, column.id);
+      });
+
+      return row;
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(rows, { skipHeader: false });
+    const workbook = XLSX.utils.book_new();
+    workbook.Workbook = {
+      Views: [{ RTL: true }],
+    };
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'מנהלים');
+
+    const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+
+    saveAs(blob, `מנהלים_${format(new Date(), 'dd-MM-yyyy_HH-mm')}.xlsx`);
+    setIsExportOpen(false);
+    toast.success(`יוצאו ${managersToExport.length} מנהלים ל-Excel`);
+  };
+
+  const renderManagerCell = (columnId: (typeof MANAGER_COLUMNS)[number]['id'], manager: Manager) => {
+    const isActive = manager.status === 'active';
+
+    switch (columnId) {
+      case 'name':
+        return (
+          <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
+            <span className="block truncate font-medium text-xs text-[#0d0d12] dark:text-[#fafafa] whitespace-nowrap">{manager.name}</span>
+          </td>
+        );
+      case 'role':
+        return (
+          <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
+            <span className={`text-xs font-medium whitespace-nowrap ${getRoleColor(manager.role)}`}>{getRoleLabel(manager.role)}</span>
+          </td>
+        );
+      case 'status':
+        return (
+          <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
+            <span className={`text-xs font-medium whitespace-nowrap ${getStatusColor(manager.status)}`}>{getStatusLabel(manager.status)}</span>
+          </td>
+        );
+      case 'email':
+        return (
+          <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
+            <span className="block truncate text-xs text-[#666d80] dark:text-[#a3a3a3] direction-ltr whitespace-nowrap">{manager.email}</span>
+          </td>
+        );
+      case 'phone':
+        return (
+          <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
+            <span className="block truncate text-xs text-[#666d80] dark:text-[#a3a3a3] direction-ltr whitespace-nowrap">{manager.phone}</span>
+          </td>
+        );
+      case 'rating':
+        return (
+          <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
+            <div className="flex items-center gap-1">
+              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 shrink-0" />
+              <span className="text-xs text-[#0d0d12] dark:text-[#fafafa] font-medium whitespace-nowrap">{manager.rating.toFixed(1)}</span>
+            </div>
+          </td>
+        );
+      case 'totalActions':
+        return (
+          <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
+            <span className="text-xs text-[#0d0d12] dark:text-[#fafafa] font-medium whitespace-nowrap">{manager.totalActions.toLocaleString()}</span>
+          </td>
+        );
+      case 'actions':
+        return (
+          <td key={columnId} className={ENTITY_TABLE_ACTIONS_BODY_CLASS}>
+            <div className="flex justify-center">
+              <button
+                onClick={(e) => { e.stopPropagation(); toggleManagerStatus(manager.id, manager.status); }}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-medium transition-all text-xs ${isActive ? 'bg-[#ecfae2] dark:bg-[#163300] text-[#16a34a] dark:text-[#9fe870] hover:bg-[#dcf5d2] dark:hover:bg-[#1f4500]' : 'bg-[#f5f5f5] dark:bg-[#262626] hover:bg-[#e5e5e5] dark:hover:bg-[#404040] text-[#737373] dark:text-[#a3a3a3]'}`}
+              >
+                <Power className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </td>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]" dir="rtl">
+    <>
+    <div className="flex flex-row h-full overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]" dir="ltr">
+      <div className={`shrink-0 transition-[width] duration-200 overflow-hidden border-l border-[#e5e5e5] dark:border-[#1f1f1f] ${(isExportOpen || columnsOpen) ? 'w-[380px]' : 'w-0'}`}>
+        <div className="w-[380px] h-full flex flex-col bg-white dark:bg-[#0a0a0a]" dir="rtl">
+          {isExportOpen && (
+            <>
+              <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-[#e5e5e5] dark:border-[#262626] bg-[#fafafa] dark:bg-[#141414]">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-[#0d0d12] dark:text-[#fafafa]" />
+                  <span className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">ייצוא</span>
+                </div>
+                <button onClick={() => setIsExportOpen(false)} className="p-1.5 hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] rounded-lg transition-colors">
+                  <X className="w-4 h-4 text-[#737373] dark:text-[#a3a3a3]" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                <button
+                  type="button"
+                  onClick={handleExportVisibleManagers}
+                  className="w-full text-right rounded-2xl border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#0f0f0f] p-4 transition-all hover:border-[#9fe870]/50 hover:bg-[#f8fff2] dark:hover:bg-[#11180c]"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-xl bg-[#9fe870]/15 text-[#6bc84a]">
+                      <FileSpreadsheet className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">ייצוא טבלת המנהלים</div>
+                      <div className="mt-1 text-xs text-[#737373] dark:text-[#a3a3a3]">Excel עם העמודות המוצגות כרגע בטבלה</div>
+                      <div className="mt-3 flex items-center gap-2 text-[11px] text-[#a3a3a3]">
+                        <span>{selectedManagerIds.size > 0 ? selectedManagerIds.size : filteredManagers.length} מנהלים</span>
+                        <span>•</span>
+                        <span>{visibleManagerColumns.filter((column) => column.id !== 'actions').length} עמודות</span>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </>
+          )}
+          {columnsOpen && (
+            <>
+              <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-[#e5e5e5] dark:border-[#262626] bg-[#fafafa] dark:bg-[#141414]">
+                <div className="flex items-center gap-2">
+                  <SlidersHorizontal className="w-4 h-4 text-[#0d0d12] dark:text-[#fafafa]" />
+                  <span className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">עמודות</span>
+                </div>
+                <button onClick={() => setColumnsOpen(false)} className="p-1.5 hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] rounded-lg transition-colors">
+                  <X className="w-4 h-4 text-[#737373] dark:text-[#a3a3a3]" />
+                </button>
+              </div>
+              <ColumnSelector
+                visibleColumns={visibleColumns}
+                setVisibleColumns={setVisibleColumns}
+                isOpen={columnsOpen}
+                setIsOpen={setColumnsOpen}
+                isEmbedded={true}
+                categories={[...MANAGER_COLUMN_CATEGORIES]}
+                defaultVisibleColumns={MANAGER_COLUMNS.map((column) => column.id)}
+                title="עמודות מנהלים"
+                description="בחר אילו פרטים יופיעו בטבלת המנהלים"
+                presetsKey="managers-column-presets-v1"
+              />
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="flex-1 min-w-0 overflow-hidden flex flex-col" dir="rtl">
       <div className="sticky top-0 z-20 shrink-0 h-16 flex items-center justify-between px-5 border-b border-[#e5e5e5] dark:border-[#1f1f1f] bg-white dark:bg-[#171717]">
         <div className="flex items-center gap-2.5">
           <button
@@ -175,15 +502,25 @@ export const ManagersPage: React.FC = () => {
             <ManagersToolbar
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
+              columnsOpen={columnsOpen}
               stats={stats}
               onAddManager={() => setIsModalOpen(true)}
               onClearAll={handleClearAll}
               hasActiveFilters={hasActiveFilters}
+              onToggleColumns={() => { setColumnsOpen(true); setIsExportOpen(false); }}
             />
+            <button
+              type="button"
+              onClick={() => { setIsExportOpen((v) => !v); setColumnsOpen(false); }}
+              className="h-9 flex items-center gap-1.5 px-3 rounded-[4px] border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] text-sm font-medium text-[#525252] dark:text-[#a3a3a3] hover:bg-[#f5f5f5] dark:hover:bg-[#202020] transition-colors"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">ייצוא</span>
+            </button>
           </div>
 
-          <div className="shrink-0 px-3 pb-3 bg-white dark:bg-[#171717] border-b border-[#e5e5e5] dark:border-[#1f1f1f]">
-            <div className="md:hidden mb-3">
+          <div className="md:hidden shrink-0 px-4 pb-3 bg-white dark:bg-[#171717] border-b border-[#e5e5e5] dark:border-[#1f1f1f]">
+            <div className="mb-3">
               <ManagersInlineFilters
                 statusFilter={statusFilter}
                 onStatusChange={setStatusFilter}
@@ -195,48 +532,89 @@ export const ManagersPage: React.FC = () => {
                 roleCounts={roleCounts}
               />
             </div>
-            <ManagersFilterChips
-              statusFilter={statusFilter}
-              onClearStatus={() => setStatusFilter('all')}
-              roleFilter={roleFilter}
-              onClearRole={() => setRoleFilter('all')}
-              searchQuery={searchQuery}
-              onClearSearch={() => setSearchQuery('')}
-              onClearAll={handleClearAll}
-            />
+          </div>
+
+          {hasActiveFilters && (
+            <div className="shrink-0 px-4 pb-3 bg-white dark:bg-[#171717] border-b border-[#e5e5e5] dark:border-[#1f1f1f]">
+              <ManagersFilterChips
+                statusFilter={statusFilter}
+                onClearStatus={() => setStatusFilter('all')}
+                roleFilter={roleFilter}
+                onClearRole={() => setRoleFilter('all')}
+                searchQuery={searchQuery}
+                onClearSearch={() => setSearchQuery('')}
+                onClearAll={handleClearAll}
+              />
+            </div>
+          )}
+
+          <div className="shrink-0 px-4 py-1 border-b border-[#e5e5e5] dark:border-[#1f1f1f] bg-white dark:bg-[#171717]">
+            <span className="text-xs text-[#a3a3a3] dark:text-[#737373]">
+              {filteredManagers.length} מנהלים
+            </span>
           </div>
 
           <div className="flex-1 overflow-auto relative">
-              <table className="w-full text-sm">
-                <thead className="sticky top-0 z-10 bg-[#fafafa] dark:bg-[#0a0a0a] border-b border-[#e5e5e5] dark:border-[#1f1f1f]">
+              <table className="w-full" role="grid" aria-label="טבלת מנהלים">
+                <colgroup>
+                  <col style={{ width: ENTITY_TABLE_WIDTHS.checkbox }} />
+                  {visibleManagerColumns.map((column) => (
+                    <col key={column.id} style={{ width: getManagerColumnWidth(column.id) }} />
+                  ))}
+                </colgroup>
+                <thead className={ENTITY_TABLE_HEAD_CLASS}>
                   <tr>
-                    {['שם מנהל', 'תפקיד', 'סטטוס', 'אימייל', 'טלפון', 'דירוג', 'סך פעולות', 'פעולות'].map((h, i) => (
-                      <th key={h} className={`px-4 py-2.5 text-xs font-medium text-[#666d80] dark:text-[#a3a3a3] whitespace-nowrap ${i === 7 ? 'text-center' : 'text-right'}`}>{h}</th>
+                    <th className={ENTITY_TABLE_CHECKBOX_HEAD_CLASS}>
+                      <label
+                        className={ENTITY_TABLE_CHECKBOX_HEAD_LABEL_CLASS}
+                        style={{ touchAction: 'manipulation' }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={allVisibleManagersSelected}
+                          ref={(el) => { if (el) el.indeterminate = someVisibleManagersSelected && !allVisibleManagersSelected; }}
+                          onChange={handleToggleSelectAllManagers}
+                          className="h-4 w-4 cursor-pointer rounded border-[#d4d4d4] text-[#16a34a] accent-[#16a34a] focus:ring-[#16a34a] focus:ring-offset-0 dark:border-[#404040]"
+                        />
+                      </label>
+                    </th>
+                    {visibleManagerColumns.map((column) => (
+                      <th
+                        key={column.id}
+                        className={column.id === 'actions'
+                          ? ENTITY_TABLE_ACTIONS_HEAD_CLASS
+                          : `${ENTITY_TABLE_HEADER_CELL_BASE_CLASS} pr-2 pl-2`}
+                      >
+                        {column.id === 'actions' ? (
+                          <span className="sr-only">{column.label}</span>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            <span className="whitespace-nowrap text-xs font-medium text-[#666d80] dark:text-[#a3a3a3]">{column.label}</span>
+                            <GripVertical className="h-3 w-3 shrink-0 cursor-grab text-[#d4d4d4] opacity-0 transition-opacity group-hover/col:opacity-100 active:cursor-grabbing dark:text-[#404040]" />
+                          </div>
+                        )}
+                      </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {filteredManagers.map((manager) => {
-                    const isActive = manager.status === 'active';
                     return (
                       <tr key={manager.id} onClick={() => navigate(`/manager/${manager.id}`)} className="bg-white dark:bg-[#171717] border-b border-[#f5f5f5] dark:border-[#1f1f1f] hover:bg-[#fafafa] dark:hover:bg-[#111111] transition-colors cursor-pointer">
-                        <td className="px-4 py-2.5"><div className="flex items-center gap-2"><Shield className="w-4 h-4 text-[#16a34a] dark:text-[#22c55e] shrink-0" /><span className="font-medium text-xs text-[#0d0d12] dark:text-[#fafafa] whitespace-nowrap">{manager.name}</span></div></td>
-                        <td className="px-4 py-2.5"><span className={`text-xs font-medium whitespace-nowrap ${getRoleColor(manager.role)}`}>{getRoleLabel(manager.role)}</span></td>
-                        <td className="px-4 py-2.5"><span className={`text-xs font-medium whitespace-nowrap ${getStatusColor(manager.status)}`}>{getStatusLabel(manager.status)}</span></td>
-                        <td className="px-4 py-2.5"><span className="text-xs text-[#666d80] dark:text-[#a3a3a3] direction-ltr whitespace-nowrap">{manager.email}</span></td>
-                        <td className="px-4 py-2.5"><span className="text-xs text-[#666d80] dark:text-[#a3a3a3] direction-ltr whitespace-nowrap">{manager.phone}</span></td>
-                        <td className="px-4 py-2.5"><div className="flex items-center gap-1"><Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 shrink-0" /><span className="text-xs text-[#0d0d12] dark:text-[#fafafa] font-medium whitespace-nowrap">{manager.rating.toFixed(1)}</span></div></td>
-                        <td className="px-4 py-2.5"><span className="text-xs text-[#0d0d12] dark:text-[#fafafa] font-medium whitespace-nowrap">{manager.totalActions.toLocaleString()}</span></td>
-                        <td className="px-4 py-2.5">
-                          <div className="flex justify-center">
-                            <button
-                              onClick={(e) => { e.stopPropagation(); toggleManagerStatus(manager.id, manager.status); }}
-                              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-medium transition-all text-xs ${isActive ? 'bg-[#ecfae2] dark:bg-[#163300] text-[#16a34a] dark:text-[#9fe870] hover:bg-[#dcf5d2] dark:hover:bg-[#1f4500]' : 'bg-[#f5f5f5] dark:bg-[#262626] hover:bg-[#e5e5e5] dark:hover:bg-[#404040] text-[#737373] dark:text-[#a3a3a3]'}`}
-                            >
-                              <Power className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
+                        <td className={ENTITY_TABLE_CHECKBOX_BODY_CLASS} onClick={(e) => e.stopPropagation()}>
+                          <label
+                            className={ENTITY_TABLE_CHECKBOX_BODY_LABEL_CLASS}
+                            style={{ touchAction: 'manipulation' }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedManagerIds.has(manager.id)}
+                              onChange={() => handleToggleSelectManager(manager.id)}
+                              className="h-4 w-4 cursor-pointer rounded border-[#d4d4d4] text-[#16a34a] accent-[#16a34a] focus:ring-[#16a34a] focus:ring-offset-0 dark:border-[#404040]"
+                            />
+                          </label>
                         </td>
+                        {visibleManagerColumns.map((column) => renderManagerCell(column.id, manager))}
                       </tr>
                     );
                   })}
@@ -252,6 +630,8 @@ export const ManagersPage: React.FC = () => {
               )}
             </div>
         </div>
+      </div>
+    </div>
 
       {isModalOpen && (
         <>
@@ -292,6 +672,6 @@ export const ManagersPage: React.FC = () => {
           </div>
         </>
       )}
-    </div>
+    </>
   );
 };
