@@ -24,7 +24,7 @@ export const BusinessManagement: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a] flex flex-col">
       {/* Top bar */}
-      <div className="bg-white dark:bg-[#171717] border-b border-[#e5e5e5] dark:border-[#1f1f1f] px-5 h-16 flex items-center justify-between shrink-0">
+      <div className="sticky top-0 z-20 bg-white dark:bg-[#171717] border-b border-[#e5e5e5] dark:border-[#1f1f1f] px-5 h-16 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => (window as any).toggleMobileSidebar?.()}

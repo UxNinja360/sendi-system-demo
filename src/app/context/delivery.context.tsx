@@ -674,6 +674,109 @@ const STORAGE_KEY = 'sendi-delivery-state';
 const LIVE_MANAGER_ON_SHIFT_ONLY_STORAGE_KEY = 'sendi-live-manager-on-shift-only';
 const LIVE_MANAGER_ROUTE_STOP_ORDERS_STORAGE_KEY = 'sendi-live-manager-route-stop-orders';
 const LIVE_MANAGER_COURIER_POSITIONS_STORAGE_KEY = 'sendi-live-manager-courier-positions';
+const LIVE_MANAGER_COURIER_POSITIONS_TS_STORAGE_KEY = 'sendi-live-manager-courier-positions-ts';
+const COURIER_MOVE_SPEED = 0.00012;
+
+type MapPosition = {
+  lat: number;
+  lng: number;
+};
+
+const COURIER_FALLBACK_POSITIONS: MapPosition[] = [
+  { lat: 32.0700, lng: 34.7735 }, { lat: 32.0752, lng: 34.7731 },
+  { lat: 32.0800, lng: 34.7728 }, { lat: 32.0626, lng: 34.7738 },
+  { lat: 32.0643, lng: 34.7769 }, { lat: 32.0718, lng: 34.7669 },
+  { lat: 32.0765, lng: 34.7662 }, { lat: 32.0653, lng: 34.7755 },
+  { lat: 32.0760, lng: 34.7643 }, { lat: 32.0820, lng: 34.7836 },
+  { lat: 32.0646, lng: 34.7742 }, { lat: 32.0649, lng: 34.7698 },
+  { lat: 32.0864, lng: 34.7781 }, { lat: 32.0562, lng: 34.7718 },
+  { lat: 32.0830, lng: 34.7900 }, { lat: 32.0899, lng: 34.7793 },
+  { lat: 32.0834, lng: 34.8096 }, { lat: 32.0783, lng: 34.8088 },
+  { lat: 32.0808, lng: 34.8050 }, { lat: 32.0700, lng: 34.8135 },
+  { lat: 32.0533, lng: 34.7583 }, { lat: 32.0175, lng: 34.7783 },
+  { lat: 32.0230, lng: 34.7535 }, { lat: 32.0968, lng: 34.7730 },
+];
+
+const hasValidPosition = (value: Partial<MapPosition> | null | undefined): value is MapPosition =>
+  typeof value?.lat === 'number' &&
+  Number.isFinite(value.lat) &&
+  typeof value?.lng === 'number' &&
+  Number.isFinite(value.lng);
+
+const toRadians = (value: number) => (value * Math.PI) / 180;
+
+const getDistanceKm = (from: MapPosition, to: MapPosition) => {
+  const earthRadiusKm = 6371;
+  const latDiff = toRadians(to.lat - from.lat);
+  const lngDiff = toRadians(to.lng - from.lng);
+  const fromLat = toRadians(from.lat);
+  const toLat = toRadians(to.lat);
+
+  const a =
+    Math.sin(latDiff / 2) ** 2 +
+    Math.cos(fromLat) * Math.cos(toLat) * Math.sin(lngDiff / 2) ** 2;
+
+  return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
+const estimateTravelMinutes = (from: MapPosition | null, to: MapPosition | null) => {
+  if (!from || !to) return 8;
+  const distanceKm = getDistanceKm(from, to);
+  const minutes = (distanceKm / 18) * 60;
+  return Math.max(4, Math.round(minutes) + 2);
+};
+
+const getPickupReadyAt = (deliveries: Delivery[]) => {
+  const readyTimes = deliveries
+    .map((delivery) => {
+      if (delivery.pickedUpAt) return null;
+      if (delivery.orderReadyTime) return new Date(delivery.orderReadyTime);
+      if (typeof delivery.preparationTime === 'number') {
+        return new Date(new Date(delivery.createdAt).getTime() + delivery.preparationTime * 60000);
+      }
+      return null;
+    })
+    .filter((value): value is Date => value instanceof Date && !Number.isNaN(value.getTime()));
+
+  if (readyTimes.length === 0) return null;
+  return new Date(Math.max(...readyTimes.map((value) => value.getTime())));
+};
+
+const getPickupGroupKey = (delivery: Delivery) => (
+  delivery.restaurantId ||
+  `${delivery.restaurantName}:${delivery.pickup_latitude ?? ''}:${delivery.pickup_longitude ?? ''}`
+);
+
+const buildDefaultStopIds = (deliveries: Delivery[]) => {
+  const seenPickupGroups = new Set<string>();
+  const stopIds: string[] = [];
+
+  deliveries.forEach((delivery) => {
+    const pickupGroupKey = getPickupGroupKey(delivery);
+    if (!seenPickupGroups.has(pickupGroupKey)) {
+      seenPickupGroups.add(pickupGroupKey);
+      stopIds.push(`pickup-group:${pickupGroupKey}`);
+    }
+
+    stopIds.push(`${delivery.id}-dropoff`);
+  });
+
+  return stopIds;
+};
+
+const normalizeRouteStopOrder = (savedOrder: string[] | undefined, defaultStops: string[]) => {
+  if (!savedOrder || savedOrder.length === 0) {
+    return defaultStops;
+  }
+
+  const validStopIds = new Set(defaultStops);
+  const normalizedSavedStops = savedOrder.filter((stopId, index) => (
+    validStopIds.has(stopId) && savedOrder.indexOf(stopId) === index
+  ));
+  const missingStops = defaultStops.filter((stopId) => !normalizedSavedStops.includes(stopId));
+
+  return [...normalizedSavedStops, ...missingStops];
+};
 
 const createActivityLogEntry = (action: DeliveryAction, state: DeliveryState): ActivityLogEntry | null => {
   const now = new Date();
@@ -1006,6 +1109,48 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   
   // ×ž×•× ×” ×œ×ž×©×œ×•×—×™× - ×œ×”×‘×˜×™×— ×™×™×—×•×“×™×•×ª ×©×œ ID
   const deliveryCounter = useRef(0);
+  const courierPositionsRef = useRef<Map<string, MapPosition>>(new Map());
+  const courierPositionTimestampsRef = useRef<Map<string, number>>(new Map());
+
+  const getStoredRouteStopOrders = useCallback((): Record<string, string[]> => {
+    if (typeof window === 'undefined') return {};
+
+    try {
+      const raw = window.localStorage.getItem(LIVE_MANAGER_ROUTE_STOP_ORDERS_STORAGE_KEY);
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch {
+      return {};
+    }
+  }, []);
+
+  const getInitialCourierPosition = useCallback((courier: Courier, index: number): MapPosition => {
+    const activeDeliveries = stateRef.current.deliveries.filter((delivery) =>
+      delivery.courierId === courier.id &&
+      (delivery.status === 'assigned' || delivery.status === 'delivering')
+    );
+
+    const pickupDelivery = activeDeliveries.find((delivery) =>
+      delivery.status === 'assigned' && delivery.arrivedAtRestaurantAt && !delivery.pickedUpAt
+    );
+    if (pickupDelivery && hasValidPosition({ lat: pickupDelivery.pickup_latitude, lng: pickupDelivery.pickup_longitude })) {
+      return {
+        lat: pickupDelivery.pickup_latitude as number,
+        lng: pickupDelivery.pickup_longitude as number,
+      };
+    }
+
+    const dropoffDelivery = activeDeliveries.find((delivery) => delivery.status === 'delivering');
+    if (dropoffDelivery && hasValidPosition({ lat: dropoffDelivery.dropoff_latitude, lng: dropoffDelivery.dropoff_longitude })) {
+      return {
+        lat: dropoffDelivery.dropoff_latitude as number,
+        lng: dropoffDelivery.dropoff_longitude as number,
+      };
+    }
+
+    return { ...COURIER_FALLBACK_POSITIONS[index % COURIER_FALLBACK_POSITIONS.length] };
+  }, []);
 
   // ×¤×•× ×§×¦×™×” ×œ×™×¦×™×¨×ª ID ×§×‘×•×¢ ×œ×ž×¡×¢×“×” ×‘×”×ª×‘×¡×¡ ×¢×œ ×©×ž×”
   const getRestaurantId = (restaurantName: string): string => {
@@ -1024,6 +1169,72 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
     return `r${Math.abs(hash % 100) + 1}`;
   };
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const rawPositions = window.localStorage.getItem(LIVE_MANAGER_COURIER_POSITIONS_STORAGE_KEY);
+      if (rawPositions) {
+        const parsed = JSON.parse(rawPositions) as Record<string, { lat?: number; lng?: number }>;
+        const next = new Map<string, MapPosition>();
+
+        Object.entries(parsed).forEach(([courierId, position]) => {
+          if (typeof position?.lat === 'number' && typeof position?.lng === 'number') {
+            next.set(courierId, { lat: position.lat, lng: position.lng });
+          }
+        });
+
+        courierPositionsRef.current = next;
+      }
+
+      const rawTimestamps = window.localStorage.getItem(LIVE_MANAGER_COURIER_POSITIONS_TS_STORAGE_KEY);
+      if (rawTimestamps) {
+        const parsed = JSON.parse(rawTimestamps) as Record<string, number>;
+        const next = new Map<string, number>();
+
+        Object.entries(parsed).forEach(([courierId, timestamp]) => {
+          if (typeof timestamp === 'number' && Number.isFinite(timestamp)) {
+            next.set(courierId, timestamp);
+          }
+        });
+
+        courierPositionTimestampsRef.current = next;
+      }
+    } catch {
+      courierPositionsRef.current = new Map();
+      courierPositionTimestampsRef.current = new Map();
+    }
+  }, []);
+
+  useEffect(() => {
+    let changed = false;
+
+    state.couriers.forEach((courier, index) => {
+      if (courierPositionsRef.current.has(courier.id)) return;
+      courierPositionsRef.current.set(courier.id, getInitialCourierPosition(courier, index));
+      courierPositionTimestampsRef.current.set(courier.id, Date.now());
+      changed = true;
+    });
+
+    Array.from(courierPositionsRef.current.keys()).forEach((courierId) => {
+      if (state.couriers.some((courier) => courier.id === courierId)) return;
+      courierPositionsRef.current.delete(courierId);
+      courierPositionTimestampsRef.current.delete(courierId);
+      changed = true;
+    });
+
+    if (!changed || typeof window === 'undefined') return;
+
+    window.localStorage.setItem(
+      LIVE_MANAGER_COURIER_POSITIONS_STORAGE_KEY,
+      JSON.stringify(Object.fromEntries(courierPositionsRef.current.entries()))
+    );
+    window.localStorage.setItem(
+      LIVE_MANAGER_COURIER_POSITIONS_TS_STORAGE_KEY,
+      JSON.stringify(Object.fromEntries(courierPositionTimestampsRef.current.entries()))
+    );
+  }, [getInitialCourierPosition, state.couriers]);
 
   // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // ×¨×©×™×ž×ª ×›×ª×•×‘×•×ª ××ž×™×ª×™×•×ª ×‘×’×•×© ×“×Ÿ ×¢× ×§×•××•×¨×“×™× ×˜×•×ª GPS ×ž×“×•×™×§×•×ª
@@ -1375,69 +1586,226 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return () => clearInterval(interval);
   }, [state.isSystemOpen, state.autoAssignEnabled, state.deliveries, state.couriers]);
 
-  // ×”×ª×§×“×ž×•×ª ×©×œ×‘×™× ××•×˜×•×ž×˜×™×ª - ×ž×ž×©×™×›×” ×’× ×›×©×”×ž×¢×¨×›×ª ×¡×’×•×¨×”
+  // מנוע התקדמות גלובלי - ממשיך להזיז משלוחים גם בלי עמוד מנג'ר לייב פתוח
   useEffect(() => {
+    const SPEED = COURIER_MOVE_SPEED;
+    const ARRIVE = 0.0003;
+
     const interval = setInterval(() => {
-      state.deliveries.forEach(delivery => {
-        const now = new Date();
-        
-        // ×™×¦×™×¨×ª ×–×ž×Ÿ ×ž×©×•×§×œ×œ ×œ×›×œ ×ž×©×œ×•×— ×¢×œ ×¤×™ ×”-ID ×©×œ×•
-        const deliveryHash = delivery.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        const seed = (deliveryHash % 1000) / 1000; // 0.0-1.0
+      const routeStopOrders = getStoredRouteStopOrders();
+      const stateNow = stateRef.current;
+      const posUpdates = new Map<string, MapPosition>();
+      const statusUpdates: Array<{ type: 'delivering' | 'complete' | 'arrived_pickup'; ids: string[] }> = [];
+      const phaseUpdates = new Map<string, Partial<Delivery>>();
 
-        // ×¤×•× ×§×¦×™×” ×œ×—×™×©×•×‘ ×–×ž×Ÿ ×ž×©×œ×•×— ×ž×©×•×§×œ×œ
-        const getWeightedDeliveryTime = (baseSeed: number) => {
-          // 15% ×¡×™×›×•×™ ×œ×ž×©×œ×•×— ×ž×”×™×¨ (3-5 ×“×§×•×ª)
-          if (baseSeed < 0.15) {
-            const quickSeed = (deliveryHash % 200) / 200;
-            return 3 + quickSeed * 2; // 3-5 ×“×§×•×ª
+      stateNow.couriers.forEach((courier, index) => {
+        const activeDeliveries = stateNow.deliveries.filter((delivery) =>
+          delivery.courierId === courier.id &&
+          (delivery.status === 'assigned' || delivery.status === 'delivering')
+        );
+        if (activeDeliveries.length === 0) return;
+
+        const currentPosition =
+          posUpdates.get(courier.id) ??
+          courierPositionsRef.current.get(courier.id) ??
+          getInitialCourierPosition(courier, index);
+
+        if (!courierPositionsRef.current.has(courier.id)) {
+          posUpdates.set(courier.id, currentPosition);
+        }
+
+        const defaultStops = buildDefaultStopIds(activeDeliveries);
+        const stopIds = normalizeRouteStopOrder(routeStopOrders[courier.id], defaultStops);
+
+        let nextStopType: 'pickup' | 'dropoff' | undefined;
+        let nextStopDeliveries: Delivery[] = [];
+        let nextStopPosition: MapPosition | null = null;
+
+        for (const stopId of stopIds) {
+          if (stopId.startsWith('pickup-group:')) {
+            const pickupGroupKey = stopId.replace('pickup-group:', '');
+            const pickupGroupDeliveries = activeDeliveries.filter((delivery) =>
+              getPickupGroupKey(delivery) === pickupGroupKey &&
+              delivery.status === 'assigned'
+            );
+
+            if (pickupGroupDeliveries.length > 0) {
+              nextStopType = 'pickup';
+              nextStopDeliveries = pickupGroupDeliveries;
+              nextStopPosition = hasValidPosition({
+                lat: pickupGroupDeliveries[0].pickup_latitude,
+                lng: pickupGroupDeliveries[0].pickup_longitude,
+              })
+                ? {
+                    lat: pickupGroupDeliveries[0].pickup_latitude as number,
+                    lng: pickupGroupDeliveries[0].pickup_longitude as number,
+                  }
+                : null;
+              break;
+            }
+          } else {
+            const deliveryId = stopId.replace(/-dropoff$/, '');
+            const delivery = activeDeliveries.find((item) => item.id === deliveryId && item.status === 'delivering');
+            if (delivery) {
+              nextStopType = 'dropoff';
+              nextStopDeliveries = [delivery];
+              nextStopPosition = hasValidPosition({
+                lat: delivery.dropoff_latitude,
+                lng: delivery.dropoff_longitude,
+              })
+                ? {
+                    lat: delivery.dropoff_latitude as number,
+                    lng: delivery.dropoff_longitude as number,
+                  }
+                : null;
+              break;
+            }
           }
-          
-          // 85% ×”× ×•×ª×¨×™× - ×ž×©×œ×•×—×™× ×¨×’×™×œ×™× (5-28 ×“×§×•×ª)
-          const remaining = (baseSeed - 0.15) / 0.85;
-          const skewed = Math.pow(remaining, 1.5);
-          return 5 + skewed * 23; // 5-28 ×“×§×•×ª
-        };
+        }
 
-        const totalDeliveryMinutes = getWeightedDeliveryTime(seed);
-        
-        // ×—×œ×•×§×”: 40% ×œ×ž×¡×¢×“×”, 60% ×œ×œ×§×•×—
-        const timeToRestaurantSeconds = totalDeliveryMinutes * 0.4 * 60; // ×‘×©× ×™×•×ª
-        const timeToCustomerSeconds = totalDeliveryMinutes * 0.6 * 60; // ×‘×©× ×™×•×ª
+        if (!nextStopType || nextStopDeliveries.length === 0 || !nextStopPosition) return;
 
-        if (delivery.status === 'assigned' && delivery.assignedAt) {
-          const pickupStartedAt = delivery.started_pickup ?? delivery.assignedAt;
-          const timeSinceAssigned = (now.getTime() - pickupStartedAt.getTime()) / 1000;
-          if (timeSinceAssigned >= timeToRestaurantSeconds) {
-              rawDispatch({
-                type: 'UPDATE_STATUS',
-                payload: {
-                  deliveryId: delivery.id,
-                status: 'delivering',
+        if (nextStopType === 'pickup') {
+          const activePickupIds = new Set(nextStopDeliveries.map((delivery) => delivery.id));
+
+          nextStopDeliveries.forEach((delivery) => {
+            if (!delivery.started_pickup) {
+              phaseUpdates.set(delivery.id, {
+                ...(phaseUpdates.get(delivery.id) ?? {}),
+                started_pickup: new Date(),
+              });
+            }
+          });
+
+          activeDeliveries
+            .filter(
+              (delivery) =>
+                delivery.status === 'assigned' &&
+                !activePickupIds.has(delivery.id) &&
+                !!delivery.started_pickup
+            )
+            .forEach((delivery) => {
+              phaseUpdates.set(delivery.id, {
+                ...(phaseUpdates.get(delivery.id) ?? {}),
+                started_pickup: null,
+              });
+            });
+        } else {
+          const activeDropoffIds = new Set(nextStopDeliveries.map((delivery) => delivery.id));
+
+          nextStopDeliveries.forEach((delivery) => {
+            if (!delivery.started_dropoff) {
+              phaseUpdates.set(delivery.id, {
+                ...(phaseUpdates.get(delivery.id) ?? {}),
+                started_dropoff: new Date(),
+              });
+            }
+          });
+
+          activeDeliveries
+            .filter(
+              (delivery) =>
+                delivery.status === 'delivering' &&
+                !activeDropoffIds.has(delivery.id) &&
+                !!delivery.started_dropoff
+            )
+            .forEach((delivery) => {
+              phaseUpdates.set(delivery.id, {
+                ...(phaseUpdates.get(delivery.id) ?? {}),
+                started_dropoff: null,
+              });
+            });
+        }
+
+        const dLat = nextStopPosition.lat - currentPosition.lat;
+        const dLng = nextStopPosition.lng - currentPosition.lng;
+        const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+
+        if (dist < ARRIVE) {
+          posUpdates.set(courier.id, nextStopPosition);
+
+          if (nextStopType === 'pickup') {
+            const areAllOrdersReady = nextStopDeliveries.every((delivery) =>
+              delivery.order_ready ||
+              delivery.reportedOrderIsReady ||
+              (delivery.arrivedAtRestaurantAt &&
+                Date.now() - new Date(delivery.arrivedAtRestaurantAt).getTime() >=
+                  ((delivery.preparationTime || delivery.cook_time || 5) * 60000) / (stateNow.timeMultiplier || 1))
+            );
+
+            if (areAllOrdersReady) {
+              statusUpdates.push({ type: 'delivering', ids: nextStopDeliveries.map((delivery) => delivery.id) });
+            } else {
+              const notArrivedDeliveryIds = nextStopDeliveries
+                .filter((delivery) => !delivery.arrivedAtRestaurantAt)
+                .map((delivery) => delivery.id);
+
+              if (notArrivedDeliveryIds.length > 0) {
+                statusUpdates.push({ type: 'arrived_pickup', ids: notArrivedDeliveryIds });
+              }
+            }
+          } else {
+            statusUpdates.push({ type: 'complete', ids: nextStopDeliveries.map((delivery) => delivery.id) });
+          }
+        } else {
+          const ratio = Math.min(SPEED / dist, 1);
+          posUpdates.set(courier.id, {
+            lat: currentPosition.lat + dLat * ratio,
+            lng: currentPosition.lng + dLng * ratio,
+          });
+        }
+      });
+
+      if (posUpdates.size > 0) {
+        posUpdates.forEach((position, courierId) => {
+          courierPositionsRef.current.set(courierId, position);
+          courierPositionTimestampsRef.current.set(courierId, Date.now());
+        });
+
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem(
+            LIVE_MANAGER_COURIER_POSITIONS_STORAGE_KEY,
+            JSON.stringify(Object.fromEntries(courierPositionsRef.current.entries()))
+          );
+          window.localStorage.setItem(
+            LIVE_MANAGER_COURIER_POSITIONS_TS_STORAGE_KEY,
+            JSON.stringify(Object.fromEntries(courierPositionTimestampsRef.current.entries()))
+          );
+        }
+      }
+
+      phaseUpdates.forEach((updates, deliveryId) => {
+        rawDispatch({ type: 'UPDATE_DELIVERY', payload: { deliveryId, updates } });
+      });
+
+      statusUpdates.forEach(({ type, ids }) => {
+        ids.forEach((id) => {
+          if (type === 'complete') {
+            rawDispatch({ type: 'COMPLETE_DELIVERY', payload: id });
+          } else if (type === 'arrived_pickup') {
+            rawDispatch({
+              type: 'UPDATE_DELIVERY',
+              payload: { deliveryId: id, updates: { arrivedAtRestaurantAt: new Date() } },
+            });
+          } else if (type === 'delivering') {
+            rawDispatch({
+              type: 'UPDATE_DELIVERY',
+              payload: {
+                deliveryId: id,
+                updates: {
+                  status: 'delivering',
+                  pickedUpAt: new Date(),
+                  started_pickup: new Date(),
+                },
               },
             });
           }
-        }
-
-        // ×× ×”×©×œ×™×— ×”×’×™×¢ ×œ×ž×¡×¢×“×” ×•×”×”×–×ž× ×” ×”×™×ª×” ××”××ª× ×” ×ž×¡×¤×™×§ ×–×ž×Ÿ, ×”×•× ×™×•×¦× ×œ×œ×§×•×—
-
-        // ×× × ××¡×£ ××• ×™×¦× ×œ×œ×§×•×—, ×¡×™×™× ××—×¨×™ ×–×ž×Ÿ ×”× ×¡×™×¢×”
-        const isHeadingToCustomer =
-          delivery.status === 'delivering' && delivery.started_dropoff;
-        if (isHeadingToCustomer) {
-          const timeSincePickup = (now.getTime() - delivery.started_dropoff!.getTime()) / 1000;
-          if (timeSincePickup >= timeToCustomerSeconds) {
-              rawDispatch({
-                type: 'COMPLETE_DELIVERY',
-                payload: delivery.id,
-              });
-          }
-        }
+        });
       });
-    }, 1000); // ×‘×“×•×§ ×›×œ ×©× ×™×™×”
+    }, 1000);
 
     return () => clearInterval(interval);
-  }, [state.deliveries, state.timeMultiplier]); // ×”×•×¡×¨×” ×”×ª×œ×•×ª ×‘-isSystemOpen ×›×“×™ ×©×™×¢×‘×•×“ ×’× ×›×©×”×ž×¢×¨×›×ª ×¡×’×•×¨×”
+  }, [getInitialCourierPosition, getStoredRouteStopOrders]);
 
   const toggleSystem = () => {
     dispatch({ type: 'TOGGLE_SYSTEM' });
@@ -1469,6 +1837,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         window.localStorage.removeItem(LIVE_MANAGER_ON_SHIFT_ONLY_STORAGE_KEY);
         window.localStorage.removeItem(LIVE_MANAGER_ROUTE_STOP_ORDERS_STORAGE_KEY);
         window.localStorage.removeItem(LIVE_MANAGER_COURIER_POSITIONS_STORAGE_KEY);
+        window.localStorage.removeItem(LIVE_MANAGER_COURIER_POSITIONS_TS_STORAGE_KEY);
       } catch (error) {
         console.warn('Failed to clear persisted delivery state', error);
       }

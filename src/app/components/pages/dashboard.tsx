@@ -43,7 +43,8 @@ export const Dashboard: React.FC = () => {
   const delivering = state.deliveries.filter((d) => d.status === 'delivering').length;
 
   const activeCouriers = state.couriers.filter((c) => c.status !== 'offline');
-  const totalCouriers = activeCouriers.length;
+  const connectedCouriers = activeCouriers.length;
+  const totalCouriers = state.couriers.length;
   const busyCouriers = activeCouriers.filter((c) => c.status === 'busy').length;
   // "פנוי" = במשמרת פעילה + אין משלוח פעיל
   const freeCouriers = state.couriers.filter((c) => c.isOnShift && c.status === 'available').length;
@@ -244,7 +245,7 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#f5f5f5] dark:bg-[#0a0a0a] flex flex-col">
-      <div className="bg-white dark:bg-[#171717] border-b border-[#e5e5e5] dark:border-[#1f1f1f] px-5 h-16 flex items-center justify-between shrink-0">
+      <div className="sticky top-0 z-20 bg-white dark:bg-[#171717] border-b border-[#e5e5e5] dark:border-[#1f1f1f] px-5 h-16 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => (window as Window & { toggleMobileSidebar?: () => void }).toggleMobileSidebar?.()}
@@ -259,7 +260,7 @@ export const Dashboard: React.FC = () => {
 
       <div className="flex-1 py-6">
         <div className="w-full max-w-[90rem] mx-auto px-4 md:px-6 space-y-4 pb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
             {(() => {
               const filledBar = Math.min(20, Math.round((activeDeliveries / Math.max(activeDeliveries + 4, 10)) * 20));
               return (
@@ -304,9 +305,20 @@ export const Dashboard: React.FC = () => {
                     </div>
                   <div className="mt-4 space-y-2.5 flex-1">
                     {[
-                      { dot: 'bg-blue-400', label: 'עסוקים', value: busyCouriers },
+                      { dot: 'bg-blue-400', label: 'פנויים', value: freeOnShiftCouriers },
                       { dot: 'bg-purple-400', label: 'במשמרת', value: couriersOnShift },
-                      { dot: 'bg-green-400', label: 'מחוברים', value: totalCouriers },
+                      {
+                        dot: 'bg-green-400',
+                        label: 'מחוברים למערכת',
+                        value: (
+                          <span dir="ltr" className="inline-flex items-baseline gap-0.5 tabular-nums">
+                            <span>{connectedCouriers}</span>
+                            <span className="text-[11px] font-medium text-[#888] dark:text-[#6b6b6b]">
+                              /{totalCouriers}
+                            </span>
+                          </span>
+                        ),
+                      },
                     ].map((row) => (
                       <div key={row.label} className="flex items-center justify-between">
                         <span className="flex items-center gap-2 text-xs text-[#666d80] dark:text-[#a3a3a3]"><span className={`w-1.5 h-1.5 rounded-full shrink-0 ${row.dot}`} />{row.label}</span>

@@ -546,7 +546,7 @@ export const DeliveriesPage: React.FC = () => {
         <div className="flex-1 min-w-0 overflow-hidden flex flex-col" dir="rtl">
 
           {/* ── Header: Title + New delivery ── */}
-          <div className="shrink-0 h-16 flex items-center justify-between px-5 border-b border-[#e5e5e5] dark:border-[#1f1f1f] bg-white dark:bg-[#171717]">
+          <div className="sticky top-0 z-20 shrink-0 h-16 flex items-center justify-between px-5 border-b border-[#e5e5e5] dark:border-[#1f1f1f] bg-white dark:bg-[#171717]">
             {/* Title */}
             <div className="flex items-center gap-2.5">
               {/* Hamburger — mobile only */}

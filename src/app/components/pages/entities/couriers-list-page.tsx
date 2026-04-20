@@ -291,7 +291,7 @@ export const CouriersListPage: React.FC = () => {
   return (
     <>
       <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]" dir="rtl">
-        <div className="shrink-0 h-16 flex items-center justify-between border-b border-[#e5e5e5] bg-white dark:border-[#1f1f1f] dark:bg-[#171717] px-5">
+        <div className="sticky top-0 z-20 shrink-0 h-16 flex items-center justify-between border-b border-[#e5e5e5] bg-white dark:border-[#1f1f1f] dark:bg-[#171717] px-5">
           <div className="flex items-center gap-2.5">
             <button
               onClick={() => (window as any).toggleMobileSidebar?.()}

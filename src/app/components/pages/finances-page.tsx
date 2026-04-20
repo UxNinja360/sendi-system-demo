@@ -5,7 +5,7 @@ import { ShipmentHub } from './finance/shipment-hub';
 export const FinancesPage: React.FC = () => {
   return (
     <div className="flex min-h-screen flex-col bg-[#fafafa] dark:bg-[#0a0a0a]">
-      <div className="flex h-16 shrink-0 items-center justify-between border-b border-[#e5e5e5] bg-white px-5 dark:border-[#1f1f1f] dark:bg-[#171717]">
+      <div className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-[#e5e5e5] bg-white px-5 dark:border-[#1f1f1f] dark:bg-[#171717]">
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => (window as any).toggleMobileSidebar?.()}

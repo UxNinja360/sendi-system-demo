@@ -392,7 +392,7 @@ export const RestaurantsPage: React.FC = () => {
       <div className="flex flex-col h-full overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]" dir="rtl">
 
         {/* Header */}
-        <div className="shrink-0 h-16 flex items-center justify-between px-5 border-b border-[#e5e5e5] dark:border-[#1f1f1f] bg-white dark:bg-[#171717]">
+        <div className="sticky top-0 z-20 shrink-0 h-16 flex items-center justify-between px-5 border-b border-[#e5e5e5] dark:border-[#1f1f1f] bg-white dark:bg-[#171717]">
           <div className="flex items-center gap-2.5">
             <button
               onClick={() => (window as any).toggleMobileSidebar?.()}

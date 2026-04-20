@@ -455,7 +455,7 @@ export const ReportsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a]">
-      <div className="bg-white dark:bg-[#171717] border-b border-[#e5e5e5] dark:border-[#1f1f1f] px-5 h-16 flex items-center justify-between">
+      <div className="sticky top-0 z-20 bg-white dark:bg-[#171717] border-b border-[#e5e5e5] dark:border-[#1f1f1f] px-5 h-16 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <button onClick={() => (window as any).toggleMobileSidebar?.()} className="md:hidden p-1.5 rounded-lg text-[#737373] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors">
             <Menu className="w-5 h-5" />

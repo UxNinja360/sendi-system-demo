@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trash2, Activity } from 'lucide-react';
+import { Activity, Menu, Trash2 } from 'lucide-react';
 import { useDelivery } from '../../context/delivery.context';
 
 const categoryLabels = {
@@ -26,30 +26,28 @@ const categoryClasses = {
 
 export const LogPage: React.FC = () => {
   const { state, dispatch } = useDelivery();
-  const visibleLogs = state.activityLogs.filter(entry => entry.category !== 'navigation');
+  const visibleLogs = state.activityLogs.filter((entry) => entry.category !== 'navigation');
 
   return (
     <div className="min-h-full bg-[#111111] text-[#fafafa]">
-      <div className="border-b border-[#262626] bg-[#171717] px-6 py-5">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#2f2f2f] bg-[#1d1d1d]">
-              <Activity className="h-5 w-5 text-[#9fe870]" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">LOG</h1>
-              <p className="text-sm text-[#a3a3a3]">יומן פעולות המשתמש במערכת</p>
-            </div>
-          </div>
-
+      <div className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-[#e5e5e5] bg-white px-5 dark:border-[#1f1f1f] dark:bg-[#171717]">
+        <div className="flex items-center gap-2.5">
           <button
-            onClick={() => dispatch({ type: 'CLEAR_ACTIVITY_LOGS' })}
-            className="inline-flex items-center gap-2 rounded-xl border border-[#3a3a3a] bg-[#202020] px-4 py-2 text-sm font-medium text-[#fafafa] transition-colors hover:border-[#525252] hover:bg-[#262626]"
+            onClick={() => (window as Window & { toggleMobileSidebar?: () => void }).toggleMobileSidebar?.()}
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-[#525252] transition-colors hover:bg-[#f5f5f5] dark:text-[#a3a3a3] dark:hover:bg-[#262626] md:hidden"
           >
-            <Trash2 className="h-4 w-4" />
-            נקה לוג
+            <Menu className="h-5 w-5" />
           </button>
+          <span className="text-[15px] font-semibold text-[#0d0d12] dark:text-[#fafafa]">יומן פעולות</span>
         </div>
+
+        <button
+          onClick={() => dispatch({ type: 'CLEAR_ACTIVITY_LOGS' })}
+          className="inline-flex items-center gap-2 rounded-xl border border-[#e5e5e5] bg-[#f5f5f5] px-4 py-2 text-sm font-medium text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:border-[#2a2a2a] dark:bg-[#101010] dark:text-[#fafafa] dark:hover:bg-[#171717]"
+        >
+          <Trash2 className="h-4 w-4" />
+          נקה לוג
+        </button>
       </div>
 
       <div className="px-6 py-6">
@@ -79,9 +77,7 @@ export const LogPage: React.FC = () => {
                       <span className="text-xs text-[#737373]">{entry.actionType}</span>
                     </div>
                     <h3 className="mt-3 text-base font-semibold text-[#fafafa]">{entry.title}</h3>
-                    {entry.description ? (
-                      <p className="mt-1 text-sm text-[#a3a3a3]">{entry.description}</p>
-                    ) : null}
+                    {entry.description ? <p className="mt-1 text-sm text-[#a3a3a3]">{entry.description}</p> : null}
                   </div>
 
                   <div className="shrink-0 text-left">
@@ -92,9 +88,7 @@ export const LogPage: React.FC = () => {
                         second: '2-digit',
                       })}
                     </div>
-                    <div className="mt-1 text-xs text-[#737373]">
-                      {entry.timestamp.toLocaleDateString('he-IL')}
-                    </div>
+                    <div className="mt-1 text-xs text-[#737373]">{entry.timestamp.toLocaleDateString('he-IL')}</div>
                   </div>
                 </div>
               </div>
