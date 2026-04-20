@@ -12,6 +12,7 @@ import { DeliveriesPage } from './components/pages/deliveries-page';
 import { AdminMode } from './components/pages/admin-mode';
 import { ReportsPage } from './components/pages/reports-page';
 import { PerformancePage } from './components/pages/performance-page';
+import { LogPage } from './components/pages/log-page';
 import { FinancesPage } from './components/pages/finances-page';
 import { TrackingPage } from './components/pages/tracking-page';
 import { CouriersPage } from './components/pages/entities/couriers-page';
@@ -83,6 +84,10 @@ export const router = createBrowserRouter([
       {
         path: 'performance',
         element: <PerformancePage />,
+      },
+      {
+        path: 'log',
+        element: <LogPage />,
       },
       {
         path: 'finances',

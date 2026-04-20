@@ -1536,8 +1536,20 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
       };
     }
 
+    case 'ADD_ACTIVITY_LOG':
+      return {
+        ...state,
+        activityLogs: [action.payload, ...state.activityLogs].slice(0, 500),
+      };
+
+    case 'CLEAR_ACTIVITY_LOGS':
+      return {
+        ...state,
+        activityLogs: [],
+      };
+
     case 'RESET_SYSTEM':
-        return action.payload;
+          return action.payload;
 
     default:
       return state;

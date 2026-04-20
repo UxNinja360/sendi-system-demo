@@ -73,6 +73,9 @@ export const Breadcrumbs: React.FC = () => {
     else if (path === '/wallet') {
       breadcrumbs.push({ label: 'ארנק', path: '/wallet' });
     }
+    else if (path === '/log') {
+      breadcrumbs.push({ label: 'LOG', path: '/log' });
+    }
     // Entity Management
     else if (path === '/entities') {
       breadcrumbs.push({ label: t('nav.entityManagement'), path: '/entities' });

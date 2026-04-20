@@ -1,6 +1,7 @@
 ﻿import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
 import {
   DayOfWeek,
+  ActivityLogEntry,
   DeliveryState,
   DeliveryAction,
   Delivery,
@@ -658,6 +659,7 @@ const initialState: DeliveryState = {
   shifts: buildInitialShifts(),
   restaurants: RESTAURANTS_DATA,
   customers: CUSTOMERS_DATA,
+  activityLogs: [],
   deliveryBalance: 500, // יתרת משלוחים התחלתית - 500 משלוחים
   stats: {
     hour: { total: 0, delivered: 0, cancelled: 0, revenue: 0 },
@@ -672,6 +674,192 @@ const STORAGE_KEY = 'sendi-delivery-state';
 const LIVE_MANAGER_ON_SHIFT_ONLY_STORAGE_KEY = 'sendi-live-manager-on-shift-only';
 const LIVE_MANAGER_ROUTE_STOP_ORDERS_STORAGE_KEY = 'sendi-live-manager-route-stop-orders';
 const LIVE_MANAGER_COURIER_POSITIONS_STORAGE_KEY = 'sendi-live-manager-courier-positions';
+
+const createActivityLogEntry = (action: DeliveryAction, state: DeliveryState): ActivityLogEntry | null => {
+  const now = new Date();
+  const getDeliveryLabel = (deliveryId: string) =>
+    state.deliveries.find((delivery) => delivery.id === deliveryId)?.orderNumber ?? deliveryId;
+  const getCourierLabel = (courierId: string) =>
+    state.couriers.find((courier) => courier.id === courierId)?.name ?? courierId;
+  const getRestaurantLabel = (restaurantId: string) =>
+    state.restaurants.find((restaurant) => restaurant.id === restaurantId)?.name ?? restaurantId;
+
+  switch (action.type) {
+    case 'TOGGLE_SYSTEM':
+      return {
+        id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: now,
+        title: state.isSystemOpen ? 'המערכת נסגרה' : 'המערכת נפתחה',
+        description: state.isSystemOpen ? 'קבלת משלוחים הופסקה' : 'קבלת משלוחים הופעלה',
+        actionType: action.type,
+        category: 'system',
+      };
+    case 'TOGGLE_AUTO_ASSIGN':
+      return {
+        id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: now,
+        title: state.autoAssignEnabled ? 'שיוך אוטומטי כובה' : 'שיוך אוטומטי הופעל',
+        actionType: action.type,
+        category: 'system',
+      };
+    case 'ADD_DELIVERY':
+      return {
+        id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: now,
+        title: 'משלוח חדש נוצר',
+        description: `${action.payload.orderNumber} · ${action.payload.restaurantName}`,
+        actionType: action.type,
+        category: 'delivery',
+      };
+    case 'ASSIGN_COURIER':
+      return {
+        id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: now,
+        title: 'משלוח שויך לשליח',
+        description: `${getDeliveryLabel(action.payload.deliveryId)} → ${getCourierLabel(action.payload.courierId)}`,
+        actionType: action.type,
+        category: 'delivery',
+      };
+    case 'CANCEL_DELIVERY':
+      return {
+        id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: now,
+        title: 'משלוח בוטל',
+        description: getDeliveryLabel(action.payload),
+        actionType: action.type,
+        category: 'delivery',
+      };
+    case 'UNASSIGN_COURIER':
+      return {
+        id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: now,
+        title: 'שיוך שליח הוסר',
+        description: getDeliveryLabel(action.payload),
+        actionType: action.type,
+        category: 'delivery',
+      };
+    case 'UPDATE_DELIVERY':
+      return {
+        id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: now,
+        title: 'פרטי משלוח עודכנו',
+        description: getDeliveryLabel(action.payload.deliveryId),
+        actionType: action.type,
+        category: 'delivery',
+      };
+    case 'DELETE_DELIVERY':
+      return {
+        id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: now,
+        title: 'משלוח נמחק',
+        description: getDeliveryLabel(action.payload),
+        actionType: action.type,
+        category: 'delivery',
+      };
+    case 'UPDATE_COURIER_STATUS':
+      return {
+        id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: now,
+        title: 'סטטוס שליח עודכן',
+        description: `${getCourierLabel(action.payload.courierId)} → ${action.payload.status}`,
+        actionType: action.type,
+        category: 'courier',
+      };
+    case 'START_COURIER_SHIFT':
+      return {
+        id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: now,
+        title: 'שליח התחיל משמרת',
+        description: getCourierLabel(action.payload.courierId),
+        actionType: action.type,
+        category: 'shift',
+      };
+    case 'END_COURIER_SHIFT':
+      return {
+        id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: now,
+        title: 'שליח סיים משמרת',
+        description: getCourierLabel(action.payload.courierId),
+        actionType: action.type,
+        category: 'shift',
+      };
+    case 'ADD_COURIER':
+      return {
+        id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: now,
+        title: 'שליח חדש נוסף',
+        description: action.payload.name,
+        actionType: action.type,
+        category: 'courier',
+      };
+    case 'REMOVE_COURIER':
+      return {
+        id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: now,
+        title: 'שליח הוסר',
+        description: getCourierLabel(action.payload),
+        actionType: action.type,
+        category: 'courier',
+      };
+    case 'ADD_RESTAURANT':
+      return {
+        id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: now,
+        title: 'מסעדה חדשה נוספה',
+        description: action.payload.name,
+        actionType: action.type,
+        category: 'restaurant',
+      };
+    case 'TOGGLE_RESTAURANT':
+      return {
+        id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: now,
+        title: 'סטטוס מסעדה עודכן',
+        description: getRestaurantLabel(action.payload),
+        actionType: action.type,
+        category: 'restaurant',
+      };
+    case 'UPDATE_RESTAURANT':
+      return {
+        id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: now,
+        title: 'פרטי מסעדה עודכנו',
+        description: getRestaurantLabel(action.payload.restaurantId),
+        actionType: action.type,
+        category: 'restaurant',
+      };
+    case 'ADD_DELIVERY_BALANCE':
+      return {
+        id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: now,
+        title: 'יתרת משלוחים עודכנה',
+        description: `+${action.payload}`,
+        actionType: action.type,
+        category: 'settings',
+      };
+    case 'CREATE_SHIFT_TEMPLATE':
+    case 'UPDATE_SHIFT_TEMPLATE':
+    case 'DELETE_SHIFT_TEMPLATE':
+    case 'CREATE_SHIFT':
+    case 'UPDATE_SHIFT':
+    case 'DELETE_SHIFT':
+    case 'ASSIGN_COURIER_TO_SHIFT':
+    case 'AUTO_ASSIGN_SHIFT':
+    case 'REMOVE_COURIER_FROM_SHIFT':
+    case 'START_SHIFT_ASSIGNMENT':
+    case 'END_SHIFT_ASSIGNMENT':
+      return {
+        id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: now,
+        title: 'פעולת משמרת בוצעה',
+        description: action.type,
+        actionType: action.type,
+        category: 'shift',
+      };
+    default:
+      return null;
+  }
+};
 
 const reviveDates = (value: unknown): unknown => {
   if (Array.isArray(value)) {
@@ -774,7 +962,25 @@ const DeliveryContext = createContext<DeliveryContextType | undefined>(undefined
 
 // Provider
 export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, dispatch] = useReducer(deliveryReducer, initialState, loadInitialState);
+  const [state, rawDispatch] = useReducer(deliveryReducer, initialState, loadInitialState);
+  const stateRef = useRef(state);
+
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  const dispatch = useCallback((action: DeliveryAction) => {
+    rawDispatch(action);
+
+    if (action.type === 'ADD_ACTIVITY_LOG' || action.type === 'CLEAR_ACTIVITY_LOGS' || action.type === 'RESET_SYSTEM') {
+      return;
+    }
+
+    const logEntry = createActivityLogEntry(action, stateRef.current);
+    if (logEntry) {
+      rawDispatch({ type: 'ADD_ACTIVITY_LOG', payload: logEntry });
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -1098,7 +1304,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         for (let i = 0; i < restaurant.deliveryRate; i++) {
           const newDelivery = generateDelivery(restaurant);
           if (newDelivery) {
-            dispatch({ type: 'ADD_DELIVERY', payload: newDelivery });
+            rawDispatch({ type: 'ADD_DELIVERY', payload: newDelivery });
           }
         }
       };
@@ -1118,7 +1324,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         clearTimeout(timer);
       });
     };
-  }, [state.isSystemOpen, state.restaurants, state.timeMultiplier, generateDelivery, dispatch]);
+  }, [state.isSystemOpen, state.restaurants, state.timeMultiplier, generateDelivery, rawDispatch]);
 
   // ×¦×•×•×ª×™× ××•×˜×•×ž×˜×™ (××•×¤×¦×™×•× ×œ×™ - × ×™×ª×Ÿ ×œ×”×¡×™×¨ ×× ×¨×•×¦×™× ×¦×•×•×ª×™× ×™×“× ×™ ×‘×œ×‘×“)
   useEffect(() => {
@@ -1133,7 +1339,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       );
 
       if (pendingDelivery && availableCourier) {
-        dispatch({
+        rawDispatch({
           type: 'ASSIGN_COURIER',
           payload: createAssignCourierPayload(pendingDelivery.id, availableCourier.id),
         });
@@ -1158,7 +1364,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         );
         
         if (availableCourier) {
-          dispatch({
+          rawDispatch({
             type: 'ASSIGN_COURIER',
             payload: createAssignCourierPayload(pendingDelivery.id, availableCourier.id),
           });
@@ -1203,10 +1409,10 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           const pickupStartedAt = delivery.started_pickup ?? delivery.assignedAt;
           const timeSinceAssigned = (now.getTime() - pickupStartedAt.getTime()) / 1000;
           if (timeSinceAssigned >= timeToRestaurantSeconds) {
-            dispatch({
-              type: 'UPDATE_STATUS',
-              payload: {
-                deliveryId: delivery.id,
+              rawDispatch({
+                type: 'UPDATE_STATUS',
+                payload: {
+                  deliveryId: delivery.id,
                 status: 'delivering',
               },
             });
@@ -1221,10 +1427,10 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (isHeadingToCustomer) {
           const timeSincePickup = (now.getTime() - delivery.started_dropoff!.getTime()) / 1000;
           if (timeSincePickup >= timeToCustomerSeconds) {
-            dispatch({
-              type: 'COMPLETE_DELIVERY',
-              payload: delivery.id,
-            });
+              rawDispatch({
+                type: 'COMPLETE_DELIVERY',
+                payload: delivery.id,
+              });
           }
         }
       });

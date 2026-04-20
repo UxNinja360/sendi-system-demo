@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { Activity, CheckCircle, ClipboardList, Clock, Menu, Store, TrendingUp, Users, XCircle } from 'lucide-react';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useDelivery } from '../../context/delivery.context';
+import { useTheme } from '../../context/theme.context';
 
 const openStatuses = ['pending', 'assigned', 'delivering'] as const;
 const ago = (date: Date) => {
@@ -12,8 +13,20 @@ const ago = (date: Date) => {
   return `לפני ${Math.round(minutes / 60)} ש׳`;
 };
 
+const PERIOD_LABELS = {
+  hour: 'שעה',
+  today: 'היום',
+  week: 'שבוע',
+} as const;
+
+const SERIES_LABELS = {
+  completed: 'משלוחים שנמסרו',
+  cancelled: 'משלוחים שבוטלו',
+} as const;
+
 export const Dashboard: React.FC = () => {
   const { state } = useDelivery();
+  const { isDark } = useTheme();
   const navigate = useNavigate();
   const [selectedPeriod, setSelectedPeriod] = React.useState<'hour' | 'today' | 'week'>('hour');
   const [currentTime, setCurrentTime] = React.useState(new Date());
@@ -187,6 +200,48 @@ export const Dashboard: React.FC = () => {
     });
   }, [selectedPeriod, state.deliveries]);
 
+  const chartTooltipContent = React.useCallback(
+    ({
+      active,
+      payload,
+      label,
+    }: {
+      active?: boolean;
+      payload?: Array<{ dataKey?: string; value?: number; color?: string }>;
+      label?: string;
+    }) => {
+      if (!active || !payload?.length) return null;
+
+      return (
+        <div
+          dir="rtl"
+          className={`min-w-[180px] rounded-2xl border px-4 py-3 shadow-2xl ${
+            isDark
+              ? 'border-[#343434] bg-[#171717]/95 text-[#fafafa]'
+              : 'border-[#e5e5e5] bg-white/95 text-[#0d0d12]'
+          }`}
+        >
+          <div className={`mb-3 text-xs font-semibold ${isDark ? 'text-[#d4d4d4]' : 'text-[#525252]'}`}>{label}</div>
+          <div className="space-y-2">
+            {payload.map((item) => {
+              const key = item.dataKey as 'completed' | 'cancelled';
+              return (
+                <div key={key} className="flex items-center justify-between gap-4 text-sm">
+                  <span className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
+                    <span className={isDark ? 'text-[#d4d4d4]' : 'text-[#525252]'}>{SERIES_LABELS[key] ?? key}</span>
+                  </span>
+                  <span className="font-semibold">{item.value ?? 0}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    },
+    [isDark]
+  );
+
   return (
     <div className="min-h-screen bg-[#f5f5f5] dark:bg-[#0a0a0a] flex flex-col">
       <div className="bg-white dark:bg-[#171717] border-b border-[#e5e5e5] dark:border-[#1f1f1f] px-5 h-16 flex items-center justify-between shrink-0">
@@ -235,34 +290,6 @@ export const Dashboard: React.FC = () => {
             })()}
 
               {(() => {
-                const filledBar = totalRestaurants > 0 ? Math.round((activeRestaurantsNow / totalRestaurants) * 20) : 0;
-                return (
-                <div className="bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] p-5 flex flex-col cursor-pointer hover:border-[#c0c0c0] dark:hover:border-[#3a3a3a] transition-all" onClick={() => navigate('/restaurants')}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-medium text-[#888] dark:text-[#a3a3a3] uppercase tracking-wide">מסעדות פעילות</span>
-                    <Store size={15} className="text-[#a3a3a3] dark:text-[#525252]" />
-                  </div>
-                  <div className="mt-2 text-[2.5rem] font-light leading-none text-[#0d0d12] dark:text-[#fafafa] tracking-tight">{activeRestaurantsNow}</div>
-                  <div className="mt-3 flex items-center gap-[3px]">
-                    {Array.from({ length: 20 }, (_, i) => <div key={i} className={`flex-1 h-[3px] rounded-full transition-colors ${i < filledBar ? 'bg-orange-400' : 'bg-[#e5e5e5] dark:bg-[#2a2a2a]'}`} />)}
-                  </div>
-                    <div className="mt-4 space-y-2.5 flex-1">
-                      {[
-                        { dot: 'bg-green-400', label: 'מחוברות', value: activeRestaurants },
-                        { dot: 'bg-red-400', label: 'עמוסות (6+ משלוחים)', value: busyRestaurantsNow.length },
-                      ].map((row) => (
-                      <div key={row.label} className="flex items-center justify-between">
-                        <span className="flex items-center gap-2 text-xs text-[#666d80] dark:text-[#a3a3a3]"><span className={`w-1.5 h-1.5 rounded-full shrink-0 ${row.dot}`} />{row.label}</span>
-                        <span className="text-xs font-semibold text-[#0d0d12] dark:text-[#fafafa]">{row.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <button onClick={(e) => { e.stopPropagation(); navigate('/restaurants'); }} className="mt-4 pt-3 border-t border-[#f0f0f0] dark:border-[#262626] text-xs text-[#9fe870] hover:text-[#8dd960] font-medium text-right transition-colors">צפה בכל המסעדות ←</button>
-                </div>
-              );
-            })()}
-
-              {(() => {
                 const deliveriesPerCourierValue = Number(deliveriesPerOnShiftCourier);
                 const filledBar = Math.min(20, Math.round(deliveriesPerCourierValue * 4));
                 return (
@@ -288,6 +315,34 @@ export const Dashboard: React.FC = () => {
                     ))}
                   </div>
                   <button onClick={(e) => { e.stopPropagation(); navigate('/couriers'); }} className="mt-4 pt-3 border-t border-[#f0f0f0] dark:border-[#262626] text-xs text-[#9fe870] hover:text-[#8dd960] font-medium text-right transition-colors">צפה בכל השליחים ←</button>
+                </div>
+              );
+            })()}
+
+              {(() => {
+                const filledBar = totalRestaurants > 0 ? Math.round((activeRestaurantsNow / totalRestaurants) * 20) : 0;
+                return (
+                <div className="bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] p-5 flex flex-col cursor-pointer hover:border-[#c0c0c0] dark:hover:border-[#3a3a3a] transition-all" onClick={() => navigate('/restaurants')}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-medium text-[#888] dark:text-[#a3a3a3] uppercase tracking-wide">מסעדות פעילות</span>
+                    <Store size={15} className="text-[#a3a3a3] dark:text-[#525252]" />
+                  </div>
+                  <div className="mt-2 text-[2.5rem] font-light leading-none text-[#0d0d12] dark:text-[#fafafa] tracking-tight">{activeRestaurantsNow}</div>
+                  <div className="mt-3 flex items-center gap-[3px]">
+                    {Array.from({ length: 20 }, (_, i) => <div key={i} className={`flex-1 h-[3px] rounded-full transition-colors ${i < filledBar ? 'bg-orange-400' : 'bg-[#e5e5e5] dark:bg-[#2a2a2a]'}`} />)}
+                  </div>
+                    <div className="mt-4 space-y-2.5 flex-1">
+                      {[
+                        { dot: 'bg-green-400', label: 'מחוברות', value: activeRestaurants },
+                        { dot: 'bg-red-400', label: 'עמוסות (6+ משלוחים)', value: busyRestaurantsNow.length },
+                      ].map((row) => (
+                      <div key={row.label} className="flex items-center justify-between">
+                        <span className="flex items-center gap-2 text-xs text-[#666d80] dark:text-[#a3a3a3]"><span className={`w-1.5 h-1.5 rounded-full shrink-0 ${row.dot}`} />{row.label}</span>
+                        <span className="text-xs font-semibold text-[#0d0d12] dark:text-[#fafafa]">{row.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <button onClick={(e) => { e.stopPropagation(); navigate('/restaurants'); }} className="mt-4 pt-3 border-t border-[#f0f0f0] dark:border-[#262626] text-xs text-[#9fe870] hover:text-[#8dd960] font-medium text-right transition-colors">צפה בכל המסעדות ←</button>
                 </div>
               );
             })()}
@@ -330,19 +385,22 @@ export const Dashboard: React.FC = () => {
 
           <div>
             <div className="bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] p-4 md:p-5">
-              <div className="flex items-center justify-between gap-3 mb-4">
-                <div>
-                  <h2 className="text-base md:text-lg font-semibold text-[#0d0d12] dark:text-[#fafafa]">פעילות היום</h2>
-                  <p className="text-sm text-[#666d80] dark:text-[#a3a3a3]">תקציר קצר למעלה, מגמה למטה.</p>
+              <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div className="shrink-0">
+                  <h2 className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">פעילות היום</h2>
                 </div>
-                <div className="inline-flex rounded-xl bg-[#f5f5f5] dark:bg-[#111111] p-1">
+                <div className="inline-flex w-fit rounded-full border border-[#2a2a2a] bg-[#111111] p-1">
                   {(['hour', 'today', 'week'] as const).map((period) => (
                     <button
                       key={period}
                       onClick={() => setSelectedPeriod(period)}
-                      className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${selectedPeriod === period ? 'bg-[#0d0d12] dark:bg-[#fafafa] text-white dark:text-[#0d0d12]' : 'text-[#666d80] dark:text-[#a3a3a3]'}`}
+                      className={`rounded-full px-4 py-2 text-xs font-semibold transition-all ${
+                        selectedPeriod === period
+                          ? 'bg-[#1f1f1f] text-[#fafafa] shadow-sm'
+                          : 'text-[#8b8b8b] hover:bg-[#171717] hover:text-[#fafafa]'
+                      }`}
                     >
-                      {period === 'hour' ? 'שעה' : period === 'today' ? 'היום' : 'שבוע'}
+                      {PERIOD_LABELS[period]}
                     </button>
                   ))}
                 </div>
@@ -351,10 +409,10 @@ export const Dashboard: React.FC = () => {
               <div className="bg-[#fafafa] dark:bg-[#0a0a0a] rounded-xl p-4">
                 <ResponsiveContainer width="100%" height={240}>
                   <LineChart data={getChartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e5" vertical={false} opacity={0.3} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#2a2a2a' : '#e5e5e5'} vertical={false} opacity={0.45} />
                     <XAxis dataKey="name" stroke="transparent" tick={{ fill: '#666d80', fontSize: 12 }} axisLine={false} tickLine={false} dy={8} />
                     <YAxis stroke="transparent" tick={{ fill: '#666d80', fontSize: 12 }} axisLine={false} tickLine={false} width={40} dx={-5} />
-                    <Tooltip contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.98)', border: 'none', borderRadius: '12px', padding: '12px 16px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                    <Tooltip content={chartTooltipContent} cursor={{ stroke: isDark ? '#525252' : '#cfcfcf', strokeWidth: 1 }} />
                     <Line type="natural" dataKey="completed" stroke="#9fe870" strokeWidth={3} dot={false} activeDot={{ r: 7, fill: '#9fe870', stroke: '#fff', strokeWidth: 3 }} />
                     <Line type="natural" dataKey="cancelled" stroke="#ea0b0b" strokeWidth={3} dot={false} activeDot={{ r: 7, fill: '#ea0b0b', stroke: '#fff', strokeWidth: 3 }} />
                   </LineChart>

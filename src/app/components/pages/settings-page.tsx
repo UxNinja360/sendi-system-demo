@@ -2,17 +2,13 @@ import React from 'react';
 import {
   AlertTriangle,
   ChevronLeft,
-  Clock3,
-  DollarSign,
   Globe,
   LogOut,
-  MapPin,
   Menu,
   Monitor,
   Moon,
   Palette,
   RotateCcw,
-  Settings,
   Sparkles,
   Sun,
   Users,
@@ -135,14 +131,31 @@ const SectionCard: React.FC<{
   title: string;
   description: string;
   children: React.ReactNode;
-}> = ({ icon, title, description, children }) => (
-  <div className="overflow-hidden rounded-2xl border border-[#e5e5e5] bg-white dark:border-[#1f1f1f] dark:bg-[#171717]">
-    <div className="border-b border-[#e5e5e5] bg-[#fafafa] px-4 py-3 dark:border-[#1f1f1f] dark:bg-[#111111]">
+  danger?: boolean;
+}> = ({ icon, title, description, children, danger = false }) => (
+  <div
+    className={`overflow-hidden rounded-2xl border ${
+      danger
+        ? 'border-red-200 bg-red-50/50 dark:border-red-500/20 dark:bg-red-500/5'
+        : 'border-[#e5e5e5] bg-white dark:border-[#1f1f1f] dark:bg-[#171717]'
+    }`}
+  >
+    <div
+      className={`border-b px-4 py-3 ${
+        danger
+          ? 'border-red-200 bg-red-50 dark:border-red-500/20 dark:bg-red-500/10'
+          : 'border-[#e5e5e5] bg-[#fafafa] dark:border-[#1f1f1f] dark:bg-[#111111]'
+      }`}
+    >
       <div className="flex items-center gap-2">
         {icon}
-        <span className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">{title}</span>
+        <span className={`text-sm font-semibold ${danger ? 'text-red-700 dark:text-red-300' : 'text-[#0d0d12] dark:text-[#fafafa]'}`}>
+          {title}
+        </span>
       </div>
-      <div className="mt-1 text-xs text-[#666d80] dark:text-[#a3a3a3]">{description}</div>
+      <div className={`mt-1 text-xs ${danger ? 'text-red-600/80 dark:text-red-300/75' : 'text-[#666d80] dark:text-[#a3a3a3]'}`}>
+        {description}
+      </div>
     </div>
     {children}
   </div>
@@ -187,31 +200,6 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
 
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-3 py-3 md:px-5 md:py-5">
-
-          <SectionCard
-            icon={<Settings className="h-4 w-4 text-[#16a34a] dark:text-[#9fe870]" />}
-            title={TEXT.operations}
-            description={TEXT.operationsDescription}
-          >
-            <SettingRow
-              icon={<Clock3 className="h-4 w-4" />}
-              title={TEXT.operatingHours}
-              hint={TEXT.operatingHoursHint}
-              control={<OpenButton onClick={() => navigate('/settings/hours')} />}
-            />
-            <SettingRow
-              icon={<MapPin className="h-4 w-4" />}
-              title={TEXT.zones}
-              hint={TEXT.zonesHint}
-              control={<OpenButton onClick={() => navigate('/settings/zones')} />}
-            />
-            <SettingRow
-              icon={<DollarSign className="h-4 w-4" />}
-              title={TEXT.distancePricing}
-              hint={TEXT.distancePricingHint}
-              control={<OpenButton onClick={() => navigate('/settings/distance-pricing')} />}
-            />
-          </SectionCard>
 
           <SectionCard
             icon={<UserCog className="h-4 w-4 text-[#16a34a] dark:text-[#9fe870]" />}
@@ -273,9 +261,9 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
           </SectionCard>
 
           <SectionCard
-            icon={<AlertTriangle className="h-4 w-4 text-red-500" />}
-            title={TEXT.advanced}
-            description={TEXT.advancedDescription}
+            icon={<LogOut className="h-4 w-4 text-[#16a34a] dark:text-[#9fe870]" />}
+            title={TEXT.logout}
+            description={TEXT.logoutHint}
           >
             <SettingRow
               icon={<LogOut className="h-4 w-4" />}
@@ -292,6 +280,14 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
                 </button>
               }
             />
+          </SectionCard>
+
+          <SectionCard
+            icon={<AlertTriangle className="h-4 w-4 text-red-500" />}
+            title={TEXT.reset}
+            description={TEXT.resetHint}
+            danger
+          >
             <SettingRow
               icon={<AlertTriangle className="h-4 w-4" />}
               title={TEXT.reset}
