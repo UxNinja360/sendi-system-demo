@@ -25,11 +25,11 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-[#f0fdf4] via-[#fafafa] to-[#ecfccb] dark:from-[#0a0a0a] dark:via-[#0f1410] dark:to-[#0a0a0a] flex items-center justify-center p-4">
+    <div className="min-h-[100dvh] w-full bg-gradient-to-br from-[#f0fdf4] via-[#fafafa] to-[#ecfccb] dark:from-[#0a0a0a] dark:via-[#0f1410] dark:to-[#0a0a0a] flex items-center justify-center p-4 sm:p-6">
       {authStep === 'phone' ? (
         <LoginPhone onSubmit={handlePhoneSubmit} />
       ) : (
-        <LoginOtp phoneNumber={phoneNumber} onSubmit={handleOtpSubmit} onBack={handleBack} />
+        <LoginOtp phone={phoneNumber} onSubmit={handleOtpSubmit} onBack={handleBack} />
       )}
     </div>
   );
