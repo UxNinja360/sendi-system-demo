@@ -1,25 +1,39 @@
 ﻿import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { Download, FileSpreadsheet, FileText, Filter, GripVertical, Menu, MoreVertical, Package, Phone, Plus, Power, Search, Sparkles, Star, Trash2, User, X, Clock, LogOut, SlidersHorizontal } from 'lucide-react';
+import { FileSpreadsheet, FileText, Filter, Menu, Package, Phone, Plus, Power, Star, Trash2, User, X, Clock, LogOut, SlidersHorizontal, Search, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
+import { ListInfoBar } from '../../common/list-info-bar';
 import { useDelivery } from '../../../context/delivery.context';
 import { Courier } from '../../../types/delivery.types';
+import {
+  EntityActionMenu,
+  EntityActionMenuDivider,
+  EntityActionMenuHeader,
+  EntityActionMenuItem,
+  EntityActionMenuOverlay,
+} from './entity-action-menu';
 import { ColumnSelector } from '../../deliveries/column-selector';
 import { CouriersInlineFilters } from './couriers-inline-filters';
+import { EntityExportDrawer } from './entity-export-drawer';
+import { EntityExportButton } from './entity-export-button';
+import { exportRowsToExcel } from './entity-export-utils';
+import { EntityEmptyState, EntityNoResultsState } from './entity-empty-state';
+import { EntityRowActionTrigger } from './entity-row-action-trigger';
+import { EntitySidePanel } from './entity-side-panel';
+import { EntitySidePanelHeader } from './entity-side-panel-header';
+import { EntityTableHeaderCell } from './entity-table-header-cell';
+import {
+  EntityTableActionsCell,
+  EntityTableHeaderCheckbox,
+  EntityTableRowCheckbox,
+  EntityTableShell,
+} from './entity-table-shell';
 import { CouriersToolbar } from './couriers-toolbar';
 import {
-  ENTITY_TABLE_ACTIONS_BODY_CLASS,
   ENTITY_TABLE_ACTIONS_HEAD_CLASS,
-  ENTITY_TABLE_CHECKBOX_BODY_CLASS,
-  ENTITY_TABLE_CHECKBOX_BODY_LABEL_CLASS,
-  ENTITY_TABLE_CHECKBOX_HEAD_CLASS,
-  ENTITY_TABLE_CHECKBOX_HEAD_LABEL_CLASS,
   ENTITY_TABLE_DATA_CELL_CLASS,
-  ENTITY_TABLE_HEAD_CLASS,
-  ENTITY_TABLE_HEADER_CELL_BASE_CLASS,
+  ENTITY_TABLE_ROW_CLASS,
   ENTITY_TABLE_WIDTHS,
 } from './entity-table-shared';
 
@@ -37,6 +51,7 @@ const TEXT = {
     '\u05de\u05e9\u05de\u05e8\u05ea',
     '\u05d6\u05de\u05d9\u05e0\u05d5\u05ea',
     '\u05e1\u05d5\u05d2 \u05e8\u05db\u05d1',
+    '\u05e9\u05d9\u05d8\u05ea \u05d4\u05e2\u05e1\u05e7\u05d4',
     '\u05d8\u05dc\u05e4\u05d5\u05df',
     '\u05d3\u05d9\u05e8\u05d5\u05d2',
     '\u05e1\u05da \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
@@ -60,6 +75,7 @@ const TEXT = {
   fullName: '\u05e9\u05dd \u05de\u05dc\u05d0',
   enterFullName: '\u05d4\u05d6\u05df \u05e9\u05dd \u05de\u05dc\u05d0',
   vehicleType: '\u05e1\u05d5\u05d2 \u05e8\u05db\u05d1',
+  employmentType: '\u05e9\u05d9\u05d8\u05ea \u05d4\u05e2\u05e1\u05e7\u05d4',
   phone: '\u05d8\u05dc\u05e4\u05d5\u05df',
   enterPhone: '\u05d4\u05d6\u05df \u05de\u05e1\u05e4\u05e8 \u05d8\u05dc\u05e4\u05d5\u05df',
   cancel: '\u05d1\u05d9\u05d8\u05d5\u05dc',
@@ -73,6 +89,7 @@ const COURIER_COLUMNS = [
   { id: 'shift', label: 'משמרת' },
   { id: 'availability', label: 'זמינות' },
   { id: 'vehicleType', label: 'סוג רכב' },
+  { id: 'employmentType', label: 'שיטת העסקה' },
   { id: 'phone', label: 'טלפון' },
   { id: 'rating', label: 'דירוג' },
   { id: 'totalDeliveries', label: 'סך משלוחים' },
@@ -96,12 +113,24 @@ const COURIER_COLUMN_CATEGORIES = [
     label: 'פרופיל',
     columns: [
       { id: 'vehicleType', label: 'סוג רכב' },
+      { id: 'employmentType', label: 'שיטת העסקה' },
       { id: 'phone', label: 'טלפון' },
       { id: 'rating', label: 'דירוג' },
       { id: 'totalDeliveries', label: 'סך משלוחים' },
     ],
   },
 ] as const;
+type SortableCourierColumnId =
+  | 'name'
+  | 'connection'
+  | 'shift'
+  | 'availability'
+  | 'vehicleType'
+  | 'employmentType'
+  | 'phone'
+  | 'rating'
+  | 'totalDeliveries'
+  | 'currentDelivery';
 
 const getCourierColumnWidth = (columnId: (typeof COURIER_COLUMNS)[number]['id']) => {
   switch (columnId) {
@@ -114,6 +143,8 @@ const getCourierColumnWidth = (columnId: (typeof COURIER_COLUMNS)[number]['id'])
     case 'availability':
       return ENTITY_TABLE_WIDTHS.sm;
     case 'vehicleType':
+      return ENTITY_TABLE_WIDTHS.sm;
+    case 'employmentType':
       return ENTITY_TABLE_WIDTHS.sm;
     case 'phone':
       return ENTITY_TABLE_WIDTHS.phone;
@@ -140,6 +171,8 @@ export const CouriersListPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'busy' | 'offline'>('all');
   const [deliveryFilter, setDeliveryFilter] = useState<'all' | 'with_delivery' | 'without_delivery'>('all');
   const [sortBy, setSortBy] = useState<'name' | 'rating' | 'deliveries' | 'status'>('name');
+  const [sortColumn, setSortColumn] = useState<SortableCourierColumnId>('name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [newCourier, setNewCourier] = useState<{ name: string; phone: string; vehicleType: Courier['vehicleType'] }>({
     name: '',
     phone: '',
@@ -161,25 +194,25 @@ export const CouriersListPage: React.FC = () => {
   });
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; courier: Courier } | null>(null);
   const [selectedCourierIds, setSelectedCourierIds] = useState<Set<string>>(new Set());
-  const contextMenuRef = useRef<HTMLDivElement>(null);
-
-  // Close context menu on outside click or Escape
-  useEffect(() => {
-    if (!contextMenu) return;
-    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setContextMenu(null); };
-    const handleClick = (e: MouseEvent) => {
-      if (contextMenuRef.current && !contextMenuRef.current.contains(e.target as Node)) setContextMenu(null);
-    };
-    window.addEventListener('keydown', handleKey);
-    window.addEventListener('pointerdown', handleClick);
-    return () => { window.removeEventListener('keydown', handleKey); window.removeEventListener('pointerdown', handleClick); };
-  }, [contextMenu]);
 
   useEffect(() => {
     try {
       localStorage.setItem(COURIER_VISIBLE_COLUMNS_KEY, JSON.stringify(Array.from(visibleColumns)));
     } catch {}
   }, [visibleColumns]);
+
+  useEffect(() => {
+    const mappedColumn: SortableCourierColumnId =
+      sortBy === 'rating'
+        ? 'rating'
+        : sortBy === 'deliveries'
+          ? 'totalDeliveries'
+          : sortBy === 'status'
+            ? 'connection'
+            : 'name';
+    setSortColumn(mappedColumn);
+    setSortDirection('asc');
+  }, [sortBy]);
 
   const filteredCouriers = useMemo(() => {
     let filtered = state.couriers;
@@ -207,27 +240,76 @@ export const CouriersListPage: React.FC = () => {
       });
     }
 
+    const direction = sortDirection === 'asc' ? 1 : -1;
+    const connectionOrder = { available: 0, busy: 1, offline: 2 };
+    const shiftValue = (courier: Courier) => (courier.isOnShift ? 1 : 0);
+    const availabilityValue = (courier: Courier) => {
+      if (courier.status === 'busy') return 0;
+      if (courier.status === 'offline' || !courier.isOnShift) return 2;
+      return 1;
+    };
+
     return [...filtered].sort((a, b) => {
-      if (sortBy === 'name') {
-        return a.name.localeCompare(b.name, 'he');
+      switch (sortColumn) {
+        case 'name':
+          return a.name.localeCompare(b.name, 'he') * direction;
+        case 'connection':
+          return (connectionOrder[a.status] - connectionOrder[b.status]) * direction;
+        case 'shift':
+          return (shiftValue(a) - shiftValue(b)) * direction;
+        case 'availability':
+          return (availabilityValue(a) - availabilityValue(b)) * direction;
+        case 'vehicleType':
+          return a.vehicleType.localeCompare(b.vehicleType, 'he') * direction;
+        case 'employmentType':
+          return a.employmentType.localeCompare(b.employmentType, 'he') * direction;
+        case 'phone':
+          return a.phone.localeCompare(b.phone, 'he') * direction;
+        case 'rating':
+          return (a.rating - b.rating) * direction;
+        case 'totalDeliveries':
+          return (a.totalDeliveries - b.totalDeliveries) * direction;
+        case 'currentDelivery': {
+          const aDelivery = state.deliveries.find(
+            delivery =>
+              delivery.courierId === a.id &&
+              delivery.status !== 'delivered' &&
+              delivery.status !== 'cancelled',
+          );
+          const bDelivery = state.deliveries.find(
+            delivery =>
+              delivery.courierId === b.id &&
+              delivery.status !== 'delivered' &&
+              delivery.status !== 'cancelled',
+          );
+          const aValue = aDelivery?.orderNumber ?? '';
+          const bValue = bDelivery?.orderNumber ?? '';
+          return aValue.localeCompare(bValue, 'he') * direction;
+        }
+        default:
+          return 0;
       }
-      if (sortBy === 'rating') {
-        return b.rating - a.rating;
-      }
-      if (sortBy === 'deliveries') {
-        return b.totalDeliveries - a.totalDeliveries;
-      }
-      if (sortBy === 'status') {
-        const statusOrder = { available: 0, busy: 1, offline: 2 };
-        return statusOrder[a.status] - statusOrder[b.status];
-      }
-      return 0;
     });
-  }, [deliveryFilter, searchQuery, sortBy, state.couriers, state.deliveries, statusFilter]);
+  }, [deliveryFilter, searchQuery, sortColumn, sortDirection, state.couriers, state.deliveries, statusFilter]);
   const visibleCourierColumns = useMemo(
     () => COURIER_COLUMNS.filter((column) => visibleColumns.has(column.id)),
     [visibleColumns],
   );
+
+  const handleCourierSort = (columnId: SortableCourierColumnId) => {
+    if (sortColumn === columnId) {
+      setSortDirection((current) => (current === 'asc' ? 'desc' : 'asc'));
+      return;
+    }
+
+    setSortColumn(columnId);
+    setSortDirection('asc');
+
+    if (columnId === 'name') setSortBy('name');
+    if (columnId === 'rating') setSortBy('rating');
+    if (columnId === 'totalDeliveries') setSortBy('deliveries');
+    if (columnId === 'connection') setSortBy('status');
+  };
 
   const stats = useMemo(
     () => ({
@@ -312,6 +394,8 @@ export const CouriersListPage: React.FC = () => {
             : 'פנוי';
       case 'vehicleType':
         return courier.vehicleType;
+      case 'employmentType':
+        return courier.employmentType;
       case 'phone':
         return courier.phone;
       case 'rating':
@@ -350,20 +434,11 @@ export const CouriersListPage: React.FC = () => {
       return row;
     });
 
-    const worksheet = XLSX.utils.json_to_sheet(rows, { skipHeader: false });
-    const workbook = XLSX.utils.book_new();
-    workbook.Workbook = {
-      Views: [{ RTL: true }],
-    };
-
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'שליחים');
-
-    const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([buffer], {
-      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    exportRowsToExcel({
+      rows,
+      sheetName: 'שליחים',
+      fileName: `שליחים_${format(new Date(), 'dd-MM-yyyy_HH-mm')}.xlsx`,
     });
-
-    saveAs(blob, `שליחים_${format(new Date(), 'dd-MM-yyyy_HH-mm')}.xlsx`);
     setIsExportOpen(false);
     toast.success(`יוצאו ${couriersToExport.length} שליחים ל-Excel`);
   };
@@ -399,6 +474,7 @@ export const CouriersListPage: React.FC = () => {
       name: newCourier.name.trim(),
       phone: newCourier.phone.trim(),
       vehicleType: newCourier.vehicleType,
+      employmentType: 'פר משלוח',
       status: 'available',
       isOnShift: false,
       shiftStartedAt: null,
@@ -417,6 +493,10 @@ export const CouriersListPage: React.FC = () => {
   const handleModalClose = () => {
     setIsModalOpen(false);
     setNewCourier({ name: '', phone: '', vehicleType: 'אופנוע' });
+  };
+
+  const closeCourierActionsMenu = () => {
+    setContextMenu(null);
   };
 
   const toggleCourierPower = (courierId: string, currentStatus: string) => {
@@ -440,7 +520,7 @@ export const CouriersListPage: React.FC = () => {
   };
 
   const handleToggleShift = (courier: Courier) => {
-    setContextMenu(null);
+    closeCourierActionsMenu();
     if (courier.status === 'offline') {
       toast.error(`אי אפשר להתחיל משמרת ל${courier.name} כשהוא לא מחובר`);
       return;
@@ -456,7 +536,7 @@ export const CouriersListPage: React.FC = () => {
 
   const handleRemoveCourier = (courier: Courier, event: React.MouseEvent) => {
     event.stopPropagation();
-    setContextMenu(null);
+    closeCourierActionsMenu();
 
     if (courier.activeDeliveryIds.length > 0) {
       toast.error(TEXT.cannotDelete);
@@ -540,6 +620,12 @@ export const CouriersListPage: React.FC = () => {
             <span className="whitespace-nowrap text-xs text-[#666d80] dark:text-[#a3a3a3]">{courier.vehicleType}</span>
           </td>
         );
+      case 'employmentType':
+        return (
+          <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
+            <span className="whitespace-nowrap text-xs text-[#666d80] dark:text-[#a3a3a3]">{courier.employmentType}</span>
+          </td>
+        );
       case 'phone':
         return (
           <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
@@ -578,33 +664,15 @@ export const CouriersListPage: React.FC = () => {
         );
       case 'actions':
         return (
-          <td key={columnId} className={ENTITY_TABLE_ACTIONS_BODY_CLASS}>
-            <div className="flex justify-center gap-1">
-              <button
-                onClick={event => {
-                  event.stopPropagation();
-                  toggleCourierPower(courier.id, courier.status);
-                }}
-                className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all ${
-                  courier.status !== 'offline'
-                    ? 'bg-[#ecfae2] text-[#16a34a] hover:bg-[#dcf5d2] dark:bg-[#163300] dark:text-[#9fe870] dark:hover:bg-[#1f4500]'
-                    : 'bg-[#f5f5f5] text-[#737373] hover:bg-[#e5e5e5] dark:bg-[#262626] dark:text-[#a3a3a3] dark:hover:bg-[#404040]'
-                }`}
-                title={courier.status === 'offline' ? TEXT.activateCourier : TEXT.disableCourier}
-              >
-                <Power className="h-3.5 w-3.5" />
-              </button>
-              <div className="relative">
-                <button
-                  onClick={event => openCourierActionsMenu(courier, event)}
-                  className="inline-flex items-center justify-center rounded-lg p-1.5 text-[#737373] transition-colors hover:bg-[#f5f5f5] dark:text-[#a3a3a3] dark:hover:bg-[#262626]"
-                  title={TEXT.more}
-                >
-                  <MoreVertical className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
-          </td>
+          <EntityTableActionsCell key={columnId}>
+            <EntityRowActionTrigger
+              onClick={event => {
+                event.stopPropagation();
+                openCourierActionsMenu(courier, event);
+              }}
+              title={TEXT.more}
+            />
+          </EntityTableActionsCell>
         );
       default:
         return null;
@@ -614,55 +682,29 @@ export const CouriersListPage: React.FC = () => {
   return (
     <>
       <div className="flex flex-row h-full overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]" dir="ltr">
-        <div className={`shrink-0 transition-[width] duration-200 overflow-hidden border-l border-[#e5e5e5] dark:border-[#1f1f1f] ${(isExportOpen || columnsOpen) ? 'w-[380px]' : 'w-0'}`}>
-          <div className="w-[380px] h-full flex flex-col bg-white dark:bg-[#0a0a0a]" dir="rtl">
+        <EntitySidePanel isOpen={isExportOpen || columnsOpen}>
             {isExportOpen && (
-              <>
-                <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-[#e5e5e5] dark:border-[#262626] bg-[#fafafa] dark:bg-[#141414]">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-[#0d0d12] dark:text-[#fafafa]" />
-                    <span className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">ייצוא</span>
-                  </div>
-                  <button onClick={() => setIsExportOpen(false)} className="p-1.5 hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] rounded-lg transition-colors">
-                    <X className="w-4 h-4 text-[#737373] dark:text-[#a3a3a3]" />
-                  </button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                  <button
-                    type="button"
-                    onClick={handleExportVisibleCouriers}
-                    className="w-full text-right rounded-2xl border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#0f0f0f] p-4 transition-all hover:border-[#9fe870]/50 hover:bg-[#f8fff2] dark:hover:bg-[#11180c]"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-xl bg-[#9fe870]/15 text-[#6bc84a]">
-                        <FileSpreadsheet className="h-5 w-5" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">ייצוא טבלת השליחים</div>
-                        <div className="mt-1 text-xs text-[#737373] dark:text-[#a3a3a3]">Excel עם העמודות המוצגות כרגע בטבלה</div>
-                        <div className="mt-3 flex items-center gap-2 text-[11px] text-[#a3a3a3]">
-                          <span>{selectedCourierIds.size > 0 ? selectedCourierIds.size : filteredCouriers.length} שליחים</span>
-                          <span>•</span>
-                          <span>{visibleCourierColumns.filter((column) => column.id !== 'actions').length} עמודות</span>
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                </div>
-              </>
+              <EntityExportDrawer
+                onClose={() => setIsExportOpen(false)}
+                actions={[
+                  {
+                    id: 'visible-couriers',
+                    title: 'ייצוא טבלת השליחים',
+                    description: 'Excel עם העמודות המוצגות כרגע בטבלה',
+                    meta: `${selectedCourierIds.size > 0 ? selectedCourierIds.size : filteredCouriers.length} שליחים · ${visibleCourierColumns.filter((column) => column.id !== 'actions').length} עמודות`,
+                    icon: <FileSpreadsheet className="h-5 w-5" />,
+                    onClick: handleExportVisibleCouriers,
+                  },
+                ]}
+              />
             )}
             {columnsOpen && (
               <>
-                <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-[#e5e5e5] dark:border-[#262626] bg-[#fafafa] dark:bg-[#141414]">
-                  <div className="flex items-center gap-2">
-                    <SlidersHorizontal className="w-4 h-4 text-[#0d0d12] dark:text-[#fafafa]" />
-                    <span className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">עמודות</span>
-                  </div>
-                  <button onClick={() => setColumnsOpen(false)} className="p-1.5 hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] rounded-lg transition-colors">
-                    <X className="w-4 h-4 text-[#737373] dark:text-[#a3a3a3]" />
-                  </button>
-                </div>
+                <EntitySidePanelHeader
+                  icon={<SlidersHorizontal className="w-4 h-4" />}
+                  title="עמודות"
+                  onClose={() => setColumnsOpen(false)}
+                />
                 <ColumnSelector
                   visibleColumns={visibleColumns}
                   setVisibleColumns={setVisibleColumns}
@@ -677,8 +719,7 @@ export const CouriersListPage: React.FC = () => {
                 />
               </>
             )}
-          </div>
-        </div>
+        </EntitySidePanel>
 
         <div className="flex-1 min-w-0 overflow-hidden flex flex-col" dir="rtl">
         <div className="sticky top-0 z-20 shrink-0 h-16 flex items-center justify-between border-b border-[#e5e5e5] bg-white dark:border-[#1f1f1f] dark:bg-[#171717] px-5">
@@ -731,152 +772,89 @@ export const CouriersListPage: React.FC = () => {
               onViewModeChange={setViewMode}
               onToggleColumns={() => { setColumnsOpen(true); setIsExportOpen(false); }}
             />
-            <button
-              type="button"
-              onClick={() => { setIsExportOpen((v) => !v); setColumnsOpen(false); }}
-              className="h-9 flex items-center gap-1.5 px-3 rounded-[4px] border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] text-sm font-medium text-[#525252] dark:text-[#a3a3a3] hover:bg-[#f5f5f5] dark:hover:bg-[#202020] transition-colors"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">ייצוא</span>
-            </button>
-          </div>
+              <EntityExportButton onClick={() => { setIsExportOpen((v) => !v); setColumnsOpen(false); }} />
+            </div>
 
-          <div className="shrink-0 px-4 py-1 border-b border-[#e5e5e5] dark:border-[#1f1f1f] bg-white dark:bg-[#171717]">
-            <span className="text-xs text-[#a3a3a3] dark:text-[#737373]">
-              {filteredCouriers.length} שליחים
-            </span>
-          </div>
+          <ListInfoBar>{filteredCouriers.length} שליחים</ListInfoBar>
 
           {viewMode === 'list' ? (
             <div className="flex-1 min-h-0 flex flex-col">
               {filteredCouriers.length === 0 ? (
                 <div className="bg-white dark:bg-[#171717]">
                   {state.couriers.length === 0 ? (
-                    /* No couriers at all */
-                    <div className="flex flex-col items-center justify-center py-20 px-4">
-                      <div className="relative">
-                        <div className="w-24 h-24 bg-gradient-to-br from-[#9fe870]/20 to-[#9fe870]/5 rounded-2xl flex items-center justify-center mb-6">
-                          <User className="w-12 h-12 text-[#9fe870]" />
-                        </div>
-                        <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-[#9fe870] to-[#8ed960] rounded-full flex items-center justify-center shadow-lg">
-                          <Sparkles className="w-4 h-4 text-white" />
-                        </div>
-                      </div>
-                      <h3 className="text-xl font-bold text-[#0d0d12] dark:text-[#fafafa] mb-2">
-                        טרם נוספו שליחים
-                      </h3>
-                      <p className="text-sm text-[#737373] dark:text-[#a3a3a3] text-center max-w-md mb-6">
-                        כאשר יתווספו שליחים למערכת, הם יופיעו כאן עם כל הפרטים והאפשרויות לניהול מתקדם
-                      </p>
-                      <div className="flex items-center gap-2 px-4 py-2 bg-[#f5f5f5] dark:bg-[#0a0a0a] rounded-lg border border-[#e5e5e5] dark:border-[#262626]">
-                        <div className="w-2 h-2 bg-[#9fe870] rounded-full animate-pulse" />
-                        <span className="text-xs text-[#737373] dark:text-[#a3a3a3]">
-                          המערכת מוכנה לקבלת שליחים חדשים
-                        </span>
-                      </div>
-                    </div>
+                    <EntityEmptyState
+                      icon={<User className="h-12 w-12 text-[#9fe870]" />}
+                      title="טרם נוספו שליחים"
+                      description="כאשר יתווספו שליחים למערכת, הם יופיעו כאן עם כל הפרטים והאפשרויות לניהול מתקדם"
+                      footerText="המערכת מוכנה לקבלת שליחים חדשים"
+                    />
                   ) : (
-                    /* Filters/search returned nothing */
-                    <div className="flex flex-col items-center justify-center py-20 px-4">
-                      <div className="relative">
-                        <div className="w-24 h-24 bg-gradient-to-br from-amber-500/20 to-amber-500/5 rounded-2xl flex items-center justify-center mb-6">
-                          <Search className="w-12 h-12 text-amber-500" />
-                        </div>
-                      </div>
-                      <h3 className="text-xl font-bold text-[#0d0d12] dark:text-[#fafafa] mb-2">
-                        לא נמצאו תוצאות
-                      </h3>
-                      <p className="text-sm text-[#737373] dark:text-[#a3a3a3] text-center max-w-md mb-4">
-                        {searchQuery ? `לא נמצאו שליחים לחיפוש "${searchQuery}"` : 'הפילטרים שבחרת לא מצאו שליחים תואמים'}
-                      </p>
-                      <button
-                        onClick={handleClearAll}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-l from-[#9fe870] to-[#8ed960] text-[#0d0d12] rounded-xl text-sm font-medium hover:from-[#8ed960] hover:to-[#7dc850] transition-all shadow-lg shadow-[#9fe870]/30"
-                      >
-                        <Filter className="w-4 h-4" />
-                        נקה את כל הפילטרים
-                      </button>
-                    </div>
+                    <EntityNoResultsState
+                      description={searchQuery ? `לא נמצאו שליחים לחיפוש "${searchQuery}"` : 'הפילטרים שבחרת לא מצאו שליחים תואמים'}
+                      onClearAll={handleClearAll}
+                    />
                   )}
                 </div>
               ) : (
-                <div className="overflow-auto relative flex-1">
-                  <table className="w-full" role="grid" aria-label="טבלת שליחים">
+                <EntityTableShell
+                  ariaLabel="טבלת שליחים"
+                  colgroup={
                     <colgroup>
                       <col style={{ width: ENTITY_TABLE_WIDTHS.checkbox }} />
                       {visibleCourierColumns.map((column) => (
                         <col key={column.id} style={{ width: getCourierColumnWidth(column.id) }} />
                       ))}
                     </colgroup>
-                    <thead className={ENTITY_TABLE_HEAD_CLASS}>
-                      <tr>
-                        <th className={ENTITY_TABLE_CHECKBOX_HEAD_CLASS}>
-                          <label
-                            className={ENTITY_TABLE_CHECKBOX_HEAD_LABEL_CLASS}
-                            style={{ touchAction: 'manipulation' }}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={allVisibleCouriersSelected}
-                              ref={(el) => { if (el) el.indeterminate = someVisibleCouriersSelected && !allVisibleCouriersSelected; }}
-                              onChange={handleToggleSelectAllCouriers}
-                              className="h-4 w-4 cursor-pointer rounded border-[#d4d4d4] text-[#16a34a] accent-[#16a34a] focus:ring-[#16a34a] focus:ring-offset-0 dark:border-[#404040]"
-                            />
-                          </label>
-                        </th>
-                        {visibleCourierColumns.map(column => (
+                  }
+                  headerRow={
+                    <tr>
+                      <EntityTableHeaderCheckbox
+                        checked={allVisibleCouriersSelected}
+                        indeterminate={someVisibleCouriersSelected}
+                        onChange={handleToggleSelectAllCouriers}
+                      />
+                      {visibleCourierColumns.map((column) => (
+                        column.id === 'actions' ? (
                           <th
                             key={column.id}
-                            className={`${ENTITY_TABLE_HEADER_CELL_BASE_CLASS} ${column.id === 'actions' ? ENTITY_TABLE_ACTIONS_HEAD_CLASS : 'pr-2 pl-2'}`}
+                            className={`${ENTITY_TABLE_ACTIONS_HEAD_CLASS} ${column.id === 'actions' ? '' : 'pr-2 pl-2'}`}
                           >
-                            {column.id === 'actions' ? (
-                              <span className="sr-only">{column.label}</span>
-                            ) : (
-                              <div className="flex items-center gap-1">
-                                <span className="whitespace-nowrap text-xs font-medium text-[#666d80] dark:text-[#a3a3a3]">
-                                  {column.label}
-                                </span>
-                                <GripVertical className="h-3 w-3 shrink-0 cursor-grab text-[#d4d4d4] opacity-0 transition-opacity group-hover/col:opacity-100 active:cursor-grabbing dark:text-[#404040]" />
-                              </div>
-                            )}
+                            <span className="sr-only">{column.label}</span>
                           </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredCouriers.map(courier => {
-                        const currentDelivery = getCurrentDelivery(courier.id);
+                        ) : (
+                          <EntityTableHeaderCell
+                          key={column.id}
+                            label={column.label}
+                            onSort={() => handleCourierSort(column.id as SortableCourierColumnId)}
+                            sortDirection={sortColumn === column.id ? sortDirection : null}
+                          />
+                        )
+                      ))}
+                    </tr>
+                  }
+                >
+                  {filteredCouriers.map((courier) => {
+                    const currentDelivery = getCurrentDelivery(courier.id);
 
-                        return (
-                          <tr
-                            key={courier.id}
-                            onClick={() => navigate(`/courier/${courier.id}`)}
-                            onContextMenu={(e) => {
-                              e.preventDefault();
-                              setContextMenu({ x: e.clientX, y: e.clientY, courier });
-                            }}
-                            className="cursor-pointer border-b border-[#f5f5f5] bg-white transition-colors hover:bg-[#fafafa] dark:border-[#1f1f1f] dark:bg-[#171717] dark:hover:bg-[#111111]"
-                          >
-                            <td className={ENTITY_TABLE_CHECKBOX_BODY_CLASS} onClick={event => event.stopPropagation()}>
-                              <label
-                                className={ENTITY_TABLE_CHECKBOX_BODY_LABEL_CLASS}
-                                style={{ touchAction: 'manipulation' }}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={selectedCourierIds.has(courier.id)}
-                                  onChange={() => handleToggleSelectCourier(courier.id)}
-                                  className="h-4 w-4 cursor-pointer rounded border-[#d4d4d4] text-[#16a34a] accent-[#16a34a] focus:ring-[#16a34a] focus:ring-offset-0 dark:border-[#404040]"
-                                />
-                              </label>
-                            </td>
-                            {visibleCourierColumns.map((column) => renderCourierCell(column.id, courier, currentDelivery))}
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                    return (
+                      <tr
+                        key={courier.id}
+                        onClick={() => navigate(`/courier/${courier.id}`)}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          setContextMenu({ x: e.clientX, y: e.clientY, courier });
+                        }}
+                        className={ENTITY_TABLE_ROW_CLASS}
+                      >
+                        <EntityTableRowCheckbox
+                          checked={selectedCourierIds.has(courier.id)}
+                          onChange={() => handleToggleSelectCourier(courier.id)}
+                        />
+                        {visibleCourierColumns.map((column) => renderCourierCell(column.id, courier, currentDelivery))}
+                      </tr>
+                    );
+                  })}
+                </EntityTableShell>
               )}
             </div>
           ) : (
@@ -983,13 +961,10 @@ export const CouriersListPage: React.FC = () => {
                           <span>{courier.status === 'offline' ? TEXT.activate : TEXT.disable}</span>
                         </button>
                         <div className="relative self-end sm:self-auto">
-                          <button
+                          <EntityRowActionTrigger
                             onClick={event => openCourierActionsMenu(courier, event)}
-                            className="inline-flex items-center justify-center rounded-lg p-2 text-[#737373] transition-colors hover:bg-[#f5f5f5] dark:text-[#a3a3a3] dark:hover:bg-[#262626]"
                             title={TEXT.more}
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </button>
+                          />
                         </div>
                       </div>
                     </div>
@@ -1077,71 +1052,79 @@ export const CouriersListPage: React.FC = () => {
       )}
 
       {/* Right-click context menu */}
-      {contextMenu && (
-        <div
-          ref={contextMenuRef}
-          className="fixed z-50 min-w-[180px] bg-white dark:bg-[#1a1a1a] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl shadow-2xl overflow-hidden py-1"
-          style={{ top: contextMenu.y, left: contextMenu.x }}
-          onPointerDown={(e) => e.stopPropagation()}
-        >
-          {/* שם השליח */}
-          <div className="px-3 py-2 border-b border-[#f5f5f5] dark:border-[#262626] mb-1">
-            <p className="text-xs font-semibold text-[#0d0d12] dark:text-[#fafafa] truncate">{contextMenu.courier.name}</p>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              {contextMenu.courier.status === 'offline' ? (
-                <span className="text-[11px] font-medium text-[#737373] dark:text-[#a3a3a3]">לא מחובר</span>
-              ) : contextMenu.courier.status === 'busy' ? (
-                <span className="text-[11px] font-medium text-[#f97316] dark:text-[#ffa94d]">במשלוח</span>
-              ) : (
-                <span className="text-[11px] font-medium text-[#16a34a] dark:text-[#9fe870]">זמין לקבלת משלוחים</span>
-              )}
-              <span className="text-[10px] text-[#525252] dark:text-[#737373]">·</span>
-              <span className={`text-[11px] font-medium ${contextMenu.courier.isOnShift ? 'text-[#a78bfa] dark:text-[#c4b5fd]' : 'text-[#737373] dark:text-[#525252]'}`}>
-                {contextMenu.courier.isOnShift ? 'במשמרת' : 'לא במשמרת'}
-              </span>
-            </div>
-          </div>
-
-          {/* פרטים מלאים */}
-          <button
-            onClick={() => { setContextMenu(null); navigate(`/courier/${contextMenu.courier.id}`); }}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-[#0d0d12] dark:text-[#fafafa] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors"
+      <EntityActionMenuOverlay
+        open={Boolean(contextMenu)}
+        position={contextMenu ? { x: contextMenu.x, y: contextMenu.y } : null}
+        onClose={closeCourierActionsMenu}
+      >
+        {contextMenu && (
+          <EntityActionMenu
+            style={{ top: contextMenu.y, left: contextMenu.x }}
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
           >
-            <FileText className="w-3.5 h-3.5 text-[#737373] dark:text-[#a3a3a3]" />
-            פרטים מלאים
-          </button>
+            <EntityActionMenuHeader
+              title={contextMenu.courier.name}
+              subtitle={
+                <div className="flex items-center gap-1.5">
+                {contextMenu.courier.status === 'offline' ? (
+                  <span className="text-[11px] font-medium text-[#737373] dark:text-[#a3a3a3]">לא מחובר</span>
+                ) : contextMenu.courier.status === 'busy' ? (
+                  <span className="text-[11px] font-medium text-[#f97316] dark:text-[#ffa94d]">במשלוח</span>
+                ) : (
+                  <span className="text-[11px] font-medium text-[#16a34a] dark:text-[#9fe870]">זמין לקבלת משלוחים</span>
+                )}
+                <span className="text-[10px] text-[#525252] dark:text-[#737373]">·</span>
+                <span className={`text-[11px] font-medium ${contextMenu.courier.isOnShift ? 'text-[#a78bfa] dark:text-[#c4b5fd]' : 'text-[#737373] dark:text-[#525252]'}`}>
+                  {contextMenu.courier.isOnShift ? 'במשמרת' : 'לא במשמרת'}
+                </span>
+                </div>
+              }
+            />
 
-          {/* התחל / סיים משמרת */}
-          <button
-            onClick={() => handleToggleShift(contextMenu.courier)}
-            disabled={!contextMenu.courier.isOnShift && contextMenu.courier.status === 'offline'}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-[#0d0d12] dark:text-[#fafafa] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {contextMenu.courier.isOnShift ? (
-              <>
-                <LogOut className="w-3.5 h-3.5 text-[#f97316]" />
-                סיים משמרת
-              </>
-            ) : (
-              <>
-                <Clock className="w-3.5 h-3.5 text-[#16a34a] dark:text-[#9fe870]" />
-                התחל משמרת
-              </>
-            )}
-          </button>
+            <EntityActionMenuItem
+              onClick={() => { closeCourierActionsMenu(); navigate(`/courier/${contextMenu.courier.id}`); }}
+              icon={<FileText className="w-3.5 h-3.5 text-[#737373] dark:text-[#a3a3a3]" />}
+            >
+              פרטים מלאים
+            </EntityActionMenuItem>
 
-          <div className="border-t border-[#f5f5f5] dark:border-[#262626] my-1" />
+            <EntityActionMenuItem
+              onClick={() => {
+                toggleCourierPower(contextMenu.courier.id, contextMenu.courier.status);
+                closeCourierActionsMenu();
+              }}
+              icon={<Power className="w-3.5 h-3.5 text-[#16a34a] dark:text-[#9fe870]" />}
+            >
+              {contextMenu.courier.status === 'offline' ? TEXT.activateCourier : TEXT.disableCourier}
+            </EntityActionMenuItem>
 
-          {/* מחק שליח */}
-          <button
-            onClick={(e) => { handleRemoveCourier(contextMenu.courier, e); setContextMenu(null); }}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            מחק שליח
-          </button>
-        </div>
-      )}
+            <EntityActionMenuItem
+              onClick={() => handleToggleShift(contextMenu.courier)}
+              disabled={!contextMenu.courier.isOnShift && contextMenu.courier.status === 'offline'}
+              icon={
+                contextMenu.courier.isOnShift ? (
+                  <LogOut className="w-3.5 h-3.5 text-[#f97316]" />
+                ) : (
+                  <Clock className="w-3.5 h-3.5 text-[#16a34a] dark:text-[#9fe870]" />
+                )
+              }
+            >
+              {contextMenu.courier.isOnShift ? 'סיים משמרת' : 'התחל משמרת'}
+            </EntityActionMenuItem>
+
+            <EntityActionMenuDivider />
+
+            <EntityActionMenuItem
+              onClick={(e) => handleRemoveCourier(contextMenu.courier, e)}
+              icon={<Trash2 className="w-3.5 h-3.5" />}
+              danger
+            >
+              מחק שליח
+            </EntityActionMenuItem>
+          </EntityActionMenu>
+        )}
+      </EntityActionMenuOverlay>
     </>
   );
 };

@@ -13,6 +13,11 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  TABLE_ACTIONS_BODY_BASE_CLASS,
+  TABLE_CHECKBOX_BODY_CLASS,
+  TABLE_CHECKBOX_LABEL_CLASS,
+} from '../common/table-ui';
 import { ALL_COLUMNS, CUSTOM_COLUMN_IDS, COLUMN_MAP } from './column-defs';
 import type { ColumnDef } from './column-defs';
 import { STATUS_CONFIG, ALL_STATUSES } from './status-config';
@@ -79,11 +84,11 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
   const config = STATUS_CONFIG[delivery.status];
   const StatusIcon = config.icon;
 
-  const stickyBg = isDrawerTarget
-    ? 'bg-[#dcfce7] dark:bg-[#14532d]'
+  const actionsCellBg = isDrawerTarget
+    ? 'bg-[#dcfce7]/50 dark:bg-[#14532d]/30'
     : isSelected
-      ? 'bg-[#dbeafe] dark:bg-[#1e3a8a]'
-      : 'bg-white dark:bg-[#171717]';
+      ? 'bg-[#dbeafe]/50 dark:bg-[#1e3a8a]/20'
+      : 'bg-transparent group-hover:bg-[#fafafa] dark:group-hover:bg-[#0a0a0a]';
 
   // Row height configuration
   const rowHeightConfig = {
@@ -205,7 +210,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
         setContextMenuPos({ x: e.clientX, y: e.clientY });
         setMenuOpen(true);
       }}
-      className={`border-b border-[#e5e5e5] dark:border-[#262626] last:border-b-0 transition-colors ${
+      className={`group border-b border-[#e5e5e5] dark:border-[#262626] last:border-b-0 transition-colors ${
         isDrawerTarget
           ? 'bg-[#dcfce7]/50 dark:bg-[#14532d]/30'
           : isSelected
@@ -214,9 +219,9 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
       }`}
     >
       {/* Checkbox */}
-      <td className="pr-4 pl-0" onClick={(e) => e.stopPropagation()}>
+      <td className={TABLE_CHECKBOX_BODY_CLASS} onClick={(e) => e.stopPropagation()}>
         <label
-          className="flex items-center justify-start min-h-[42px] cursor-pointer touch-manipulation"
+          className={TABLE_CHECKBOX_LABEL_CLASS}
           style={{ touchAction: 'manipulation' }}
         >
           <input
@@ -257,7 +262,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
       })}
 
       {/* Actions column */}
-      <td className={`relative px-1 ${heightClasses.py} w-10 text-center ${stickyBg}`} onClick={(e) => e.stopPropagation()}>
+      <td className={`${TABLE_ACTIONS_BODY_BASE_CLASS} ${heightClasses.py} ${actionsCellBg}`} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-end gap-0.5" data-no-row-click>
           {/* Quick actions — visible on row hover */}
           <button

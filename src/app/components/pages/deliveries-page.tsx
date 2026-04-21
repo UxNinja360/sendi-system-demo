@@ -7,11 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  Download,
-  FileDown,
-  Menu,
   AlignVerticalSpaceAround,
-  Plus,
   Package,
   Columns3,
   ChevronDown,
@@ -24,14 +20,18 @@ import {
 import { format as formatDate } from 'date-fns';
 import { he } from 'date-fns/locale';
 import { NewDeliveryDialog } from '../deliveries/new-delivery-dialog';
-import { ExportDrawer } from '../deliveries/export-drawer';
 import { DeliveryTableHeader } from '../deliveries/delivery-table-header';
 import { DeliveryTableRow } from '../deliveries/delivery-table-row';
 import { DeliveryDetailSidePanel } from '../deliveries/delivery-detail-side-panel';
 import { DeliveryEditDialog } from '../deliveries/delivery-edit-dialog';
+import { DeliveriesToolbarActions } from '../deliveries/deliveries-toolbar-actions';
+import { DeliveriesPageHeader } from '../deliveries/deliveries-page-header';
+import { DeliveriesPeriodControls } from '../deliveries/deliveries-period-controls';
+import { DeliveriesSearchControl } from '../deliveries/deliveries-search-control';
+import { DeliveriesSidePanel } from '../deliveries/deliveries-side-panel';
+import { DeliveriesDesktopFilters } from '../deliveries/deliveries-desktop-filters';
 import { STATUS_LABELS, DEFAULT_VISIBLE_COLUMNS } from '../deliveries/status-config';
 import { ALL_COLUMNS, COLUMN_MAP } from '../deliveries/column-defs';
-import { ColumnSelector } from '../deliveries/column-selector';
 import type { ColumnDef } from '../deliveries/column-defs';
 import { EnhancedEmptyState } from '../deliveries/enhanced-empty-state';
 import type { RowHeight } from '../deliveries/row-height-selector';
@@ -39,7 +39,8 @@ import { RowHeightSelector } from '../deliveries/row-height-selector';
 import { toast } from 'sonner';
 import { useDeliveriesFilters } from '../../hooks/useDeliveriesFilters';
 import { useDeliveriesExport } from '../../hooks/useDeliveriesExport';
-import { PeriodToolbar, PeriodMode } from '../ui/period-toolbar';
+import type { PeriodMode } from '../ui/period-toolbar';
+import { ListInfoBar } from '../common/list-info-bar';
 
 // פונקציה לחישוב זמן שנותר — נדרש עבור DeliveryTableRow
 const calculateTimeRemaining = (delivery: Delivery): number | null => {
@@ -545,90 +546,37 @@ export const DeliveriesPage: React.FC = () => {
     <>
       <div className="flex flex-row h-full overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]" dir="ltr">
 
-        {/* ── LEFT: Columns / Export side panel ── */}
-        <div className={`shrink-0 transition-[width] duration-200 overflow-hidden border-l border-[#e5e5e5] dark:border-[#1f1f1f] ${(exportOpen || columnsOpen) ? 'w-[380px]' : 'w-0'}`}>
-          <div className="w-[380px] h-full flex flex-col bg-white dark:bg-[#0a0a0a]" dir="rtl">
-
-            {/* Export panel */}
-            {exportOpen && (<>
-              <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-[#e5e5e5] dark:border-[#262626] bg-[#fafafa] dark:bg-[#141414]">
-                <div className="flex items-center gap-2">
-                  <FileDown className="w-4 h-4 text-[#0d0d12] dark:text-[#fafafa]" />
-                  <span className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">ייצוא</span>
-                </div>
-                <button onClick={() => setExportOpen(false)} className="p-1.5 hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] rounded-lg transition-colors">
-                  <X className="w-4 h-4 text-[#737373] dark:text-[#a3a3a3]" />
-                </button>
-              </div>
-              <ExportDrawer
-                isOpen={exportOpen}
-                isEmbedded={true}
-                onClose={() => setExportOpen(false)}
-                onExport={(config) => { handleUnifiedExport(config); setExportOpen(false); }}
-                visibleColumns={visibleColumns}
-                deliveryCount={filteredStats.total}
-                selectedCount={selectedIds.size}
-                groupCounts={reportGroupCounts}
-              />
-            </>)}
-
-            {/* Columns panel */}
-            {columnsOpen && (<>
-              <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-[#e5e5e5] dark:border-[#262626] bg-[#fafafa] dark:bg-[#141414]">
-                <div className="flex items-center gap-2">
-                  <SlidersHorizontal className="w-4 h-4 text-[#0d0d12] dark:text-[#fafafa]" />
-                  <span className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">עמודות</span>
-                </div>
-                <button onClick={() => setColumnsOpen(false)} className="p-1.5 hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] rounded-lg transition-colors">
-                  <X className="w-4 h-4 text-[#737373] dark:text-[#a3a3a3]" />
-                </button>
-              </div>
-              <ColumnSelector
-                visibleColumns={visibleColumns}
-                setVisibleColumns={setVisibleColumns}
-                isOpen={columnsOpen}
-                setIsOpen={setColumnsOpen}
-                isEmbedded={true}
-              />
-            </>)}
-
-          </div>
-        </div>
+        <DeliveriesSidePanel
+          exportOpen={exportOpen}
+          columnsOpen={columnsOpen}
+          onCloseExport={() => setExportOpen(false)}
+          onCloseColumns={() => setColumnsOpen(false)}
+          setColumnsOpen={setColumnsOpen}
+          onExport={(config) => {
+            handleUnifiedExport(config);
+            setExportOpen(false);
+          }}
+          visibleColumns={visibleColumns}
+          setVisibleColumns={setVisibleColumns}
+          deliveryCount={filteredStats.total}
+          selectedCount={selectedIds.size}
+          groupCounts={reportGroupCounts}
+        />
 
         {/* ── CENTER: Main content ── */}
         <div className="flex-1 min-w-0 overflow-hidden flex flex-col" dir="rtl">
 
-          {/* ── Header: Title + New delivery ── */}
-          <div className="sticky top-0 z-20 shrink-0 h-16 flex items-center justify-between px-5 border-b border-[#e5e5e5] dark:border-[#1f1f1f] bg-white dark:bg-[#171717]">
-            {/* Title */}
-            <div className="flex items-center gap-2.5">
-              {/* Hamburger — mobile only */}
-              <button
-                onClick={() => (window as any).toggleMobileSidebar?.()}
-                className="md:hidden p-1.5 rounded-lg text-[#737373] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
-                <span className="text-[15px] font-semibold text-[#0d0d12] dark:text-[#fafafa]">משלוחים</span>
-              {filteredDeliveries.length > 0 && (
-                <span className="text-sm text-[#a3a3a3] tabular-nums">{filteredDeliveries.length.toLocaleString()}</span>
-              )}
-            </div>
-
-            {/* New delivery */}
-            <button
-              onClick={() => setNewDeliveryOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-[#9fe870] hover:bg-[#8dd960] text-[#0d0d12] transition-colors"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              משלוח חדש
-            </button>
-          </div>
+          <DeliveriesPageHeader
+            totalCount={filteredDeliveries.length}
+            onOpenNewDelivery={() => setNewDeliveryOpen(true)}
+            onToggleMobileSidebar={() => (window as any).toggleMobileSidebar?.()}
+          />
 
           {/* ── Combined toolbar ── */}
           <div className="shrink-0 flex items-center gap-1.5 px-3 py-2.5 border-b border-[#e5e5e5] dark:border-[#1f1f1f] bg-white dark:bg-[#171717] flex-wrap">
 
             {/* Period controls — month nav + clickable label that opens date-range popover */}
+            {false && (
             <div className="flex items-center gap-1 relative" ref={datePickerRef}>
               {periodMode !== 'custom_range' && (
                 <button
@@ -752,8 +700,31 @@ export const DeliveriesPage: React.FC = () => {
                 );
               })()}
             </div>
+            )}
+            <DeliveriesPeriodControls
+              periodMode={periodMode}
+              setPeriodMode={setPeriodMode}
+              monthAnchor={monthAnchor}
+              setMonthAnchor={setMonthAnchor}
+              datePickerOpen={datePickerOpen}
+              setDatePickerOpen={setDatePickerOpen}
+              datePickerRef={datePickerRef}
+              calendarMonth={calendarMonth}
+              setCalendarMonth={setCalendarMonth}
+              hoverDate={hoverDate}
+              setHoverDate={setHoverDate}
+              pickingStart={pickingStart}
+              setPickingStart={setPickingStart}
+              customStartDate={customStartDate}
+              setCustomStartDate={setCustomStartDate}
+              customEndDate={customEndDate}
+              setCustomEndDate={setCustomEndDate}
+              setDateRange={setDateRange}
+              setCurrentPage={setCurrentPage}
+            />
 
             {/* Search */}
+            {false && (
             <div className="hidden relative flex items-center">
               {searchOpen ? (
                 <div className="flex items-center gap-1">
@@ -790,9 +761,67 @@ export const DeliveriesPage: React.FC = () => {
                 </button>
               )}
             </div>
+            )}
+            <DeliveriesSearchControl
+              searchOpen={searchOpen}
+              setSearchOpen={setSearchOpen}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+            />
+            <DeliveriesDesktopFilters
+              statusRef={statusRef}
+              branchRef={branchRef}
+              areaRef={areaRef}
+              restaurantRef={restaurantRef}
+              courierRef={courierRef}
+              statusOpen={statusOpen}
+              setStatusOpen={setStatusOpen}
+              branchOpen={branchOpen}
+              setBranchOpen={setBranchOpen}
+              areaOpen={areaOpen}
+              setAreaOpen={setAreaOpen}
+              restaurantOpen={restaurantOpen}
+              setRestaurantOpen={setRestaurantOpen}
+              courierOpen={courierOpen}
+              setCourierOpen={setCourierOpen}
+              setDateOpen={setDateOpen}
+              setColumnsOpen={setColumnsOpen}
+              statusFilters={statusFilters}
+              setStatusFilters={setStatusFilters}
+              toggleStatusFilter={toggleStatusFilter}
+              statusCounts={statusCounts}
+              statusChipConfig={STATUS_CHIP_CONFIG}
+              selectedBranches={selectedBranches}
+              setSelectedBranches={setSelectedBranches}
+              toggleBranch={toggleBranch}
+              branchOptions={branchOptions}
+              branchSearch={branchSearch}
+              setBranchSearch={setBranchSearch}
+              selectedAreas={selectedAreas}
+              setSelectedAreas={setSelectedAreas}
+              toggleArea={toggleArea}
+              areaOptions={areaOptions}
+              areaSearch={areaSearch}
+              setAreaSearch={setAreaSearch}
+              selectedRestaurants={selectedRestaurants}
+              setSelectedRestaurants={setSelectedRestaurants}
+              toggleRestaurant={toggleRestaurant}
+              restaurantOptions={restaurantOptions}
+              restaurantSearch={restaurantSearch}
+              setRestaurantSearch={setRestaurantSearch}
+              selectedCouriers={selectedCouriers}
+              setSelectedCouriers={setSelectedCouriers}
+              toggleCourier={toggleCourier}
+              courierOptions={courierOptions}
+              courierSearch={courierSearch}
+              setCourierSearch={setCourierSearch}
+              setCurrentPage={setCurrentPage}
+            />
 
 
             {/* Desktop filters — hidden on mobile */}
+            {false && (
+              <>
             <div className="hidden md:contents">
 
             {false && (
@@ -1199,6 +1228,8 @@ export const DeliveriesPage: React.FC = () => {
             </div>
 
             </div>{/* end hidden md:contents */}
+              </>
+            )}
 
             {/* Mobile only: Filters button */}
             <button
@@ -1219,79 +1250,36 @@ export const DeliveriesPage: React.FC = () => {
             {/* Spacer */}
             <div className="flex-1" />
 
-            {/* Search */}
-            <div className="relative flex items-center" ref={searchRef}>
-              {searchOpen ? (
-                <div className="flex items-center gap-1">
-                  <div className="relative">
-                    <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#a3a3a3] pointer-events-none" />
-                    <input
-                      autoFocus
-                      type="text"
-                      placeholder="חפש משלוח..."
-                      value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
-                      className="w-48 h-9 pr-8 pl-6 bg-[#f5f5f5] dark:bg-[#262626] border border-transparent focus:border-[#9fe870]/50 rounded-[4px] text-sm text-[#0d0d12] dark:text-[#fafafa] placeholder-[#a3a3a3] outline-none transition-all"
-                    />
-                    {searchQuery && (
-                      <button onClick={() => setSearchQuery('')} className="absolute left-2 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-[#e5e5e5] dark:hover:bg-[#262626] transition-colors">
-                        <X className="w-3 h-3 text-[#a3a3a3]" />
-                      </button>
-                    )}
-                  </div>
-                  <button onClick={() => { setSearchOpen(false); setSearchQuery(''); }} className="p-1 rounded hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors">
-                    <X className="w-3.5 h-3.5 text-[#a3a3a3]" />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setSearchOpen(true)}
-                  className={`flex items-center justify-center w-9 h-9 rounded-[4px] border text-sm font-medium transition-colors ${
-                    searchQuery
-                      ? 'bg-[#9fe870]/15 border-[#9fe870]/40 text-[#6bc84a]'
-                      : 'bg-white dark:bg-[#171717] border-[#e5e5e5] dark:border-[#262626] text-[#525252] dark:text-[#a3a3a3] hover:bg-[#f5f5f5] dark:hover:bg-[#202020]'
-                  }`}
-                >
-                  <Search className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-
-
-
-
-            {/* Columns visibility */}
-            <div className="relative">
-              <button
-                onClick={() => { setColumnsOpen(v => !v); if (!columnsOpen) setExportOpen(false); setDateOpen(false); setStatusOpen(false); setCourierOpen(false); setRestaurantOpen(false); setBranchOpen(false); }}
-                className={`h-9 flex items-center gap-1.5 px-3 rounded-[4px] border text-sm font-medium transition-colors ${
-                  columnsOpen
-                    ? 'bg-[#f5f5f5] dark:bg-[#262626] border-[#e5e5e5] dark:border-[#262626] text-[#0d0d12] dark:text-[#fafafa]'
-                    : 'bg-white dark:bg-[#171717] border-[#e5e5e5] dark:border-[#262626] text-[#525252] dark:text-[#a3a3a3] hover:bg-[#f5f5f5] dark:hover:bg-[#202020]'
-                }`}
-                title="הצג/הסתר עמודות"
-              >
-                <Columns3 className="w-3.5 h-3.5" />
-                <span>עמודות</span>
-              </button>
-            </div>
-
-            {/* Export */}
-            <button
-              onClick={() => { setExportOpen(true); setColumnsOpen(false); }}
-              className="h-9 flex items-center gap-1.5 px-3 rounded-[4px] border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] text-sm font-medium text-[#525252] dark:text-[#a3a3a3] hover:bg-[#f5f5f5] dark:hover:bg-[#202020] transition-colors"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">ייצוא</span>
-            </button>
+            <DeliveriesToolbarActions
+              searchRef={searchRef}
+              searchOpen={searchOpen}
+              searchQuery={searchQuery}
+              columnsOpen={columnsOpen}
+              onSearchQueryChange={setSearchQuery}
+              onOpenSearch={() => setSearchOpen(true)}
+              onCloseSearch={() => {
+                setSearchOpen(false);
+                setSearchQuery('');
+              }}
+              onClearSearch={() => setSearchQuery('')}
+              onToggleColumns={() => {
+                setColumnsOpen((value) => !value);
+                if (!columnsOpen) setExportOpen(false);
+                setDateOpen(false);
+                setStatusOpen(false);
+                setCourierOpen(false);
+                setRestaurantOpen(false);
+                setBranchOpen(false);
+              }}
+              onOpenExport={() => {
+                setExportOpen(true);
+                setColumnsOpen(false);
+              }}
+            />
           </div>
 
           {/* ── Summary strip ── */}
-          <div className="shrink-0 px-4 py-1 border-b border-[#e5e5e5] dark:border-[#1f1f1f] bg-white dark:bg-[#171717]">
-            <span className="text-xs text-[#a3a3a3] dark:text-[#737373]">
-              {filteredDeliveries.length} משלוחים
-            </span>
-          </div>
+          <ListInfoBar>{filteredDeliveries.length} משלוחים</ListInfoBar>
 
           {/* ── Mobile Filters Bottom Sheet ── */}
           {mobileFiltersOpen && (

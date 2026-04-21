@@ -34,7 +34,6 @@ import {
   Map,
   Palette,
   User,
-  UserCog,
   Wallet,
   // icons
 } from 'lucide-react';
@@ -149,7 +148,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
       return location.pathname === menuPath;
     }
     // Support for separate pages
-    if (menuPath === '/deliveries' || menuPath === '/couriers' || menuPath === '/couriers/shifts' || menuPath === '/restaurants' || menuPath === '/customers' || menuPath === '/settings/zones' || menuPath === '/settings/distance-pricing' || menuPath === '/settings/hours' || menuPath === '/settings/managers' || menuPath === '/wallet' || menuPath === '/log') {
+    if (menuPath === '/deliveries' || menuPath === '/couriers' || menuPath === '/couriers/shifts' || menuPath === '/restaurants' || menuPath === '/customers' || menuPath === '/zones' || menuPath === '/distance-pricing' || menuPath === '/hours' || menuPath === '/wallet' || menuPath === '/log') {
       return location.pathname === menuPath;
     }
     // /data pages removed - no longer needed
@@ -440,34 +439,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
             )}
           </div>
 
-          {/* מנהלים */}
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNav('/settings/managers');
-            }}
-            className={`
-              mx-2 mb-1 rounded-lg cursor-pointer transition-all duration-200 relative
-              ${location.pathname === '/settings/managers'
-                ? 'bg-[#f5f5f5] dark:bg-[#262626] text-[#16a34a] dark:text-[#22c55e]'
-                : 'text-[#737373] dark:text-[#a3a3a3] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a] hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
-              }
-            `}
-          >
-            {!isCollapsed || !isDesktop ? (
-              <div className="flex items-center gap-3 px-4 py-2.5">
-                <UserCog size={19} className="shrink-0 stroke-[1.8px]" />
-                <span className="text-sm font-medium truncate">מנהלים</span>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center py-2.5" title="מנהלים">
-                <UserCog size={19} className="stroke-[1.8px]" />
-              </div>
-            )}
-          </div>
-
-          <div className="my-2 mx-4 border-t border-[#e5e5e5] dark:border-[#262626]" />
-
           {/* משמרות */}
           <div
             onClick={(e) => {
@@ -490,6 +461,86 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
             ) : (
               <div className="flex items-center justify-center py-2.5" title="משמרות">
                 <Calendar size={19} className="stroke-[1.8px]" />
+              </div>
+            )}
+          </div>
+
+          <div className="my-2 mx-4 border-t border-[#e5e5e5] dark:border-[#262626]" />
+
+          {/* אזורי משלוח */}
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              handleNav('/zones');
+            }}
+            className={`
+              mx-2 mb-1 rounded-lg cursor-pointer transition-all duration-200 relative
+              ${location.pathname === '/zones'
+                ? 'bg-[#f5f5f5] dark:bg-[#262626] text-[#16a34a] dark:text-[#22c55e]'
+                : 'text-[#737373] dark:text-[#a3a3a3] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a] hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
+              }
+            `}
+          >
+            {!isCollapsed || !isDesktop ? (
+              <div className="flex items-center gap-3 px-4 py-2.5">
+                <Map size={19} className="shrink-0 stroke-[1.8px]" />
+                <span className="text-sm font-medium truncate">אזורי משלוח</span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center py-2.5" title="אזורי משלוח">
+                <Map size={19} className="stroke-[1.8px]" />
+              </div>
+            )}
+          </div>
+
+          {/* תמחור לפי מרחק */}
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              handleNav('/distance-pricing');
+            }}
+            className={`
+              mx-2 mb-1 rounded-lg cursor-pointer transition-all duration-200 relative
+              ${location.pathname === '/distance-pricing'
+                ? 'bg-[#f5f5f5] dark:bg-[#262626] text-[#16a34a] dark:text-[#22c55e]'
+                : 'text-[#737373] dark:text-[#a3a3a3] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a] hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
+              }
+            `}
+          >
+            {!isCollapsed || !isDesktop ? (
+              <div className="flex items-center gap-3 px-4 py-2.5">
+                <Ruler size={19} className="shrink-0 stroke-[1.8px]" />
+                <span className="text-sm font-medium truncate">תמחור לפי מרחק</span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center py-2.5" title="תמחור לפי מרחק">
+                <Ruler size={19} className="stroke-[1.8px]" />
+              </div>
+            )}
+          </div>
+
+          {/* שעות פעילות */}
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              handleNav('/hours');
+            }}
+            className={`
+              mx-2 mb-1 rounded-lg cursor-pointer transition-all duration-200 relative
+              ${location.pathname === '/hours'
+                ? 'bg-[#f5f5f5] dark:bg-[#262626] text-[#16a34a] dark:text-[#22c55e]'
+                : 'text-[#737373] dark:text-[#a3a3a3] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a] hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
+              }
+            `}
+          >
+            {!isCollapsed || !isDesktop ? (
+              <div className="flex items-center gap-3 px-4 py-2.5">
+                <Clock size={19} className="shrink-0 stroke-[1.8px]" />
+                <span className="text-sm font-medium truncate">שעות פעילות</span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center py-2.5" title="שעות פעילות">
+                <Clock size={19} className="stroke-[1.8px]" />
               </div>
             )}
           </div>
@@ -547,88 +598,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
               </div>
             )}
           </div>
-
-          <div className="my-2 mx-4 border-t border-[#e5e5e5] dark:border-[#262626]" />
-
-          {/* אזורי משלוח */}
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNav('/settings/zones');
-            }}
-            className={`
-              mx-2 mb-1 rounded-lg cursor-pointer transition-all duration-200 relative
-              ${location.pathname === '/settings/zones'
-                ? 'bg-[#f5f5f5] dark:bg-[#262626] text-[#16a34a] dark:text-[#22c55e]'
-                : 'text-[#737373] dark:text-[#a3a3a3] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a] hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
-              }
-            `}
-          >
-            {!isCollapsed || !isDesktop ? (
-              <div className="flex items-center gap-3 px-4 py-2.5">
-                <Map size={19} className="shrink-0 stroke-[1.8px]" />
-                <span className="text-sm font-medium truncate">אזורי משלוח</span>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center py-2.5" title="אזורי משלוח">
-                <Map size={19} className="stroke-[1.8px]" />
-              </div>
-            )}
-          </div>
-
-          {/* תמחור לפי מרחק */}
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNav('/settings/distance-pricing');
-            }}
-            className={`
-              mx-2 mb-1 rounded-lg cursor-pointer transition-all duration-200 relative
-              ${location.pathname === '/settings/distance-pricing'
-                ? 'bg-[#f5f5f5] dark:bg-[#262626] text-[#16a34a] dark:text-[#22c55e]'
-                : 'text-[#737373] dark:text-[#a3a3a3] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a] hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
-              }
-            `}
-          >
-            {!isCollapsed || !isDesktop ? (
-              <div className="flex items-center gap-3 px-4 py-2.5">
-                <Ruler size={19} className="shrink-0 stroke-[1.8px]" />
-                <span className="text-sm font-medium truncate">תמחור לפי מרחק</span>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center py-2.5" title="תמחור לפי מרחק">
-                <Ruler size={19} className="stroke-[1.8px]" />
-              </div>
-            )}
-          </div>
-
-          {/* שעות פעילות */}
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNav('/settings/hours');
-            }}
-            className={`
-              mx-2 mb-1 rounded-lg cursor-pointer transition-all duration-200 relative
-              ${location.pathname === '/settings/hours'
-                ? 'bg-[#f5f5f5] dark:bg-[#262626] text-[#16a34a] dark:text-[#22c55e]'
-                : 'text-[#737373] dark:text-[#a3a3a3] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a] hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
-              }
-            `}
-          >
-            {!isCollapsed || !isDesktop ? (
-              <div className="flex items-center gap-3 px-4 py-2.5">
-                <Clock size={19} className="shrink-0 stroke-[1.8px]" />
-                <span className="text-sm font-medium truncate">שעות פעילות</span>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center py-2.5" title="שעות פעילות">
-                <Clock size={19} className="stroke-[1.8px]" />
-              </div>
-            )}
-          </div>
-
-          <div className="my-2 mx-4 border-t border-[#e5e5e5] dark:border-[#262626]" />
 
           {/* יומן פעולות */}
           <div
@@ -808,7 +777,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
              ) : (
               <div
                 className="hidden md:flex flex-col items-center gap-1"
-                title={state.isSystemOpen ? t('sidebar.acceptDeliveries') : '���� ������� �����'}
+                title={state.isSystemOpen ? t('sidebar.acceptDeliveries') : '\u05de\u05e2\u05e8\u05db\u05ea \u05e1\u05d2\u05d5\u05e8\u05d4'}
               >
                 <Power className={`w-4 h-4 transition-colors ${
                   state.isSystemOpen ? 'text-[#02B74F]' : 'text-[#dc2626]'

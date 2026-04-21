@@ -12,7 +12,6 @@ import {
   Sparkles,
   Sun,
   Users,
-  UserCog,
   Wallet,
   Zap,
 } from 'lucide-react';
@@ -200,21 +199,6 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
 
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-3 py-3 md:px-5 md:py-5">
-
-          <SectionCard
-            icon={<UserCog className="h-4 w-4 text-[#16a34a] dark:text-[#9fe870]" />}
-            title={TEXT.access}
-            description={TEXT.accessDescription}
-          >
-            <SettingRow
-              icon={<UserCog className="h-4 w-4" />}
-              title={TEXT.managers}
-              hint={TEXT.managersHint}
-              control={<OpenButton onClick={() => navigate('/settings/managers')} />}
-            />
-          </SectionCard>
-
-
           <SectionCard
             icon={<Palette className="h-4 w-4 text-[#16a34a] dark:text-[#9fe870]" />}
             title={TEXT.personal}

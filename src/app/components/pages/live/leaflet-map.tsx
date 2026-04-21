@@ -2,7 +2,7 @@
 import L from 'leaflet';
 import { MapPin, FileText, X } from 'lucide-react';
 import { useTheme } from '../../../context/theme.context';
-import { isMcDonaldsRestaurant } from '../../../utils/restaurant-branding';
+import { getRestaurantBrandMarker } from '../../../utils/restaurant-branding';
 import 'leaflet/dist/leaflet.css';
 
 interface MapMarker {
@@ -418,15 +418,15 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
 
     // Restaurant icon â€” subtle small square pin
     const createRestaurantIcon = (size: number = 22, restaurantName?: string) => {
-      if (isMcDonaldsRestaurant(restaurantName)) {
+      const brandMarker = getRestaurantBrandMarker(restaurantName);
+      if (brandMarker) {
         return L.divIcon({
           className: 'custom-marker restaurant-marker',
           html: `
             <div style="
               width: ${size}px;
               height: ${size}px;
-              background-color: #da291c;
-              border: 2px solid rgba(255,255,255,0.9);
+              background-color: ${brandMarker.fill};
               border-radius: 5px;
               box-shadow: 0 1px 4px rgba(0,0,0,0.35);
               display: flex;
@@ -434,12 +434,12 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
               justify-content: center;
               cursor: pointer;
               opacity: 0.95;
-              color: #ffc72c;
+              color: ${brandMarker.text};
               font-size: 13px;
               font-weight: 900;
               font-family: Arial, sans-serif;
               line-height: 1;
-            ">M</div>
+            ">${brandMarker.label}</div>
           `,
           iconSize: [size, size],
           iconAnchor: [size / 2, size / 2],
@@ -452,7 +452,6 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
             width: ${size}px;
             height: ${size}px;
             background-color: #7c3aed;
-            border: 2px solid rgba(255,255,255,0.8);
             border-radius: 4px;
             box-shadow: 0 1px 4px rgba(0,0,0,0.35);
             display: flex;

@@ -52,12 +52,6 @@ export const Breadcrumbs: React.FC = () => {
       
       if (path === '/settings/shipments') {
         breadcrumbs.push({ label: t('breadcrumbs.shipmentBalance'), path: '/settings/shipments' });
-      } else if (path === '/settings/hours') {
-        breadcrumbs.push({ label: t('breadcrumbs.operatingHours'), path: '/settings/hours' });
-      } else if (path === '/settings/zones') {
-        breadcrumbs.push({ label: t('breadcrumbs.deliveryZones'), path: '/settings/zones' });
-      } else if (path === '/settings/distance-pricing') {
-        breadcrumbs.push({ label: t('breadcrumbs.distancePricing'), path: '/settings/distance-pricing' });
       } else if (path === '/settings/reports') {
         breadcrumbs.push({ label: t('nav.reports'), path: '/settings/reports' });
       } else if (path === '/settings/performance') {
@@ -66,9 +60,16 @@ export const Breadcrumbs: React.FC = () => {
         breadcrumbs.push({ label: t('nav.monthlyPayout'), path: '/settings/payouts' });
       } else if (path === '/settings/history') {
         breadcrumbs.push({ label: t('nav.purchaseHistory'), path: '/settings/history' });
-      } else if (path === '/settings/managers') {
-        breadcrumbs.push({ label: t('nav.managers'), path: '/settings/managers' });
       }
+    }
+    else if (path === '/hours') {
+      breadcrumbs.push({ label: t('breadcrumbs.operatingHours'), path: '/hours' });
+    }
+    else if (path === '/zones') {
+      breadcrumbs.push({ label: t('breadcrumbs.deliveryZones'), path: '/zones' });
+    }
+    else if (path === '/distance-pricing') {
+      breadcrumbs.push({ label: t('breadcrumbs.distancePricing'), path: '/distance-pricing' });
     }
     else if (path === '/wallet') {
       breadcrumbs.push({ label: 'ארנק', path: '/wallet' });

@@ -6,7 +6,6 @@ import { Dashboard } from './components/pages/dashboard';
 import { PayoutsPage } from './components/pages/finance/payouts-page';
 import { WalletPage } from './components/pages/finance/wallet-page';
 import { LiveManager } from './components/pages/live-manager';
-import { LiveManagerPage } from './components/pages/live-manager-page';
 import { BusinessManagement } from './components/pages/business-management';
 import { DeliveriesPage } from './components/pages/deliveries-page';
 import { AdminMode } from './components/pages/admin-mode';
@@ -19,7 +18,6 @@ import { CouriersPage } from './components/pages/entities/couriers-page';
 import { CouriersListPage } from './components/pages/entities/couriers-list-page';
 import { RestaurantsPage } from './components/pages/entities/restaurants-page';
 import { CustomersPage } from './components/pages/entities/customers-page';
-import { ManagersPage } from './components/pages/entities/managers-page';
 import { DeliveryDetailsPage } from './components/pages/delivery-details-page';
 import { RestaurantDetailsPage } from './components/pages/restaurant-details-page';
 import { CourierDetailsPage } from './components/pages/courier-details-page';
@@ -146,20 +144,16 @@ export const router = createBrowserRouter([
         element: <SettingsPage />,
       },
       {
-        path: 'settings/hours',
+        path: 'hours',
         element: <OperatingHoursPage />,
       },
       {
-        path: 'settings/zones',
+        path: 'zones',
         element: <DeliveryZonesPage />,
       },
       {
-        path: 'settings/distance-pricing',
+        path: 'distance-pricing',
         element: <DistancePricingPage />,
-      },
-      {
-        path: 'settings/managers',
-        element: <ManagersPage />,
       },
 
       // === Admin ===

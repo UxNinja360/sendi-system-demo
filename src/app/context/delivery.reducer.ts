@@ -73,6 +73,878 @@ const getShiftStatusFromAssignments = (
   return 'planned' as const;
 };
 
+const updateCourierActiveDeliveries = (
+  couriers: DeliveryState['couriers'],
+  courierId: string,
+  transformActiveDeliveryIds: (activeDeliveryIds: string[]) => string[]
+) =>
+  couriers.map((courier) => {
+    if (courier.id !== courierId) return courier;
+
+    const activeDeliveryIds = transformActiveDeliveryIds(courier.activeDeliveryIds);
+    return {
+      ...courier,
+      activeDeliveryIds,
+      status: getCourierStatusAfterLoadChange(courier.status, activeDeliveryIds),
+    };
+  });
+
+const withStartedDropoffForNextDelivery = (
+  deliveries: Delivery[],
+  courierId: string | null | undefined,
+  now: Date,
+  excludedDeliveryIds: string[] = []
+) => {
+  if (!courierId) return deliveries;
+
+  const nextDropoffDeliveryId = getNextDropoffDeliveryId(deliveries, courierId, excludedDeliveryIds);
+  if (!nextDropoffDeliveryId) return deliveries;
+
+  return deliveries.map((delivery) =>
+    delivery.id === nextDropoffDeliveryId
+      ? {
+          ...delivery,
+          started_dropoff: delivery.started_dropoff ?? now,
+        }
+      : delivery
+  );
+};
+
+const updateDeliveriesForStatusChange = (
+  deliveries: Delivery[],
+  deliveryId: string,
+  status: DeliveryStatus,
+  now: Date
+) =>
+  deliveries.map((delivery) => {
+    if (delivery.id !== deliveryId) return delivery;
+
+    const updated = { ...delivery, status };
+    if (status === 'delivering') {
+      updated.arrivedAtRestaurantAt = now;
+      updated.arrived_at_rest = now;
+      updated.pickedUpAt = updated.pickedUpAt ?? now;
+      updated.took_it_time = updated.took_it_time ?? now;
+      updated.started_pickup = updated.started_pickup ?? updated.assignedAt ?? now;
+    }
+
+    return updated;
+  });
+
+const shouldStartDropoffForCourier = (
+  deliveries: Delivery[],
+  courierId: string | null | undefined,
+  currentDeliveryId: string
+) => {
+  if (!courierId) return false;
+
+  const hasAssignedDeliveries = deliveries.some(
+    (delivery) =>
+      delivery.id !== currentDeliveryId &&
+      delivery.courierId === courierId &&
+      delivery.status === 'assigned'
+  );
+
+  const hasActiveDropoff = deliveries.some(
+    (delivery) =>
+      delivery.courierId === courierId &&
+      delivery.status === 'delivering' &&
+      !!delivery.started_dropoff
+  );
+
+  return !hasAssignedDeliveries && !hasActiveDropoff;
+};
+
+const shouldStartNextDropoffAfterCompletion = (
+  deliveries: Delivery[],
+  courierId: string | null | undefined,
+  currentDeliveryId: string
+) => {
+  if (!courierId) return false;
+
+  return !deliveries.some(
+    (delivery) =>
+      delivery.id !== currentDeliveryId &&
+      delivery.courierId === courierId &&
+      delivery.status === 'delivering' &&
+      !!delivery.started_dropoff
+  );
+};
+
+const updateDeliveriesForCompletion = (
+  deliveries: Delivery[],
+  deliveryId: string,
+  now: Date
+) =>
+  deliveries.map((delivery) =>
+    delivery.id === deliveryId
+      ? {
+          ...delivery,
+          status: 'delivered' as DeliveryStatus,
+          started_dropoff: delivery.started_dropoff ?? delivery.pickedUpAt ?? now,
+          deliveredAt: now,
+          delivered_time: now,
+          arrived_at_client: now,
+          arrivedAtCustomerAt: now,
+        }
+      : delivery
+  );
+
+const updateDeliveriesForCancellation = (
+  deliveries: Delivery[],
+  deliveryId: string,
+  cancelledAfterPickup: boolean,
+  now: Date
+) =>
+  deliveries.map((delivery) =>
+    delivery.id === deliveryId
+      ? {
+          ...delivery,
+          status: 'cancelled' as DeliveryStatus,
+          cancelledAt: now,
+          cancelledAfterPickup,
+        }
+      : delivery
+  );
+
+const updateCourierAfterCompletedDelivery = (
+  couriers: DeliveryState['couriers'],
+  courierId: string | null | undefined,
+  deliveryId: string
+) => {
+  if (!courierId) return couriers;
+
+  return updateCourierActiveDeliveries(couriers, courierId, (activeDeliveryIds) =>
+    activeDeliveryIds.filter((id) => id !== deliveryId)
+  ).map((courier) =>
+    courier.id === courierId
+      ? {
+          ...courier,
+          totalDeliveries: courier.totalDeliveries + 1,
+        }
+      : courier
+  );
+};
+
+const updateCourierAfterCancelledDelivery = (
+  couriers: DeliveryState['couriers'],
+  courierId: string | null | undefined,
+  deliveryId: string
+) => {
+  if (!courierId) return couriers;
+
+  return updateCourierActiveDeliveries(couriers, courierId, (activeDeliveryIds) =>
+    activeDeliveryIds.filter((id) => id !== deliveryId)
+  );
+};
+
+const endShiftAssignmentsForOfflineCourier = (
+  shifts: DeliveryState['shifts'],
+  currentShiftAssignmentId: string | null | undefined,
+  now: Date
+) => {
+  if (!currentShiftAssignmentId) return shifts;
+
+  return shifts.map((shift) => {
+    let didChange = false;
+    const nextAssignments = shift.courierAssignments.map((assignment) => {
+      if (assignment.id === currentShiftAssignmentId && !assignment.endedAt) {
+        didChange = true;
+        return { ...assignment, endedAt: now };
+      }
+
+      return assignment;
+    });
+
+    return didChange
+      ? {
+          ...shift,
+          courierAssignments: nextAssignments,
+          status: getShiftStatusFromAssignments(nextAssignments),
+        }
+      : shift;
+  });
+};
+
+const updateCourierStatusState = (
+  couriers: DeliveryState['couriers'],
+  courierId: string,
+  status: DeliveryState['couriers'][number]['status'],
+  now: Date
+) =>
+  couriers.map((courier) =>
+    courier.id === courierId
+      ? {
+          ...courier,
+          status,
+          isOnShift: status === 'offline' ? false : courier.isOnShift,
+          shiftEndedAt: status === 'offline' && courier.isOnShift ? now : courier.shiftEndedAt,
+          currentShiftAssignmentId:
+            status === 'offline' ? null : courier.currentShiftAssignmentId,
+        }
+      : courier
+  );
+
+const resolveEmergencyTemplateState = (
+  shiftTemplates: DeliveryState['shiftTemplates'],
+  todayKey: string,
+  weekStartKey: string,
+  weekEndKey: string
+) => {
+  const emergencyTemplate =
+    shiftTemplates.find(
+      (template) =>
+        template.name === EMERGENCY_SHIFT_NAME &&
+        (template.activeStartDate ?? '0000-01-01') <= todayKey &&
+        (template.activeEndDate ?? '9999-12-31') >= todayKey
+    ) ?? null;
+
+  const emergencyTemplateId = emergencyTemplate?.id ?? `template-emergency-${weekStartKey}`;
+  const nextShiftTemplates = emergencyTemplate
+    ? shiftTemplates
+    : [
+        ...shiftTemplates,
+        {
+          id: emergencyTemplateId,
+          name: EMERGENCY_SHIFT_NAME,
+          type: 'full' as const,
+          startTime: '00:00',
+          endTime: '23:59',
+          slots: [],
+          requiredCouriers: 0,
+          activeStartDate: weekStartKey,
+          activeEndDate: weekEndKey,
+        },
+      ];
+
+  return {
+    emergencyTemplate,
+    emergencyTemplateId,
+    nextShiftTemplates,
+  };
+};
+
+const buildEmergencySlotState = (
+  emergencyTemplate: DeliveryState['shiftTemplates'][number] | null,
+  existingEmergencyShift: DeliveryState['shifts'][number] | null,
+  courierId: string
+) => {
+  const assignedSlotIds = new Set(
+    existingEmergencyShift?.courierAssignments.map((assignment) => assignment.slotId) ?? []
+  );
+  const emergencySlotNumbers = [...assignedSlotIds]
+    .map((slotId) => {
+      const match = slotId.match(/slot-emergency-(\d+)/);
+      return match ? Number(match[1]) : null;
+    })
+    .filter((value): value is number => value !== null);
+  const nextEmergencySlotNumber =
+    emergencySlotNumbers.length > 0 ? Math.max(...emergencySlotNumbers) + 1 : 1;
+
+  const newSlot = {
+    id: `slot-emergency-${nextEmergencySlotNumber}-${Date.now()}-${courierId}`,
+    label: `${EMERGENCY_SHIFT_NAME} ${nextEmergencySlotNumber}`,
+  };
+
+  const hydratedEmergencySlots = [...(emergencyTemplate?.slots ?? [])];
+  assignedSlotIds.forEach((slotId) => {
+    if (hydratedEmergencySlots.some((slot) => slot.id === slotId)) return;
+
+    const match = slotId.match(/slot-emergency-(\d+)/);
+    const slotNumber = match ? Number(match[1]) : hydratedEmergencySlots.length + 1;
+    hydratedEmergencySlots.push({
+      id: slotId,
+      label: `${EMERGENCY_SHIFT_NAME} ${slotNumber}`,
+    });
+  });
+
+  return {
+    assignedSlotIds,
+    newSlot,
+    nextEmergencyTemplateSlots: [...hydratedEmergencySlots, newSlot],
+  };
+};
+
+const closeActiveCourierAssignmentsForShiftStart = (
+  shifts: DeliveryState['shifts'],
+  courierId: string,
+  now: Date
+) => {
+  const activeAssignmentIdsToClose = new Set<string>();
+
+  const nextShiftsBase = shifts.map((shift) => {
+    let didChange = false;
+    const nextAssignments = shift.courierAssignments.map((assignment) => {
+      if (assignment.courierId !== courierId || !assignment.startedAt || assignment.endedAt) {
+        return assignment;
+      }
+
+      didChange = true;
+      activeAssignmentIdsToClose.add(assignment.id);
+      return {
+        ...assignment,
+        endedAt: now,
+      };
+    });
+
+    return didChange
+      ? {
+          ...shift,
+          courierAssignments: nextAssignments,
+          status: getShiftStatusFromAssignments(nextAssignments),
+        }
+      : shift;
+  });
+
+  return {
+    nextShiftsBase,
+    activeAssignmentIdsToClose,
+  };
+};
+
+const upsertEmergencyShift = (
+  shifts: DeliveryState['shifts'],
+  existingEmergencyShift: DeliveryState['shifts'][number] | null,
+  nextEmergencyShift: DeliveryState['shifts'][number]
+) =>
+  existingEmergencyShift
+    ? shifts.map((shift) => (shift.id === existingEmergencyShift.id ? nextEmergencyShift : shift))
+    : [...shifts, nextEmergencyShift].sort((a, b) =>
+        a.date === b.date ? a.startTime.localeCompare(b.startTime) : a.date.localeCompare(b.date)
+      );
+
+const updateCouriersForStartedShift = (
+  couriers: DeliveryState['couriers'],
+  courierId: string,
+  assignmentId: string,
+  activeAssignmentIdsToClose: Set<string>,
+  now: Date
+) =>
+  couriers.map((courier) =>
+    courier.id === courierId
+      ? {
+          ...courier,
+          isOnShift: true,
+          shiftStartedAt: now,
+          shiftEndedAt: null,
+          currentShiftAssignmentId: assignmentId,
+        }
+      : activeAssignmentIdsToClose.has(courier.currentShiftAssignmentId ?? '')
+        ? {
+            ...courier,
+            isOnShift: false,
+            shiftEndedAt: now,
+            currentShiftAssignmentId: null,
+          }
+        : courier
+  );
+
+const endCourierShiftAssignments = (
+  shifts: DeliveryState['shifts'],
+  currentShiftAssignmentId: string | null | undefined,
+  now: Date
+) => {
+  if (!currentShiftAssignmentId) return shifts;
+
+  return shifts.map((shift) => {
+    let didChange = false;
+    const nextAssignments = shift.courierAssignments.map((assignment) => {
+      if (assignment.id === currentShiftAssignmentId && !assignment.endedAt) {
+        didChange = true;
+        return {
+          ...assignment,
+          startedAt: assignment.startedAt ?? now,
+          endedAt: now,
+        };
+      }
+
+      return assignment;
+    });
+
+    return didChange
+      ? {
+          ...shift,
+          courierAssignments: nextAssignments,
+          status: getShiftStatusFromAssignments(nextAssignments),
+        }
+      : shift;
+  });
+};
+
+const updateCourierAfterShiftEnd = (
+  couriers: DeliveryState['couriers'],
+  courierId: string,
+  now: Date
+) =>
+  couriers.map((courier) =>
+    courier.id === courierId
+      ? {
+          ...courier,
+          isOnShift: false,
+          shiftEndedAt: now,
+          currentShiftAssignmentId: null,
+        }
+      : courier
+  );
+
+const removeShiftAndResetCouriers = (
+  shifts: DeliveryState['shifts'],
+  couriers: DeliveryState['couriers'],
+  shiftId: string,
+  now: Date
+) => {
+  const deletedShift = shifts.find((shift) => shift.id === shiftId);
+  const deletedAssignmentIds = new Set(
+    deletedShift?.courierAssignments.map((assignment) => assignment.id) ?? []
+  );
+
+  return {
+    shifts: shifts.filter((shift) => shift.id !== shiftId),
+    couriers: couriers.map((courier) =>
+      courier.currentShiftAssignmentId &&
+      deletedAssignmentIds.has(courier.currentShiftAssignmentId)
+        ? {
+            ...courier,
+            isOnShift: false,
+            shiftEndedAt: now,
+            currentShiftAssignmentId: null,
+          }
+        : courier
+    ),
+  };
+};
+
+const resetCouriersForRemovedAssignments = (
+  couriers: DeliveryState['couriers'],
+  assignmentIds: Set<string>,
+  now: Date
+) => {
+  if (assignmentIds.size === 0) return couriers;
+
+  return couriers.map((courier) =>
+    courier.currentShiftAssignmentId && assignmentIds.has(courier.currentShiftAssignmentId)
+      ? {
+          ...courier,
+          isOnShift: false,
+          shiftEndedAt: now,
+          currentShiftAssignmentId: null,
+        }
+      : courier
+  );
+};
+
+const createShiftTemplateState = (
+  shiftTemplates: DeliveryState['shiftTemplates'],
+  weeklyShiftConfig: DeliveryState['weeklyShiftConfig'],
+  template: ShiftTemplate
+) => ({
+  shiftTemplates: [...shiftTemplates, template],
+  weeklyShiftConfig: weeklyShiftConfig.map((config) =>
+    config.isClosed || config.templateIds.includes(template.id)
+      ? config
+      : { ...config, templateIds: [...config.templateIds, template.id] }
+  ),
+});
+
+const updateShiftTemplateState = (
+  shiftTemplates: DeliveryState['shiftTemplates'],
+  templateId: string,
+  updates: Partial<Omit<ShiftTemplate, 'id'>>
+) =>
+  shiftTemplates.map((template) =>
+    template.id === templateId ? { ...template, ...updates } : template
+  );
+
+const deleteShiftTemplateState = (
+  state: DeliveryState,
+  templateId: string,
+  cutoffDate: string,
+  now: Date
+) => {
+  const removedAssignmentIds = new Set(
+    state.shifts
+      .filter((shift) => shift.templateId === templateId && shift.date >= cutoffDate)
+      .flatMap((shift) => shift.courierAssignments.map((assignment) => assignment.id))
+  );
+
+  return {
+    shiftTemplates: state.shiftTemplates.filter((template) => template.id !== templateId),
+    weeklyShiftConfig: state.weeklyShiftConfig.map((config) => ({
+      ...config,
+      templateIds: config.templateIds.filter((id) => id !== templateId),
+    })),
+    shifts: state.shifts.filter(
+      (shift) => !(shift.templateId === templateId && shift.date >= cutoffDate)
+    ),
+    couriers: resetCouriersForRemovedAssignments(state.couriers, removedAssignmentIds, now),
+  };
+};
+
+const moveShiftTemplateState = (
+  shiftTemplates: DeliveryState['shiftTemplates'],
+  templateId: string,
+  direction: 'up' | 'down'
+) => {
+  const currentIndex = shiftTemplates.findIndex((template) => template.id === templateId);
+  if (currentIndex === -1) return shiftTemplates;
+
+  const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+  if (targetIndex < 0 || targetIndex >= shiftTemplates.length) return shiftTemplates;
+
+  const nextTemplates = [...shiftTemplates];
+  const [movedTemplate] = nextTemplates.splice(currentIndex, 1);
+  nextTemplates.splice(targetIndex, 0, movedTemplate);
+
+  return nextTemplates;
+};
+
+const setWeeklyShiftDayState = (
+  weeklyShiftConfig: DeliveryState['weeklyShiftConfig'],
+  nextDayConfig: WeeklyShiftDayConfig
+) => {
+  const nextWeeklyConfig = weeklyShiftConfig.some(
+    (config) => config.dayOfWeek === nextDayConfig.dayOfWeek
+  )
+    ? weeklyShiftConfig.map((config) =>
+        config.dayOfWeek === nextDayConfig.dayOfWeek ? nextDayConfig : config
+      )
+    : [...weeklyShiftConfig, nextDayConfig];
+
+  return nextWeeklyConfig.sort((a, b) => a.dayOfWeek - b.dayOfWeek);
+};
+
+const ensureWeekShiftsState = (
+  state: DeliveryState,
+  startDate: string,
+  endDate: string,
+  now: Date
+) => {
+  const result = materializeWeekShifts(
+    state.shifts,
+    state.shiftTemplates,
+    state.weeklyShiftConfig,
+    startDate,
+    endDate
+  );
+
+  if (!result.changed) return null;
+
+  const removedShiftAssignmentIds = new Set(
+    state.shifts
+      .filter((shift) => shift.templateId && isDateInRange(shift.date, startDate, endDate))
+      .filter((shift) => !result.shifts.some((nextShift) => nextShift.id === shift.id))
+      .flatMap((shift) => shift.courierAssignments.map((assignment) => assignment.id))
+  );
+
+  return {
+    shifts: result.shifts,
+    couriers: resetCouriersForRemovedAssignments(
+      state.couriers,
+      removedShiftAssignmentIds,
+      now
+    ),
+  };
+};
+
+const createShiftState = (
+  shifts: DeliveryState['shifts'],
+  shift: WorkShift
+) => [...shifts, shift];
+
+const updateShiftState = (
+  shifts: DeliveryState['shifts'],
+  shiftId: string,
+  updates: Partial<Omit<WorkShift, 'id' | 'courierAssignments' | 'createdAt'>>
+) =>
+  shifts.map((shift) =>
+    shift.id === shiftId
+      ? {
+          ...shift,
+          ...updates,
+        }
+      : shift
+  );
+
+const assignCourierToShiftState = (
+  shifts: DeliveryState['shifts'],
+  couriers: DeliveryState['couriers'],
+  shiftId: string,
+  courierId: string,
+  slotId: string,
+  now: Date
+) => {
+  const removedAssignmentIds = new Set<string>();
+
+  const nextShifts = shifts.map((shift) => {
+    if (shift.id !== shiftId) return shift;
+
+    const nextAssignmentsBase = shift.courierAssignments.filter((assignment) => {
+      const shouldRemove = assignment.slotId === slotId && !assignment.endedAt;
+      if (shouldRemove) {
+        removedAssignmentIds.add(assignment.id);
+      }
+      return !shouldRemove;
+    });
+
+    const nextAssignments = [
+      ...nextAssignmentsBase,
+      {
+        id: `shift-assignment-${now.getTime()}-${courierId}-${slotId}`,
+        courierId,
+        slotId,
+        startedAt: null,
+        endedAt: null,
+      },
+    ];
+
+    return {
+      ...shift,
+      courierAssignments: nextAssignments,
+      status: getShiftStatusFromAssignments(nextAssignments),
+    };
+  });
+
+  const nextCouriers =
+    removedAssignmentIds.size === 0
+      ? couriers
+      : couriers.map((courier) =>
+          courier.currentShiftAssignmentId &&
+          removedAssignmentIds.has(courier.currentShiftAssignmentId)
+            ? {
+                ...courier,
+                isOnShift: false,
+                shiftEndedAt: now,
+                currentShiftAssignmentId: null,
+              }
+            : courier
+        );
+
+  return {
+    shifts: nextShifts,
+    couriers: nextCouriers,
+  };
+};
+
+const removeCourierFromShiftState = (
+  shifts: DeliveryState['shifts'],
+  couriers: DeliveryState['couriers'],
+  shiftId: string,
+  assignmentId: string,
+  now: Date
+) => ({
+  shifts: shifts.map((shift) => {
+    if (shift.id !== shiftId) return shift;
+
+    const nextAssignments = shift.courierAssignments.filter(
+      (assignment) => assignment.id !== assignmentId
+    );
+
+    return {
+      ...shift,
+      courierAssignments: nextAssignments,
+      status: getShiftStatusFromAssignments(nextAssignments),
+    };
+  }),
+  couriers: couriers.map((courier) =>
+    courier.currentShiftAssignmentId === assignmentId
+      ? {
+          ...courier,
+          isOnShift: false,
+          shiftEndedAt: now,
+          currentShiftAssignmentId: null,
+        }
+      : courier
+  ),
+});
+
+const startShiftAssignmentState = (
+  shifts: DeliveryState['shifts'],
+  couriers: DeliveryState['couriers'],
+  shiftId: string,
+  assignmentId: string,
+  now: Date
+) => {
+  const targetShift = shifts.find((shift) => shift.id === shiftId);
+  const assignment = targetShift?.courierAssignments.find((item) => item.id === assignmentId);
+  const courier = assignment
+    ? couriers.find((item) => item.id === assignment.courierId)
+    : null;
+
+  if (!targetShift || !assignment || !courier || courier.status === 'offline') {
+    return null;
+  }
+
+  return {
+    shifts: shifts.map((shift) => {
+      const nextAssignments = shift.courierAssignments.map((item) => {
+        if (item.courierId !== assignment.courierId) return item;
+
+        if (shift.id === shiftId && item.id === assignmentId) {
+          return {
+            ...item,
+            startedAt: item.startedAt ?? now,
+            endedAt: null,
+          };
+        }
+
+        if (item.startedAt && !item.endedAt) {
+          return {
+            ...item,
+            endedAt: now,
+          };
+        }
+
+        return item;
+      });
+
+      return {
+        ...shift,
+        courierAssignments: nextAssignments,
+        status: getShiftStatusFromAssignments(nextAssignments),
+      };
+    }),
+    couriers: couriers.map((item) =>
+      item.id === assignment.courierId
+        ? {
+            ...item,
+            isOnShift: true,
+            shiftStartedAt: now,
+            shiftEndedAt: null,
+            currentShiftAssignmentId: assignmentId,
+          }
+        : item
+    ),
+  };
+};
+
+const endShiftAssignmentState = (
+  shifts: DeliveryState['shifts'],
+  couriers: DeliveryState['couriers'],
+  shiftId: string,
+  assignmentId: string,
+  now: Date
+) => {
+  const targetShift = shifts.find((shift) => shift.id === shiftId);
+  const assignment = targetShift?.courierAssignments.find((item) => item.id === assignmentId);
+
+  if (!targetShift || !assignment) {
+    return null;
+  }
+
+  return {
+    shifts: shifts.map((shift) => {
+      if (shift.id !== shiftId) return shift;
+
+      const nextAssignments = shift.courierAssignments.map((item) =>
+        item.id === assignmentId
+          ? {
+              ...item,
+              startedAt: item.startedAt ?? now,
+              endedAt: now,
+            }
+          : item
+      );
+
+      return {
+        ...shift,
+        courierAssignments: nextAssignments,
+        status: getShiftStatusFromAssignments(nextAssignments),
+      };
+    }),
+    couriers: couriers.map((item) =>
+      item.id === assignment.courierId
+        ? {
+            ...item,
+            isOnShift: false,
+            shiftEndedAt: now,
+            currentShiftAssignmentId: null,
+          }
+        : item
+    ),
+  };
+};
+
+const removeCourierState = (
+  shifts: DeliveryState['shifts'],
+  couriers: DeliveryState['couriers'],
+  courierId: string
+) => {
+  const courier = couriers.find((item) => item.id === courierId);
+  if (courier && courier.activeDeliveryIds.length > 0) {
+    return null;
+  }
+
+  return {
+    shifts: shifts.map((shift) => {
+      const nextAssignments = shift.courierAssignments.filter(
+        (assignment) => assignment.courierId !== courierId
+      );
+
+      return nextAssignments.length === shift.courierAssignments.length
+        ? shift
+        : {
+            ...shift,
+            courierAssignments: nextAssignments,
+            status: getShiftStatusFromAssignments(nextAssignments),
+          };
+    }),
+    couriers: couriers.filter((item) => item.id !== courierId),
+  };
+};
+
+const toggleRestaurantState = (
+  restaurants: DeliveryState['restaurants'],
+  restaurantId: string
+) =>
+  restaurants.map((restaurant) =>
+    restaurant.id === restaurantId
+      ? { ...restaurant, isActive: !restaurant.isActive }
+      : restaurant
+  );
+
+const updateRestaurantState = (
+  restaurants: DeliveryState['restaurants'],
+  restaurantId: string,
+  updates: Partial<DeliveryState['restaurants'][number]>
+) =>
+  restaurants.map((restaurant) =>
+    restaurant.id === restaurantId
+      ? {
+          ...restaurant,
+          ...updates,
+          defaultPreparationTime:
+            typeof updates.defaultPreparationTime === 'number' &&
+            updates.defaultPreparationTime > 0
+              ? updates.defaultPreparationTime
+              : restaurant.defaultPreparationTime,
+          maxDeliveryTime:
+            typeof updates.maxDeliveryTime === 'number' &&
+            updates.maxDeliveryTime > 0
+              ? updates.maxDeliveryTime
+              : restaurant.maxDeliveryTime,
+        }
+      : restaurant
+  );
+
+const removeRestaurantState = (
+  deliveries: DeliveryState['deliveries'],
+  restaurants: DeliveryState['restaurants'],
+  restaurantId: string
+) => {
+  const hasActiveDeliveries = deliveries.some(
+    (delivery) =>
+      delivery.restaurantId === restaurantId &&
+      delivery.status !== 'delivered' &&
+      delivery.status !== 'cancelled'
+  );
+
+  if (hasActiveDeliveries) {
+    return null;
+  }
+
+  return restaurants.filter((restaurant) => restaurant.id !== restaurantId);
+};
+
 const toDateKey = (date: Date) => {
   const year = date.getFullYear();
   const month = `${date.getMonth() + 1}`.padStart(2, '0');
@@ -315,6 +1187,110 @@ const getRestaurantMaxDeliveryTime = (restaurant: Restaurant) =>
     ? restaurant.maxDeliveryTime
     : 60;
 
+const getRecentRestaurantDeliveries = (
+  deliveries: Delivery[],
+  restaurantName: string,
+  referenceTime = new Date()
+) => {
+  const oneHourAgo = new Date(referenceTime.getTime() - 60 * 60 * 1000);
+
+  return deliveries.filter(
+    (delivery) =>
+      delivery.restaurantName === restaurantName &&
+      new Date(delivery.createdAt) >= oneHourAgo
+  );
+};
+
+const getRestaurantCapacityDelayMinutes = (
+  recentDeliveries: Delivery[],
+  referenceTime = new Date()
+) => {
+  if (recentDeliveries.length === 0) return null;
+
+  const oldestDelivery = [...recentDeliveries].sort(
+    (left, right) => new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime()
+  )[0];
+
+  const nextAvailableTime = new Date(new Date(oldestDelivery.createdAt).getTime() + 60 * 60 * 1000);
+  return Math.ceil((nextAvailableTime.getTime() - referenceTime.getTime()) / 1000 / 60);
+};
+
+const normalizeIncomingDelivery = (payload: Delivery, restaurant: Restaurant) => {
+  const preparationTime =
+    typeof payload.preparationTime === 'number' && payload.preparationTime > 0
+      ? payload.preparationTime
+      : typeof payload.cook_time === 'number' && payload.cook_time > 0
+        ? payload.cook_time
+        : getRestaurantPreparationTime(restaurant);
+  const createdAt = new Date(payload.createdAt ?? payload.creation_time ?? new Date());
+  const maxDeliveryTime =
+    typeof payload.maxDeliveryTime === 'number' && payload.maxDeliveryTime > 0
+      ? payload.maxDeliveryTime
+      : typeof payload.max_time_to_deliver === 'number' && payload.max_time_to_deliver > 0
+        ? payload.max_time_to_deliver
+        : getRestaurantMaxDeliveryTime(restaurant);
+  const orderReadyTime =
+    payload.orderReadyTime ??
+    new Date(createdAt.getTime() + preparationTime * 60000);
+
+  return {
+    ...payload,
+    preparationTime,
+    cook_time: preparationTime,
+    origin_cook_time:
+      typeof payload.origin_cook_time === 'number' && payload.origin_cook_time > 0
+        ? payload.origin_cook_time
+        : preparationTime,
+    orderReadyTime,
+    maxDeliveryTime,
+    max_time_to_deliver: maxDeliveryTime,
+    should_delivered_time:
+      payload.should_delivered_time ??
+      new Date(createdAt.getTime() + maxDeliveryTime * 60000),
+  };
+};
+
+const getRestaurantByName = (restaurants: Restaurant[], restaurantName: string) =>
+  restaurants.find((restaurant) => restaurant.name === restaurantName);
+
+const buildStateAfterAddingDelivery = (
+  state: DeliveryState,
+  delivery: Delivery,
+  restaurant: Restaurant,
+  recentRestaurantDeliveries: Delivery[],
+  maxAllowed: number
+) => {
+  const deliveries = [...state.deliveries, delivery];
+  const deliveryBalance = state.deliveryBalance - 1;
+
+  console.log(
+    `Added delivery for ${restaurant.name} (${restaurant.type}), remaining balance: ${deliveryBalance}, hourly load: ${recentRestaurantDeliveries.length + 1}/${maxAllowed}`
+  );
+
+  return {
+    ...state,
+    deliveries,
+    deliveryBalance,
+    stats: calculateStats(deliveries),
+  };
+};
+
+const reorderDeliveriesByPriority = (
+  deliveries: Delivery[],
+  deliveryId: string,
+  newPriority: number
+) =>
+  deliveries.map((delivery) =>
+    delivery.id === deliveryId
+      ? { ...delivery, orderPriority: newPriority }
+      : delivery
+  );
+
+const appendActivityLogEntry = (
+  activityLogs: DeliveryState['activityLogs'],
+  entry: DeliveryState['activityLogs'][number]
+) => [entry, ...activityLogs].slice(0, 500);
+
 export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): DeliveryState => {
   switch (action.type) {
     case 'TOGGLE_SYSTEM':
@@ -339,11 +1315,10 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
     case 'CREATE_SHIFT_TEMPLATE':
       return {
         ...state,
-        shiftTemplates: [...state.shiftTemplates, action.payload],
-        weeklyShiftConfig: state.weeklyShiftConfig.map((config) =>
-          config.isClosed || config.templateIds.includes(action.payload.id)
-            ? config
-            : { ...config, templateIds: [...config.templateIds, action.payload.id] }
+        ...createShiftTemplateState(
+          state.shiftTemplates,
+          state.weeklyShiftConfig,
+          action.payload
         ),
       };
 
@@ -351,53 +1326,29 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
       const { templateId, updates } = action.payload;
       return {
         ...state,
-        shiftTemplates: state.shiftTemplates.map((template) =>
-          template.id === templateId ? { ...template, ...updates } : template
-        ),
+        shiftTemplates: updateShiftTemplateState(state.shiftTemplates, templateId, updates),
       };
     }
 
     case 'DELETE_SHIFT_TEMPLATE': {
       const { templateId, effectiveFromDate } = action.payload;
       const cutoffDate = effectiveFromDate ?? toDateKey(new Date());
-      const removedAssignmentIds = new Set(
-        state.shifts
-          .filter((shift) => shift.templateId === templateId && shift.date >= cutoffDate)
-          .flatMap((shift) => shift.courierAssignments.map((assignment) => assignment.id))
-      );
+      const now = new Date();
 
       return {
         ...state,
-        shiftTemplates: state.shiftTemplates.filter((template) => template.id !== templateId),
-        weeklyShiftConfig: state.weeklyShiftConfig.map((config) => ({
-          ...config,
-          templateIds: config.templateIds.filter((id) => id !== templateId),
-        })),
-        shifts: state.shifts.filter((shift) => !(shift.templateId === templateId && shift.date >= cutoffDate)),
-        couriers: state.couriers.map((courier) =>
-          courier.currentShiftAssignmentId && removedAssignmentIds.has(courier.currentShiftAssignmentId)
-            ? {
-                ...courier,
-                isOnShift: false,
-                shiftEndedAt: new Date(),
-                currentShiftAssignmentId: null,
-              }
-            : courier
-        ),
+        ...deleteShiftTemplateState(state, templateId, cutoffDate, now),
       };
     }
 
     case 'MOVE_SHIFT_TEMPLATE': {
       const { templateId, direction } = action.payload;
-      const currentIndex = state.shiftTemplates.findIndex((template) => template.id === templateId);
-      if (currentIndex === -1) return state;
-
-      const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-      if (targetIndex < 0 || targetIndex >= state.shiftTemplates.length) return state;
-
-      const nextTemplates = [...state.shiftTemplates];
-      const [movedTemplate] = nextTemplates.splice(currentIndex, 1);
-      nextTemplates.splice(targetIndex, 0, movedTemplate);
+      const nextTemplates = moveShiftTemplateState(
+        state.shiftTemplates,
+        templateId,
+        direction
+      );
+      if (nextTemplates === state.shiftTemplates) return state;
 
       return {
         ...state,
@@ -406,54 +1357,27 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
     }
 
     case 'SET_WEEKLY_SHIFT_DAY': {
-      const nextWeeklyConfig = state.weeklyShiftConfig.some(
-        (config) => config.dayOfWeek === action.payload.dayOfWeek
-      )
-        ? state.weeklyShiftConfig.map((config) =>
-            config.dayOfWeek === action.payload.dayOfWeek ? action.payload : config
-          )
-        : [...state.weeklyShiftConfig, action.payload];
-
       return {
         ...state,
-        weeklyShiftConfig: nextWeeklyConfig.sort((a, b) => a.dayOfWeek - b.dayOfWeek),
+        weeklyShiftConfig: setWeeklyShiftDayState(
+          state.weeklyShiftConfig,
+          action.payload
+        ),
       };
     }
 
     case 'ENSURE_WEEK_SHIFTS': {
-      const result = materializeWeekShifts(
-        state.shifts,
-        state.shiftTemplates,
-        state.weeklyShiftConfig,
+      const nextState = ensureWeekShiftsState(
+        state,
         action.payload.startDate,
-        action.payload.endDate
+        action.payload.endDate,
+        new Date()
       );
-
-      if (!result.changed) return state;
-
-      const removedShiftAssignmentIds = new Set(
-        state.shifts
-          .filter((shift) => shift.templateId && isDateInRange(shift.date, action.payload.startDate, action.payload.endDate))
-          .filter((shift) => !result.shifts.some((nextShift) => nextShift.id === shift.id))
-          .flatMap((shift) => shift.courierAssignments.map((assignment) => assignment.id))
-      );
+      if (!nextState) return state;
 
       return {
         ...state,
-        shifts: result.shifts,
-        couriers:
-          removedShiftAssignmentIds.size === 0
-            ? state.couriers
-            : state.couriers.map((courier) =>
-                courier.currentShiftAssignmentId && removedShiftAssignmentIds.has(courier.currentShiftAssignmentId)
-                  ? {
-                      ...courier,
-                      isOnShift: false,
-                      shiftEndedAt: new Date(),
-                      currentShiftAssignmentId: null,
-                    }
-                  : courier
-              ),
+        ...nextState,
       };
     }
 
@@ -465,17 +1389,16 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
       }
 
       // ✅ בדיקה 2: בדיקת מגבלת משלוחים לשעה למסעדה (לפי סוג המסעדה)
-      const restaurant = state.restaurants.find(r => r.name === action.payload.restaurantName);
+      const restaurant = getRestaurantByName(state.restaurants, action.payload.restaurantName);
       
       if (!restaurant) {
         console.warn(`⛔ מסעדה ${action.payload.restaurantName} לא נמצאה - משלוח נדחה`);
         return state;
       }
       
-      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-      const restaurantDeliveriesInLastHour = state.deliveries.filter(d => 
-        d.restaurantName === action.payload.restaurantName && 
-        new Date(d.createdAt) >= oneHourAgo
+      const restaurantDeliveriesInLastHour = getRecentRestaurantDeliveries(
+        state.deliveries,
+        action.payload.restaurantName
       );
       
       const maxAllowed = restaurant.maxDeliveriesPerHour;
@@ -488,7 +1411,8 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
         
         const oldestDeliveryTime = new Date(oldestDelivery.createdAt);
         const nextAvailableTime = new Date(oldestDeliveryTime.getTime() + 60 * 60 * 1000);
-        const timeUntilNext = Math.ceil((nextAvailableTime.getTime() - Date.now()) / 1000 / 60);
+        const timeUntilNext =
+          getRestaurantCapacityDelayMinutes(restaurantDeliveriesInLastHour, new Date()) ?? 0;
         
         console.log(
           `ℹ️  ${action.payload.restaurantName} (${restaurant.type}): הגיע למקסימום (${maxAllowed}/${maxAllowed} בשעה האחרונה). ` +
@@ -497,37 +1421,14 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
         return state;
       }
 
-      const preparationTime =
-        typeof action.payload.preparationTime === 'number' && action.payload.preparationTime > 0
-          ? action.payload.preparationTime
-          : typeof action.payload.cook_time === 'number' && action.payload.cook_time > 0
-            ? action.payload.cook_time
-            : getRestaurantPreparationTime(restaurant);
-      const createdAt = new Date(action.payload.createdAt ?? action.payload.creation_time ?? new Date());
-      const maxDeliveryTime =
-        typeof action.payload.maxDeliveryTime === 'number' && action.payload.maxDeliveryTime > 0
-          ? action.payload.maxDeliveryTime
-          : typeof action.payload.max_time_to_deliver === 'number' && action.payload.max_time_to_deliver > 0
-            ? action.payload.max_time_to_deliver
-            : getRestaurantMaxDeliveryTime(restaurant);
-      const orderReadyTime =
-        action.payload.orderReadyTime ??
-        new Date(createdAt.getTime() + preparationTime * 60000);
-      const normalizedDelivery = {
-        ...action.payload,
-        preparationTime,
-        cook_time: preparationTime,
-        origin_cook_time:
-          typeof action.payload.origin_cook_time === 'number' && action.payload.origin_cook_time > 0
-            ? action.payload.origin_cook_time
-            : preparationTime,
-        orderReadyTime,
-        maxDeliveryTime,
-        max_time_to_deliver: maxDeliveryTime,
-        should_delivered_time:
-          action.payload.should_delivered_time ??
-          new Date(createdAt.getTime() + maxDeliveryTime * 60000),
-      };
+      const normalizedDelivery = normalizeIncomingDelivery(action.payload, restaurant);
+      return buildStateAfterAddingDelivery(
+        state,
+        normalizedDelivery,
+        restaurant,
+        restaurantDeliveriesInLastHour,
+        maxAllowed
+      );
 
       const newDeliveries = [...state.deliveries, normalizedDelivery];
       const newBalance = state.deliveryBalance - 1;
@@ -584,7 +1485,7 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
           // עדכון זמן הגעה משוער ללקוח: 20-40 דקות מעכשיו
           const estimatedCustomerTime = new Date(estimatedRestaurantTime.getTime() + (20 + Math.random() * 20) * 60000);
           
-          return { 
+          return {
             ...d, 
             courierId, 
             status: 'assigned' as DeliveryStatus, 
@@ -600,18 +1501,11 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
         }
         return d;
       });
-      const newCouriers = state.couriers.map(c => {
-        if (c.id === courierId) {
-          const newActiveDeliveryIds = [...c.activeDeliveryIds, deliveryId];
-          const newStatus = getCourierStatusAfterLoadChange(c.status, newActiveDeliveryIds);
-          return { 
-            ...c, 
-            activeDeliveryIds: newActiveDeliveryIds,
-            status: newStatus as const
-          };
-        }
-        return c;
-      });
+      const newCouriers = updateCourierActiveDeliveries(
+        state.couriers,
+        courierId,
+        (activeDeliveryIds) => [...activeDeliveryIds, deliveryId]
+      );
 
       return {
         ...state,
@@ -642,14 +1536,13 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
           : d
       );
 
-      const newCouriers = state.couriers.map(c => {
-        if (c.id === delivery.courierId) {
-          const newActiveDeliveryIds = c.activeDeliveryIds.filter(id => id !== deliveryId);
-          const newStatus = getCourierStatusAfterLoadChange(c.status, newActiveDeliveryIds);
-          return { ...c, activeDeliveryIds: newActiveDeliveryIds, status: newStatus as const };
-        }
-        return c;
-      });
+      const newCouriers = delivery.courierId
+        ? updateCourierActiveDeliveries(
+            state.couriers,
+            delivery.courierId,
+            (activeDeliveryIds) => activeDeliveryIds.filter((id) => id !== deliveryId)
+          )
+        : state.couriers;
 
       return {
         ...state,
@@ -663,56 +1556,32 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
       const { deliveryId, status } = action.payload;
       const now = new Date();
       const targetDelivery = state.deliveries.find(d => d.id === deliveryId);
-      const deliveriesAfterStatusUpdate = state.deliveries.map(d => {
-        if (d.id === deliveryId) {
-          const updated = { ...d, status };
-          if (status === 'delivering') {
-            // שעת הגעה בפועל למסעדה
-            updated.arrivedAtRestaurantAt = now;
-            updated.arrived_at_rest = now;
-            updated.pickedUpAt = updated.pickedUpAt ?? now;
-            updated.took_it_time = updated.took_it_time ?? now;
-            updated.started_pickup = updated.started_pickup ?? updated.assignedAt ?? now;
-          }
-          return updated;
-        }
-        return d;
-      });
-      const shouldStartDropoffPhase =
+      const deliveriesAfterStatusUpdate = updateDeliveriesForStatusChange(
+        state.deliveries,
+        deliveryId,
+        status,
+        now
+      );
+      const newDeliveries =
         status === 'delivering' &&
-        !!targetDelivery?.courierId &&
-        !deliveriesAfterStatusUpdate.some(
-          delivery =>
-            delivery.id !== deliveryId &&
-            delivery.courierId === targetDelivery.courierId &&
-            delivery.status === 'assigned'
-        ) &&
-        !deliveriesAfterStatusUpdate.some(
-          delivery =>
-            delivery.courierId === targetDelivery.courierId &&
-            delivery.status === 'delivering' &&
-            !!delivery.started_dropoff
-        );
-      const nextDropoffDeliveryId =
-        shouldStartDropoffPhase && targetDelivery?.courierId
-          ? getNextDropoffDeliveryId(deliveriesAfterStatusUpdate, targetDelivery.courierId)
-          : null;
-      const newDeliveries = nextDropoffDeliveryId
-        ? deliveriesAfterStatusUpdate.map((delivery) =>
-            delivery.id === nextDropoffDeliveryId
-              ? {
-                  ...delivery,
-                  started_dropoff: delivery.started_dropoff ?? now,
-                }
-              : delivery
-          )
-        : deliveriesAfterStatusUpdate;
+        shouldStartDropoffForCourier(
+          deliveriesAfterStatusUpdate,
+          targetDelivery?.courierId,
+          deliveryId
+        )
+          ? withStartedDropoffForNextDelivery(
+              deliveriesAfterStatusUpdate,
+              targetDelivery?.courierId,
+              now
+            )
+          : deliveriesAfterStatusUpdate;
 
       return {
         ...state,
         deliveries: newDeliveries,
         stats: calculateStats(newDeliveries),
       };
+
     }
 
     case 'UPDATE_DELIVERY': {
@@ -735,58 +1604,30 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
         return state;
       }
       const now = new Date();
-      
-      const deliveriesAfterCompletion = state.deliveries.map(d =>
-        d.id === deliveryId
-          ? { 
-              ...d, 
-              status: 'delivered' as DeliveryStatus, 
-              started_dropoff: d.started_dropoff ?? d.pickedUpAt ?? now,
-              deliveredAt: now,
-              delivered_time: now,
-              // שעת הגעה בפועל ללקוח
-                arrived_at_client: now,
-                arrivedAtCustomerAt: now,
-              }
-            : d
+
+      const deliveriesAfterCompletion = updateDeliveriesForCompletion(
+        state.deliveries,
+        deliveryId,
+        now
       );
-      const nextDropoffDeliveryId =
-        delivery.courierId &&
-        !deliveriesAfterCompletion.some(
-          item =>
-            item.id !== deliveryId &&
-            item.courierId === delivery.courierId &&
-            item.status === 'delivering' &&
-            !!item.started_dropoff
-        )
-          ? getNextDropoffDeliveryId(deliveriesAfterCompletion, delivery.courierId, [deliveryId])
-          : null;
-      const newDeliveries = nextDropoffDeliveryId
-        ? deliveriesAfterCompletion.map((item) =>
-            item.id === nextDropoffDeliveryId
-              ? {
-                  ...item,
-                  started_dropoff: item.started_dropoff ?? now,
-                }
-              : item
+      const newDeliveries = shouldStartNextDropoffAfterCompletion(
+        deliveriesAfterCompletion,
+        delivery.courierId,
+        deliveryId
+      )
+        ? withStartedDropoffForNextDelivery(
+            deliveriesAfterCompletion,
+            delivery.courierId,
+            now,
+            [deliveryId]
           )
         : deliveriesAfterCompletion;
 
-      const newCouriers = state.couriers.map(c => {
-        if (c.id === delivery?.courierId) {
-          // הסרת המשלוח מהמערך הפעיל
-          const newActiveDeliveryIds = c.activeDeliveryIds.filter(id => id !== deliveryId);
-          const newStatus = getCourierStatusAfterLoadChange(c.status, newActiveDeliveryIds);
-          
-          return {
-            ...c,
-            activeDeliveryIds: newActiveDeliveryIds,
-            status: newStatus as const,
-            totalDeliveries: c.totalDeliveries + 1
-          };
-        }
-        return c;
-      });
+      const newCouriers = updateCourierAfterCompletedDelivery(
+        state.couriers,
+        delivery.courierId,
+        deliveryId
+      );
 
       return {
         ...state,
@@ -794,6 +1635,7 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
         couriers: newCouriers,
         stats: calculateStats(newDeliveries),
       };
+
     }
 
     case 'CANCEL_DELIVERY': {
@@ -806,62 +1648,39 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
       // ✅ החזרה ליתרה: אם הביטול קרה לפני delivering (כלומר pending או assigned)
       // במצב delivering השליח כבר בדרך עם ההזמנה, אז לא מחזירים
       const shouldRefund = delivery && ['pending', 'assigned'].includes(delivery.status);
-      
-      const deliveriesAfterCancellation = state.deliveries.map(d =>
-        d.id === deliveryId
-          ? { 
-              ...d, 
-              status: 'cancelled' as DeliveryStatus, 
-              cancelledAt: new Date(),
-              cancelledAfterPickup: cancelledAfterPickup
-             }
-           : d
+      const cancelledAt = new Date();
+      const deliveriesAfterCancellationNext = updateDeliveriesForCancellation(
+        state.deliveries,
+        deliveryId,
+        cancelledAfterPickup,
+        cancelledAt
       );
-      const nextDropoffDeliveryId =
+      const nextDeliveries =
         cancelledAfterPickup &&
-        delivery?.courierId &&
-        !deliveriesAfterCancellation.some(
-          item =>
-            item.id !== deliveryId &&
-            item.courierId === delivery.courierId &&
-            item.status === 'delivering' &&
-            !!item.started_dropoff
+        shouldStartNextDropoffAfterCompletion(
+          deliveriesAfterCancellationNext,
+          delivery?.courierId,
+          deliveryId
         )
-          ? getNextDropoffDeliveryId(deliveriesAfterCancellation, delivery.courierId, [deliveryId])
-          : null;
-      const newDeliveries = nextDropoffDeliveryId
-        ? deliveriesAfterCancellation.map((item) =>
-            item.id === nextDropoffDeliveryId
-              ? {
-                  ...item,
-                  started_dropoff: item.started_dropoff ?? new Date(),
-                }
-              : item
-          )
-        : deliveriesAfterCancellation;
-
-      const newCouriers = state.couriers.map(c => {
-        if (c.id === delivery?.courierId) {
-          // הסרת המשלוח מהמערך הפעיל
-          const newActiveDeliveryIds = c.activeDeliveryIds.filter(id => id !== deliveryId);
-          const newStatus = getCourierStatusAfterLoadChange(c.status, newActiveDeliveryIds);
-          
-          return {
-            ...c,
-            activeDeliveryIds: newActiveDeliveryIds,
-            status: newStatus as const
-          };
-        }
-        return c;
-      });
+          ? withStartedDropoffForNextDelivery(
+              deliveriesAfterCancellationNext,
+              delivery?.courierId,
+              cancelledAt,
+              [deliveryId]
+            )
+          : deliveriesAfterCancellationNext;
+      const nextCouriers = updateCourierAfterCancelledDelivery(
+        state.couriers,
+        delivery?.courierId,
+        deliveryId
+      );
 
       return {
         ...state,
-        deliveries: newDeliveries,
-        couriers: newCouriers,
-        // ✅ החזרה ליתרה אם הביטול היה מוקדם (לפני שהשליח אסף)
+        deliveries: nextDeliveries,
+        couriers: nextCouriers,
         deliveryBalance: shouldRefund ? state.deliveryBalance + 1 : state.deliveryBalance,
-        stats: calculateStats(newDeliveries),
+        stats: calculateStats(nextDeliveries),
       };
     }
 
@@ -886,33 +1705,18 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
         courier?.currentShiftAssignmentId;
 
       const newShifts = shouldForceEndAssignment
-        ? state.shifts.map((shift) => {
-            const nextAssignments = shift.courierAssignments.map((assignment) =>
-              assignment.id === courier.currentShiftAssignmentId && !assignment.endedAt
-                ? { ...assignment, endedAt: now }
-                : assignment
-            );
-
-            return nextAssignments === shift.courierAssignments
-              ? shift
-              : {
-                  ...shift,
-                  courierAssignments: nextAssignments,
-                  status: getShiftStatusFromAssignments(nextAssignments),
-                };
-          })
+        ? endShiftAssignmentsForOfflineCourier(
+            state.shifts,
+            courier.currentShiftAssignmentId,
+            now
+          )
         : state.shifts;
 
-      const newCouriers = state.couriers.map(c =>
-        c.id === courierId
-          ? {
-              ...c,
-              status,
-              isOnShift: status === 'offline' ? false : c.isOnShift,
-              shiftEndedAt: status === 'offline' && c.isOnShift ? now : c.shiftEndedAt,
-              currentShiftAssignmentId: status === 'offline' ? null : c.currentShiftAssignmentId,
-            }
-          : c
+      const newCouriers = updateCourierStatusState(
+        state.couriers,
+        courierId,
+        status,
+        now
       );
 
       return {
@@ -934,30 +1738,13 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
       weekEnd.setDate(weekStart.getDate() + 6);
       const weekStartKey = toDateKey(weekStart);
       const weekEndKey = toDateKey(weekEnd);
-      const emergencyTemplate =
-        state.shiftTemplates.find(
-          (template) =>
-            template.name === EMERGENCY_SHIFT_NAME &&
-            (template.activeStartDate ?? '0000-01-01') <= todayKey &&
-            (template.activeEndDate ?? '9999-12-31') >= todayKey
-        ) ?? null;
-      const emergencyTemplateId = emergencyTemplate?.id ?? `template-emergency-${weekStartKey}`;
-      const nextShiftTemplates = emergencyTemplate
-        ? state.shiftTemplates
-        : [
-            ...state.shiftTemplates,
-            {
-              id: emergencyTemplateId,
-              name: EMERGENCY_SHIFT_NAME,
-              type: 'full' as const,
-              startTime: '00:00',
-              endTime: '23:59',
-              slots: [],
-              requiredCouriers: 0,
-              activeStartDate: weekStartKey,
-              activeEndDate: weekEndKey,
-            },
-          ];
+      const { emergencyTemplate, emergencyTemplateId, nextShiftTemplates } =
+        resolveEmergencyTemplateState(
+          state.shiftTemplates,
+          todayKey,
+          weekStartKey,
+          weekEndKey
+        );
 
       const existingEmergencyShift =
         state.shifts.find(
@@ -966,58 +1753,15 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
             (shift.templateId === emergencyTemplateId || shift.name === EMERGENCY_SHIFT_NAME)
         ) ?? null;
 
-      const assignedSlotIds = new Set(existingEmergencyShift?.courierAssignments.map((assignment) => assignment.slotId) ?? []);
-      const emergencySlotNumbers = [...assignedSlotIds]
-        .map((slotId) => {
-          const match = slotId.match(/slot-emergency-(\d+)/);
-          return match ? Number(match[1]) : null;
-        })
-        .filter((value): value is number => value !== null);
-      const nextEmergencySlotNumber = emergencySlotNumbers.length > 0 ? Math.max(...emergencySlotNumbers) + 1 : 1;
-
-      const newSlot = {
-        id: `slot-emergency-${nextEmergencySlotNumber}-${Date.now()}-${courierId}`,
-        label: `${EMERGENCY_SHIFT_NAME} ${nextEmergencySlotNumber}`,
-      };
-      const existingEmergencyTemplateSlots = emergencyTemplate?.slots ?? [];
-      const hydratedEmergencySlots = [...existingEmergencyTemplateSlots];
-
-      assignedSlotIds.forEach((slotId) => {
-        if (hydratedEmergencySlots.some((slot) => slot.id === slotId)) return;
-        const match = slotId.match(/slot-emergency-(\d+)/);
-        const slotNumber = match ? Number(match[1]) : hydratedEmergencySlots.length + 1;
-        hydratedEmergencySlots.push({
-          id: slotId,
-          label: `${EMERGENCY_SHIFT_NAME} ${slotNumber}`,
-        });
-      });
-
-      const nextEmergencyTemplateSlots = [...hydratedEmergencySlots, newSlot];
+      const { assignedSlotIds, newSlot, nextEmergencyTemplateSlots } = buildEmergencySlotState(
+        emergencyTemplate,
+        existingEmergencyShift,
+        courierId
+      );
 
       const assignmentId = `shift-assignment-${Date.now()}-${courierId}-${newSlot.id}`;
-      const activeAssignmentIdsToClose = new Set<string>();
-
-      const nextShiftsBase = state.shifts.map((shift) => {
-        const nextAssignments = shift.courierAssignments.map((assignment) => {
-          if (assignment.courierId !== courierId || !assignment.startedAt || assignment.endedAt) {
-            return assignment;
-          }
-
-          activeAssignmentIdsToClose.add(assignment.id);
-          return {
-            ...assignment,
-            endedAt: now,
-          };
-        });
-
-        return nextAssignments === shift.courierAssignments
-          ? shift
-          : {
-              ...shift,
-              courierAssignments: nextAssignments,
-              status: getShiftStatusFromAssignments(nextAssignments),
-            };
-      });
+      const { nextShiftsBase, activeAssignmentIdsToClose } =
+        closeActiveCourierAssignmentsForShiftStart(state.shifts, courierId, now);
 
       const nextEmergencyShift = existingEmergencyShift
         ? {
@@ -1060,11 +1804,11 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
             createdAt: now,
           };
 
-      const nextShifts = existingEmergencyShift
-        ? nextShiftsBase.map((shift) => (shift.id === existingEmergencyShift.id ? nextEmergencyShift : shift))
-        : [...nextShiftsBase, nextEmergencyShift].sort((a, b) =>
-            a.date === b.date ? a.startTime.localeCompare(b.startTime) : a.date.localeCompare(b.date)
-          );
+      const nextShifts = upsertEmergencyShift(
+        nextShiftsBase,
+        existingEmergencyShift,
+        nextEmergencyShift
+      );
       const finalizedShiftTemplates = nextShiftTemplates.map((template) =>
         template.id === emergencyTemplateId
           ? {
@@ -1081,23 +1825,12 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
         ...state,
         shiftTemplates: finalizedShiftTemplates,
         shifts: nextShifts,
-        couriers: state.couriers.map((item) =>
-          item.id === courierId
-            ? {
-                ...item,
-                isOnShift: true,
-                shiftStartedAt: now,
-                shiftEndedAt: null,
-                currentShiftAssignmentId: assignmentId,
-              }
-            : activeAssignmentIdsToClose.has(item.currentShiftAssignmentId ?? '')
-              ? {
-                  ...item,
-                  isOnShift: false,
-                  shiftEndedAt: now,
-                  currentShiftAssignmentId: null,
-                }
-              : item
+        couriers: updateCouriersForStartedShift(
+          state.couriers,
+          courierId,
+          assignmentId,
+          activeAssignmentIdsToClose,
+          now
         ),
       };
     }
@@ -1109,44 +1842,19 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
 
       return {
         ...state,
-        shifts: courier?.currentShiftAssignmentId
-          ? state.shifts.map((shift) => {
-              const nextAssignments = shift.courierAssignments.map((assignment) =>
-                assignment.id === courier.currentShiftAssignmentId && !assignment.endedAt
-                  ? {
-                      ...assignment,
-                      startedAt: assignment.startedAt ?? now,
-                      endedAt: now,
-                    }
-                  : assignment
-              );
-
-              return nextAssignments === shift.courierAssignments
-                ? shift
-                : {
-                    ...shift,
-                    courierAssignments: nextAssignments,
-                    status: getShiftStatusFromAssignments(nextAssignments),
-                  };
-            })
-          : state.shifts,
-        couriers: state.couriers.map((courier) =>
-          courier.id === courierId
-            ? {
-                ...courier,
-                isOnShift: false,
-                shiftEndedAt: now,
-                currentShiftAssignmentId: null,
-              }
-            : courier
+        shifts: endCourierShiftAssignments(
+          state.shifts,
+          courier?.currentShiftAssignmentId,
+          now
         ),
+        couriers: updateCourierAfterShiftEnd(state.couriers, courierId, now),
       };
     }
 
     case 'CREATE_SHIFT': {
       return {
         ...state,
-        shifts: [...state.shifts, action.payload],
+        shifts: createShiftState(state.shifts, action.payload),
       };
     }
 
@@ -1154,38 +1862,23 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
       const { shiftId, updates } = action.payload;
       return {
         ...state,
-        shifts: state.shifts.map((shift) =>
-          shift.id === shiftId
-            ? {
-                ...shift,
-                ...updates,
-              }
-            : shift
-        ),
+        shifts: updateShiftState(state.shifts, shiftId, updates),
       };
     }
 
     case 'DELETE_SHIFT': {
       const { shiftId } = action.payload;
-      const deletedShift = state.shifts.find((shift) => shift.id === shiftId);
-      const deletedAssignmentIds = new Set(
-        deletedShift?.courierAssignments.map((assignment) => assignment.id) ?? []
+      const { shifts, couriers } = removeShiftAndResetCouriers(
+        state.shifts,
+        state.couriers,
+        shiftId,
+        new Date()
       );
 
       return {
         ...state,
-        shifts: state.shifts.filter((shift) => shift.id !== shiftId),
-        couriers: state.couriers.map((courier) =>
-          courier.currentShiftAssignmentId &&
-          deletedAssignmentIds.has(courier.currentShiftAssignmentId)
-            ? {
-                ...courier,
-                isOnShift: false,
-                shiftEndedAt: new Date(),
-                currentShiftAssignmentId: null,
-              }
-            : courier
-        ),
+        shifts,
+        couriers,
       };
     }
 
@@ -1195,49 +1888,19 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
         return state;
       }
 
-      const removedAssignmentIds: string[] = [];
+      const { shifts, couriers } = assignCourierToShiftState(
+        state.shifts,
+        state.couriers,
+        shiftId,
+        courierId,
+        slotId,
+        new Date()
+      );
 
       return {
         ...state,
-        shifts: state.shifts.map((shift) => {
-          if (shift.id !== shiftId) return shift;
-          const nextAssignmentsBase = shift.courierAssignments.filter((assignment) => {
-            const shouldRemove = assignment.slotId === slotId && !assignment.endedAt;
-            if (shouldRemove) {
-              removedAssignmentIds.push(assignment.id);
-            }
-            return !shouldRemove;
-          });
-          const nextAssignments = [
-            ...nextAssignmentsBase,
-            {
-              id: `shift-assignment-${Date.now()}-${courierId}-${slotId}`,
-              courierId,
-              slotId,
-              startedAt: null,
-              endedAt: null,
-            },
-          ];
-
-          return {
-            ...shift,
-            courierAssignments: nextAssignments,
-            status: getShiftStatusFromAssignments(nextAssignments),
-          };
-        }),
-        couriers:
-          removedAssignmentIds.length === 0
-            ? state.couriers
-            : state.couriers.map((courier) =>
-                courier.currentShiftAssignmentId && removedAssignmentIds.includes(courier.currentShiftAssignmentId)
-                  ? {
-                      ...courier,
-                      isOnShift: false,
-                      shiftEndedAt: new Date(),
-                      currentShiftAssignmentId: null,
-                    }
-                  : courier
-              ),
+        shifts,
+        couriers,
       };
     }
 
@@ -1288,126 +1951,58 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
 
     case 'REMOVE_COURIER_FROM_SHIFT': {
       const { shiftId, assignmentId } = action.payload;
+      const { shifts, couriers } = removeCourierFromShiftState(
+        state.shifts,
+        state.couriers,
+        shiftId,
+        assignmentId,
+        new Date()
+      );
 
       return {
         ...state,
-        shifts: state.shifts.map((shift) => {
-          if (shift.id !== shiftId) return shift;
-          const nextAssignments = shift.courierAssignments.filter(
-            (assignment) => assignment.id !== assignmentId
-          );
-
-          return {
-            ...shift,
-            courierAssignments: nextAssignments,
-            status: getShiftStatusFromAssignments(nextAssignments),
-          };
-        }),
-        couriers: state.couriers.map((courier) =>
-          courier.currentShiftAssignmentId === assignmentId
-            ? {
-                ...courier,
-                isOnShift: false,
-                shiftEndedAt: new Date(),
-                currentShiftAssignmentId: null,
-              }
-            : courier
-        ),
+        shifts,
+        couriers,
       };
     }
 
     case 'START_SHIFT_ASSIGNMENT': {
       const { shiftId, assignmentId } = action.payload;
       const now = new Date();
-      const targetShift = state.shifts.find((shift) => shift.id === shiftId);
-      const assignment = targetShift?.courierAssignments.find((item) => item.id === assignmentId);
-      const courier = assignment
-        ? state.couriers.find((item) => item.id === assignment.courierId)
-        : null;
-      if (!targetShift || !assignment || !courier || courier.status === 'offline') return state;
+      const nextState = startShiftAssignmentState(
+        state.shifts,
+        state.couriers,
+        shiftId,
+        assignmentId,
+        now
+      );
+
+      if (!nextState) return state;
 
       return {
         ...state,
-        shifts: state.shifts.map((shift) => {
-          const nextAssignments = shift.courierAssignments.map((item) => {
-            if (item.courierId !== assignment.courierId) return item;
-
-            if (shift.id === shiftId && item.id === assignmentId) {
-              return {
-                ...item,
-                startedAt: item.startedAt ?? now,
-                endedAt: null,
-              };
-            }
-
-            if (item.startedAt && !item.endedAt) {
-              return {
-                ...item,
-                endedAt: now,
-              };
-            }
-
-            return item;
-          });
-
-          return {
-            ...shift,
-            courierAssignments: nextAssignments,
-            status: getShiftStatusFromAssignments(nextAssignments),
-          };
-        }),
-        couriers: state.couriers.map((courier) =>
-          courier.id === assignment.courierId
-            ? {
-                ...courier,
-                isOnShift: true,
-                shiftStartedAt: now,
-                shiftEndedAt: null,
-                currentShiftAssignmentId: assignmentId,
-              }
-            : courier
-        ),
+        shifts: nextState.shifts,
+        couriers: nextState.couriers,
       };
     }
 
     case 'END_SHIFT_ASSIGNMENT': {
       const { shiftId, assignmentId } = action.payload;
       const now = new Date();
-      const targetShift = state.shifts.find((shift) => shift.id === shiftId);
-      const assignment = targetShift?.courierAssignments.find((item) => item.id === assignmentId);
-      if (!targetShift || !assignment) return state;
+      const nextState = endShiftAssignmentState(
+        state.shifts,
+        state.couriers,
+        shiftId,
+        assignmentId,
+        now
+      );
+
+      if (!nextState) return state;
 
       return {
         ...state,
-        shifts: state.shifts.map((shift) => {
-          if (shift.id !== shiftId) return shift;
-
-          const nextAssignments = shift.courierAssignments.map((item) =>
-            item.id === assignmentId
-              ? {
-                  ...item,
-                  startedAt: item.startedAt ?? now,
-                  endedAt: now,
-                }
-              : item
-          );
-
-          return {
-            ...shift,
-            courierAssignments: nextAssignments,
-            status: getShiftStatusFromAssignments(nextAssignments),
-          };
-        }),
-        couriers: state.couriers.map((courier) =>
-          courier.id === assignment.courierId
-            ? {
-                ...courier,
-                isOnShift: false,
-                shiftEndedAt: now,
-                currentShiftAssignmentId: null,
-              }
-            : courier
-        ),
+        shifts: nextState.shifts,
+        couriers: nextState.couriers,
       };
     }
 
@@ -1420,6 +2015,14 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
 
     case 'REMOVE_COURIER': {
       const courierId = action.payload;
+      const nextState = removeCourierState(state.shifts, state.couriers, courierId);
+      if (!nextState) return state;
+
+      return {
+        ...state,
+        shifts: nextState.shifts,
+        couriers: nextState.couriers,
+      };
       // בדיקה אם לשליח יש משלוחים פעילים
       const courier = state.couriers.find(c => c.id === courierId);
       if (courier && courier.activeDeliveryIds.length > 0) {
@@ -1449,13 +2052,10 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
 
     case 'TOGGLE_RESTAURANT': {
       const restaurantId = action.payload;
-      const newRestaurants = state.restaurants.map(r =>
-        r.id === restaurantId ? { ...r, isActive: !r.isActive } : r
-      );
 
       return {
         ...state,
-        restaurants: newRestaurants,
+        restaurants: toggleRestaurantState(state.restaurants, restaurantId),
       };
     }
 
@@ -1463,22 +2063,7 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
       const { restaurantId, updates } = action.payload;
       return {
         ...state,
-        restaurants: state.restaurants.map((restaurant) =>
-          restaurant.id === restaurantId
-            ? {
-                ...restaurant,
-                ...updates,
-                defaultPreparationTime:
-                  typeof updates.defaultPreparationTime === 'number' && updates.defaultPreparationTime > 0
-                    ? updates.defaultPreparationTime
-                    : restaurant.defaultPreparationTime,
-                maxDeliveryTime:
-                  typeof updates.maxDeliveryTime === 'number' && updates.maxDeliveryTime > 0
-                    ? updates.maxDeliveryTime
-                    : restaurant.maxDeliveryTime,
-              }
-            : restaurant
-        ),
+        restaurants: updateRestaurantState(state.restaurants, restaurantId, updates),
       };
     }
 
@@ -1491,6 +2076,19 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
 
     case 'REMOVE_RESTAURANT': {
       const restaurantId = action.payload;
+      const nextRestaurants = removeRestaurantState(
+        state.deliveries,
+        state.restaurants,
+        restaurantId
+      );
+
+      if (!nextRestaurants) return state;
+
+      return {
+        ...state,
+        restaurants: nextRestaurants,
+      };
+
       const hasActiveDeliveries = state.deliveries.some(d =>
         d.restaurantId === restaurantId &&
         d.status !== 'delivered' &&
@@ -1524,22 +2122,21 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
 
     case 'REORDER_DELIVERY': {
       const { deliveryId, newPriority } = action.payload;
-      const newDeliveries = state.deliveries.map(d => 
-        d.id === deliveryId 
-          ? { ...d, orderPriority: newPriority }
-          : d
-      );
-      
+
       return {
         ...state,
-        deliveries: newDeliveries,
+        deliveries: reorderDeliveriesByPriority(
+          state.deliveries,
+          deliveryId,
+          newPriority
+        ),
       };
     }
 
     case 'ADD_ACTIVITY_LOG':
       return {
         ...state,
-        activityLogs: [action.payload, ...state.activityLogs].slice(0, 500),
+        activityLogs: appendActivityLogEntry(state.activityLogs, action.payload),
       };
 
     case 'CLEAR_ACTIVITY_LOGS':

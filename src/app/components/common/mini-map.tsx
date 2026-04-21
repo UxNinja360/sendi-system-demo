@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Map, Maximize2, Minimize2, X, Move } from 'lucide-react';
 import { useDelivery } from '../../context/delivery.context';
-import { isMcDonaldsRestaurant } from '../../utils/restaurant-branding';
+import { getRestaurantBrandMarker } from '../../utils/restaurant-branding';
 
 type Position = { x: number; y: number };
 type Size = 'small' | 'medium' | 'large' | 'xlarge' | 'full';
@@ -259,29 +259,31 @@ export const MiniMap: React.FC = () => {
           };
           const color = colors[marker.type as keyof typeof colors];
 
+          const brandMarker =
+            marker.type === 'restaurant' ? getRestaurantBrandMarker(marker.label) : null;
+
           return (
             <g key={marker.id} className="hover:opacity-80 transition-opacity">
               <circle
                 cx={marker.x}
                 cy={marker.y}
                 r="2"
-                fill={marker.type === 'restaurant' && isMcDonaldsRestaurant(marker.label) ? '#da291c' : color.fill}
-                stroke={color.stroke}
-                strokeWidth="0.5"
+                fill={brandMarker?.fill ?? color.fill}
+                stroke="none"
                 className="animate-pulse"
               >
                 <title>{marker.label}</title>
               </circle>
-              {marker.type === 'restaurant' && isMcDonaldsRestaurant(marker.label) && (
+              {marker.type === 'restaurant' && brandMarker && (
                 <text
                   x={marker.x}
                   y={marker.y + 0.7}
                   fontSize="1.8"
                   fontWeight="900"
-                  fill="#ffc72c"
+                  fill={brandMarker.text}
                   textAnchor="middle"
                 >
-                  M
+                  {brandMarker.label}
                 </text>
               )}
               {marker.type === 'courier' && (

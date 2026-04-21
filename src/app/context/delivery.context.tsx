@@ -27,6 +27,7 @@ const AREAS = ['תל אביב', 'רמת גן', 'גבעתיים', 'בני ברק'
 
 const DEFAULT_RESTAURANT_PREPARATION_TIME = 5;
 const DEFAULT_COURIER_VEHICLE_TYPE: Courier['vehicleType'] = 'אופנוע';
+const DEFAULT_COURIER_EMPLOYMENT_TYPE: Courier['employmentType'] = 'פר משלוח';
 const DEFAULT_RESTAURANT_MAX_DELIVERY_TIME = 30;
 
 const getDefaultPreparationTimeByType = (_type: string) => DEFAULT_RESTAURANT_PREPARATION_TIME;
@@ -34,6 +35,7 @@ const getDefaultPreparationTimeByType = (_type: string) => DEFAULT_RESTAURANT_PR
 const normalizeCourier = (courier: Courier): Courier => ({
   ...courier,
   vehicleType: courier.vehicleType ?? DEFAULT_COURIER_VEHICLE_TYPE,
+  employmentType: courier.employmentType ?? DEFAULT_COURIER_EMPLOYMENT_TYPE,
 });
 
 const normalizeCouriers = (couriers: Courier[]): Courier[] => couriers.map(normalizeCourier);
@@ -157,6 +159,7 @@ const generateCouriers = (): Courier[] => {
   };
   
   const couriers: Courier[] = [];
+  const employmentTypes: Courier['employmentType'][] = ['פר משלוח', 'שעתי'];
   
   for (let i = 0; i < 24; i++) {
     const phoneNumber = Math.floor(1000000 + seededRandom((i + 1) * 1000) * 9000000);
@@ -167,6 +170,7 @@ const generateCouriers = (): Courier[] => {
       name: courierNames[i],
       phone: `050-${phoneNumber}`,
       vehicleType: vehicleTypes[i % vehicleTypes.length],
+      employmentType: employmentTypes[i % employmentTypes.length],
       status: 'offline',
       isOnShift: false,
       shiftStartedAt: null,
@@ -472,6 +476,97 @@ const generateRestaurants = (): Restaurant[] => {
       totalOrders: 940,
       avgTime: 24,
     },
+    {
+      name: 'דומינו\'ס אבן גבירול',
+      type: 'פיצה',
+      city: 'תל אביב',
+      street: 'אבן גבירול',
+      streetNumber: 143,
+      phone: '076-804-8974',
+      lat: 32.0939,
+      lng: 34.7818,
+      rating: 4.5,
+      totalOrders: 1185,
+      avgTime: 23,
+    },
+    {
+      name: 'דומינו\'ס הירקון כשר',
+      type: 'פיצה',
+      city: 'תל אביב',
+      street: 'כ״ג יורדי הסירה',
+      streetNumber: 10,
+      phone: '076-804-8950',
+      lat: 32.0972,
+      lng: 34.7731,
+      rating: 4.4,
+      totalOrders: 960,
+      avgTime: 24,
+    },
+    {
+      name: 'דומינו\'ס יגאל אלון',
+      type: 'פיצה',
+      city: 'תל אביב',
+      street: 'יגאל אלון',
+      streetNumber: 90,
+      phone: '076-804-8950',
+      lat: 32.0695,
+      lng: 34.7938,
+      rating: 4.5,
+      totalOrders: 1040,
+      avgTime: 22,
+    },
+    {
+      name: 'דומינו\'ס פלורנטין',
+      type: 'פיצה',
+      city: 'תל אביב',
+      street: 'פלורנטין',
+      streetNumber: 25,
+      phone: '076-804-8950',
+      lat: 32.0569,
+      lng: 34.7699,
+      rating: 4.6,
+      totalOrders: 990,
+      avgTime: 21,
+    },
+    {
+      name: 'דומינו\'ס קרליבך',
+      type: 'פיצה',
+      city: 'תל אביב',
+      street: 'קרליבך',
+      streetNumber: 29,
+      phone: '076-804-8950',
+      lat: 32.0714,
+      lng: 34.7801,
+      rating: 4.5,
+      totalOrders: 1015,
+      avgTime: 22,
+    },
+    {
+      name: 'דומינו\'ס רמת אביב',
+      type: 'פיצה',
+      city: 'תל אביב',
+      street: 'טאגור',
+      streetNumber: 30,
+      phone: '076-804-8950',
+      lat: 32.1147,
+      lng: 34.7966,
+      rating: 4.4,
+      totalOrders: 870,
+      avgTime: 24,
+    },
+    {
+      name: 'דומינו\'ס רמת החייל',
+      type: 'פיצה',
+      city: 'תל אביב',
+      street: 'ראול ולנברג',
+      streetNumber: 24,
+      phone: '076-804-8950',
+      lat: 32.1104,
+      lng: 34.8402,
+      rating: 4.5,
+      totalOrders: 930,
+      avgTime: 23,
+    },
   ];
 
   // ×¤×•× ×§×¦×™×” ×©×ž×—×–×™×¨×” ××ª ×”×’×“×¨×•×ª ×”×ž×¡×¢×“×” ×œ×¤×™ ×¡×•×’
@@ -524,6 +619,19 @@ const generateRestaurants = (): Restaurant[] => {
 };
 
 const RESTAURANTS_DATA: Restaurant[] = normalizeRestaurants(generateRestaurants());
+
+const mergeSeededRestaurants = (restaurants: Restaurant[]): Restaurant[] => {
+  const normalizedExisting = normalizeRestaurants(restaurants);
+  const existingNames = new Set(
+    normalizedExisting.map(restaurant => restaurant.name.trim().toLowerCase())
+  );
+
+  const missingSeededRestaurants = RESTAURANTS_DATA.filter(
+    restaurant => !existingNames.has(restaurant.name.trim().toLowerCase())
+  );
+
+  return [...normalizedExisting, ...missingSeededRestaurants];
+};
 
 // ×™×¦×™×¨×ª ×œ×§×•×—×•×ª
 const generateCustomers = (): Customer[] => {
@@ -1020,7 +1128,7 @@ const loadInitialState = (baseState: DeliveryState): DeliveryState => {
 
     const parsed = reviveDates(JSON.parse(raw)) as Partial<DeliveryState>;
 
-    const restaurants = normalizeRestaurants(
+    const restaurants = mergeSeededRestaurants(
       (parsed.restaurants as Restaurant[] | undefined) ?? baseState.restaurants
     );
     const couriers = normalizeCouriers(

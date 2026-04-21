@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
 import { ChevronUp, ChevronDown, GripVertical } from 'lucide-react';
+import {
+  TABLE_ACTIONS_HEAD_CLASS,
+  TABLE_CHECKBOX_HEAD_CLASS,
+  TABLE_CHECKBOX_LABEL_CLASS,
+  TABLE_HEAD_SURFACE_CLASS,
+  TABLE_HEADER_CELL_BASE_CLASS,
+} from '../common/table-ui';
 import type { ColumnDef } from './column-defs';
 
 interface DeliveryTableHeaderProps {
@@ -71,12 +78,12 @@ export const DeliveryTableHeader: React.FC<DeliveryTableHeaderProps> = ({
   };
 
   return (
-    <thead className="bg-[#fafafa] dark:bg-[#0a0a0a] border-b border-[#e5e5e5] dark:border-[#262626] sticky top-0 z-10">
+    <thead className={TABLE_HEAD_SURFACE_CLASS}>
       <tr>
         {/* Checkbox column */}
-        <th className="pr-4 pl-0">
+        <th className={TABLE_CHECKBOX_HEAD_CLASS}>
           <label
-            className="flex items-center justify-start min-h-[42px] cursor-pointer touch-manipulation"
+            className={TABLE_CHECKBOX_LABEL_CLASS}
             style={{ touchAction: 'manipulation' }}
           >
             <input
@@ -105,7 +112,7 @@ export const DeliveryTableHeader: React.FC<DeliveryTableHeaderProps> = ({
             return (
               <th
                 key={col.id}
-                className={`group/col pr-2 pl-2 py-2.5 text-right transition-all ${dragClasses}`}
+                className={`${TABLE_HEADER_CELL_BASE_CLASS} pr-2 pl-2 ${dragClasses}`}
                 draggable
                 onDragStart={e => handleDragStart(e, col.id)}
                 onDragOver={e => handleDragOver(e, col.id)}
@@ -130,7 +137,7 @@ export const DeliveryTableHeader: React.FC<DeliveryTableHeaderProps> = ({
           return (
             <th
               key={col.id}
-              className={`group/col pr-2 pl-2 py-2.5 text-right transition-all ${dragClasses}`}
+                className={`${TABLE_HEADER_CELL_BASE_CLASS} pr-2 pl-2 ${dragClasses}`}
               draggable
               onDragStart={e => handleDragStart(e, col.id)}
               onDragOver={e => handleDragOver(e, col.id)}
@@ -149,7 +156,7 @@ export const DeliveryTableHeader: React.FC<DeliveryTableHeaderProps> = ({
         })}
 
         {/* Actions column */}
-        <th className="px-1 py-2.5 w-10 text-center">
+        <th className={TABLE_ACTIONS_HEAD_CLASS}>
           <span className="sr-only">פעולות</span>
         </th>
       </tr>

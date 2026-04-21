@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { isMcDonaldsRestaurant } from '../../utils/restaurant-branding';
+import { getRestaurantBrandMarker } from '../../utils/restaurant-branding';
 
 interface Delivery {
   id: string;
@@ -189,9 +189,12 @@ export const PendingDeliveriesMap: React.FC<PendingDeliveriesMapProps> = ({
         {/* סמני מסעדות */}
         {markers
           .filter(m => m.type === 'restaurant')
-          .map(marker => (
+          .map(marker => {
+            const brandMarker = getRestaurantBrandMarker(marker.label);
+
+            return (
             <g key={marker.id}>
-              {isMcDonaldsRestaurant(marker.label) ? (
+              {brandMarker ? (
                 <>
                   <rect
                     x={marker.position.x - 2.5}
@@ -199,19 +202,17 @@ export const PendingDeliveriesMap: React.FC<PendingDeliveriesMapProps> = ({
                     width="5"
                     height="5"
                     rx="1"
-                    fill="#da291c"
-                    stroke={isDark ? '#171717' : '#ffffff'}
-                    strokeWidth="0.6"
+                    fill={brandMarker.fill}
                   />
                   <text
                     x={marker.position.x}
                     y={marker.position.y + 1}
                     fontSize="3"
                     fontWeight="900"
-                    fill="#ffc72c"
+                    fill={brandMarker.text}
                     textAnchor="middle"
                   >
-                    M
+                    {brandMarker.label}
                   </text>
                 </>
               ) : (
@@ -221,8 +222,7 @@ export const PendingDeliveriesMap: React.FC<PendingDeliveriesMapProps> = ({
                     cy={marker.position.y}
                     r="2.5"
                     fill={isDark ? '#171717' : '#ffffff'}
-                    stroke="#ef4444"
-                    strokeWidth="0.6"
+                    stroke="none"
                   />
                   <circle
                     cx={marker.position.x}
@@ -233,7 +233,7 @@ export const PendingDeliveriesMap: React.FC<PendingDeliveriesMapProps> = ({
                 </>
               )}
             </g>
-          ))}
+          )})}
 
         {/* סמני משלוחים */}
         {markers

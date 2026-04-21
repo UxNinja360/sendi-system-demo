@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Power, Download, GripVertical, Store as StoreIcon, Menu, Plus, MoreVertical, Trash2, X, Sparkles, Search, Filter, FileText, FileSpreadsheet, SlidersHorizontal } from 'lucide-react';
+import { Power, Download, Store as StoreIcon, Menu, Plus, Trash2, X, Sparkles, Search, Filter, FileText, FileSpreadsheet, SlidersHorizontal } from 'lucide-react';
 import { useDelivery } from '../../../context/delivery.context';
 import { useNavigate } from 'react-router';
 import { Delivery, Restaurant } from '../../../types/delivery.types';
@@ -14,15 +14,25 @@ import { RestaurantsToolbar } from './restaurants-toolbar';
 import { RestaurantsInlineFilters } from './restaurants-inline-filters';
 import { getRestaurantChainId, isMcDonaldsRestaurant } from '../../../utils/restaurant-branding';
 import {
-  ENTITY_TABLE_ACTIONS_BODY_CLASS,
-  ENTITY_TABLE_ACTIONS_HEAD_CLASS,
-  ENTITY_TABLE_CHECKBOX_BODY_CLASS,
-  ENTITY_TABLE_CHECKBOX_BODY_LABEL_CLASS,
-  ENTITY_TABLE_CHECKBOX_HEAD_CLASS,
-  ENTITY_TABLE_CHECKBOX_HEAD_LABEL_CLASS,
+  EntityActionMenu,
+  EntityActionMenuDivider,
+  EntityActionMenuHeader,
+  EntityActionMenuItem,
+  EntityActionMenuOverlay,
+} from './entity-action-menu';
+import { EntityRowActionTrigger } from './entity-row-action-trigger';
+import { EntityTableHeaderCell } from './entity-table-header-cell';
+import {
+  EntityTableActionsCell,
+  EntityTableActionsHeader,
+  EntityTableHeaderCheckbox,
+  EntityTableRowCheckbox,
+  EntityTableShell,
+} from './entity-table-shell';
+import {
   ENTITY_TABLE_DATA_CELL_CLASS,
   ENTITY_TABLE_HEAD_CLASS,
-  ENTITY_TABLE_HEADER_CELL_BASE_CLASS,
+  ENTITY_TABLE_ROW_CLASS,
   ENTITY_TABLE_WIDTHS,
 } from './entity-table-shared';
 
@@ -94,6 +104,7 @@ const getRestaurantColumnWidth = (columnId: RestaurantColId) => {
   }
 };
 type RestaurantColId = typeof RESTAURANT_COLS[number]['id'];
+type RestaurantSortableColumnId = RestaurantColId;
 const COL_ORDER_KEY = 'restaurants-column-order-v3';
 const RESTAURANT_VISIBLE_COLUMNS_KEY = 'restaurants-visible-columns-v1';
 const RESTAURANT_COLUMN_CATEGORIES = [
@@ -133,6 +144,8 @@ export const RestaurantsPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [cityFilter, setCityFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [sortColumn, setSortColumn] = useState<RestaurantSortableColumnId>('name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [openActionsRestaurantId, setOpenActionsRestaurantId] = useState<string | null>(null);
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
@@ -226,19 +239,57 @@ export const RestaurantsPage: React.FC = () => {
   const uniqueCities = useMemo(() => [...new Set(restaurants.map(r => r.city))].sort((a, b) => a.localeCompare(b, 'he')), [restaurants]);
   const uniqueTypes = useMemo(() => [...new Set(restaurants.map(r => r.type))].sort((a, b) => a.localeCompare(b, 'he')), [restaurants]);
 
-  const filteredRestaurants = useMemo(() => restaurants.filter(r => {
-    const matchesSearch = !searchQuery ||
-      r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.contactPerson.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.phone.includes(searchQuery);
-    const matchesStatus = statusFilter === 'all' ||
-      (statusFilter === 'active' && r.isActive) ||
-      (statusFilter === 'inactive' && !r.isActive);
-    const matchesCity = cityFilter === 'all' || r.city === cityFilter;
-    const matchesType = typeFilter === 'all' || r.type === typeFilter;
-    return matchesSearch && matchesStatus && matchesCity && matchesType;
-  }), [restaurants, searchQuery, statusFilter, cityFilter, typeFilter]);
+  const handleRestaurantSort = useCallback((columnId: RestaurantSortableColumnId) => {
+    setSortColumn((current) => {
+      if (current === columnId) {
+        setSortDirection((direction) => (direction === 'asc' ? 'desc' : 'asc'));
+        return current;
+      }
+      setSortDirection('asc');
+      return columnId;
+    });
+  }, []);
+
+  const filteredRestaurants = useMemo(() => {
+    const filtered = restaurants.filter((r) => {
+      const matchesSearch = !searchQuery ||
+        r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        r.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        r.contactPerson.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        r.phone.includes(searchQuery);
+      const matchesStatus = statusFilter === 'all' ||
+        (statusFilter === 'active' && r.isActive) ||
+        (statusFilter === 'inactive' && !r.isActive);
+      const matchesCity = cityFilter === 'all' || r.city === cityFilter;
+      const matchesType = typeFilter === 'all' || r.type === typeFilter;
+      return matchesSearch && matchesStatus && matchesCity && matchesType;
+    });
+
+    const direction = sortDirection === 'asc' ? 1 : -1;
+
+    return [...filtered].sort((a, b) => {
+      switch (sortColumn) {
+        case 'name':
+          return a.name.localeCompare(b.name, 'he') * direction;
+        case 'chainId':
+          return (a.chainId || '-').localeCompare(b.chainId || '-', 'he') * direction;
+        case 'type':
+          return a.type.localeCompare(b.type, 'he') * direction;
+        case 'status':
+          return a.status.localeCompare(b.status, 'he') * direction;
+        case 'address':
+          return `${a.street}, ${a.city}`.localeCompare(`${b.street}, ${b.city}`, 'he') * direction;
+        case 'phone':
+          return a.phone.localeCompare(b.phone, 'he') * direction;
+        case 'contact':
+          return a.contactPerson.localeCompare(b.contactPerson, 'he') * direction;
+        case 'deliveries':
+          return (a.totalDeliveries - b.totalDeliveries) * direction;
+        default:
+          return 0;
+      }
+    });
+  }, [restaurants, searchQuery, statusFilter, cityFilter, typeFilter, sortColumn, sortDirection]);
 
   // Stats
   const stats = useMemo(() => ({
@@ -745,8 +796,9 @@ export const RestaurantsPage: React.FC = () => {
                   )}
                 </div>
               ) : (
-                <div className="overflow-auto relative flex-1">
-                  <table className="w-full" role="grid" aria-label="טבלת מסעדות">
+                <EntityTableShell
+                  ariaLabel="טבלת מסעדות"
+                  colgroup={
                     <colgroup>
                       <col style={{ width: ENTITY_TABLE_WIDTHS.checkbox }} />
                       {visibleOrderedCols.map((col) => (
@@ -754,143 +806,128 @@ export const RestaurantsPage: React.FC = () => {
                       ))}
                       <col style={{ width: ENTITY_TABLE_WIDTHS.actions }} />
                     </colgroup>
-                    {/* ── Header ── */}
-                    <thead className={ENTITY_TABLE_HEAD_CLASS}>
-                      <tr>
-                        <th className={ENTITY_TABLE_CHECKBOX_HEAD_CLASS}>
-                          <label
-                            className={ENTITY_TABLE_CHECKBOX_HEAD_LABEL_CLASS}
-                            style={{ touchAction: 'manipulation' }}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={allVisibleRestaurantsSelected}
-                              ref={(el) => { if (el) el.indeterminate = someVisibleRestaurantsSelected && !allVisibleRestaurantsSelected; }}
-                              onChange={handleToggleSelectAllRestaurants}
-                              className="h-4 w-4 cursor-pointer rounded border-[#d4d4d4] text-[#16a34a] accent-[#16a34a] focus:ring-[#16a34a] focus:ring-offset-0 dark:border-[#404040]"
-                            />
-                          </label>
-                        </th>
-                        {/* Draggable data columns */}
-                        {visibleOrderedCols.map(col => (
-                          <th
-                            key={col.id}
-                            draggable
-                            onDragStart={e => { e.dataTransfer.setData('text/plain', col.id); setDraggingId(col.id); }}
-                            onDragOver={e => { e.preventDefault(); setDragOverId(col.id); }}
-                            onDragLeave={() => setDragOverId(null)}
-                            onDrop={e => { e.preventDefault(); const from = e.dataTransfer.getData('text/plain'); handleColumnReorder(from, col.id); setDragOverId(null); setDraggingId(null); }}
-                            onDragEnd={() => { setDraggingId(null); setDragOverId(null); }}
-                            className={`${ENTITY_TABLE_HEADER_CELL_BASE_CLASS} pr-2 pl-2 whitespace-nowrap select-none cursor-grab
-                              ${draggingId === col.id ? 'opacity-40' : ''}
-                              ${dragOverId === col.id && draggingId !== col.id ? 'bg-[#dbeafe] ring-2 ring-inset ring-[#3b82f6]/40 dark:bg-[#1e3a8a]/40' : ''}`}
-                          >
-                            <div className="flex items-center gap-1">
-                              <span className="text-xs font-medium text-[#666d80] dark:text-[#a3a3a3]">{col.label}</span>
-                              <GripVertical className="h-3 w-3 shrink-0 cursor-grab text-[#d4d4d4] opacity-0 transition-opacity group-hover/col:opacity-100 active:cursor-grabbing dark:text-[#404040]" />
-                            </div>
-                          </th>
-                        ))}
-
-                        {/* Actions (fixed, not draggable) */}
-                        <th className={ENTITY_TABLE_ACTIONS_HEAD_CLASS}>
-                          <span className="sr-only">פעולות</span>
-                        </th>
-                      </tr>
-                    </thead>
-
-                    {/* ── Body ── */}
-                    <tbody>
-                      {filteredRestaurants.map((restaurant, idx) => (
-                          <tr
-                            key={restaurant.restaurantId}
-                            onClick={() => navigate(`/restaurant/${restaurant.restaurantId}`)}
-                            onContextMenu={(e) => {
-                              e.preventDefault();
-                              setContextMenuPos({ x: e.clientX, y: e.clientY });
-                              setOpenActionsRestaurantId(restaurant.restaurantId);
-                            }}
-                            className="border-b border-[#f5f5f5] dark:border-[#1f1f1f] transition-colors cursor-pointer bg-white dark:bg-[#171717] hover:bg-[#fafafa] dark:hover:bg-[#111111]"
-                          >
-                            <td className={ENTITY_TABLE_CHECKBOX_BODY_CLASS} onClick={e => e.stopPropagation()}>
-                              <label
-                                className={ENTITY_TABLE_CHECKBOX_BODY_LABEL_CLASS}
-                                style={{ touchAction: 'manipulation' }}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={selectedRestaurantIds.has(restaurant.restaurantId)}
-                                  onChange={() => handleToggleSelectRestaurant(restaurant.restaurantId)}
-                                  className="h-4 w-4 cursor-pointer rounded border-[#d4d4d4] text-[#16a34a] accent-[#16a34a] focus:ring-[#16a34a] focus:ring-offset-0 dark:border-[#404040]"
-                                />
-                              </label>
-                            </td>
-                            {/* Data cells in column order */}
-                            {visibleOrderedCols.map(col => (
-                              <td key={col.id} className={ENTITY_TABLE_DATA_CELL_CLASS}>
-                                {col.id === 'name' && (
-                                  <span className="block truncate font-medium text-xs text-[#0d0d12] dark:text-[#fafafa] whitespace-nowrap">{restaurant.name}</span>
-                                )}
-                                {col.id === 'type' && (
-                                  <span className="block truncate text-xs text-[#737373] dark:text-[#a3a3a3] whitespace-nowrap">{restaurant.type}</span>
-                                )}
-                                {col.id === 'chainId' && (
-                                  <span className="block truncate text-xs text-[#666d80] dark:text-[#a3a3a3] whitespace-nowrap">{restaurant.chainId}</span>
-                                )}
-                                {col.id === 'status' && (
-                                  <span className={`text-xs font-medium whitespace-nowrap ${restaurant.isActive ? 'text-[#16a34a] dark:text-[#9fe870]' : 'text-[#737373] dark:text-[#a3a3a3]'}`}>
-                                    {restaurant.status}
-                                  </span>
-                                )}
-                                {col.id === 'address' && (
-                                  <span className="block truncate text-xs text-[#666d80] dark:text-[#a3a3a3] whitespace-nowrap">{restaurant.street}, {restaurant.city}</span>
-                                )}
-                                {col.id === 'phone' && (
-                                  <span className="block truncate text-xs text-[#666d80] dark:text-[#a3a3a3] whitespace-nowrap">{restaurant.phone}</span>
-                                )}
-                                {col.id === 'contact' && (
-                                  <span className="block truncate text-xs text-[#666d80] dark:text-[#a3a3a3] whitespace-nowrap">{restaurant.contactPerson}</span>
-                                )}
-                                {col.id === 'deliveries' && (
-                                  <span className="text-xs text-[#0d0d12] dark:text-[#fafafa] font-medium whitespace-nowrap">{restaurant.totalDeliveries}</span>
-                                )}
-                              </td>
-                            ))}
-
-                            {/* Actions */}
-                            <td className={ENTITY_TABLE_ACTIONS_BODY_CLASS} onClick={e => e.stopPropagation()}>
-                              <div className="flex justify-center gap-1">
-                                <button
-                                  data-onboarding={idx === 0 ? 'restaurant-toggle' : undefined}
-                                  onClick={(e) => handleToggleRestaurant(restaurant.restaurantId, e)}
-                                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-medium transition-all text-xs ${
-                                    restaurant.isActive
-                                      ? 'bg-[#ecfae2] dark:bg-[#163300] text-[#16a34a] dark:text-[#9fe870] hover:bg-[#dcf5d2] dark:hover:bg-[#1f4500]'
-                                      : 'bg-[#f5f5f5] dark:bg-[#262626] hover:bg-[#e5e5e5] dark:hover:bg-[#404040] text-[#737373] dark:text-[#a3a3a3]'
-                                  }`}
-                                  title={restaurant.isActive ? 'השבת מסעדה' : 'הפעל מסעדה'}
-                                >
-                                  <Power className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
-                                    setContextMenuPos({ x: rect.left, y: rect.bottom + 4 });
-                                    setOpenActionsRestaurantId(restaurant.restaurantId);
-                                  }}
-                                  className="inline-flex items-center justify-center p-1.5 rounded-lg text-[#737373] dark:text-[#a3a3a3] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors"
-                                  title="עוד"
-                                >
-                                  <MoreVertical className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
+                  }
+                  headerRow={
+                    <tr>
+                      <EntityTableHeaderCheckbox
+                        checked={allVisibleRestaurantsSelected}
+                        indeterminate={someVisibleRestaurantsSelected}
+                        onChange={handleToggleSelectAllRestaurants}
+                      />
+                      {visibleOrderedCols.map((col) => (
+                        <EntityTableHeaderCell
+                          key={col.id}
+                          label={col.label}
+                          onSort={() => handleRestaurantSort(col.id)}
+                          sortDirection={sortColumn === col.id ? sortDirection : null}
+                          draggable
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData('text/plain', col.id);
+                            setDraggingId(col.id);
+                          }}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            setDragOverId(col.id);
+                          }}
+                          onDragLeave={() => setDragOverId(null)}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            const from = e.dataTransfer.getData('text/plain');
+                            handleColumnReorder(from, col.id);
+                            setDragOverId(null);
+                            setDraggingId(null);
+                          }}
+                          onDragEnd={() => {
+                            setDraggingId(null);
+                            setDragOverId(null);
+                          }}
+                          isDragging={draggingId === col.id}
+                          isDragOver={dragOverId === col.id && draggingId !== col.id}
+                        />
                       ))}
-                    </tbody>
-                  </table>
-                </div>
+                      <EntityTableActionsHeader />
+                    </tr>
+                  }
+                >
+                  {filteredRestaurants.map((restaurant, idx) => (
+                    <tr
+                      key={restaurant.restaurantId}
+                      onClick={() => navigate(`/restaurant/${restaurant.restaurantId}`)}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        setContextMenuPos({ x: e.clientX, y: e.clientY });
+                        setOpenActionsRestaurantId(restaurant.restaurantId);
+                      }}
+                      className={ENTITY_TABLE_ROW_CLASS}
+                    >
+                      <EntityTableRowCheckbox
+                        checked={selectedRestaurantIds.has(restaurant.restaurantId)}
+                        onChange={() => handleToggleSelectRestaurant(restaurant.restaurantId)}
+                      />
+                      {visibleOrderedCols.map((col) => (
+                        <td key={col.id} className={ENTITY_TABLE_DATA_CELL_CLASS}>
+                          {col.id === 'name' && (
+                            <span className="block truncate font-medium text-xs text-[#0d0d12] dark:text-[#fafafa] whitespace-nowrap">
+                              {restaurant.name}
+                            </span>
+                          )}
+                          {col.id === 'type' && (
+                            <span className="block truncate text-xs text-[#737373] dark:text-[#a3a3a3] whitespace-nowrap">
+                              {restaurant.type}
+                            </span>
+                          )}
+                          {col.id === 'chainId' && (
+                            <span className="block truncate text-xs text-[#666d80] dark:text-[#a3a3a3] whitespace-nowrap">
+                              {restaurant.chainId}
+                            </span>
+                          )}
+                          {col.id === 'status' && (
+                            <span
+                              className={`text-xs font-medium whitespace-nowrap ${
+                                restaurant.isActive
+                                  ? 'text-[#16a34a] dark:text-[#9fe870]'
+                                  : 'text-[#737373] dark:text-[#a3a3a3]'
+                              }`}
+                            >
+                              {restaurant.status}
+                            </span>
+                          )}
+                          {col.id === 'address' && (
+                            <span className="block truncate text-xs text-[#666d80] dark:text-[#a3a3a3] whitespace-nowrap">
+                              {restaurant.street}, {restaurant.city}
+                            </span>
+                          )}
+                          {col.id === 'phone' && (
+                            <span className="block truncate text-xs text-[#666d80] dark:text-[#a3a3a3] whitespace-nowrap">
+                              {restaurant.phone}
+                            </span>
+                          )}
+                          {col.id === 'contact' && (
+                            <span className="block truncate text-xs text-[#666d80] dark:text-[#a3a3a3] whitespace-nowrap">
+                              {restaurant.contactPerson}
+                            </span>
+                          )}
+                          {col.id === 'deliveries' && (
+                            <span className="text-xs text-[#0d0d12] dark:text-[#fafafa] font-medium whitespace-nowrap">
+                              {restaurant.totalDeliveries}
+                            </span>
+                          )}
+                        </td>
+                      ))}
+                      <EntityTableActionsCell onClick={(e) => e.stopPropagation()}>
+                        <EntityRowActionTrigger
+                          title="עוד"
+                          data-onboarding={idx === 0 ? 'restaurant-toggle' : undefined}
+                          onClick={(e) => {
+                            const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
+                            setContextMenuPos({ x: rect.left, y: rect.bottom + 4 });
+                            setOpenActionsRestaurantId(restaurant.restaurantId);
+                          }}
+                        />
+                      </EntityTableActionsCell>
+                    </tr>
+                  ))}
+                </EntityTableShell>
               )}
             </div>
 
@@ -898,55 +935,77 @@ export const RestaurantsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Context menu (right-click) */}
-      {contextMenuPos && openActionsRestaurantId && (() => {
-        const restaurant = state.restaurants.find(r => r.id === openActionsRestaurantId);
-        if (!restaurant) return null;
-        return (
-          <div
-            className="fixed inset-0 z-50"
-            onClick={() => { setOpenActionsRestaurantId(null); setContextMenuPos(null); }}
-            onContextMenu={(e) => { e.preventDefault(); setOpenActionsRestaurantId(null); setContextMenuPos(null); }}
-          >
-            <div
-              className="absolute min-w-[180px] bg-white dark:bg-[#1a1a1a] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl shadow-2xl overflow-hidden py-1"
+      <EntityActionMenuOverlay
+        open={Boolean(contextMenuPos && openActionsRestaurantId)}
+        position={contextMenuPos}
+        onClose={() => {
+          setOpenActionsRestaurantId(null);
+          setContextMenuPos(null);
+        }}
+      >
+        {contextMenuPos && openActionsRestaurantId && (() => {
+          const restaurant = state.restaurants.find((r) => r.id === openActionsRestaurantId);
+          if (!restaurant) return null;
+
+          return (
+            <EntityActionMenu
               style={{ top: contextMenuPos.y, left: contextMenuPos.x }}
               onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
             >
-              {/* שם המסעדה */}
-              <div className="px-3 py-2 border-b border-[#f5f5f5] dark:border-[#262626] mb-1">
-                <p className="text-xs font-semibold text-[#0d0d12] dark:text-[#fafafa] truncate">{restaurant.name}</p>
-                <p className={`text-[11px] font-medium mt-0.5 ${restaurant.isActive ? 'text-[#16a34a] dark:text-[#9fe870]' : 'text-[#737373] dark:text-[#a3a3a3]'}`}>
-                  {restaurant.isActive ? 'פעיל' : 'לא פעיל'}
-                </p>
-              </div>
+              <EntityActionMenuHeader
+                title={restaurant.name}
+                subtitle={
+                  <span
+                    className={`text-[11px] font-medium ${
+                      restaurant.isActive
+                        ? 'text-[#16a34a] dark:text-[#9fe870]'
+                        : 'text-[#737373] dark:text-[#a3a3a3]'
+                    }`}
+                  >
+                    {restaurant.isActive ? 'פעיל' : 'לא פעיל'}
+                  </span>
+                }
+              />
 
-              {/* פרטים מלאים */}
-              <button
-                onClick={() => { setContextMenuPos(null); setOpenActionsRestaurantId(null); navigate(`/restaurant/${restaurant.id}`); }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-[#0d0d12] dark:text-[#fafafa] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors"
+              <EntityActionMenuItem
+                onClick={() => {
+                  setContextMenuPos(null);
+                  setOpenActionsRestaurantId(null);
+                  navigate(`/restaurant/${restaurant.id}`);
+                }}
+                icon={<FileText className="w-3.5 h-3.5 text-[#737373] dark:text-[#a3a3a3]" />}
               >
-                <FileText className="w-3.5 h-3.5 text-[#737373] dark:text-[#a3a3a3]" />
                 פרטים מלאים
-              </button>
+              </EntityActionMenuItem>
 
-              <div className="border-t border-[#f5f5f5] dark:border-[#262626] my-1" />
+              <EntityActionMenuItem
+                onClick={(e) => {
+                  handleToggleRestaurant(restaurant.id, e);
+                  setContextMenuPos(null);
+                  setOpenActionsRestaurantId(null);
+                }}
+                icon={<Power className="w-3.5 h-3.5 text-[#16a34a] dark:text-[#9fe870]" />}
+              >
+                {restaurant.isActive ? 'השבת מסעדה' : 'הפעל מסעדה'}
+              </EntityActionMenuItem>
 
-              {/* מחק מסעדה */}
-              <button
+              <EntityActionMenuDivider />
+
+              <EntityActionMenuItem
                 onClick={(e) => {
                   handleRemoveRestaurant(restaurant.id, restaurant.name, e);
                   setContextMenuPos(null);
                 }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                icon={<Trash2 className="w-3.5 h-3.5" />}
+                danger
               >
-                <Trash2 className="w-3.5 h-3.5" />
                 מחק מסעדה
-              </button>
-            </div>
-          </div>
-        );
-      })()}
+              </EntityActionMenuItem>
+            </EntityActionMenu>
+          );
+        })()}
+      </EntityActionMenuOverlay>
 
       {/* Add restaurant modal */}
       {isAddModalOpen && (
