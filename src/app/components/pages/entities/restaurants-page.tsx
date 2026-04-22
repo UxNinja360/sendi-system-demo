@@ -240,15 +240,14 @@ export const RestaurantsPage: React.FC = () => {
   const uniqueTypes = useMemo(() => [...new Set(restaurants.map(r => r.type))].sort((a, b) => a.localeCompare(b, 'he')), [restaurants]);
 
   const handleRestaurantSort = useCallback((columnId: RestaurantSortableColumnId) => {
-    setSortColumn((current) => {
-      if (current === columnId) {
-        setSortDirection((direction) => (direction === 'asc' ? 'desc' : 'asc'));
-        return current;
-      }
-      setSortDirection('asc');
-      return columnId;
-    });
-  }, []);
+    if (sortColumn === columnId) {
+      setSortDirection((current) => (current === 'asc' ? 'desc' : 'asc'));
+      return;
+    }
+
+    setSortColumn(columnId);
+    setSortDirection('asc');
+  }, [sortColumn]);
 
   const filteredRestaurants = useMemo(() => {
     const filtered = restaurants.filter((r) => {

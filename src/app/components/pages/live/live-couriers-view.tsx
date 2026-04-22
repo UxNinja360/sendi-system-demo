@@ -6,6 +6,10 @@ import { Courier, Delivery } from '../../../types/delivery.types';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { formatAddressWithArea } from '../../../utils/delivery-presenters';
+import {
+  getDeliveryPickupBatchKey,
+  getPickupGroupStopId,
+} from '../../../utils/pickup-batches';
 import { toast } from 'sonner';
 
 type MapPosition = {
@@ -102,9 +106,7 @@ const getPickupReadyAt = (orders: Delivery[]) => {
   return new Date(Math.max(...readyTimes.map((value) => value.getTime())));
 };
 
-// ========================================
-// Route Stop - עצ�Tרת �zס�o�.�o (איסוף א�. הורדה)
-// ========================================
+// Route stop used in the courier route list.
 export interface RouteStop {
   id: string; // unique stop ID: `${deliveryId}-pickup` or `${deliveryId}-dropoff`
   deliveryId: string;
@@ -112,7 +114,7 @@ export interface RouteStop {
   type: 'pickup' | 'dropoff';
   order: Delivery;
   orders?: Delivery[];
-  isPreview?: boolean; // �"אם �-�. תצ�.�'�" �zק�"�T�z�" (�~רם א�.שר)
+  isPreview?: boolean;
 }
 
 interface LiveCouriersViewProps {
@@ -134,9 +136,7 @@ interface LiveCouriersViewProps {
   courierLocations?: Record<string, MapPosition>;
 }
 
-// ========================================
-// DraggableRouteStop - �>ר�~�Tס עצ�Tר�" �'רר�Tר
-// ========================================
+// Single draggable route stop in the expanded courier view.
 interface DraggableRouteStopProps {
   stop: RouteStop;
   index: number;
@@ -144,7 +144,7 @@ interface DraggableRouteStopProps {
   moveStop: (courierId: string, fromIndex: number, toIndex: number) => void;
   formatTime: (date: Date | null) => string;
   isLast: boolean;
-  stopNumber: number; // �zספר ס�T�"�.ר�T �'�zס�o�.�o
+  stopNumber: number;
   totalStops: number;
   etaAt?: Date | null;
 }
@@ -213,7 +213,7 @@ const DraggableRouteStop: React.FC<DraggableRouteStopProps> = React.memo(({
   );
   const readyAt = isPickup ? getPickupReadyAt(groupedOrders) : null;
 
-  // ס�~�~�.ס �'ר�zת �"עצ�Tר�" (�oא �'ר�zת �"�zש�o�.�-)
+  // Derive a compact status pill for each stop.
   const getStopStatus = (): { label: string; colorClass: string } => {
     if (isPreview) return { label: 'טיוטה', colorClass: 'bg-[#22c55e]/15 text-[#16a34a] dark:bg-[#22c55e]/20 dark:text-[#7bf1a8]' };
     
@@ -256,7 +256,6 @@ const DraggableRouteStop: React.FC<DraggableRouteStopProps> = React.memo(({
         isDragging ? 'opacity-30 scale-95' : 'opacity-100'
       } ${isOver ? 'bg-[#e0f7f1] dark:bg-[#0a2f2f]' : ''}`}
     >
-      {/* ק�. �z�-�'ר אנ�>�T */}
       {!isLast && (
         <div className="absolute right-[26px] top-full w-0.5 h-2 bg-[#d4d4d4] dark:bg-[#404040] z-0" />
       )}
@@ -272,7 +271,6 @@ const DraggableRouteStop: React.FC<DraggableRouteStopProps> = React.memo(({
       >
         <div className="px-3 py-2">
           <div className="flex items-start gap-2">
-            {/* א�T�Tק�.�Y �'ר�Tר�" + �zספר עצ�Tר�" */}
             <div className="flex flex-col items-center gap-0.5 flex-shrink-0 pt-0.5">
               <div className="cursor-grab active:cursor-grabbing">
                 <GripVertical className="w-3.5 h-3.5 text-[#a3a3a3] dark:text-[#525252]" />
@@ -286,11 +284,8 @@ const DraggableRouteStop: React.FC<DraggableRouteStopProps> = React.memo(({
               </div>
             </div>
 
-            {/* ת�.�>�Y */}
             <div className="flex-1 min-w-0">
-              {/* ש�.ר�" ראש�.נ�": ס�.�' עצ�Tר�" + �zספר �"�-�zנ�" + ת�' preview */}
               <div className="flex items-center gap-1.5 mb-1">
-                {/* Badge ס�.�' */}
                 <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${
                   isPickup
                     ? 'bg-[#22c55e]/15 text-[#16a34a] dark:bg-[#22c55e]/20 dark:text-[#7bf1a8]'
@@ -309,7 +304,6 @@ const DraggableRouteStop: React.FC<DraggableRouteStopProps> = React.memo(({
                   )}
                 </span>
 
-                {/* �zספר �"�-�zנ�" */}
                 {isPickup && groupedCount > 1 ? (
                   <span className="text-[11px] font-bold text-[#0d0d12] dark:text-[#fafafa]">
                     {groupedCount} משלוחים
@@ -320,14 +314,12 @@ const DraggableRouteStop: React.FC<DraggableRouteStopProps> = React.memo(({
                   </span>
                 )}
 
-                {/* ס�~�~�.ס */}
                 <span
                   className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${stopStatus.colorClass}`}
                 >
                   {stopStatus.label}
                 </span>
 
-                {/* ת�' Preview */}
                 {isPreview && (
                   <span className="px-1.5 py-0.5 rounded bg-[#22c55e]/20 text-[#16a34a] dark:text-[#7bf1a8] text-[10px] font-bold border border-[#22c55e]/30 mr-auto">
                     טיוטה
@@ -335,9 +327,8 @@ const DraggableRouteStop: React.FC<DraggableRouteStopProps> = React.memo(({
                 )}
               </div>
 
-              {/* ש�.ר�" שנ�T�T�": �z�Tק�.ם + שם */}
               {isPickup ? (
-                // איסוף - �zסע�"�"
+                // Pickup row
                 <div className="flex items-center gap-1.5 text-[11px]">
                   <Store className="w-3 h-3 text-[#22c55e] flex-shrink-0" />
                   <span className="font-bold text-[#22c55e] truncate">{order.restaurantName}</span>
@@ -355,7 +346,7 @@ const DraggableRouteStop: React.FC<DraggableRouteStopProps> = React.memo(({
                   )}
                 </div>
               ) : (
-                // הורדה - �oק�.�-
+                // Dropoff row
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-1.5 text-[11px]">
                     <User className="w-3 h-3 text-[#ef4444] flex-shrink-0" />
@@ -370,7 +361,6 @@ const DraggableRouteStop: React.FC<DraggableRouteStopProps> = React.memo(({
                 </div>
               )}
 
-              {/* ש�.ר�" ש�o�Tש�Tת: �-�z�Y */}
               <div className="flex items-center gap-2 mt-1 text-[10px] text-[#a3a3a3] dark:text-[#525252]">
                 {secondaryTimeLabel ? (
                   <span className="font-medium text-[#0284c7] dark:text-[#7dd3fc]">{secondaryTimeLabel}</span>
@@ -400,14 +390,7 @@ const DraggableRouteStop: React.FC<DraggableRouteStopProps> = React.memo(({
   );
 });
 
-// ========================================
-// פ�.נקצ�T�" �o�"�zרת �zש�o�.�-�Tם �o-Route Stops
-// ========================================
-const getPickupGroupKey = (order: Delivery) => (
-  order.restaurantId ||
-  `${order.restaurantName}:${order.pickup_latitude ?? ''}:${order.pickup_longitude ?? ''}`
-);
-
+// Convert active deliveries into pickup/dropoff route stops.
 const deliveriesToRouteStops = (
   deliveries: Delivery[],
   isPreview: boolean = false
@@ -416,7 +399,7 @@ const deliveriesToRouteStops = (
   const pickupGroups = new Map<string, Delivery[]>();
 
   deliveries.forEach((order) => {
-    const pickupGroupKey = getPickupGroupKey(order);
+    const pickupGroupKey = getDeliveryPickupBatchKey(order);
     const groupedOrders = pickupGroups.get(pickupGroupKey);
 
     if (groupedOrders) {
@@ -424,7 +407,7 @@ const deliveriesToRouteStops = (
     } else {
       pickupGroups.set(pickupGroupKey, [order]);
       stops.push({
-        id: `pickup-group:${pickupGroupKey}`,
+        id: getPickupGroupStopId(pickupGroupKey),
         deliveryId: order.id,
         deliveryIds: [order.id],
         type: 'pickup',
@@ -448,7 +431,7 @@ const deliveriesToRouteStops = (
   return stops.map((stop) => {
     if (stop.type !== 'pickup') return stop;
 
-    const groupedOrders = pickupGroups.get(getPickupGroupKey(stop.order)) ?? [stop.order];
+    const groupedOrders = pickupGroups.get(getDeliveryPickupBatchKey(stop.order)) ?? [stop.order];
     return {
       ...stop,
       deliveryIds: groupedOrders.map((groupedOrder) => groupedOrder.id),
@@ -457,9 +440,6 @@ const deliveriesToRouteStops = (
   });
 };
 
-// ========================================
-// LiveCouriersView - �"ק�.�zפ�.ננ�~�" �"ראש�Tת
-// ========================================
 export const LiveCouriersView: React.FC<LiveCouriersViewProps> = ({
   onCourierClick,
   onCourierExpand,
@@ -487,7 +467,7 @@ export const LiveCouriersView: React.FC<LiveCouriersViewProps> = ({
   const [openMenuCourierId, setOpenMenuCourierId] = useState<string | null>(null);
   const [openMenuPosition, setOpenMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const [openMenuSource, setOpenMenuSource] = useState<'button' | 'context' | null>(null);
-  // ש�Tנ�.�T ס�"ר �z�zת�T�Y �oא�Tש�.ר: courierId �?' string[] | null אם א�T�Y ש�Tנ�.�T
+  // Temporary route order waiting for explicit confirmation.
   const [pendingRouteOrder, setPendingRouteOrder] = useState<{ courierId: string; order: string[] } | null>(null);
 
   // Refs for stable moveStop callback (populated after couriersWithOrders is computed below)
@@ -499,7 +479,7 @@ export const LiveCouriersView: React.FC<LiveCouriersViewProps> = ({
     return state.deliveries.filter(d => previewDeliveryIds.has(d.id));
   }, [previewDeliveryIds, state.deliveries]);
 
-  // �-�Tש�.�' �zש�o�.�-�Tם פעיל�Tם �o�>�o ש�o�T�-
+  // Connected couriers used by the filters and summaries.
   const connectedCouriers = useMemo(
     () => state.couriers.filter((courier) => courier.status !== 'offline'),
     [state.couriers]
@@ -520,10 +500,10 @@ export const LiveCouriersView: React.FC<LiveCouriersViewProps> = ({
             (d.status === 'assigned' || d.status === 'delivering')
         );
 
-        // �Tצ�Tרת route stops �z�"�zש�o�.�-�Tם �"פעיל�Tם
+        // Build route stops from active deliveries.
         let stops = deliveriesToRouteStops(activeOrders, false);
 
-        // אם �-�"�. �"ש�o�T�- �"נ�'�-ר �oצ�T�.�.ת �?" �"�.סף preview stops
+        // Append preview stops during assignment mode for the selected courier.
         if (assignmentMode && selectedCourierId === courier.id && previewDeliveries.length > 0) {
           const existingIds = new Set(stops.map(s => s.id));
           const previewStops = deliveriesToRouteStops(
@@ -533,11 +513,11 @@ export const LiveCouriersView: React.FC<LiveCouriersViewProps> = ({
           stops = [...stops, ...previewStops];
         }
 
-        // �"סרת �>פ�T�o�.�T�.ת (guard)
+        // Guard against duplicate stop ids.
         const seen = new Set<string>();
         stops = stops.filter(s => { if (seen.has(s.id)) return false; seen.add(s.id); return true; });
 
-        // ס�T�"�.ר �oפ�T ס�"ר �z�.תאם
+        // Apply pending or persisted custom route order.
         const effectiveOrder =
           (pendingRouteOrder?.courierId === courier.id ? pendingRouteOrder.order : null)
           ?? routeStopOrders[courier.id];
@@ -645,16 +625,16 @@ export const LiveCouriersView: React.FC<LiveCouriersViewProps> = ({
       let comparison = 0;
 
       if (sortBy === 'status') {
-        // עס�.ק�Tם ק�.�"ם, א�-ר�T�"ם �'�zש�zרת, א�-ר�T�"ם �z�-�.�'ר�Tם לא במשמרת, �.א�- א�.פ�o�T�T�Y
+        // Busy couriers first, then on-shift idle, then connected idle, then offline.
         const statusOrder = (c: typeof a) => {
-          if (c.activeOrders.length > 0) return 0; // עס�.ק עם �zש�o�.�-�Tם - ראש�.�Y
-          if (c.status !== 'offline' && c.isOnShift) return 1; // �'�zש�zרת
-          if (c.status !== 'offline') return 2; // �z�-�.�'ר לא במשמרת
-          return 3; // offline
+          if (c.activeOrders.length > 0) return 0;
+          if (c.status !== 'offline' && c.isOnShift) return 1;
+          if (c.status !== 'offline') return 2;
+          return 3;
         };
         comparison = statusOrder(a) - statusOrder(b);
         if (comparison === 0) {
-          // �'ת�.�s א�.ת�" ק�'�.צ�": �z�T ש�Tש �o�. �T�.תר �zש�o�.�-�Tם - ק�.�"ם
+          // Within the same group, heavier workload comes first.
           comparison = b.activeOrders.length - a.activeOrders.length;
         }
       } else if (sortBy === 'name') {
@@ -708,12 +688,12 @@ export const LiveCouriersView: React.FC<LiveCouriersViewProps> = ({
 
   const handleCourierClick = (courierId: string) => {
     if (assignmentMode) {
-      // �'�zצ�' צ�T�.�.ת �?" �'�-�Tרת ש�o�T�- (toggle)
+      // In assignment mode, clicking selects the courier instead of expanding it.
       onCourierClick?.(courierId);
       return;
     }
 
-    // �zצ�' ר�'�T�o �?" �~�.�'�o �"ר�-�'�"
+    // Outside assignment mode, clicking toggles expanded route details.
     const courier = couriersWithOrders.find((c) => c.id === courierId);
     if (!courier || courier.routeStops.filter(s => !s.isPreview).length === 0) return;
 
@@ -736,14 +716,14 @@ export const LiveCouriersView: React.FC<LiveCouriersViewProps> = ({
     onCourierExpand?.(courierId);
   };
 
-  // פ�.ר�z�~ �-�z�Y
+  // Compact time formatter used across stop cards.
   const formatTime = (date: Date | null) => {
     if (!date) return '-';
     const d = new Date(date);
     return d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Drag & Drop - ש�Tנ�.�T ס�"ר עצירות (ש�z�Tר�" �'-pending, �oא �'-parent)
+  // Drag and drop only updates temporary order until the user confirms it.
   const moveStop = useCallback(
     (courierId: string, fromIndex: number, toIndex: number) => {
       const courier = couriersWithOrdersRef.current.find((c) => c.id === courierId);
@@ -760,7 +740,7 @@ export const LiveCouriersView: React.FC<LiveCouriersViewProps> = ({
         return { courierId, order: newOrder };
       });
     },
-    [] // stable â€” reads from refs
+    [] // stable - reads from refs
   );
 
   const confirmRouteOrder = useCallback(() => {
@@ -864,7 +844,7 @@ export const LiveCouriersView: React.FC<LiveCouriersViewProps> = ({
     setOpenMenuPosition(null);
   };
 
-  // ש�Tנ�.�T ס�~�~�.ס �-�T�'�.ר ש�o�T�-
+  // Toggle courier online/offline state from the row menu.
   const toggleCourierStatus = (courierId: string, e: React.MouseEvent) => {
     e.stopPropagation();
 
@@ -973,7 +953,6 @@ export const LiveCouriersView: React.FC<LiveCouriersViewProps> = ({
           </div>
         )}
 
-        {/* רש�T�zת ש�o�T�-�Tם */}
         <div className="flex-1 flex flex-col">
           {displayedCouriers.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full py-12 px-4">
@@ -1026,14 +1005,12 @@ export const LiveCouriersView: React.FC<LiveCouriersViewProps> = ({
                     });
                   }}
                 >
-                  {/* פס �"ש�o�T�- */}
                   <div
                     className="px-3 py-3 cursor-pointer"
                     onClick={() => handleCourierClickWithMenuClose(courier.id)}
                   >
                     <div className="flex items-center gap-2.5">
 
-                      {/* פר�~�T ש�o�T�- */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2 mb-1">
                           <div className="flex items-center gap-2 min-w-0">
@@ -1066,7 +1043,6 @@ export const LiveCouriersView: React.FC<LiveCouriersViewProps> = ({
                           </div>
                         </div>
 
-                        {/* ש�.ר�" שנ�T�T�": info */}
                         <div className="flex items-center gap-3 text-xs text-[#737373] dark:text-[#a3a3a3] min-w-0 overflow-hidden">
                           <div className="flex items-center gap-1 flex-shrink-0">
                             <span>{shiftLabel}</span>
@@ -1103,7 +1079,6 @@ export const LiveCouriersView: React.FC<LiveCouriersViewProps> = ({
                         </div>
                       </div>
 
-                      {/* �>פת�.ר "ע�.�"" + תפר�T�~ */}
                       <div className="relative flex-shrink-0">
                           <button
                             onClick={(e) => {
@@ -1174,16 +1149,13 @@ export const LiveCouriersView: React.FC<LiveCouriersViewProps> = ({
                           , document.body)}
                         </div>
 
-                      {/* א�T�Tק�.�Y �"ר�-�'�" */}
                     </div>
                   </div>
 
-                  {/* רש�T�zת עצירות �zס�o�.�o �z�.ר�-�'ת עם Drag & Drop */}
                   {showRoute && (
                     <div className="bg-[#f5f5f5] dark:bg-[#0a0a0a] border-t border-[#e5e5e5] dark:border-[#262626] py-1">
                       {courier.routeStops.length > 0 ? (
                         <>
-                          {/* �>�.תרת �zס�o�.�o */}
                           <div className="px-3 py-1.5 flex items-center justify-between">
                             <span className="text-[10px] font-bold text-[#737373] dark:text-[#a3a3a3] uppercase tracking-wider">
                               מסלול ({realStops.length} עצירות{hasPreviewStops ? ` +${previewCount} בתצוגה מקדימה` : ''})
@@ -1195,7 +1167,6 @@ export const LiveCouriersView: React.FC<LiveCouriersViewProps> = ({
                             )}
                           </div>
 
-                          {/* א�Tש�.ר ש�Tנ�.�T ס�"ר */}
                           {pendingRouteOrder?.courierId === courier.id && (
                             <div className="mx-2 mb-1 px-3 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 rounded-lg flex items-center justify-between gap-2">
                               <span className="text-xs text-amber-700 dark:text-amber-400 font-medium">הסדר השתנה — לאשר?</span>
@@ -1246,11 +1217,11 @@ export const LiveCouriersView: React.FC<LiveCouriersViewProps> = ({
             })
           )}
 
-        {/* â”€â”€ Assignment Bottom Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* Assignment bottom bar */}
         {assignmentMode && (
           <div className="sticky bottom-0 inset-x-0 z-20 mt-auto border-t border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
             {!selectedCourierId ? (
-              // ש�o�' 1 �?" �'�-ר ש�o�T�-
+              // Step 1: choose courier
               <div className="flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-2 text-sm text-[#737373] dark:text-[#a3a3a3]">
                   <span className="font-bold text-[#0d0d12] dark:text-white">{selectedDeliveryCount}</span>
@@ -1264,7 +1235,7 @@ export const LiveCouriersView: React.FC<LiveCouriersViewProps> = ({
                 </button>
               </div>
             ) : (
-              // ש�o�' 2 �?" אשר
+              // Step 2: confirm assignment
               <div className="flex items-center gap-3 px-4 py-3">
                 <button
                   onClick={() => onClearCourierSelection?.()}

@@ -265,6 +265,7 @@ export interface Delivery extends
   courierRating?: number; // מיפוי ל-client_runner_rank
   createdAt: Date; // מיפוי ל-creation_time
   assignedAt: Date | null; // מיפוי ל-coupled_time
+  pickupBatchId?: string | null;
   pickedUpAt: Date | null; // מיפוי ל-took_it_time
   deliveredAt: Date | null; // מיפוי ל-delivered_time
   arrivedAtRestaurantAt: Date | null; // מיפוי ל-arrived_at_rest
@@ -447,6 +448,7 @@ export type DeliveryAction =
       payload: {
         deliveryId: string;
         courierId: string;
+        pickupBatchId?: string;
         runner_at_assigning_latitude?: number;
         runner_at_assigning_longitude?: number;
       };

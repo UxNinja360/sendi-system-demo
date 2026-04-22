@@ -29,7 +29,6 @@ type DeliveriesDesktopFiltersProps = {
   setRestaurantOpen: React.Dispatch<React.SetStateAction<boolean>>;
   courierOpen: boolean;
   setCourierOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  setDateOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setColumnsOpen: React.Dispatch<React.SetStateAction<boolean>>;
   statusFilters: Set<DeliveryStatus>;
   setStatusFilters: React.Dispatch<React.SetStateAction<Set<DeliveryStatus>>>;
@@ -82,22 +81,22 @@ type MultiSelectFilterProps = {
 };
 
 const getCheckboxClass = (isActive: boolean) =>
-  `w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
-    isActive ? 'bg-[#9fe870] border-[#9fe870]' : 'border-[#d4d4d4] dark:border-[#404040]'
+  `flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors ${
+    isActive ? 'border-[#9fe870] bg-[#9fe870]' : 'border-[#d4d4d4] dark:border-[#404040]'
   }`;
 
 const getOptionButtonClass = (isActive: boolean) =>
-  `w-full flex items-center gap-2.5 px-3 py-2 text-sm text-right transition-colors ${
+  `w-full flex items-center gap-2.5 px-3 py-2 text-right text-sm transition-colors ${
     isActive
-      ? 'text-[#0d0d12] dark:text-[#fafafa] bg-[#f5f5f5] dark:bg-[#262626]'
-      : 'text-[#525252] dark:text-[#a3a3a3] hover:bg-[#f5f5f5] dark:hover:bg-[#262626]'
+      ? 'bg-[#f5f5f5] text-[#0d0d12] dark:bg-[#262626] dark:text-[#fafafa]'
+      : 'text-[#525252] hover:bg-[#f5f5f5] dark:text-[#a3a3a3] dark:hover:bg-[#262626]'
   }`;
 
 const getFilterButtonClass = (isActive: boolean) =>
-  `h-9 flex items-center gap-1.5 px-3 rounded-[4px] border text-sm font-medium transition-colors ${
+  `flex h-9 items-center gap-1.5 rounded-[4px] border px-3 text-sm font-medium transition-colors ${
     isActive
-      ? 'bg-[#9fe870]/15 border-[#9fe870]/40 text-[#6bc84a]'
-      : 'bg-white dark:bg-[#171717] border-[#e5e5e5] dark:border-[#262626] text-[#525252] dark:text-[#a3a3a3] hover:bg-[#f5f5f5] dark:hover:bg-[#202020]'
+      ? 'border-[#9fe870]/40 bg-[#9fe870]/15 text-[#6bc84a]'
+      : 'border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]'
   }`;
 
 const MultiSelectFilter: React.FC<MultiSelectFilterProps> = ({
@@ -122,16 +121,16 @@ const MultiSelectFilter: React.FC<MultiSelectFilterProps> = ({
     selectedValues.size === 0
       ? defaultLabel
       : selectedValues.size === 1
-        ? (options.find((option) => selectedValues.has(option.id))?.label ?? defaultLabel)
+        ? (options.find(option => selectedValues.has(option.id))?.label ?? defaultLabel)
         : `${selectedValues.size} ${pluralLabel}`;
 
-  const filteredOptions = options.filter((option) => !searchValue || option.label.includes(searchValue));
+  const filteredOptions = options.filter(option => !searchValue || option.label.includes(searchValue));
 
   return (
     <div className="relative" ref={containerRef}>
       <button
         onClick={() => {
-          setOpen((value) => !value);
+          setOpen(value => !value);
           closeOtherMenus();
         }}
         className={getFilterButtonClass(isActive)}
@@ -140,36 +139,36 @@ const MultiSelectFilter: React.FC<MultiSelectFilterProps> = ({
         <span>{selectedLabel}</span>
         {isActive ? (
           <span
-            onClick={(event) => {
+            onClick={event => {
               event.stopPropagation();
               setSelectedValues(new Set());
               setOpen(false);
               setCurrentPage(1);
             }}
-            className="p-0.5 rounded hover:bg-[#dcfce7] dark:hover:bg-[#052e16] transition-colors cursor-pointer"
+            className="cursor-pointer rounded p-0.5 transition-colors hover:bg-[#dcfce7] dark:hover:bg-[#052e16]"
             role="button"
           >
-            <X className="w-3 h-3" />
+            <X className="h-3 w-3" />
           </span>
         ) : (
-          <ChevronDown className={`w-3 h-3 opacity-50 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`h-3 w-3 opacity-50 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute top-full mt-1.5 right-0 z-50 bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-xl shadow-xl flex flex-col min-w-[200px] max-h-[260px]">
-          <div className="p-2 border-b border-[#f0f0f0] dark:border-[#262626]">
+        <div className="absolute top-full right-0 z-50 mt-1.5 flex max-h-[260px] min-w-[200px] flex-col rounded-xl border border-[#e5e5e5] bg-white shadow-xl dark:border-[#262626] dark:bg-[#171717]">
+          <div className="border-b border-[#f0f0f0] p-2 dark:border-[#262626]">
             <input
               autoFocus
               value={searchValue}
-              onChange={(event) => setSearchValue(event.target.value)}
+              onChange={event => setSearchValue(event.target.value)}
               placeholder={placeholder}
-              className="w-full px-2.5 py-1.5 text-sm bg-[#f5f5f5] dark:bg-[#141414] rounded-lg outline-none placeholder-[#a3a3a3] text-[#0d0d12] dark:text-[#fafafa]"
+              className="w-full rounded-lg bg-[#f5f5f5] px-2.5 py-1.5 text-sm text-[#0d0d12] outline-none placeholder-[#a3a3a3] dark:bg-[#141414] dark:text-[#fafafa]"
               style={{ direction: 'rtl' }}
             />
           </div>
           <div className="overflow-y-auto py-1">
-            {filteredOptions.map((option) => {
+            {filteredOptions.map(option => {
               const optionActive = selectedValues.has(option.id);
               return (
                 <button
@@ -181,7 +180,7 @@ const MultiSelectFilter: React.FC<MultiSelectFilterProps> = ({
                   className={getOptionButtonClass(optionActive)}
                 >
                   <span className={getCheckboxClass(optionActive)}>
-                    {optionActive && <Check className="w-2.5 h-2.5 text-[#0d0d12]" />}
+                    {optionActive && <Check className="h-2.5 w-2.5 text-[#0d0d12]" />}
                   </span>
                   <span className="flex-1 truncate">{option.label}</span>
                 </button>
@@ -210,7 +209,6 @@ export const DeliveriesDesktopFilters: React.FC<DeliveriesDesktopFiltersProps> =
   setRestaurantOpen,
   courierOpen,
   setCourierOpen,
-  setDateOpen,
   setColumnsOpen,
   statusFilters,
   setStatusFilters,
@@ -244,7 +242,6 @@ export const DeliveriesDesktopFilters: React.FC<DeliveriesDesktopFiltersProps> =
   setCurrentPage,
 }) => {
   const closeOtherMenusFromStatus = () => {
-    setDateOpen(false);
     setCourierOpen(false);
     setRestaurantOpen(false);
     setBranchOpen(false);
@@ -253,7 +250,6 @@ export const DeliveriesDesktopFilters: React.FC<DeliveriesDesktopFiltersProps> =
   };
 
   const closeOtherMenusFromBranch = () => {
-    setDateOpen(false);
     setStatusOpen(false);
     setCourierOpen(false);
     setRestaurantOpen(false);
@@ -262,7 +258,6 @@ export const DeliveriesDesktopFilters: React.FC<DeliveriesDesktopFiltersProps> =
   };
 
   const closeOtherMenusFromArea = () => {
-    setDateOpen(false);
     setStatusOpen(false);
     setCourierOpen(false);
     setRestaurantOpen(false);
@@ -271,7 +266,6 @@ export const DeliveriesDesktopFilters: React.FC<DeliveriesDesktopFiltersProps> =
   };
 
   const closeOtherMenusFromRestaurant = () => {
-    setDateOpen(false);
     setStatusOpen(false);
     setCourierOpen(false);
     setBranchOpen(false);
@@ -280,7 +274,6 @@ export const DeliveriesDesktopFilters: React.FC<DeliveriesDesktopFiltersProps> =
   };
 
   const closeOtherMenusFromCourier = () => {
-    setDateOpen(false);
     setStatusOpen(false);
     setRestaurantOpen(false);
     setBranchOpen(false);
@@ -293,37 +286,38 @@ export const DeliveriesDesktopFilters: React.FC<DeliveriesDesktopFiltersProps> =
       <div className="relative" ref={statusRef}>
         <button
           onClick={() => {
-            setStatusOpen((value) => !value);
+            setStatusOpen(value => !value);
             closeOtherMenusFromStatus();
           }}
           className={getFilterButtonClass(statusFilters.size > 0)}
         >
           <span>סטטוס</span>
           {statusFilters.size > 0 && (
-            <span className="bg-[#9fe870] text-[#0d0d12] text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center shrink-0">
+            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#9fe870] text-[10px] font-bold text-[#0d0d12]">
               {statusFilters.size}
             </span>
           )}
           {statusFilters.size === 0 ? (
-            <ChevronDown className={`w-3 h-3 opacity-50 transition-transform ${statusOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`h-3 w-3 opacity-50 transition-transform ${statusOpen ? 'rotate-180' : ''}`} />
           ) : (
             <span
-              onClick={(event) => {
+              onClick={event => {
                 event.stopPropagation();
                 setStatusFilters(new Set());
                 setStatusOpen(false);
                 setCurrentPage(1);
               }}
-              className="p-0.5 rounded hover:bg-[#dcfce7] dark:hover:bg-[#052e16] transition-colors cursor-pointer"
+              className="cursor-pointer rounded p-0.5 transition-colors hover:bg-[#dcfce7] dark:hover:bg-[#052e16]"
               role="button"
               aria-label="נקה סטטוס"
             >
-              <X className="w-3 h-3" />
+              <X className="h-3 w-3" />
             </span>
           )}
         </button>
+
         {statusOpen && (
-          <div className="absolute top-full mt-1.5 right-0 z-50 bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-xl shadow-xl py-1 min-w-[150px]">
+          <div className="absolute top-full right-0 z-50 mt-1.5 min-w-[150px] rounded-xl border border-[#e5e5e5] bg-white py-1 shadow-xl dark:border-[#262626] dark:bg-[#171717]">
             {statusChipConfig.map(({ status, label, dot }) => {
               const isActive = statusFilters.has(status);
               const count = statusCounts[status] ?? 0;
@@ -334,24 +328,24 @@ export const DeliveriesDesktopFilters: React.FC<DeliveriesDesktopFiltersProps> =
                     toggleStatusFilter(status);
                     setCurrentPage(1);
                   }}
-                  className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm transition-colors ${
+                  className={`flex w-full items-center gap-2 px-3 py-1.5 text-sm transition-colors ${
                     isActive
-                      ? 'text-[#0d0d12] dark:text-[#fafafa] bg-[#f5f5f5] dark:bg-[#262626]'
-                      : 'text-[#525252] dark:text-[#a3a3a3] hover:bg-[#f5f5f5] dark:hover:bg-[#262626]'
+                      ? 'bg-[#f5f5f5] text-[#0d0d12] dark:bg-[#262626] dark:text-[#fafafa]'
+                      : 'text-[#525252] hover:bg-[#f5f5f5] dark:text-[#a3a3a3] dark:hover:bg-[#262626]'
                   }`}
                 >
                   <span
                     className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border transition-colors ${
                       isActive
                         ? 'border-[#9fe870] bg-[#9fe870] text-[#0d0d12]'
-                        : 'border-[#d4d4d4] dark:border-[#404040] bg-white dark:bg-[#171717] text-transparent'
+                        : 'border-[#d4d4d4] bg-white text-transparent dark:border-[#404040] dark:bg-[#171717]'
                     }`}
                   >
                     <Check className="h-3 w-3" />
                   </span>
-                  <span className={`w-2 h-2 rounded-full shrink-0 transition-opacity ${dot} ${isActive ? '' : 'opacity-50'}`} />
+                  <span className={`h-2 w-2 shrink-0 rounded-full transition-opacity ${dot} ${isActive ? '' : 'opacity-50'}`} />
                   <span className={`flex-1 text-right ${isActive ? 'font-medium' : ''}`}>{label}</span>
-                  <span className="text-xs text-[#a3a3a3] tabular-nums">{count}</span>
+                  <span className="tabular-nums text-xs text-[#a3a3a3]">{count}</span>
                 </button>
               );
             })}
@@ -408,7 +402,7 @@ export const DeliveriesDesktopFilters: React.FC<DeliveriesDesktopFiltersProps> =
         pluralLabel="מסעדות"
         placeholder="חפש מסעדה..."
         setCurrentPage={setCurrentPage}
-        icon={<Utensils className="w-3.5 h-3.5" />}
+        icon={<Utensils className="h-3.5 w-3.5" />}
       />
 
       <MultiSelectFilter
@@ -426,7 +420,7 @@ export const DeliveriesDesktopFilters: React.FC<DeliveriesDesktopFiltersProps> =
         pluralLabel="שליחים"
         placeholder="חפש שליח..."
         setCurrentPage={setCurrentPage}
-        icon={<Users className="w-3.5 h-3.5" />}
+        icon={<Users className="h-3.5 w-3.5" />}
       />
     </div>
   );

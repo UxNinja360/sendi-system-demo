@@ -402,7 +402,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
       {/* Content */}
       <div className="flex-1 overflow-y-auto overscroll-contain">
         {searchQuery.trim() ? (
-          // â”€â”€ Search mode: flat list â”€â”€
+          // Search mode: flat list
           <div className="p-3">
             {(() => {
               const q = searchQuery.trim().toLowerCase();
@@ -416,7 +416,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
             })()}
           </div>
         ) : (
-          // â”€â”€ Accordion mode â”€â”€
+          // Accordion mode
           <div>
             {categories.map(cat => {
               const selected = cat.columns.filter(c => visibleColumns.has(c.id)).length;

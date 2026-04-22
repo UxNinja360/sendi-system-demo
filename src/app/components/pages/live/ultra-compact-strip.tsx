@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Clock, MapPin, User, X, UserPlus, MoreVertical, Phone, Timer, CheckCircle, RotateCcw, Edit, ArrowLeft, MessageSquare, Package, Banknote, CreditCard, Info, Bike } from 'lucide-react';
 import { Delivery } from '../../../types/delivery.types';
 
-interface Order {
+export interface UltraCompactStripOrder {
   id: string;
   deliveryId: string;
   restaurantName: string;
@@ -15,18 +15,18 @@ interface Order {
   amountToCollect: number;
   courierName: string | null;
   phone?: string;
-  prepTime?: number; // ×–×ž×Ÿ ×”×›× ×” ×‘×“×§×•×ª
-  estimatedDelivery?: string; // ×–×ž×Ÿ ××•×ž×“×Ÿ ×œ×ž×©×œ×•×—
-  pickedUpAt?: Date | null; // ×ž×ª×™ × ××¡×£
-  deliveredAt?: Date | null; // ×ž×ª×™ × ×ž×¡×¨
-  orderNotes?: string; // ×”×¢×¨×•×ª ×œ×§×•×—
-  paymentMethod?: 'cash' | 'credit'; // ××ž×¦×¢×™ ×ª×©×œ×•×
-  cashToCollect?: number; // ×›×¡×£ ×œ×’×‘×•×ª ×ž×”×œ×§×•×— ×‘×ž×–×•×ž×Ÿ
-  fullDelivery?: Delivery; // ×”××•×‘×™×™×§×˜ ×”×ž×œ×
+  prepTime?: number;
+  estimatedDelivery?: string;
+  pickedUpAt?: Date | null;
+  deliveredAt?: Date | null;
+  orderNotes?: string;
+  paymentMethod?: 'cash' | 'credit';
+  cashToCollect?: number;
+  fullDelivery?: Delivery;
 }
 
 interface UltraCompactStripProps {
-  order: Order;
+  order: UltraCompactStripOrder;
   routeEtaLabel?: string | null;
   isSelected: boolean;
   isChecked: boolean;
@@ -37,7 +37,7 @@ interface UltraCompactStripProps {
   onToggleCheck: (deliveryId: string) => void;
   onHover?: (orderId: string | null) => void;
   isHovered?: boolean;
-  onShowDetails?: (order: Order) => void;
+  onShowDetails?: (order: UltraCompactStripOrder) => void;
 }
 
 export const UltraCompactStrip: React.FC<UltraCompactStripProps> = ({
@@ -59,7 +59,7 @@ export const UltraCompactStrip: React.FC<UltraCompactStripProps> = ({
   const [contextMenuPos, setContextMenuPos] = useState<{ top: number; left: number } | null>(null);
   const menuBtnRef = useRef<HTMLButtonElement>(null);
 
-  // ×¡×’×™×¨×” ×‘×’×œ×™×œ×”
+  // Close the menu while scrolling.
   useEffect(() => {
     if (!showMenu) return;
     const close = () => {
@@ -70,12 +70,12 @@ export const UltraCompactStrip: React.FC<UltraCompactStripProps> = ({
     return () => window.removeEventListener('scroll', close, true);
   }, [showMenu]);
   
-  // ×—×™×©×•×‘ ×–×ž×Ÿ ×©×¢×‘×¨
+  // Calculate elapsed minutes since order creation.
   const now = Date.now();
-  const elapsed = Math.floor((now - order.createdAtTimestamp) / 60000); // ×“×§×•×ª
+  const elapsed = Math.floor((now - order.createdAtTimestamp) / 60000);
   const isCritical = elapsed >= 7 && order.status !== 'delivered' && order.status !== 'cancelled';
 
-  // ×¦×‘×¢×™× ×œ×¤×™ ×¡×˜×˜×•×¡
+  // Visual styles per order status.
   const statusColors = {
     pending: 'bg-orange-100 dark:bg-orange-500/20 border-orange-300 dark:border-orange-500/40',
     assigned: 'bg-yellow-100 dark:bg-yellow-500/20 border-yellow-300 dark:border-yellow-500/40',
@@ -101,7 +101,7 @@ export const UltraCompactStrip: React.FC<UltraCompactStripProps> = ({
       ? `הכנה ${order.prepTime} דק׳`
       : null;
 
-  // ×¤×•×¨×ž×˜ ×–×ž× ×™ ××™×¡×•×£ ×•×ž×¡×™×¨×”
+  // Format pickup / dropoff related timestamps.
   const formatTime = (date: Date | null | undefined) => {
     if (!date) return null;
     return new Date(date).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
@@ -168,11 +168,9 @@ export const UltraCompactStrip: React.FC<UltraCompactStripProps> = ({
           setShowMenu(true);
         }}
       >
-        {/* ×”×ž×©×œ×•×— */}
         <div className="px-3 py-2 flex items-start gap-2">
-          {/* ×ª×•×›×Ÿ ×”×ž×©×œ×•×— */}
           <div className="flex-1 min-w-0 space-y-1.5">
-            {/* Header: ×ž×¡×¤×¨ ×ž×©×œ×•×— + ×©×¢×” + ×¡×˜×˜×•×¡ */}
+            {/* Header: order number, creation time and status */}
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-mono font-bold text-[#0d0d12] dark:text-[#fafafa] text-[10px]">
@@ -191,13 +189,13 @@ export const UltraCompactStrip: React.FC<UltraCompactStripProps> = ({
                   </>
                 )}
               </div>
-              {/* ××™× ×“×™×§×˜×•×¨ ×¡×˜×˜×•×¡ - ×¦×ž×•×“ ×œ×¤×™× ×” ×”×©×ž××œ×™×ª */}
+              {/* Compact status pill */}
               <span className={`px-1.5 py-0.5 font-bold rounded ${ displayStatusKey === 'pending' ? 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400' : displayStatusKey === 'assigned' ? 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-400' : displayStatusKey === 'delivering' ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400' : displayStatusKey === 'delivered' ? 'bg-green-100 dark:bg-green-600/20 text-green-700 dark:text-green-400' : 'bg-red-100 dark:bg-red-600/20 text-red-700 dark:text-red-400' } text-[12px]`}>
                 {displayStatusLabel}
               </span>
             </div>
 
-            {/* ×ž×¡×œ×•×œ: ×ž×¡×¢×“×” â†’ ×›×ª×•×‘×ª */}
+            {/* Route: restaurant to customer address */}
             <div className="flex items-center gap-2 text-[11px] min-w-0">
               <Package className="w-3 h-3 text-[#22c55e] flex-shrink-0" />
               <span className="font-bold text-[#22c55e] text-[14px] truncate whitespace-nowrap shrink min-w-0">{order.restaurantName}</span>
@@ -206,7 +204,7 @@ export const UltraCompactStrip: React.FC<UltraCompactStripProps> = ({
               <span className="font-bold text-[#0d0d12] dark:text-[#fafafa] truncate text-[14px] min-w-0">{order.address}</span>
             </div>
 
-            {/* ×©×œ×™×— + ×œ×§×•×— */}
+            {/* Customer, courier and ETA row */}
             <div className="flex items-center gap-2 text-[10px] flex-wrap">
               <User className="w-3 h-3 text-[#737373] dark:text-[#a3a3a3]" />
               <span className="font-medium text-[#0d0d12] dark:text-[#fafafa]">{order.customerName}</span>
@@ -227,9 +225,9 @@ export const UltraCompactStrip: React.FC<UltraCompactStripProps> = ({
               )}
             </div>
 
-            {/* ×ª×©×œ×•× + ×”×¢×¨×•×ª - ×©×•×¨×” ××—×ª ×§×•×ž×¤×§×˜×™×ª */}
+            {/* Payment / notes row */}
             <div className="flex items-center gap-2 flex-wrap">
-              {/* ×”×¢×¨×•×ª */}
+              {/* Notes */}
               {order.orderNotes && (
                 <div className="flex items-center gap-1 rounded px-1.5 py-0.5 flex-1 min-w-0">
                   <MessageSquare className="w-2.5 h-2.5 text-[#a3a3a3] dark:text-[#525252] flex-shrink-0" />
@@ -241,7 +239,7 @@ export const UltraCompactStrip: React.FC<UltraCompactStripProps> = ({
             </div>
           </div>
           
-          {/* ×ª×¤×¨×™×˜ 3 × ×§×•×“×•×ª - ×œ×›×œ ×”×¡×˜×˜×•×¡×™× */}
+          {/* Actions menu trigger */}
           <div className="relative">
             <button
               ref={menuBtnRef}
@@ -266,7 +264,7 @@ export const UltraCompactStrip: React.FC<UltraCompactStripProps> = ({
             
             {showMenu && (contextMenuPos || menuPos) && createPortal(
               <>
-                {/* ×¨×§×¢ ×©×§×•×£ ×œ×¡×’×™×¨×” */}
+                {/* Click-away backdrop */}
                 <div
                   className="fixed inset-0 z-[9990]"
                   onClick={(e) => {
@@ -275,12 +273,12 @@ export const UltraCompactStrip: React.FC<UltraCompactStripProps> = ({
                     setContextMenuPos(null);
                   }}
                 />
-                {/* ×ª×¤×¨×™×˜ */}
+                {/* Menu */}
                 <div
                   style={{ position: 'fixed', top: (contextMenuPos || menuPos)!.top, left: (contextMenuPos || menuPos)!.left, zIndex: 9991 }}
                   className="bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-lg shadow-xl overflow-hidden min-w-[150px]"
                 >
-                  {/* ×›×¤×ª×•×¨ ×¤×¨×˜×™× ×ž×œ××™× - ×œ×›×œ ×”×¡×˜×˜×•×¡×™× */}
+                  {/* Full details action */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -293,7 +291,7 @@ export const UltraCompactStrip: React.FC<UltraCompactStripProps> = ({
                     <span>פרטים מלאים</span>
                   </button>
 
-                  {/* ××¤×©×¨×•×™×•×ª ×œ×¤×™ ×¡×˜×˜×•×¡ */}
+                  {/* Status-specific actions */}
                   {order.status === 'pending' && (
                     <>
                       <button

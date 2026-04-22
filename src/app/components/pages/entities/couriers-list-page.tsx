@@ -170,7 +170,6 @@ export const CouriersListPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'busy' | 'offline'>('all');
   const [deliveryFilter, setDeliveryFilter] = useState<'all' | 'with_delivery' | 'without_delivery'>('all');
-  const [sortBy, setSortBy] = useState<'name' | 'rating' | 'deliveries' | 'status'>('name');
   const [sortColumn, setSortColumn] = useState<SortableCourierColumnId>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [newCourier, setNewCourier] = useState<{ name: string; phone: string; vehicleType: Courier['vehicleType'] }>({
@@ -200,19 +199,6 @@ export const CouriersListPage: React.FC = () => {
       localStorage.setItem(COURIER_VISIBLE_COLUMNS_KEY, JSON.stringify(Array.from(visibleColumns)));
     } catch {}
   }, [visibleColumns]);
-
-  useEffect(() => {
-    const mappedColumn: SortableCourierColumnId =
-      sortBy === 'rating'
-        ? 'rating'
-        : sortBy === 'deliveries'
-          ? 'totalDeliveries'
-          : sortBy === 'status'
-            ? 'connection'
-            : 'name';
-    setSortColumn(mappedColumn);
-    setSortDirection('asc');
-  }, [sortBy]);
 
   const filteredCouriers = useMemo(() => {
     let filtered = state.couriers;
@@ -304,11 +290,6 @@ export const CouriersListPage: React.FC = () => {
 
     setSortColumn(columnId);
     setSortDirection('asc');
-
-    if (columnId === 'name') setSortBy('name');
-    if (columnId === 'rating') setSortBy('rating');
-    if (columnId === 'totalDeliveries') setSortBy('deliveries');
-    if (columnId === 'connection') setSortBy('status');
   };
 
   const stats = useMemo(
@@ -340,7 +321,6 @@ export const CouriersListPage: React.FC = () => {
     setSearchQuery('');
     setStatusFilter('all');
     setDeliveryFilter('all');
-    setSortBy('name');
   };
 
   const getStatusLabel = (status: string) => {
@@ -755,8 +735,6 @@ export const CouriersListPage: React.FC = () => {
               onStatusChange={setStatusFilter}
               deliveryFilter={deliveryFilter}
               onDeliveryChange={setDeliveryFilter}
-              sortBy={sortBy}
-              onSortChange={setSortBy}
               statusCounts={statusCounts}
             />
             <div className="flex-1" />

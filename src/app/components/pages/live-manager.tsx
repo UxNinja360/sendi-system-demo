@@ -1,16 +1,26 @@
 ﻿import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { MapPin, Clock, Search, X, ArrowUp, ArrowDown, User, UserCircle, ChevronLeft, ChevronRight, ChevronsUp, CheckSquare, Menu, Home, Package, Users, TrendingUp, Settings, PanelRightOpen, ArrowDownAZ, Bike, CreditCard, Store } from 'lucide-react';
-import { useLocation, useNavigate } from 'react-router';
+import { Menu } from 'lucide-react';
+import { useLocation } from 'react-router';
 import { useDelivery } from '../../context/delivery.context';
 import { Delivery } from '../../types/delivery.types';
+import { LiveDeliveriesTab } from './live/live-deliveries-tab';
 import { LiveRestaurantsView } from './live/live-restaurants-view';
 import { LiveCouriersView } from './live/live-couriers-view';
 import { LeafletMap } from './live/leaflet-map';
-import { UltraCompactStrip } from './live/ultra-compact-strip';
 import { OrderDetailsPanel } from './live/order-details-panel';
+import { LiveManagerDesktopControls } from './live/live-manager-desktop-controls';
+import { LiveManagerDesktopHeader } from './live/live-manager-desktop-header';
+import { LiveManagerMinimizedWidget } from './live/live-manager-minimized-widget';
+import { LiveManagerMobileControls } from './live/live-manager-mobile-controls';
+import BottomAppBar from './live/bottom-app-bar';
 import { DeliveryEditDialog } from '../deliveries/delivery-edit-dialog';
-import { AppLogo } from '../icons/app-logo';
-import BottomAppBar from '../../../imports/BottomAppBar';
+import {
+  buildDefaultRouteStopIds,
+  createPickupBatchId,
+  getDeliveryPickupBatchKey,
+  getPickupGroupStopId,
+  getRestaurantPickupBaseKey,
+} from '../../utils/pickup-batches';
 import { toast } from 'sonner';
 
 type TabType = 'deliveries' | 'couriers';
@@ -98,7 +108,6 @@ const getPickupReadyAt = (deliveries: Delivery[]) => {
 export const LiveManager: React.FC = () => {
   const { state, dispatch, assignCourier, cancelDelivery, unassignCourier, updateDelivery } = useDelivery();
   const location = useLocation();
-  const navigate = useNavigate();
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [pendingScrollOrderId, setPendingScrollOrderId] = useState<string | null>(null);
   const [pendingScrollCourierId, setPendingScrollCourierId] = useState<string | null>(null);
@@ -107,7 +116,6 @@ export const LiveManager: React.FC = () => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('deliveries');
-  const [courierSortBy, setCourierSortBy] = useState<'status' | 'name' | 'deliveries' | 'rating'>('status');
   const [courierQuickFilter, setCourierQuickFilter] = useState<'all' | 'free' | 'busy'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [shiftFilter, setShiftFilter] = useState<'all' | 'shift' | 'no_shift'>(() => {
@@ -146,28 +154,7 @@ export const LiveManager: React.FC = () => {
 
     return [...normalizedSavedStops, ...missingStops];
   }, []);
-  const getPickupGroupKey = useCallback((delivery: Delivery) => (
-    delivery.restaurantId ||
-    `${delivery.restaurantName}:${delivery.pickup_latitude ?? ''}:${delivery.pickup_longitude ?? ''}`
-  ), []);
-  const buildDefaultStopIds = useCallback((deliveries: Delivery[]) => {
-    const seenPickupGroups = new Set<string>();
-    const stopIds: string[] = [];
-
-    deliveries.forEach((delivery) => {
-      const pickupGroupKey = getPickupGroupKey(delivery);
-      if (!seenPickupGroups.has(pickupGroupKey)) {
-        seenPickupGroups.add(pickupGroupKey);
-        stopIds.push(`pickup-group:${pickupGroupKey}`);
-      }
-
-      stopIds.push(`${delivery.id}-dropoff`);
-    });
-
-    return stopIds;
-  }, [getPickupGroupKey]);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const buildDefaultStopIds = useCallback((deliveries: Delivery[]) => buildDefaultRouteStopIds(deliveries), []);
   const [panelHeight, setPanelHeight] = useState<'half' | 'full'>('half'); // For mobile - removed collapsed
   const [panelSize, setPanelSize] = useState<'normal' | 'medium' | 'large' | 'minimized'>(() => {
     const saved = localStorage.getItem('liveManagerPanelSize');
@@ -216,6 +203,12 @@ export const LiveManager: React.FC = () => {
     setCourierQuickFilter((current) => (current === target ? 'all' : target));
   }, [shiftFilter]);
 
+  const openMobileSidebar = useCallback(() => {
+    if ((window as any).toggleMobileSidebar) {
+      (window as any).toggleMobileSidebar();
+    }
+  }, []);
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
     window.localStorage.setItem(
@@ -227,14 +220,15 @@ export const LiveManager: React.FC = () => {
   // ── Simulator WebSocket ───────────────────────────────────────────────────
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [simConnected, setSimConnected] = useState(false);
   const [simPositions, setSimPositions] = useState<Map<string, { lat: number; lng: number }>>(new Map());
 
   const connectSim = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
     const ws = new WebSocket('ws://localhost:8765');
     wsRef.current = ws;
-    ws.onopen = () => { setSimConnected(true); if (reconnectRef.current) clearTimeout(reconnectRef.current); };
+    ws.onopen = () => {
+      if (reconnectRef.current) clearTimeout(reconnectRef.current);
+    };
     ws.onmessage = (e) => {
       try {
         const msg = JSON.parse(e.data);
@@ -251,7 +245,6 @@ export const LiveManager: React.FC = () => {
       } catch { /* ignore */ }
     };
     ws.onclose = () => {
-      setSimConnected(false);
       wsRef.current = null;
       reconnectRef.current = setTimeout(() => connectSim(), 4000);
     };
@@ -393,8 +386,6 @@ export const LiveManager: React.FC = () => {
 
   // סדר עדיפות איסוף לכל שליח: deliveryId ראשון ברשימה = הבא לטיפול
   // המנהל יכול לשנות סדר זה בעתיד דרך drag-and-drop
-  const [courierQueues, setCourierQueues] = useState<Map<string, string[]>>(new Map());
-
   const getCourierNextTarget = useCallback((courier: typeof state.couriers[number]) => {
     const activeDeliveries = state.deliveries.filter(d =>
       d.courierId === courier.id &&
@@ -409,7 +400,7 @@ export const LiveManager: React.FC = () => {
       if (stopId.startsWith('pickup-group:')) {
         const pickupGroupKey = stopId.replace('pickup-group:', '');
         const pickupGroupDeliveries = activeDeliveries.filter((delivery) =>
-          getPickupGroupKey(delivery) === pickupGroupKey &&
+          getDeliveryPickupBatchKey(delivery) === pickupGroupKey &&
           delivery.status === 'assigned'
         );
 
@@ -432,7 +423,7 @@ export const LiveManager: React.FC = () => {
     }
 
     return null;
-  }, [buildDefaultStopIds, getPickupGroupKey, normalizeRouteStopOrder, state.deliveries]);
+  }, [buildDefaultStopIds, normalizeRouteStopOrder, state.deliveries]);
 
   useEffect(() => {
     const now = Date.now();
@@ -511,7 +502,7 @@ export const LiveManager: React.FC = () => {
           if (stopId.startsWith('pickup-group:')) {
             const pickupGroupKey = stopId.replace('pickup-group:', '');
             const pickupGroupDeliveries = activeDeliveries.filter((delivery) =>
-              getPickupGroupKey(delivery) === pickupGroupKey &&
+              getDeliveryPickupBatchKey(delivery) === pickupGroupKey &&
               delivery.status === 'assigned'
             );
 
@@ -689,7 +680,7 @@ export const LiveManager: React.FC = () => {
     }, 1000);
 
     return () => clearInterval(tick);
-  }, [buildDefaultStopIds, dispatch, getPickupGroupKey, normalizeRouteStopOrder]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [buildDefaultStopIds, dispatch, normalizeRouteStopOrder]); // eslint-disable-line react-hooks/exhaustive-deps
   // ─────────────────────────────────────────────────────────────────────────
 
   // Hover states for map correlation
@@ -699,19 +690,6 @@ export const LiveManager: React.FC = () => {
 
   const isDeliveryAssignable = useCallback((delivery?: Delivery | null) => {
     return delivery?.status === 'pending';
-  }, []);
-
-  const getDistanceMeters = useCallback((lat1: number, lng1: number, lat2: number, lng2: number) => {
-    const toRad = (value: number) => (value * Math.PI) / 180;
-    const earthRadius = 6371000;
-    const dLat = toRad(lat2 - lat1);
-    const dLng = toRad(lng2 - lng1);
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-      Math.sin(dLng / 2) * Math.sin(dLng / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return earthRadius * c;
   }, []);
 
   // Order details panel state
@@ -912,7 +890,7 @@ export const LiveManager: React.FC = () => {
         if (stopId.startsWith('pickup-group:')) {
           const pickupGroupKey = stopId.replace('pickup-group:', '');
           const pickupGroupDeliveries = activeDeliveries.filter((delivery) =>
-            getPickupGroupKey(delivery) === pickupGroupKey &&
+            getDeliveryPickupBatchKey(delivery) === pickupGroupKey &&
             delivery.status === 'assigned'
           );
 
@@ -972,7 +950,6 @@ export const LiveManager: React.FC = () => {
   }, [
     buildDefaultStopIds,
     couriersWithLocations,
-    getPickupGroupKey,
     normalizeRouteStopOrder,
     routeStopOrders,
     state.couriers,
@@ -995,40 +972,26 @@ export const LiveManager: React.FC = () => {
     return { connected: connected.length, onShift: onShift.length, noShift: connected.length - onShift.length };
   }, [state.couriers]);
 
+  const freeCouriersCount = useMemo(
+    () => state.couriers.filter(
+      c => c.isOnShift && !state.deliveries.some(
+        d => d.courierId === c.id && ['assigned', 'delivering'].includes(d.status)
+      )
+    ).length,
+    [state.couriers, state.deliveries]
+  );
+
+  const busyCouriersCount = useMemo(
+    () => state.couriers.filter(
+      c => state.deliveries.some(
+        d => d.courierId === c.id && ['assigned', 'delivering'].includes(d.status)
+      )
+    ).length,
+    [state.couriers, state.deliveries]
+  );
+
   // Available couriers
   const availableCouriers = state.couriers.filter(c => c.status !== 'offline' && c.isOnShift);
-
-  // Top available couriers for quick assignment (sorted by availability)
-  const topAvailableCouriers = useMemo(() => {
-    return [...state.couriers]
-      .filter(c => c.status !== 'offline' && c.isOnShift)
-      .sort((a, b) => {
-        // First: available couriers
-        if (a.status === 'available' && b.status !== 'available') return -1;
-        if (a.status !== 'available' && b.status === 'available') return 1;
-        // Then: by number of active deliveries (less is better)
-        return a.activeDeliveryIds.length - b.activeDeliveryIds.length;
-      })
-      .slice(0, 5); // Show top 5
-  }, [state.couriers]);
-
-  // Sort couriers
-  const sortedCouriers = React.useMemo(() => {
-    return [...availableCouriers].sort((a, b) => {
-      if (courierSortBy === 'status') {
-        if (a.status === 'available' && b.status !== 'available') return -1;
-        if (a.status !== 'available' && b.status === 'available') return 1;
-        return a.activeDeliveryIds.length - b.activeDeliveryIds.length;
-      } else if (courierSortBy === 'name') {
-        return a.name.localeCompare(b.name, 'he');
-      } else if (courierSortBy === 'deliveries') {
-        return b.totalDeliveries - a.totalDeliveries;
-      } else if (courierSortBy === 'rating') {
-        return b.rating - a.rating;
-      }
-      return 0;
-    });
-  }, [availableCouriers, courierSortBy]);
 
   // Live delivery stats for the current manager dataset
   const todayDeliveries = React.useMemo(() => {
@@ -1190,6 +1153,18 @@ export const LiveManager: React.FC = () => {
     setActiveTab('couriers');
   };
 
+  const handleToggleSelectedDelivery = useCallback((deliveryId: string) => {
+    setSelectedDeliveryIds((current) => {
+      const next = new Set(current);
+      if (next.has(deliveryId)) {
+        next.delete(deliveryId);
+      } else {
+        next.add(deliveryId);
+      }
+      return next;
+    });
+  }, []);
+
   const handleMapOrderClick = useCallback((deliveryId: string) => {
     const delivery = state.deliveries.find(d => d.id === deliveryId);
     if (!delivery) return;
@@ -1284,6 +1259,8 @@ export const LiveManager: React.FC = () => {
     const courier = state.couriers.find(c => c.id === selectedCourierId);
     const courierName = courier?.name || 'שליח';
     const deliveryCount = validSelectedDeliveryIds.size;
+    const selectedPickupBatchIdsByRestaurant = new Map<string, string>();
+    const selectedPickupBatchIdsByDeliveryId = new Map<string, string>();
 
     // Smart route ordering — always set a fresh order on every assignment.
     // This overrides any stale data from localStorage.
@@ -1300,6 +1277,30 @@ export const LiveManager: React.FC = () => {
 
       const deliveringDeliveries = existingActiveDeliveries.filter(d => d.status === 'delivering');
       const assignedDeliveries   = existingActiveDeliveries.filter(d => d.status === 'assigned');
+      const existingAssignedPickupBatchIdsByRestaurant = new Map<string, string>();
+
+      assignedDeliveries.forEach((delivery) => {
+        const restaurantKey = getRestaurantPickupBaseKey(delivery);
+        if (existingAssignedPickupBatchIdsByRestaurant.has(restaurantKey)) return;
+        existingAssignedPickupBatchIdsByRestaurant.set(
+          restaurantKey,
+          getDeliveryPickupBatchKey(delivery)
+        );
+      });
+
+      newDeliveryObjects.forEach((delivery) => {
+        const restaurantKey = getRestaurantPickupBaseKey(delivery);
+        let pickupBatchId =
+          selectedPickupBatchIdsByRestaurant.get(restaurantKey) ??
+          existingAssignedPickupBatchIdsByRestaurant.get(restaurantKey);
+
+        if (!pickupBatchId) {
+          pickupBatchId = createPickupBatchId(restaurantKey);
+        }
+
+        selectedPickupBatchIdsByRestaurant.set(restaurantKey, pickupBatchId);
+        selectedPickupBatchIdsByDeliveryId.set(delivery.id, pickupBatchId);
+      });
 
       const smartStops: string[] = [];
       const seenPickupGroups = new Set<string>();
@@ -1311,20 +1312,24 @@ export const LiveManager: React.FC = () => {
 
       // 2. Existing assigned deliveries — interleaved pickup → dropoff
       assignedDeliveries.forEach(d => {
-        const key = getPickupGroupKey(d);
-        if (!seenPickupGroups.has(key)) {
-          seenPickupGroups.add(key);
-          smartStops.push(`pickup-group:${key}`);
+        const key = getDeliveryPickupBatchKey(d);
+        const stopId = getPickupGroupStopId(key);
+        if (!seenPickupGroups.has(stopId)) {
+          seenPickupGroups.add(stopId);
+          smartStops.push(stopId);
         }
         smartStops.push(`${d.id}-dropoff`);
       });
 
       // 3. Newly assigned deliveries — interleaved pickup → dropoff
       newDeliveryObjects.forEach(d => {
-        const key = getPickupGroupKey(d);
-        if (!seenPickupGroups.has(key)) {
-          seenPickupGroups.add(key);
-          smartStops.push(`pickup-group:${key}`);
+        const key =
+          selectedPickupBatchIdsByDeliveryId.get(d.id) ??
+          createPickupBatchId(getRestaurantPickupBaseKey(d));
+        const stopId = getPickupGroupStopId(key);
+        if (!seenPickupGroups.has(stopId)) {
+          seenPickupGroups.add(stopId);
+          smartStops.push(stopId);
         }
         smartStops.push(`${d.id}-dropoff`);
       });
@@ -1332,8 +1337,7 @@ export const LiveManager: React.FC = () => {
       // 4. Claim pickup-groups for delivering orders at the end (map skips them
       //    when all orders in the group are already delivering).
       deliveringDeliveries.forEach(d => {
-        const key = getPickupGroupKey(d);
-        const stopId = `pickup-group:${key}`;
+        const stopId = getPickupGroupStopId(getDeliveryPickupBatchKey(d));
         if (!smartStops.includes(stopId)) smartStops.push(stopId);
       });
 
@@ -1345,7 +1349,9 @@ export const LiveManager: React.FC = () => {
       }
     }
 
-    validSelectedDeliveryIds.forEach(deliveryId => assignCourier(deliveryId, selectedCourierId));
+    validSelectedDeliveryIds.forEach((deliveryId) =>
+      assignCourier(deliveryId, selectedCourierId, selectedPickupBatchIdsByDeliveryId.get(deliveryId))
+    );
 
     toast.success(
       deliveryCount === 1
@@ -1392,12 +1398,7 @@ export const LiveManager: React.FC = () => {
         {/* Mobile Menu Button */}
         <div className="md:hidden absolute top-4 right-4 z-50">
           <button
-            onClick={() => {
-              // פתיחת הסיידבר הרגיל
-              if ((window as any).toggleMobileSidebar) {
-                (window as any).toggleMobileSidebar();
-              }
-            }}
+            onClick={openMobileSidebar}
             className="p-3 bg-white dark:bg-[#171717] rounded-xl shadow-lg border border-[#e5e5e5] dark:border-[#262626] hover:bg-[#fafafa] dark:hover:bg-[#262626] active:scale-95 transition-all"
           >
             <Menu className="w-6 h-6 text-[#0d0d12] dark:text-white" />
@@ -1453,413 +1454,99 @@ export const LiveManager: React.FC = () => {
         >
           {/* Minimized Widget */}
           {panelSize === 'minimized' ? (
-            <div className="flex items-center gap-3 px-4 py-3">
-              {/* Total deliveries */}
-              <div className="flex items-center gap-1.5">
-                <Package className="w-4 h-4 text-[#22c55e]" />
-                <span className="text-sm font-bold text-[#0d0d12] dark:text-white">
-                  {todayDeliveries.total}
-                </span>
-              </div>
-
-              <div className="w-px h-5 bg-[#e5e5e5] dark:bg-[#404040]" />
-
-              {/* Status dots */}
-              <div className="flex items-center gap-2">
-                {todayDeliveries.pending > 0 && (
-                  <div className="flex items-center gap-1">
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: 'rgb(255,105,0)' }} />
-                    <span className="text-xs font-bold text-[#737373] dark:text-[#a3a3a3]">{todayDeliveries.pending}</span>
-                  </div>
-                )}
-                {(todayDeliveries.assigned + todayDeliveries.pickingUp) > 0 && (
-                  <div className="flex items-center gap-1">
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: 'rgb(240,177,0)' }} />
-                    <span className="text-xs font-bold text-[#737373] dark:text-[#a3a3a3]">{todayDeliveries.assigned + todayDeliveries.pickingUp}</span>
-                  </div>
-                )}
-                {todayDeliveries.delivered > 0 && (
-                  <div className="flex items-center gap-1">
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: 'rgb(0,166,62)' }} />
-                    <span className="text-xs font-bold text-[#737373] dark:text-[#a3a3a3]">{todayDeliveries.delivered}</span>
-                  </div>
-                )}
-                {todayDeliveries.cancelled > 0 && (
-                  <div className="flex items-center gap-1">
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: 'rgb(231,0,11)' }} />
-                    <span className="text-xs font-bold text-[#737373] dark:text-[#a3a3a3]">{todayDeliveries.cancelled}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="w-px h-5 bg-[#e5e5e5] dark:bg-[#404040]" />
-
-              {/* Courier count */}
-              <div className="flex items-center gap-1.5">
-                <Bike className="w-4 h-4 text-[#22c55e]" />
-                <span className="text-xs font-bold text-[#737373] dark:text-[#a3a3a3]">{availableCouriers.length}</span>
-              </div>
-
-              <div className="w-px h-5 bg-[#e5e5e5] dark:bg-[#404040]" />
-
-              {/* Explicit expand button */}
-              <button
-                onClick={(e) => { e.stopPropagation(); setPanelSize('normal'); }}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors group"
-                title="פתח פאנל"
-              >
-                <PanelRightOpen className="w-3.5 h-3.5 text-[#737373] group-hover:text-[#22c55e] transition-colors" />
-                <span className="text-xs text-[#737373] group-hover:text-[#22c55e] transition-colors font-medium">פתח</span>
-              </button>
-            </div>
+            <LiveManagerMinimizedWidget
+              totalDeliveries={todayDeliveries.total}
+              pendingCount={todayDeliveries.pending}
+              inProgressCount={todayDeliveries.assigned + todayDeliveries.pickingUp}
+              deliveredCount={todayDeliveries.delivered}
+              cancelledCount={todayDeliveries.cancelled}
+              availableCouriersCount={availableCouriers.length}
+              onExpand={(event) => {
+                event.stopPropagation();
+                setPanelSize('normal');
+              }}
+            />
           ) : (
           <>
-          {/* Modern Segmented Tab Switcher */}
-          <div className="px-4 pt-3 pb-0 border-b border-[#e5e5e5] dark:border-[#262626]">
-            <div className="flex items-center gap-3">
-              <div className="flex-1 flex gap-0">
-                <button
-                  onClick={() => {
-                    setActiveTab('deliveries');
-                    if (assignmentMode) {
-                      setAssignmentMode(false);
-                      setSelectedDeliveryIds(new Set());
-                      setSelectedCourierId(null);
-                    }
-                  }}
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 transition-all border-b ${
-                    activeTab === 'deliveries'
-                      ? 'text-[#22c55e] border-[#22c55e]'
-                      : 'text-[#525252] dark:text-[#737373] border-transparent hover:text-[#22c55e] hover:border-[#22c55e]/30'
-                  }`}
-                >
-                  <Package className="w-4 h-4 shrink-0" />
-                  <span className="font-semibold text-sm">משלוחים</span>
-                  <span className={`text-xs font-medium tabular-nums ${
-                    activeTab === 'deliveries' ? 'text-[#22c55e]/70' : 'text-[#a3a3a3] dark:text-[#525252]'
-                  }`}>{orders.length}</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab('couriers')}
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 transition-all border-b ${
-                    activeTab === 'couriers'
-                      ? 'text-[#22c55e] border-[#22c55e]'
-                      : 'text-[#525252] dark:text-[#737373] border-transparent hover:text-[#22c55e] hover:border-[#22c55e]/30'
-                  }`}
-                >
-                  <Bike className="w-4 h-4 shrink-0" />
-                  <span className="font-semibold text-sm">שליחים</span>
-                  <span className={`text-xs font-medium tabular-nums ${
-                    activeTab === 'couriers' ? 'text-[#22c55e]/70' : 'text-[#a3a3a3] dark:text-[#525252]'
-                  }`}>{availableCouriers.length}</span>
-                </button>
-              </div>
-              
-              {/* Resize Button: cycles normal → medium → large → normal */}
-              <button
-                onClick={() => {
-                  setPanelSize(prev =>
-                    prev === 'normal'
-                      ? 'medium'
-                      : prev === 'medium'
-                      ? 'large'
-                      : 'normal'
-                  );
-                }}
-                className="p-2 hover:bg-[#f5f5f5] dark:hover:bg-[#262626] rounded-lg transition-colors group flex-shrink-0"
-                title={panelSize === 'large' ? 'הקטן' : 'הגדל'}
-              >
-                {panelSize === 'large' ? (
-                  <ChevronRight className="w-4 h-4 text-[#737373] group-hover:text-[#22c55e] transition-colors" />
-                ) : (
-                  <ChevronLeft className="w-4 h-4 text-[#737373] group-hover:text-[#22c55e] transition-colors" />
-                )}
-              </button>
-              <button
-                onClick={() => setPanelSize('minimized')}
-                className="p-2 hover:bg-[#f5f5f5] dark:hover:bg-[#262626] rounded-lg transition-colors group flex-shrink-0"
-                title="מזער לסרגל"
-              >
-                <ChevronsUp className="w-4 h-4 text-[#737373] group-hover:text-[#22c55e] transition-colors" />
-              </button>
-            </div>
-          </div>
+          <LiveManagerDesktopHeader
+            activeTab={activeTab}
+            deliveriesCount={orders.length}
+            couriersCount={availableCouriers.length}
+            panelSize={panelSize}
+            onSelectDeliveries={() => {
+              setActiveTab('deliveries');
+              if (assignmentMode) {
+                setAssignmentMode(false);
+                setSelectedDeliveryIds(new Set());
+                setSelectedCourierId(null);
+              }
+            }}
+            onSelectCouriers={() => setActiveTab('couriers')}
+            onCyclePanelSize={() => {
+              setPanelSize(prev =>
+                prev === 'normal'
+                  ? 'medium'
+                  : prev === 'medium'
+                  ? 'large'
+                  : 'normal'
+              );
+            }}
+            onMinimize={() => setPanelSize('minimized')}
+          />
 
-          {/* Search and Controls */}
-          <div className="p-4 border-b border-[#e5e5e5] dark:border-[#262626]">
-            <div className="flex items-center justify-between gap-4">
-              {/* Search - For both Deliveries and Couriers */}
-              <div className="relative flex-1">
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#737373]" />
-                <input
-                  type="text"
-                  placeholder="חיפוש..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pr-10 pl-3 py-2 bg-[#f5f5f5] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] rounded-lg text-[#0d0d12] dark:text-white text-sm placeholder:text-[#737373] focus:outline-none focus:ring-2 focus:ring-[#16a34a] focus:border-transparent"
-                />
-              </div>
-            </div>
-
-            {/* Filter Buttons - Deliveries or Couriers */}
-            {(activeTab === 'deliveries' || activeTab === 'couriers') && (
-              <div className="flex items-center justify-start gap-2 overflow-x-auto mt-2 pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                <style>{`
-                  div::-webkit-scrollbar {
-                    display: none;
-                  }
-                `}</style>
-
-                {activeTab === 'couriers' ? (<>
-                  <div className="flex gap-2 flex-shrink-0">
-                    <button
-                      onClick={() => handleToggleShiftFilter('shift')}
-                      className={`px-3 py-1.5 rounded-lg font-bold transition-all flex-shrink-0 text-[12px] whitespace-nowrap ${
-                        shiftFilter === 'shift'
-                          ? 'bg-[rgba(59,130,246,0.18)] text-[#2563eb] dark:text-[#93c5fd] border border-[rgba(59,130,246,0.4)]'
-                          : 'bg-[#e5e5e5] dark:bg-[#262626] text-[#666d80] dark:text-[#737373] border border-[#d4d4d4] dark:border-[#404040] hover:bg-[#d4d4d4] dark:hover:bg-[#1a1a1a]'
-                      }`}
-                    >
-                      במשמרת ({shiftCounts.onShift})
-                    </button>
-                  <button
-                    onClick={() => handleToggleCourierQuickFilter('free')}
-                    className={`px-3 py-1.5 rounded-lg font-bold transition-all flex-shrink-0 text-[12px] whitespace-nowrap ${courierQuickFilter === 'free' ? 'bg-[rgba(14,165,233,0.18)] text-[#0284c7] dark:text-[#7dd3fc] border border-[rgba(14,165,233,0.38)]' : 'bg-[#e5e5e5] dark:bg-[#262626] text-[#666d80] dark:text-[#737373] border border-[#d4d4d4] dark:border-[#404040] hover:bg-[#d4d4d4] dark:hover:bg-[#1a1a1a]'}`}
-                  >
-                    פנויים ({state.couriers.filter(c => c.isOnShift && !state.deliveries.some(d => d.courierId === c.id && ['assigned','delivering'].includes(d.status))).length})
-                  </button>
-                  <button
-                    onClick={() => handleToggleCourierQuickFilter('busy')}
-                    className={`px-3 py-1.5 rounded-lg font-bold transition-all flex-shrink-0 text-[12px] whitespace-nowrap ${courierQuickFilter === 'busy' ? 'bg-[rgba(99,102,241,0.22)] text-[#4f46e5] dark:text-[#c7d2fe] border border-[rgba(99,102,241,0.45)]' : 'bg-[#e5e5e5] dark:bg-[#262626] text-[#666d80] dark:text-[#737373] border border-[#d4d4d4] dark:border-[#404040] hover:bg-[#d4d4d4] dark:hover:bg-[#1a1a1a]'}`}
-                  >
-                    במשלוח ({state.couriers.filter(c => state.deliveries.some(d => d.courierId === c.id && ['assigned','delivering'].includes(d.status))).length})
-                  </button>
-                    <button
-                      onClick={() => handleSetShiftFilter('all')}
-                      className={`px-3 py-1.5 rounded-lg font-bold transition-all flex-shrink-0 text-[12px] whitespace-nowrap ${
-                        shiftFilter === 'all'
-                          ? 'bg-[rgba(15,205,211,0.18)] text-[#0fcdd3] dark:text-[#67e8f9] border border-[rgba(15,205,211,0.4)]'
-                          : 'bg-[#e5e5e5] dark:bg-[#262626] text-[#666d80] dark:text-[#737373] border border-[#d4d4d4] dark:border-[#404040] hover:bg-[#d4d4d4] dark:hover:bg-[#1a1a1a]'
-                      }`}
-                    >
-                      מחוברים ({shiftCounts.connected})
-                    </button>
-                  </div>
-                </>) : (<>
-                <button
-                  onClick={() => toggleStatusFilter('pending')}
-                  className={`px-3 py-1.5 rounded-lg font-bold transition-all flex-shrink-0 ${ statusFilters.includes('pending') ? 'bg-[rgba(255,105,0,0.3)] text-[#ff6900] dark:text-[#ffc068] border border-[rgba(255,105,0,0.5)]' : 'bg-[#e5e5e5] dark:bg-[#262626] text-[#666d80] dark:text-[#737373] border border-[#d4d4d4] dark:border-[#404040] hover:bg-[#d4d4d4] dark:hover:bg-[#1a1a1a]' } text-[12px] whitespace-nowrap`}
-                >
-                  ממתין {todayDeliveries.pending}
-                </button>
-                <button
-                  onClick={() => toggleStatusFilter('assigned')}
-                  className={`px-3 py-1.5 rounded-lg font-bold transition-all flex-shrink-0 ${ statusFilters.includes('assigned') ? 'bg-[rgba(240,177,0,0.3)] text-[#d4a000] dark:text-[#ffdf20] border border-[rgba(240,177,0,0.5)]' : 'bg-[#e5e5e5] dark:bg-[#262626] text-[#666d80] dark:text-[#737373] border border-[#d4d4d4] dark:border-[#404040] hover:bg-[#d4d4d4] dark:hover:bg-[#1a1a1a]' } text-[12px] whitespace-nowrap`}
-                >
-                  שובץ {todayDeliveries.assigned}
-                </button>
-                <button
-                  onClick={() => toggleStatusFilter('delivering')}
-                  className={`px-3 py-1.5 rounded-lg font-bold transition-all flex-shrink-0 ${ statusFilters.includes('delivering') ? 'bg-[rgba(99,102,241,0.3)] text-[#6366f1] dark:text-[#a5b4fc] border border-[rgba(99,102,241,0.5)]' : 'bg-[#e5e5e5] dark:bg-[#262626] text-[#666d80] dark:text-[#737373] border border-[#d4d4d4] dark:border-[#404040] hover:bg-[#d4d4d4] dark:hover:bg-[#1a1a1a]' } text-[12px] whitespace-nowrap`}
-                >
-                  נאסף {todayDeliveries.delivering ?? 0}
-                </button>
-                <button
-                  onClick={() => toggleStatusFilter('delivered')}
-                  className={`px-3 py-1.5 rounded-lg font-bold transition-all flex-shrink-0 ${ statusFilters.includes('delivered') ? 'bg-[rgba(0,166,62,0.3)] text-[#00a63e] dark:text-[#7bf1a8] border border-[rgba(0,166,62,0.5)]' : 'bg-[#e5e5e5] dark:bg-[#262626] text-[#666d80] dark:text-[#737373] border border-[#d4d4d4] dark:border-[#404040] hover:bg-[#d4d4d4] dark:hover:bg-[#1a1a1a]' } text-[12px] whitespace-nowrap`}
-                >
-                  נמסר {todayDeliveries.delivered}
-                </button>
-                <button
-                  onClick={() => toggleStatusFilter('cancelled')}
-                  className={`px-3 py-1.5 rounded-lg font-bold transition-all flex-shrink-0 ${ statusFilters.includes('cancelled') ? 'bg-[rgba(231,0,11,0.3)] text-[#e7000b] dark:text-[#ffa2a2] border border-[rgba(231,0,11,0.5)]' : 'bg-[#e5e5e5] dark:bg-[#262626] text-[#666d80] dark:text-[#737373] border border-[#d4d4d4] dark:border-[#404040] hover:bg-[#d4d4d4] dark:hover:bg-[#1a1a1a]' } text-[12px] whitespace-nowrap`}
-                >
-                  בוטל {todayDeliveries.cancelled}
-                </button>
-                </>)}
-              </div>
-            )}
-          </div>
+          <LiveManagerDesktopControls
+            activeTab={activeTab}
+            searchQuery={searchQuery}
+            onSearchQueryChange={setSearchQuery}
+            shiftFilter={shiftFilter}
+            courierQuickFilter={courierQuickFilter}
+            shiftCounts={shiftCounts}
+            freeCouriersCount={freeCouriersCount}
+            busyCouriersCount={busyCouriersCount}
+            onToggleShiftFilter={handleToggleShiftFilter}
+            onToggleCourierQuickFilter={handleToggleCourierQuickFilter}
+            onSetShiftFilter={handleSetShiftFilter}
+            statusFilters={statusFilters}
+            todayDeliveries={todayDeliveries}
+            onToggleStatusFilter={toggleStatusFilter}
+          />
 
           {/* Content Area - Dynamic based on activeTab */}
           <div className="flex-1 overflow-y-auto relative">
             {activeTab === 'deliveries' ? (
               <>
-
-                {/* Counter - Above Deliveries List */}
-                {orders.length > 0 && (
-                  <div className="p-3 border-b border-[#e5e5e5] dark:border-[#262626] bg-[#fafafa] dark:bg-[#0a0a0a] sticky top-0 z-10">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="text-right text-[#737373] dark:text-[#a3a3a3] text-xs flex-1">
-                        מציג {orders.length} משלוחים
-                      </div>
-
-                      {/* Sort Controls */}
-                      <div className="flex items-center gap-1">
-                        {/* Sort Menu Button */}
-                        <div className="relative">
-                          <button
-                            onClick={() => setShowSortMenu(!showSortMenu)}
-                            className="px-2 py-1 hover:bg-white dark:hover:bg-[#171717] rounded-lg transition-colors flex-shrink-0 text-xs"
-                            title="בחר קטגורית מיון"
-                          >
-                            <span className="text-[#737373] dark:text-[#a3a3a3]">
-                              לפי: <span className="font-bold text-[#22c55e]">
-                                {getSortLabel()}
-                              </span>
-                            </span>
-                          </button>
-
-                          {/* Sort Dropdown */}
-                          {showSortMenu && (
-                            <>
-                              {/* Backdrop */}
-                              <div 
-                                className="fixed inset-0 z-40"
-                                onClick={() => setShowSortMenu(false)}
-                              />
-                              
-                              {/* Menu */}
-                              <div className="absolute left-0 mt-2 w-48 bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-xl shadow-2xl overflow-hidden z-50">
-                                <button
-                                  onClick={() => {
-                                    setSortBy('time');
-                                    setShowSortMenu(false);
-                                  }}
-                                  className={`w-full text-right px-4 py-2.5 text-sm transition-colors ${
-                                    sortBy === 'time'
-                                      ? 'bg-[#f0fdf4] dark:bg-[#0a2f1a] text-[#22c55e] font-bold'
-                                      : 'hover:bg-[#fafafa] dark:hover:bg-[#262626] text-[#0d0d12] dark:text-[#fafafa]'
-                                  }`}
-                                >
-                                  לפי זמן
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setSortBy('status');
-                                    setShowSortMenu(false);
-                                  }}
-                                  className={`w-full text-right px-4 py-2.5 text-sm transition-colors ${
-                                    sortBy === 'status'
-                                      ? 'bg-[#f0fdf4] dark:bg-[#0a2f1a] text-[#22c55e] font-bold'
-                                      : 'hover:bg-[#fafafa] dark:hover:bg-[#262626] text-[#0d0d12] dark:text-[#fafafa]'
-                                  }`}
-                                >
-                                  לפי סטטוס
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setSortBy('restaurant');
-                                    setShowSortMenu(false);
-                                  }}
-                                  className={`w-full text-right px-4 py-2.5 text-sm transition-colors ${
-                                    sortBy === 'restaurant'
-                                      ? 'bg-[#f0fdf4] dark:bg-[#0a2f1a] text-[#22c55e] font-bold'
-                                      : 'hover:bg-[#fafafa] dark:hover:bg-[#262626] text-[#0d0d12] dark:text-[#fafafa]'
-                                  }`}
-                                >
-                                  לפי מסעדה
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setSortBy('address');
-                                    setShowSortMenu(false);
-                                  }}
-                                  className={`w-full text-right px-4 py-2.5 text-sm transition-colors ${
-                                    sortBy === 'address'
-                                      ? 'bg-[#f0fdf4] dark:bg-[#0a2f1a] text-[#22c55e] font-bold'
-                                      : 'hover:bg-[#fafafa] dark:hover:bg-[#262626] text-[#0d0d12] dark:text-[#fafafa]'
-                                  }`}
-                                >
-                                  לפי כתובת
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setSortBy('ready');
-                                    setShowSortMenu(false);
-                                  }}
-                                  className={`w-full text-right px-4 py-2.5 text-sm transition-colors ${
-                                    sortBy === 'ready'
-                                      ? 'bg-[#f0fdf4] dark:bg-[#0a2f1a] text-[#22c55e] font-bold'
-                                      : 'hover:bg-[#fafafa] dark:hover:bg-[#262626] text-[#0d0d12] dark:text-[#fafafa]'
-                                  }`}
-                                >
-                                  לפי מוכן
-                                </button>
-                              </div>
-                            </>
-                          )}
-                        </div>
-
-                        {/* Direction Toggle Button */}
-                        <button
-                          onClick={() => setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')}
-                          className="p-1.5 hover:bg-white dark:hover:bg-[#171717] rounded-lg transition-colors"
-                          title={sortDirection === 'asc' ? 'עבור למיון מהחדש לישן' : 'עבור למיון מהישן לחדש'}
-                        >
-                          {sortDirection === 'asc' ? (
-                            <ArrowDown className="w-3.5 h-3.5 text-[#737373]" />
-                          ) : (
-                            <ArrowUp className="w-3.5 h-3.5 text-[#737373]" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {orders.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full py-12 px-4">
-                    <MapPin className="w-10 h-10 text-[#404040] mb-2" />
-                    <p className="text-xs text-[#737373]">אין משלוחים להצגה</p>
-                  </div>
-                ) : (
-                  orders.map(order => (
-                    <UltraCompactStrip
-                      key={order.deliveryId}
-                      order={order}
-                      routeEtaLabel={routeEtaLabelByDeliveryId[order.deliveryId] ?? null}
-                      isSelected={selectedOrderId === order.id || selectedOrderId === order.deliveryId}
-                      isChecked={validSelectedDeliveryIds.has(order.deliveryId)}
-                      onClick={() => handleDeliveryRowClick(order)}
-                      onCancel={cancelDelivery}
-                      onUnassign={unassignCourier}
-                      onAssignCourier={handleOpenAssignMode}
-                      onToggleCheck={(deliveryId) => {
-                        if (!isDeliveryAssignable(state.deliveries.find(d => d.id === deliveryId))) return;
-                        const newSet = new Set(selectedDeliveryIds);
-                        if (newSet.has(deliveryId)) {
-                          newSet.delete(deliveryId);
-                        } else {
-                          newSet.add(deliveryId);
-                        }
-                        setSelectedDeliveryIds(newSet);
-                      }}
-                      onHover={setHoveredOrderId}
-                      isHovered={hoveredOrderId === order.id}
-                      onShowDetails={setSelectedOrderForDetails}
-                    />
-                  ))
-                )}
-                {/* Bottom bar - delivery selection */}
-                {validSelectedDeliveryIds.size > 0 && (
-                  <div className="sticky bottom-0 inset-x-0 border-t border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
-                    <div className="flex items-center gap-3 px-4 py-3">
-                      <button
-                        onClick={() => setSelectedDeliveryIds(new Set())}
-                        className="px-3 py-2 rounded-lg border border-[#e5e5e5] dark:border-[#262626] text-sm font-semibold text-[#737373] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors flex-shrink-0"
-                      >
-                        ביטול
-                      </button>
-                      <button
-                        onClick={handleOpenAssignForSelected}
-                        className="flex-1 px-4 py-2 rounded-lg bg-[#22c55e] hover:bg-[#16a34a] text-white font-bold text-sm transition-colors shadow-md shadow-[#22c55e]/20"
-                      >
-                        שבץ {validSelectedDeliveryIds.size} {validSelectedDeliveryIds.size === 1 ? 'משלוח' : 'משלוחים'} ←
-                      </button>
-                    </div>
-                  </div>
-                )}
+                <LiveDeliveriesTab
+                  orders={orders}
+                  routeEtaLabelByDeliveryId={routeEtaLabelByDeliveryId}
+                  sortBy={sortBy}
+                  sortDirection={sortDirection}
+                  showSortMenu={showSortMenu}
+                  sortLabel={getSortLabel()}
+                  selectedOrderId={selectedOrderId}
+                  selectedDeliveryIds={validSelectedDeliveryIds}
+                  hoveredOrderId={hoveredOrderId}
+                  isDeliverySelectable={(deliveryId) =>
+                    isDeliveryAssignable(state.deliveries.find((delivery) => delivery.id === deliveryId))
+                  }
+                  onToggleSortMenu={() => setShowSortMenu(!showSortMenu)}
+                  onCloseSortMenu={() => setShowSortMenu(false)}
+                  onSelectSort={(value) => {
+                    setSortBy(value);
+                    setShowSortMenu(false);
+                  }}
+                  onToggleDirection={() =>
+                    setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))
+                  }
+                  onOrderClick={handleDeliveryRowClick}
+                  onCancel={cancelDelivery}
+                  onUnassign={unassignCourier}
+                  onAssignCourier={handleOpenAssignMode}
+                  onToggleSelection={handleToggleSelectedDelivery}
+                  onHover={setHoveredOrderId}
+                  onShowDetails={setSelectedOrderForDetails}
+                  onClearSelection={() => setSelectedDeliveryIds(new Set())}
+                  onAssignSelected={handleOpenAssignForSelected}
+                />
               </>
             ) : (
               /* Couriers Tab */
@@ -1926,272 +1613,60 @@ export const LiveManager: React.FC = () => {
               <div className="w-10 h-1 bg-[#d4d4d4] dark:bg-[#404040] rounded-full"></div>
             </div>
 
-            {/* Search and Filters */}
             {(activeTab === 'deliveries' || activeTab === 'couriers') && (
-              <div className="flex-shrink-0 p-4 border-b border-[#e5e5e5] dark:border-[#262626]">
-                <div className="relative">
-                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#737373]" />
-                  <input
-                    type="text"
-                    placeholder="חיפוש..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pr-10 pl-3 py-2 bg-[#f5f5f5] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] rounded-lg text-[#0d0d12] dark:text-white text-sm placeholder:text-[#737373] focus:outline-none focus:ring-2 focus:ring-[#16a34a] focus:border-transparent"
-                  />
-                </div>
-
-                {/* Filter Buttons */}
-                <div className="flex items-center justify-start gap-2 overflow-x-auto mt-2 pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                  {activeTab === 'couriers' ? (<>
-                    <div className="flex gap-2 flex-shrink-0">
-                      <button
-                        onClick={() => handleToggleShiftFilter('shift')}
-                        className={`px-3 py-1.5 rounded-lg font-bold transition-all flex-shrink-0 text-[12px] whitespace-nowrap ${
-                          shiftFilter === 'shift'
-                            ? 'bg-[rgba(59,130,246,0.18)] text-[#2563eb] dark:text-[#93c5fd] border border-[rgba(59,130,246,0.4)]'
-                            : 'bg-[#e5e5e5] dark:bg-[#262626] text-[#666d80] dark:text-[#737373] border border-[#d4d4d4] dark:border-[#404040] hover:bg-[#d4d4d4] dark:hover:bg-[#1a1a1a]'
-                        }`}
-                      >
-                        במשמרת ({shiftCounts.onShift})
-                      </button>
-                    <button
-                      onClick={() => handleToggleCourierQuickFilter('free')}
-                      className={`px-3 py-1.5 rounded-lg font-bold transition-all flex-shrink-0 text-[12px] whitespace-nowrap ${courierQuickFilter === 'free' ? 'bg-[rgba(14,165,233,0.18)] text-[#0284c7] dark:text-[#7dd3fc] border border-[rgba(14,165,233,0.38)]' : 'bg-[#e5e5e5] dark:bg-[#262626] text-[#666d80] dark:text-[#737373] border border-[#d4d4d4] dark:border-[#404040] hover:bg-[#d4d4d4] dark:hover:bg-[#1a1a1a]'}`}
-                    >
-                      פנויים ({state.couriers.filter(c => c.isOnShift && !state.deliveries.some(d => d.courierId === c.id && ['assigned','delivering'].includes(d.status))).length})
-                    </button>
-                    <button
-                      onClick={() => handleToggleCourierQuickFilter('busy')}
-                      className={`px-3 py-1.5 rounded-lg font-bold transition-all flex-shrink-0 text-[12px] whitespace-nowrap ${courierQuickFilter === 'busy' ? 'bg-[rgba(99,102,241,0.22)] text-[#4f46e5] dark:text-[#c7d2fe] border border-[rgba(99,102,241,0.45)]' : 'bg-[#e5e5e5] dark:bg-[#262626] text-[#666d80] dark:text-[#737373] border border-[#d4d4d4] dark:border-[#404040] hover:bg-[#d4d4d4] dark:hover:bg-[#1a1a1a]'}`}
-                    >
-                      במשלוח ({state.couriers.filter(c => state.deliveries.some(d => d.courierId === c.id && ['assigned','delivering'].includes(d.status))).length})
-                    </button>
-                      <button
-                        onClick={() => handleSetShiftFilter('all')}
-                        className={`px-3 py-1.5 rounded-lg font-bold transition-all flex-shrink-0 text-[12px] whitespace-nowrap ${
-                          shiftFilter === 'all'
-                            ? 'bg-[rgba(15,205,211,0.18)] text-[#0fcdd3] dark:text-[#67e8f9] border border-[rgba(15,205,211,0.4)]'
-                            : 'bg-[#e5e5e5] dark:bg-[#262626] text-[#666d80] dark:text-[#737373] border border-[#d4d4d4] dark:border-[#404040] hover:bg-[#d4d4d4] dark:hover:bg-[#1a1a1a]'
-                        }`}
-                      >
-                        מחוברים ({shiftCounts.connected})
-                      </button>
-                    </div>
-                  </>) : (<>
-                  <button
-                    onClick={() => toggleStatusFilter('pending')}
-                    className={`px-3 py-1.5 rounded-lg font-bold transition-all flex-shrink-0 ${ statusFilters.includes('pending') ? 'bg-[rgba(255,105,0,0.3)] text-[#ff6900] dark:text-[#ffc068] border border-[rgba(255,105,0,0.5)]' : 'bg-[#e5e5e5] dark:bg-[#262626] text-[#666d80] dark:text-[#737373] border border-[#d4d4d4] dark:border-[#404040] hover:bg-[#d4d4d4] dark:hover:bg-[#1a1a1a]' } text-[12px] whitespace-nowrap`}
-                  >
-                    ממתין {todayDeliveries.pending}
-                  </button>
-                  <button
-                    onClick={() => toggleStatusFilter('assigned')}
-                    className={`px-3 py-1.5 rounded-lg font-bold transition-all flex-shrink-0 ${ statusFilters.includes('assigned') ? 'bg-[rgba(240,177,0,0.3)] text-[#d4a000] dark:text-[#ffdf20] border border-[rgba(240,177,0,0.5)]' : 'bg-[#e5e5e5] dark:bg-[#262626] text-[#666d80] dark:text-[#737373] border border-[#d4d4d4] dark:border-[#404040] hover:bg-[#d4d4d4] dark:hover:bg-[#1a1a1a]' } text-[12px] whitespace-nowrap`}
-                  >
-                    שובץ {todayDeliveries.assigned}
-                  </button>
-                  <button
-                    onClick={() => toggleStatusFilter('delivering')}
-                    className={`px-3 py-1.5 rounded-lg font-bold transition-all flex-shrink-0 ${ statusFilters.includes('delivering') ? 'bg-[rgba(99,102,241,0.3)] text-[#6366f1] dark:text-[#a5b4fc] border border-[rgba(99,102,241,0.5)]' : 'bg-[#e5e5e5] dark:bg-[#262626] text-[#666d80] dark:text-[#737373] border border-[#d4d4d4] dark:border-[#404040] hover:bg-[#d4d4d4] dark:hover:bg-[#1a1a1a]' } text-[12px] whitespace-nowrap`}
-                  >
-                    נאסף {todayDeliveries.delivering ?? 0}
-                  </button>
-                  <button
-                    onClick={() => toggleStatusFilter('delivered')}
-                    className={`px-3 py-1.5 rounded-lg font-bold transition-all flex-shrink-0 ${ statusFilters.includes('delivered') ? 'bg-[rgba(0,166,62,0.3)] text-[#00a63e] dark:text-[#7bf1a8] border border-[rgba(0,166,62,0.5)]' : 'bg-[#e5e5e5] dark:bg-[#262626] text-[#666d80] dark:text-[#737373] border border-[#d4d4d4] dark:border-[#404040] hover:bg-[#d4d4d4] dark:hover:bg-[#1a1a1a]' } text-[12px] whitespace-nowrap`}
-                  >
-                    נמסר {todayDeliveries.delivered}
-                  </button>
-                  <button
-                    onClick={() => toggleStatusFilter('cancelled')}
-                    className={`px-3 py-1.5 rounded-lg font-bold transition-all flex-shrink-0 ${ statusFilters.includes('cancelled') ? 'bg-[rgba(231,0,11,0.3)] text-[#e7000b] dark:text-[#ffa2a2] border border-[rgba(231,0,11,0.5)]' : 'bg-[#e5e5e5] dark:bg-[#262626] text-[#666d80] dark:text-[#737373] border border-[#d4d4d4] dark:border-[#404040] hover:bg-[#d4d4d4] dark:hover:bg-[#1a1a1a]' } text-[12px] whitespace-nowrap`}
-                  >
-                    בוטל {todayDeliveries.cancelled}
-                  </button>
-                  </>)}
-                </div>
-              </div>
+              <LiveManagerMobileControls
+                activeTab={activeTab}
+                searchQuery={searchQuery}
+                onSearchQueryChange={setSearchQuery}
+                shiftFilter={shiftFilter}
+                courierQuickFilter={courierQuickFilter}
+                shiftCounts={shiftCounts}
+                freeCouriersCount={freeCouriersCount}
+                busyCouriersCount={busyCouriersCount}
+                onToggleShiftFilter={handleToggleShiftFilter}
+                onToggleCourierQuickFilter={handleToggleCourierQuickFilter}
+                onSetShiftFilter={handleSetShiftFilter}
+                statusFilters={statusFilters}
+                todayDeliveries={todayDeliveries}
+                onToggleStatusFilter={toggleStatusFilter}
+              />
             )}
 
             {/* Content Area - Dynamic based on activeTab */}
             <div className="flex-1 overflow-y-auto relative">
               {activeTab === 'deliveries' ? (
                 <>
-
-                  {/* Counter + Sort */}
-                  {orders.length > 0 && (
-                    <div className="p-3 border-b border-[#e5e5e5] dark:border-[#262626] bg-[#fafafa] dark:bg-[#0a0a0a] sticky top-0 z-10">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="text-right text-[#737373] dark:text-[#a3a3a3] text-xs flex-1">
-                          מציג {orders.length} משלוחים
-                        </div>
-
-                        {/* Sort Controls */}
-                        <div className="flex items-center gap-1">
-                          {/* Sort Menu Button */}
-                          <div className="relative">
-                            <button
-                              onClick={() => setShowSortMenu(!showSortMenu)}
-                              className="px-2 py-1 hover:bg-white dark:hover:bg-[#171717] rounded-lg transition-colors flex-shrink-0 text-xs"
-                              title="בחר קטגורית מיון"
-                            >
-                              <span className="text-[#737373] dark:text-[#a3a3a3]">
-                                לפי: <span className="font-bold text-[#22c55e]">
-                                  {getSortLabel()}
-                                </span>
-                              </span>
-                            </button>
-
-                            {/* Sort Dropdown */}
-                            {showSortMenu && (
-                              <>
-                                {/* Backdrop */}
-                                <div 
-                                  className="fixed inset-0 z-40"
-                                  onClick={() => setShowSortMenu(false)}
-                                />
-                                
-                                {/* Menu */}
-                                <div className="absolute left-0 mt-2 w-48 bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-xl shadow-2xl overflow-hidden z-50">
-                                  <button
-                                    onClick={() => {
-                                      setSortBy('time');
-                                      setShowSortMenu(false);
-                                    }}
-                                    className={`w-full text-right px-4 py-2.5 text-sm transition-colors ${
-                                      sortBy === 'time'
-                                        ? 'bg-[#f0fdf4] dark:bg-[#0a2f1a] text-[#22c55e] font-bold'
-                                        : 'hover:bg-[#fafafa] dark:hover:bg-[#262626] text-[#0d0d12] dark:text-[#fafafa]'
-                                    }`}
-                                  >
-                                    לפי זמן
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setSortBy('status');
-                                      setShowSortMenu(false);
-                                    }}
-                                    className={`w-full text-right px-4 py-2.5 text-sm transition-colors ${
-                                      sortBy === 'status'
-                                        ? 'bg-[#f0fdf4] dark:bg-[#0a2f1a] text-[#22c55e] font-bold'
-                                        : 'hover:bg-[#fafafa] dark:hover:bg-[#262626] text-[#0d0d12] dark:text-[#fafafa]'
-                                    }`}
-                                  >
-                                    לפי סטטוס
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setSortBy('restaurant');
-                                      setShowSortMenu(false);
-                                    }}
-                                    className={`w-full text-right px-4 py-2.5 text-sm transition-colors ${
-                                      sortBy === 'restaurant'
-                                        ? 'bg-[#f0fdf4] dark:bg-[#0a2f1a] text-[#22c55e] font-bold'
-                                        : 'hover:bg-[#fafafa] dark:hover:bg-[#262626] text-[#0d0d12] dark:text-[#fafafa]'
-                                    }`}
-                                  >
-                                    לפי מסעדה
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setSortBy('address');
-                                      setShowSortMenu(false);
-                                    }}
-                                    className={`w-full text-right px-4 py-2.5 text-sm transition-colors ${
-                                      sortBy === 'address'
-                                        ? 'bg-[#f0fdf4] dark:bg-[#0a2f1a] text-[#22c55e] font-bold'
-                                        : 'hover:bg-[#fafafa] dark:hover:bg-[#262626] text-[#0d0d12] dark:text-[#fafafa]'
-                                    }`}
-                                  >
-                                    לפי כתובת
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setSortBy('ready');
-                                      setShowSortMenu(false);
-                                    }}
-                                    className={`w-full text-right px-4 py-2.5 text-sm transition-colors ${
-                                      sortBy === 'ready'
-                                        ? 'bg-[#f0fdf4] dark:bg-[#0a2f1a] text-[#22c55e] font-bold'
-                                        : 'hover:bg-[#fafafa] dark:hover:bg-[#262626] text-[#0d0d12] dark:text-[#fafafa]'
-                                    }`}
-                                  >
-                                    לפי מוכן
-                                  </button>
-                                </div>
-                              </>
-                            )}
-                          </div>
-
-                          {/* Direction Toggle Button */}
-                          <button
-                            onClick={() => setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')}
-                            className="p-1.5 hover:bg-white dark:hover:bg-[#171717] rounded-lg transition-colors"
-                            title={sortDirection === 'asc' ? 'עבור למיון מהחדש לישן' : 'עבור למיון מהישן לחדש'}
-                          >
-                            {sortDirection === 'asc' ? (
-                              <ArrowDown className="w-3.5 h-3.5 text-[#737373]" />
-                            ) : (
-                              <ArrowUp className="w-3.5 h-3.5 text-[#737373]" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Deliveries List */}
-                  {orders.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full py-12 px-4">
-                      <MapPin className="w-10 h-10 text-[#404040] mb-2" />
-                      <p className="text-xs text-[#737373]">אין משלוחים להצגה</p>
-                    </div>
-                  ) : (
-                    orders.map(order => (
-                      <UltraCompactStrip
-                        key={order.deliveryId}
-                        order={order}
-                        isSelected={selectedOrderId === order.id || selectedOrderId === order.deliveryId}
-                        isChecked={validSelectedDeliveryIds.has(order.deliveryId)}
-                        onClick={() => handleDeliveryRowClick(order)}
-                        onCancel={cancelDelivery}
-                        onUnassign={unassignCourier}
-                        onAssignCourier={handleOpenAssignMode}
-                        onToggleCheck={(deliveryId) => {
-                          if (!isDeliveryAssignable(state.deliveries.find(d => d.id === deliveryId))) return;
-                          const newSet = new Set(selectedDeliveryIds);
-                          if (newSet.has(deliveryId)) {
-                            newSet.delete(deliveryId);
-                          } else {
-                            newSet.add(deliveryId);
-                          }
-                          setSelectedDeliveryIds(newSet);
-                        }}
-                        onHover={setHoveredOrderId}
-                        isHovered={hoveredOrderId === order.id}
-                        onShowDetails={setSelectedOrderForDetails}
-                      />
-                    ))
-                  )}
-                  {/* Bottom bar - delivery selection - Mobile */}
-                  {validSelectedDeliveryIds.size > 0 && (
-                    <div className="sticky bottom-0 inset-x-0 border-t border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
-                      <div className="flex items-center gap-3 px-4 py-3">
-                        <button
-                          onClick={() => setSelectedDeliveryIds(new Set())}
-                          className="px-3 py-2 rounded-lg border border-[#e5e5e5] dark:border-[#262626] text-sm font-semibold text-[#737373] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors flex-shrink-0"
-                        >
-                          ביטול
-                        </button>
-                        <button
-                          onClick={handleOpenAssignForSelected}
-                          className="flex-1 px-4 py-2 rounded-lg bg-[#22c55e] hover:bg-[#16a34a] text-white font-bold text-sm transition-colors shadow-md shadow-[#22c55e]/20"
-                        >
-                          שבץ {validSelectedDeliveryIds.size} {validSelectedDeliveryIds.size === 1 ? 'משלוח' : 'משלוחים'} ←
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                  <LiveDeliveriesTab
+                    orders={orders}
+                    sortBy={sortBy}
+                    sortDirection={sortDirection}
+                    showSortMenu={showSortMenu}
+                    sortLabel={getSortLabel()}
+                    selectedOrderId={selectedOrderId}
+                    selectedDeliveryIds={validSelectedDeliveryIds}
+                    hoveredOrderId={hoveredOrderId}
+                    isDeliverySelectable={(deliveryId) =>
+                      isDeliveryAssignable(state.deliveries.find((delivery) => delivery.id === deliveryId))
+                    }
+                    onToggleSortMenu={() => setShowSortMenu(!showSortMenu)}
+                    onCloseSortMenu={() => setShowSortMenu(false)}
+                    onSelectSort={(value) => {
+                      setSortBy(value);
+                      setShowSortMenu(false);
+                    }}
+                    onToggleDirection={() =>
+                      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))
+                    }
+                    onOrderClick={handleDeliveryRowClick}
+                    onCancel={cancelDelivery}
+                    onUnassign={unassignCourier}
+                    onAssignCourier={handleOpenAssignMode}
+                    onToggleSelection={handleToggleSelectedDelivery}
+                    onHover={setHoveredOrderId}
+                    onShowDetails={setSelectedOrderForDetails}
+                    onClearSelection={() => setSelectedDeliveryIds(new Set())}
+                    onAssignSelected={handleOpenAssignForSelected}
+                  />
                 </>
               ) : (
                 /* Couriers Tab */
@@ -2222,11 +1697,7 @@ export const LiveManager: React.FC = () => {
           <BottomAppBar
             activeTab={activeTab}
             onTabChange={setActiveTab}
-            onAddDelivery={() => {
-              // TODO: Open Add Delivery Modal
-              alert('הוסף משלוח חדש - בפיתוח');
-            }}
-            onOpenMenu={() => setMobileSidebarOpen(true)}
+            onOpenMenu={openMobileSidebar}
           />
         </div>
 

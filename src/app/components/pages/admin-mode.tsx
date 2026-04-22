@@ -29,7 +29,6 @@ import {
 import { format } from 'date-fns';
 import { he } from 'date-fns/locale';
 import { toast } from 'sonner';
-import { SimpleMapPlaceholder } from '../simple-map-placeholder';
 
 // Types for drag and drop
 const ItemTypes = {
@@ -570,8 +569,8 @@ export const AdminMode: React.FC = () => {
                   🗺️ <strong>מפה חיה:</strong> צפה בכל השליחים והמשלוחים במיקום בזמן אמת כדי לקבל החלטות חכמות על שיבוץ משלוחים
                 </p>
               </div>
-              <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#e5e5e5] dark:border-[#262626] overflow-hidden">
-                <SimpleMapPlaceholder height="calc(100vh - 350px)" />
+              <div className="flex min-h-[320px] items-center justify-center rounded-xl border border-[#e5e5e5] bg-white p-8 dark:border-[#262626] dark:bg-[#171717]">
+                <p className="text-sm text-[#737373] dark:text-[#a3a3a3]">תצוגת מפת הדמה הוסרה מהמערכת.</p>
               </div>
             </div>
           )}

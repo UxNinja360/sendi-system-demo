@@ -6,9 +6,6 @@ import { SettingsPage } from '../pages/settings-page';
 import { PageLoader } from '../ui/page-loader';
 import { LoadingBar } from '../ui/loading-bar';
 import { Toaster } from '../common/toaster';
-import { MiniMap } from '../common/mini-map';
-import { OnboardingProvider } from '../../context/onboarding.context';
-import { OnboardingTooltip } from '../onboarding/onboarding-tooltip';
 
 export const AppLayout: React.FC = () => {
   const [isPageLoading, setIsPageLoading] = useState(false);
@@ -51,39 +48,34 @@ export const AppLayout: React.FC = () => {
   const isLoading = navigation.state === 'loading';
 
   return (
-    <OnboardingProvider>
-      <div className="flex h-screen w-full overflow-hidden bg-[#fafafa] text-[#0d0d12] transition-colors duration-300 dark:bg-[#0a0a0a] dark:text-[#fafafa]">
-        <Toaster />
-        <OnboardingTooltip />
+    <div className="flex h-screen w-full overflow-hidden bg-[#fafafa] text-[#0d0d12] transition-colors duration-300 dark:bg-[#0a0a0a] dark:text-[#fafafa]">
+      <Toaster />
 
-        {!isLivePage && <MiniMap />}
+      <Sidebar onLogout={handleLogout} />
 
-        <Sidebar onLogout={handleLogout} />
+      <div className="flex h-full w-full flex-1 flex-col overflow-hidden">
+        {!isLivePage && <Breadcrumbs />}
 
-        <div className="flex h-full w-full flex-1 flex-col overflow-hidden">
-          {!isLivePage && <Breadcrumbs />}
+        <LoadingBar isLoading={isLoading || isPageLoading} />
 
-          <LoadingBar isLoading={isLoading || isPageLoading} />
+        <div
+          className={`relative flex-1 w-full bg-[#fafafa] dark:bg-[#0a0a0a] ${
+            isLivePage || location.pathname === '/deliveries'
+              ? 'overflow-hidden flex flex-col'
+              : 'overflow-y-auto scroll-smooth'
+          }`}
+        >
+          {isLoading && (
+            <div className="absolute inset-0 z-50 bg-[#fafafa] dark:bg-[#0a0a0a]">
+              <PageLoader page={getCurrentPage()} />
+            </div>
+          )}
 
-          <div
-            className={`relative flex-1 w-full bg-[#fafafa] dark:bg-[#0a0a0a] ${
-              isLivePage || location.pathname === '/deliveries'
-                ? 'overflow-hidden flex flex-col'
-                : 'overflow-y-auto scroll-smooth'
-            }`}
-          >
-            {isLoading && (
-              <div className="absolute inset-0 z-50 bg-[#fafafa] dark:bg-[#0a0a0a]">
-                <PageLoader page={getCurrentPage()} />
-              </div>
-            )}
-
-            <Suspense fallback={<PageLoader page={getCurrentPage()} />}>
-              {isSettingsPage ? <SettingsPage onLogout={handleLogout} /> : <Outlet />}
-            </Suspense>
-          </div>
+          <Suspense fallback={<PageLoader page={getCurrentPage()} />}>
+            {isSettingsPage ? <SettingsPage onLogout={handleLogout} /> : <Outlet />}
+          </Suspense>
         </div>
       </div>
-    </OnboardingProvider>
+    </div>
   );
 };

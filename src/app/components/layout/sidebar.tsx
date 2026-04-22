@@ -41,10 +41,26 @@ import { AppLogo } from '../icons/app-logo';
 import { useDelivery } from '../../context/delivery.context';
 import { useTheme } from '../../context/theme.context';
 import { useLanguage } from '../../context/language.context';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 interface SidebarProps {
   onLogout: () => void;
 }
+
+interface SidebarIconTooltipProps {
+  label: string;
+  children: React.ReactNode;
+  className?: string;
+}
+
+const SidebarIconTooltip: React.FC<SidebarIconTooltipProps> = ({ label, children, className }) => (
+  <Tooltip>
+    <TooltipTrigger asChild>
+      <div className={className}>{children}</div>
+    </TooltipTrigger>
+    <TooltipContent side="left">{label}</TooltipContent>
+  </Tooltip>
+);
 
 export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
   const navigate = useNavigate();
@@ -316,12 +332,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
                 </span>
               </div>
             ) : (
-              <div
+              <SidebarIconTooltip
+                label={`${t('nav.live')} • ${activeDeliveriesCount}`}
                 className="flex items-center justify-center py-2.5"
-                title={`${t('nav.live')} • ${activeDeliveriesCount}`}
               >
                 <Activity size={19} className="stroke-[1.8px]" />
-              </div>
+              </SidebarIconTooltip>
             )}
           </div>
 
@@ -348,9 +364,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
                 <span className="text-sm font-medium truncate">{t('nav.dashboard')}</span>
               </div>
             ) : (
-              <div className="flex items-center justify-center py-2.5" title={t('nav.dashboard')}>
+              <SidebarIconTooltip label={t('nav.dashboard')} className="flex items-center justify-center py-2.5">
                 <LayoutDashboard size={19} className="stroke-[1.8px]" />
-              </div>
+              </SidebarIconTooltip>
             )}
           </div>
 
@@ -377,9 +393,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
                 <span className="text-sm font-medium truncate">{t('nav.history')}</span>
               </div>
             ) : (
-              <div className="flex items-center justify-center py-2.5" title={t('nav.history')}>
+              <SidebarIconTooltip label={t('nav.history')} className="flex items-center justify-center py-2.5">
                 <Package size={19} className="stroke-[1.8px]" />
-              </div>
+              </SidebarIconTooltip>
             )}
           </div>
 
@@ -406,9 +422,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
                 <span className="text-sm font-medium truncate">מסעדות</span>
               </div>
             ) : (
-              <div className="flex items-center justify-center py-2.5" title="מסעדות">
+              <SidebarIconTooltip label="מסעדות" className="flex items-center justify-center py-2.5">
                 <Store size={19} className="stroke-[1.8px]" />
-              </div>
+              </SidebarIconTooltip>
             )}
           </div>
 
@@ -433,9 +449,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
                 <span className="text-sm font-medium truncate">שליחים</span>
               </div>
             ) : (
-              <div className="flex items-center justify-center py-2.5" title="שליחים">
+              <SidebarIconTooltip label="שליחים" className="flex items-center justify-center py-2.5">
                 <Bike size={19} className="stroke-[1.8px]" />
-              </div>
+              </SidebarIconTooltip>
             )}
           </div>
 
@@ -459,9 +475,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
                 <span className="text-sm font-medium truncate">משמרות</span>
               </div>
             ) : (
-              <div className="flex items-center justify-center py-2.5" title="משמרות">
+              <SidebarIconTooltip label="משמרות" className="flex items-center justify-center py-2.5">
                 <Calendar size={19} className="stroke-[1.8px]" />
-              </div>
+              </SidebarIconTooltip>
             )}
           </div>
 
@@ -487,9 +503,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
                 <span className="text-sm font-medium truncate">אזורי משלוח</span>
               </div>
             ) : (
-              <div className="flex items-center justify-center py-2.5" title="אזורי משלוח">
+              <SidebarIconTooltip label="אזורי משלוח" className="flex items-center justify-center py-2.5">
                 <Map size={19} className="stroke-[1.8px]" />
-              </div>
+              </SidebarIconTooltip>
             )}
           </div>
 
@@ -513,9 +529,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
                 <span className="text-sm font-medium truncate">תמחור לפי מרחק</span>
               </div>
             ) : (
-              <div className="flex items-center justify-center py-2.5" title="תמחור לפי מרחק">
+              <SidebarIconTooltip label="תמחור לפי מרחק" className="flex items-center justify-center py-2.5">
                 <Ruler size={19} className="stroke-[1.8px]" />
-              </div>
+              </SidebarIconTooltip>
             )}
           </div>
 
@@ -539,9 +555,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
                 <span className="text-sm font-medium truncate">שעות פעילות</span>
               </div>
             ) : (
-              <div className="flex items-center justify-center py-2.5" title="שעות פעילות">
+              <SidebarIconTooltip label="שעות פעילות" className="flex items-center justify-center py-2.5">
                 <Clock size={19} className="stroke-[1.8px]" />
-              </div>
+              </SidebarIconTooltip>
             )}
           </div>
 
@@ -567,9 +583,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
                 <span className="text-sm font-medium truncate">{t('sidebar.reports')}</span>
               </div>
             ) : (
-              <div className="flex items-center justify-center py-2.5" title={t('sidebar.reports')}>
+              <SidebarIconTooltip label={t('sidebar.reports')} className="flex items-center justify-center py-2.5">
                 <FileText size={19} className="stroke-[1.8px]" />
-              </div>
+              </SidebarIconTooltip>
             )}
           </div>
 
@@ -593,9 +609,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
                 <span className="text-sm font-medium truncate">ביצועים</span>
               </div>
             ) : (
-              <div className="flex items-center justify-center py-2.5" title="ביצועים">
+              <SidebarIconTooltip label="ביצועים" className="flex items-center justify-center py-2.5">
                 <TrendingUp size={19} className="stroke-[1.8px]" />
-              </div>
+              </SidebarIconTooltip>
             )}
           </div>
 
@@ -619,9 +635,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
                 <span className="text-sm font-medium truncate">יומן פעולות</span>
               </div>
             ) : (
-              <div className="flex items-center justify-center py-2.5" title="יומן פעולות">
+              <SidebarIconTooltip label="יומן פעולות" className="flex items-center justify-center py-2.5">
                 <FileText size={19} className="stroke-[1.8px]" />
-              </div>
+              </SidebarIconTooltip>
             )}
           </div>
 
@@ -682,12 +698,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
                  </span>
                </div>
              ) : (
-               <div className="hidden md:flex flex-col items-center gap-1" title="ארנק">
+               <SidebarIconTooltip label="ארנק" className="hidden md:flex flex-col items-center gap-1">
                  <Wallet size={16} className="text-[#16a34a] dark:text-[#9fe870]" />
                  <span className="text-[10px] font-bold text-[#16a34a] dark:text-[#9fe870]">
                    {walletRevenue > 999 ? `${Math.floor(walletRevenue / 1000)}K` : Math.round(walletRevenue)}
                  </span>
-               </div>
+               </SidebarIconTooltip>
              )}
            </div>
 
@@ -711,7 +727,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
                  </span>
                </div>
              ) : (
-               <div className="hidden md:flex flex-col items-center gap-1" title={t('sidebar.deliveryBalance')}>
+               <SidebarIconTooltip
+                 label={t('sidebar.deliveryBalance')}
+                 className="hidden md:flex flex-col items-center gap-1"
+               >
                  <Package size={16} className="text-[#0fcdd3]" />
                  <span className={`text-[10px] font-bold ${
                    state.deliveryBalance <= 100
@@ -720,7 +739,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
                  }`}>
                    {state.deliveryBalance > 999 ? `${Math.floor(state.deliveryBalance / 1000)}K` : state.deliveryBalance}
                  </span>
-               </div>
+               </SidebarIconTooltip>
              )}
            </div>
 
@@ -774,15 +793,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
                  </div>
 
                </div>
-             ) : (
-              <div
+            ) : (
+              <SidebarIconTooltip
+                label={state.isSystemOpen ? t('sidebar.acceptDeliveries') : '\u05de\u05e2\u05e8\u05db\u05ea \u05e1\u05d2\u05d5\u05e8\u05d4'}
                 className="hidden md:flex flex-col items-center gap-1"
-                title={state.isSystemOpen ? t('sidebar.acceptDeliveries') : '\u05de\u05e2\u05e8\u05db\u05ea \u05e1\u05d2\u05d5\u05e8\u05d4'}
               >
                 <Power className={`w-4 h-4 transition-colors ${
                   state.isSystemOpen ? 'text-[#02B74F]' : 'text-[#dc2626]'
                 }`} />
-              </div>
+              </SidebarIconTooltip>
             )}
           </div>
 
@@ -816,18 +835,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
                  className={`flex items-center justify-center p-2.5 cursor-pointer transition-colors rounded-md mx-1 ${
                    location.pathname.startsWith('/settings') ? 'bg-[#0d0d12] dark:bg-[#262626] text-[#fafafa] dark:text-[#fafafa]' : 'text-[#36394a] dark:text-[#d4d4d4] hover:bg-[#f5f5f5] dark:hover:bg-[#404040]'
                  }`}
-                 title={t('sidebar.systemSettings')}
                >
-                 <Settings size={20} className="stroke-[1.5px]" />
+                 <SidebarIconTooltip label={t('sidebar.systemSettings')} className="flex items-center justify-center">
+                   <Settings size={20} className="stroke-[1.5px]" />
+                 </SidebarIconTooltip>
                </div>
                <div 
                  onClick={() => handleNav('/help')}
                  className={`flex items-center justify-center p-2.5 cursor-pointer transition-colors rounded-md mx-1 ${
                    location.pathname === '/help' ? 'bg-[#0d0d12] dark:bg-[#262626] text-[#fafafa] dark:text-[#fafafa]' : 'text-[#36394a] dark:text-[#d4d4d4] hover:bg-[#f5f5f5] dark:hover:bg-[#404040]'
                  }`}
-                 title={t('sidebar.help')}
                >
-                 <HelpCircle size={20} className="stroke-[1.5px]" />
+                 <SidebarIconTooltip label={t('sidebar.help')} className="flex items-center justify-center">
+                   <HelpCircle size={20} className="stroke-[1.5px]" />
+                 </SidebarIconTooltip>
                </div>
              </div>
            ) : (

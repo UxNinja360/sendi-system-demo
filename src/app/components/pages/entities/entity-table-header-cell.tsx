@@ -58,7 +58,14 @@ export const EntityTableHeaderCell: React.FC<EntityTableHeaderCellProps> = ({
         {onSort ? (
           <button
             type="button"
-            onClick={onSort}
+            draggable={false}
+            onMouseDown={(event) => event.stopPropagation()}
+            onPointerDown={(event) => event.stopPropagation()}
+            onDragStart={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              event.stopPropagation();
+              onSort();
+            }}
             className="flex items-center gap-1 whitespace-nowrap text-xs font-medium text-[#666d80] transition-colors hover:text-[#16a34a] dark:text-[#a3a3a3] dark:hover:text-[#22c55e]"
           >
             <span>{label}</span>

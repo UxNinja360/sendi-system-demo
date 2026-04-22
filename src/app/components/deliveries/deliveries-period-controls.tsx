@@ -47,36 +47,39 @@ export const DeliveriesPeriodControls: React.FC<DeliveriesPeriodControlsProps> =
   setDateRange,
   setCurrentPage,
 }) => (
-  <div className="flex items-center gap-1 relative" ref={datePickerRef}>
+  <div className="relative flex items-center gap-1" ref={datePickerRef}>
     {periodMode !== 'custom_range' && (
       <button
         onClick={() => setMonthAnchor(v => new Date(v.getFullYear(), v.getMonth() - 1, 1))}
-        className="h-9 w-9 flex items-center justify-center rounded-[4px] border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] hover:bg-[#f5f5f5] dark:hover:bg-[#202020] transition-colors"
+        className="flex h-9 w-9 items-center justify-center rounded-[4px] border border-[#e5e5e5] bg-white transition-colors hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:hover:bg-[#202020]"
       >
-        <ChevronRight className="w-4 h-4" />
+        <ChevronRight className="h-4 w-4" />
       </button>
     )}
+
     <button
       onClick={() => setDatePickerOpen(v => !v)}
-      className={`h-9 px-4 min-w-[150px] flex items-center justify-center gap-2 rounded-[4px] border text-sm font-medium transition-colors ${
+      className={`flex h-9 min-w-[150px] items-center justify-center gap-2 rounded-[4px] border px-4 text-sm font-medium transition-colors ${
         periodMode === 'custom_range'
-          ? 'border-[#0d0d12] dark:border-[#fafafa] bg-[#0d0d12] dark:bg-[#fafafa] text-white dark:text-[#0d0d12]'
-          : 'border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] text-[#0d0d12] dark:text-[#fafafa]'
+          ? 'border-[#0d0d12] bg-[#0d0d12] text-white dark:border-[#fafafa] dark:bg-[#fafafa] dark:text-[#0d0d12]'
+          : 'border-[#e5e5e5] bg-white text-[#0d0d12] dark:border-[#262626] dark:bg-[#171717] dark:text-[#fafafa]'
       }`}
     >
-      <Calendar className="w-4 h-4 shrink-0 opacity-60" />
+      <Calendar className="h-4 w-4 shrink-0 opacity-60" />
       {periodMode === 'custom_range' && customStartDate && customEndDate
-        ? `${formatDate(new Date(customStartDate), 'dd/MM')} – ${formatDate(new Date(customEndDate), 'dd/MM/yyyy')}`
+        ? `${formatDate(new Date(customStartDate), 'dd/MM')} - ${formatDate(new Date(customEndDate), 'dd/MM/yyyy')}`
         : formatDate(monthAnchor, 'MMMM yyyy', { locale: he })}
     </button>
+
     {periodMode !== 'custom_range' && (
       <button
         onClick={() => setMonthAnchor(v => new Date(v.getFullYear(), v.getMonth() + 1, 1))}
-        className="h-9 w-9 flex items-center justify-center rounded-[4px] border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] hover:bg-[#f5f5f5] dark:hover:bg-[#202020] transition-colors"
+        className="flex h-9 w-9 items-center justify-center rounded-[4px] border border-[#e5e5e5] bg-white transition-colors hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:hover:bg-[#202020]"
       >
-        <ChevronLeft className="w-4 h-4" />
+        <ChevronLeft className="h-4 w-4" />
       </button>
     )}
+
     {periodMode === 'custom_range' && (
       <button
         onClick={() => {
@@ -84,100 +87,118 @@ export const DeliveriesPeriodControls: React.FC<DeliveriesPeriodControlsProps> =
           setDatePickerOpen(false);
           setCurrentPage(1);
         }}
-        className="h-9 w-9 flex items-center justify-center rounded-[4px] border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] hover:bg-[#f5f5f5] dark:hover:bg-[#202020] transition-colors"
+        className="flex h-9 w-9 items-center justify-center rounded-[4px] border border-[#e5e5e5] bg-white transition-colors hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:hover:bg-[#202020]"
         title="נקה טווח"
       >
-        <X className="w-3.5 h-3.5 text-[#737373]" />
+        <X className="h-3.5 w-3.5 text-[#737373]" />
       </button>
     )}
 
-    {datePickerOpen && (() => {
-      const today = formatDate(new Date(), 'yyyy-MM-dd');
-      const y = calendarMonth.getFullYear();
-      const m = calendarMonth.getMonth();
-      const firstDay = new Date(y, m, 1).getDay();
-      const daysInMonth = new Date(y, m + 1, 0).getDate();
-      const cells: (string | null)[] = Array(firstDay).fill(null);
-      for (let d = 1; d <= daysInMonth; d++) {
-        cells.push(formatDate(new Date(y, m, d), 'yyyy-MM-dd'));
-      }
-      while (cells.length % 7 !== 0) {
-        cells.push(null);
-      }
+    {datePickerOpen &&
+      (() => {
+        const today = formatDate(new Date(), 'yyyy-MM-dd');
+        const y = calendarMonth.getFullYear();
+        const m = calendarMonth.getMonth();
+        const firstDay = new Date(y, m, 1).getDay();
+        const daysInMonth = new Date(y, m + 1, 0).getDate();
+        const cells: (string | null)[] = Array(firstDay).fill(null);
 
-      const handleDayClick = (day: string) => {
-        if (pickingStart || (customStartDate && day < customStartDate)) {
-          setCustomStartDate(day);
-          setCustomEndDate('');
-          setDateRange('custom');
-          setPeriodMode('custom_range');
-          setPickingStart(false);
-        } else {
-          setCustomEndDate(day);
-          setDateRange('custom');
-          setPeriodMode('custom_range');
-          setCurrentPage(1);
-          setPickingStart(true);
-          setDatePickerOpen(false);
+        for (let d = 1; d <= daysInMonth; d++) {
+          cells.push(formatDate(new Date(y, m, d), 'yyyy-MM-dd'));
         }
-      };
 
-      const effectiveEnd = hoverDate && !pickingStart && !customEndDate ? hoverDate : customEndDate;
+        while (cells.length % 7 !== 0) {
+          cells.push(null);
+        }
 
-      return (
-        <div className="absolute top-full mt-1.5 right-0 z-50 bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-xl shadow-xl p-3 w-[280px]" dir="rtl">
-          <div className="flex items-center justify-between mb-2">
-            <button onClick={() => setCalendarMonth(new Date(y, m - 1, 1))} className="p-1 rounded hover:bg-[#f5f5f5] dark:hover:bg-[#262626]">
-              <ChevronRight className="w-4 h-4" />
-            </button>
-            <span className="text-sm font-medium text-[#0d0d12] dark:text-[#fafafa]">
-              {formatDate(calendarMonth, 'MMMM yyyy', { locale: he })}
-            </span>
-            <button onClick={() => setCalendarMonth(new Date(y, m + 1, 1))} className="p-1 rounded hover:bg-[#f5f5f5] dark:hover:bg-[#262626]">
-              <ChevronLeft className="w-4 h-4" />
-            </button>
+        const handleDayClick = (day: string) => {
+          if (pickingStart || (customStartDate && day < customStartDate)) {
+            setCustomStartDate(day);
+            setCustomEndDate('');
+            setDateRange('custom');
+            setPeriodMode('custom_range');
+            setPickingStart(false);
+          } else {
+            setCustomEndDate(day);
+            setDateRange('custom');
+            setPeriodMode('custom_range');
+            setCurrentPage(1);
+            setPickingStart(true);
+            setDatePickerOpen(false);
+          }
+        };
+
+        const effectiveEnd = hoverDate && !pickingStart && !customEndDate ? hoverDate : customEndDate;
+
+        return (
+          <div
+            className="absolute top-full right-0 z-50 mt-1.5 w-[280px] rounded-xl border border-[#e5e5e5] bg-white p-3 shadow-xl dark:border-[#262626] dark:bg-[#171717]"
+            dir="rtl"
+          >
+            <div className="mb-2 flex items-center justify-between">
+              <button
+                onClick={() => setCalendarMonth(new Date(y, m - 1, 1))}
+                className="rounded p-1 hover:bg-[#f5f5f5] dark:hover:bg-[#262626]"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+              <span className="text-sm font-medium text-[#0d0d12] dark:text-[#fafafa]">
+                {formatDate(calendarMonth, 'MMMM yyyy', { locale: he })}
+              </span>
+              <button
+                onClick={() => setCalendarMonth(new Date(y, m + 1, 1))}
+                className="rounded p-1 hover:bg-[#f5f5f5] dark:hover:bg-[#262626]"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="mb-1 grid grid-cols-7">
+              {['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'].map(d => (
+                <div key={d} className="py-0.5 text-center text-[10px] text-[#a3a3a3]">
+                  {d}
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-7">
+              {cells.map((day, i) => {
+                if (!day) return <div key={i} />;
+
+                const isStart = day === customStartDate;
+                const isEnd = day === effectiveEnd;
+                const inRange = customStartDate && effectiveEnd && day > customStartDate && day < effectiveEnd;
+                const isToday = day === today;
+
+                return (
+                  <button
+                    key={day}
+                    onClick={() => handleDayClick(day)}
+                    onMouseEnter={() => !pickingStart && !customEndDate && setHoverDate(day)}
+                    onMouseLeave={() => setHoverDate(null)}
+                    className={`relative h-7 w-full text-xs transition-colors ${
+                      isStart || isEnd ? 'z-10 rounded-lg bg-[#9fe870] font-semibold text-[#0d0d12]' : ''
+                    } ${inRange ? 'bg-[#9fe870]/20 text-[#0d0d12] dark:text-[#fafafa]' : ''} ${
+                      !isStart && !isEnd && !inRange
+                        ? 'rounded-lg text-[#0d0d12] hover:bg-[#f5f5f5] dark:text-[#fafafa] dark:hover:bg-[#262626]'
+                        : ''
+                    } ${isToday && !isStart && !isEnd ? 'font-bold underline' : ''}`}
+                  >
+                    {parseInt(day.slice(8))}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-2 text-center text-[11px] text-[#a3a3a3]">
+              {pickingStart
+                ? 'לחץ על תאריך התחלה'
+                : customStartDate && !customEndDate
+                  ? 'לחץ על תאריך סיום'
+                  : ''}
+            </div>
           </div>
-
-          <div className="grid grid-cols-7 mb-1">
-            {['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'].map(d => (
-              <div key={d} className="text-center text-[10px] text-[#a3a3a3] py-0.5">
-                {d}
-              </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-7">
-            {cells.map((day, i) => {
-              if (!day) return <div key={i} />;
-              const isStart = day === customStartDate;
-              const isEnd = day === effectiveEnd;
-              const inRange = customStartDate && effectiveEnd && day > customStartDate && day < effectiveEnd;
-              const isToday = day === today;
-
-              return (
-                <button
-                  key={day}
-                  onClick={() => handleDayClick(day)}
-                  onMouseEnter={() => !pickingStart && !customEndDate && setHoverDate(day)}
-                  onMouseLeave={() => setHoverDate(null)}
-                  className={`relative h-7 w-full text-xs transition-colors
-                    ${isStart || isEnd ? 'bg-[#9fe870] text-[#0d0d12] font-semibold rounded-lg z-10' : ''}
-                    ${inRange ? 'bg-[#9fe870]/20 text-[#0d0d12] dark:text-[#fafafa]' : ''}
-                    ${!isStart && !isEnd && !inRange ? 'text-[#0d0d12] dark:text-[#fafafa] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] rounded-lg' : ''}
-                    ${isToday && !isStart && !isEnd ? 'font-bold underline' : ''}
-                  `}
-                >
-                  {parseInt(day.slice(8))}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="mt-2 text-center text-[11px] text-[#a3a3a3]">
-            {pickingStart ? 'לחץ על תאריך התחלה' : customStartDate && !customEndDate ? 'לחץ על תאריך סיום' : ''}
-          </div>
-        </div>
-      );
-    })()}
+        );
+      })()}
   </div>
 );
