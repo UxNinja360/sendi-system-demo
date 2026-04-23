@@ -1,22 +1,22 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Menu } from 'lucide-react';
 import { useDelivery } from '../context/delivery.context';
 import { Delivery } from '../types/delivery.types';
-import { LiveDeliveriesTab } from '../components/live/live-deliveries-tab';
-import { LiveRestaurantsView } from '../components/live/live-restaurants-view';
-import { LiveCouriersView } from '../components/live/live-couriers-view';
-import { LeafletMap } from '../components/live/leaflet-map';
-import { LiveManagerDesktopPanel } from '../components/live/live-manager-desktop-panel';
-import { OrderDetailsPanel } from '../components/live/order-details-panel';
-import { LiveManagerMobilePanel } from '../components/live/live-manager-mobile-panel';
-import { useLiveAssignmentFlow } from '../components/live/use-live-assignment-flow';
-import { useLiveManagerControls } from '../components/live/use-live-manager-controls';
-import { useLiveManagerData } from '../components/live/use-live-manager-data';
-import { useLiveDeliveryEdit } from '../components/live/use-live-delivery-edit';
-import { useLiveManagerEffects } from '../components/live/use-live-manager-effects';
-import { useLiveManagerSelection } from '../components/live/use-live-manager-selection';
-import BottomAppBar from '../components/live/bottom-app-bar';
-import { DeliveryEditDialog } from '../components/deliveries/delivery-edit-dialog';
+import { LiveDeliveriesTab } from '../live/live-deliveries-tab';
+import { LiveRestaurantsView } from '../live/live-restaurants-view';
+import { LiveCouriersView } from '../live/live-couriers-view';
+import { LeafletMap } from '../live/leaflet-map';
+import { LiveManagerDesktopPanel } from '../live/live-manager-desktop-panel';
+import { OrderDetailsPanel } from '../live/order-details-panel';
+import { LiveManagerMobilePanel } from '../live/live-manager-mobile-panel';
+import { useLiveAssignmentFlow } from '../live/use-live-assignment-flow';
+import { useLiveManagerControls } from '../live/use-live-manager-controls';
+import { useLiveManagerData } from '../live/use-live-manager-data';
+import { useLiveDeliveryEdit } from '../live/use-live-delivery-edit';
+import { useLiveManagerEffects } from '../live/use-live-manager-effects';
+import { useLiveManagerSelection } from '../live/use-live-manager-selection';
+import BottomAppBar from '../live/bottom-app-bar';
+import { DeliveryEditDialog } from '../deliveries/delivery-edit-dialog';
 import {
   buildDefaultRouteStopIds,
   getDeliveryPickupBatchKey,
@@ -882,3 +882,5 @@ export const LiveManager: React.FC = () => {
     </>
   );
 };
+
+

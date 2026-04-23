@@ -3,14 +3,13 @@ import { AppLayout } from './components/layout/app-layout';
 import { LoginPage } from './pages/login-page';
 import { NotFoundPage } from './pages/not-found-page';
 import { Dashboard } from './pages/dashboard';
-import { PayoutsPage } from './pages/finance/payouts-page';
-import { WalletPage } from './pages/finance/wallet-page';
+import { WalletPage } from './pages/wallet-page';
 import { LiveManager } from './pages/live-manager';
 import { DeliveriesPage } from './pages/deliveries-page';
 import { ReportsPage } from './pages/reports-page';
 import { PerformancePage } from './pages/performance-page';
 import { LogPage } from './pages/log-page';
-import { FinancesPage } from './pages/finances-page';
+import { DeliveryBalancePage } from './pages/delivery-balance-page';
 import { CouriersPage } from './pages/entities/couriers-page';
 import { CouriersListPage } from './pages/entities/couriers-list-page';
 import { RestaurantsPage } from './pages/entities/restaurants-page';
@@ -81,8 +80,8 @@ export const router = createBrowserRouter([
         element: <LogPage />,
       },
       {
-        path: 'finances',
-        element: <FinancesPage />,
+        path: 'delivery-balance',
+        element: <DeliveryBalancePage />,
       },
       {
         path: 'wallet',
@@ -123,10 +122,6 @@ export const router = createBrowserRouter([
         element: <CustomerDetailsPage />,
       },
       // === Business & Finance ===
-      {
-        path: 'settings/payouts',
-        element: <PayoutsPage />,
-      },
       // === Settings ===
       {
         path: 'settings',

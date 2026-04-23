@@ -37,8 +37,6 @@ export const Breadcrumbs: React.FC = () => {
         breadcrumbs.push({ label: t('nav.reports'), path: '/settings/reports' });
       } else if (path === '/settings/performance') {
         breadcrumbs.push({ label: t('breadcrumbs.performance'), path: '/settings/performance' });
-      } else if (path === '/settings/payouts') {
-        breadcrumbs.push({ label: t('nav.monthlyPayout'), path: '/settings/payouts' });
       } else if (path === '/settings/history') {
         breadcrumbs.push({ label: t('nav.purchaseHistory'), path: '/settings/history' });
       }
@@ -51,6 +49,9 @@ export const Breadcrumbs: React.FC = () => {
     }
     else if (path === '/distance-pricing') {
       breadcrumbs.push({ label: t('breadcrumbs.distancePricing'), path: '/distance-pricing' });
+    }
+    else if (path === '/delivery-balance') {
+      breadcrumbs.push({ label: t('sidebar.deliveryBalance'), path: '/delivery-balance' });
     }
     else if (path === '/wallet') {
       breadcrumbs.push({ label: 'ארנק', path: '/wallet' });

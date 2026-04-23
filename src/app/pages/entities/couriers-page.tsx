@@ -1,6 +1,6 @@
-import React from 'react';
+﻿import React from 'react';
 import { Menu } from 'lucide-react';
-import { CouriersShifts } from '../../components/entities/couriers-shifts';
+import { CouriersShifts } from '../../entities/couriers-shifts';
 
 const SHIFTS_PAGE_TITLE = '\u05e0\u05d9\u05d4\u05d5\u05dc \u05de\u05e9\u05de\u05e8\u05d5\u05ea';
 
@@ -25,3 +25,4 @@ export const CouriersPage: React.FC = () => {
     </div>
   );
 };
+

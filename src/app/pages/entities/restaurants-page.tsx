@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Power, Download, Store as StoreIcon, Trash2, X, Sparkles, Search, Filter, FileText, FileSpreadsheet, SlidersHorizontal } from 'lucide-react';
+﻿import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { Power, Download, Store as StoreIcon, Trash2, X, Sparkles, Search, Filter, FileText, FileSpreadsheet } from 'lucide-react';
 import { useDelivery } from '../../context/delivery.context';
 import { useNavigate } from 'react-router';
 import { Delivery, Restaurant } from '../../types/delivery.types';
@@ -8,11 +8,14 @@ import * as XLSX from 'xlsx';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { toast } from 'sonner';
-import { ColumnSelector } from '../../components/deliveries/column-selector';
+import { ListColumnsPanel } from '../../components/common/list-columns-panel';
+import { ListExportDrawer } from '../../components/common/list-export-drawer';
 import { ListInfoBar } from '../../components/common/list-info-bar';
 import { ListPageHeader } from '../../components/common/list-page-header';
-import { RestaurantsToolbar } from '../../components/entities/restaurants-toolbar';
-import { RestaurantsInlineFilters } from '../../components/entities/restaurants-inline-filters';
+import { ListSidePanel } from '../../components/common/list-side-panel';
+import { SelectionActionBar } from '../../components/common/selection-action-bar';
+import { RestaurantsToolbar } from '../../entities/restaurants-toolbar';
+import { RestaurantsInlineFilters } from '../../entities/restaurants-inline-filters';
 import { getRestaurantChainId } from '../../utils/restaurant-branding';
 import {
   EntityActionMenu,
@@ -20,22 +23,22 @@ import {
   EntityActionMenuHeader,
   EntityActionMenuItem,
   EntityActionMenuOverlay,
-} from '../../components/entities/entity-action-menu';
-import { EntityRowActionTrigger } from '../../components/entities/entity-row-action-trigger';
-import { EntityTableHeaderCell } from '../../components/entities/entity-table-header-cell';
+} from '../../components/common/entity-action-menu';
+import { EntityRowActionTrigger } from '../../components/common/entity-row-action-trigger';
+import { EntityTableHeaderCell } from '../../components/common/entity-table-header-cell';
 import {
   EntityTableActionsCell,
   EntityTableActionsHeader,
   EntityTableHeaderCheckbox,
   EntityTableRowCheckbox,
   EntityTableShell,
-} from '../../components/entities/entity-table-shell';
+} from '../../components/common/entity-table-shell';
 import {
   ENTITY_TABLE_DATA_CELL_CLASS,
   ENTITY_TABLE_HEAD_CLASS,
   ENTITY_TABLE_ROW_CLASS,
   ENTITY_TABLE_WIDTHS,
-} from '../../components/entities/entity-table-shared';
+} from '../../components/common/entity-table-shared';
 
 // ═══════════════════════════════════════
 // Types
@@ -588,93 +591,45 @@ export const RestaurantsPage: React.FC = () => {
   return (
     <>
       <div className="flex flex-row h-full overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]" dir="ltr">
-        <div className={`shrink-0 transition-[width] duration-200 overflow-hidden border-l border-[#e5e5e5] dark:border-[#1f1f1f] ${(isExportOpen || columnsOpen) ? 'w-[380px]' : 'w-0'}`}>
-          <div className="w-[380px] h-full flex flex-col bg-white dark:bg-[#0a0a0a]" dir="rtl">
-            {isExportOpen && (
-              <>
-                <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-[#e5e5e5] dark:border-[#262626] bg-[#fafafa] dark:bg-[#141414]">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-[#0d0d12] dark:text-[#fafafa]" />
-                    <span className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">ייצוא</span>
-                  </div>
-                  <button onClick={() => setIsExportOpen(false)} className="p-1.5 hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] rounded-lg transition-colors">
-                    <X className="w-4 h-4 text-[#737373] dark:text-[#a3a3a3]" />
-                  </button>
-                </div>
+        <ListSidePanel isOpen={isExportOpen || columnsOpen}>
+          {isExportOpen && (
+            <ListExportDrawer
+              onClose={() => setIsExportOpen(false)}
+              actions={[
+                {
+                  id: 'visible-restaurants',
+                  title: 'ייצוא טבלת המסעדות',
+                  description: 'Excel עם העמודות המוצגות כרגע בטבלה',
+                  meta: `${selectedRestaurantIds.size > 0 ? selectedRestaurantIds.size : filteredRestaurants.length} מסעדות · ${visibleOrderedCols.length} עמודות`,
+                  icon: <FileSpreadsheet className="h-5 w-5" />,
+                  onClick: handleExportVisibleRestaurants,
+                },
+                {
+                  id: 'zip-per-restaurant',
+                  title: 'ייצוא ZIP לפי מסעדה',
+                  description: 'קובץ Excel נפרד לכל מסעדה עם המשלוחים שלה',
+                  meta: `${stats.total} מסעדות · ${state.deliveries.length} משלוחים`,
+                  icon: <Download className="h-5 w-5" />,
+                  onClick: handleExportZipPerRestaurant,
+                },
+              ]}
+            />
+          )}
 
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                  <button
-                    type="button"
-                    onClick={handleExportVisibleRestaurants}
-                    className="w-full text-right rounded-2xl border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#0f0f0f] p-4 transition-all hover:border-[#9fe870]/50 hover:bg-[#f8fff2] dark:hover:bg-[#11180c]"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-xl bg-[#9fe870]/15 text-[#6bc84a]">
-                        <FileSpreadsheet className="h-5 w-5" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">ייצוא טבלת המסעדות</div>
-                        <div className="mt-1 text-xs text-[#737373] dark:text-[#a3a3a3]">Excel עם העמודות המוצגות כרגע בטבלה</div>
-                        <div className="mt-3 flex items-center gap-2 text-[11px] text-[#a3a3a3]">
-                          <span>{selectedRestaurantIds.size > 0 ? selectedRestaurantIds.size : filteredRestaurants.length} מסעדות</span>
-                          <span>·</span>
-                          <span>{visibleOrderedCols.length} עמודות</span>
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleExportZipPerRestaurant}
-                    className="w-full text-right rounded-2xl border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#0f0f0f] p-4 transition-all hover:border-[#9fe870]/50 hover:bg-[#f8fff2] dark:hover:bg-[#11180c]"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-xl bg-[#9fe870]/15 text-[#6bc84a]">
-                        <Download className="h-5 w-5" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">ייצוא ZIP לכל המסעדות</div>
-                        <div className="mt-1 text-xs text-[#737373] dark:text-[#a3a3a3]">קובץ Excel נפרד לכל מסעדה עם הדוחות שלה</div>
-                        <div className="mt-3 flex items-center gap-2 text-[11px] text-[#a3a3a3]">
-                          <span>{stats.total} מסעדות</span>
-                          <span>·</span>
-                          <span>{state.deliveries.length} משלוחים</span>
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                </div>
-              </>
-            )}
-
-            {columnsOpen && (
-              <>
-                <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-[#e5e5e5] dark:border-[#262626] bg-[#fafafa] dark:bg-[#141414]">
-                  <div className="flex items-center gap-2">
-                    <SlidersHorizontal className="w-4 h-4 text-[#0d0d12] dark:text-[#fafafa]" />
-                    <span className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">עמודות</span>
-                  </div>
-                  <button onClick={() => setColumnsOpen(false)} className="p-1.5 hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] rounded-lg transition-colors">
-                    <X className="w-4 h-4 text-[#737373] dark:text-[#a3a3a3]" />
-                  </button>
-                </div>
-                <ColumnSelector
-                  visibleColumns={visibleColumns}
-                  setVisibleColumns={setVisibleColumns}
-                  isOpen={columnsOpen}
-                  setIsOpen={setColumnsOpen}
-                  isEmbedded={true}
-                  categories={[...RESTAURANT_COLUMN_CATEGORIES]}
-                  defaultVisibleColumns={RESTAURANT_COLS.map((column) => column.id)}
-                  title="עמודות מסעדות"
-                  description="בחר אילו פרטים יופיעו בטבלת המסעדות"
-                  presetsKey="restaurants-column-presets-v1"
-                />
-              </>
-            )}
-          </div>
-        </div>
+          {columnsOpen && (
+            <ListColumnsPanel
+              isOpen={columnsOpen}
+              setIsOpen={setColumnsOpen}
+              visibleColumns={visibleColumns}
+              setVisibleColumns={setVisibleColumns}
+              categories={[...RESTAURANT_COLUMN_CATEGORIES]}
+              defaultVisibleColumns={RESTAURANT_COLS.map((column) => column.id)}
+              title="עמודות מסעדות"
+              description="בחר אילו פרטים יופיעו בטבלת המסעדות"
+              presetsKey="restaurants-column-presets-v1"
+            />
+          )}
+        </ListSidePanel>
 
         <div className="flex-1 min-w-0 overflow-hidden flex flex-col" dir="rtl">
 
@@ -767,6 +722,7 @@ export const RestaurantsPage: React.FC = () => {
                   )}
                 </div>
               ) : (
+                <>
                 <EntityTableShell
                   ariaLabel="טבלת מסעדות"
                   colgroup={
@@ -899,6 +855,21 @@ export const RestaurantsPage: React.FC = () => {
                     </tr>
                   ))}
                 </EntityTableShell>
+                <SelectionActionBar
+                  selectedCount={selectedRestaurantIds.size}
+                  selectionLabel={`נבחרו ${selectedRestaurantIds.size} מסעדות`}
+                  onClear={() => setSelectedRestaurantIds(new Set())}
+                  actions={
+                    <button
+                      type="button"
+                      onClick={handleExportVisibleRestaurants}
+                      className="rounded-lg bg-[#16a34a] px-4 py-2 text-sm font-bold text-white shadow-md shadow-[#16a34a]/20 transition-colors hover:bg-[#15803d]"
+                    >
+                      ייצוא נבחרות
+                    </button>
+                  }
+                />
+                </>
               )}
             </div>
 
@@ -1059,3 +1030,4 @@ export const RestaurantsPage: React.FC = () => {
     </>
   );
 };
+

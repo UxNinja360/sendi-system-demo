@@ -2,22 +2,23 @@
 import { format as formatDate } from 'date-fns';
 import { useDelivery } from '../context/delivery.context';
 import { Delivery, DeliveryStatus } from '../types/delivery.types';
-import { DeliveriesToolbarActions } from '../components/deliveries/deliveries-toolbar-actions';
-import { DeliveriesPeriodControls } from '../components/deliveries/deliveries-period-controls';
-import { DeliveriesSidePanel } from '../components/deliveries/deliveries-side-panel';
-import { DeliveriesDesktopFilters } from '../components/deliveries/deliveries-desktop-filters';
-import { DeliveriesTableSection } from '../components/deliveries/deliveries-table-section';
-import { DeliveriesOverlays } from '../components/deliveries/deliveries-overlays';
-import { STATUS_LABELS, DEFAULT_VISIBLE_COLUMNS } from '../components/deliveries/status-config';
-import { ALL_COLUMNS, COLUMN_MAP } from '../components/deliveries/column-defs';
-import type { ColumnDef } from '../components/deliveries/column-defs';
-import type { RowHeight } from '../components/deliveries/row-height-selector';
+import { DeliveriesPeriodControls } from '../deliveries/deliveries-period-controls';
+import { DeliveriesSidePanel } from '../deliveries/deliveries-side-panel';
+import { DeliveriesDesktopFilters } from '../deliveries/deliveries-desktop-filters';
+import { DeliveriesTableSection } from '../deliveries/deliveries-table-section';
+import { DeliveriesOverlays } from '../deliveries/deliveries-overlays';
+import { STATUS_LABELS, DEFAULT_VISIBLE_COLUMNS } from '../deliveries/status-config';
+import { ALL_COLUMNS, COLUMN_MAP } from '../deliveries/column-defs';
+import type { ColumnDef } from '../deliveries/column-defs';
+import type { RowHeight } from '../components/common/row-height-selector';
 import { toast } from 'sonner';
-import { useDeliveriesFilters } from '../hooks/useDeliveriesFilters';
-import { useDeliveriesExport } from '../hooks/useDeliveriesExport';
+import { useDeliveriesFilters } from '../deliveries/use-deliveries-filters';
+import { useDeliveriesExport } from '../deliveries/use-deliveries-export';
 import type { PeriodMode } from '../components/ui/period-toolbar';
 import { ListInfoBar } from '../components/common/list-info-bar';
 import { ListPageHeader } from '../components/common/list-page-header';
+import { ListToolbarActions } from '../components/common/list-toolbar-actions';
+import { SelectionActionBar } from '../components/common/selection-action-bar';
 
 const calculateTimeRemaining = (delivery: Delivery): number | null => {
   if (delivery.status === 'delivered' || delivery.status === 'cancelled') return null;
@@ -568,15 +569,17 @@ export const DeliveriesPage: React.FC = () => {
             <div className="flex-1" />
 
             <div className="flex items-center gap-1.5">
-              <DeliveriesToolbarActions
+              <ListToolbarActions
                 searchQuery={searchQuery}
-                columnsOpen={columnsOpen}
                 onSearchQueryChange={setSearchQuery}
+                searchPlaceholder="חפש משלוח..."
+                searchWidthClass="w-48"
+                columnsOpen={columnsOpen}
                 onToggleColumns={() => {
                   setColumnsOpen((current) => !current);
                   setExportOpen(false);
                 }}
-                onOpenExport={() => {
+                onExport={() => {
                   setExportOpen(true);
                   setColumnsOpen(false);
                 }}
@@ -621,6 +624,23 @@ export const DeliveriesPage: React.FC = () => {
               drawerDeliveryId={drawerDeliveryId}
               rowHeight={rowHeight}
             />
+            <SelectionActionBar
+              selectedCount={selectedIds.size}
+              selectionLabel={`נבחרו ${selectedIds.size} משלוחים`}
+              onClear={() => setSelectedIds(new Set())}
+              actions={
+                <button
+                  type="button"
+                  onClick={() => {
+                    setExportOpen(true);
+                    setColumnsOpen(false);
+                  }}
+                  className="rounded-lg bg-[#16a34a] px-4 py-2 text-sm font-bold text-white shadow-md shadow-[#16a34a]/20 transition-colors hover:bg-[#15803d]"
+                >
+                  ייצוא נבחרים
+                </button>
+              }
+            />
 
           </div>
         </div>
@@ -662,4 +682,5 @@ export const DeliveriesPage: React.FC = () => {
     </>
   );
 };
+
 

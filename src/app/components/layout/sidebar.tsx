@@ -165,7 +165,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
       return location.pathname === menuPath;
     }
     // Support for separate pages
-    if (menuPath === '/deliveries' || menuPath === '/couriers' || menuPath === '/couriers/shifts' || menuPath === '/restaurants' || menuPath === '/customers' || menuPath === '/zones' || menuPath === '/distance-pricing' || menuPath === '/hours' || menuPath === '/wallet' || menuPath === '/log') {
+    if (menuPath === '/deliveries' || menuPath === '/couriers' || menuPath === '/couriers/shifts' || menuPath === '/restaurants' || menuPath === '/customers' || menuPath === '/zones' || menuPath === '/distance-pricing' || menuPath === '/hours' || menuPath === '/wallet' || menuPath === '/log' || menuPath === '/delivery-balance') {
       return location.pathname === menuPath;
     }
     // /data pages removed - no longer needed
@@ -710,7 +710,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
 
            {/* Delivery Balance Indicator */}
            <div 
-            onClick={() => handleNav('/finances')}
+            onClick={() => handleNav('/delivery-balance')}
             className="px-4 py-3 border-b border-[#e5e5e5] dark:border-[#262626] cursor-pointer hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a] transition-colors"
            >
              {(!isCollapsed || !isDesktop) ? (

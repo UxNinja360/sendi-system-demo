@@ -1,10 +1,11 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { FileSpreadsheet, FileText, Filter, Package, Phone, Plus, Power, Star, Trash2, User, X, Clock, LogOut, SlidersHorizontal, Search, Sparkles } from 'lucide-react';
+import { FileSpreadsheet, FileText, Filter, Package, Phone, Plus, Power, Star, Trash2, User, X, Clock, LogOut, Search, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ListInfoBar } from '../../components/common/list-info-bar';
 import { ListPageHeader } from '../../components/common/list-page-header';
+import { SelectionActionBar } from '../../components/common/selection-action-bar';
 import { useDelivery } from '../../context/delivery.context';
 import { Courier } from '../../types/delivery.types';
 import {
@@ -13,29 +14,28 @@ import {
   EntityActionMenuHeader,
   EntityActionMenuItem,
   EntityActionMenuOverlay,
-} from '../../components/entities/entity-action-menu';
-import { ColumnSelector } from '../../components/deliveries/column-selector';
-import { CouriersInlineFilters } from '../../components/entities/couriers-inline-filters';
-import { EntityExportDrawer } from '../../components/entities/entity-export-drawer';
-import { exportRowsToExcel } from '../../components/entities/entity-export-utils';
-import { EntityEmptyState, EntityNoResultsState } from '../../components/entities/entity-empty-state';
-import { EntityRowActionTrigger } from '../../components/entities/entity-row-action-trigger';
-import { EntitySidePanel } from '../../components/entities/entity-side-panel';
-import { EntitySidePanelHeader } from '../../components/entities/entity-side-panel-header';
-import { EntityTableHeaderCell } from '../../components/entities/entity-table-header-cell';
+} from '../../components/common/entity-action-menu';
+import { ListColumnsPanel } from '../../components/common/list-columns-panel';
+import { ListExportDrawer } from '../../components/common/list-export-drawer';
+import { CouriersInlineFilters } from '../../entities/couriers-inline-filters';
+import { exportRowsToExcel } from '../../components/common/entity-export-utils';
+import { EntityEmptyState, EntityNoResultsState } from '../../components/common/entity-empty-state';
+import { EntityRowActionTrigger } from '../../components/common/entity-row-action-trigger';
+import { ListSidePanel } from '../../components/common/list-side-panel';
+import { EntityTableHeaderCell } from '../../components/common/entity-table-header-cell';
 import {
   EntityTableActionsCell,
   EntityTableHeaderCheckbox,
   EntityTableRowCheckbox,
   EntityTableShell,
-} from '../../components/entities/entity-table-shell';
-import { CouriersToolbar } from '../../components/entities/couriers-toolbar';
+} from '../../components/common/entity-table-shell';
+import { CouriersToolbar } from '../../entities/couriers-toolbar';
 import {
   ENTITY_TABLE_ACTIONS_HEAD_CLASS,
   ENTITY_TABLE_DATA_CELL_CLASS,
   ENTITY_TABLE_ROW_CLASS,
   ENTITY_TABLE_WIDTHS,
-} from '../../components/entities/entity-table-shared';
+} from '../../components/common/entity-table-shared';
 
 const TEXT = {
   pageTitle: '\u05e9\u05dc\u05d9\u05d7\u05d9\u05dd',
@@ -662,44 +662,36 @@ export const CouriersListPage: React.FC = () => {
   return (
     <>
       <div className="flex flex-row h-full overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]" dir="ltr">
-        <EntitySidePanel isOpen={isExportOpen || columnsOpen}>
-            {isExportOpen && (
-              <EntityExportDrawer
-                onClose={() => setIsExportOpen(false)}
-                actions={[
-                  {
-                    id: 'visible-couriers',
-                    title: 'ייצוא טבלת השליחים',
-                    description: 'Excel עם העמודות המוצגות כרגע בטבלה',
-                    meta: `${selectedCourierIds.size > 0 ? selectedCourierIds.size : filteredCouriers.length} שליחים · ${visibleCourierColumns.filter((column) => column.id !== 'actions').length} עמודות`,
-                    icon: <FileSpreadsheet className="h-5 w-5" />,
-                    onClick: handleExportVisibleCouriers,
-                  },
-                ]}
-              />
-            )}
-            {columnsOpen && (
-              <>
-                <EntitySidePanelHeader
-                  icon={<SlidersHorizontal className="w-4 h-4" />}
-                  title="עמודות"
-                  onClose={() => setColumnsOpen(false)}
-                />
-                <ColumnSelector
-                  visibleColumns={visibleColumns}
-                  setVisibleColumns={setVisibleColumns}
-                  isOpen={columnsOpen}
-                  setIsOpen={setColumnsOpen}
-                  isEmbedded={true}
-                  categories={[...COURIER_COLUMN_CATEGORIES]}
-                  defaultVisibleColumns={COURIER_COLUMNS.map((column) => column.id)}
-                  title="עמודות שליחים"
-                  description="בחר אילו פרטים יופיעו בטבלת השליחים"
-                  presetsKey="couriers-column-presets-v1"
-                />
-              </>
-            )}
-        </EntitySidePanel>
+        <ListSidePanel isOpen={isExportOpen || columnsOpen}>
+          {isExportOpen && (
+            <ListExportDrawer
+              onClose={() => setIsExportOpen(false)}
+              actions={[
+                {
+                  id: 'visible-couriers',
+                  title: 'ייצוא טבלת השליחים',
+                  description: 'Excel עם העמודות המוצגות כרגע בטבלה',
+                  meta: `${selectedCourierIds.size > 0 ? selectedCourierIds.size : filteredCouriers.length} שליחים · ${visibleCourierColumns.filter((column) => column.id !== 'actions').length} עמודות`,
+                  icon: <FileSpreadsheet className="h-5 w-5" />,
+                  onClick: handleExportVisibleCouriers,
+                },
+              ]}
+            />
+          )}
+          {columnsOpen && (
+            <ListColumnsPanel
+              isOpen={columnsOpen}
+              setIsOpen={setColumnsOpen}
+              visibleColumns={visibleColumns}
+              setVisibleColumns={setVisibleColumns}
+              categories={[...COURIER_COLUMN_CATEGORIES]}
+              defaultVisibleColumns={COURIER_COLUMNS.map((column) => column.id)}
+              title="עמודות שליחים"
+              description="בחר אילו פרטים יופיעו בטבלת השליחים"
+              presetsKey="couriers-column-presets-v1"
+            />
+          )}
+        </ListSidePanel>
 
         <div className="flex-1 min-w-0 overflow-hidden flex flex-col" dir="rtl">
         <ListPageHeader
@@ -752,6 +744,7 @@ export const CouriersListPage: React.FC = () => {
                   )}
                 </div>
               ) : (
+                <>
                 <EntityTableShell
                   ariaLabel="טבלת שליחים"
                   colgroup={
@@ -811,6 +804,21 @@ export const CouriersListPage: React.FC = () => {
                     );
                   })}
                 </EntityTableShell>
+                <SelectionActionBar
+                  selectedCount={selectedCourierIds.size}
+                  selectionLabel={`נבחרו ${selectedCourierIds.size} שליחים`}
+                  onClear={() => setSelectedCourierIds(new Set())}
+                  actions={
+                    <button
+                      type="button"
+                      onClick={handleExportVisibleCouriers}
+                      className="rounded-lg bg-[#16a34a] px-4 py-2 text-sm font-bold text-white shadow-md shadow-[#16a34a]/20 transition-colors hover:bg-[#15803d]"
+                    >
+                      ייצוא נבחרים
+                    </button>
+                  }
+                />
+                </>
               )}
             </div>
           ) : (
@@ -1084,3 +1092,4 @@ export const CouriersListPage: React.FC = () => {
     </>
   );
 };
+
