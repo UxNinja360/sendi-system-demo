@@ -444,6 +444,142 @@ export const CouriersListPage: React.FC = () => {
     });
   };
 
+  const handleBulkSetCourierStatus = (targetStatus: Courier['status']) => {
+    const selectedCouriers = state.couriers.filter((courier) => selectedCourierIds.has(courier.id));
+    if (selectedCouriers.length === 0) {
+      toast.error('לא נבחרו שליחים לפעולה');
+      return;
+    }
+
+    const couriersWithActiveDeliveries = new Set(
+      state.deliveries
+        .filter((delivery) => delivery.status === 'assigned' || delivery.status === 'delivering')
+        .map((delivery) => delivery.courierId)
+        .filter((courierId): courierId is string => Boolean(courierId)),
+    );
+
+    const eligibleCouriers = selectedCouriers.filter((courier) => {
+      if (targetStatus === 'available') {
+        return courier.status === 'offline';
+      }
+
+      return courier.status !== 'offline' && !couriersWithActiveDeliveries.has(courier.id);
+    });
+
+    eligibleCouriers.forEach((courier) => {
+      dispatch({
+        type: 'UPDATE_COURIER_STATUS',
+        payload: {
+          courierId: courier.id,
+          status: targetStatus,
+        },
+      });
+    });
+
+    const alreadyInTargetStatusCount = selectedCouriers.filter((courier) =>
+      targetStatus === 'available' ? courier.status !== 'offline' : courier.status === 'offline',
+    ).length;
+    const blockedByActiveDeliveriesCount =
+      targetStatus === 'offline'
+        ? selectedCouriers.filter(
+            (courier) => courier.status !== 'offline' && couriersWithActiveDeliveries.has(courier.id),
+          ).length
+        : 0;
+
+    const summary = [
+      eligibleCouriers.length > 0
+        ? targetStatus === 'available'
+          ? `הופעלו ${eligibleCouriers.length} שליחים`
+          : `הושבתו ${eligibleCouriers.length} שליחים`
+        : null,
+      alreadyInTargetStatusCount > 0
+        ? targetStatus === 'available'
+          ? `${alreadyInTargetStatusCount} כבר היו פעילים`
+          : `${alreadyInTargetStatusCount} כבר היו מושבתים`
+        : null,
+      blockedByActiveDeliveriesCount > 0
+        ? `${blockedByActiveDeliveriesCount} לא הושבתו כי יש להם משלוחים פעילים`
+        : null,
+    ]
+      .filter(Boolean)
+      .join('. ');
+
+    if (eligibleCouriers.length > 0) {
+      setSelectedCourierIds(new Set());
+      toast.success(summary);
+      return;
+    }
+
+    toast.error(summary || 'לא בוצע שינוי בשליחים שנבחרו');
+  };
+
+  const handleBulkStartShift = () => {
+    const selectedCouriers = state.couriers.filter((courier) => selectedCourierIds.has(courier.id));
+    if (selectedCouriers.length === 0) {
+      toast.error('לא נבחרו שליחים לפעולה');
+      return;
+    }
+
+    const eligibleCouriers = selectedCouriers.filter(
+      (courier) => courier.status !== 'offline' && !courier.isOnShift,
+    );
+
+    eligibleCouriers.forEach((courier) => {
+      dispatch({ type: 'START_COURIER_SHIFT', payload: { courierId: courier.id } });
+    });
+
+    const offlineCouriersCount = selectedCouriers.filter((courier) => courier.status === 'offline').length;
+    const alreadyOnShiftCount = selectedCouriers.filter(
+      (courier) => courier.status !== 'offline' && courier.isOnShift,
+    ).length;
+
+    const summary = [
+      eligibleCouriers.length > 0 ? `החלה משמרת ל-${eligibleCouriers.length} שליחים` : null,
+      alreadyOnShiftCount > 0 ? `${alreadyOnShiftCount} כבר היו במשמרת` : null,
+      offlineCouriersCount > 0 ? `${offlineCouriersCount} לא חוברו ולכן לא התחילו משמרת` : null,
+    ]
+      .filter(Boolean)
+      .join('. ');
+
+    if (eligibleCouriers.length > 0) {
+      setSelectedCourierIds(new Set());
+      toast.success(summary);
+      return;
+    }
+
+    toast.error(summary || 'לא בוצע שינוי במשמרות של השליחים שנבחרו');
+  };
+
+  const handleBulkEndShift = () => {
+    const selectedCouriers = state.couriers.filter((courier) => selectedCourierIds.has(courier.id));
+    if (selectedCouriers.length === 0) {
+      toast.error('לא נבחרו שליחים לפעולה');
+      return;
+    }
+
+    const eligibleCouriers = selectedCouriers.filter((courier) => courier.isOnShift);
+
+    eligibleCouriers.forEach((courier) => {
+      dispatch({ type: 'END_COURIER_SHIFT', payload: { courierId: courier.id } });
+    });
+
+    const alreadyOffShiftCount = selectedCouriers.length - eligibleCouriers.length;
+    const summary = [
+      eligibleCouriers.length > 0 ? `הסתיימה משמרת ל-${eligibleCouriers.length} שליחים` : null,
+      alreadyOffShiftCount > 0 ? `${alreadyOffShiftCount} כבר לא היו במשמרת` : null,
+    ]
+      .filter(Boolean)
+      .join('. ');
+
+    if (eligibleCouriers.length > 0) {
+      setSelectedCourierIds(new Set());
+      toast.success(summary);
+      return;
+    }
+
+    toast.error(summary || 'לא בוצע שינוי במשמרות של השליחים שנבחרו');
+  };
+
   const addCourier = () => {
     if (!newCourier.name.trim() || !newCourier.phone.trim()) {
       return;
@@ -809,13 +945,43 @@ export const CouriersListPage: React.FC = () => {
                   selectionLabel={`נבחרו ${selectedCourierIds.size} שליחים`}
                   onClear={() => setSelectedCourierIds(new Set())}
                   actions={
-                    <button
-                      type="button"
-                      onClick={handleExportVisibleCouriers}
-                      className="rounded-lg bg-[#16a34a] px-4 py-2 text-sm font-bold text-white shadow-md shadow-[#16a34a]/20 transition-colors hover:bg-[#15803d]"
-                    >
-                      ייצוא נבחרים
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleBulkSetCourierStatus('available')}
+                        className="rounded-lg bg-[#16a34a] px-4 py-2 text-sm font-bold text-white shadow-md shadow-[#16a34a]/20 transition-colors hover:bg-[#15803d]"
+                      >
+                        הפעל
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleBulkSetCourierStatus('offline')}
+                        className="rounded-lg bg-[#404040] px-4 py-2 text-sm font-bold text-white shadow-md shadow-black/10 transition-colors hover:bg-[#262626]"
+                      >
+                        השבת
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleBulkStartShift}
+                        className="rounded-lg bg-[#7c3aed] px-4 py-2 text-sm font-bold text-white shadow-md shadow-[#7c3aed]/20 transition-colors hover:bg-[#6d28d9]"
+                      >
+                        התחל משמרת
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleBulkEndShift}
+                        className="rounded-lg bg-[#ea580c] px-4 py-2 text-sm font-bold text-white shadow-md shadow-[#ea580c]/20 transition-colors hover:bg-[#c2410c]"
+                      >
+                        סיים משמרת
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleExportVisibleCouriers}
+                        className="rounded-lg border border-[#d4d4d4] bg-white px-4 py-2 text-sm font-bold text-[#0d0d12] transition-colors hover:bg-[#f5f5f5] dark:border-[#404040] dark:bg-[#171717] dark:text-[#fafafa] dark:hover:bg-[#262626]"
+                      >
+                        ייצוא נבחרים
+                      </button>
+                    </>
                   }
                 />
                 </>

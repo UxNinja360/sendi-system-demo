@@ -348,6 +348,47 @@ export const RestaurantsPage: React.FC = () => {
     });
   };
 
+  const handleBulkSetRestaurantsActive = useCallback((isActive: boolean) => {
+    const selectedRestaurants = restaurants.filter((restaurant) =>
+      selectedRestaurantIds.has(restaurant.restaurantId),
+    );
+
+    if (selectedRestaurants.length === 0) {
+      toast.error('לא נבחרו מסעדות לפעולה');
+      return;
+    }
+
+    const restaurantsToUpdate = selectedRestaurants.filter((restaurant) => restaurant.isActive !== isActive);
+
+    restaurantsToUpdate.forEach((restaurant) => {
+      dispatch({ type: 'TOGGLE_RESTAURANT', payload: restaurant.restaurantId });
+    });
+
+    const alreadyInTargetStateCount = selectedRestaurants.length - restaurantsToUpdate.length;
+    const summary = [
+      restaurantsToUpdate.length > 0
+        ? isActive
+          ? `הופעלו ${restaurantsToUpdate.length} מסעדות`
+          : `הושבתו ${restaurantsToUpdate.length} מסעדות`
+        : null,
+      alreadyInTargetStateCount > 0
+        ? isActive
+          ? `${alreadyInTargetStateCount} כבר היו פעילות`
+          : `${alreadyInTargetStateCount} כבר היו מושבתות`
+        : null,
+    ]
+      .filter(Boolean)
+      .join('. ');
+
+    if (restaurantsToUpdate.length > 0) {
+      setSelectedRestaurantIds(new Set());
+      toast.success(summary);
+      return;
+    }
+
+    toast.error(summary || 'לא בוצע שינוי במסעדות שנבחרו');
+  }, [dispatch, restaurants, selectedRestaurantIds]);
+
   // ── Add restaurant ──
   const handleAddRestaurant = async () => {
     if (!newRestaurant.name.trim()) return;
@@ -851,13 +892,29 @@ export const RestaurantsPage: React.FC = () => {
                   selectionLabel={`נבחרו ${selectedRestaurantIds.size} מסעדות`}
                   onClear={() => setSelectedRestaurantIds(new Set())}
                   actions={
-                    <button
-                      type="button"
-                      onClick={handleExportVisibleRestaurants}
-                      className="rounded-lg bg-[#16a34a] px-4 py-2 text-sm font-bold text-white shadow-md shadow-[#16a34a]/20 transition-colors hover:bg-[#15803d]"
-                    >
-                      ייצוא נבחרות
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleBulkSetRestaurantsActive(true)}
+                        className="rounded-lg bg-[#16a34a] px-4 py-2 text-sm font-bold text-white shadow-md shadow-[#16a34a]/20 transition-colors hover:bg-[#15803d]"
+                      >
+                        הפעל
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleBulkSetRestaurantsActive(false)}
+                        className="rounded-lg bg-[#404040] px-4 py-2 text-sm font-bold text-white shadow-md shadow-black/10 transition-colors hover:bg-[#262626]"
+                      >
+                        השבת
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleExportVisibleRestaurants}
+                        className="rounded-lg border border-[#d4d4d4] bg-white px-4 py-2 text-sm font-bold text-[#0d0d12] transition-colors hover:bg-[#f5f5f5] dark:border-[#404040] dark:bg-[#171717] dark:text-[#fafafa] dark:hover:bg-[#262626]"
+                      >
+                        ייצוא נבחרות
+                      </button>
+                    </>
                   }
                 />
                 </>
