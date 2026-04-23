@@ -4,7 +4,6 @@ import { useDelivery } from '../../context/delivery.context';
 import { useNavigate } from 'react-router';
 import { Delivery, Restaurant } from '../../types/delivery.types';
 import { format } from 'date-fns';
-import * as XLSX from 'xlsx';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { toast } from 'sonner';
@@ -17,6 +16,13 @@ import { SelectionActionBar } from '../../components/common/selection-action-bar
 import { RestaurantsToolbar } from '../../entities/restaurants-toolbar';
 import { RestaurantsInlineFilters } from '../../entities/restaurants-inline-filters';
 import { getRestaurantChainId } from '../../utils/restaurant-branding';
+import {
+  createExcelWorkbook,
+  exportRowsToExcel,
+  downloadExcelBuffer,
+  sanitizeExportFileName,
+  workbookToExcelBuffer,
+} from '../../utils/export-utils';
 import {
   EntityActionMenu,
   EntityActionMenuDivider,
@@ -435,10 +441,6 @@ export const RestaurantsPage: React.FC = () => {
   // Build single restaurant workbook
   // ═══════════════════════════════════════
   const buildRestaurantWorkbook = (restaurantName: string, deliveries: Delivery[]): ArrayBuffer => {
-    const wb = XLSX.utils.book_new();
-    wb.Workbook = wb.Workbook || {};
-    wb.Workbook.Views = [{ RTL: true }];
-
     const f = calcFinancials(deliveries);
     const summaryRows = [
       { 'פרט': 'מסעדה', 'ערך': restaurantName },
@@ -456,11 +458,14 @@ export const RestaurantsPage: React.FC = () => {
       { 'פרט': 'עמלות', 'ערך': `₪${f.totalCommission.toLocaleString()}` },
       { 'פרט': 'רווח נקי', 'ערך': `₪${f.profit.toLocaleString()}` },
     ];
-    const summaryWs = XLSX.utils.json_to_sheet(summaryRows);
-    summaryWs['!cols'] = [{ wch: 20 }, { wch: 22 }];
-    XLSX.utils.book_append_sheet(wb, summaryWs, 'סיכום');
 
-    return XLSX.write(wb, { bookType: 'xlsx', type: 'array' }) as ArrayBuffer;
+    const workbook = createExcelWorkbook({
+      rows: summaryRows,
+      sheetName: 'סיכום',
+      columnWidths: [20, 22],
+    });
+
+    return workbookToExcelBuffer(workbook);
   };
 
   // ═══════════════════════════════════════
@@ -492,7 +497,7 @@ export const RestaurantsPage: React.FC = () => {
     // Individual files
     const usedNames = new Set<string>();
     sortedGroups.forEach(([, group]) => {
-      let safeName = group.name.replace(/[\\\/\*\?\[\]:\\\"<>|]/g, '').trim() || 'ללא_שם';
+      let safeName = sanitizeExportFileName(group.name);
       if (usedNames.has(safeName)) { let c = 2; while (usedNames.has(`${safeName}_${c}`)) c++; safeName = `${safeName}_${c}`; }
       usedNames.add(safeName);
       zip.file(`${safeName}_${dateStr}.xlsx`, buildRestaurantWorkbook(group.name, group.deliveries));
@@ -513,9 +518,8 @@ export const RestaurantsPage: React.FC = () => {
     );
     if (deliveries.length === 0) { toast.error(`אין משלוחים למסעדה ${restaurantName}`); return; }
     const buf = buildRestaurantWorkbook(restaurantName, deliveries);
-    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const safeName = restaurantName.replace(/[\\\/\*\?\[\]:\\\"<>|]/g, '').trim();
-    saveAs(blob, `${safeName}_${format(new Date(), 'dd-MM-yyyy')}.xlsx`);
+    const safeName = sanitizeExportFileName(restaurantName);
+    downloadExcelBuffer(buf, `${safeName}_${format(new Date(), 'dd-MM-yyyy')}.xlsx`);
     toast.success(`דוח ${restaurantName} הורד`);
   };
 
@@ -561,26 +565,13 @@ export const RestaurantsPage: React.FC = () => {
       ),
     );
 
-    const worksheet = XLSX.utils.json_to_sheet(rows);
-    worksheet['!cols'] = visibleOrderedCols.map((column) => ({
-      wch: Math.max(12, column.label.length + 4),
-    }));
-
-    const workbook = XLSX.utils.book_new();
-    workbook.Workbook = workbook.Workbook || {};
-    workbook.Workbook.Views = [{ RTL: true }];
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'מסעדות');
-
-    const buffer = XLSX.write(workbook, {
-      bookType: 'xlsx',
-      type: 'array',
+    exportRowsToExcel({
+      rows,
+      sheetName: 'מסעדות',
+      fileName: `מסעדות_${format(new Date(), 'dd-MM-yyyy_HH-mm')}.xlsx`,
+      columnWidths: visibleOrderedCols.map((column) => Math.max(12, column.label.length + 4)),
     });
 
-    const blob = new Blob([buffer], {
-      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    });
-
-    saveAs(blob, `מסעדות_${format(new Date(), 'dd-MM-yyyy_HH-mm')}.xlsx`);
     setIsExportOpen(false);
     toast.success(`יוצאו ${restaurantsToExport.length} מסעדות ל-Excel`);
   }, [filteredRestaurants, getRestaurantExportCellValue, selectedRestaurantIds, visibleOrderedCols]);

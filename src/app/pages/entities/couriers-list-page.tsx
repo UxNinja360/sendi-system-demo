@@ -18,7 +18,7 @@ import {
 import { ListColumnsPanel } from '../../components/common/list-columns-panel';
 import { ListExportDrawer } from '../../components/common/list-export-drawer';
 import { CouriersInlineFilters } from '../../entities/couriers-inline-filters';
-import { exportRowsToExcel } from '../../components/common/entity-export-utils';
+import { exportRowsToExcel } from '../../utils/export-utils';
 import { EntityEmptyState, EntityNoResultsState } from '../../components/common/entity-empty-state';
 import { EntityRowActionTrigger } from '../../components/common/entity-row-action-trigger';
 import { ListSidePanel } from '../../components/common/list-side-panel';
