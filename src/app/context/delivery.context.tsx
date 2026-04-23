@@ -431,19 +431,19 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [state]);
   
-  // ×ª×™×§×•×Ÿ ××•×˜×•×ž×˜×™ ×©×œ ×ž×¡×¢×“×•×ª ×œ× ×¤×¢×™×œ×•×ª - ×¨×§ ×¤×¢× ××—×ª ×‘×”×ª×—×œ×”
-  // ×”×•×¡×¨ - ×ž×ª×—×™×œ×™× ×¢× 0 ×ž×¡×¢×“×•×ª ×¤×¢×™×œ×•×ª
-  // useEffect(() => {
-  //   const activeRestaurants = state.restaurants.filter(r => r.isActive);
-  //   if (activeRestaurants.length === 0) {
-  //     console.warn('ðŸ”§ ×ž×ª×§×Ÿ ×ž×¡×¢×“×•×ª ×œ× ×¤×¢×™×œ×•×ª - ×ž×¤×¢×™×œ ××ª ×›×•×œ×Ÿ...');
-  //     // ××™×Ÿ ×ž×¡×¢×“×•×ª ×¤×¢×™×œ×•×ª - ×¦×¨×™×š ×œ×ª×§×Ÿ ××ª ×–×”
-  //     const fixedRestaurants = state.restaurants.map(r => ({ ...r, isActive: true }));
-  //     dispatch({ type: 'SET_RESTAURANTS', payload: fixedRestaurants });
-  //   }
-  // }, []); // ×¨×§ ×¤×¢× ××—×ª ×‘×”×ª×—×œ×”
-  
-  // ×ž×•× ×” ×œ×ž×©×œ×•×—×™× - ×œ×”×‘×˜×™×— ×™×™×—×•×“×™×•×ª ×©×œ ID
+  // Keep the initial restaurant activation state as seeded.
+
+
+
+
+
+
+
+
+
+
+
+  // Delivery counter keeps generated demo IDs unique.
   const deliveryCounter = useRef(0);
   const courierPositionsRef = useRef<Map<string, MapPosition>>(new Map());
   const courierPositionTimestampsRef = useRef<Map<string, number>>(new Map());
@@ -488,15 +488,15 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return { ...COURIER_FALLBACK_POSITIONS[index % COURIER_FALLBACK_POSITIONS.length] };
   }, []);
 
-  // ×¤×•× ×§×¦×™×” ×œ×™×¦×™×¨×ª ID ×§×‘×•×¢ ×œ×ž×¡×¢×“×” ×‘×”×ª×‘×¡×¡ ×¢×œ ×©×ž×”
+  // Reuse the seeded restaurant id when the name matches.
   const getRestaurantId = (restaurantName: string): string => {
-    // ×—×™×¤×•×© ×‘×ž×¡×¢×“×•×ª ×”×§×™×™×ž×•×ª ×‘×ž×¢×¨×›×ª
+
     const restaurant = RESTAURANTS_DATA.find(r => r.name === restaurantName);
     if (restaurant) {
       return restaurant.id;
     }
     
-    // fallback - ×™×¦×™×¨×ª hash ×× ×”×ž×¡×¢×“×” ×œ× × ×ž×¦××” (×œ× ××ž×•×¨ ×œ×§×¨×•×ª)
+    // Fallback hash for unexpected restaurant names.
     let hash = 0;
     for (let i = 0; i < restaurantName.length; i++) {
       const char = restaurantName.charCodeAt(i);
@@ -572,9 +572,9 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     );
   }, [getInitialCourierPosition, state.couriers]);
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // ×¨×©×™×ž×ª ×›×ª×•×‘×•×ª ××ž×™×ª×™×•×ª ×‘×’×•×© ×“×Ÿ ×¢× ×§×•××•×¨×“×™× ×˜×•×ª GPS ×ž×“×•×™×§×•×ª
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Real delivery addresses with GPS coordinates around central Israel.
+
+
   const REAL_ADDRESSES = [
     { address: 'דיזנגוף 22, תל אביב', city: 'תל אביב', street: 'דיזנגוף', building: '22', lat: 32.0700, lng: 34.7735, area: 'מרכז תל אביב' },
     { address: 'דיזנגוף 55, תל אביב', city: 'תל אביב', street: 'דיזנגוף', building: '55', lat: 32.0725, lng: 34.7733, area: 'מרכז תל אביב' },
@@ -610,13 +610,13 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const apiShortOrderId = `${Math.floor(100000 + Math.random() * 900000)}`;
     
     const customerName = ISRAELI_NAMES[Math.floor(Math.random() * ISRAELI_NAMES.length)];
-    const price = Math.floor(15 + Math.random() * 35); // 15-50 â‚ª
+    const price = Math.floor(15 + Math.random() * 35); // 15-50 ILS
 
-    // ×‘×—×™×¨×ª ×›×ª×•×‘×ª ×œ×§×•×— ××ž×™×ª×™×ª
+    // Pick a realistic customer address from the demo pool.
     const customerAddr = REAL_ADDRESSES[Math.floor(Math.random() * REAL_ADDRESSES.length)];
     const area = customerAddr.area;
 
-    // ×ž×¦×™××ª ×”×ž×¡×¢×“×” ×›×“×™ ×œ×§×‘×œ ×§×•××•×¨×“×™× ×˜×•×ª ××ž×™×ª×™×•×ª
+    // Reuse restaurant coordinates when available.
     const restaurantName = restaurant.name;
     const pickupLat = restaurant.lat || 32.0853;
     const pickupLng = restaurant.lng || 34.7818;
@@ -625,20 +625,20 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const restAddress = restaurant.address ?? `${restStreet}, ${restCity}`;
 
     const now = new Date();
-    // ×–×ž×Ÿ ×”×’×¢×” ×ž×©×•×¢×¨ ×œ×ž×¡×¢×“×”: 5-15 ×“×§×•×ª ×ž×¢×›×©×™×•
+    // Estimated arrival to restaurant: 5-15 minutes.
     const estimatedRestaurantTime = new Date(now.getTime() + (5 + Math.random() * 10) * 60000);
-    // ×–×ž×Ÿ ×”×’×¢×” ×ž×©×•×¢×¨ ×œ×œ×§×•×—: 20-40 ×“×§×•×ª ×ž×¢×›×©×™×•
+    // Estimated arrival to customer: 20-40 minutes.
     const estimatedCustomerTime = new Date(now.getTime() + (20 + Math.random() * 20) * 60000);
 
-    const restPrice = Math.floor(price * 0.7); // 70% ×ž×”×ž×—×™×¨ ×œ×œ×§×•×—
-    const runnerPrice = Math.floor(price * 0.3); // 30% ×œ×©×œ×™×—
+    const restPrice = Math.floor(price * 0.7); // 70% of customer price
+    const runnerPrice = Math.floor(price * 0.3); // 30% to courier
     const cookTime = restaurant.defaultPreparationTime ?? DEFAULT_RESTAURANT_PREPARATION_TIME;
     const maxDeliveryTime = restaurant.maxDeliveryTime ?? DEFAULT_RESTAURANT_MAX_DELIVERY_TIME;
 
     return {
-      // ========================================
-      // 1. âš™ï¸ Core Entity
-      // ========================================
+      // Core entity
+
+
       id,
       api_short_order_id: apiShortOrderId,
       api_str_order_id: `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -652,9 +652,9 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       comment: Math.random() > 0.7 ? 'הערת מערכת' : undefined,
       pack_num: `${1 + Math.floor(Math.random() * 3)}`,
       
-      // ========================================
-      // 2. ðŸª Origin / Spawner
-      // ========================================
+      // Origin / spawner
+
+
       rest_id: restaurant.id,
       branch_id: Math.random() > 0.7 ? `BR${Math.floor(1 + Math.random() * 5)}` : undefined,
       rest_name: restaurantName,
@@ -675,9 +675,9 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       is_drinks_exist: Math.random() > 0.6,
       is_sauces_exist: Math.random() > 0.5,
       
-      // ========================================
-      // 3. ðŸŽ¯ Target / Client
-      // ========================================
+      // Target / client
+
+
       client_id: `cu${Math.floor(1 + Math.random() * 30)}`,
       client_name: customerName,
       client_phone: `050-${Math.floor(1000000 + Math.random() * 9000000)}`,
@@ -696,9 +696,9 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       client_agree_to_place: Math.random() > 0.8,
       signature_url: undefined,
       
-      // ========================================
-      // 4. ðŸš´ Actor / Runner
-      // ========================================
+      // Actor / runner
+
+
       runner_id: null,
       pending_runner_id: undefined,
       shift_runner_id: undefined,
@@ -714,9 +714,9 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       delivery_area_id: `da${Math.floor(1 + Math.random() * 10)}`,
       main_polygon_name: ['מרכז', 'צפון', 'דרום', 'מזרח', 'מערב'][Math.floor(Math.random() * 5)],
       
-      // ========================================
-      // 5. â±ï¸ Timeline / Events
-      // ========================================
+      // Timeline / events
+
+
       creation_time: now,
       delivery_date: new Date(now.getTime() + (20 + Math.random() * 20) * 60000),
       push_time: Math.random() > 0.5 ? new Date(now.getTime() + Math.random() * 60000) : undefined,
@@ -740,7 +740,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       dropoff_deviation: 0,
       delay_reason: undefined,
       delay_duration: 0,
-      delivery_distance: Math.floor(1 + Math.random() * 10), // 1-10 ×§"×ž
+      delivery_distance: Math.floor(1 + Math.random() * 10), // 1-10 km
       duration_to_client: Math.floor(15 + Math.random() * 30),
       eta_after_pickup: Math.floor(10 + Math.random() * 20),
       suplly_status: ['ממתין', 'בהכנה', 'מוכן'][Math.floor(Math.random() * 3)],
@@ -828,8 +828,8 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
   }, []);
 
-  // ×ž× ×’× ×•×Ÿ: ×›×œ ×ž×¡×¢×“×” ×¤×¢×™×œ×” ×™×•×¦×¨×ª ×ž×©×œ×•×—×™× ×‘×§×¦×‘ ×©×œ×”
-  // ×—×©×•×‘: ×œ× ×ª×œ×•×™ ×‘-deliveryBalance ×›×“×™ ×œ× ×œ×™×¦×•×¨ ×ž×—×“×© ××ª ×”-intervals ×‘×›×œ ×ž×©×œ×•×— ×©× ×•×¦×¨
+  // Each active restaurant generates deliveries at its own configured rate.
+  // Keep this independent from deliveryBalance so intervals stay stable.
   const deliveryBalanceRef = useRef(state.deliveryBalance);
   useEffect(() => { deliveryBalanceRef.current = state.deliveryBalance; }, [state.deliveryBalance]);
 
@@ -841,9 +841,9 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const intervals: NodeJS.Timeout[] = [];
 
-    // ×¢×‘×•×¨ ×›×œ ×ž×¡×¢×“×” ×¤×¢×™×œ×”, ×¦×•×¨ interval ×ž×©×œ×”
+    // Create a dedicated timer loop for every active restaurant.
     activeRestaurants.forEach(restaurant => {
-      // ×™×¦×™×¨×ª ×ž×©×œ×•×—/×™× ×ž×™×™×“×™×ª (××—×¨×™ 1-3 ×©× ×™×•×ª)
+      // Start with a short randomized delay.
       const initialDelay = (Math.random() * 2000 + 1000) / state.timeMultiplier;
 
       const spawn = () => {
@@ -859,7 +859,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const initialTimeout = setTimeout(spawn, initialDelay);
       intervals.push(initialTimeout);
 
-      // interval ×§×‘×•×¢ ×œ×¤×™ deliveryInterval ×©×œ ×”×ž×¡×¢×“×”
+      // Repeat according to the restaurant delivery interval.
       const intervalMs = (restaurant.deliveryInterval * 60 * 1000) / state.timeMultiplier;
       const interval = setInterval(spawn, intervalMs);
       intervals.push(interval);
@@ -873,14 +873,14 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
   }, [state.isSystemOpen, state.restaurants, state.timeMultiplier, generateDelivery, rawDispatch]);
 
-  // ×¦×•×•×ª×™× ××•×˜×•×ž×˜×™ (××•×¤×¦×™×•× ×œ×™ - × ×™×ª×Ÿ ×œ×”×¡×™×¨ ×× ×¨×•×¦×™× ×¦×•×•×ª×™× ×™×“× ×™ ×‘×œ×‘×“)
+  // Auto-assign pending deliveries while the feature is enabled.
   useEffect(() => {
     if (!state.autoAssignEnabled) return;
 
     const interval = setInterval(() => {
-      // ×ž×¦× ×ž×©×œ×•×— ×ž×ž×ª×™×Ÿ
+      // Find one pending delivery.
       const pendingDelivery = state.deliveries.find(d => d.status === 'pending');
-      // ×ž×¦× ×©×œ×™×— ×™×›×•×œ ×œ×§×‘×œ ×ž×©×œ×•×— × ×•×¡×£ (×¤×—×•×ª ×ž-2 ×ž×©×œ×•×—×™× ×¤×¢×™×œ×™×)
+      // Find one courier that can still take another delivery.
       const availableCourier = state.couriers.find(c => 
         c.status !== 'offline' && c.isOnShift && c.activeDeliveryIds.length < 2
       );
@@ -891,21 +891,21 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           payload: createAssignCourierPayload(pendingDelivery.id, availableCourier.id),
         });
       }
-    }, 500); // ×‘×“×•×§ ×›×œ ×—×¦×™ ×©× ×™×™×” - ×©×™×‘×•×¥ ×ž×™×™×“×™!
+    }, 500); // Check twice per second for near-immediate auto assignment.
 
     return () => clearInterval(interval);
   }, [state.autoAssignEnabled, state.deliveries, state.couriers]);
 
-  // ×¦×•×•×ª ×•×”×©×œ× ×ž×©×œ×•×—×™× ×ž×ž×ª×™× ×™× ×›×©×”×ž×¢×¨×›×ª ×¡×’×•×¨×” ×•×©×™×‘×•×¥ ××•×˜×•×ž×˜×™ ×¤×¢×™×œ
+  // Keep assigning pending deliveries even when the system is closed, if auto-assign stays enabled.
   useEffect(() => {
     if (state.isSystemOpen || !state.autoAssignEnabled) return;
 
     const interval = setInterval(() => {
-      // ×ž×¦× ×ž×©×œ×•×— ×ž×ž×ª×™×Ÿ
+      // Find one pending delivery.
       const pendingDelivery = state.deliveries.find(d => d.status === 'pending');
       
       if (pendingDelivery) {
-        // ×ž×¦× ×©×œ×™×— ×™×›×•×œ ×œ×§×‘×œ ×ž×©×œ×•×— × ×•×¡×£ (×¤×—×•×ª ×ž-2 ×ž×©×œ×•×—×™× ×¤×¢×™×œ×™×)
+        // Find one courier that can still take another delivery.
         const availableCourier = state.couriers.find(c => 
           c.status !== 'offline' && c.isOnShift && c.activeDeliveryIds.length < 2
         );
@@ -917,7 +917,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           });
         }
       }
-    }, 3000); // ×‘×“×•×§ ×›×œ 3 ×©× ×™×•×ª
+    }, 3000); // Check every 3 seconds.
 
     return () => clearInterval(interval);
   }, [state.isSystemOpen, state.autoAssignEnabled, state.deliveries, state.couriers]);
@@ -1219,7 +1219,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   );
 };
 
-// Hook ×œ×©×™×ž×•×© ×‘-Context
+// Context consumer hook.
 export const useDelivery = () => {
   const context = useContext(DeliveryContext);
   if (context === undefined) {

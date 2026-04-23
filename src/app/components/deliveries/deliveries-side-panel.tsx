@@ -2,8 +2,8 @@ import React from 'react';
 import { Download, SlidersHorizontal } from 'lucide-react';
 import { ExportDrawer } from './export-drawer';
 import { ColumnSelector } from './column-selector';
-import { EntitySidePanel } from '../pages/entities/entity-side-panel';
-import { EntitySidePanelHeader } from '../pages/entities/entity-side-panel-header';
+import { EntitySidePanel } from '../entities/entity-side-panel';
+import { EntitySidePanelHeader } from '../entities/entity-side-panel-header';
 
 type DeliveriesSidePanelProps = {
   exportOpen: boolean;

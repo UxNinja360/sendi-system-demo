@@ -1,39 +1,8 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 export type ThemeColor = 'green' | 'blue' | 'purple' | 'orange' | 'pink' | 'red';
-export type SeasonalMode = 'none' | 'hanukkah' | 'purim' | 'passover' | 'independence' | 'summer' | 'winter';
 
-interface ThemeContextType {
-  themeColor: ThemeColor;
-  setThemeColor: (color: ThemeColor) => void;
-  seasonalMode: SeasonalMode;
-  setSeasonalMode: (mode: SeasonalMode) => void;
-  isDark: boolean;
-  toggleDark: () => void;
-  autoThemeEnabled: boolean;
-  setAutoThemeEnabled: (enabled: boolean) => void;
-  getThemeClasses: () => {
-    primary: string;
-    primaryLight: string;
-    primaryDark: string;
-    gradient: string;
-    border: string;
-    bg: string;
-    text: string;
-  };
-}
-
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
-
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within ThemeProvider');
-  }
-  return context;
-};
-
-const themeColors: Record<ThemeColor, {
+type ThemeClasses = {
   primary: string;
   primaryLight: string;
   primaryDark: string;
@@ -41,7 +10,17 @@ const themeColors: Record<ThemeColor, {
   border: string;
   bg: string;
   text: string;
-}> = {
+};
+
+interface ThemeContextType {
+  themeColor: ThemeColor;
+  setThemeColor: (color: ThemeColor) => void;
+  isDark: boolean;
+  toggleDark: () => void;
+  getThemeClasses: () => ThemeClasses;
+}
+
+const themeColors: Record<ThemeColor, ThemeClasses> = {
   green: {
     primary: '#16a34a',
     primaryLight: '#22c55e',
@@ -98,136 +77,82 @@ const themeColors: Record<ThemeColor, {
   },
 };
 
-const seasonalThemes: Record<SeasonalMode, {
-  name: string;
-  emoji: string;
-  colors: string[];
-  effects?: string;
-}> = {
-  none: {
-    name: 'רגיל',
-    emoji: '🎨',
-    colors: [],
-  },
-  hanukkah: {
-    name: 'חנוכה',
-    emoji: '🕎',
-    colors: ['#2563eb', '#ffffff', '#fbbf24'],
-    effects: 'sparkle',
-  },
-  purim: {
-    name: 'פורים',
-    emoji: '🎭',
-    colors: ['#a855f7', '#ec4899', '#f59e0b'],
-    effects: 'confetti',
-  },
-  passover: {
-    name: 'פסח',
-    emoji: '🍷',
-    colors: ['#dc2626', '#fbbf24', '#16a34a'],
-    effects: 'subtle',
-  },
-  independence: {
-    name: 'יום העצמאות',
-    emoji: '🇮🇱',
-    colors: ['#2563eb', '#ffffff'],
-    effects: 'fireworks',
-  },
-  summer: {
-    name: 'קיץ',
-    emoji: '☀️',
-    colors: ['#f59e0b', '#f97316', '#fbbf24'],
-    effects: 'sunny',
-  },
-  winter: {
-    name: 'חורף',
-    emoji: '❄️',
-    colors: ['#06b6d4', '#3b82f6', '#8b5cf6'],
-    effects: 'snow',
-  },
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+const DEFAULT_THEME_COLOR: ThemeColor = 'green';
+
+const safeLocalStorageGet = (key: string) => {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
+const safeLocalStorageSet = (key: string, value: string) => {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Ignore storage failures and keep the in-memory state working.
+  }
+};
+
+const safeLocalStorageRemove = (key: string) => {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // Ignore storage failures and keep the in-memory state working.
+  }
+};
+
+const readStoredThemeColor = (): ThemeColor => {
+  const stored = safeLocalStorageGet('themeColor');
+  return stored && stored in themeColors ? (stored as ThemeColor) : DEFAULT_THEME_COLOR;
+};
+
+const readStoredDarkMode = (): boolean => {
+  const stored = safeLocalStorageGet('theme');
+  if (stored === 'dark') return true;
+  if (stored === 'light') return false;
+
+  try {
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+  } catch {
+    return false;
+  }
+};
+
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme must be used within ThemeProvider');
+  }
+  return context;
 };
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [themeColor, setThemeColorState] = useState<ThemeColor>(() => {
-    const saved = localStorage.getItem('themeColor');
-    return (saved as ThemeColor) || 'green';
-  });
+  const [themeColor, setThemeColor] = useState<ThemeColor>(readStoredThemeColor);
+  const [isDark, setIsDark] = useState<boolean>(readStoredDarkMode);
 
-  const [seasonalMode, setSeasonalModeState] = useState<SeasonalMode>(() => {
-    const saved = localStorage.getItem('seasonalMode');
-    return (saved as SeasonalMode) || 'none';
-  });
-
-  const [isDark, setIsDark] = useState(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) return savedTheme === 'dark';
-    // ברירת מחדל לפי שעה: כהה בין 17:00 ל-06:00
-    const hour = new Date().getHours();
-    return hour >= 17 || hour < 6;
-  });
-
-  const [autoThemeEnabled, setAutoThemeEnabledState] = useState(() => {
-    return localStorage.getItem('themeManual') !== 'true';
-  });
+  const themeClasses = useMemo(() => themeColors[themeColor], [themeColor]);
 
   useEffect(() => {
-    localStorage.setItem('themeColor', themeColor);
-    
-    // Apply CSS variables for dynamic theming
-    const colors = themeColors[themeColor];
-    document.documentElement.style.setProperty('--theme-primary', colors.primary);
-    document.documentElement.style.setProperty('--theme-primary-light', colors.primaryLight);
-    document.documentElement.style.setProperty('--theme-primary-dark', colors.primaryDark);
-  }, [themeColor]);
+    safeLocalStorageSet('themeColor', themeColor);
+    document.documentElement.style.setProperty('--theme-primary', themeClasses.primary);
+    document.documentElement.style.setProperty('--theme-primary-light', themeClasses.primaryLight);
+    document.documentElement.style.setProperty('--theme-primary-dark', themeClasses.primaryDark);
+  }, [themeColor, themeClasses]);
 
   useEffect(() => {
-    localStorage.setItem('seasonalMode', seasonalMode);
-  }, [seasonalMode]);
-
-  useEffect(() => {
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    safeLocalStorageSet('theme', isDark ? 'dark' : 'light');
+    safeLocalStorageRemove('themeManual');
+    safeLocalStorageRemove('seasonalMode');
     document.documentElement.classList.toggle('dark', isDark);
+    document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
   }, [isDark]);
 
-  // בדיקת שעה אוטומטית כל דקה (רק אם autoTheme פעיל)
-  useEffect(() => {
-    if (!autoThemeEnabled) return;
-    const check = () => {
-      const hour = new Date().getHours();
-      const shouldBeDark = hour >= 17 || hour < 6;
-      setIsDark(shouldBeDark);
-    };
-    check();
-    const interval = setInterval(check, 60000);
-    return () => clearInterval(interval);
-  }, [autoThemeEnabled]);
-
-  const setThemeColor = (color: ThemeColor) => {
-    setThemeColorState(color);
-  };
-
-  const setSeasonalMode = (mode: SeasonalMode) => {
-    setSeasonalModeState(mode);
-  };
-
   const toggleDark = () => {
-    setIsDark(prev => !prev);
-    // סימון שהמשתמש בחר ידנית
-    localStorage.setItem('themeManual', 'true');
-    setAutoThemeEnabledState(false);
-  };
-
-  const setAutoThemeEnabled = (enabled: boolean) => {
-    setAutoThemeEnabledState(enabled);
-    if (enabled) {
-      localStorage.removeItem('themeManual');
-    } else {
-      localStorage.setItem('themeManual', 'true');
-    }
-  };
-
-  const getThemeClasses = () => {
-    return themeColors[themeColor];
+    setIsDark((prev) => !prev);
   };
 
   return (
@@ -235,13 +160,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       value={{
         themeColor,
         setThemeColor,
-        seasonalMode,
-        setSeasonalMode,
         isDark,
         toggleDark,
-        autoThemeEnabled,
-        setAutoThemeEnabled,
-        getThemeClasses,
+        getThemeClasses: () => themeClasses,
       }}
     >
       {children}
@@ -249,5 +170,4 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 };
 
-export { themeColors, seasonalThemes };
-export type { ThemeContextType };
+export { themeColors };

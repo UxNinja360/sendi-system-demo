@@ -27,25 +27,6 @@ export const Breadcrumbs: React.FC = () => {
     else if (path === '/live') {
       breadcrumbs.push({ label: 'LIVE', path: '/live' });
     }
-    // Data pages - REMOVED, no longer needed
-    // Business Management
-    else if (path.startsWith('/business')) {
-      breadcrumbs.push({ label: t('nav.businessManagement'), path: '/business' });
-      
-      if (path === '/business/shipments') {
-        breadcrumbs.push({ label: t('breadcrumbs.shipments'), path: '/business/shipments' });
-      } else if (path === '/business/hours') {
-        breadcrumbs.push({ label: t('breadcrumbs.operatingHours'), path: '/business/hours' });
-      } else if (path === '/business/zones') {
-        breadcrumbs.push({ label: t('breadcrumbs.deliveryZones'), path: '/business/zones' });
-      } else if (path === '/business/distance-pricing') {
-        breadcrumbs.push({ label: t('breadcrumbs.distancePricing'), path: '/business/distance-pricing' });
-      } else if (path === '/business/reports') {
-        breadcrumbs.push({ label: t('nav.reports'), path: '/business/reports' });
-      } else if (path === '/business/performance') {
-        breadcrumbs.push({ label: t('breadcrumbs.performance'), path: '/business/performance' });
-      }
-    }
     // Settings
     else if (path.startsWith('/settings')) {
       breadcrumbs.push({ label: t('nav.settings'), path: '/settings' });

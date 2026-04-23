@@ -2,7 +2,6 @@ import React from 'react';
 import { DashboardSkeleton } from './skeletons/dashboard-skeleton';
 import { FinanceSkeleton } from './skeletons/finance-skeleton';
 import { EntitiesSkeleton } from './skeletons/entities-skeleton';
-import { BusinessSkeleton } from './skeletons/business-skeleton';
 import { GenericSkeleton } from './skeletons/generic-skeleton';
 
 interface PageLoaderProps {
@@ -20,8 +19,6 @@ export const PageLoader: React.FC<PageLoaderProps> = ({ page = 'generic' }) => {
         return <FinanceSkeleton />;
       case 'entities':
         return <EntitiesSkeleton />;
-      case 'business':
-        return <BusinessSkeleton />;
       case 'data':
       case 'settings':
       case 'live':

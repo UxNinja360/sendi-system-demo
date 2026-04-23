@@ -2,7 +2,6 @@ import { Suspense, useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate, useNavigation } from 'react-router';
 import { Sidebar } from './sidebar';
 import { Breadcrumbs } from './breadcrumbs';
-import { SettingsPage } from '../pages/settings-page';
 import { PageLoader } from '../ui/page-loader';
 import { LoadingBar } from '../ui/loading-bar';
 import { Toaster } from '../common/toaster';
@@ -32,7 +31,6 @@ export const AppLayout: React.FC = () => {
     const path = location.pathname;
     if (path === '/dashboard') return 'dashboard';
     if (path === '/live') return 'live';
-    if (path.startsWith('/business')) return 'business';
     if (path === '/entities') return 'entities';
     if (path.startsWith('/settings')) return 'settings';
     return 'generic';
@@ -44,7 +42,6 @@ export const AppLayout: React.FC = () => {
   };
 
   const isLivePage = location.pathname === '/live';
-  const isSettingsPage = location.pathname === '/settings';
   const isLoading = navigation.state === 'loading';
 
   return (
@@ -72,7 +69,7 @@ export const AppLayout: React.FC = () => {
           )}
 
           <Suspense fallback={<PageLoader page={getCurrentPage()} />}>
-            {isSettingsPage ? <SettingsPage onLogout={handleLogout} /> : <Outlet />}
+            <Outlet />
           </Suspense>
         </div>
       </div>

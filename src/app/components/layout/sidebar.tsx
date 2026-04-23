@@ -23,7 +23,6 @@ import {
   Bike,
   Calendar,
   UserCircle,
-  Truck,
   Signal,
   TrendingUp,
   Ruler,
@@ -77,19 +76,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
   
   // Load collapsed state from localStorage
   const [isCollapsed, setIsCollapsed] = useState(() => {
-    const saved = localStorage.getItem('sidebar-collapsed');
-    return saved ? JSON.parse(saved) : false;
+    try {
+      const saved = localStorage.getItem('sidebar-collapsed');
+      return saved ? JSON.parse(saved) : false;
+    } catch {
+      return false;
+    }
   });
   
   const [isBusinessPopupOpen, setIsBusinessPopupOpen] = useState(false);
   const [selectedBusiness, setSelectedBusiness] = useState('Tel Aviv - Runners');
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 768);
   const [isBalancePopupOpen, setIsBalancePopupOpen] = useState(false);
-  const [isTrackingExpanded, setIsTrackingExpanded] = useState(() => {
-    // Auto-expand if we're inside tracking
-    return location.pathname.startsWith('/tracking');
-  });
-
   const businesses = [
     'Tel Aviv - Runners',
     'Mr. Delivery',
@@ -117,7 +115,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
   
   // Save collapsed state to localStorage when it changes
   useEffect(() => {
-    localStorage.setItem('sidebar-collapsed', JSON.stringify(isCollapsed));
+    try {
+      localStorage.setItem('sidebar-collapsed', JSON.stringify(isCollapsed));
+    } catch {
+      // Ignore storage failures and keep the in-memory state working.
+    }
   }, [isCollapsed]);
 
   // Expose toggle function globally for TopBar
@@ -138,7 +140,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
   const menuItems: MenuItem[] = [
     { id: '/live', icon: Activity, label: 'מנג׳ר לייב' },
     { id: '/dashboard', icon: LayoutDashboard, label: 'דשבורד' },
-    { id: '/tracking', icon: Truck, label: 'מעקב משלוחים' },
     { divider: true },
     { id: '/deliveries', icon: Package, label: 'משלוחים' },
     { id: '/couriers', icon: Bike, label: 'שליחים' },
@@ -160,7 +161,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
 
   // Helper to check if a menu item is active
   const isMenuItemActive = (menuPath: string) => {
-    if (menuPath === '/dashboard' || menuPath === '/live' || menuPath === '/tracking') {
+    if (menuPath === '/dashboard' || menuPath === '/live') {
       return location.pathname === menuPath;
     }
     // Support for separate pages
@@ -308,7 +309,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
           }}
           className="flex-1 overflow-y-auto py-2 scrollbar-thin scrollbar-thumb-[#d4d4d4] dark:scrollbar-thumb-[#404040] bg-[#fafafa] dark:bg-[#0a0a0a] cursor-pointer"
         >
-          {/* ×ž× ×''×¨ ×œ×™×™×' */}
+          {/* Live manager */}
           <div
             data-onboarding="nav-live"
             onClick={(e) => {
@@ -341,10 +342,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
             )}
           </div>
 
-          {/* ×ž×¤×¨×™×" */}
+          {/* Divider */}
           <div className="my-2 mx-4 border-t border-[#e5e5e5] dark:border-[#262626]" />
 
-          {/* ×"×©×'×•×¨×" */}
+          {/* Dashboard */}
           <div
             onClick={(e) => {
               e.stopPropagation();
@@ -370,7 +371,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
             )}
           </div>
 
-          {/* ×ž×¤×¨×™×" */}
+          {/* Divider */}
           <div className="my-2 mx-4 border-t border-[#e5e5e5] dark:border-[#262626]" />
 
           {/* משלוחים */}
@@ -747,7 +748,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
            <div className="px-4 py-3 border-b border-[#e5e5e5] dark:border-[#262626]">
              {(!isCollapsed || !isDesktop) ? (
                <div className="space-y-3">
-                 {/* ×§×'×œ×ª ×ž×©×œ×•×—×™× */}
+                  {/* Accept deliveries */}
                  <div data-onboarding="system-toggle" className="flex items-center justify-between">
                    <span className="text-xs text-[#666d80] dark:text-[#a3a3a3]">{t('sidebar.acceptDeliveries')}</span>
                    <button
@@ -774,7 +775,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
                    </button>
                  </div>
 
-                 {/* ×©×™×'×•×¥ ××•×˜×•×ž×˜×™ */}
+                  {/* Auto assign */}
                  <div className="flex items-center justify-between">
                    <span className="text-xs text-[#666d80] dark:text-[#a3a3a3]">{t('sidebar.autoAssign')}</span>
                    <button

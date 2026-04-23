@@ -1,31 +1,28 @@
 import { createBrowserRouter, Navigate } from 'react-router';
 import { AppLayout } from './components/layout/app-layout';
-import { LoginPage } from './components/pages/login-page';
-import { NotFoundPage } from './components/pages/not-found-page';
-import { Dashboard } from './components/pages/dashboard';
-import { PayoutsPage } from './components/pages/finance/payouts-page';
-import { WalletPage } from './components/pages/finance/wallet-page';
-import { LiveManager } from './components/pages/live-manager';
-import { BusinessManagement } from './components/pages/business-management';
-import { DeliveriesPage } from './components/pages/deliveries-page';
-import { AdminMode } from './components/pages/admin-mode';
-import { ReportsPage } from './components/pages/reports-page';
-import { PerformancePage } from './components/pages/performance-page';
-import { LogPage } from './components/pages/log-page';
-import { FinancesPage } from './components/pages/finances-page';
-import { TrackingPage } from './components/pages/tracking-page';
-import { CouriersPage } from './components/pages/entities/couriers-page';
-import { CouriersListPage } from './components/pages/entities/couriers-list-page';
-import { RestaurantsPage } from './components/pages/entities/restaurants-page';
-import { CustomersPage } from './components/pages/entities/customers-page';
-import { DeliveryDetailsPage } from './components/pages/delivery-details-page';
-import { RestaurantDetailsPage } from './components/pages/restaurant-details-page';
-import { CourierDetailsPage } from './components/pages/courier-details-page';
-import { CustomerDetailsPage } from './components/pages/customer-details-page';
-import { SettingsPage } from './components/pages/settings-page';
-import { OperatingHoursPage } from './components/pages/operating-hours-page';
-import { DeliveryZonesPage } from './components/pages/delivery-zones-page';
-import { DistancePricingPage } from './components/pages/distance-pricing-page';
+import { LoginPage } from './pages/login-page';
+import { NotFoundPage } from './pages/not-found-page';
+import { Dashboard } from './pages/dashboard';
+import { PayoutsPage } from './pages/finance/payouts-page';
+import { WalletPage } from './pages/finance/wallet-page';
+import { LiveManager } from './pages/live-manager';
+import { DeliveriesPage } from './pages/deliveries-page';
+import { ReportsPage } from './pages/reports-page';
+import { PerformancePage } from './pages/performance-page';
+import { LogPage } from './pages/log-page';
+import { FinancesPage } from './pages/finances-page';
+import { CouriersPage } from './pages/entities/couriers-page';
+import { CouriersListPage } from './pages/entities/couriers-list-page';
+import { RestaurantsPage } from './pages/entities/restaurants-page';
+import { CustomersPage } from './pages/entities/customers-page';
+import { DeliveryDetailsPage } from './pages/delivery-details-page';
+import { RestaurantDetailsPage } from './pages/restaurant-details-page';
+import { CourierDetailsPage } from './pages/courier-details-page';
+import { CustomerDetailsPage } from './pages/customer-details-page';
+import { SettingsPage } from './pages/settings-page';
+import { OperatingHoursPage } from './pages/operating-hours-page';
+import { DeliveryZonesPage } from './pages/delivery-zones-page';
+import { DistancePricingPage } from './pages/distance-pricing-page';
 import { DeliveryProvider } from './context/delivery.context';
 import { ThemeProvider } from './context/theme.context';
 import { LanguageProvider } from './context/language.context';
@@ -65,10 +62,6 @@ export const router = createBrowserRouter([
       {
         path: 'live',
         element: <LiveManager />,
-      },
-      {
-        path: 'tracking',
-        element: <TrackingPage />,
       },
       // === Data ===
       {
@@ -131,10 +124,6 @@ export const router = createBrowserRouter([
       },
       // === Business & Finance ===
       {
-        path: 'business/:tab?',
-        element: <BusinessManagement />,
-      },
-      {
         path: 'settings/payouts',
         element: <PayoutsPage />,
       },
@@ -156,11 +145,6 @@ export const router = createBrowserRouter([
         element: <DistancePricingPage />,
       },
 
-      // === Admin ===
-      {
-        path: 'admin',
-        element: <AdminMode />,
-      },
       // === Catch-all ===
       {
         path: '*',
