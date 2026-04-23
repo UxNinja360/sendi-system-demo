@@ -70,7 +70,7 @@ export const RowHeightSelector: React.FC<RowHeightSelectorProps> = ({
       {/* Panel */}
       <div
         ref={panelRef}
-        className="fixed top-[64px] left-0 h-[calc(100vh-64px)] w-full sm:w-[380px] bg-white dark:bg-[#0f0f0f] z-50 shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-left duration-300"
+        className="app-safe-side-panel fixed left-0 w-full sm:w-[380px] bg-white dark:bg-[#0f0f0f] z-50 shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-left duration-300"
         style={{ direction: 'rtl' }}
       >
         {/* Header */}

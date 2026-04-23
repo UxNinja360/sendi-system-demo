@@ -9,6 +9,7 @@ import { saveAs } from 'file-saver';
 import { toast } from 'sonner';
 import { ListColumnsPanel } from '../../components/common/list-columns-panel';
 import { ListExportDrawer } from '../../components/common/list-export-drawer';
+import { ListFiltersRow } from '../../components/common/list-filters-row';
 import { ListInfoBar } from '../../components/common/list-info-bar';
 import { ListPageHeader } from '../../components/common/list-page-header';
 import { ListSidePanel } from '../../components/common/list-side-panel';
@@ -677,27 +678,30 @@ export const RestaurantsPage: React.FC = () => {
         <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
 
             {/* Toolbar row */}
-            <div className="shrink-0 flex items-center gap-1.5 px-3 py-2.5 border-b border-[#e5e5e5] dark:border-[#1f1f1f] bg-white dark:bg-[#171717]">
-              <RestaurantsInlineFilters
-                statusFilter={statusFilter}
-                onStatusChange={setStatusFilter}
-                cityFilter={cityFilter}
-                onCityChange={setCityFilter}
-                typeFilter={typeFilter}
-                onTypeChange={setTypeFilter}
-                cityOptions={uniqueCities}
-                typeOptions={uniqueTypes}
-                statusCounts={statusCounts}
-              />
-              <div className="flex-1" />
-              <RestaurantsToolbar
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                columnsOpen={columnsOpen}
-                onExport={() => { setIsExportOpen((v) => !v); setColumnsOpen(false); }}
-                onToggleColumns={() => { setColumnsOpen(true); setIsExportOpen(false); }}
-              />
-            </div>
+            <ListFiltersRow
+              filters={
+                <RestaurantsInlineFilters
+                  statusFilter={statusFilter}
+                  onStatusChange={setStatusFilter}
+                  cityFilter={cityFilter}
+                  onCityChange={setCityFilter}
+                  typeFilter={typeFilter}
+                  onTypeChange={setTypeFilter}
+                  cityOptions={uniqueCities}
+                  typeOptions={uniqueTypes}
+                  statusCounts={statusCounts}
+                />
+              }
+              actions={
+                <RestaurantsToolbar
+                  searchQuery={searchQuery}
+                  onSearchChange={setSearchQuery}
+                  columnsOpen={columnsOpen}
+                  onExport={() => { setIsExportOpen((v) => !v); setColumnsOpen(false); }}
+                  onToggleColumns={() => { setColumnsOpen(true); setIsExportOpen(false); }}
+                />
+              }
+            />
 
             <ListInfoBar>{filteredRestaurants.length} מסעדות</ListInfoBar>
 

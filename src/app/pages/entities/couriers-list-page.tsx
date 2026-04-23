@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ListInfoBar } from '../../components/common/list-info-bar';
+import { ListFiltersRow } from '../../components/common/list-filters-row';
 import { ListPageHeader } from '../../components/common/list-page-header';
 import { SelectionActionBar } from '../../components/common/selection-action-bar';
 import { useDelivery } from '../../context/delivery.context';
@@ -841,23 +842,26 @@ export const CouriersListPage: React.FC = () => {
         />
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="shrink-0 flex items-center gap-1.5 px-3 py-2.5 border-b border-[#e5e5e5] dark:border-[#1f1f1f] bg-white dark:bg-[#171717]">
-            <CouriersInlineFilters
-              statusFilter={statusFilter}
-              onStatusChange={setStatusFilter}
-              deliveryFilter={deliveryFilter}
-              onDeliveryChange={setDeliveryFilter}
-              statusCounts={statusCounts}
-            />
-            <div className="flex-1" />
-            <CouriersToolbar
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              columnsOpen={columnsOpen}
-              onToggleColumns={() => { setColumnsOpen(true); setIsExportOpen(false); }}
-              onExport={() => { setIsExportOpen((v) => !v); setColumnsOpen(false); }}
-            />
-            </div>
+          <ListFiltersRow
+            filters={
+              <CouriersInlineFilters
+                statusFilter={statusFilter}
+                onStatusChange={setStatusFilter}
+                deliveryFilter={deliveryFilter}
+                onDeliveryChange={setDeliveryFilter}
+                statusCounts={statusCounts}
+              />
+            }
+            actions={
+              <CouriersToolbar
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                columnsOpen={columnsOpen}
+                onToggleColumns={() => { setColumnsOpen(true); setIsExportOpen(false); }}
+                onExport={() => { setIsExportOpen((v) => !v); setColumnsOpen(false); }}
+              />
+            }
+          />
 
           <ListInfoBar>{filteredCouriers.length} שליחים</ListInfoBar>
 

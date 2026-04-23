@@ -16,6 +16,7 @@ import { useDeliveriesFilters } from '../deliveries/use-deliveries-filters';
 import { useDeliveriesExport } from '../deliveries/use-deliveries-export';
 import type { PeriodMode } from '../components/ui/period-toolbar';
 import { ListInfoBar } from '../components/common/list-info-bar';
+import { ListFiltersRow } from '../components/common/list-filters-row';
 import { ListPageHeader } from '../components/common/list-page-header';
 import { ListToolbarActions } from '../components/common/list-toolbar-actions';
 import { SelectionActionBar } from '../components/common/selection-action-bar';
@@ -492,83 +493,82 @@ export const DeliveriesPage: React.FC = () => {
             onPrimaryAction={() => setNewDeliveryOpen(true)}
           />
 
-          <div className="shrink-0 flex items-center gap-1.5 px-3 py-2.5 border-b border-[#e5e5e5] dark:border-[#1f1f1f] bg-white dark:bg-[#171717] flex-wrap">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <DeliveriesPeriodControls
-                periodMode={periodMode}
-                setPeriodMode={setPeriodMode}
-                monthAnchor={monthAnchor}
-                setMonthAnchor={setMonthAnchor}
-                datePickerOpen={datePickerOpen}
-                setDatePickerOpen={setDatePickerOpen}
-                datePickerRef={datePickerRef}
-                calendarMonth={calendarMonth}
-                setCalendarMonth={setCalendarMonth}
-                hoverDate={hoverDate}
-                setHoverDate={setHoverDate}
-                pickingStart={pickingStart}
-                setPickingStart={setPickingStart}
-                customStartDate={customStartDate}
-                setCustomStartDate={setCustomStartDate}
-                customEndDate={customEndDate}
-                setCustomEndDate={setCustomEndDate}
-                setDateRange={setDateRange}
-                setCurrentPage={setCurrentPage}
-              />
+          <ListFiltersRow
+            filters={
+              <>
+                <DeliveriesPeriodControls
+                  periodMode={periodMode}
+                  setPeriodMode={setPeriodMode}
+                  monthAnchor={monthAnchor}
+                  setMonthAnchor={setMonthAnchor}
+                  datePickerOpen={datePickerOpen}
+                  setDatePickerOpen={setDatePickerOpen}
+                  datePickerRef={datePickerRef}
+                  calendarMonth={calendarMonth}
+                  setCalendarMonth={setCalendarMonth}
+                  hoverDate={hoverDate}
+                  setHoverDate={setHoverDate}
+                  pickingStart={pickingStart}
+                  setPickingStart={setPickingStart}
+                  customStartDate={customStartDate}
+                  setCustomStartDate={setCustomStartDate}
+                  customEndDate={customEndDate}
+                  setCustomEndDate={setCustomEndDate}
+                  setDateRange={setDateRange}
+                  setCurrentPage={setCurrentPage}
+                />
 
-              <DeliveriesDesktopFilters
-                statusRef={statusRef}
-                branchRef={branchRef}
-                areaRef={areaRef}
-                restaurantRef={restaurantRef}
-                courierRef={courierRef}
-                statusOpen={statusOpen}
-                setStatusOpen={setStatusOpen}
-                branchOpen={branchOpen}
-                setBranchOpen={setBranchOpen}
-                areaOpen={areaOpen}
-                setAreaOpen={setAreaOpen}
-                restaurantOpen={restaurantOpen}
-                setRestaurantOpen={setRestaurantOpen}
-                courierOpen={courierOpen}
-                setCourierOpen={setCourierOpen}
-                setColumnsOpen={setColumnsOpen}
-                statusFilters={statusFilters}
-                setStatusFilters={setStatusFilters}
-                toggleStatusFilter={toggleStatusFilter}
-                statusCounts={statusCounts}
-                statusChipConfig={STATUS_CHIP_CONFIG}
-                selectedBranches={selectedBranches}
-                setSelectedBranches={setSelectedBranches}
-                toggleBranch={toggleBranch}
-                branchOptions={branchOptions}
-                branchSearch={branchSearch}
-                setBranchSearch={setBranchSearch}
-                selectedAreas={selectedAreas}
-                setSelectedAreas={setSelectedAreas}
-                toggleArea={toggleArea}
-                areaOptions={areaOptions}
-                areaSearch={areaSearch}
-                setAreaSearch={setAreaSearch}
-                selectedRestaurants={selectedRestaurants}
-                setSelectedRestaurants={setSelectedRestaurants}
-                toggleRestaurant={toggleRestaurant}
-                restaurantOptions={restaurantOptions}
-                restaurantSearch={restaurantSearch}
-                setRestaurantSearch={setRestaurantSearch}
-                selectedCouriers={selectedCouriers}
-                setSelectedCouriers={setSelectedCouriers}
-                toggleCourier={toggleCourier}
-                courierOptions={courierOptions}
-                courierSearch={courierSearch}
-                setCourierSearch={setCourierSearch}
-                setCurrentPage={setCurrentPage}
-              />
-            </div>
-
-            <div className="flex-1" />
-
-            <div className="flex items-center gap-1.5">
+                <DeliveriesDesktopFilters
+                  statusRef={statusRef}
+                  branchRef={branchRef}
+                  areaRef={areaRef}
+                  restaurantRef={restaurantRef}
+                  courierRef={courierRef}
+                  statusOpen={statusOpen}
+                  setStatusOpen={setStatusOpen}
+                  branchOpen={branchOpen}
+                  setBranchOpen={setBranchOpen}
+                  areaOpen={areaOpen}
+                  setAreaOpen={setAreaOpen}
+                  restaurantOpen={restaurantOpen}
+                  setRestaurantOpen={setRestaurantOpen}
+                  courierOpen={courierOpen}
+                  setCourierOpen={setCourierOpen}
+                  setColumnsOpen={setColumnsOpen}
+                  statusFilters={statusFilters}
+                  setStatusFilters={setStatusFilters}
+                  toggleStatusFilter={toggleStatusFilter}
+                  statusCounts={statusCounts}
+                  statusChipConfig={STATUS_CHIP_CONFIG}
+                  selectedBranches={selectedBranches}
+                  setSelectedBranches={setSelectedBranches}
+                  toggleBranch={toggleBranch}
+                  branchOptions={branchOptions}
+                  branchSearch={branchSearch}
+                  setBranchSearch={setBranchSearch}
+                  selectedAreas={selectedAreas}
+                  setSelectedAreas={setSelectedAreas}
+                  toggleArea={toggleArea}
+                  areaOptions={areaOptions}
+                  areaSearch={areaSearch}
+                  setAreaSearch={setAreaSearch}
+                  selectedRestaurants={selectedRestaurants}
+                  setSelectedRestaurants={setSelectedRestaurants}
+                  toggleRestaurant={toggleRestaurant}
+                  restaurantOptions={restaurantOptions}
+                  restaurantSearch={restaurantSearch}
+                  setRestaurantSearch={setRestaurantSearch}
+                  selectedCouriers={selectedCouriers}
+                  setSelectedCouriers={setSelectedCouriers}
+                  toggleCourier={toggleCourier}
+                  courierOptions={courierOptions}
+                  courierSearch={courierSearch}
+                  setCourierSearch={setCourierSearch}
+                  setCurrentPage={setCurrentPage}
+                />
+              </>
+            }
+            actions={
               <ListToolbarActions
                 searchQuery={searchQuery}
                 onSearchQueryChange={setSearchQuery}
@@ -584,9 +584,8 @@ export const DeliveriesPage: React.FC = () => {
                   setColumnsOpen(false);
                 }}
               />
-            </div>
-
-          </div>
+            }
+          />
 
           <ListInfoBar>{filteredStats.total} משלוחים</ListInfoBar>
 

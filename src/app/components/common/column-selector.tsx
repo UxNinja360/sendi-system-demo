@@ -565,7 +565,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
   return (
     <div
       ref={panelRef}
-      className={`fixed top-[64px] left-0 h-[calc(100vh-64px)] w-full sm:w-[460px] bg-[#0f0f0f] shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-out ${
+      className={`app-safe-side-panel fixed left-0 w-full sm:w-[460px] bg-[#0f0f0f] shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-out ${
         isAnimating ? 'translate-x-0' : '-translate-x-full'
       }`}
       style={{ direction: 'rtl' }}

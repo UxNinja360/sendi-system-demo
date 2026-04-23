@@ -242,7 +242,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
           }
         }}
         className={`
-          fixed md:static inset-y-0 right-0 bg-[#fafafa] dark:bg-[#0a0a0a] border-l border-[#e5e5e5] dark:border-[#262626] flex flex-col shadow-xl md:shadow-none h-screen
+          fixed md:static inset-y-0 right-0 bg-[#fafafa] dark:bg-[#0a0a0a] border-l border-[#e5e5e5] dark:border-[#262626] flex flex-col shadow-xl md:shadow-none h-[100dvh] min-h-screen
           ${isCollapsed ? 'translate-x-0 z-[110] md:z-50' : 'translate-x-full md:translate-x-0 z-[110] md:z-50'}
         `}
         style={{
@@ -257,7 +257,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
             // Toggle sidebar in both desktop and mobile
             setIsCollapsed(!isCollapsed);
           }}
-          className="h-16 flex items-center justify-between border-b border-[#e5e5e5] dark:border-[#262626] shrink-0 bg-[#fafafa] dark:bg-[#0a0a0a] cursor-pointer hover:bg-[#f0f0f0] dark:hover:bg-[#111111] transition-colors px-[16px] py-[0px]"
+          className="app-safe-header flex items-center justify-between border-b border-[#e5e5e5] dark:border-[#262626] shrink-0 bg-[#fafafa] dark:bg-[#0a0a0a] cursor-pointer hover:bg-[#f0f0f0] dark:hover:bg-[#111111] transition-colors px-[16px] py-[0px]"
         >
            <div className="flex items-center gap-2 md:hidden">
               <AppLogo size={20} className="text-[#02B74F]" />
