@@ -19,7 +19,7 @@ export default defineConfig({
         name: 'Sendi',
         short_name: 'Sendi',
         description: 'Sendi delivery operations cockpit',
-        theme_color: '#9fe870',
+        theme_color: '#0a0a0a',
         background_color: '#0a0a0a',
         display: 'fullscreen',
         display_override: ['fullscreen', 'standalone', 'minimal-ui'],
