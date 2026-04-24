@@ -1,0 +1,233 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/@fs/C:\\Users\\reala\\OneDrive\\Desktop\\sendi\\se.io SYSTEM DEMO\\src\\app\\auth\\login-otp.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=ec14390d"; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/auth/login-otp.tsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+var _s = $RefreshSig$();
+import __vite__cjsImport3_react from "/node_modules/.vite/deps/react.js?v=ec14390d"; const useEffect = __vite__cjsImport3_react["useEffect"]; const useRef = __vite__cjsImport3_react["useRef"]; const useState = __vite__cjsImport3_react["useState"];
+import { ArrowRight } from "/node_modules/.vite/deps/lucide-react.js?v=ec14390d";
+import { AppLogo } from "/src/app/components/icons/app-logo.tsx";
+const EMPTY_OTP = ["", "", "", "", "", ""];
+export const LoginOtp = ({ phone, onSubmit, onBack }) => {
+  _s();
+  const [otp, setOtp] = useState(EMPTY_OTP);
+  const [error, setError] = useState("");
+  const inputRefs = useRef([]);
+  useEffect(() => {
+    inputRefs.current[0]?.focus();
+  }, []);
+  const handleSubmit = (otpString) => {
+    if (otpString === "123456") {
+      onSubmit(otpString);
+      return;
+    }
+    setError("קוד שגוי, נסה שוב");
+    setOtp(EMPTY_OTP);
+    inputRefs.current[0]?.focus();
+  };
+  const handleChange = (index, value) => {
+    if (value && !/^\d$/.test(value)) return;
+    const nextOtp = [...otp];
+    nextOtp[index] = value;
+    setOtp(nextOtp);
+    setError("");
+    if (value && index < nextOtp.length - 1) {
+      inputRefs.current[index + 1]?.focus();
+    }
+    if (index === nextOtp.length - 1 && value) {
+      handleSubmit(nextOtp.join(""));
+    }
+  };
+  const handleKeyDown = (index, e) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text").replace(/\D/g, "");
+    if (pastedData.length === 6) {
+      const nextOtp = pastedData.split("");
+      setOtp(nextOtp);
+      inputRefs.current[5]?.focus();
+      setTimeout(() => handleSubmit(pastedData), 100);
+    }
+  };
+  const formatPhone = (value) => {
+    if (!value) return "";
+    return value.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3");
+  };
+  return /* @__PURE__ */ jsxDEV("div", { className: "w-full flex items-center justify-center py-[max(1rem,env(safe-area-inset-top))]", children: /* @__PURE__ */ jsxDEV("div", { className: "w-full max-w-md", children: [
+    /* @__PURE__ */ jsxDEV("div", { className: "text-center mb-6 sm:mb-8", children: [
+      /* @__PURE__ */ jsxDEV("div", { className: "inline-flex items-center justify-center h-16 w-16 sm:h-20 sm:w-20 bg-[#02B74F] rounded-2xl mb-4 shadow-lg", children: /* @__PURE__ */ jsxDEV(AppLogo, { size: 40, className: "text-white sm:h-12 sm:w-12" }, void 0, false, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/auth/login-otp.tsx",
+        lineNumber: 97,
+        columnNumber: 13
+      }, this) }, void 0, false, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/auth/login-otp.tsx",
+        lineNumber: 96,
+        columnNumber: 11
+      }, this),
+      /* @__PURE__ */ jsxDEV("h1", { className: "text-2xl sm:text-3xl font-extrabold text-[#0d0d12] dark:text-[#fafafa] mb-2", children: "הזן קוד אימות" }, void 0, false, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/auth/login-otp.tsx",
+        lineNumber: 99,
+        columnNumber: 11
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { className: "text-sm sm:text-base text-[#666d80] dark:text-[#a3a3a3]", children: "שלחנו קוד אימות למספר" }, void 0, false, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/auth/login-otp.tsx",
+        lineNumber: 102,
+        columnNumber: 11
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { className: "text-[#0d0d12] dark:text-[#fafafa] font-medium mt-1", dir: "ltr", children: formatPhone(phone) }, void 0, false, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/auth/login-otp.tsx",
+        lineNumber: 105,
+        columnNumber: 11
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/auth/login-otp.tsx",
+      lineNumber: 95,
+      columnNumber: 9
+    }, this),
+    /* @__PURE__ */ jsxDEV("div", { className: "bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] p-5 sm:p-8 shadow-xl", children: /* @__PURE__ */ jsxDEV("div", { className: "space-y-6", children: [
+      /* @__PURE__ */ jsxDEV("div", { className: "flex justify-center gap-2 sm:gap-3", dir: "ltr", children: otp.map(
+        (digit, index) => /* @__PURE__ */ jsxDEV(
+          "input",
+          {
+            ref: (el) => {
+              inputRefs.current[index] = el;
+            },
+            type: "text",
+            inputMode: "numeric",
+            autoComplete: index === 0 ? "one-time-code" : "off",
+            maxLength: 1,
+            value: digit,
+            onChange: (e) => handleChange(index, e.target.value),
+            onKeyDown: (e) => handleKeyDown(index, e),
+            onPaste: index === 0 ? handlePaste : void 0,
+            className: `h-12 w-10 sm:h-14 sm:w-12 text-center text-xl sm:text-2xl font-bold bg-[#fafafa] dark:bg-[#0a0a0a] border-2 rounded-xl text-[#0d0d12] dark:text-[#fafafa] focus:outline-none focus:border-[#02B74F] transition-all ${error ? "border-[#ea0b0b] animate-shake" : "border-[#e5e5e5] dark:border-[#262626]"}`
+          },
+          index,
+          false,
+          {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/auth/login-otp.tsx",
+            lineNumber: 114,
+            columnNumber: 15
+          },
+          this
+        )
+      ) }, void 0, false, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/auth/login-otp.tsx",
+        lineNumber: 112,
+        columnNumber: 13
+      }, this),
+      error && /* @__PURE__ */ jsxDEV("div", { className: "text-center text-sm text-[#ea0b0b] font-medium animate-in fade-in", children: error }, void 0, false, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/auth/login-otp.tsx",
+        lineNumber: 137,
+        columnNumber: 13
+      }, this),
+      /* @__PURE__ */ jsxDEV("div", { className: "text-center", children: /* @__PURE__ */ jsxDEV("p", { className: "text-xs text-[#666d80] dark:text-[#a3a3a3]", children: "טיפ: קוד הבדיקה הוא 123456" }, void 0, false, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/auth/login-otp.tsx",
+        lineNumber: 143,
+        columnNumber: 15
+      }, this) }, void 0, false, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/auth/login-otp.tsx",
+        lineNumber: 142,
+        columnNumber: 13
+      }, this),
+      /* @__PURE__ */ jsxDEV("div", { className: "text-center", children: /* @__PURE__ */ jsxDEV(
+        "button",
+        {
+          type: "button",
+          className: "text-sm text-[#02B74F] hover:underline font-medium",
+          children: "שלח קוד שוב"
+        },
+        void 0,
+        false,
+        {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/auth/login-otp.tsx",
+          lineNumber: 149,
+          columnNumber: 15
+        },
+        this
+      ) }, void 0, false, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/auth/login-otp.tsx",
+        lineNumber: 148,
+        columnNumber: 13
+      }, this),
+      /* @__PURE__ */ jsxDEV(
+        "button",
+        {
+          onClick: onBack,
+          className: "w-full flex items-center justify-center gap-2 px-6 py-3 bg-[#f5f5f5] dark:bg-[#262626] hover:bg-[#e5e5e5] dark:hover:bg-[#404040] text-[#0d0d12] dark:text-[#fafafa] font-medium rounded-xl transition-all duration-200",
+          children: [
+            /* @__PURE__ */ jsxDEV(ArrowRight, { className: "w-5 h-5" }, void 0, false, {
+              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/auth/login-otp.tsx",
+              lineNumber: 161,
+              columnNumber: 15
+            }, this),
+            /* @__PURE__ */ jsxDEV("span", { children: "חזור" }, void 0, false, {
+              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/auth/login-otp.tsx",
+              lineNumber: 162,
+              columnNumber: 15
+            }, this)
+          ]
+        },
+        void 0,
+        true,
+        {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/auth/login-otp.tsx",
+          lineNumber: 157,
+          columnNumber: 13
+        },
+        this
+      )
+    ] }, void 0, true, {
+      fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/auth/login-otp.tsx",
+      lineNumber: 111,
+      columnNumber: 11
+    }, this) }, void 0, false, {
+      fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/auth/login-otp.tsx",
+      lineNumber: 110,
+      columnNumber: 9
+    }, this)
+  ] }, void 0, true, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/auth/login-otp.tsx",
+    lineNumber: 94,
+    columnNumber: 7
+  }, this) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/auth/login-otp.tsx",
+    lineNumber: 93,
+    columnNumber: 5
+  }, this);
+};
+_s(LoginOtp, "NHXXp6GUCqJznU0MEgcUsBm4VNw=");
+_c = LoginOtp;
+var _c;
+$RefreshReg$(_c, "LoginOtp");
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/auth/login-otp.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/auth/login-otp.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,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QSxLQUhGO0FBQUE7QUFBQTtBQUFBO0FBQUEsYUFJQTtBQUFBLE1BRUEsdUJBQUMsU0FBSSxXQUFVLGVBQ2I7QUFBQSxRQUFDO0FBQUE7QUFBQSxVQUNDLE1BQUs7QUFBQSxVQUNMLFdBQVU7QUFBQSxVQUFvRDtBQUFBO0FBQUEsUUFGaEU7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBLE1BS0EsS0FORjtBQUFBO0FBQUE7QUFBQTtBQUFBLGFBT0E7QUFBQSxNQUVBO0FBQUEsUUFBQztBQUFBO0FBQUEsVUFDQyxTQUFTSjtBQUFBQSxVQUNULFdBQVU7QUFBQSxVQUVWO0FBQUEsbUNBQUMsY0FBVyxXQUFVLGFBQXRCO0FBQUE7QUFBQTtBQUFBO0FBQUEsbUJBQStCO0FBQUEsWUFDL0IsdUJBQUMsVUFBSyxvQkFBTjtBQUFBO0FBQUE7QUFBQTtBQUFBLG1CQUFVO0FBQUE7QUFBQTtBQUFBLFFBTFo7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBLE1BTUE7QUFBQSxTQXBERjtBQUFBO0FBQUE7QUFBQTtBQUFBLFdBcURBLEtBdERGO0FBQUE7QUFBQTtBQUFBO0FBQUEsV0F1REE7QUFBQSxPQXZFRjtBQUFBO0FBQUE7QUFBQTtBQUFBLFNBd0VBLEtBekVGO0FBQUE7QUFBQTtBQUFBO0FBQUEsU0EwRUE7QUFFSjtBQUFFQyxHQXpJV0osVUFBaUM7QUFBQSxLQUFqQ0E7QUFBaUMsSUFBQXNDO0FBQUEsYUFBQUEsSUFBQSIsIm5hbWVzIjpbInVzZUVmZmVjdCIsInVzZVJlZiIsInVzZVN0YXRlIiwiQXJyb3dSaWdodCIsIkFwcExvZ28iLCJFTVBUWV9PVFAiLCJMb2dpbk90cCIsInBob25lIiwib25TdWJtaXQiLCJvbkJhY2siLCJfcyIsIm90cCIsInNldE90cCIsImVycm9yIiwic2V0RXJyb3IiLCJpbnB1dFJlZnMiLCJjdXJyZW50IiwiZm9jdXMiLCJoYW5kbGVTdWJtaXQiLCJvdHBTdHJpbmciLCJoYW5kbGVDaGFuZ2UiLCJpbmRleCIsInZhbHVlIiwidGVzdCIsIm5leHRPdHAiLCJsZW5ndGgiLCJqb2luIiwiaGFuZGxlS2V5RG93biIsImUiLCJrZXkiLCJoYW5kbGVQYXN0ZSIsInByZXZlbnREZWZhdWx0IiwicGFzdGVkRGF0YSIsImNsaXBib2FyZERhdGEiLCJnZXREYXRhIiwicmVwbGFjZSIsInNwbGl0Iiwic2V0VGltZW91dCIsImZvcm1hdFBob25lIiwibWFwIiwiZGlnaXQiLCJlbCIsInRhcmdldCIsInVuZGVmaW5lZCIsIl9jIl0sImlnbm9yZUxpc3QiOltdLCJzb3VyY2VzIjpbImxvZ2luLW90cC50c3giXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IFJlYWN0LCB7IHVzZUVmZmVjdCwgdXNlUmVmLCB1c2VTdGF0ZSB9IGZyb20gJ3JlYWN0JztcbmltcG9ydCB7IEFycm93UmlnaHQgfSBmcm9tICdsdWNpZGUtcmVhY3QnO1xuaW1wb3J0IHsgQXBwTG9nbyB9IGZyb20gJy4uL2NvbXBvbmVudHMvaWNvbnMvYXBwLWxvZ28nO1xuXG5pbnRlcmZhY2UgTG9naW5PdHBQcm9wcyB7XG4gIHBob25lOiBzdHJpbmc7XG4gIG9uU3VibWl0OiAob3RwOiBzdHJpbmcpID0+IHZvaWQ7XG4gIG9uQmFjazogKCkgPT4gdm9pZDtcbn1cblxuY29uc3QgRU1QVFlfT1RQID0gWycnLCAnJywgJycsICcnLCAnJywgJyddO1xuXG5leHBvcnQgY29uc3QgTG9naW5PdHA6IFJlYWN0LkZDPExvZ2luT3RwUHJvcHM+ID0gKHsgcGhvbmUsIG9uU3VibWl0LCBvbkJhY2sgfSkgPT4ge1xuICBjb25zdCBbb3RwLCBzZXRPdHBdID0gdXNlU3RhdGUoRU1QVFlfT1RQKTtcbiAgY29uc3QgW2Vycm9yLCBzZXRFcnJvcl0gPSB1c2VTdGF0ZSgnJyk7XG4gIGNvbnN0IGlucHV0UmVmcyA9IHVzZVJlZjwoSFRNTElucHV0RWxlbWVudCB8IG51bGwpW10+KFtdKTtcblxuICB1c2VFZmZlY3QoKCkgPT4ge1xuICAgIGlucHV0UmVmcy5jdXJyZW50WzBdPy5mb2N1cygpO1xuICB9LCBbXSk7XG5cbiAgY29uc3QgaGFuZGxlU3VibWl0ID0gKG90cFN0cmluZzogc3RyaW5nKSA9PiB7XG4gICAgaWYgKG90cFN0cmluZyA9PT0gJzEyMzQ1NicpIHtcbiAgICAgIG9uU3VibWl0KG90cFN0cmluZyk7XG4gICAgICByZXR1cm47XG4gICAgfVxuXG4gICAgc2V0RXJyb3IoJ9en15XXkyDXqdeS15XXmSwg16DXodeUINep15XXkScpO1xuICAgIHNldE90cChFTVBUWV9PVFApO1xuICAgIGlucHV0UmVmcy5jdXJyZW50WzBdPy5mb2N1cygpO1xuICB9O1xuXG4gIGNvbnN0IGhhbmRsZUNoYW5nZSA9IChpbmRleDogbnVtYmVyLCB2YWx1ZTogc3RyaW5nKSA9PiB7XG4gICAgaWYgKHZhbHVlICYmICEvXlxcZCQvLnRlc3QodmFsdWUpKSByZXR1cm47XG5cbiAgICBjb25zdCBuZXh0T3RwID0gWy4uLm90cF07XG4gICAgbmV4dE90cFtpbmRleF0gPSB2YWx1ZTtcbiAgICBzZXRPdHAobmV4dE90cCk7XG4gICAgc2V0RXJyb3IoJycpO1xuXG4gICAgaWYgKHZhbHVlICYmIGluZGV4IDwgbmV4dE90cC5sZW5ndGggLSAxKSB7XG4gICAgICBpbnB1dFJlZnMuY3VycmVudFtpbmRleCArIDFdPy5mb2N1cygpO1xuICAgIH1cblxuICAgIGlmIChpbmRleCA9PT0gbmV4dE90cC5sZW5ndGggLSAxICYmIHZhbHVlKSB7XG4gICAgICBoYW5kbGVTdWJtaXQobmV4dE90cC5qb2luKCcnKSk7XG4gICAgfVxuICB9O1xuXG4gIGNvbnN0IGhhbmRsZUtleURvd24gPSAoaW5kZXg6IG51bWJlciwgZTogUmVhY3QuS2V5Ym9hcmRFdmVudDxIVE1MSW5wdXRFbGVtZW50PikgPT4ge1xuICAgIGlmIChlLmtleSA9PT0gJ0JhY2tzcGFjZScgJiYgIW90cFtpbmRleF0gJiYgaW5kZXggPiAwKSB7XG4gICAgICBpbnB1dFJlZnMuY3VycmVudFtpbmRleCAtIDFdPy5mb2N1cygpO1xuICAgIH1cbiAgfTtcblxuICBjb25zdCBoYW5kbGVQYXN0ZSA9IChlOiBSZWFjdC5DbGlwYm9hcmRFdmVudCkgPT4ge1xuICAgIGUucHJldmVudERlZmF1bHQoKTtcbiAgICBjb25zdCBwYXN0ZWREYXRhID0gZS5jbGlwYm9hcmREYXRhLmdldERhdGEoJ3RleHQnKS5yZXBsYWNlKC9cXEQvZywgJycpO1xuXG4gICAgaWYgKHBhc3RlZERhdGEubGVuZ3RoID09PSA2KSB7XG4gICAgICBjb25zdCBuZXh0T3RwID0gcGFzdGVkRGF0YS5zcGxpdCgnJyk7XG4gICAgICBzZXRPdHAobmV4dE90cCk7XG4gICAgICBpbnB1dFJlZnMuY3VycmVudFs1XT8uZm9jdXMoKTtcbiAgICAgIHNldFRpbWVvdXQoKCkgPT4gaGFuZGxlU3VibWl0KHBhc3RlZERhdGEpLCAxMDApO1xuICAgIH1cbiAgfTtcblxuICBjb25zdCBmb3JtYXRQaG9uZSA9ICh2YWx1ZTogc3RyaW5nKSA9PiB7XG4gICAgaWYgKCF2YWx1ZSkgcmV0dXJuICcnO1xuICAgIHJldHVybiB2YWx1ZS5yZXBsYWNlKC8oXFxkezN9KShcXGR7M30pKFxcZHs0fSkvLCAnJDEtJDItJDMnKTtcbiAgfTtcblxuICByZXR1cm4gKFxuICAgIDxkaXYgY2xhc3NOYW1lPVwidy1mdWxsIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIHB5LVttYXgoMXJlbSxlbnYoc2FmZS1hcmVhLWluc2V0LXRvcCkpXVwiPlxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJ3LWZ1bGwgbWF4LXctbWRcIj5cbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ0ZXh0LWNlbnRlciBtYi02IHNtOm1iLThcIj5cbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImlubGluZS1mbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBoLTE2IHctMTYgc206aC0yMCBzbTp3LTIwIGJnLVsjMDJCNzRGXSByb3VuZGVkLTJ4bCBtYi00IHNoYWRvdy1sZ1wiPlxuICAgICAgICAgICAgPEFwcExvZ28gc2l6ZT17NDB9IGNsYXNzTmFtZT1cInRleHQtd2hpdGUgc206aC0xMiBzbTp3LTEyXCIgLz5cbiAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICA8aDEgY2xhc3NOYW1lPVwidGV4dC0yeGwgc206dGV4dC0zeGwgZm9udC1leHRyYWJvbGQgdGV4dC1bIzBkMGQxMl0gZGFyazp0ZXh0LVsjZmFmYWZhXSBtYi0yXCI+XG4gICAgICAgICAgICDXlNeW158g16fXldeTINeQ15nXnteV16pcbiAgICAgICAgICA8L2gxPlxuICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtc20gc206dGV4dC1iYXNlIHRleHQtWyM2NjZkODBdIGRhcms6dGV4dC1bI2EzYTNhM11cIj5cbiAgICAgICAgICAgINep15zXl9eg15Ug16fXldeTINeQ15nXnteV16og15zXnteh16TXqFxuICAgICAgICAgIDwvcD5cbiAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LVsjMGQwZDEyXSBkYXJrOnRleHQtWyNmYWZhZmFdIGZvbnQtbWVkaXVtIG10LTFcIiBkaXI9XCJsdHJcIj5cbiAgICAgICAgICAgIHtmb3JtYXRQaG9uZShwaG9uZSl9XG4gICAgICAgICAgPC9wPlxuICAgICAgICA8L2Rpdj5cblxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImJnLXdoaXRlIGRhcms6YmctWyMxNzE3MTddIHJvdW5kZWQtMnhsIGJvcmRlciBib3JkZXItWyNlNWU1ZTVdIGRhcms6Ym9yZGVyLVsjMjYyNjI2XSBwLTUgc206cC04IHNoYWRvdy14bFwiPlxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS02XCI+XG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXgganVzdGlmeS1jZW50ZXIgZ2FwLTIgc206Z2FwLTNcIiBkaXI9XCJsdHJcIj5cbiAgICAgICAgICAgICAge290cC5tYXAoKGRpZ2l0LCBpbmRleCkgPT4gKFxuICAgICAgICAgICAgICAgIDxpbnB1dFxuICAgICAgICAgICAgICAgICAga2V5PXtpbmRleH1cbiAgICAgICAgICAgICAgICAgIHJlZj17KGVsKSA9PiB7XG4gICAgICAgICAgICAgICAgICAgIGlucHV0UmVmcy5jdXJyZW50W2luZGV4XSA9IGVsO1xuICAgICAgICAgICAgICAgICAgfX1cbiAgICAgICAgICAgICAgICAgIHR5cGU9XCJ0ZXh0XCJcbiAgICAgICAgICAgICAgICAgIGlucHV0TW9kZT1cIm51bWVyaWNcIlxuICAgICAgICAgICAgICAgICAgYXV0b0NvbXBsZXRlPXtpbmRleCA9PT0gMCA/ICdvbmUtdGltZS1jb2RlJyA6ICdvZmYnfVxuICAgICAgICAgICAgICAgICAgbWF4TGVuZ3RoPXsxfVxuICAgICAgICAgICAgICAgICAgdmFsdWU9e2RpZ2l0fVxuICAgICAgICAgICAgICAgICAgb25DaGFuZ2U9eyhlKSA9PiBoYW5kbGVDaGFuZ2UoaW5kZXgsIGUudGFyZ2V0LnZhbHVlKX1cbiAgICAgICAgICAgICAgICAgIG9uS2V5RG93bj17KGUpID0+IGhhbmRsZUtleURvd24oaW5kZXgsIGUpfVxuICAgICAgICAgICAgICAgICAgb25QYXN0ZT17aW5kZXggPT09IDAgPyBoYW5kbGVQYXN0ZSA6IHVuZGVmaW5lZH1cbiAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT17YGgtMTIgdy0xMCBzbTpoLTE0IHNtOnctMTIgdGV4dC1jZW50ZXIgdGV4dC14bCBzbTp0ZXh0LTJ4bCBmb250LWJvbGQgYmctWyNmYWZhZmFdIGRhcms6YmctWyMwYTBhMGFdIGJvcmRlci0yIHJvdW5kZWQteGwgdGV4dC1bIzBkMGQxMl0gZGFyazp0ZXh0LVsjZmFmYWZhXSBmb2N1czpvdXRsaW5lLW5vbmUgZm9jdXM6Ym9yZGVyLVsjMDJCNzRGXSB0cmFuc2l0aW9uLWFsbCAke1xuICAgICAgICAgICAgICAgICAgICBlcnJvclxuICAgICAgICAgICAgICAgICAgICAgID8gJ2JvcmRlci1bI2VhMGIwYl0gYW5pbWF0ZS1zaGFrZSdcbiAgICAgICAgICAgICAgICAgICAgICA6ICdib3JkZXItWyNlNWU1ZTVdIGRhcms6Ym9yZGVyLVsjMjYyNjI2XSdcbiAgICAgICAgICAgICAgICAgIH1gfVxuICAgICAgICAgICAgICAgIC8+XG4gICAgICAgICAgICAgICkpfVxuICAgICAgICAgICAgPC9kaXY+XG5cbiAgICAgICAgICAgIHtlcnJvciAmJiAoXG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidGV4dC1jZW50ZXIgdGV4dC1zbSB0ZXh0LVsjZWEwYjBiXSBmb250LW1lZGl1bSBhbmltYXRlLWluIGZhZGUtaW5cIj5cbiAgICAgICAgICAgICAgICB7ZXJyb3J9XG4gICAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICAgKX1cblxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ0ZXh0LWNlbnRlclwiPlxuICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXhzIHRleHQtWyM2NjZkODBdIGRhcms6dGV4dC1bI2EzYTNhM11cIj5cbiAgICAgICAgICAgICAgICDXmNeZ16Q6INen15XXkyDXlNeR15PXmden15Qg15TXldeQIDEyMzQ1NlxuICAgICAgICAgICAgICA8L3A+XG4gICAgICAgICAgICA8L2Rpdj5cblxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ0ZXh0LWNlbnRlclwiPlxuICAgICAgICAgICAgICA8YnV0dG9uXG4gICAgICAgICAgICAgICAgdHlwZT1cImJ1dHRvblwiXG4gICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwidGV4dC1zbSB0ZXh0LVsjMDJCNzRGXSBob3Zlcjp1bmRlcmxpbmUgZm9udC1tZWRpdW1cIlxuICAgICAgICAgICAgICA+XG4gICAgICAgICAgICAgICAg16nXnNeXINen15XXkyDXqdeV15FcbiAgICAgICAgICAgICAgPC9idXR0b24+XG4gICAgICAgICAgICA8L2Rpdj5cblxuICAgICAgICAgICAgPGJ1dHRvblxuICAgICAgICAgICAgICBvbkNsaWNrPXtvbkJhY2t9XG4gICAgICAgICAgICAgIGNsYXNzTmFtZT1cInctZnVsbCBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBnYXAtMiBweC02IHB5LTMgYmctWyNmNWY1ZjVdIGRhcms6YmctWyMyNjI2MjZdIGhvdmVyOmJnLVsjZTVlNWU1XSBkYXJrOmhvdmVyOmJnLVsjNDA0MDQwXSB0ZXh0LVsjMGQwZDEyXSBkYXJrOnRleHQtWyNmYWZhZmFdIGZvbnQtbWVkaXVtIHJvdW5kZWQteGwgdHJhbnNpdGlvbi1hbGwgZHVyYXRpb24tMjAwXCJcbiAgICAgICAgICAgID5cbiAgICAgICAgICAgICAgPEFycm93UmlnaHQgY2xhc3NOYW1lPVwidy01IGgtNVwiIC8+XG4gICAgICAgICAgICAgIDxzcGFuPteX15bXldeoPC9zcGFuPlxuICAgICAgICAgICAgPC9idXR0b24+XG4gICAgICAgICAgPC9kaXY+XG4gICAgICAgIDwvZGl2PlxuICAgICAgPC9kaXY+XG4gICAgPC9kaXY+XG4gICk7XG59O1xuIl0sImZpbGUiOiJDOi9Vc2Vycy9yZWFsYS9PbmVEcml2ZS9EZXNrdG9wL3NlbmRpL3NlLmlvIFNZU1RFTSBERU1PL3NyYy9hcHAvYXV0aC9sb2dpbi1vdHAudHN4In0=

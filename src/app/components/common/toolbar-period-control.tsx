@@ -153,7 +153,7 @@ export const ToolbarPeriodControl: React.FC<ToolbarPeriodControlProps> = ({
       <button
         type="button"
         onClick={() => setDatePickerOpen((value) => !value)}
-        className={`flex h-9 min-w-[118px] items-center justify-center gap-1.5 rounded-[4px] border px-3 text-sm font-medium transition-colors sm:min-w-[150px] sm:gap-2 sm:px-4 ${
+        className={`flex h-9 min-w-[96px] items-center justify-center gap-1 rounded-[4px] border px-2 text-[13px] font-medium transition-colors sm:min-w-[150px] sm:gap-2 sm:px-4 sm:text-sm ${
           periodMode === 'custom_range'
             ? 'border-[#0d0d12] bg-[#0d0d12] text-white dark:border-[#fafafa] dark:bg-[#fafafa] dark:text-[#0d0d12]'
             : 'border-[#e5e5e5] bg-white text-[#0d0d12] dark:border-[#262626] dark:bg-[#171717] dark:text-[#fafafa]'

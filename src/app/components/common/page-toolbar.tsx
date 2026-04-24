@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu } from 'lucide-react';
+import { MoreHorizontal, Plus } from 'lucide-react';
 import {
   ToolbarPeriodControl,
   type PeriodMode,
@@ -29,24 +29,20 @@ const toDateInputValue = (date: Date) =>
   `${date.getFullYear()}-${`${date.getMonth() + 1}`.padStart(2, '0')}-${`${date.getDate()}`.padStart(2, '0')}`;
 
 export const PageToolbar: React.FC<PageToolbarProps> = ({
-  title,
-  count,
-  showZeroCount = false,
-  onToggleMobileSidebar,
   headerControls,
   headerActions,
   primaryActionLabel,
-  primaryActionIcon,
   onPrimaryAction,
   primaryActionDataOnboarding,
   showPeriodControl = true,
   periodControl,
   controls,
   actions,
-  summary,
   controlsClassName = '',
   actionsClassName = '',
 }) => {
+  const primaryActionMenuRef = React.useRef<HTMLDivElement | null>(null);
+  const [primaryActionMenuOpen, setPrimaryActionMenuOpen] = React.useState(false);
   const [defaultPeriodMode, setDefaultPeriodMode] =
     React.useState<PeriodMode>('current_month');
   const [defaultMonthAnchor, setDefaultMonthAnchor] = React.useState(
@@ -58,9 +54,27 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
   const [defaultCustomEndDate, setDefaultCustomEndDate] = React.useState(
     () => toDateInputValue(new Date()),
   );
-  const shouldShowCount =
-    typeof count === 'number' && (showZeroCount || count > 0);
-  const renderedSummary = summary ?? (shouldShowCount ? count.toLocaleString() : null);
+
+  React.useEffect(() => {
+    if (!primaryActionMenuOpen) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!primaryActionMenuRef.current?.contains(event.target as Node)) {
+        setPrimaryActionMenuOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setPrimaryActionMenuOpen(false);
+      }
+    };
+    window.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [primaryActionMenuOpen]);
+
   const renderedPeriodControl = showPeriodControl
     ? periodControl ?? (
         <ToolbarPeriodControl
@@ -75,81 +89,84 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
         />
       )
     : null;
-  const hasSecondaryRow = Boolean(renderedPeriodControl || controls || actions);
-  const hasSummaryRow = Boolean(renderedSummary || headerControls);
-  const renderedHeaderActions =
+  const renderedPrimaryAction =
     headerActions ??
     (primaryActionLabel && onPrimaryAction ? (
       <button
         type="button"
         data-onboarding={primaryActionDataOnboarding}
-        onClick={onPrimaryAction}
-        className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-[#9fe870] px-3 py-1.5 text-sm font-semibold text-[#0d0d12] transition-colors hover:bg-[#8fd65f]"
+        onClick={() => setPrimaryActionMenuOpen((current) => !current)}
+        title={primaryActionLabel}
+        aria-label={primaryActionLabel}
+        aria-haspopup="menu"
+        aria-expanded={primaryActionMenuOpen}
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[4px] border border-[#e5e5e5] bg-white text-[#525252] transition-colors hover:bg-[#f5f5f5] focus:outline-none focus:ring-2 focus:ring-[#9fe870]/40 dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
       >
-        {primaryActionIcon}
-        <span>{primaryActionLabel}</span>
+        <MoreHorizontal className="h-4 w-4" />
       </button>
     ) : null);
+  const hasToolbarRow = Boolean(
+    renderedPrimaryAction || renderedPeriodControl || controls || actions || headerControls,
+  );
 
   return (
-    <div className="app-safe-header app-toolbar-shell sticky top-0 z-20 shrink-0 border-b border-[#e5e5e5] bg-white dark:border-[#1f1f1f] dark:bg-[#171717]">
-      <div className="app-toolbar-row flex min-h-16 items-center justify-between gap-3 px-5">
-        <div className="flex items-center gap-2.5">
-          <button
-            type="button"
-            onClick={onToggleMobileSidebar}
-            className="rounded-lg p-1.5 text-[#737373] transition-colors hover:bg-[#f5f5f5] dark:hover:bg-[#262626] md:hidden"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-          <span className="text-[15px] font-semibold text-[#0d0d12] dark:text-[#fafafa]">
-            {title}
-          </span>
-        </div>
-
-        {renderedHeaderActions}
-      </div>
-
-      {hasSecondaryRow ? (
-        <div className="app-toolbar-row overflow-visible border-t border-[#f0f0f0] px-3 py-2.5 dark:border-[#1f1f1f]">
-          <div className="flex max-w-full flex-wrap items-center gap-2 md:min-w-0 md:flex-nowrap">
-            {renderedPeriodControl ? (
-              <div className="flex max-w-full shrink-0 flex-nowrap items-center gap-1.5">
-                {renderedPeriodControl}
-              </div>
-            ) : null}
-            {controls ? (
-              <div
-                className={`flex max-w-full shrink-0 flex-nowrap items-center gap-1.5 ${controlsClassName}`.trim()}
-              >
-                {controls}
-              </div>
-            ) : null}
-            {actions ? (
-              <div
-                className={`flex max-w-full shrink-0 flex-nowrap items-center gap-1.5 ${actionsClassName}`.trim()}
-              >
-                {actions}
-              </div>
-            ) : null}
+    <>
+      {hasToolbarRow ? (
+        <div className="app-toolbar-shell sticky top-0 z-20 shrink-0 border-b border-[#e5e5e5] bg-white dark:border-[#1f1f1f] dark:bg-[#171717]">
+          <div className="app-toolbar-row overflow-visible px-3 py-2.5">
+            <div className="flex max-w-full flex-nowrap items-center gap-1.5">
+              {renderedPeriodControl ? (
+                <div className="flex max-w-full shrink-0 flex-nowrap items-center gap-1">
+                  {renderedPeriodControl}
+                </div>
+              ) : null}
+              {controls ? (
+                <div
+                  className={`flex max-w-full shrink-0 flex-nowrap items-center gap-1 ${controlsClassName}`.trim()}
+                >
+                  {controls}
+                </div>
+              ) : null}
+              {actions ? (
+                <div
+                  className={`flex max-w-full shrink-0 flex-nowrap items-center gap-1 ${actionsClassName}`.trim()}
+                >
+                  {actions}
+                </div>
+              ) : null}
+              {headerControls ? (
+                <div className="flex max-w-full shrink-0 flex-nowrap items-center gap-1">
+                  {headerControls}
+                </div>
+              ) : null}
+              {renderedPrimaryAction ? (
+                <div ref={primaryActionMenuRef} className="relative flex shrink-0 items-center">
+                  {renderedPrimaryAction}
+                  {primaryActionMenuOpen && primaryActionLabel && onPrimaryAction ? (
+                    <div
+                      role="menu"
+                      className="absolute left-0 top-full z-50 mt-2 min-w-40 overflow-hidden rounded-lg border border-[#e5e5e5] bg-white py-1 text-right shadow-xl dark:border-[#262626] dark:bg-[#171717]"
+                    >
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setPrimaryActionMenuOpen(false);
+                          onPrimaryAction();
+                        }}
+                        className="flex w-full items-center justify-between gap-3 px-3 py-2 text-sm font-medium text-[#0d0d12] transition-colors hover:bg-[#f5f5f5] dark:text-[#fafafa] dark:hover:bg-[#262626]"
+                      >
+                        <span>{primaryActionLabel}</span>
+                        <Plus className="h-3.5 w-3.5 text-[#9fe870]" />
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
       ) : null}
-
-      {hasSummaryRow ? (
-        <div className="app-toolbar-row border-t border-[#f0f0f0] px-4 py-1 dark:border-[#1f1f1f]">
-          <div className="flex max-w-full items-center justify-between gap-3">
-            <span className="text-xs text-[#a3a3a3] dark:text-[#737373]">
-              {renderedSummary}
-            </span>
-            {headerControls ? (
-              <div className="flex max-w-full items-center gap-1.5">
-                {headerControls}
-              </div>
-            ) : null}
-          </div>
-        </div>
-      ) : null}
-    </div>
+    </>
   );
 };

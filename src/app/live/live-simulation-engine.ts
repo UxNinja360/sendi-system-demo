@@ -26,6 +26,9 @@ export type LiveSimulationTickResult = {
 
 export const COURIER_TRAVEL_SPEED_KMH = 18;
 export const COURIER_ARRIVAL_DISTANCE_KM = 0.03;
+const SIMULATION_MIN_STEP_MS = 250;
+const SIMULATION_FALLBACK_STEP_MS = 1000;
+const SIMULATION_BACKGROUND_CATCHUP_MS = 30 * 60 * 1000;
 
 export const COURIER_FALLBACK_POSITIONS: MapPosition[] = [
   { lat: 32.0700, lng: 34.7735 }, { lat: 32.0752, lng: 34.7731 },
@@ -375,12 +378,19 @@ export const advanceLiveSimulation = ({
     const routePath = buildSimulatedGpsRoutePath([currentPosition, nextStopPosition]);
     const routeDistanceKm = getRoutePathDistanceKm(routePath);
     const distanceKm = routeDistanceKm || getDistanceKm(currentPosition, nextStopPosition);
+    const routeStartedAtMs = nextStopDeliveries.reduce((latest, delivery) => {
+      const candidate = nextStopType === 'pickup'
+        ? getDateTime(delivery.started_pickup) ??
+          getDateTime(delivery.assignedAt) ??
+          getDateTime(delivery.coupled_time)
+        : getDateTime(delivery.started_dropoff) ??
+          getDateTime(delivery.pickedUpAt) ??
+          getDateTime(delivery.took_it_time);
 
-    if (distanceKm < arrivalDistanceKm) {
-      nextPositions.set(courier.id, nextStopPosition);
-      nextTimestamps.set(courier.id, nowMs);
-      positionChanged = true;
+      return candidate ? Math.max(latest, candidate) : latest;
+    }, 0);
 
+    const queueArrivalUpdates = () => {
       if (nextStopType === 'pickup') {
         const areAllOrdersReady = nextStopDeliveries.every((delivery) =>
           isDeliveryReadyForPickup(delivery, nowMs, state.timeMultiplier)
@@ -406,12 +416,34 @@ export const advanceLiveSimulation = ({
           deliveryIds: nextStopDeliveries.map((delivery) => delivery.id),
         });
       }
+    };
+
+    if (distanceKm < arrivalDistanceKm) {
+      nextPositions.set(courier.id, nextStopPosition);
+      nextTimestamps.set(courier.id, nowMs);
+      positionChanged = true;
+      queueArrivalUpdates();
     } else {
-      const elapsedMs = previousTimestamp ? nowMs - previousTimestamp : 1000;
-      const boundedElapsedMs = Math.min(Math.max(elapsedMs, 250), 3000);
-      const stepKm = (speedKmh * boundedElapsedMs) / 3600000;
-      const nextPosition = advanceAlongRoutePath(routePath, Math.min(stepKm, distanceKm));
-      nextPositions.set(courier.id, nextPosition ?? currentPosition);
+      const elapsedFromMs = previousTimestamp
+        ? Math.max(previousTimestamp, routeStartedAtMs || previousTimestamp)
+        : routeStartedAtMs || nowMs - SIMULATION_FALLBACK_STEP_MS;
+      const elapsedMs = nowMs - elapsedFromMs;
+      const boundedElapsedMs = Math.min(
+        Math.max(elapsedMs, SIMULATION_MIN_STEP_MS),
+        SIMULATION_BACKGROUND_CATCHUP_MS
+      );
+      const simulationSpeedKmh = speedKmh * Math.max(state.timeMultiplier || 1, 0.1);
+      const stepKm = (simulationSpeedKmh * boundedElapsedMs) / 3600000;
+      const reachedStop = stepKm >= Math.max(0, distanceKm - arrivalDistanceKm);
+
+      if (reachedStop) {
+        nextPositions.set(courier.id, nextStopPosition);
+        queueArrivalUpdates();
+      } else {
+        const nextPosition = advanceAlongRoutePath(routePath, stepKm);
+        nextPositions.set(courier.id, nextPosition ?? currentPosition);
+      }
+
       nextTimestamps.set(courier.id, nowMs);
       positionChanged = true;
     }

@@ -1,0 +1,63 @@
+﻿{
+    "url":  "http://127.0.0.1:5173/couriers?__codex_toolbar_verify=2",
+    "buttons":  [
+                    {
+                        "text":  "עמודות",
+                        "aria":  "עמודות",
+                        "title":  "הצג או הסתר עמודות",
+                        "row":  1,
+                        "parentClass":  "relative flex flex-nowrap items-center gap-1.5",
+                        "rect":  {
+                                     "x":  922,
+                                     "y":  115,
+                                     "w":  36,
+                                     "h":  36
+                                 }
+                    },
+                    {
+                        "text":  "ייצוא",
+                        "aria":  "ייצוא",
+                        "title":  "ייצוא",
+                        "row":  1,
+                        "parentClass":  "relative flex flex-nowrap items-center gap-1.5",
+                        "rect":  {
+                                     "x":  880,
+                                     "y":  115,
+                                     "w":  36,
+                                     "h":  36
+                                 }
+                    }
+                ],
+    "rows":  [
+                 {
+                     "i":  0,
+                     "text":  "שליחים הוסף שליח",
+                     "rect":  {
+                                  "x":  1,
+                                  "y":  40,
+                                  "w":  1206,
+                                  "h":  64
+                              }
+                 },
+                 {
+                     "i":  1,
+                     "text":  "סטטוס משלוחים",
+                     "rect":  {
+                                  "x":  1,
+                                  "y":  104,
+                                  "w":  1206,
+                                  "h":  57
+                              }
+                 },
+                 {
+                     "i":  2,
+                     "text":  "0 זמינים · 0 במשלוח · 0 במשמרת",
+                     "rect":  {
+                                  "x":  1,
+                                  "y":  161,
+                                  "w":  1206,
+                                  "h":  25
+                              }
+                 }
+             ]
+}

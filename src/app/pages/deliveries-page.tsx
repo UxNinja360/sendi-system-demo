@@ -121,7 +121,6 @@ type DeliveriesOverviewStats = {
   delivering: number;
   delivered: number;
   cancelled: number;
-  unassigned: number;
   revenue: number;
 };
 
@@ -134,7 +133,6 @@ const DeliveriesOverviewStrip: React.FC<{
     { label: 'ממתינים', value: stats.pending.toLocaleString('he-IL'), tone: 'warning' },
     { label: 'משובצים', value: stats.assigned.toLocaleString('he-IL') },
     { label: 'בדרך', value: stats.delivering.toLocaleString('he-IL') },
-    { label: 'ללא שליח', value: stats.unassigned.toLocaleString('he-IL'), tone: 'warning' },
     { label: 'נמסרו', value: stats.delivered.toLocaleString('he-IL'), tone: 'success' },
     { label: 'הכנסות', value: `₪${Math.round(stats.revenue).toLocaleString('he-IL')}` },
     ...(hasFilters ? [{ label: 'תוצאות', value: stats.filtered.toLocaleString('he-IL') }] : []),
@@ -470,7 +468,6 @@ export const DeliveriesPage: React.FC = () => {
       delivering,
       delivered,
       cancelled,
-      unassigned: filteredDeliveries.filter(d => !d.courierId && d.status !== 'delivered' && d.status !== 'cancelled').length,
       revenue: sumDeliveryMoney(
         filteredDeliveries.filter(d => d.status === 'delivered'),
         getDeliveryCustomerCharge,

@@ -108,12 +108,6 @@ export const LiveManager: React.FC = () => {
   }, [dispatch]);
   const buildDefaultStopIds = useCallback((deliveries: Delivery[]) => buildDefaultRouteStopIds(deliveries), []);
 
-  const openMobileSidebar = useCallback(() => {
-    if ((window as any).toggleMobileSidebar) {
-      (window as any).toggleMobileSidebar();
-    }
-  }, []);
-
   useEffect(() => {
     if (typeof window === 'undefined') return;
     window.localStorage.setItem(
@@ -504,7 +498,6 @@ export const LiveManager: React.FC = () => {
           <BottomAppBar
             activeTab={activeTab}
             onTabChange={setActiveTab}
-            onOpenMenu={openMobileSidebar}
           />
         </div>
 

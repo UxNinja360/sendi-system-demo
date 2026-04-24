@@ -1,15 +1,13 @@
-﻿import { Menu, Package, Users } from 'lucide-react';
+import { Package, Users } from 'lucide-react';
 
 interface BottomAppBarProps {
   activeTab: 'deliveries' | 'couriers';
   onTabChange: (tab: 'deliveries' | 'couriers') => void;
-  onOpenMenu?: () => void;
 }
 
 export default function BottomAppBar({
   activeTab,
   onTabChange,
-  onOpenMenu,
 }: BottomAppBarProps) {
   return (
     <div className="border-t border-[#e5e5e5] bg-white shadow-2xl dark:border-[#262626] dark:bg-[#171717]">
@@ -17,17 +15,6 @@ export default function BottomAppBar({
         className="flex items-center gap-2 px-3 py-3"
         style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
       >
-        {onOpenMenu ? (
-          <button
-            type="button"
-            onClick={onOpenMenu}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-[#737373] transition-colors hover:bg-[#f5f5f5] dark:text-[#a3a3a3] dark:hover:bg-[#232323]"
-            aria-label="פתח תפריט"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-        ) : null}
-
         <div className="flex min-w-0 flex-1 items-center justify-around gap-2">
           <button
             type="button"
@@ -67,4 +54,3 @@ export default function BottomAppBar({
     </div>
   );
 }
-

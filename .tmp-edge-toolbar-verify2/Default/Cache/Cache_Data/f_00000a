@@ -1,0 +1,257 @@
+import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=ec14390d"; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import { createBrowserRouter, Navigate } from "/node_modules/.vite/deps/react-router.js?v=ec14390d";
+import { AppLayout } from "/src/app/components/layout/app-layout.tsx";
+import { LoginPage } from "/src/app/pages/login-page.tsx";
+import { NotFoundPage } from "/src/app/pages/not-found-page.tsx";
+import { Dashboard } from "/src/app/pages/dashboard.tsx?t=1777071078587";
+import { WalletPage } from "/src/app/pages/wallet-page.tsx?t=1777071078587";
+import { LiveManager } from "/src/app/pages/live-manager.tsx";
+import { DeliveriesPage } from "/src/app/pages/deliveries-page.tsx?t=1777071078587";
+import { ReportsPage } from "/src/app/pages/reports-page.tsx?t=1777071078587";
+import { PerformancePage } from "/src/app/pages/performance-page.tsx?t=1777071078587";
+import { LogPage } from "/src/app/pages/log-page.tsx?t=1777071078587";
+import { DeliveryBalancePage } from "/src/app/pages/delivery-balance-page.tsx?t=1777071078587";
+import { CouriersPage } from "/src/app/pages/couriers-page.tsx?t=1777071078587";
+import { CouriersListPage } from "/src/app/pages/couriers-list-page.tsx?t=1777071078587";
+import { RestaurantsPage } from "/src/app/pages/restaurants-page.tsx?t=1777071078587";
+import { CustomersPage } from "/src/app/pages/customers-page.tsx?t=1777071078587";
+import { DeliveryDetailsPage } from "/src/app/pages/delivery-details-page.tsx";
+import { RestaurantDetailsPage } from "/src/app/pages/restaurant-details-page.tsx";
+import { CourierDetailsPage } from "/src/app/pages/courier-details-page.tsx";
+import { CustomerDetailsPage } from "/src/app/pages/customer-details-page.tsx";
+import { SettingsPage } from "/src/app/pages/settings-page.tsx?t=1777071078587";
+import { OperatingHoursPage } from "/src/app/pages/operating-hours-page.tsx?t=1777071078587";
+import { DeliveryZonesPage } from "/src/app/pages/delivery-zones-page.tsx";
+import { DistancePricingPage } from "/src/app/pages/distance-pricing-page.tsx?t=1777071078587";
+import { DeliveryProvider } from "/src/app/context/delivery.context.tsx";
+import { ThemeProvider } from "/src/app/context/theme.context.tsx";
+import { LanguageProvider } from "/src/app/context/language.context.tsx";
+import { getNavItemById } from "/src/app/app-navigation.ts";
+const routePath = (id) => getNavItemById(id)?.routePath ?? id;
+export const router = createBrowserRouter(
+  [
+    {
+      path: "/login",
+      element: /* @__PURE__ */ jsxDEV(LanguageProvider, { children: /* @__PURE__ */ jsxDEV(ThemeProvider, { children: /* @__PURE__ */ jsxDEV(LoginPage, {}, void 0, false, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+        lineNumber: 38,
+        columnNumber: 11
+      }, this) }, void 0, false, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+        lineNumber: 37,
+        columnNumber: 9
+      }, this) }, void 0, false, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+        lineNumber: 36,
+        columnNumber: 3
+      }, this)
+    },
+    {
+      path: "/",
+      element: /* @__PURE__ */ jsxDEV(LanguageProvider, { children: /* @__PURE__ */ jsxDEV(ThemeProvider, { children: /* @__PURE__ */ jsxDEV(DeliveryProvider, { children: /* @__PURE__ */ jsxDEV(AppLayout, {}, void 0, false, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+        lineNumber: 49,
+        columnNumber: 13
+      }, this) }, void 0, false, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+        lineNumber: 48,
+        columnNumber: 11
+      }, this) }, void 0, false, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+        lineNumber: 47,
+        columnNumber: 9
+      }, this) }, void 0, false, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+        lineNumber: 46,
+        columnNumber: 3
+      }, this),
+      children: [
+        {
+          index: true,
+          element: /* @__PURE__ */ jsxDEV(Navigate, { to: "/dashboard", replace: true }, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+            lineNumber: 57,
+            columnNumber: 14
+          }, this)
+        },
+        // === Core ===
+        {
+          path: routePath("dashboard"),
+          element: /* @__PURE__ */ jsxDEV(Dashboard, {}, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+            lineNumber: 62,
+            columnNumber: 14
+          }, this)
+        },
+        {
+          path: routePath("live"),
+          element: /* @__PURE__ */ jsxDEV(LiveManager, {}, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+            lineNumber: 66,
+            columnNumber: 14
+          }, this)
+        },
+        // === Data ===
+        {
+          path: routePath("deliveries"),
+          element: /* @__PURE__ */ jsxDEV(DeliveriesPage, {}, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+            lineNumber: 71,
+            columnNumber: 14
+          }, this)
+        },
+        {
+          path: routePath("reports"),
+          element: /* @__PURE__ */ jsxDEV(ReportsPage, {}, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+            lineNumber: 75,
+            columnNumber: 14
+          }, this)
+        },
+        {
+          path: routePath("performance"),
+          element: /* @__PURE__ */ jsxDEV(PerformancePage, {}, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+            lineNumber: 79,
+            columnNumber: 14
+          }, this)
+        },
+        {
+          path: routePath("log"),
+          element: /* @__PURE__ */ jsxDEV(LogPage, {}, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+            lineNumber: 83,
+            columnNumber: 14
+          }, this)
+        },
+        {
+          path: routePath("delivery-balance"),
+          element: /* @__PURE__ */ jsxDEV(DeliveryBalancePage, {}, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+            lineNumber: 87,
+            columnNumber: 14
+          }, this)
+        },
+        {
+          path: routePath("wallet"),
+          element: /* @__PURE__ */ jsxDEV(WalletPage, {}, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+            lineNumber: 91,
+            columnNumber: 14
+          }, this)
+        },
+        // === Entities ===
+        {
+          path: routePath("couriers"),
+          element: /* @__PURE__ */ jsxDEV(CouriersListPage, {}, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+            lineNumber: 96,
+            columnNumber: 14
+          }, this)
+        },
+        {
+          path: routePath("courier-shifts"),
+          element: /* @__PURE__ */ jsxDEV(CouriersPage, {}, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+            lineNumber: 100,
+            columnNumber: 14
+          }, this)
+        },
+        {
+          path: routePath("restaurants"),
+          element: /* @__PURE__ */ jsxDEV(RestaurantsPage, {}, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+            lineNumber: 104,
+            columnNumber: 14
+          }, this)
+        },
+        {
+          path: routePath("customers"),
+          element: /* @__PURE__ */ jsxDEV(CustomersPage, {}, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+            lineNumber: 108,
+            columnNumber: 14
+          }, this)
+        },
+        // === Entity Details ===
+        {
+          path: "delivery/:deliveryId",
+          element: /* @__PURE__ */ jsxDEV(DeliveryDetailsPage, {}, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+            lineNumber: 113,
+            columnNumber: 14
+          }, this)
+        },
+        {
+          path: "restaurant/:restaurantId",
+          element: /* @__PURE__ */ jsxDEV(RestaurantDetailsPage, {}, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+            lineNumber: 117,
+            columnNumber: 14
+          }, this)
+        },
+        {
+          path: "courier/:courierId",
+          element: /* @__PURE__ */ jsxDEV(CourierDetailsPage, {}, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+            lineNumber: 121,
+            columnNumber: 14
+          }, this)
+        },
+        {
+          path: "customer/:customerId",
+          element: /* @__PURE__ */ jsxDEV(CustomerDetailsPage, {}, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+            lineNumber: 125,
+            columnNumber: 14
+          }, this)
+        },
+        // === Business & Finance ===
+        // === Settings ===
+        {
+          path: routePath("settings"),
+          element: /* @__PURE__ */ jsxDEV(SettingsPage, {}, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+            lineNumber: 131,
+            columnNumber: 14
+          }, this)
+        },
+        {
+          path: routePath("hours"),
+          element: /* @__PURE__ */ jsxDEV(OperatingHoursPage, {}, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+            lineNumber: 135,
+            columnNumber: 14
+          }, this)
+        },
+        {
+          path: routePath("zones"),
+          element: /* @__PURE__ */ jsxDEV(DeliveryZonesPage, {}, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+            lineNumber: 139,
+            columnNumber: 14
+          }, this)
+        },
+        {
+          path: routePath("distance-pricing"),
+          element: /* @__PURE__ */ jsxDEV(DistancePricingPage, {}, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+            lineNumber: 143,
+            columnNumber: 14
+          }, this)
+        },
+        // === Catch-all ===
+        {
+          path: "*",
+          element: /* @__PURE__ */ jsxDEV(NotFoundPage, {}, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/routes.tsx",
+            lineNumber: 149,
+            columnNumber: 14
+          }, this)
+        }
+      ]
+    }
+  ]
+);
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJtYXBwaW5ncyI6IkFBcUNVO0FBckNWLFNBQVNBLHFCQUFxQkMsZ0JBQWdCO0FBQzlDLFNBQVNDLGlCQUFpQjtBQUMxQixTQUFTQyxpQkFBaUI7QUFDMUIsU0FBU0Msb0JBQW9CO0FBQzdCLFNBQVNDLGlCQUFpQjtBQUMxQixTQUFTQyxrQkFBa0I7QUFDM0IsU0FBU0MsbUJBQW1CO0FBQzVCLFNBQVNDLHNCQUFzQjtBQUMvQixTQUFTQyxtQkFBbUI7QUFDNUIsU0FBU0MsdUJBQXVCO0FBQ2hDLFNBQVNDLGVBQWU7QUFDeEIsU0FBU0MsMkJBQTJCO0FBQ3BDLFNBQVNDLG9CQUFvQjtBQUM3QixTQUFTQyx3QkFBd0I7QUFDakMsU0FBU0MsdUJBQXVCO0FBQ2hDLFNBQVNDLHFCQUFxQjtBQUM5QixTQUFTQywyQkFBMkI7QUFDcEMsU0FBU0MsNkJBQTZCO0FBQ3RDLFNBQVNDLDBCQUEwQjtBQUNuQyxTQUFTQywyQkFBMkI7QUFDcEMsU0FBU0Msb0JBQW9CO0FBQzdCLFNBQVNDLDBCQUEwQjtBQUNuQyxTQUFTQyx5QkFBeUI7QUFDbEMsU0FBU0MsMkJBQTJCO0FBQ3BDLFNBQVNDLHdCQUF3QjtBQUNqQyxTQUFTQyxxQkFBcUI7QUFDOUIsU0FBU0Msd0JBQXdCO0FBQ2pDLFNBQVNDLHNCQUFzQjtBQUUvQixNQUFNQyxZQUFZQSxDQUFDQyxPQUFlRixlQUFlRSxFQUFFLEdBQUdELGFBQWFDO0FBRTVELGFBQU1DLFNBQVMvQjtBQUFBQSxFQUFvQjtBQUFBLElBQ3hDO0FBQUEsTUFDRWdDLE1BQU07QUFBQSxNQUNOQyxTQUNFLHVCQUFDLG9CQUNDLGlDQUFDLGlCQUNDLGlDQUFDLGVBQUQ7QUFBQTtBQUFBO0FBQUE7QUFBQSxhQUFVLEtBRFo7QUFBQTtBQUFBO0FBQUE7QUFBQSxhQUVBLEtBSEY7QUFBQTtBQUFBO0FBQUE7QUFBQSxhQUlBO0FBQUEsSUFFSjtBQUFBLElBQ0E7QUFBQSxNQUNFRCxNQUFNO0FBQUEsTUFDTkMsU0FDRSx1QkFBQyxvQkFDQyxpQ0FBQyxpQkFDQyxpQ0FBQyxvQkFDQyxpQ0FBQyxlQUFEO0FBQUE7QUFBQTtBQUFBO0FBQUEsYUFBVSxLQURaO0FBQUE7QUFBQTtBQUFBO0FBQUEsYUFFQSxLQUhGO0FBQUE7QUFBQTtBQUFBO0FBQUEsYUFJQSxLQUxGO0FBQUE7QUFBQTtBQUFBO0FBQUEsYUFNQTtBQUFBLE1BRUZDLFVBQVU7QUFBQSxRQUNSO0FBQUEsVUFDRUMsT0FBTztBQUFBLFVBQ1BGLFNBQVMsdUJBQUMsWUFBUyxJQUFHLGNBQWEsU0FBTyxRQUFqQztBQUFBO0FBQUE7QUFBQTtBQUFBLGlCQUFpQztBQUFBLFFBQzVDO0FBQUE7QUFBQSxRQUVBO0FBQUEsVUFDRUQsTUFBTUgsVUFBVSxXQUFXO0FBQUEsVUFDM0JJLFNBQVMsdUJBQUMsZUFBRDtBQUFBO0FBQUE7QUFBQTtBQUFBLGlCQUFVO0FBQUEsUUFDckI7QUFBQSxRQUNBO0FBQUEsVUFDRUQsTUFBTUgsVUFBVSxNQUFNO0FBQUEsVUFDdEJJLFNBQVMsdUJBQUMsaUJBQUQ7QUFBQTtBQUFBO0FBQUE7QUFBQSxpQkFBWTtBQUFBLFFBQ3ZCO0FBQUE7QUFBQSxRQUVBO0FBQUEsVUFDRUQsTUFBTUgsVUFBVSxZQUFZO0FBQUEsVUFDNUJJLFNBQVMsdUJBQUMsb0JBQUQ7QUFBQTtBQUFBO0FBQUE7QUFBQSxpQkFBZTtBQUFBLFFBQzFCO0FBQUEsUUFDQTtBQUFBLFVBQ0VELE1BQU1ILFVBQVUsU0FBUztBQUFBLFVBQ3pCSSxTQUFTLHVCQUFDLGlCQUFEO0FBQUE7QUFBQTtBQUFBO0FBQUEsaUJBQVk7QUFBQSxRQUN2QjtBQUFBLFFBQ0E7QUFBQSxVQUNFRCxNQUFNSCxVQUFVLGFBQWE7QUFBQSxVQUM3QkksU0FBUyx1QkFBQyxxQkFBRDtBQUFBO0FBQUE7QUFBQTtBQUFBLGlCQUFnQjtBQUFBLFFBQzNCO0FBQUEsUUFDQTtBQUFBLFVBQ0VELE1BQU1ILFVBQVUsS0FBSztBQUFBLFVBQ3JCSSxTQUFTLHVCQUFDLGFBQUQ7QUFBQTtBQUFBO0FBQUE7QUFBQSxpQkFBUTtBQUFBLFFBQ25CO0FBQUEsUUFDQTtBQUFBLFVBQ0VELE1BQU1ILFVBQVUsa0JBQWtCO0FBQUEsVUFDbENJLFNBQVMsdUJBQUMseUJBQUQ7QUFBQTtBQUFBO0FBQUE7QUFBQSxpQkFBb0I7QUFBQSxRQUMvQjtBQUFBLFFBQ0E7QUFBQSxVQUNFRCxNQUFNSCxVQUFVLFFBQVE7QUFBQSxVQUN4QkksU0FBUyx1QkFBQyxnQkFBRDtBQUFBO0FBQUE7QUFBQTtBQUFBLGlCQUFXO0FBQUEsUUFDdEI7QUFBQTtBQUFBLFFBRUE7QUFBQSxVQUNFRCxNQUFNSCxVQUFVLFVBQVU7QUFBQSxVQUMxQkksU0FBUyx1QkFBQyxzQkFBRDtBQUFBO0FBQUE7QUFBQTtBQUFBLGlCQUFpQjtBQUFBLFFBQzVCO0FBQUEsUUFDQTtBQUFBLFVBQ0VELE1BQU1ILFVBQVUsZ0JBQWdCO0FBQUEsVUFDaENJLFNBQVMsdUJBQUMsa0JBQUQ7QUFBQTtBQUFBO0FBQUE7QUFBQSxpQkFBYTtBQUFBLFFBQ3hCO0FBQUEsUUFDQTtBQUFBLFVBQ0VELE1BQU1ILFVBQVUsYUFBYTtBQUFBLFVBQzdCSSxTQUFTLHVCQUFDLHFCQUFEO0FBQUE7QUFBQTtBQUFBO0FBQUEsaUJBQWdCO0FBQUEsUUFDM0I7QUFBQSxRQUNBO0FBQUEsVUFDRUQsTUFBTUgsVUFBVSxXQUFXO0FBQUEsVUFDM0JJLFNBQVMsdUJBQUMsbUJBQUQ7QUFBQTtBQUFBO0FBQUE7QUFBQSxpQkFBYztBQUFBLFFBQ3pCO0FBQUE7QUFBQSxRQUVBO0FBQUEsVUFDRUQsTUFBTTtBQUFBLFVBQ05DLFNBQVMsdUJBQUMseUJBQUQ7QUFBQTtBQUFBO0FBQUE7QUFBQSxpQkFBb0I7QUFBQSxRQUMvQjtBQUFBLFFBQ0E7QUFBQSxVQUNFRCxNQUFNO0FBQUEsVUFDTkMsU0FBUyx1QkFBQywyQkFBRDtBQUFBO0FBQUE7QUFBQTtBQUFBLGlCQUFzQjtBQUFBLFFBQ2pDO0FBQUEsUUFDQTtBQUFBLFVBQ0VELE1BQU07QUFBQSxVQUNOQyxTQUFTLHVCQUFDLHdCQUFEO0FBQUE7QUFBQTtBQUFBO0FBQUEsaUJBQW1CO0FBQUEsUUFDOUI7QUFBQSxRQUNBO0FBQUEsVUFDRUQsTUFBTTtBQUFBLFVBQ05DLFNBQVMsdUJBQUMseUJBQUQ7QUFBQTtBQUFBO0FBQUE7QUFBQSxpQkFBb0I7QUFBQSxRQUMvQjtBQUFBO0FBQUE7QUFBQSxRQUdBO0FBQUEsVUFDRUQsTUFBTUgsVUFBVSxVQUFVO0FBQUEsVUFDMUJJLFNBQVMsdUJBQUMsa0JBQUQ7QUFBQTtBQUFBO0FBQUE7QUFBQSxpQkFBYTtBQUFBLFFBQ3hCO0FBQUEsUUFDQTtBQUFBLFVBQ0VELE1BQU1ILFVBQVUsT0FBTztBQUFBLFVBQ3ZCSSxTQUFTLHVCQUFDLHdCQUFEO0FBQUE7QUFBQTtBQUFBO0FBQUEsaUJBQW1CO0FBQUEsUUFDOUI7QUFBQSxRQUNBO0FBQUEsVUFDRUQsTUFBTUgsVUFBVSxPQUFPO0FBQUEsVUFDdkJJLFNBQVMsdUJBQUMsdUJBQUQ7QUFBQTtBQUFBO0FBQUE7QUFBQSxpQkFBa0I7QUFBQSxRQUM3QjtBQUFBLFFBQ0E7QUFBQSxVQUNFRCxNQUFNSCxVQUFVLGtCQUFrQjtBQUFBLFVBQ2xDSSxTQUFTLHVCQUFDLHlCQUFEO0FBQUE7QUFBQTtBQUFBO0FBQUEsaUJBQW9CO0FBQUEsUUFDL0I7QUFBQTtBQUFBLFFBR0E7QUFBQSxVQUNFRCxNQUFNO0FBQUEsVUFDTkMsU0FBUyx1QkFBQyxrQkFBRDtBQUFBO0FBQUE7QUFBQTtBQUFBLGlCQUFhO0FBQUEsUUFDeEI7QUFBQSxNQUFDO0FBQUEsSUFFTDtBQUFBLEVBQUM7QUFDRiIsIm5hbWVzIjpbImNyZWF0ZUJyb3dzZXJSb3V0ZXIiLCJOYXZpZ2F0ZSIsIkFwcExheW91dCIsIkxvZ2luUGFnZSIsIk5vdEZvdW5kUGFnZSIsIkRhc2hib2FyZCIsIldhbGxldFBhZ2UiLCJMaXZlTWFuYWdlciIsIkRlbGl2ZXJpZXNQYWdlIiwiUmVwb3J0c1BhZ2UiLCJQZXJmb3JtYW5jZVBhZ2UiLCJMb2dQYWdlIiwiRGVsaXZlcnlCYWxhbmNlUGFnZSIsIkNvdXJpZXJzUGFnZSIsIkNvdXJpZXJzTGlzdFBhZ2UiLCJSZXN0YXVyYW50c1BhZ2UiLCJDdXN0b21lcnNQYWdlIiwiRGVsaXZlcnlEZXRhaWxzUGFnZSIsIlJlc3RhdXJhbnREZXRhaWxzUGFnZSIsIkNvdXJpZXJEZXRhaWxzUGFnZSIsIkN1c3RvbWVyRGV0YWlsc1BhZ2UiLCJTZXR0aW5nc1BhZ2UiLCJPcGVyYXRpbmdIb3Vyc1BhZ2UiLCJEZWxpdmVyeVpvbmVzUGFnZSIsIkRpc3RhbmNlUHJpY2luZ1BhZ2UiLCJEZWxpdmVyeVByb3ZpZGVyIiwiVGhlbWVQcm92aWRlciIsIkxhbmd1YWdlUHJvdmlkZXIiLCJnZXROYXZJdGVtQnlJZCIsInJvdXRlUGF0aCIsImlkIiwicm91dGVyIiwicGF0aCIsImVsZW1lbnQiLCJjaGlsZHJlbiIsImluZGV4Il0sImlnbm9yZUxpc3QiOltdLCJzb3VyY2VzIjpbInJvdXRlcy50c3giXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgY3JlYXRlQnJvd3NlclJvdXRlciwgTmF2aWdhdGUgfSBmcm9tICdyZWFjdC1yb3V0ZXInO1xyXG5pbXBvcnQgeyBBcHBMYXlvdXQgfSBmcm9tICcuL2NvbXBvbmVudHMvbGF5b3V0L2FwcC1sYXlvdXQnO1xyXG5pbXBvcnQgeyBMb2dpblBhZ2UgfSBmcm9tICcuL3BhZ2VzL2xvZ2luLXBhZ2UnO1xuaW1wb3J0IHsgTm90Rm91bmRQYWdlIH0gZnJvbSAnLi9wYWdlcy9ub3QtZm91bmQtcGFnZSc7XG5pbXBvcnQgeyBEYXNoYm9hcmQgfSBmcm9tICcuL3BhZ2VzL2Rhc2hib2FyZCc7XG5pbXBvcnQgeyBXYWxsZXRQYWdlIH0gZnJvbSAnLi9wYWdlcy93YWxsZXQtcGFnZSc7XG5pbXBvcnQgeyBMaXZlTWFuYWdlciB9IGZyb20gJy4vcGFnZXMvbGl2ZS1tYW5hZ2VyJztcbmltcG9ydCB7IERlbGl2ZXJpZXNQYWdlIH0gZnJvbSAnLi9wYWdlcy9kZWxpdmVyaWVzLXBhZ2UnO1xuaW1wb3J0IHsgUmVwb3J0c1BhZ2UgfSBmcm9tICcuL3BhZ2VzL3JlcG9ydHMtcGFnZSc7XG5pbXBvcnQgeyBQZXJmb3JtYW5jZVBhZ2UgfSBmcm9tICcuL3BhZ2VzL3BlcmZvcm1hbmNlLXBhZ2UnO1xuaW1wb3J0IHsgTG9nUGFnZSB9IGZyb20gJy4vcGFnZXMvbG9nLXBhZ2UnO1xuaW1wb3J0IHsgRGVsaXZlcnlCYWxhbmNlUGFnZSB9IGZyb20gJy4vcGFnZXMvZGVsaXZlcnktYmFsYW5jZS1wYWdlJztcbmltcG9ydCB7IENvdXJpZXJzUGFnZSB9IGZyb20gJy4vcGFnZXMvY291cmllcnMtcGFnZSc7XG5pbXBvcnQgeyBDb3VyaWVyc0xpc3RQYWdlIH0gZnJvbSAnLi9wYWdlcy9jb3VyaWVycy1saXN0LXBhZ2UnO1xuaW1wb3J0IHsgUmVzdGF1cmFudHNQYWdlIH0gZnJvbSAnLi9wYWdlcy9yZXN0YXVyYW50cy1wYWdlJztcbmltcG9ydCB7IEN1c3RvbWVyc1BhZ2UgfSBmcm9tICcuL3BhZ2VzL2N1c3RvbWVycy1wYWdlJztcbmltcG9ydCB7IERlbGl2ZXJ5RGV0YWlsc1BhZ2UgfSBmcm9tICcuL3BhZ2VzL2RlbGl2ZXJ5LWRldGFpbHMtcGFnZSc7XG5pbXBvcnQgeyBSZXN0YXVyYW50RGV0YWlsc1BhZ2UgfSBmcm9tICcuL3BhZ2VzL3Jlc3RhdXJhbnQtZGV0YWlscy1wYWdlJztcbmltcG9ydCB7IENvdXJpZXJEZXRhaWxzUGFnZSB9IGZyb20gJy4vcGFnZXMvY291cmllci1kZXRhaWxzLXBhZ2UnO1xuaW1wb3J0IHsgQ3VzdG9tZXJEZXRhaWxzUGFnZSB9IGZyb20gJy4vcGFnZXMvY3VzdG9tZXItZGV0YWlscy1wYWdlJztcbmltcG9ydCB7IFNldHRpbmdzUGFnZSB9IGZyb20gJy4vcGFnZXMvc2V0dGluZ3MtcGFnZSc7XG5pbXBvcnQgeyBPcGVyYXRpbmdIb3Vyc1BhZ2UgfSBmcm9tICcuL3BhZ2VzL29wZXJhdGluZy1ob3Vycy1wYWdlJztcbmltcG9ydCB7IERlbGl2ZXJ5Wm9uZXNQYWdlIH0gZnJvbSAnLi9wYWdlcy9kZWxpdmVyeS16b25lcy1wYWdlJztcbmltcG9ydCB7IERpc3RhbmNlUHJpY2luZ1BhZ2UgfSBmcm9tICcuL3BhZ2VzL2Rpc3RhbmNlLXByaWNpbmctcGFnZSc7XG5pbXBvcnQgeyBEZWxpdmVyeVByb3ZpZGVyIH0gZnJvbSAnLi9jb250ZXh0L2RlbGl2ZXJ5LmNvbnRleHQnO1xuaW1wb3J0IHsgVGhlbWVQcm92aWRlciB9IGZyb20gJy4vY29udGV4dC90aGVtZS5jb250ZXh0JztcbmltcG9ydCB7IExhbmd1YWdlUHJvdmlkZXIgfSBmcm9tICcuL2NvbnRleHQvbGFuZ3VhZ2UuY29udGV4dCc7XG5pbXBvcnQgeyBnZXROYXZJdGVtQnlJZCB9IGZyb20gJy4vYXBwLW5hdmlnYXRpb24nO1xuXG5jb25zdCByb3V0ZVBhdGggPSAoaWQ6IHN0cmluZykgPT4gZ2V0TmF2SXRlbUJ5SWQoaWQpPy5yb3V0ZVBhdGggPz8gaWQ7XG5cclxuZXhwb3J0IGNvbnN0IHJvdXRlciA9IGNyZWF0ZUJyb3dzZXJSb3V0ZXIoW1xyXG4gIHtcclxuICAgIHBhdGg6ICcvbG9naW4nLFxyXG4gICAgZWxlbWVudDogKFxyXG4gICAgICA8TGFuZ3VhZ2VQcm92aWRlcj5cclxuICAgICAgICA8VGhlbWVQcm92aWRlcj5cclxuICAgICAgICAgIDxMb2dpblBhZ2UgLz5cclxuICAgICAgICA8L1RoZW1lUHJvdmlkZXI+XHJcbiAgICAgIDwvTGFuZ3VhZ2VQcm92aWRlcj5cclxuICAgICksXHJcbiAgfSxcclxuICB7XHJcbiAgICBwYXRoOiAnLycsXHJcbiAgICBlbGVtZW50OiAoXHJcbiAgICAgIDxMYW5ndWFnZVByb3ZpZGVyPlxyXG4gICAgICAgIDxUaGVtZVByb3ZpZGVyPlxyXG4gICAgICAgICAgPERlbGl2ZXJ5UHJvdmlkZXI+XHJcbiAgICAgICAgICAgIDxBcHBMYXlvdXQgLz5cclxuICAgICAgICAgIDwvRGVsaXZlcnlQcm92aWRlcj5cclxuICAgICAgICA8L1RoZW1lUHJvdmlkZXI+XHJcbiAgICAgIDwvTGFuZ3VhZ2VQcm92aWRlcj5cclxuICAgICksXHJcbiAgICBjaGlsZHJlbjogW1xyXG4gICAgICB7XHJcbiAgICAgICAgaW5kZXg6IHRydWUsXHJcbiAgICAgICAgZWxlbWVudDogPE5hdmlnYXRlIHRvPVwiL2Rhc2hib2FyZFwiIHJlcGxhY2UgLz4sXHJcbiAgICAgIH0sXHJcbiAgICAgIC8vID09PSBDb3JlID09PVxuICAgICAge1xuICAgICAgICBwYXRoOiByb3V0ZVBhdGgoJ2Rhc2hib2FyZCcpLFxuICAgICAgICBlbGVtZW50OiA8RGFzaGJvYXJkIC8+LFxuICAgICAgfSxcbiAgICAgIHtcbiAgICAgICAgcGF0aDogcm91dGVQYXRoKCdsaXZlJyksXG4gICAgICAgIGVsZW1lbnQ6IDxMaXZlTWFuYWdlciAvPixcbiAgICAgIH0sXG4gICAgICAvLyA9PT0gRGF0YSA9PT1cbiAgICAgIHtcbiAgICAgICAgcGF0aDogcm91dGVQYXRoKCdkZWxpdmVyaWVzJyksXG4gICAgICAgIGVsZW1lbnQ6IDxEZWxpdmVyaWVzUGFnZSAvPixcbiAgICAgIH0sXG4gICAgICB7XG4gICAgICAgIHBhdGg6IHJvdXRlUGF0aCgncmVwb3J0cycpLFxuICAgICAgICBlbGVtZW50OiA8UmVwb3J0c1BhZ2UgLz4sXG4gICAgICB9LFxuICAgICAge1xuICAgICAgICBwYXRoOiByb3V0ZVBhdGgoJ3BlcmZvcm1hbmNlJyksXG4gICAgICAgIGVsZW1lbnQ6IDxQZXJmb3JtYW5jZVBhZ2UgLz4sXG4gICAgICB9LFxuICAgICAge1xuICAgICAgICBwYXRoOiByb3V0ZVBhdGgoJ2xvZycpLFxuICAgICAgICBlbGVtZW50OiA8TG9nUGFnZSAvPixcbiAgICAgIH0sXG4gICAgICB7XG4gICAgICAgIHBhdGg6IHJvdXRlUGF0aCgnZGVsaXZlcnktYmFsYW5jZScpLFxuICAgICAgICBlbGVtZW50OiA8RGVsaXZlcnlCYWxhbmNlUGFnZSAvPixcbiAgICAgIH0sXG4gICAgICB7XG4gICAgICAgIHBhdGg6IHJvdXRlUGF0aCgnd2FsbGV0JyksXG4gICAgICAgIGVsZW1lbnQ6IDxXYWxsZXRQYWdlIC8+LFxuICAgICAgfSxcbiAgICAgIC8vID09PSBFbnRpdGllcyA9PT1cbiAgICAgIHtcbiAgICAgICAgcGF0aDogcm91dGVQYXRoKCdjb3VyaWVycycpLFxuICAgICAgICBlbGVtZW50OiA8Q291cmllcnNMaXN0UGFnZSAvPixcbiAgICAgIH0sXG4gICAgICB7XG4gICAgICAgIHBhdGg6IHJvdXRlUGF0aCgnY291cmllci1zaGlmdHMnKSxcbiAgICAgICAgZWxlbWVudDogPENvdXJpZXJzUGFnZSAvPixcbiAgICAgIH0sXG4gICAgICB7XG4gICAgICAgIHBhdGg6IHJvdXRlUGF0aCgncmVzdGF1cmFudHMnKSxcbiAgICAgICAgZWxlbWVudDogPFJlc3RhdXJhbnRzUGFnZSAvPixcbiAgICAgIH0sXG4gICAgICB7XG4gICAgICAgIHBhdGg6IHJvdXRlUGF0aCgnY3VzdG9tZXJzJyksXG4gICAgICAgIGVsZW1lbnQ6IDxDdXN0b21lcnNQYWdlIC8+LFxuICAgICAgfSxcbiAgICAgIC8vID09PSBFbnRpdHkgRGV0YWlscyA9PT1cclxuICAgICAge1xyXG4gICAgICAgIHBhdGg6ICdkZWxpdmVyeS86ZGVsaXZlcnlJZCcsXHJcbiAgICAgICAgZWxlbWVudDogPERlbGl2ZXJ5RGV0YWlsc1BhZ2UgLz4sXHJcbiAgICAgIH0sXHJcbiAgICAgIHtcclxuICAgICAgICBwYXRoOiAncmVzdGF1cmFudC86cmVzdGF1cmFudElkJyxcclxuICAgICAgICBlbGVtZW50OiA8UmVzdGF1cmFudERldGFpbHNQYWdlIC8+LFxyXG4gICAgICB9LFxyXG4gICAgICB7XHJcbiAgICAgICAgcGF0aDogJ2NvdXJpZXIvOmNvdXJpZXJJZCcsXHJcbiAgICAgICAgZWxlbWVudDogPENvdXJpZXJEZXRhaWxzUGFnZSAvPixcclxuICAgICAgfSxcclxuICAgICAge1xyXG4gICAgICAgIHBhdGg6ICdjdXN0b21lci86Y3VzdG9tZXJJZCcsXHJcbiAgICAgICAgZWxlbWVudDogPEN1c3RvbWVyRGV0YWlsc1BhZ2UgLz4sXHJcbiAgICAgIH0sXHJcbiAgICAgIC8vID09PSBCdXNpbmVzcyAmIEZpbmFuY2UgPT09XG4gICAgICAvLyA9PT0gU2V0dGluZ3MgPT09XG4gICAgICB7XG4gICAgICAgIHBhdGg6IHJvdXRlUGF0aCgnc2V0dGluZ3MnKSxcbiAgICAgICAgZWxlbWVudDogPFNldHRpbmdzUGFnZSAvPixcbiAgICAgIH0sXG4gICAgICB7XG4gICAgICAgIHBhdGg6IHJvdXRlUGF0aCgnaG91cnMnKSxcbiAgICAgICAgZWxlbWVudDogPE9wZXJhdGluZ0hvdXJzUGFnZSAvPixcbiAgICAgIH0sXG4gICAgICB7XG4gICAgICAgIHBhdGg6IHJvdXRlUGF0aCgnem9uZXMnKSxcbiAgICAgICAgZWxlbWVudDogPERlbGl2ZXJ5Wm9uZXNQYWdlIC8+LFxuICAgICAgfSxcbiAgICAgIHtcbiAgICAgICAgcGF0aDogcm91dGVQYXRoKCdkaXN0YW5jZS1wcmljaW5nJyksXG4gICAgICAgIGVsZW1lbnQ6IDxEaXN0YW5jZVByaWNpbmdQYWdlIC8+LFxuICAgICAgfSxcblxyXG4gICAgICAvLyA9PT0gQ2F0Y2gtYWxsID09PVxuICAgICAge1xyXG4gICAgICAgIHBhdGg6ICcqJyxcclxuICAgICAgICBlbGVtZW50OiA8Tm90Rm91bmRQYWdlIC8+LFxyXG4gICAgICB9LFxyXG4gICAgXSxcclxuICB9LFxyXG5dKTtcclxuIl0sImZpbGUiOiJDOi9Vc2Vycy9yZWFsYS9PbmVEcml2ZS9EZXNrdG9wL3NlbmRpL3NlLmlvIFNZU1RFTSBERU1PL3NyYy9hcHAvcm91dGVzLnRzeCJ9

@@ -1,0 +1,383 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/@fs/C:\\Users\\reala\\OneDrive\\Desktop\\sendi\\se.io SYSTEM DEMO\\src\\app\\components\\ui\\skeletons\\finance-skeleton.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=ec14390d"; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+export const FinanceSkeleton = () => {
+  return /* @__PURE__ */ jsxDEV("div", { className: "h-full flex flex-col bg-[#fafafa] dark:bg-[#0a0a0a]", children: [
+    /* @__PURE__ */ jsxDEV("div", { className: "px-8 pt-8", children: /* @__PURE__ */ jsxDEV("div", { className: "flex gap-2 border-b border-[#e5e5e5] dark:border-[#262626]", children: [
+      /* @__PURE__ */ jsxDEV("div", { className: "h-10 w-24 skeleton mb-[-2px]" }, void 0, false, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+        lineNumber: 28,
+        columnNumber: 11
+      }, this),
+      /* @__PURE__ */ jsxDEV("div", { className: "h-10 w-24 skeleton mb-[-2px]" }, void 0, false, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+        lineNumber: 29,
+        columnNumber: 11
+      }, this),
+      /* @__PURE__ */ jsxDEV("div", { className: "h-10 w-24 skeleton mb-[-2px]" }, void 0, false, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+        lineNumber: 30,
+        columnNumber: 11
+      }, this),
+      /* @__PURE__ */ jsxDEV("div", { className: "h-10 w-24 skeleton mb-[-2px]" }, void 0, false, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+        lineNumber: 31,
+        columnNumber: 11
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+      lineNumber: 27,
+      columnNumber: 9
+    }, this) }, void 0, false, {
+      fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+      lineNumber: 26,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV("div", { className: "flex-1 overflow-y-auto p-8", children: /* @__PURE__ */ jsxDEV("div", { className: "max-w-5xl mx-auto space-y-8", children: [
+      /* @__PURE__ */ jsxDEV("div", { className: "grid grid-cols-1 md:grid-cols-3 gap-6", children: [
+        /* @__PURE__ */ jsxDEV("div", { className: "md:col-span-2 bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] overflow-hidden", children: [
+          /* @__PURE__ */ jsxDEV("div", { className: "p-4", children: /* @__PURE__ */ jsxDEV("div", { className: "flex justify-between items-center", children: [
+            /* @__PURE__ */ jsxDEV("div", { className: "space-y-3", children: [
+              /* @__PURE__ */ jsxDEV("div", { className: "h-4 w-40 skeleton" }, void 0, false, {
+                fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+                lineNumber: 45,
+                columnNumber: 21
+              }, this),
+              /* @__PURE__ */ jsxDEV("div", { className: "h-9 w-32 skeleton" }, void 0, false, {
+                fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+                lineNumber: 46,
+                columnNumber: 21
+              }, this)
+            ] }, void 0, true, {
+              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+              lineNumber: 44,
+              columnNumber: 19
+            }, this),
+            /* @__PURE__ */ jsxDEV("div", { className: "size-11 rounded-full skeleton" }, void 0, false, {
+              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+              lineNumber: 48,
+              columnNumber: 19
+            }, this)
+          ] }, void 0, true, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+            lineNumber: 43,
+            columnNumber: 17
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+            lineNumber: 42,
+            columnNumber: 15
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { className: "h-10 w-full bg-[#fafafa] dark:bg-[#0a0a0a] border-t border-[#e5e5e5] dark:border-[#262626]" }, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+            lineNumber: 51,
+            columnNumber: 15
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+          lineNumber: 41,
+          columnNumber: 13
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] p-5", children: /* @__PURE__ */ jsxDEV("div", { className: "flex flex-col items-center space-y-3", children: [
+          /* @__PURE__ */ jsxDEV("div", { className: "size-9 rounded-full skeleton" }, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+            lineNumber: 57,
+            columnNumber: 17
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { className: "h-3 w-24 skeleton" }, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+            lineNumber: 58,
+            columnNumber: 17
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { className: "h-8 w-20 skeleton" }, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+            lineNumber: 59,
+            columnNumber: 17
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+          lineNumber: 56,
+          columnNumber: 15
+        }, this) }, void 0, false, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+          lineNumber: 55,
+          columnNumber: 13
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+        lineNumber: 39,
+        columnNumber: 11
+      }, this),
+      /* @__PURE__ */ jsxDEV("div", { className: "bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] p-6", children: /* @__PURE__ */ jsxDEV("div", { className: "space-y-6", children: [
+        /* @__PURE__ */ jsxDEV("div", { className: "flex items-center justify-between", children: [
+          /* @__PURE__ */ jsxDEV("div", { className: "h-6 w-48 skeleton" }, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+            lineNumber: 69,
+            columnNumber: 17
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { className: "size-10 rounded-full skeleton" }, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+            lineNumber: 70,
+            columnNumber: 17
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+          lineNumber: 68,
+          columnNumber: 15
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "text-center space-y-2", children: [
+          /* @__PURE__ */ jsxDEV("div", { className: "h-4 w-32 skeleton mx-auto" }, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+            lineNumber: 75,
+            columnNumber: 17
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { className: "h-16 w-48 skeleton mx-auto" }, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+            lineNumber: 76,
+            columnNumber: 17
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+          lineNumber: 74,
+          columnNumber: 15
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "space-y-3", children: [
+          /* @__PURE__ */ jsxDEV("div", { className: "h-2 w-full skeleton rounded-full" }, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+            lineNumber: 81,
+            columnNumber: 17
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { className: "flex justify-between", children: [
+            /* @__PURE__ */ jsxDEV("div", { className: "h-3 w-16 skeleton" }, void 0, false, {
+              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+              lineNumber: 83,
+              columnNumber: 19
+            }, this),
+            /* @__PURE__ */ jsxDEV("div", { className: "h-3 w-20 skeleton" }, void 0, false, {
+              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+              lineNumber: 84,
+              columnNumber: 19
+            }, this)
+          ] }, void 0, true, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+            lineNumber: 82,
+            columnNumber: 17
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+          lineNumber: 80,
+          columnNumber: 15
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "flex gap-3", children: [
+          /* @__PURE__ */ jsxDEV("div", { className: "h-10 w-10 skeleton rounded-lg" }, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+            lineNumber: 90,
+            columnNumber: 17
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { className: "h-10 w-10 skeleton rounded-lg" }, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+            lineNumber: 91,
+            columnNumber: 17
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { className: "h-10 w-10 skeleton rounded-lg" }, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+            lineNumber: 92,
+            columnNumber: 17
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+          lineNumber: 89,
+          columnNumber: 15
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "bg-[#fafafa] dark:bg-[#0a0a0a] rounded-xl p-4 space-y-3", children: [
+          /* @__PURE__ */ jsxDEV("div", { className: "flex justify-between", children: [
+            /* @__PURE__ */ jsxDEV("div", { className: "h-4 w-24 skeleton" }, void 0, false, {
+              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+              lineNumber: 98,
+              columnNumber: 19
+            }, this),
+            /* @__PURE__ */ jsxDEV("div", { className: "h-4 w-20 skeleton" }, void 0, false, {
+              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+              lineNumber: 99,
+              columnNumber: 19
+            }, this)
+          ] }, void 0, true, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+            lineNumber: 97,
+            columnNumber: 17
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { className: "flex justify-between", children: [
+            /* @__PURE__ */ jsxDEV("div", { className: "h-4 w-32 skeleton" }, void 0, false, {
+              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+              lineNumber: 102,
+              columnNumber: 19
+            }, this),
+            /* @__PURE__ */ jsxDEV("div", { className: "h-4 w-16 skeleton" }, void 0, false, {
+              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+              lineNumber: 103,
+              columnNumber: 19
+            }, this)
+          ] }, void 0, true, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+            lineNumber: 101,
+            columnNumber: 17
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { className: "h-px w-full bg-[#e5e5e5] dark:bg-[#262626]" }, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+            lineNumber: 105,
+            columnNumber: 17
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { className: "flex justify-between", children: [
+            /* @__PURE__ */ jsxDEV("div", { className: "h-5 w-20 skeleton" }, void 0, false, {
+              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+              lineNumber: 107,
+              columnNumber: 19
+            }, this),
+            /* @__PURE__ */ jsxDEV("div", { className: "h-6 w-28 skeleton" }, void 0, false, {
+              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+              lineNumber: 108,
+              columnNumber: 19
+            }, this)
+          ] }, void 0, true, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+            lineNumber: 106,
+            columnNumber: 17
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+          lineNumber: 96,
+          columnNumber: 15
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "h-12 w-full skeleton rounded-xl" }, void 0, false, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+          lineNumber: 113,
+          columnNumber: 15
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+        lineNumber: 66,
+        columnNumber: 13
+      }, this) }, void 0, false, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+        lineNumber: 65,
+        columnNumber: 11
+      }, this),
+      /* @__PURE__ */ jsxDEV("div", { children: [
+        /* @__PURE__ */ jsxDEV("div", { className: "h-6 w-40 skeleton mb-4" }, void 0, false, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+          lineNumber: 119,
+          columnNumber: 13
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "grid grid-cols-1 md:grid-cols-3 gap-4", children: [1, 2, 3].map(
+          (i) => /* @__PURE__ */ jsxDEV(
+            "div",
+            {
+              className: "bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] p-6",
+              children: /* @__PURE__ */ jsxDEV("div", { className: "space-y-4", children: [
+                /* @__PURE__ */ jsxDEV("div", { className: "h-5 w-24 skeleton" }, void 0, false, {
+                  fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+                  lineNumber: 127,
+                  columnNumber: 21
+                }, this),
+                /* @__PURE__ */ jsxDEV("div", { className: "h-10 w-32 skeleton" }, void 0, false, {
+                  fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+                  lineNumber: 128,
+                  columnNumber: 21
+                }, this),
+                /* @__PURE__ */ jsxDEV("div", { className: "space-y-2", children: [
+                  /* @__PURE__ */ jsxDEV("div", { className: "h-3 w-full skeleton" }, void 0, false, {
+                    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+                    lineNumber: 130,
+                    columnNumber: 23
+                  }, this),
+                  /* @__PURE__ */ jsxDEV("div", { className: "h-3 w-full skeleton" }, void 0, false, {
+                    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+                    lineNumber: 131,
+                    columnNumber: 23
+                  }, this),
+                  /* @__PURE__ */ jsxDEV("div", { className: "h-3 w-3/4 skeleton" }, void 0, false, {
+                    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+                    lineNumber: 132,
+                    columnNumber: 23
+                  }, this)
+                ] }, void 0, true, {
+                  fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+                  lineNumber: 129,
+                  columnNumber: 21
+                }, this),
+                /* @__PURE__ */ jsxDEV("div", { className: "h-10 w-full skeleton rounded-xl" }, void 0, false, {
+                  fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+                  lineNumber: 134,
+                  columnNumber: 21
+                }, this)
+              ] }, void 0, true, {
+                fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+                lineNumber: 126,
+                columnNumber: 19
+              }, this)
+            },
+            i,
+            false,
+            {
+              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+              lineNumber: 122,
+              columnNumber: 15
+            },
+            this
+          )
+        ) }, void 0, false, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+          lineNumber: 120,
+          columnNumber: 13
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+        lineNumber: 118,
+        columnNumber: 11
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+      lineNumber: 37,
+      columnNumber: 9
+    }, this) }, void 0, false, {
+      fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+      lineNumber: 36,
+      columnNumber: 7
+    }, this)
+  ] }, void 0, true, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx",
+    lineNumber: 24,
+    columnNumber: 5
+  }, this);
+};
+_c = FinanceSkeleton;
+var _c;
+$RefreshReg$(_c, "FinanceSkeleton");
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/components/ui/skeletons/finance-skeleton.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,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ZjtBQUFBO0FBQUE7QUFBQTtBQUFBLHlCQUFvQztBQUFBLHFCQUh0QztBQUFBO0FBQUE7QUFBQTtBQUFBLHVCQUlBO0FBQUEsZ0JBQ0EsdUJBQUMsU0FBSSxXQUFVLHFDQUFmO0FBQUE7QUFBQTtBQUFBO0FBQUEsdUJBQWlEO0FBQUEsbUJBUm5EO0FBQUE7QUFBQTtBQUFBO0FBQUEscUJBU0E7QUFBQTtBQUFBLFlBWktBO0FBQUFBLFlBRFA7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQSxVQWNBO0FBQUEsUUFDRCxLQWpCSDtBQUFBO0FBQUE7QUFBQTtBQUFBLGVBa0JBO0FBQUEsV0FwQkY7QUFBQTtBQUFBO0FBQUE7QUFBQSxhQXFCQTtBQUFBLFNBdEdGO0FBQUE7QUFBQTtBQUFBO0FBQUEsV0F1R0EsS0F4R0Y7QUFBQTtBQUFBO0FBQUE7QUFBQSxXQXlHQTtBQUFBLE9BckhGO0FBQUE7QUFBQTtBQUFBO0FBQUEsU0FzSEE7QUFFSjtBQUFFQyxLQTFIV0g7QUFBeUIsSUFBQUc7QUFBQSxhQUFBQSxJQUFBIiwibmFtZXMiOlsiRmluYW5jZVNrZWxldG9uIiwibWFwIiwiaSIsIl9jIl0sImlnbm9yZUxpc3QiOltdLCJzb3VyY2VzIjpbImZpbmFuY2Utc2tlbGV0b24udHN4Il0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCBSZWFjdCBmcm9tICdyZWFjdCc7XG5cbmV4cG9ydCBjb25zdCBGaW5hbmNlU2tlbGV0b246IFJlYWN0LkZDID0gKCkgPT4ge1xuICByZXR1cm4gKFxuICAgIDxkaXYgY2xhc3NOYW1lPVwiaC1mdWxsIGZsZXggZmxleC1jb2wgYmctWyNmYWZhZmFdIGRhcms6YmctWyMwYTBhMGFdXCI+XG4gICAgICB7LyogVGFicyBTa2VsZXRvbiAqL31cbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwicHgtOCBwdC04XCI+XG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBnYXAtMiBib3JkZXItYiBib3JkZXItWyNlNWU1ZTVdIGRhcms6Ym9yZGVyLVsjMjYyNjI2XVwiPlxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiaC0xMCB3LTI0IHNrZWxldG9uIG1iLVstMnB4XVwiPjwvZGl2PlxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiaC0xMCB3LTI0IHNrZWxldG9uIG1iLVstMnB4XVwiPjwvZGl2PlxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiaC0xMCB3LTI0IHNrZWxldG9uIG1iLVstMnB4XVwiPjwvZGl2PlxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiaC0xMCB3LTI0IHNrZWxldG9uIG1iLVstMnB4XVwiPjwvZGl2PlxuICAgICAgICA8L2Rpdj5cbiAgICAgIDwvZGl2PlxuXG4gICAgICB7LyogQ29udGVudCBBcmVhICovfVxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4LTEgb3ZlcmZsb3cteS1hdXRvIHAtOFwiPlxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cIm1heC13LTV4bCBteC1hdXRvIHNwYWNlLXktOFwiPlxuICAgICAgICAgIHsvKiBUb3AgQ2FyZHMgU2VjdGlvbiAqL31cbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImdyaWQgZ3JpZC1jb2xzLTEgbWQ6Z3JpZC1jb2xzLTMgZ2FwLTZcIj5cbiAgICAgICAgICAgIHsvKiBCYWxhbmNlIENhcmQgLSAyIGNvbHVtbnMgKi99XG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cIm1kOmNvbC1zcGFuLTIgYmctd2hpdGUgZGFyazpiZy1bIzE3MTcxN10gcm91bmRlZC0yeGwgYm9yZGVyIGJvcmRlci1bI2U1ZTVlNV0gZGFyazpib3JkZXItWyMyNjI2MjZdIG92ZXJmbG93LWhpZGRlblwiPlxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInAtNFwiPlxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBqdXN0aWZ5LWJldHdlZW4gaXRlbXMtY2VudGVyXCI+XG4gICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktM1wiPlxuICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImgtNCB3LTQwIHNrZWxldG9uXCI+PC9kaXY+XG4gICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiaC05IHctMzIgc2tlbGV0b25cIj48L2Rpdj5cbiAgICAgICAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzaXplLTExIHJvdW5kZWQtZnVsbCBza2VsZXRvblwiPjwvZGl2PlxuICAgICAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJoLTEwIHctZnVsbCBiZy1bI2ZhZmFmYV0gZGFyazpiZy1bIzBhMGEwYV0gYm9yZGVyLXQgYm9yZGVyLVsjZTVlNWU1XSBkYXJrOmJvcmRlci1bIzI2MjYyNl1cIj48L2Rpdj5cbiAgICAgICAgICAgIDwvZGl2PlxuXG4gICAgICAgICAgICB7LyogTW9udGhseSBVc2FnZSBDYXJkIC0gMSBjb2x1bW4gKi99XG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImJnLXdoaXRlIGRhcms6YmctWyMxNzE3MTddIHJvdW5kZWQtMnhsIGJvcmRlciBib3JkZXItWyNlNWU1ZTVdIGRhcms6Ym9yZGVyLVsjMjYyNjI2XSBwLTVcIj5cbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGZsZXgtY29sIGl0ZW1zLWNlbnRlciBzcGFjZS15LTNcIj5cbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNpemUtOSByb3VuZGVkLWZ1bGwgc2tlbGV0b25cIj48L2Rpdj5cbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImgtMyB3LTI0IHNrZWxldG9uXCI+PC9kaXY+XG4gICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJoLTggdy0yMCBza2VsZXRvblwiPjwvZGl2PlxuICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgIDwvZGl2PlxuXG4gICAgICAgICAgey8qIFB1cmNoYXNlIFNlY3Rpb24gKi99XG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJiZy13aGl0ZSBkYXJrOmJnLVsjMTcxNzE3XSByb3VuZGVkLTJ4bCBib3JkZXIgYm9yZGVyLVsjZTVlNWU1XSBkYXJrOmJvcmRlci1bIzI2MjYyNl0gcC02XCI+XG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktNlwiPlxuICAgICAgICAgICAgICB7LyogSGVhZGVyICovfVxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktYmV0d2VlblwiPlxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiaC02IHctNDggc2tlbGV0b25cIj48L2Rpdj5cbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNpemUtMTAgcm91bmRlZC1mdWxsIHNrZWxldG9uXCI+PC9kaXY+XG4gICAgICAgICAgICAgIDwvZGl2PlxuXG4gICAgICAgICAgICAgIHsvKiBBbW91bnQgRGlzcGxheSAqL31cbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ0ZXh0LWNlbnRlciBzcGFjZS15LTJcIj5cbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImgtNCB3LTMyIHNrZWxldG9uIG14LWF1dG9cIj48L2Rpdj5cbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImgtMTYgdy00OCBza2VsZXRvbiBteC1hdXRvXCI+PC9kaXY+XG4gICAgICAgICAgICAgIDwvZGl2PlxuXG4gICAgICAgICAgICAgIHsvKiBTbGlkZXIgKi99XG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS0zXCI+XG4gICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJoLTIgdy1mdWxsIHNrZWxldG9uIHJvdW5kZWQtZnVsbFwiPjwvZGl2PlxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBqdXN0aWZ5LWJldHdlZW5cIj5cbiAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiaC0zIHctMTYgc2tlbGV0b25cIj48L2Rpdj5cbiAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiaC0zIHctMjAgc2tlbGV0b25cIj48L2Rpdj5cbiAgICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgICAgPC9kaXY+XG5cbiAgICAgICAgICAgICAgey8qIEJ1dHRvbnMgKi99XG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBnYXAtM1wiPlxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiaC0xMCB3LTEwIHNrZWxldG9uIHJvdW5kZWQtbGdcIj48L2Rpdj5cbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImgtMTAgdy0xMCBza2VsZXRvbiByb3VuZGVkLWxnXCI+PC9kaXY+XG4gICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJoLTEwIHctMTAgc2tlbGV0b24gcm91bmRlZC1sZ1wiPjwvZGl2PlxuICAgICAgICAgICAgICA8L2Rpdj5cblxuICAgICAgICAgICAgICB7LyogUHJpY2UgRGlzcGxheSAqL31cbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJiZy1bI2ZhZmFmYV0gZGFyazpiZy1bIzBhMGEwYV0gcm91bmRlZC14bCBwLTQgc3BhY2UteS0zXCI+XG4gICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGp1c3RpZnktYmV0d2VlblwiPlxuICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJoLTQgdy0yNCBza2VsZXRvblwiPjwvZGl2PlxuICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJoLTQgdy0yMCBza2VsZXRvblwiPjwvZGl2PlxuICAgICAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBqdXN0aWZ5LWJldHdlZW5cIj5cbiAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiaC00IHctMzIgc2tlbGV0b25cIj48L2Rpdj5cbiAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiaC00IHctMTYgc2tlbGV0b25cIj48L2Rpdj5cbiAgICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImgtcHggdy1mdWxsIGJnLVsjZTVlNWU1XSBkYXJrOmJnLVsjMjYyNjI2XVwiPjwvZGl2PlxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBqdXN0aWZ5LWJldHdlZW5cIj5cbiAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiaC01IHctMjAgc2tlbGV0b25cIj48L2Rpdj5cbiAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiaC02IHctMjggc2tlbGV0b25cIj48L2Rpdj5cbiAgICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgICAgPC9kaXY+XG5cbiAgICAgICAgICAgICAgey8qIENoZWNrb3V0IEJ1dHRvbiAqL31cbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJoLTEyIHctZnVsbCBza2VsZXRvbiByb3VuZGVkLXhsXCI+PC9kaXY+XG4gICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICA8L2Rpdj5cblxuICAgICAgICAgIHsvKiBQYWNrYWdlcyBHcmlkICovfVxuICAgICAgICAgIDxkaXY+XG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImgtNiB3LTQwIHNrZWxldG9uIG1iLTRcIj48L2Rpdj5cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZ3JpZCBncmlkLWNvbHMtMSBtZDpncmlkLWNvbHMtMyBnYXAtNFwiPlxuICAgICAgICAgICAgICB7WzEsIDIsIDNdLm1hcCgoaSkgPT4gKFxuICAgICAgICAgICAgICAgIDxkaXZcbiAgICAgICAgICAgICAgICAgIGtleT17aX1cbiAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cImJnLXdoaXRlIGRhcms6YmctWyMxNzE3MTddIHJvdW5kZWQtMnhsIGJvcmRlciBib3JkZXItWyNlNWU1ZTVdIGRhcms6Ym9yZGVyLVsjMjYyNjI2XSBwLTZcIlxuICAgICAgICAgICAgICAgID5cbiAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS00XCI+XG4gICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiaC01IHctMjQgc2tlbGV0b25cIj48L2Rpdj5cbiAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJoLTEwIHctMzIgc2tlbGV0b25cIj48L2Rpdj5cbiAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTJcIj5cbiAgICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImgtMyB3LWZ1bGwgc2tlbGV0b25cIj48L2Rpdj5cbiAgICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImgtMyB3LWZ1bGwgc2tlbGV0b25cIj48L2Rpdj5cbiAgICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImgtMyB3LTMvNCBza2VsZXRvblwiPjwvZGl2PlxuICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJoLTEwIHctZnVsbCBza2VsZXRvbiByb3VuZGVkLXhsXCI+PC9kaXY+XG4gICAgICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgICAgKSl9XG4gICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgPC9kaXY+XG4gICAgICA8L2Rpdj5cbiAgICA8L2Rpdj5cbiAgKTtcbn07Il0sImZpbGUiOiJDOi9Vc2Vycy9yZWFsYS9PbmVEcml2ZS9EZXNrdG9wL3NlbmRpL3NlLmlvIFNZU1RFTSBERU1PL3NyYy9hcHAvY29tcG9uZW50cy91aS9za2VsZXRvbnMvZmluYW5jZS1za2VsZXRvbi50c3gifQ==

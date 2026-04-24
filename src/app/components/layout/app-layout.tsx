@@ -1,6 +1,8 @@
 import { Suspense, useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate, useNavigation } from 'react-router';
 import { Sidebar } from './sidebar';
+import { MobileNavigation } from './mobile-navigation';
+import { MobileMenuNudge } from './mobile-menu-nudge';
 import { Breadcrumbs } from './breadcrumbs';
 import { PageLoader } from '../ui/page-loader';
 import { LoadingBar } from '../ui/loading-bar';
@@ -75,6 +77,9 @@ export const AppLayout: React.FC = () => {
             <Outlet />
           </Suspense>
         </div>
+
+        {!isLivePage && <MobileNavigation />}
+        <MobileMenuNudge />
       </div>
     </div>
   );

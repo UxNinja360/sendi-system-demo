@@ -658,9 +658,9 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return candidatePool[Math.floor(Math.random() * candidatePool.length)].address;
   };
 
-  const generateDelivery = useCallback((restaurant: Restaurant): Delivery | null => {
+  const generateDelivery = useCallback((restaurant: Restaurant, generatedAt: Date = new Date()): Delivery | null => {
     deliveryCounter.current += 1;
-    const id = `D${Date.now()}-${deliveryCounter.current}-${Math.random().toString(36).substr(2, 9)}`;
+    const id = `D${generatedAt.getTime()}-${deliveryCounter.current}-${Math.random().toString(36).substr(2, 9)}`;
     const orderNumber = `#${Math.floor(10000 + Math.random() * 90000)}`;
     const apiShortOrderId = `${Math.floor(100000 + Math.random() * 900000)}`;
     
@@ -683,7 +683,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const deliveryDistanceKm = Math.max(0.8, Math.round(directDistanceKm * 1.28 * 10) / 10);
     const etaAfterPickupMinutes = Math.max(8, Math.round((deliveryDistanceKm / 18) * 60) + 3);
 
-    const now = new Date();
+    const now = generatedAt;
     // Estimated arrival to restaurant: 5-15 minutes.
     const estimatedRestaurantTime = new Date(now.getTime() + (5 + Math.random() * 10) * 60000);
     const estimatedCustomerTime = new Date(
@@ -701,7 +701,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       id,
       api_short_order_id: apiShortOrderId,
-      api_str_order_id: `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      api_str_order_id: `ORDER-${generatedAt.getTime()}-${Math.random().toString(36).substr(2, 9)}`,
       status: 'pending',
       priority: Math.floor(Math.random() * 3), // 0-2
       is_api: Math.random() > 0.5,
@@ -902,12 +902,12 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       simulationOpenedAtRef.current = Date.now();
     }
 
-    const spawnEligibleDelivery = () => {
+    const spawnEligibleDelivery = (now: Date = new Date()) => {
       const stateNow = stateRef.current;
       if (!stateNow.isSystemOpen || deliveryBalanceRef.current <= 0) return;
 
       const speed = Math.max(stateNow.timeMultiplier || 1, 0.1);
-      const nowMs = Date.now();
+      const nowMs = now.getTime();
       const activeDeliveryCount = stateNow.deliveries.filter(isLiveActiveDelivery).length;
       const activeDeliveryLimit = getActiveSimulatedDeliveryLimit(stateNow);
       const activeCapacity = activeDeliveryLimit - activeDeliveryCount;
@@ -954,10 +954,20 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       );
 
       for (let i = 0; i < deliveryCount; i++) {
-        const newDelivery = generateDelivery(nextRestaurant);
+        const newDelivery = generateDelivery(nextRestaurant, now);
         if (newDelivery) {
           rawDispatch({ type: 'ADD_DELIVERY', payload: newDelivery });
         }
+      }
+    };
+
+    const handleSchedulerWake = () => {
+      spawnEligibleDelivery();
+    };
+
+    const handleVisibilityChange = () => {
+      if (typeof document === 'undefined' || !document.hidden) {
+        handleSchedulerWake();
       }
     };
 
@@ -968,9 +978,27 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       Math.max(1000, SIMULATION_TICK_MS / timerSpeed)
     );
 
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', handleSchedulerWake);
+      window.addEventListener('pageshow', handleSchedulerWake);
+    }
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    }
+
     return () => {
       clearTimeout(initialTimer);
       clearInterval(interval);
+
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('focus', handleSchedulerWake);
+        window.removeEventListener('pageshow', handleSchedulerWake);
+      }
+
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      }
     };
   }, [state.isSystemOpen, state.timeMultiplier, generateDelivery, rawDispatch]);
 
@@ -978,7 +1006,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     if (!state.autoAssignEnabled) return;
 
-    const interval = setInterval(() => {
+    const runAutoAssign = () => {
       const stateNow = stateRef.current;
       const pendingDelivery = stateNow.deliveries.find((delivery) => delivery.status === 'pending');
       const availableCourier = getAutoAssignableCourier(stateNow.couriers);
@@ -989,14 +1017,59 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           payload: createAssignCourierPayload(pendingDelivery.id, availableCourier.id),
         });
       }
-    }, state.isSystemOpen ? 500 : 3000);
+    };
 
-    return () => clearInterval(interval);
+    const handleAutoAssignWake = () => {
+      runAutoAssign();
+    };
+
+    const handleVisibilityChange = () => {
+      if (typeof document === 'undefined' || !document.hidden) {
+        handleAutoAssignWake();
+      }
+    };
+
+    const interval = setInterval(runAutoAssign, state.isSystemOpen ? 500 : 3000);
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', handleAutoAssignWake);
+      window.addEventListener('pageshow', handleAutoAssignWake);
+    }
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    }
+
+    return () => {
+      clearInterval(interval);
+
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('focus', handleAutoAssignWake);
+        window.removeEventListener('pageshow', handleAutoAssignWake);
+      }
+
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      }
+    };
   }, [state.autoAssignEnabled, state.isSystemOpen]);
 
   // Global progress engine: keeps deliveries moving without the LIVE page open.
   useEffect(() => {
-    const interval = setInterval(() => {
+    const persistCourierPositions = () => {
+      if (typeof window === 'undefined') return;
+
+      window.localStorage.setItem(
+        LIVE_MANAGER_COURIER_POSITIONS_STORAGE_KEY,
+        JSON.stringify(Object.fromEntries(courierPositionsRef.current.entries()))
+      );
+      window.localStorage.setItem(
+        LIVE_MANAGER_COURIER_POSITIONS_TS_STORAGE_KEY,
+        JSON.stringify(Object.fromEntries(courierPositionTimestampsRef.current.entries()))
+      );
+    };
+
+    const runProgressTick = () => {
       const tick = advanceLiveSimulation({
         state: stateRef.current,
         currentPositions: courierPositionsRef.current,
@@ -1007,17 +1080,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (tick.positionChanged) {
         courierPositionsRef.current = tick.courierPositions;
         courierPositionTimestampsRef.current = tick.courierPositionTimestamps;
-
-        if (typeof window !== 'undefined') {
-          window.localStorage.setItem(
-            LIVE_MANAGER_COURIER_POSITIONS_STORAGE_KEY,
-            JSON.stringify(Object.fromEntries(courierPositionsRef.current.entries()))
-          );
-          window.localStorage.setItem(
-            LIVE_MANAGER_COURIER_POSITIONS_TS_STORAGE_KEY,
-            JSON.stringify(Object.fromEntries(courierPositionTimestampsRef.current.entries()))
-          );
-        }
+        persistCourierPositions();
       }
 
       tick.phaseUpdates.forEach((updates, deliveryId) => {
@@ -1025,9 +1088,9 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       });
 
       tick.statusUpdates.forEach(({ type, deliveryIds }) => {
-        deliveryIds.forEach((id) => {
-          const now = new Date();
+        const now = new Date();
 
+        deliveryIds.forEach((id) => {
           if (type === 'complete') {
             rawDispatch({ type: 'COMPLETE_DELIVERY', payload: id });
           } else if (type === 'arrived_pickup') {
@@ -1053,9 +1116,41 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           }
         });
       });
-    }, 1000);
+    };
 
-    return () => clearInterval(interval);
+    const handleProgressWake = () => {
+      runProgressTick();
+    };
+
+    const handleVisibilityChange = () => {
+      if (typeof document === 'undefined' || !document.hidden) {
+        handleProgressWake();
+      }
+    };
+
+    const interval = setInterval(runProgressTick, 1000);
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', handleProgressWake);
+      window.addEventListener('pageshow', handleProgressWake);
+    }
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    }
+
+    return () => {
+      clearInterval(interval);
+
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('focus', handleProgressWake);
+        window.removeEventListener('pageshow', handleProgressWake);
+      }
+
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      }
+    };
   }, []);
 
   const toggleSystem = () => {
