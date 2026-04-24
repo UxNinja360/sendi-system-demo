@@ -40,7 +40,7 @@ export const LogPage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-full bg-[#111111] text-[#fafafa]">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#111111] text-[#fafafa]">
       <PageToolbar
         title={TEXT.title}
         count={visibleLogs.length}
@@ -61,7 +61,7 @@ export const LogPage: React.FC = () => {
         }
       />
 
-      <div className="px-6 py-6">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-6">
         {visibleLogs.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-[#2f2f2f] bg-[#171717] px-6 py-12 text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#1d1d1d]">

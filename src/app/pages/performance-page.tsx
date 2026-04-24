@@ -76,7 +76,7 @@ export const PerformancePage: React.FC = () => {
   }, [deliveriesInRange, state.restaurants]);
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5] dark:bg-[#0a0a0a] flex flex-col">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#f5f5f5] dark:bg-[#0a0a0a]">
       <div dir="rtl">
         <PageToolbar
           title="ביצועים"
@@ -97,7 +97,7 @@ export const PerformancePage: React.FC = () => {
         />
       </div>
 
-      <div className="flex-1" />
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain" />
     </div>
   );
 };

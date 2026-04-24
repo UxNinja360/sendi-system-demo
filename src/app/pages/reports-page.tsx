@@ -360,7 +360,7 @@ export const ReportsPage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a]">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]">
       <div dir="rtl">
         <PageToolbar
           title="דוחות"
@@ -381,8 +381,8 @@ export const ReportsPage: React.FC = () => {
           summary={`${deliveriesInRange.length} משלוחים • ${courierReports.length} שליחים • ${restaurantReports.length} מסעדות`}
         />
 
-        <div className="flex flex-col items-center">
-          <div className="w-full max-w-[90rem]" />
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <div className="mx-auto flex w-full max-w-[90rem] flex-col" />
         </div>
       </div>
     </div>

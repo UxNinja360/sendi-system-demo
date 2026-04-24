@@ -42,6 +42,23 @@ export const AppLayout: React.FC = () => {
   };
 
   const isLivePage = location.pathname === '/live';
+  const managedScrollRoutes = new Set([
+    '/dashboard',
+    '/deliveries',
+    '/couriers',
+    '/couriers/shifts',
+    '/restaurants',
+    '/customers',
+    '/settings',
+    '/wallet',
+    '/delivery-balance',
+    '/reports',
+    '/performance',
+    '/log',
+    '/hours',
+    '/distance-pricing',
+  ]);
+  const isManagedScrollPage = isLivePage || managedScrollRoutes.has(location.pathname);
   const isLoading = navigation.state === 'loading';
 
   return (
@@ -57,7 +74,7 @@ export const AppLayout: React.FC = () => {
 
         <div
           className={`relative flex-1 w-full bg-[#fafafa] dark:bg-[#0a0a0a] ${
-            isLivePage || location.pathname === '/deliveries' || location.pathname === '/dashboard'
+            isManagedScrollPage
               ? 'overflow-hidden flex flex-col'
               : 'overflow-y-auto scroll-smooth'
           }`}

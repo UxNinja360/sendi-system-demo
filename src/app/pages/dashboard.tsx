@@ -2,7 +2,6 @@
 import { useNavigate } from 'react-router';
 import { Activity, CheckCircle, ClipboardList, Clock, Store, TrendingUp, Users, XCircle } from 'lucide-react';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { PageToolbar } from '../components/common/page-toolbar';
 import { useDelivery } from '../context/delivery.context';
 import { useTheme } from '../context/theme.context';
 
@@ -246,18 +245,6 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#f5f5f5] dark:bg-[#0a0a0a]">
-      <PageToolbar
-        title="דשבורד"
-        onToggleMobileSidebar={() =>
-          (window as Window & { toggleMobileSidebar?: () => void }).toggleMobileSidebar?.()
-        }
-        headerActions={
-          <span className="text-[11px] text-[#888] dark:text-[#8b8b8b]">
-            {currentTime.toLocaleString('he-IL')}
-          </span>
-        }
-      />
-
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto w-full max-w-[90rem] space-y-4 px-4 py-6 pb-8 md:px-6">
           <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">

@@ -32,7 +32,7 @@ export const CustomersScreen: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a] flex flex-col" dir="rtl">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]" dir="rtl">
       <PageToolbar
         title="לקוחות"
         count={filteredCustomers.length}
@@ -76,8 +76,8 @@ export const CustomersScreen: React.FC = () => {
         summary={`מציג ${filteredCustomers.length} מתוך ${state.customers.length} לקוחות`}
       />
 
-      <div className="px-3 py-3 sm:px-4 sm:py-4 md:px-8 md:py-8">
-        <div className="mx-auto flex h-full max-w-7xl flex-col">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className="mx-auto flex min-h-full max-w-7xl flex-col px-3 py-3 sm:px-4 sm:py-4 md:px-8 md:py-8">
           {viewMode === 'cards' ? (
             filteredCustomers.length > 0 ? (
               <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
