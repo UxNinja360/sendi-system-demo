@@ -92,8 +92,8 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
     ) : null);
 
   return (
-    <div className="app-safe-header sticky top-0 z-20 shrink-0 border-b border-[#e5e5e5] bg-white dark:border-[#1f1f1f] dark:bg-[#171717]">
-      <div className="flex min-h-16 items-center justify-between gap-3 px-5">
+    <div className="app-safe-header app-toolbar-shell sticky top-0 z-20 shrink-0 border-b border-[#e5e5e5] bg-white dark:border-[#1f1f1f] dark:bg-[#171717]">
+      <div className="app-toolbar-row flex min-h-16 items-center justify-between gap-3 px-5">
         <div className="flex items-center gap-2.5">
           <button
             type="button"
@@ -111,23 +111,23 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
       </div>
 
       {hasSecondaryRow ? (
-        <div className="overflow-visible border-t border-[#f0f0f0] px-3 py-2.5 dark:border-[#1f1f1f]">
-          <div className="flex flex-wrap items-center gap-2 md:min-w-0 md:flex-nowrap">
+        <div className="app-toolbar-row overflow-visible border-t border-[#f0f0f0] px-3 py-2.5 dark:border-[#1f1f1f]">
+          <div className="flex max-w-full flex-wrap items-center gap-2 md:min-w-0 md:flex-nowrap">
             {renderedPeriodControl ? (
-              <div className="flex shrink-0 flex-nowrap items-center gap-1.5">
+              <div className="flex max-w-full shrink-0 flex-nowrap items-center gap-1.5">
                 {renderedPeriodControl}
               </div>
             ) : null}
             {controls ? (
               <div
-                className={`flex shrink-0 flex-nowrap items-center gap-1.5 ${controlsClassName}`.trim()}
+                className={`flex max-w-full shrink-0 flex-nowrap items-center gap-1.5 ${controlsClassName}`.trim()}
               >
                 {controls}
               </div>
             ) : null}
             {actions ? (
               <div
-                className={`flex shrink-0 flex-nowrap items-center gap-1.5 ${actionsClassName}`.trim()}
+                className={`flex max-w-full shrink-0 flex-nowrap items-center gap-1.5 ${actionsClassName}`.trim()}
               >
                 {actions}
               </div>
@@ -137,13 +137,13 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
       ) : null}
 
       {hasSummaryRow ? (
-        <div className="border-t border-[#f0f0f0] px-4 py-1 dark:border-[#1f1f1f]">
-          <div className="flex items-center justify-between gap-3">
+        <div className="app-toolbar-row border-t border-[#f0f0f0] px-4 py-1 dark:border-[#1f1f1f]">
+          <div className="flex max-w-full items-center justify-between gap-3">
             <span className="text-xs text-[#a3a3a3] dark:text-[#737373]">
               {renderedSummary}
             </span>
             {headerControls ? (
-              <div className="flex items-center gap-1.5">
+              <div className="flex max-w-full items-center gap-1.5">
                 {headerControls}
               </div>
             ) : null}

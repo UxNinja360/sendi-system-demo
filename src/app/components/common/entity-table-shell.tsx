@@ -56,7 +56,7 @@ export const EntityTableShell: React.FC<EntityTableShellProps> = ({
 }) => (
   <div
     ref={scrollContainerRef}
-    className={['overflow-auto relative flex-1', wrapperClassName].filter(Boolean).join(' ')}
+    className={['app-table-shell relative flex-1 overflow-auto min-w-0', wrapperClassName].filter(Boolean).join(' ')}
     onMouseDown={onMouseDown}
     onMouseMove={onMouseMove}
     onMouseUp={onMouseUp}

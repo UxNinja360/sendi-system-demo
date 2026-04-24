@@ -25,17 +25,17 @@ export const ListTableSection: React.FC<ListTableSectionProps> = ({
 }) => {
   if (isEmpty) {
     return (
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 max-w-full flex-col">
         <div className="bg-white dark:bg-[#171717]">{emptyState}</div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 max-w-full flex-col">
       <div
         className={[
-          'relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white dark:bg-[#171717]',
+          'relative flex min-h-0 flex-1 max-w-full flex-col overflow-hidden bg-white dark:bg-[#171717]',
           tableContainerClassName,
         ]
           .filter(Boolean)

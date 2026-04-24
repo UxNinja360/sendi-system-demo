@@ -15,6 +15,17 @@ html,
 body,
 #root {
   min-height: 100%;
+  max-width: 100%;
+}
+
+html,
+body {
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+}
+
+#root {
+  overflow-x: clip;
 }
 
 body {
@@ -30,6 +41,28 @@ body {
 .app-safe-side-panel {
   top: var(--app-topbar-offset);
   height: calc(100dvh - var(--app-topbar-offset));
+}
+
+.app-toolbar-shell {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+  overscroll-behavior-x: none;
+}
+
+.app-toolbar-row {
+  width: 100%;
+  max-width: 100%;
+  overscroll-behavior-x: contain;
+  touch-action: pan-y;
+}
+
+.app-table-shell {
+  width: 100%;
+  max-width: 100%;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 @supports not (height: 100dvh) {
