@@ -87,7 +87,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
     ? 'bg-[#dcfce7]/50 dark:bg-[#14532d]/30'
     : isSelected
       ? 'bg-[#dbeafe]/50 dark:bg-[#1e3a8a]/20'
-      : 'bg-transparent group-hover:bg-[#fafafa] dark:group-hover:bg-[#0a0a0a]';
+      : 'bg-inherit group-hover:bg-[#fafafa] dark:group-hover:bg-[#0a0a0a]';
 
   // Row height configuration
   const rowHeightConfig = {
