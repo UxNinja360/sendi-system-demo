@@ -9,6 +9,7 @@ import {
   EntityTableHeaderCheckbox,
 } from '../components/common/entity-table-shell';
 import { EntityTableHeaderCell } from '../components/common/entity-table-header-cell';
+import { ENTITY_TABLE_WIDTHS } from '../components/common/entity-table-shared';
 import { ListTableSection } from '../components/common/list-table-section';
 
 type DeliveriesTableSectionProps = {
@@ -138,7 +139,7 @@ export const DeliveriesTableSection: React.FC<DeliveriesTableSectionProps> = ({
       onMouseLeave={onMouseUp}
       colgroup={
         <colgroup>
-          <col style={{ width: '44px' }} />
+          <col style={{ width: ENTITY_TABLE_WIDTHS.checkbox }} />
           {orderedColumns
             .filter((column) => visibleColumns.has(column.id))
             .map((column) => (

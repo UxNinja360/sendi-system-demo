@@ -1,5 +1,5 @@
 export const TABLE_WIDTHS = {
-  checkbox: '44px',
+  checkbox: '56px',
   actions: '40px',
   status: '86px',
   compact: '96px',

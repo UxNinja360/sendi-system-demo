@@ -83,12 +83,6 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
   const config = STATUS_CONFIG[delivery.status];
   const StatusIcon = config.icon;
 
-  const actionsCellBg = isDrawerTarget
-    ? 'bg-[#dcfce7]/50 dark:bg-[#14532d]/30'
-    : isSelected
-      ? 'bg-[#dbeafe]/50 dark:bg-[#1e3a8a]/20'
-      : 'bg-inherit group-hover:bg-[#fafafa] dark:group-hover:bg-[#0a0a0a]';
-
   // Row height configuration
   const rowHeightConfig = {
     compact: { py: 'py-1.5', text: 'text-[11px]', iconSize: 'w-3 h-3', gap: 'gap-1' },
@@ -252,7 +246,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
 
       {/* Actions column */}
       <EntityTableActionsCell
-        className={`${heightClasses.py} ${actionsCellBg}`}
+        className={heightClasses.py}
         contentClassName="items-center justify-end gap-0.5"
         onClick={(e) => e.stopPropagation()}
       >

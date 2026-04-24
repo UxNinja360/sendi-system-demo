@@ -18,12 +18,12 @@ export const ENTITY_TABLE_WIDTHS = {
 export const ENTITY_TABLE_HEAD_CLASS =
   'sticky top-0 z-10 border-b border-[#e5e5e5] bg-[#fafafa] dark:border-[#262626] dark:bg-[#0a0a0a]';
 
-export const ENTITY_TABLE_CHECKBOX_HEAD_CLASS = 'pr-4 pl-0';
-export const ENTITY_TABLE_CHECKBOX_BODY_CLASS = 'pr-4 pl-0';
+export const ENTITY_TABLE_CHECKBOX_HEAD_CLASS = 'pr-5 pl-0';
+export const ENTITY_TABLE_CHECKBOX_BODY_CLASS = 'pr-5 pl-0';
 export const ENTITY_TABLE_CHECKBOX_HEAD_LABEL_CLASS =
-  'flex min-h-[42px] cursor-pointer touch-manipulation items-center justify-start';
+  'flex min-h-[42px] min-w-[56px] cursor-pointer touch-manipulation items-center justify-start';
 export const ENTITY_TABLE_CHECKBOX_BODY_LABEL_CLASS =
-  'flex min-h-[42px] cursor-pointer touch-manipulation items-center justify-start';
+  'flex min-h-[42px] min-w-[56px] cursor-pointer touch-manipulation items-center justify-start';
 
 export const ENTITY_TABLE_HEADER_CELL_BASE_CLASS =
   'group/col py-2.5 text-right transition-all';
