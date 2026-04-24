@@ -111,8 +111,8 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
       </div>
 
       {hasSecondaryRow ? (
-        <div className="overflow-x-auto border-t border-[#f0f0f0] px-3 py-2.5 dark:border-[#1f1f1f] md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className="flex min-w-max items-center gap-2 md:min-w-0">
+        <div className="overflow-visible border-t border-[#f0f0f0] px-3 py-2.5 dark:border-[#1f1f1f]">
+          <div className="flex flex-wrap items-center gap-2 md:min-w-0 md:flex-nowrap">
             {renderedPeriodControl ? (
               <div className="flex shrink-0 flex-nowrap items-center gap-1.5">
                 {renderedPeriodControl}
