@@ -1,16 +1,25 @@
 import React from 'react';
-import { Activity, Menu, Trash2 } from 'lucide-react';
+import { Activity, Trash2 } from 'lucide-react';
+import { PageToolbar } from '../components/common/page-toolbar';
 import { useDelivery } from '../context/delivery.context';
 
-const categoryLabels = {
-  navigation: 'ניווט',
-  system: 'מערכת',
-  delivery: 'משלוחים',
-  courier: 'שליחים',
-  restaurant: 'מסעדות',
-  settings: 'הגדרות',
-  shift: 'משמרות',
-  general: 'כללי',
+const TEXT = {
+  title: '\u05d9\u05d5\u05de\u05df\u0020\u05e4\u05e2\u05d5\u05dc\u05d5\u05ea',
+  clear: '\u05e0\u05e7\u05d4\u0020\u05dc\u05d5\u05d2',
+  summarySuffix: '\u0020\u05d0\u05d9\u05e8\u05d5\u05e2\u05d9\u05dd\u0020\u05de\u05ea\u05d5\u05e2\u05d3\u05d9\u05dd',
+  emptyTitle: '\u05e2\u05d3\u05d9\u05d9\u05df\u0020\u05d0\u05d9\u05df\u0020\u05e4\u05e2\u05d5\u05dc\u05d5\u05ea\u0020\u05de\u05ea\u05d5\u05e2\u05d3\u05d5\u05ea',
+  emptyDescription:
+    '\u05db\u05e9\u05ea\u05ea\u05d7\u05d9\u05dc\u0020\u05dc\u05e2\u05d1\u05d5\u05d3\u0020\u05d1\u05de\u05e2\u05e8\u05db\u05ea\u002c\u0020\u05d4\u05e4\u05e2\u05d5\u05dc\u05d5\u05ea\u0020\u05d4\u05de\u05e8\u05db\u05d6\u05d9\u05d5\u05ea\u0020\u05d9\u05d5\u05e4\u05d9\u05e2\u05d5\u0020\u05db\u05d0\u05df\u002e',
+  categories: {
+    navigation: '\u05e0\u05d9\u05d5\u05d5\u05d8',
+    system: '\u05de\u05e2\u05e8\u05db\u05ea',
+    delivery: '\u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
+    courier: '\u05e9\u05dc\u05d9\u05d7\u05d9\u05dd',
+    restaurant: '\u05de\u05e1\u05e2\u05d3\u05d5\u05ea',
+    settings: '\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea',
+    shift: '\u05de\u05e9\u05de\u05e8\u05d5\u05ea',
+    general: '\u05db\u05dc\u05dc\u05d9',
+  },
 } as const;
 
 const categoryClasses = {
@@ -26,29 +35,31 @@ const categoryClasses = {
 
 export const LogPage: React.FC = () => {
   const { state, dispatch } = useDelivery();
-  const visibleLogs = state.activityLogs.filter((entry) => entry.category !== 'navigation');
+  const visibleLogs = state.activityLogs.filter(
+    (entry) => entry.category !== 'navigation',
+  );
 
   return (
     <div className="min-h-full bg-[#111111] text-[#fafafa]">
-      <div className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-[#e5e5e5] bg-white px-5 dark:border-[#1f1f1f] dark:bg-[#171717]">
-        <div className="flex items-center gap-2.5">
+      <PageToolbar
+        title={TEXT.title}
+        count={visibleLogs.length}
+        showZeroCount
+        summary={`${visibleLogs.length}${TEXT.summarySuffix}`}
+        onToggleMobileSidebar={() =>
+          (window as Window & { toggleMobileSidebar?: () => void }).toggleMobileSidebar?.()
+        }
+        headerActions={
           <button
-            onClick={() => (window as Window & { toggleMobileSidebar?: () => void }).toggleMobileSidebar?.()}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-[#525252] transition-colors hover:bg-[#f5f5f5] dark:text-[#a3a3a3] dark:hover:bg-[#262626] md:hidden"
+            type="button"
+            onClick={() => dispatch({ type: 'CLEAR_ACTIVITY_LOGS' })}
+            className="inline-flex items-center gap-2 rounded-xl border border-[#e5e5e5] bg-[#f5f5f5] px-4 py-2 text-sm font-medium text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:border-[#2a2a2a] dark:bg-[#101010] dark:text-[#fafafa] dark:hover:bg-[#171717]"
           >
-            <Menu className="h-5 w-5" />
+            <Trash2 className="h-4 w-4" />
+            <span>{TEXT.clear}</span>
           </button>
-          <span className="text-[15px] font-semibold text-[#0d0d12] dark:text-[#fafafa]">יומן פעולות</span>
-        </div>
-
-        <button
-          onClick={() => dispatch({ type: 'CLEAR_ACTIVITY_LOGS' })}
-          className="inline-flex items-center gap-2 rounded-xl border border-[#e5e5e5] bg-[#f5f5f5] px-4 py-2 text-sm font-medium text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:border-[#2a2a2a] dark:bg-[#101010] dark:text-[#fafafa] dark:hover:bg-[#171717]"
-        >
-          <Trash2 className="h-4 w-4" />
-          נקה לוג
-        </button>
-      </div>
+        }
+      />
 
       <div className="px-6 py-6">
         {visibleLogs.length === 0 ? (
@@ -56,8 +67,12 @@ export const LogPage: React.FC = () => {
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#1d1d1d]">
               <Activity className="h-5 w-5 text-[#737373]" />
             </div>
-            <h2 className="text-lg font-semibold text-[#fafafa]">עדיין אין פעולות מתועדות</h2>
-            <p className="mt-2 text-sm text-[#a3a3a3]">כשתתחיל לעבוד במערכת, הפעולות המרכזיות יופיעו כאן.</p>
+            <h2 className="text-lg font-semibold text-[#fafafa]">
+              {TEXT.emptyTitle}
+            </h2>
+            <p className="mt-2 text-sm text-[#a3a3a3]">
+              {TEXT.emptyDescription}
+            </p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -72,12 +87,20 @@ export const LogPage: React.FC = () => {
                       <span
                         className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${categoryClasses[entry.category]}`}
                       >
-                        {categoryLabels[entry.category]}
+                        {TEXT.categories[entry.category]}
                       </span>
-                      <span className="text-xs text-[#737373]">{entry.actionType}</span>
+                      <span className="text-xs text-[#737373]">
+                        {entry.actionType}
+                      </span>
                     </div>
-                    <h3 className="mt-3 text-base font-semibold text-[#fafafa]">{entry.title}</h3>
-                    {entry.description ? <p className="mt-1 text-sm text-[#a3a3a3]">{entry.description}</p> : null}
+                    <h3 className="mt-3 text-base font-semibold text-[#fafafa]">
+                      {entry.title}
+                    </h3>
+                    {entry.description ? (
+                      <p className="mt-1 text-sm text-[#a3a3a3]">
+                        {entry.description}
+                      </p>
+                    ) : null}
                   </div>
 
                   <div className="shrink-0 text-left">
@@ -88,7 +111,9 @@ export const LogPage: React.FC = () => {
                         second: '2-digit',
                       })}
                     </div>
-                    <div className="mt-1 text-xs text-[#737373]">{entry.timestamp.toLocaleDateString('he-IL')}</div>
+                    <div className="mt-1 text-xs text-[#737373]">
+                      {entry.timestamp.toLocaleDateString('he-IL')}
+                    </div>
                   </div>
                 </div>
               </div>

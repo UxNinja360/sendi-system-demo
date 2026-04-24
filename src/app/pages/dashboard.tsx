@@ -1,7 +1,8 @@
 ﻿import React from 'react';
 import { useNavigate } from 'react-router';
-import { Activity, CheckCircle, ClipboardList, Clock, Menu, Store, TrendingUp, Users, XCircle } from 'lucide-react';
+import { Activity, CheckCircle, ClipboardList, Clock, Store, TrendingUp, Users, XCircle } from 'lucide-react';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { PageToolbar } from '../components/common/page-toolbar';
 import { useDelivery } from '../context/delivery.context';
 import { useTheme } from '../context/theme.context';
 
@@ -245,18 +246,17 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#f5f5f5] dark:bg-[#0a0a0a] flex flex-col">
-      <div className="app-safe-header sticky top-0 z-20 bg-white dark:bg-[#171717] border-b border-[#e5e5e5] dark:border-[#1f1f1f] px-5 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={() => (window as Window & { toggleMobileSidebar?: () => void }).toggleMobileSidebar?.()}
-            className="md:hidden flex items-center justify-center w-8 h-8 rounded-lg text-[#525252] dark:text-[#a3a3a3] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-          <span className="text-[15px] font-semibold text-[#0d0d12] dark:text-[#fafafa]">דשבורד</span>
-        </div>
-        <div className="text-[11px] text-[#888] dark:text-[#8b8b8b]">{currentTime.toLocaleString('he-IL')}</div>
-      </div>
+      <PageToolbar
+        title="דשבורד"
+        onToggleMobileSidebar={() =>
+          (window as Window & { toggleMobileSidebar?: () => void }).toggleMobileSidebar?.()
+        }
+        headerActions={
+          <span className="text-[11px] text-[#888] dark:text-[#8b8b8b]">
+            {currentTime.toLocaleString('he-IL')}
+          </span>
+        }
+      />
 
       <div className="flex-1 py-6">
         <div className="w-full max-w-[90rem] mx-auto px-4 md:px-6 space-y-4 pb-8">

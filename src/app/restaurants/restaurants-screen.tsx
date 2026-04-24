@@ -1,51 +1,50 @@
 ﻿import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Power, Download, Store as StoreIcon, Trash2, X, Sparkles, Search, Filter, FileText, FileSpreadsheet } from 'lucide-react';
-import { useDelivery } from '../../context/delivery.context';
+import { useDelivery } from '../context/delivery.context';
 import { useNavigate } from 'react-router';
-import { Delivery, Restaurant } from '../../types/delivery.types';
+import { Delivery, Restaurant } from '../types/delivery.types';
 import { format } from 'date-fns';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { toast } from 'sonner';
-import { ListColumnsPanel } from '../../components/common/list-columns-panel';
-import { ListExportDrawer } from '../../components/common/list-export-drawer';
-import { ListFiltersRow } from '../../components/common/list-filters-row';
-import { ListInfoBar } from '../../components/common/list-info-bar';
-import { ListPageHeader } from '../../components/common/list-page-header';
-import { ListSidePanel } from '../../components/common/list-side-panel';
-import { SelectionActionBar } from '../../components/common/selection-action-bar';
-import { RestaurantsToolbar } from '../../entities/restaurants-toolbar';
-import { RestaurantsInlineFilters } from '../../entities/restaurants-inline-filters';
-import { getRestaurantChainId } from '../../utils/restaurant-branding';
+import { ListColumnsPanel } from '../components/common/list-columns-panel';
+import { ListExportDrawer } from '../components/common/list-export-drawer';
+import { ListInlineFilters } from '../components/common/list-inline-filters';
+import { PageToolbar } from '../components/common/page-toolbar';
+import { ListSidePanel } from '../components/common/list-side-panel';
+import { SelectionActionBar } from '../components/common/selection-action-bar';
+import { type SingleSelectFilterOption } from '../components/common/list-filter-controls';
+import { ListToolbarActions } from '../components/common/list-toolbar-actions';
+import { getRestaurantChainId } from '../utils/restaurant-branding';
 import {
   createExcelWorkbook,
   exportRowsToExcel,
   downloadExcelBuffer,
   sanitizeExportFileName,
   workbookToExcelBuffer,
-} from '../../utils/export-utils';
+} from '../utils/export-utils';
 import {
   EntityActionMenu,
   EntityActionMenuDivider,
   EntityActionMenuHeader,
   EntityActionMenuItem,
   EntityActionMenuOverlay,
-} from '../../components/common/entity-action-menu';
-import { EntityRowActionTrigger } from '../../components/common/entity-row-action-trigger';
-import { EntityTableHeaderCell } from '../../components/common/entity-table-header-cell';
+} from '../components/common/entity-action-menu';
+import { EntityRowActionTrigger } from '../components/common/entity-row-action-trigger';
+import { EntityTableHeaderCell } from '../components/common/entity-table-header-cell';
 import {
   EntityTableActionsCell,
   EntityTableActionsHeader,
   EntityTableHeaderCheckbox,
   EntityTableRowCheckbox,
   EntityTableShell,
-} from '../../components/common/entity-table-shell';
+} from '../components/common/entity-table-shell';
 import {
   ENTITY_TABLE_DATA_CELL_CLASS,
   ENTITY_TABLE_HEAD_CLASS,
   ENTITY_TABLE_ROW_CLASS,
   ENTITY_TABLE_WIDTHS,
-} from '../../components/common/entity-table-shared';
+} from '../components/common/entity-table-shared';
 
 // ═══════════════════════════════════════
 // Types
@@ -118,6 +117,11 @@ type RestaurantColId = typeof RESTAURANT_COLS[number]['id'];
 type RestaurantSortableColumnId = RestaurantColId;
 const COL_ORDER_KEY = 'restaurants-column-order-v3';
 const RESTAURANT_VISIBLE_COLUMNS_KEY = 'restaurants-visible-columns-v1';
+const RESTAURANT_STATUS_FILTER_OPTIONS: SingleSelectFilterOption[] = [
+  { id: 'all', label: 'סטטוס' },
+  { id: 'active', label: 'פעיל' },
+  { id: 'inactive', label: 'לא פעיל' },
+];
 const RESTAURANT_COLUMN_CATEGORIES = [
   {
     id: 'core',
@@ -144,7 +148,7 @@ const RESTAURANT_COLUMN_CATEGORIES = [
 // ═══════════════════════════════════════
 // Component
 // ═══════════════════════════════════════
-export const RestaurantsPage: React.FC = () => {
+export const RestaurantsScreen: React.FC = () => {
   const { state, dispatch } = useDelivery();
   const navigate = useNavigate();
 
@@ -314,6 +318,58 @@ export const RestaurantsPage: React.FC = () => {
     active: restaurants.filter(r => r.isActive).length,
     inactive: restaurants.filter(r => !r.isActive).length,
   }), [restaurants]);
+  const restaurantStatusFilterOptions = useMemo(
+    () =>
+      RESTAURANT_STATUS_FILTER_OPTIONS.map((option) => ({
+        ...option,
+        count:
+          option.id === 'all'
+            ? undefined
+            : statusCounts[option.id as keyof typeof statusCounts],
+      })),
+    [statusCounts],
+  );
+  const cityFilterOptions = useMemo<SingleSelectFilterOption[]>(
+    () => [{ id: 'all', label: 'עיר' }, ...uniqueCities.map((city) => ({ id: city, label: city }))],
+    [uniqueCities],
+  );
+  const typeFilterOptions = useMemo<SingleSelectFilterOption[]>(
+    () => [{ id: 'all', label: 'סוג' }, ...uniqueTypes.map((type) => ({ id: type, label: type }))],
+    [uniqueTypes],
+  );
+  const restaurantInlineFilters = useMemo(
+    () => [
+      {
+        key: 'status',
+        value: statusFilter,
+        onChange: (value: string) => setStatusFilter(value as typeof statusFilter),
+        options: restaurantStatusFilterOptions,
+        defaultLabel: 'סטטוס',
+      },
+      {
+        key: 'city',
+        value: cityFilter,
+        onChange: setCityFilter,
+        options: cityFilterOptions,
+        defaultLabel: 'עיר',
+      },
+      {
+        key: 'type',
+        value: typeFilter,
+        onChange: setTypeFilter,
+        options: typeFilterOptions,
+        defaultLabel: 'סוג',
+      },
+    ],
+    [
+      cityFilter,
+      cityFilterOptions,
+      restaurantStatusFilterOptions,
+      statusFilter,
+      typeFilter,
+      typeFilterOptions,
+    ],
+  );
 
   // Check active filters
   const hasActiveFilters = searchQuery || statusFilter !== 'all' || cityFilter !== 'all' || typeFilter !== 'all';
@@ -666,44 +722,36 @@ export const RestaurantsPage: React.FC = () => {
 
         <div className="flex-1 min-w-0 overflow-hidden flex flex-col" dir="rtl">
 
-        <ListPageHeader
+        <PageToolbar
           title="מסעדות"
           count={state.restaurants.length}
           onToggleMobileSidebar={() => (window as any).toggleMobileSidebar?.()}
           primaryActionLabel="הוסף מסעדה"
           onPrimaryAction={() => setIsAddModalOpen(true)}
+          headerControls={
+            <ListToolbarActions
+              showSearch={false}
+              columnsOpen={columnsOpen}
+              onExport={() => { setIsExportOpen((v) => !v); setColumnsOpen(false); }}
+              onToggleColumns={() => { setColumnsOpen(true); setIsExportOpen(false); }}
+            />
+          }
+          controls={<ListInlineFilters filters={restaurantInlineFilters} />}
+          actions={
+            <ListToolbarActions
+              searchQuery={searchQuery}
+              onSearchQueryChange={setSearchQuery}
+              searchPlaceholder="חפש מסעדה, עיר או איש קשר..."
+              searchWidthClass="w-52"
+              showColumnsToggle={false}
+              showExportButton={false}
+            />
+          }
+          summary={`${filteredRestaurants.length} מסעדות`}
         />
 
         {/* Content */}
         <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-
-            {/* Toolbar row */}
-            <ListFiltersRow
-              filters={
-                <RestaurantsInlineFilters
-                  statusFilter={statusFilter}
-                  onStatusChange={setStatusFilter}
-                  cityFilter={cityFilter}
-                  onCityChange={setCityFilter}
-                  typeFilter={typeFilter}
-                  onTypeChange={setTypeFilter}
-                  cityOptions={uniqueCities}
-                  typeOptions={uniqueTypes}
-                  statusCounts={statusCounts}
-                />
-              }
-              actions={
-                <RestaurantsToolbar
-                  searchQuery={searchQuery}
-                  onSearchChange={setSearchQuery}
-                  columnsOpen={columnsOpen}
-                  onExport={() => { setIsExportOpen((v) => !v); setColumnsOpen(false); }}
-                  onToggleColumns={() => { setColumnsOpen(true); setIsExportOpen(false); }}
-                />
-              }
-            />
-
-            <ListInfoBar>{filteredRestaurants.length} מסעדות</ListInfoBar>
 
             {/* Table / Empty state */}
             <div className="flex-1 min-h-0 flex flex-col">

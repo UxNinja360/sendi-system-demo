@@ -15,7 +15,6 @@ import {
   buildConfiguredExcelZipBlob,
   buildGroupedExcelZipBlob,
   buildGroupedPdfDocument,
-  buildSimpleCsvBlob,
   buildSimpleExcelWorkbook,
   buildSimplePdfDocument,
   buildSingleEntityWorkbookBuffer,
@@ -324,25 +323,6 @@ export function useDeliveriesExport({
           return;
         }
 
-        if (config.format === 'csv') {
-          const blob = buildSimpleCsvBlob({
-            deliveries: deliveriesToExport,
-            columns,
-            couriers,
-            calculateTimeRemaining,
-            formatTime,
-          });
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-
-          link.href = url;
-          link.download = `היסטוריה_${format(new Date(), 'dd-MM-yyyy_HH-mm')}.csv`;
-          link.click();
-          URL.revokeObjectURL(url);
-
-          toast.success(`CSV הורד — ${deliveriesToExport.length} משלוחים`);
-          return;
-        }
 
         const document = buildSimplePdfDocument({
           deliveries: deliveriesToExport,

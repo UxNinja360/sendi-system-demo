@@ -23,7 +23,7 @@ body {
 
 .app-safe-header {
   box-sizing: border-box;
-  height: var(--app-topbar-offset);
+  min-height: var(--app-topbar-offset);
   padding-top: var(--app-safe-top);
 }
 

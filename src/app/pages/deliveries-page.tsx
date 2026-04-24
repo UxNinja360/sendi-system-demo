@@ -2,9 +2,7 @@
 import { format as formatDate } from 'date-fns';
 import { useDelivery } from '../context/delivery.context';
 import { Delivery, DeliveryStatus } from '../types/delivery.types';
-import { DeliveriesPeriodControls } from '../deliveries/deliveries-period-controls';
 import { DeliveriesSidePanel } from '../deliveries/deliveries-side-panel';
-import { DeliveriesDesktopFilters } from '../deliveries/deliveries-desktop-filters';
 import { DeliveriesTableSection } from '../deliveries/deliveries-table-section';
 import { DeliveriesOverlays } from '../deliveries/deliveries-overlays';
 import { STATUS_LABELS, DEFAULT_VISIBLE_COLUMNS } from '../deliveries/status-config';
@@ -14,10 +12,10 @@ import type { RowHeight } from '../components/common/row-height-selector';
 import { toast } from 'sonner';
 import { useDeliveriesFilters } from '../deliveries/use-deliveries-filters';
 import { useDeliveriesExport } from '../deliveries/use-deliveries-export';
-import type { PeriodMode } from '../components/ui/period-toolbar';
-import { ListInfoBar } from '../components/common/list-info-bar';
-import { ListFiltersRow } from '../components/common/list-filters-row';
-import { ListPageHeader } from '../components/common/list-page-header';
+import type { PeriodMode } from '../components/common/toolbar-period-control';
+import { PageToolbar } from '../components/common/page-toolbar';
+import { ToolbarPeriodControl } from '../components/common/toolbar-period-control';
+import { ListInlineFilters } from '../components/common/list-inline-filters';
 import { ListToolbarActions } from '../components/common/list-toolbar-actions';
 import { SelectionActionBar } from '../components/common/selection-action-bar';
 
@@ -129,16 +127,8 @@ export const DeliveriesPage: React.FC = () => {
     selectedRestaurants,
     setSelectedRestaurants,
     toggleRestaurant,
-    selectedBranches,
-    setSelectedBranches,
-    toggleBranch,
-    selectedAreas,
-    setSelectedAreas,
-    toggleArea,
     courierOptions,
     restaurantOptions,
-    branchOptions,
-    areaOptions,
     filteredDeliveries,
     statusCounts,
     dateRangeStats,
@@ -173,30 +163,11 @@ export const DeliveriesPage: React.FC = () => {
   const [newDeliveryOpen, setNewDeliveryOpen] = useState(false);
   const [showRowHeightSelector, setShowRowHeightSelector] = useState(false);
 
-  const [statusOpen, setStatusOpen] = useState(false);
-  const [courierOpen, setCourierOpen] = useState(false);
-  const [restaurantOpen, setRestaurantOpen] = useState(false);
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [courierSearch, setCourierSearch] = useState('');
   const [restaurantSearch, setRestaurantSearch] = useState('');
-  const [branchOpen, setBranchOpen] = useState(false);
-  const [branchSearch, setBranchSearch] = useState('');
-  const [areaOpen, setAreaOpen] = useState(false);
-  const [areaSearch, setAreaSearch] = useState('');
   const [periodMode, setPeriodMode] = useState<PeriodMode>('current_month');
   const [monthAnchor, setMonthAnchor] = useState(new Date());
-
-  const [datePickerOpen, setDatePickerOpen] = useState(false);
-  const datePickerRef = useRef<HTMLDivElement>(null);
-  const [calendarMonth, setCalendarMonth] = useState(() => new Date());
-  const [hoverDate, setHoverDate] = useState<string | null>(null);
-  const [pickingStart, setPickingStart] = useState(true);
-  const dateRef = useRef<HTMLDivElement>(null);
-  const statusRef = useRef<HTMLDivElement>(null);
-  const courierRef = useRef<HTMLDivElement>(null);
-  const restaurantRef = useRef<HTMLDivElement>(null);
-  const branchRef = useRef<HTMLDivElement>(null);
-  const areaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (periodMode !== 'current_month') return;
@@ -208,19 +179,6 @@ export const DeliveriesPage: React.FC = () => {
     if (customStartDate !== monthStart) setCustomStartDate(monthStart);
     if (customEndDate !== monthEnd) setCustomEndDate(monthEnd);
   }, [periodMode, monthAnchor, dateRange, customStartDate, customEndDate, setDateRange, setCustomStartDate, setCustomEndDate]);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (datePickerOpen && !datePickerRef.current?.contains(e.target as Node)) setDatePickerOpen(false);
-      if (statusOpen && !statusRef.current?.contains(e.target as Node)) setStatusOpen(false);
-      if (courierOpen && !courierRef.current?.contains(e.target as Node)) setCourierOpen(false);
-      if (restaurantOpen && !restaurantRef.current?.contains(e.target as Node)) setRestaurantOpen(false);
-      if (branchOpen && !branchRef.current?.contains(e.target as Node)) setBranchOpen(false);
-      if (areaOpen && !areaRef.current?.contains(e.target as Node)) setAreaOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [datePickerOpen, statusOpen, courierOpen, restaurantOpen, branchOpen, areaOpen]);
 
   const [rowHeight, setRowHeight] = useState<RowHeight>(() => {
     try {
@@ -462,6 +420,90 @@ export const DeliveriesPage: React.FC = () => {
     revenue: filteredDeliveries.reduce((s, d) => s + (d.price ?? 0), 0),
   }), [filteredDeliveries]);
 
+  const deliveryStatusOptions = useMemo(
+    () =>
+      STATUS_CHIP_CONFIG.map(({ status, label, dot }) => ({
+        id: status,
+        label,
+        dotClassName: dot,
+        count: statusCounts[status] ?? 0,
+      })),
+    [statusCounts],
+  );
+
+  const deliveryInlineFilters = useMemo(
+    () => [
+      {
+        key: 'status',
+        kind: 'multi-select' as const,
+        selectedValues: new Set(Array.from(statusFilters) as string[]),
+        setSelectedValues: (
+          nextValue: React.SetStateAction<Set<string>>,
+        ) => {
+          setStatusFilters((previous) => {
+            const previousValues = new Set(Array.from(previous) as string[]);
+            const resolved =
+              typeof nextValue === 'function'
+                ? nextValue(previousValues)
+                : nextValue;
+            return new Set(Array.from(resolved) as DeliveryStatus[]);
+          });
+        },
+        toggleValue: (value: string) => toggleStatusFilter(value as DeliveryStatus),
+        options: deliveryStatusOptions,
+        defaultLabel: 'סטטוס',
+        pluralLabel: 'סטטוסים',
+        showSearch: false,
+        setCurrentPage,
+      },
+      {
+        key: 'restaurants',
+        kind: 'multi-select' as const,
+        selectedValues: selectedRestaurants,
+        setSelectedValues: setSelectedRestaurants,
+        toggleValue: toggleRestaurant,
+        options: restaurantOptions,
+        searchValue: restaurantSearch,
+        setSearchValue: setRestaurantSearch,
+        defaultLabel: 'מסעדה',
+        pluralLabel: 'מסעדות',
+        placeholder: 'חפש מסעדה...',
+        setCurrentPage,
+      },
+      {
+        key: 'couriers',
+        kind: 'multi-select' as const,
+        selectedValues: selectedCouriers,
+        setSelectedValues: setSelectedCouriers,
+        toggleValue: toggleCourier,
+        options: courierOptions,
+        searchValue: courierSearch,
+        setSearchValue: setCourierSearch,
+        defaultLabel: 'שליח',
+        pluralLabel: 'שליחים',
+        placeholder: 'חפש שליח...',
+        setCurrentPage,
+      },
+    ],
+    [
+      courierOptions,
+      courierSearch,
+      deliveryStatusOptions,
+      restaurantOptions,
+      restaurantSearch,
+      selectedCouriers,
+      selectedRestaurants,
+      setCurrentPage,
+      setSelectedCouriers,
+      setSelectedRestaurants,
+      setStatusFilters,
+      statusFilters,
+      toggleCourier,
+      toggleRestaurant,
+      toggleStatusFilter,
+    ],
+  );
+
   return (
     <>
       <div className="flex flex-row h-full overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]" dir="ltr">
@@ -485,95 +527,15 @@ export const DeliveriesPage: React.FC = () => {
 
         <div className="flex-1 min-w-0 overflow-hidden flex flex-col" dir="rtl">
 
-          <ListPageHeader
+          <PageToolbar
             title="משלוחים"
             count={filteredDeliveries.length}
             onToggleMobileSidebar={() => (window as any).toggleMobileSidebar?.()}
             primaryActionLabel="משלוח חדש"
             onPrimaryAction={() => setNewDeliveryOpen(true)}
-          />
-
-          <ListFiltersRow
-            filters={
-              <>
-                <DeliveriesPeriodControls
-                  periodMode={periodMode}
-                  setPeriodMode={setPeriodMode}
-                  monthAnchor={monthAnchor}
-                  setMonthAnchor={setMonthAnchor}
-                  datePickerOpen={datePickerOpen}
-                  setDatePickerOpen={setDatePickerOpen}
-                  datePickerRef={datePickerRef}
-                  calendarMonth={calendarMonth}
-                  setCalendarMonth={setCalendarMonth}
-                  hoverDate={hoverDate}
-                  setHoverDate={setHoverDate}
-                  pickingStart={pickingStart}
-                  setPickingStart={setPickingStart}
-                  customStartDate={customStartDate}
-                  setCustomStartDate={setCustomStartDate}
-                  customEndDate={customEndDate}
-                  setCustomEndDate={setCustomEndDate}
-                  setDateRange={setDateRange}
-                  setCurrentPage={setCurrentPage}
-                />
-
-                <DeliveriesDesktopFilters
-                  statusRef={statusRef}
-                  branchRef={branchRef}
-                  areaRef={areaRef}
-                  restaurantRef={restaurantRef}
-                  courierRef={courierRef}
-                  statusOpen={statusOpen}
-                  setStatusOpen={setStatusOpen}
-                  branchOpen={branchOpen}
-                  setBranchOpen={setBranchOpen}
-                  areaOpen={areaOpen}
-                  setAreaOpen={setAreaOpen}
-                  restaurantOpen={restaurantOpen}
-                  setRestaurantOpen={setRestaurantOpen}
-                  courierOpen={courierOpen}
-                  setCourierOpen={setCourierOpen}
-                  setColumnsOpen={setColumnsOpen}
-                  statusFilters={statusFilters}
-                  setStatusFilters={setStatusFilters}
-                  toggleStatusFilter={toggleStatusFilter}
-                  statusCounts={statusCounts}
-                  statusChipConfig={STATUS_CHIP_CONFIG}
-                  selectedBranches={selectedBranches}
-                  setSelectedBranches={setSelectedBranches}
-                  toggleBranch={toggleBranch}
-                  branchOptions={branchOptions}
-                  branchSearch={branchSearch}
-                  setBranchSearch={setBranchSearch}
-                  selectedAreas={selectedAreas}
-                  setSelectedAreas={setSelectedAreas}
-                  toggleArea={toggleArea}
-                  areaOptions={areaOptions}
-                  areaSearch={areaSearch}
-                  setAreaSearch={setAreaSearch}
-                  selectedRestaurants={selectedRestaurants}
-                  setSelectedRestaurants={setSelectedRestaurants}
-                  toggleRestaurant={toggleRestaurant}
-                  restaurantOptions={restaurantOptions}
-                  restaurantSearch={restaurantSearch}
-                  setRestaurantSearch={setRestaurantSearch}
-                  selectedCouriers={selectedCouriers}
-                  setSelectedCouriers={setSelectedCouriers}
-                  toggleCourier={toggleCourier}
-                  courierOptions={courierOptions}
-                  courierSearch={courierSearch}
-                  setCourierSearch={setCourierSearch}
-                  setCurrentPage={setCurrentPage}
-                />
-              </>
-            }
-            actions={
+            headerControls={
               <ListToolbarActions
-                searchQuery={searchQuery}
-                onSearchQueryChange={setSearchQuery}
-                searchPlaceholder="חפש משלוח..."
-                searchWidthClass="w-48"
+                showSearch={false}
                 columnsOpen={columnsOpen}
                 onToggleColumns={() => {
                   setColumnsOpen((current) => !current);
@@ -585,9 +547,36 @@ export const DeliveriesPage: React.FC = () => {
                 }}
               />
             }
+            periodControl={
+              <ToolbarPeriodControl
+                periodMode={periodMode}
+                setPeriodMode={setPeriodMode}
+                monthAnchor={monthAnchor}
+                setMonthAnchor={setMonthAnchor}
+                customStartDate={customStartDate}
+                setCustomStartDate={setCustomStartDate}
+                customEndDate={customEndDate}
+                setCustomEndDate={setCustomEndDate}
+                onCustomRangeChange={() => setDateRange('custom')}
+                onCustomRangeComplete={() => setCurrentPage(1)}
+                onReset={() => setCurrentPage(1)}
+              />
+            }
+            controls={
+              <ListInlineFilters filters={deliveryInlineFilters} />
+            }
+            actions={
+              <ListToolbarActions
+                searchQuery={searchQuery}
+                onSearchQueryChange={setSearchQuery}
+                searchPlaceholder="חפש משלוח..."
+                searchWidthClass="w-48"
+                showColumnsToggle={false}
+                showExportButton={false}
+              />
+            }
+            summary={`${filteredStats.total} משלוחים`}
           />
-
-          <ListInfoBar>{filteredStats.total} משלוחים</ListInfoBar>
 
           <div className="flex-1 min-h-0 flex flex-col">
             <DeliveriesTableSection

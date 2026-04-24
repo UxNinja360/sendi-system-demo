@@ -4,7 +4,6 @@ import {
   ChevronLeft,
   Globe,
   LogOut,
-  Menu,
   Moon,
   Palette,
   RotateCcw,
@@ -14,6 +13,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import { PageToolbar } from '../components/common/page-toolbar';
 import { useTheme } from '../context/theme.context';
 import { useLanguage } from '../context/language.context';
 import { useDelivery } from '../context/delivery.context';
@@ -192,18 +192,11 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]" dir="rtl">
-      <div className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-[#e5e5e5] bg-white px-5 dark:border-[#1f1f1f] dark:bg-[#171717]">
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={() => (window as any).toggleMobileSidebar?.()}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-[#525252] transition-colors hover:bg-[#f5f5f5] dark:text-[#a3a3a3] dark:hover:bg-[#262626] md:hidden"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-          <span className="text-[15px] font-semibold text-[#0d0d12] dark:text-[#fafafa]">{TEXT.title}</span>
-          <span className="text-[13px] text-[#737373] dark:text-[#a3a3a3]">{TEXT.subtitle}</span>
-        </div>
-      </div>
+      <PageToolbar
+        title={TEXT.title}
+        summary={TEXT.subtitle}
+        onToggleMobileSidebar={() => (window as any).toggleMobileSidebar?.()}
+      />
 
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-3 py-3 md:px-5 md:py-5">

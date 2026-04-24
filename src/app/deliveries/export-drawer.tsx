@@ -3,14 +3,12 @@ import {
   X,
   Download,
   FileSpreadsheet,
-  FileText,
   FileDown,
   Search,
   Check,
   ChevronDown,
   ChevronUp,
   RotateCcw,
-  Save,
   Bike,
   Store,
   ToggleLeft,
@@ -44,91 +42,6 @@ const COLUMN_CATEGORIES = [
 
 const COLUMN_LABEL_MAP = new Map(ALL_COLUMNS.map(c => [c.id, c.label]));
 
-// Presets
-interface ExportPreset {
-  id: string;
-  label: string;
-  emoji: string;
-  description: string;
-  config: Partial<ExportConfig>;
-}
-
-const BUILT_IN_PRESETS: ExportPreset[] = [
-  {
-    id: 'quick-table',
-    label: 'טבלה נוכחית',
-    emoji: '⚡',
-    description: 'Excel עם העמודות המוצגות',
-    config: { mode: 'simple', format: 'excel', columnMode: 'visible' },
-  },
-  {
-    id: 'full-report',
-    label: 'דוח מלא',
-    emoji: '📋',
-    description: 'Excel עם כל 130+ עמודות',
-    config: { mode: 'simple', format: 'excel', columnMode: 'all' },
-  },
-  {
-    id: 'pdf-print',
-    label: 'PDF להדפסה',
-    emoji: '🖨️',
-    description: 'PDF עם העמודות המוצגות',
-    config: { mode: 'simple', format: 'pdf', columnMode: 'visible' },
-  },
-  {
-    id: 'csv-import',
-    label: 'CSV לייבוא',
-    emoji: '📊',
-    description: 'CSV להעברה למערכות אחרות',
-    config: { mode: 'simple', format: 'csv', columnMode: 'visible' },
-  },
-  {
-    id: 'courier-report',
-    label: 'דוח שליחים',
-    emoji: '🚴',
-    description: 'ZIP עם קובץ Excel לכל שליח',
-    config: { mode: 'grouped', format: 'excel', groupBy: 'courier', columnMode: 'visible' },
-  },
-  {
-    id: 'restaurant-report',
-    label: 'דוח מסעדות',
-    emoji: '🏪',
-    description: 'ZIP עם קובץ Excel לכל מסעדה',
-    config: { mode: 'grouped', format: 'excel', groupBy: 'restaurant', columnMode: 'visible' },
-  },
-];
-
-// Saved templates persistence
-const STORAGE_KEY = 'export-drawer-templates';
-
-interface SavedTemplate {
-  id: string;
-  name: string;
-  createdAt: string;
-  config: {
-    mode: 'simple' | 'grouped';
-    format: 'excel' | 'csv' | 'pdf';
-    columnMode: 'visible' | 'all' | 'custom';
-    customColumns: string[];
-    groupBy: 'courier' | 'restaurant';
-    summaryFields: string[];
-    includeMasterSummary: boolean;
-    includeEntitySummary: boolean;
-    includeEntityDetail: boolean;
-  };
-}
-
-function loadTemplates(): SavedTemplate[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
-}
-
-function saveTemplates(templates: SavedTemplate[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(templates));
-}
-
 // ═══════════════════════════════════════
 // Props
 // ═══════════════════════════════════════
@@ -160,7 +73,7 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
 }) => {
   // Config state
   const [mode, setMode] = useState<'simple' | 'grouped'>('simple');
-  const [format, setFormat] = useState<'excel' | 'csv' | 'pdf'>('excel');
+  const [format, setFormat] = useState<'excel' | 'pdf'>('excel');
   const [columnMode, setColumnMode] = useState<'visible' | 'all' | 'custom'>('visible');
   const [customColumns, setCustomColumns] = useState<Set<string>>(new Set(visibleColumns));
   const [groupBy, setGroupBy] = useState<'courier' | 'restaurant'>('courier');
@@ -170,12 +83,8 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
   const [includeEntityDetail, setIncludeEntityDetail] = useState(true);
 
   // UI state
-  const [activePreset, setActivePreset] = useState<string | null>(null);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [columnSearch, setColumnSearch] = useState('');
-  const [savedTemplates, setSavedTemplates] = useState<SavedTemplate[]>(loadTemplates);
-  const [showSaveForm, setShowSaveForm] = useState(false);
-  const [newTemplateName, setNewTemplateName] = useState('');
   const panelRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -199,7 +108,6 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
   useEffect(() => {
     if (isOpen) {
       setCustomColumns(new Set(visibleColumns));
-      setSavedTemplates(loadTemplates());
     }
   }, [isOpen, visibleColumns]);
 
@@ -252,7 +160,6 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
       else next.add(colId);
       return next;
     });
-    setActivePreset(null);
   }, []);
 
   const toggleCategoryColumns = useCallback((catColumns: string[]) => {
@@ -266,7 +173,6 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
       }
       return next;
     });
-    setActivePreset(null);
   }, []);
 
   const toggleSummaryField = useCallback((id: string) => {
@@ -275,69 +181,7 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
-    setActivePreset(null);
   }, []);
-
-  // Apply a preset
-  const applyPreset = useCallback((preset: ExportPreset | SavedTemplate) => {
-    const cfg = 'emoji' in preset ? preset.config : {
-      mode: preset.config.mode,
-      format: preset.config.format,
-      columnMode: preset.config.columnMode,
-      groupBy: preset.config.groupBy,
-      customColumns: new Set(preset.config.customColumns),
-      summaryFields: new Set(preset.config.summaryFields),
-      includeMasterSummary: preset.config.includeMasterSummary,
-      includeEntitySummary: preset.config.includeEntitySummary,
-      includeEntityDetail: preset.config.includeEntityDetail,
-    };
-
-    if (cfg.mode) setMode(cfg.mode);
-    if (cfg.format) setFormat(cfg.format);
-    if (cfg.columnMode) setColumnMode(cfg.columnMode);
-    if (cfg.groupBy) setGroupBy(cfg.groupBy);
-    if ('customColumns' in cfg && cfg.customColumns instanceof Set) {
-      setCustomColumns(cfg.customColumns);
-    }
-    if ('summaryFields' in cfg && cfg.summaryFields instanceof Set) {
-      setSummaryFields(cfg.summaryFields);
-    }
-    if ('includeMasterSummary' in cfg) setIncludeMasterSummary(cfg.includeMasterSummary ?? true);
-    if ('includeEntitySummary' in cfg) setIncludeEntitySummary(cfg.includeEntitySummary ?? true);
-    if ('includeEntityDetail' in cfg) setIncludeEntityDetail(cfg.includeEntityDetail ?? true);
-
-    setActivePreset(preset.id);
-  }, []);
-
-  // Save template
-  const handleSaveTemplate = useCallback(() => {
-    if (!newTemplateName.trim()) return;
-    const tmpl: SavedTemplate = {
-      id: `tmpl_${Date.now()}`,
-      name: newTemplateName.trim(),
-      createdAt: new Date().toISOString(),
-      config: {
-        mode, format, columnMode, groupBy,
-        customColumns: Array.from(customColumns),
-        summaryFields: Array.from(summaryFields),
-        includeMasterSummary, includeEntitySummary, includeEntityDetail,
-      },
-    };
-    const updated = [...savedTemplates, tmpl];
-    setSavedTemplates(updated);
-    saveTemplates(updated);
-    setNewTemplateName('');
-    setShowSaveForm(false);
-    setActivePreset(tmpl.id);
-    toast.success(`תבנית "${tmpl.name}" נשמרה`);
-  }, [newTemplateName, mode, format, columnMode, groupBy, customColumns, summaryFields, includeMasterSummary, includeEntitySummary, includeEntityDetail, savedTemplates]);
-
-  const deleteTemplate = useCallback((id: string) => {
-    const updated = savedTemplates.filter(t => t.id !== id);
-    setSavedTemplates(updated);
-    saveTemplates(updated);
-    if (activePreset === id) setActivePreset(null);
-  }, [savedTemplates, activePreset]);
 
   // Reset
   const handleReset = useCallback(() => {
@@ -350,7 +194,6 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
     setIncludeMasterSummary(true);
     setIncludeEntitySummary(true);
     setIncludeEntityDetail(true);
-    setActivePreset(null);
     setExpandedSection(null);
     setColumnSearch('');
   }, [visibleColumns]);
@@ -372,7 +215,7 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
     const count = selectedCount > 0 ? selectedCount : deliveryCount;
     const cols = exportColumnCount;
     if (mode === 'simple') {
-      return `${count} משלוחים · ${cols} עמודות · ${format === 'excel' ? 'Excel' : format === 'csv' ? 'CSV' : 'PDF'}`;
+      return `${count} משלוחים · ${cols} עמודות · ${format === 'excel' ? 'Excel' : 'PDF'}`;
     }
     const entity = groupBy === 'courier' ? `${groupCounts.couriers} שליחים` : `${groupCounts.restaurants} מסעדות`;
     return `${count} משלוחים · ${entity} · ${format === 'excel' ? 'Excel ZIP' : 'PDF'}`;
@@ -402,7 +245,7 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
             <span className="text-[11px] text-[#a3a3a3]">קובץ Excel אחד</span>
           </button>
           <button
-            onClick={() => { setMode('grouped'); if (format === 'csv') setFormat('excel'); }}
+            onClick={() => setMode('grouped')}
             className={`flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl transition-all border ${
               mode === 'grouped'
                 ? 'bg-[#9fe870]/10 border-[#9fe870]'
@@ -470,7 +313,7 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
       {/* ④ פורמט */}
       <div className="space-y-2">
         <span className="text-[11px] font-medium text-[#a3a3a3] uppercase tracking-wide">פורמט</span>
-        <div className={`grid gap-1.5 ${mode === 'simple' ? 'grid-cols-3' : 'grid-cols-2'}`}>
+        <div className="grid grid-cols-2 gap-1.5">
           <button
             onClick={() => setFormat('excel')}
             className={`flex flex-col items-center gap-1 py-2.5 px-2 rounded-xl border transition-all ${
@@ -485,20 +328,6 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
             </span>
             <span className="text-[10px] text-[#a3a3a3]">עריכה</span>
           </button>
-          {mode === 'simple' && (
-            <button
-              onClick={() => setFormat('csv')}
-              className={`flex flex-col items-center gap-1 py-2.5 px-2 rounded-xl border transition-all ${
-                format === 'csv'
-                  ? 'bg-[#9fe870]/10 border-[#9fe870]'
-                  : 'bg-white dark:bg-[#0f0f0f] border-[#e5e5e5] dark:border-[#262626] hover:border-[#9fe870]/60'
-              }`}
-            >
-              <FileText className={`w-4 h-4 ${format === 'csv' ? 'text-[#5a9a30] dark:text-[#9fe870]' : 'text-[#a3a3a3]'}`} />
-              <span className={`text-xs font-medium ${format === 'csv' ? 'text-[#0d0d12] dark:text-[#fafafa]' : 'text-[#525252] dark:text-[#a3a3a3]'}`}>CSV</span>
-              <span className="text-[10px] text-[#a3a3a3]">ייבוא</span>
-            </button>
-          )}
           <button
             onClick={() => setFormat('pdf')}
             className={`flex flex-col items-center gap-1 py-2.5 px-2 rounded-xl border transition-all ${
@@ -514,64 +343,6 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
         </div>
       </div>
 
-      {/* תבניות שמורות — בתחתית, אחרי כל ההגדרות */}
-      <div className="space-y-2.5 pt-4 border-t border-[#e5e5e5] dark:border-[#262626]">
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] font-medium text-[#a3a3a3] uppercase tracking-wide">תבניות שמורות</span>
-          <button
-            onClick={() => setShowSaveForm(!showSaveForm)}
-            className="text-[11px] text-[#9fe870] hover:text-[#b2ed8d] transition-colors font-medium"
-          >
-            {showSaveForm ? 'ביטול' : '+ שמור נוכחי'}
-          </button>
-        </div>
-        {showSaveForm && (
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={newTemplateName}
-              onChange={e => setNewTemplateName(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSaveTemplate()}
-              placeholder="שם ההגדרה..."
-              className="flex-1 px-3 py-1.5 bg-[#f5f5f5] dark:bg-[#1a1a1a] border border-[#e5e5e5] dark:border-[#262626] rounded-lg text-xs text-[#0d0d12] dark:text-[#fafafa] placeholder-[#a3a3a3] outline-none focus:border-[#9fe870] transition-colors"
-              autoFocus
-            />
-            <button onClick={handleSaveTemplate} disabled={!newTemplateName.trim()} className="px-3 py-1.5 bg-[#9fe870] hover:bg-[#b2ed8d] text-[#0d0d12] rounded-lg text-xs font-semibold disabled:opacity-40 transition-colors">שמור</button>
-          </div>
-        )}
-        <div className="flex flex-wrap gap-1.5">
-          {BUILT_IN_PRESETS.map(preset => (
-            <button key={preset.id} onClick={() => applyPreset(preset)} title={preset.description}
-              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all border ${
-                activePreset === preset.id
-                  ? 'bg-[#9fe870] border-[#9fe870] text-[#0d0d12] shadow-sm'
-                  : 'bg-white dark:bg-[#0f0f0f] border-[#e5e5e5] dark:border-[#262626] text-[#525252] dark:text-[#a3a3a3] hover:border-[#9fe870]/60 hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
-              }`}>
-              {preset.emoji} {preset.label}
-            </button>
-          ))}
-        </div>
-        {savedTemplates.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 pt-2 border-t border-[#f5f5f5] dark:border-[#1a1a1a]">
-            {savedTemplates.map(tmpl => (
-              <div key={tmpl.id} className="flex items-center gap-0.5">
-                <button onClick={() => applyPreset(tmpl)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all border ${
-                    activePreset === tmpl.id
-                      ? 'bg-[#9fe870] border-[#9fe870] text-[#0d0d12] shadow-sm'
-                      : 'bg-white dark:bg-[#0f0f0f] border-[#e5e5e5] dark:border-[#262626] text-[#525252] dark:text-[#a3a3a3] hover:border-[#9fe870]/60 hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
-                  }`}>
-                  ★ {tmpl.name}
-                </button>
-                <button onClick={() => deleteTemplate(tmpl.id)} className="p-0.5 text-[#d4d4d4] hover:text-[#a3a3a3] dark:text-[#404040] dark:hover:text-[#737373] transition-colors">
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
     </div>
   );
 
@@ -583,7 +354,7 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
         className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-[#0d0d12] bg-[#9fe870] hover:bg-[#b2ed8d] shadow-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
       >
         <Download className="w-4 h-4" />
-        הורד {format === 'excel' ? (mode === 'grouped' ? 'Excel ZIP' : 'Excel') : format === 'csv' ? 'CSV' : 'PDF'}
+        הורד {format === 'excel' ? (mode === 'grouped' ? 'Excel ZIP' : 'Excel') : 'PDF'}
       </button>
       <div className="flex items-center justify-center gap-2 mt-1.5 text-[11px] text-[#a3a3a3]">
         <span className="tabular-nums">{(selectedCount > 0 ? selectedCount : deliveryCount).toLocaleString()} משלוחים</span>

@@ -154,7 +154,6 @@ export const DeliveryZonesPage: React.FC = () => {
     stopDrawingMode();
     setPendingLatlngs(pts);
     setNewName(`אזור ${zones.length + 1}`);
-    setNewPrice('');
   }, [zones.length]);
 
   const startDrawingMode = useCallback(() => {

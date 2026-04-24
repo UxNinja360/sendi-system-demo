@@ -1,6 +1,6 @@
 export interface ExportConfig {
   mode: 'simple' | 'grouped';
-  format: 'excel' | 'csv' | 'pdf';
+  format: 'excel' | 'pdf';
   columnMode: 'visible' | 'all' | 'custom';
   customColumns: Set<string>;
   groupBy: 'courier' | 'restaurant';

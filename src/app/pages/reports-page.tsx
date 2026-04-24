@@ -5,14 +5,17 @@ import {
   ChevronDown,
   FileSpreadsheet,
   Files,
-  Menu,
   Store,
   X,
 } from 'lucide-react';
 import { format as formatDate } from 'date-fns';
 import { useDelivery } from '../context/delivery.context';
 import { getWorkedMinutesWithinRange } from '../utils/shift-work';
-import { PeriodToolbar, PeriodMode } from '../components/ui/period-toolbar';
+import { PageToolbar } from '../components/common/page-toolbar';
+import {
+  ToolbarPeriodControl,
+  type PeriodMode,
+} from '../components/common/toolbar-period-control';
 import { useReportsExport } from '../reports/use-reports-export';
 
 const buildShiftBounds = (dateKey: string, startTime: string, endTime: string) => {
@@ -73,10 +76,7 @@ export const ReportsPage: React.FC = () => {
       return { start, end };
     }
 
-    const anchor =
-      periodMode === 'prev_month'
-        ? new Date(monthAnchor.getFullYear(), monthAnchor.getMonth() - 1, 1)
-        : new Date(monthAnchor.getFullYear(), monthAnchor.getMonth(), 1);
+    const anchor = new Date(monthAnchor.getFullYear(), monthAnchor.getMonth(), 1);
 
     return {
       start: new Date(anchor.getFullYear(), anchor.getMonth(), 1, 0, 0, 0, 0),
@@ -194,202 +194,192 @@ export const ReportsPage: React.FC = () => {
     restaurantReports,
   });
 
-  return (
-    <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a]">
-      <div className="sticky top-0 z-20 bg-white dark:bg-[#171717] border-b border-[#e5e5e5] dark:border-[#1f1f1f] px-5 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={() => (window as any).toggleMobileSidebar?.()}
-            className="md:hidden p-1.5 rounded-lg text-[#737373] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-          <span className="text-[15px] font-semibold text-[#0d0d12] dark:text-[#fafafa]">
-            דוחות
+  const reportsToolbarActions = (
+    <>
+      <button
+        onClick={() => setExportEntityType('couriers')}
+        className={`h-9 flex items-center gap-1.5 px-3 rounded-[4px] border text-sm font-medium transition-colors ${
+          exportEntityType === 'couriers'
+            ? 'bg-[#9fe870]/15 border-[#9fe870]/40 text-[#6bc84a]'
+            : 'bg-white dark:bg-[#171717] border-[#e5e5e5] dark:border-[#262626] text-[#525252] dark:text-[#a3a3a3] hover:bg-[#f5f5f5] dark:hover:bg-[#202020]'
+        }`}
+      >
+        <Bike className="w-3.5 h-3.5" />
+        שליחים
+      </button>
+      <button
+        onClick={() => setExportEntityType('restaurants')}
+        className={`h-9 flex items-center gap-1.5 px-3 rounded-[4px] border text-sm font-medium transition-colors ${
+          exportEntityType === 'restaurants'
+            ? 'bg-[#9fe870]/15 border-[#9fe870]/40 text-[#6bc84a]'
+            : 'bg-white dark:bg-[#171717] border-[#e5e5e5] dark:border-[#262626] text-[#525252] dark:text-[#a3a3a3] hover:bg-[#f5f5f5] dark:hover:bg-[#202020]'
+        }`}
+      >
+        <Store className="w-3.5 h-3.5" />
+        מסעדות
+      </button>
+
+      <div className="relative w-[200px]" ref={exportDropdownRef}>
+        <button
+          onClick={() => setExportDropdownOpen((current) => !current)}
+          className={`w-full h-9 px-3 flex items-center justify-between gap-2 rounded-[4px] border text-sm font-medium transition-colors ${
+            exportSelectedIds.length > 0
+              ? 'bg-[#9fe870]/15 border-[#9fe870]/40 text-[#6bc84a]'
+              : 'bg-white dark:bg-[#171717] border-[#e5e5e5] dark:border-[#262626] text-[#525252] dark:text-[#a3a3a3] hover:bg-[#f5f5f5] dark:hover:bg-[#202020]'
+          }`}
+        >
+          <span className="truncate text-right flex-1">
+            {exportSelectedIds.length === 0
+              ? `בחר ${exportEntityType === 'couriers' ? 'שליחים' : 'מסעדות'}...`
+              : exportSelectedIds.length ===
+                    (exportEntityType === 'couriers'
+                      ? courierReports
+                      : restaurantReports
+                    ).length
+                ? `כל ה${exportEntityType === 'couriers' ? 'שליחים' : 'מסעדות'} (${exportSelectedIds.length})`
+                : `${exportSelectedIds.length} נבחרו`}
           </span>
-        </div>
+          {exportSelectedIds.length > 0 ? (
+            <span
+              onClick={(event) => {
+                event.stopPropagation();
+                setExportSelectedIds([]);
+                setExportDropdownOpen(false);
+              }}
+              className="p-0.5 rounded hover:bg-[#dcfce7] dark:hover:bg-[#052e16] transition-colors cursor-pointer shrink-0"
+              role="button"
+            >
+              <X className="w-3 h-3" />
+            </span>
+          ) : (
+            <ChevronDown
+              className={`w-4 h-4 text-[#a3a3a3] shrink-0 transition-transform ${
+                exportDropdownOpen ? 'rotate-180' : ''
+              }`}
+            />
+          )}
+        </button>
+
+        {exportDropdownOpen ? (
+          <div className="absolute top-full mt-1 right-0 left-0 z-50 bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-lg shadow-xl overflow-hidden">
+            <div className="flex items-center justify-between px-3 py-2 border-b border-[#f0f0f0] dark:border-[#262626] bg-[#fafafa] dark:bg-[#111111]">
+              <button
+                onClick={() => {
+                  const allIds = (
+                    exportEntityType === 'couriers'
+                      ? courierReports
+                      : restaurantReports
+                  ).map((report) =>
+                    exportEntityType === 'couriers'
+                      ? (report as (typeof courierReports)[number]).courier.id
+                      : (report as (typeof restaurantReports)[number]).restaurant.id,
+                  );
+                  setExportSelectedIds(allIds);
+                }}
+                className="text-xs text-[#0fcdd3] hover:underline"
+              >
+                בחר הכל
+              </button>
+              <button
+                onClick={() => setExportSelectedIds([])}
+                className="text-xs text-[#a3a3a3] hover:underline"
+              >
+                נקה
+              </button>
+            </div>
+            <div className="max-h-[220px] overflow-y-auto divide-y divide-[#f0f0f0] dark:divide-[#1f1f1f]">
+              {(exportEntityType === 'couriers'
+                ? courierReports
+                : restaurantReports
+              ).map((report) => {
+                const id =
+                  exportEntityType === 'couriers'
+                    ? (report as (typeof courierReports)[number]).courier.id
+                    : (report as (typeof restaurantReports)[number]).restaurant.id;
+                const name =
+                  exportEntityType === 'couriers'
+                    ? (report as (typeof courierReports)[number]).courier.name
+                    : (report as (typeof restaurantReports)[number]).restaurant.name;
+                const isChecked = exportSelectedIds.includes(id);
+
+                return (
+                  <button
+                    key={id}
+                    onClick={() =>
+                      setExportSelectedIds((previous) =>
+                        isChecked
+                          ? previous.filter((value) => value !== id)
+                          : [...previous, id],
+                      )
+                    }
+                    className="w-full flex items-center gap-3 px-3 py-2.5 text-right hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a] transition-colors"
+                  >
+                    <div
+                      className={`w-4 h-4 rounded-[3px] border flex items-center justify-center shrink-0 transition-colors ${
+                        isChecked
+                          ? 'bg-[#9fe870] border-[#9fe870]'
+                          : 'border-[#d4d4d4] dark:border-[#404040]'
+                      }`}
+                    >
+                      {isChecked ? (
+                        <Check className="w-2.5 h-2.5 text-[#0d0d12]" />
+                      ) : null}
+                    </div>
+                    <span className="text-sm text-[#0d0d12] dark:text-[#fafafa] truncate flex-1">
+                      {name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
       </div>
 
-      <div dir="rtl">
-        <PeriodToolbar
-          periodMode={periodMode}
-          setPeriodMode={setPeriodMode}
-          monthAnchor={monthAnchor}
-          setMonthAnchor={setMonthAnchor}
-          customStartDate={customStartDate}
-          setCustomStartDate={setCustomStartDate}
-          customEndDate={customEndDate}
-          setCustomEndDate={setCustomEndDate}
-          className="shrink-0 flex items-center gap-1.5 px-3 py-2.5 border-b border-[#e5e5e5] dark:border-[#1f1f1f] bg-white dark:bg-[#171717] flex-wrap"
-        >
-          <div className="h-5 w-px bg-[#e5e5e5] dark:bg-[#262626] shrink-0" />
-
-          <button
-            onClick={() => setExportEntityType('couriers')}
-            className={`h-9 flex items-center gap-1.5 px-3 rounded-[4px] border text-sm font-medium transition-colors ${
-              exportEntityType === 'couriers'
-                ? 'bg-[#9fe870]/15 border-[#9fe870]/40 text-[#6bc84a]'
-                : 'bg-white dark:bg-[#171717] border-[#e5e5e5] dark:border-[#262626] text-[#525252] dark:text-[#a3a3a3] hover:bg-[#f5f5f5] dark:hover:bg-[#202020]'
-            }`}
-          >
-            <Bike className="w-3.5 h-3.5" />
-            שליחים
-          </button>
-          <button
-            onClick={() => setExportEntityType('restaurants')}
-            className={`h-9 flex items-center gap-1.5 px-3 rounded-[4px] border text-sm font-medium transition-colors ${
-              exportEntityType === 'restaurants'
-                ? 'bg-[#9fe870]/15 border-[#9fe870]/40 text-[#6bc84a]'
-                : 'bg-white dark:bg-[#171717] border-[#e5e5e5] dark:border-[#262626] text-[#525252] dark:text-[#a3a3a3] hover:bg-[#f5f5f5] dark:hover:bg-[#202020]'
-            }`}
-          >
-            <Store className="w-3.5 h-3.5" />
-            מסעדות
-          </button>
-
-          <div className="relative w-[200px]" ref={exportDropdownRef}>
-            <button
-              onClick={() => setExportDropdownOpen((current) => !current)}
-              className={`w-full h-9 px-3 flex items-center justify-between gap-2 rounded-[4px] border text-sm font-medium transition-colors ${
-                exportSelectedIds.length > 0
-                  ? 'bg-[#9fe870]/15 border-[#9fe870]/40 text-[#6bc84a]'
-                  : 'bg-white dark:bg-[#171717] border-[#e5e5e5] dark:border-[#262626] text-[#525252] dark:text-[#a3a3a3] hover:bg-[#f5f5f5] dark:hover:bg-[#202020]'
-              }`}
-            >
-              <span className="truncate text-right flex-1">
-                {exportSelectedIds.length === 0
-                  ? `בחר ${exportEntityType === 'couriers' ? 'שליחים' : 'מסעדות'}...`
-                  : exportSelectedIds.length ===
-                      (exportEntityType === 'couriers'
-                        ? courierReports
-                        : restaurantReports
-                      ).length
-                    ? `כל ה${exportEntityType === 'couriers' ? 'שליחים' : 'מסעדות'} (${exportSelectedIds.length})`
-                    : `${exportSelectedIds.length} נבחרו`}
-              </span>
-              {exportSelectedIds.length > 0 ? (
-                <span
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    setExportSelectedIds([]);
-                    setExportDropdownOpen(false);
-                  }}
-                  className="p-0.5 rounded hover:bg-[#dcfce7] dark:hover:bg-[#052e16] transition-colors cursor-pointer shrink-0"
-                  role="button"
-                >
-                  <X className="w-3 h-3" />
-                </span>
-              ) : (
-                <ChevronDown
-                  className={`w-4 h-4 text-[#a3a3a3] shrink-0 transition-transform ${
-                    exportDropdownOpen ? 'rotate-180' : ''
-                  }`}
-                />
-              )}
-            </button>
-
-            {exportDropdownOpen && (
-              <div className="absolute top-full mt-1 right-0 left-0 z-50 bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-lg shadow-xl overflow-hidden">
-                <div className="flex items-center justify-between px-3 py-2 border-b border-[#f0f0f0] dark:border-[#262626] bg-[#fafafa] dark:bg-[#111111]">
-                  <button
-                    onClick={() => {
-                      const allIds = (
-                        exportEntityType === 'couriers'
-                          ? courierReports
-                          : restaurantReports
-                      ).map((report) =>
-                        exportEntityType === 'couriers'
-                          ? (report as (typeof courierReports)[number]).courier.id
-                          : (report as (typeof restaurantReports)[number]).restaurant.id,
-                      );
-                      setExportSelectedIds(allIds);
-                    }}
-                    className="text-xs text-[#0fcdd3] hover:underline"
-                  >
-                    בחר הכל
-                  </button>
-                  <button
-                    onClick={() => setExportSelectedIds([])}
-                    className="text-xs text-[#a3a3a3] hover:underline"
-                  >
-                    נקה
-                  </button>
-                </div>
-                <div className="max-h-[220px] overflow-y-auto divide-y divide-[#f0f0f0] dark:divide-[#1f1f1f]">
-                  {(exportEntityType === 'couriers'
-                    ? courierReports
-                    : restaurantReports
-                  ).map((report) => {
-                    const id =
-                      exportEntityType === 'couriers'
-                        ? (report as (typeof courierReports)[number]).courier.id
-                        : (report as (typeof restaurantReports)[number]).restaurant.id;
-                    const name =
-                      exportEntityType === 'couriers'
-                        ? (report as (typeof courierReports)[number]).courier.name
-                        : (report as (typeof restaurantReports)[number]).restaurant.name;
-                    const isChecked = exportSelectedIds.includes(id);
-
-                    return (
-                      <button
-                        key={id}
-                        onClick={() =>
-                          setExportSelectedIds((previous) =>
-                            isChecked
-                              ? previous.filter((value) => value !== id)
-                              : [...previous, id],
-                          )
-                        }
-                        className="w-full flex items-center gap-3 px-3 py-2.5 text-right hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a] transition-colors"
-                      >
-                        <div
-                          className={`w-4 h-4 rounded-[3px] border flex items-center justify-center shrink-0 transition-colors ${
-                            isChecked
-                              ? 'bg-[#9fe870] border-[#9fe870]'
-                              : 'border-[#d4d4d4] dark:border-[#404040]'
-                          }`}
-                        >
-                          {isChecked && <Check className="w-2.5 h-2.5 text-[#0d0d12]" />}
-                        </div>
-                        <span className="text-sm text-[#0d0d12] dark:text-[#fafafa] truncate flex-1">
-                          {name}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <button
-            onClick={handleExportCombined}
-            className="h-9 flex items-center gap-1.5 px-3 rounded-[4px] border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] text-[#525252] dark:text-[#a3a3a3] text-sm font-medium hover:bg-[#f5f5f5] dark:hover:bg-[#202020] transition-colors shrink-0"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-[#16a34a]" />
-            אקסל
-          </button>
-          <button
-            onClick={handleExportSeparate}
-            disabled={exportSelectedIds.length === 0}
-            className="h-9 flex items-center gap-1.5 px-3 rounded-[4px] border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] text-[#525252] dark:text-[#a3a3a3] text-sm font-medium hover:bg-[#f5f5f5] dark:hover:bg-[#202020] transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
-          >
-            <Files className="w-3.5 h-3.5 text-[#2563eb]" />
-            נפרד
-            {exportSelectedIds.length > 0 && (
-              <span className="bg-[#9fe870] text-[#0d0d12] text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center shrink-0">
-                {exportSelectedIds.length}
-              </span>
-            )}
-          </button>
-        </PeriodToolbar>
-
-        <div className="shrink-0 px-4 py-1 border-b border-[#e5e5e5] dark:border-[#1f1f1f] bg-white dark:bg-[#171717]">
-          <span className="text-xs text-[#a3a3a3] dark:text-[#737373]">
-            {deliveriesInRange.length} משלוחים • {courierReports.length} שליחים •{' '}
-            {restaurantReports.length} מסעדות
+      <button
+        onClick={handleExportCombined}
+        className="h-9 flex items-center gap-1.5 px-3 rounded-[4px] border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] text-[#525252] dark:text-[#a3a3a3] text-sm font-medium hover:bg-[#f5f5f5] dark:hover:bg-[#202020] transition-colors shrink-0"
+      >
+        <FileSpreadsheet className="w-3.5 h-3.5 text-[#16a34a]" />
+        אקסל
+      </button>
+      <button
+        onClick={handleExportSeparate}
+        disabled={exportSelectedIds.length === 0}
+        className="h-9 flex items-center gap-1.5 px-3 rounded-[4px] border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] text-[#525252] dark:text-[#a3a3a3] text-sm font-medium hover:bg-[#f5f5f5] dark:hover:bg-[#202020] transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+      >
+        <Files className="w-3.5 h-3.5 text-[#2563eb]" />
+        נפרד
+        {exportSelectedIds.length > 0 ? (
+          <span className="bg-[#9fe870] text-[#0d0d12] text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center shrink-0">
+            {exportSelectedIds.length}
           </span>
-        </div>
+        ) : null}
+      </button>
+    </>
+  );
+
+  return (
+    <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a]">
+      <div dir="rtl">
+        <PageToolbar
+          title="דוחות"
+          onToggleMobileSidebar={() => (window as any).toggleMobileSidebar?.()}
+          periodControl={
+            <ToolbarPeriodControl
+              periodMode={periodMode}
+              setPeriodMode={setPeriodMode}
+              monthAnchor={monthAnchor}
+              setMonthAnchor={setMonthAnchor}
+              customStartDate={customStartDate}
+              setCustomStartDate={setCustomStartDate}
+              customEndDate={customEndDate}
+              setCustomEndDate={setCustomEndDate}
+            />
+          }
+          actions={reportsToolbarActions}
+          summary={`${deliveriesInRange.length} משלוחים • ${courierReports.length} שליחים • ${restaurantReports.length} מסעדות`}
+        />
 
         <div className="flex flex-col items-center">
           <div className="w-full max-w-[90rem]" />

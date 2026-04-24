@@ -3,40 +3,39 @@ import { FileSpreadsheet, FileText, Filter, Package, Phone, Plus, Power, Star, T
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { ListInfoBar } from '../../components/common/list-info-bar';
-import { ListFiltersRow } from '../../components/common/list-filters-row';
-import { ListPageHeader } from '../../components/common/list-page-header';
-import { SelectionActionBar } from '../../components/common/selection-action-bar';
-import { useDelivery } from '../../context/delivery.context';
-import { Courier } from '../../types/delivery.types';
+import { ListInlineFilters } from '../components/common/list-inline-filters';
+import { PageToolbar } from '../components/common/page-toolbar';
+import { SelectionActionBar } from '../components/common/selection-action-bar';
+import { useDelivery } from '../context/delivery.context';
+import { Courier } from '../types/delivery.types';
 import {
   EntityActionMenu,
   EntityActionMenuDivider,
   EntityActionMenuHeader,
   EntityActionMenuItem,
   EntityActionMenuOverlay,
-} from '../../components/common/entity-action-menu';
-import { ListColumnsPanel } from '../../components/common/list-columns-panel';
-import { ListExportDrawer } from '../../components/common/list-export-drawer';
-import { CouriersInlineFilters } from '../../entities/couriers-inline-filters';
-import { exportRowsToExcel } from '../../utils/export-utils';
-import { EntityEmptyState, EntityNoResultsState } from '../../components/common/entity-empty-state';
-import { EntityRowActionTrigger } from '../../components/common/entity-row-action-trigger';
-import { ListSidePanel } from '../../components/common/list-side-panel';
-import { EntityTableHeaderCell } from '../../components/common/entity-table-header-cell';
+} from '../components/common/entity-action-menu';
+import { ListColumnsPanel } from '../components/common/list-columns-panel';
+import { ListExportDrawer } from '../components/common/list-export-drawer';
+import { type SingleSelectFilterOption } from '../components/common/list-filter-controls';
+import { exportRowsToExcel } from '../utils/export-utils';
+import { EntityEmptyState, EntityNoResultsState } from '../components/common/entity-empty-state';
+import { EntityRowActionTrigger } from '../components/common/entity-row-action-trigger';
+import { ListSidePanel } from '../components/common/list-side-panel';
+import { ListToolbarActions } from '../components/common/list-toolbar-actions';
+import { EntityTableHeaderCell } from '../components/common/entity-table-header-cell';
 import {
   EntityTableActionsCell,
   EntityTableHeaderCheckbox,
   EntityTableRowCheckbox,
   EntityTableShell,
-} from '../../components/common/entity-table-shell';
-import { CouriersToolbar } from '../../entities/couriers-toolbar';
+} from '../components/common/entity-table-shell';
 import {
   ENTITY_TABLE_ACTIONS_HEAD_CLASS,
   ENTITY_TABLE_DATA_CELL_CLASS,
   ENTITY_TABLE_ROW_CLASS,
   ENTITY_TABLE_WIDTHS,
-} from '../../components/common/entity-table-shared';
+} from '../components/common/entity-table-shared';
 
 const TEXT = {
   pageTitle: '\u05e9\u05dc\u05d9\u05d7\u05d9\u05dd',
@@ -84,6 +83,17 @@ const TEXT = {
 
 const VEHICLE_TYPES: Courier['vehicleType'][] = ['אופנוע', 'רכב', 'קורקינט'];
 const COURIER_VISIBLE_COLUMNS_KEY = 'couriers-visible-columns-v1';
+const COURIER_STATUS_FILTER_OPTIONS: SingleSelectFilterOption[] = [
+  { id: 'all', label: 'סטטוס' },
+  { id: 'available', label: 'זמין' },
+  { id: 'busy', label: 'תפוס' },
+  { id: 'offline', label: 'לא מחובר' },
+];
+const COURIER_DELIVERY_FILTER_OPTIONS: SingleSelectFilterOption[] = [
+  { id: 'all', label: 'משלוחים' },
+  { id: 'with_delivery', label: 'עם משלוח פעיל' },
+  { id: 'without_delivery', label: 'ללא משלוח' },
+];
 const COURIER_COLUMNS = [
   { id: 'name', label: 'שם שליח' },
   { id: 'connection', label: 'חיבור' },
@@ -162,7 +172,7 @@ const getCourierColumnWidth = (columnId: (typeof COURIER_COLUMNS)[number]['id'])
   }
 };
 
-export const CouriersListPage: React.FC = () => {
+export const CouriersListScreen: React.FC = () => {
   const { state, dispatch } = useDelivery();
   const navigate = useNavigate();
 
@@ -312,6 +322,36 @@ export const CouriersListPage: React.FC = () => {
       offline: state.couriers.filter(courier => courier.status === 'offline').length,
     }),
     [state.couriers],
+  );
+  const courierStatusFilterOptions = useMemo(
+    () =>
+      COURIER_STATUS_FILTER_OPTIONS.map((option) => ({
+        ...option,
+        count:
+          option.id === 'all'
+            ? undefined
+            : statusCounts[option.id as keyof typeof statusCounts],
+      })),
+    [statusCounts],
+  );
+  const courierInlineFilters = useMemo(
+    () => [
+      {
+        key: 'status',
+        value: statusFilter,
+        onChange: (value: string) => setStatusFilter(value as typeof statusFilter),
+        options: courierStatusFilterOptions,
+        defaultLabel: 'סטטוס',
+      },
+      {
+        key: 'deliveries',
+        value: deliveryFilter,
+        onChange: (value: string) => setDeliveryFilter(value as typeof deliveryFilter),
+        options: COURIER_DELIVERY_FILTER_OPTIONS,
+        defaultLabel: 'משלוחים',
+      },
+    ],
+    [courierStatusFilterOptions, deliveryFilter, statusFilter],
   );
 
   const hasActiveFilters = searchQuery || statusFilter !== 'all' || deliveryFilter !== 'all';
@@ -831,7 +871,7 @@ export const CouriersListPage: React.FC = () => {
         </ListSidePanel>
 
         <div className="flex-1 min-w-0 overflow-hidden flex flex-col" dir="rtl">
-        <ListPageHeader
+        <PageToolbar
           title={TEXT.pageTitle}
           count={filteredCouriers.length}
           onToggleMobileSidebar={() => (window as any).toggleMobileSidebar?.()}
@@ -839,32 +879,29 @@ export const CouriersListPage: React.FC = () => {
           primaryActionIcon={<Plus className="h-3.5 w-3.5" />}
           onPrimaryAction={() => setIsModalOpen(true)}
           primaryActionDataOnboarding="add-courier-btn"
+          headerControls={
+            <ListToolbarActions
+              showSearch={false}
+              columnsOpen={columnsOpen}
+              onToggleColumns={() => { setColumnsOpen(true); setIsExportOpen(false); }}
+              onExport={() => { setIsExportOpen((v) => !v); setColumnsOpen(false); }}
+            />
+          }
+          controls={<ListInlineFilters filters={courierInlineFilters} />}
+          actions={
+            <ListToolbarActions
+              searchQuery={searchQuery}
+              onSearchQueryChange={setSearchQuery}
+              searchPlaceholder="חפש שליח או מספר טלפון..."
+              searchWidthClass="w-48"
+              showColumnsToggle={false}
+              showExportButton={false}
+            />
+          }
+          summary={`${filteredCouriers.length} שליחים`}
         />
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <ListFiltersRow
-            filters={
-              <CouriersInlineFilters
-                statusFilter={statusFilter}
-                onStatusChange={setStatusFilter}
-                deliveryFilter={deliveryFilter}
-                onDeliveryChange={setDeliveryFilter}
-                statusCounts={statusCounts}
-              />
-            }
-            actions={
-              <CouriersToolbar
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                columnsOpen={columnsOpen}
-                onToggleColumns={() => { setColumnsOpen(true); setIsExportOpen(false); }}
-                onExport={() => { setIsExportOpen((v) => !v); setColumnsOpen(false); }}
-              />
-            }
-          />
-
-          <ListInfoBar>{filteredCouriers.length} שליחים</ListInfoBar>
-
           {viewMode === 'list' ? (
             <div className="flex-1 min-h-0 flex flex-col">
               {filteredCouriers.length === 0 ? (

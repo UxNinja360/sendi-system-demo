@@ -4,6 +4,8 @@ import { Check, ChevronDown, X } from 'lucide-react';
 export type FilterOption = {
   id: string;
   label: string;
+  count?: number;
+  dotClassName?: string;
 };
 
 export type SingleSelectFilterOption = {
@@ -14,7 +16,7 @@ export type SingleSelectFilterOption = {
 };
 
 type ListMultiSelectFilterProps = {
-  containerRef: React.RefObject<HTMLDivElement | null>;
+  containerRef: React.RefObject<HTMLDivElement | null> | ((node: HTMLDivElement | null) => void);
   isOpen: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   closeOtherMenus: () => void;
@@ -29,10 +31,11 @@ type ListMultiSelectFilterProps = {
   placeholder: string;
   setCurrentPage?: (page: number) => void;
   icon?: React.ReactNode;
+  showSearch?: boolean;
 };
 
 type ListSingleSelectFilterProps = {
-  containerRef: React.RefObject<HTMLDivElement | null>;
+  containerRef: React.RefObject<HTMLDivElement | null> | ((node: HTMLDivElement | null) => void);
   isOpen: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   closeOtherMenus: () => void;
@@ -79,6 +82,7 @@ export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
   placeholder,
   setCurrentPage,
   icon,
+  showSearch = true,
 }) => {
   const isActive = selectedValues.size > 0;
   const selectedLabel =
@@ -88,7 +92,9 @@ export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
         ? (options.find((option) => selectedValues.has(option.id))?.label ?? defaultLabel)
         : `${selectedValues.size} ${pluralLabel}`;
 
-  const filteredOptions = options.filter((option) => !searchValue || option.label.includes(searchValue));
+  const filteredOptions = options.filter(
+    (option) => !showSearch || !searchValue || option.label.includes(searchValue),
+  );
 
   return (
     <div className="relative" ref={containerRef}>
@@ -119,18 +125,20 @@ export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
         )}
       </button>
 
-      {isOpen && (
+      {isOpen ? (
         <div className="absolute top-full right-0 z-50 mt-1.5 flex max-h-[260px] min-w-[200px] flex-col rounded-xl border border-[#e5e5e5] bg-white shadow-xl dark:border-[#262626] dark:bg-[#171717]">
-          <div className="border-b border-[#f0f0f0] p-2 dark:border-[#262626]">
-            <input
-              autoFocus
-              value={searchValue}
-              onChange={(event) => setSearchValue(event.target.value)}
-              placeholder={placeholder}
-              className="w-full rounded-lg bg-[#f5f5f5] px-2.5 py-1.5 text-sm text-[#0d0d12] outline-none placeholder-[#a3a3a3] dark:bg-[#141414] dark:text-[#fafafa]"
-              style={{ direction: 'rtl' }}
-            />
-          </div>
+          {showSearch ? (
+            <div className="border-b border-[#f0f0f0] p-2 dark:border-[#262626]">
+              <input
+                autoFocus
+                value={searchValue}
+                onChange={(event) => setSearchValue(event.target.value)}
+                placeholder={placeholder}
+                className="w-full rounded-lg bg-[#f5f5f5] px-2.5 py-1.5 text-sm text-[#0d0d12] outline-none placeholder-[#a3a3a3] dark:bg-[#141414] dark:text-[#fafafa]"
+                style={{ direction: 'rtl' }}
+              />
+            </div>
+          ) : null}
           <div className="overflow-y-auto py-1">
             {filteredOptions.map((option) => {
               const optionActive = selectedValues.has(option.id);
@@ -144,15 +152,27 @@ export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
                   className={getOptionButtonClass(optionActive)}
                 >
                   <span className={getCheckboxClass(optionActive)}>
-                    {optionActive && <Check className="h-2.5 w-2.5 text-[#0d0d12]" />}
+                    {optionActive ? <Check className="h-2.5 w-2.5 text-[#0d0d12]" /> : null}
                   </span>
-                  <span className="flex-1 truncate">{option.label}</span>
+                  {option.dotClassName ? (
+                    <span
+                      className={`h-2 w-2 shrink-0 rounded-full ${option.dotClassName} ${optionActive ? '' : 'opacity-50'}`}
+                    />
+                  ) : null}
+                  <span className={`flex-1 truncate text-right ${optionActive ? 'font-medium' : ''}`}>
+                    {option.label}
+                  </span>
+                  {typeof option.count === 'number' ? (
+                    <span className="rounded-full bg-[#f5f5f5] px-1.5 py-0.5 text-[10px] font-bold text-[#737373] dark:bg-[#262626] dark:text-[#a3a3a3]">
+                      {option.count}
+                    </span>
+                  ) : null}
                 </button>
               );
             })}
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 };
@@ -206,7 +226,7 @@ export const ListSingleSelectFilter: React.FC<ListSingleSelectFilterProps> = ({
         )}
       </button>
 
-      {isOpen && (
+      {isOpen ? (
         <div className="absolute top-full right-0 z-50 mt-1.5 min-w-[180px] rounded-[4px] border border-[#e5e5e5] bg-white py-1 shadow-xl dark:border-[#262626] dark:bg-[#171717]">
           {options.map((option) => {
             const isSelected = option.id === value;
@@ -236,7 +256,7 @@ export const ListSingleSelectFilter: React.FC<ListSingleSelectFilterProps> = ({
             );
           })}
         </div>
-      )}
+      ) : null}
     </div>
   );
 };
