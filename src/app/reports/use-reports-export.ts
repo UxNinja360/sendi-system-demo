@@ -18,9 +18,14 @@ import {
   sanitizeExportFileName,
   workbookToExcelBuffer,
 } from '../utils/export-utils';
+import {
+  formatCurrency,
+  getDeliveryCourierBasePay,
+  getDeliveryCustomerCharge,
+} from '../utils/delivery-finance';
 import { formatWorkedDuration, getWorkedMinutesWithinRange } from '../utils/shift-work';
 
-const MONEY = (value: number) => `₪${value.toLocaleString('he-IL')}`;
+const MONEY = (value: number) => formatCurrency(value);
 const DETAIL_HEADERS = [
   'מס׳ הזמנה',
   'סטטוס',
@@ -94,8 +99,8 @@ const buildDeliveryRows = (deliveries: Delivery[]) =>
     formatDateTime(delivery.createdAt),
     formatDateTime(delivery.pickedUpAt),
     formatDateTime(delivery.deliveredAt),
-    delivery.price || 0,
-    delivery.runner_price ?? delivery.courierPayment ?? 0,
+    getDeliveryCustomerCharge(delivery),
+    getDeliveryCourierBasePay(delivery),
   ]);
 
 const buildCourierWorkbook = (

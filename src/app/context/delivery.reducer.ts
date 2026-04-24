@@ -9,7 +9,14 @@
   WeeklyShiftDayConfig,
   WorkShift,
 } from '../types/delivery.types';
+import { getDeliveryCustomerCharge } from '../utils/delivery-finance';
+import { canCourierAcceptDelivery } from '../utils/courier-assignment';
 import { createPickupBatchId, getRestaurantPickupBaseKey } from '../utils/pickup-batches';
+import {
+  estimateTravelMinutes,
+  hasValidPosition,
+  type MapPosition,
+} from '../live/live-simulation-engine';
 
 const getCourierStatusAfterLoadChange = (
   courierStatus: 'available' | 'busy' | 'offline',
@@ -1392,7 +1399,7 @@ const calculateStats = (deliveries: Delivery[]) => {
     const cancelled = periodDeliveries.filter(d => d.status === 'cancelled').length;
     const revenue = periodDeliveries
       .filter(d => d.status === 'delivered')
-      .reduce((sum, d) => sum + d.price, 0);
+      .reduce((sum, d) => sum + getDeliveryCustomerCharge(d), 0);
 
     return {
       total: periodDeliveries.length,
@@ -1447,6 +1454,36 @@ const getRestaurantCapacityDelayMinutes = (
 
   const nextAvailableTime = new Date(new Date(oldestDelivery.createdAt).getTime() + 60 * 60 * 1000);
   return Math.ceil((nextAvailableTime.getTime() - referenceTime.getTime()) / 1000 / 60);
+};
+
+const getValidDateValue = (value: Date | string | number | null | undefined) => {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const toMapPosition = (
+  lat: number | null | undefined,
+  lng: number | null | undefined
+): MapPosition | null =>
+  hasValidPosition({ lat, lng })
+    ? { lat: lat as number, lng: lng as number }
+    : null;
+
+const getDeliveryTravelEstimateMinutes = (
+  delivery: Delivery,
+  pickupPosition: MapPosition | null,
+  dropoffPosition: MapPosition | null
+) => {
+  if (typeof delivery.eta_after_pickup === 'number' && delivery.eta_after_pickup > 0) {
+    return delivery.eta_after_pickup;
+  }
+
+  if (typeof delivery.duration_to_client === 'number' && delivery.duration_to_client > 0) {
+    return delivery.duration_to_client;
+  }
+
+  return estimateTravelMinutes(pickupPosition, dropoffPosition);
 };
 
 const normalizeIncomingDelivery = (payload: Delivery, restaurant: Restaurant) => {
@@ -1522,7 +1559,7 @@ const assignCourierState = (
     runner_at_assigning_longitude,
   } = payload;
   const courier = state.couriers.find((item) => item.id === courierId);
-  if (!courier || courier.status === 'offline' || !courier.isOnShift) {
+  if (!courier || !canCourierAcceptDelivery(courier, deliveryId)) {
     return null;
   }
 
@@ -1554,11 +1591,28 @@ const assignCourierState = (
       pickupStartAnchor && pickupStartAnchor.getTime() > now.getTime()
         ? new Date(pickupStartAnchor)
         : now;
-    const estimatedRestaurantTime = new Date(
-      startedPickupAt.getTime() + (5 + Math.random() * 10) * 60000
+    const courierPosition = toMapPosition(
+      runner_at_assigning_latitude,
+      runner_at_assigning_longitude
     );
+    const pickupPosition = toMapPosition(delivery.pickup_latitude, delivery.pickup_longitude);
+    const dropoffPosition = toMapPosition(delivery.dropoff_latitude, delivery.dropoff_longitude);
+    const minutesToRestaurant = estimateTravelMinutes(courierPosition, pickupPosition);
+    const minutesToCustomer = getDeliveryTravelEstimateMinutes(
+      delivery,
+      pickupPosition,
+      dropoffPosition
+    );
+    const estimatedRestaurantTime = new Date(
+      startedPickupAt.getTime() + minutesToRestaurant * 60000
+    );
+    const orderReadyTime = getValidDateValue(delivery.orderReadyTime);
+    const pickupReadyTime =
+      orderReadyTime && orderReadyTime > estimatedRestaurantTime
+        ? orderReadyTime
+        : estimatedRestaurantTime;
     const estimatedCustomerTime = new Date(
-      estimatedRestaurantTime.getTime() + (20 + Math.random() * 20) * 60000
+      pickupReadyTime.getTime() + minutesToCustomer * 60000
     );
 
     return {
@@ -1581,7 +1635,7 @@ const assignCourierState = (
   const nextCouriers = updateCourierActiveDeliveries(
     state.couriers,
     courierId,
-    (activeDeliveryIds) => [...activeDeliveryIds, deliveryId]
+    (activeDeliveryIds) => Array.from(new Set([...activeDeliveryIds, deliveryId]))
   );
 
   return {

@@ -2,7 +2,15 @@ import React, { useMemo } from 'react';
 import { ArrowLeft, Bike, Receipt, TrendingUp, Wallet } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { PageToolbar } from '../components/common/page-toolbar';
-import { useDelivery } from '../context/delivery.context';
+import { useDelivery } from '../context/delivery-context-value';
+import {
+  formatCurrency,
+  getDeliveryCommission,
+  getDeliveryCourierBasePay,
+  getDeliveryCourierTip,
+  getDeliveryCustomerCharge,
+  sumDeliveryMoney,
+} from '../utils/delivery-finance';
 
 const TEXT = {
   title: '\u05d0\u05e8\u05e0\u05e7',
@@ -36,13 +44,6 @@ const TEXT = {
     '\u05d4\u05d0\u05e8\u05e0\u05e7\u0020\u05de\u05e6\u05d9\u05d2\u0020\u05db\u05e8\u05d2\u05e2\u0020\u05d0\u05ea\u0020\u05d4\u05db\u05e1\u05e3\u0020\u05e9\u05e0\u05db\u05e0\u05e1\u0020\u05de\u05d4\u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd\u0020\u05e9\u05d4\u05d5\u05e9\u05dc\u05de\u05d5\u0020\u05d1\u05e4\u05d5\u05e2\u05dc\u002e\u0020\u05d1\u05e9\u05dc\u05d1\u0020\u05d4\u05d1\u05d0\u0020\u05d0\u05e4\u05e9\u05e8\u0020\u05dc\u05d4\u05d5\u05e1\u05d9\u05e3\u0020\u05d2\u05dd\u0020\u05de\u05e9\u05d9\u05db\u05d5\u05ea\u002c\u0020\u05d4\u05e2\u05d1\u05e8\u05d5\u05ea\u002c\u0020\u05d9\u05ea\u05e8\u05d4\u0020\u05d6\u05de\u05d9\u05e0\u05d4\u0020\u05d5\u05d4\u05d9\u05e1\u05d8\u05d5\u05e8\u05d9\u05d9\u05ea\u0020\u05ea\u05e0\u05d5\u05e2\u05d5\u05ea\u0020\u05de\u05dc\u05d0\u05d4\u002e',
 } as const;
 
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat('he-IL', {
-    style: 'currency',
-    currency: 'ILS',
-    maximumFractionDigits: 0,
-  }).format(value);
-
 export const WalletPage: React.FC = () => {
   const navigate = useNavigate();
   const { state } = useDelivery();
@@ -53,23 +54,10 @@ export const WalletPage: React.FC = () => {
   );
 
   const walletStats = useMemo(() => {
-    const totalRevenue = completedDeliveries.reduce(
-      (sum, delivery) => sum + (delivery.price ?? 0),
-      0,
-    );
-    const totalCourierPay = completedDeliveries.reduce(
-      (sum, delivery) =>
-        sum + (delivery.runner_price ?? delivery.courierPayment ?? 0),
-      0,
-    );
-    const totalTips = completedDeliveries.reduce(
-      (sum, delivery) => sum + (delivery.runner_tip ?? 0),
-      0,
-    );
-    const totalCommission = completedDeliveries.reduce(
-      (sum, delivery) => sum + (delivery.commissionAmount ?? 0),
-      0,
-    );
+    const totalRevenue = sumDeliveryMoney(completedDeliveries, getDeliveryCustomerCharge);
+    const totalCourierPay = sumDeliveryMoney(completedDeliveries, getDeliveryCourierBasePay);
+    const totalTips = sumDeliveryMoney(completedDeliveries, getDeliveryCourierTip);
+    const totalCommission = sumDeliveryMoney(completedDeliveries, getDeliveryCommission);
     const grossProfit = totalRevenue - totalCourierPay - totalCommission;
     const avgOrderValue =
       completedDeliveries.length > 0
@@ -213,10 +201,10 @@ export const WalletPage: React.FC = () => {
                     </div>
                     <div className="text-left">
                       <div className="text-sm font-semibold text-[#166534] dark:text-[#4ade80]">
-                        {formatCurrency(delivery.price ?? 0)}
+                        {formatCurrency(getDeliveryCustomerCharge(delivery))}
                       </div>
                       <div className="mt-1 text-xs text-[#737373] dark:text-[#a3a3a3]">
-                        {TEXT.courier}: {formatCurrency(delivery.runner_price ?? delivery.courierPayment ?? 0)}
+                        {TEXT.courier}: {formatCurrency(getDeliveryCourierBasePay(delivery))}
                       </div>
                     </div>
                   </div>

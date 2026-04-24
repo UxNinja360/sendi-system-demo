@@ -1,6 +1,6 @@
 ﻿import React, { useMemo, useState } from 'react';
 import { Search, Store } from 'lucide-react';
-import { useDelivery } from '../context/delivery.context';
+import { useDelivery } from '../context/delivery-context-value';
 
 export const LiveRestaurantsView: React.FC = () => {
   const { state } = useDelivery();

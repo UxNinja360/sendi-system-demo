@@ -1,10 +1,11 @@
 import { useParams, useNavigate } from 'react-router';
-import { useDelivery } from '../context/delivery.context';
+import { useDelivery } from '../context/delivery-context-value';
 import {
   ArrowRight, MapPin, Phone, Clock,
   Bike, Package, CheckCircle2, XCircle, AlertCircle,
   Navigation, Store, User
 } from 'lucide-react';
+import { formatCurrency, getDeliveryCustomerCharge } from '../utils/delivery-finance';
 
 export function DeliveryDetailsPage() {
   const { deliveryId } = useParams<{ deliveryId: string }>();
@@ -58,7 +59,7 @@ export function DeliveryDetailsPage() {
     { label: 'זמן בטיפול',   value: `${elapsedMinutes} דק׳` },
     { label: 'כתובת מסירה',  value: delivery.address },
     { label: 'אזור',          value: delivery.area },
-    { label: 'מחיר',          value: `₪${delivery.price}`, highlight: true },
+    { label: 'מחיר',          value: formatCurrency(getDeliveryCustomerCharge(delivery)), highlight: true },
     ...(delivery.notes ? [{ label: 'הערות', value: delivery.notes }] : []),
   ];
 

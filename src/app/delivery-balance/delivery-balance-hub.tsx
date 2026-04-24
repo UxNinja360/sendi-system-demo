@@ -9,7 +9,7 @@ import {
   Plus,
   CircleDollarSign,
 } from 'lucide-react';
-import { useDelivery } from '../context/delivery.context';
+import { useDelivery } from '../context/delivery-context-value';
 import { toast } from 'sonner';
 
 export const DeliveryBalanceHub: React.FC = () => {

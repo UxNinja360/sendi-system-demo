@@ -747,20 +747,26 @@ const buildInitialShifts = (): WorkShift[] => {
   return shifts;
 };
 
-// Initial delivery state.
-export const initialState: DeliveryState = {
+// Create a fresh initial state so reset never reuses mutated runtime references.
+export const createInitialDeliveryState = (): DeliveryState => ({
   isSystemOpen: false,
   autoAssignEnabled: false, // Keep auto-assignment off while the system is closed.
   timeMultiplier: 1, // Real-time simulation speed.
   deliveries: [],
-  couriers: COURIERS_DATA,
-  shiftTemplates: SHIFT_TEMPLATES,
-  weeklyShiftConfig: WEEKLY_SHIFT_CONFIG,
+  couriers: COURIERS_DATA.map((courier) => ({ ...courier, activeDeliveryIds: [...courier.activeDeliveryIds] })),
+  shiftTemplates: SHIFT_TEMPLATES.map((template) => ({
+    ...template,
+    slots: template.slots.map((slot) => ({ ...slot })),
+  })),
+  weeklyShiftConfig: WEEKLY_SHIFT_CONFIG.map((config) => ({
+    ...config,
+    templateIds: [...config.templateIds],
+  })),
   shifts: buildInitialShifts(),
-  restaurants: RESTAURANTS_DATA,
-  customers: CUSTOMERS_DATA,
+  restaurants: RESTAURANTS_DATA.map((restaurant) => ({ ...restaurant })),
+  customers: CUSTOMERS_DATA.map((customer) => ({ ...customer })),
   activityLogs: [],
-  deliveryBalance: 500, // יתרת משלוחים התחלתית - 500 משלוחים
+  deliveryBalance: 500,
   stats: {
     hour: { total: 0, delivered: 0, cancelled: 0, revenue: 0 },
     today: { total: 0, delivered: 0, cancelled: 0, revenue: 0 },
@@ -768,4 +774,6 @@ export const initialState: DeliveryState = {
     month: { total: 0, delivered: 0, cancelled: 0, revenue: 0 },
     year: { total: 0, delivered: 0, cancelled: 0, revenue: 0 },
   },
-};
+});
+
+export const initialState: DeliveryState = createInitialDeliveryState();

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Activity, Trash2 } from 'lucide-react';
 import { PageToolbar } from '../components/common/page-toolbar';
-import { useDelivery } from '../context/delivery.context';
+import { useDelivery } from '../context/delivery-context-value';
 
 const TEXT = {
   title: '\u05d9\u05d5\u05de\u05df\u0020\u05e4\u05e2\u05d5\u05dc\u05d5\u05ea',

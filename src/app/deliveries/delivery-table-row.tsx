@@ -24,6 +24,7 @@ import {
 import { ALL_COLUMNS, CUSTOM_COLUMN_IDS, COLUMN_MAP } from './column-defs';
 import type { ColumnDef } from './column-defs';
 import { STATUS_CONFIG, ALL_STATUSES } from './status-config';
+import { formatCurrency, getDeliveryCustomerCharge } from '../utils/delivery-finance';
 
 interface DeliveryTableRowProps {
   delivery: Delivery;
@@ -160,7 +161,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
       case 'price':
         return (
           <td key={colId} className={`${dataCellClassName} text-[#16a34a] dark:text-[#22c55e] font-bold whitespace-nowrap`}>
-            ₪{delivery.price}
+            {formatCurrency(getDeliveryCustomerCharge(delivery))}
           </td>
         );
 

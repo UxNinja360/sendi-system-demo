@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   AlertTriangle,
   ChevronLeft,
@@ -16,7 +16,7 @@ import { useNavigate } from 'react-router';
 import { PageToolbar } from '../components/common/page-toolbar';
 import { useTheme } from '../context/theme.context';
 import { useLanguage } from '../context/language.context';
-import { useDelivery } from '../context/delivery.context';
+import { useDelivery } from '../context/delivery-context-value';
 
 const TEXT = {
   title: '\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea',
@@ -70,6 +70,9 @@ const TEXT = {
   resetHint: '\u05de\u05d7\u05d6\u05d9\u05e8 \u05d0\u05ea \u05d4\u05de\u05e2\u05e8\u05db\u05ea \u05dc\u05de\u05e6\u05d1 \u05d4\u05d4\u05ea\u05d7\u05dc\u05ea\u05d9.',
   resetShort: '\u05d0\u05e4\u05e1',
   resetConfirm: '\u05dc\u05d0\u05e4\u05e1 \u05d0\u05ea \u05d4\u05de\u05e2\u05e8\u05db\u05ea \u05db\u05d5\u05dc\u05d4?',
+  resetConfirmBody: '\u05d4\u05e4\u05e2\u05d5\u05dc\u05d4 \u05ea\u05de\u05d7\u05e7 \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd, \u05e9\u05d9\u05d1\u05d5\u05e6\u05d9\u05dd, \u05de\u05d9\u05e7\u05d5\u05de\u05d9 \u05dc\u05d9\u05d9\u05d1 \u05d5\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea \u05ea\u05e6\u05d5\u05d2\u05ea \u05d3\u05de\u05d5. \u05d4\u05ea\u05d7\u05d1\u05e8\u05d5\u05ea, \u05e9\u05e4\u05d4 \u05d5\u05e2\u05e8\u05db\u05ea \u05e6\u05d1\u05e2\u05d9\u05dd \u05d9\u05d9\u05e9\u05d0\u05e8\u05d5.',
+  resetCancel: '\u05d1\u05d9\u05d8\u05d5\u05dc',
+  resetConfirmAction: '\u05d0\u05e4\u05e1 \u05e2\u05db\u05e9\u05d9\u05d5',
   timeHintPrefix: '\u05e8\u05e5 \u05db\u05e8\u05d2\u05e2 \u05e2\u05dc x',
 } as const;
 
@@ -174,6 +177,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
   const { isDark, toggleDark } = useTheme();
   const { language, setLanguage } = useLanguage();
   const { resetSystem } = useDelivery();
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
 
   const handleLogout = () => {
     if (onLogout) {
@@ -186,7 +190,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
   };
 
   const handleResetSystem = () => {
-    if (!window.confirm(TEXT.resetConfirm)) return;
+    setIsResetDialogOpen(false);
     resetSystem();
   };
 
@@ -275,7 +279,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
               control={
                 <button
                   type="button"
-                  onClick={handleResetSystem}
+                  onClick={() => setIsResetDialogOpen(true)}
                   className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-red-700"
                 >
                   <RotateCcw className="h-4 w-4" />
@@ -286,6 +290,48 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
           </SectionCard>
         </div>
       </div>
+
+      {isResetDialogOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 px-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reset-system-title"
+            className="w-full max-w-md rounded-2xl border border-red-200 bg-white p-5 shadow-xl dark:border-red-500/30 dark:bg-[#151515]"
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-300">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <h2 id="reset-system-title" className="text-base font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  {TEXT.resetConfirm}
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-[#666d80] dark:text-[#a3a3a3]">
+                  {TEXT.resetConfirmBody}
+                </p>
+              </div>
+            </div>
+            <div className="mt-5 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsResetDialogOpen(false)}
+                className="rounded-xl bg-[#f5f5f5] px-4 py-2 text-sm font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-[#262626] dark:text-[#fafafa] dark:hover:bg-[#333]"
+              >
+                {TEXT.resetCancel}
+              </button>
+              <button
+                type="button"
+                onClick={handleResetSystem}
+                className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700"
+              >
+                <RotateCcw className="h-4 w-4" />
+                <span>{TEXT.resetConfirmAction}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

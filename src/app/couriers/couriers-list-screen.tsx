@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import { ListInlineFilters } from '../components/common/list-inline-filters';
 import { PageToolbar } from '../components/common/page-toolbar';
 import { SelectionActionBar } from '../components/common/selection-action-bar';
-import { useDelivery } from '../context/delivery.context';
+import { useDelivery } from '../context/delivery-context-value';
 import { Courier } from '../types/delivery.types';
 import {
   EntityActionMenu,

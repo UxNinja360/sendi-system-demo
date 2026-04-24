@@ -13,7 +13,8 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { he } from 'date-fns/locale';
 
-import { useDelivery } from '../context/delivery.context';
+import { useDelivery } from '../context/delivery-context-value';
+import { formatCurrency, getDeliveryCustomerCharge, sumDeliveryMoney } from '../utils/delivery-finance';
 
 export function CustomerDetailsScreen() {
   const { customerId } = useParams<{ customerId: string }>();
@@ -43,7 +44,7 @@ export function CustomerDetailsScreen() {
     (delivery) => delivery.status === 'delivered',
   );
 
-  const totalSpent = completedDeliveries.reduce((sum, delivery) => sum + delivery.price, 0);
+  const totalSpent = sumDeliveryMoney(completedDeliveries, getDeliveryCustomerCharge);
   const averageOrderValue =
     completedDeliveries.length > 0 ? totalSpent / completedDeliveries.length : 0;
 
@@ -146,7 +147,7 @@ export function CustomerDetailsScreen() {
                 <div>
                   <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">סה"כ הוצאות</div>
                   <div className="text-2xl font-bold text-[#16a34a] dark:text-[#22c55e]">
-                    ₪{totalSpent}
+                    {formatCurrency(totalSpent)}
                   </div>
                 </div>
               </div>
@@ -160,7 +161,7 @@ export function CustomerDetailsScreen() {
                 <div>
                   <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">ממוצע הזמנה</div>
                   <div className="text-2xl font-bold text-[#0d0d12] dark:text-[#fafafa]">
-                    ₪{Math.round(averageOrderValue)}
+                    {formatCurrency(Math.round(averageOrderValue))}
                   </div>
                 </div>
               </div>
@@ -260,7 +261,7 @@ export function CustomerDetailsScreen() {
                       </span>
 
                       <div className="text-sm font-bold text-[#16a34a] dark:text-[#22c55e]">
-                        ₪{delivery.price}
+                        {formatCurrency(getDeliveryCustomerCharge(delivery))}
                       </div>
 
                       <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">

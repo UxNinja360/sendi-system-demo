@@ -1,4 +1,4 @@
-﻿import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
+﻿import React, { useReducer, useEffect, useCallback, useRef } from 'react';
 import {
   ActivityLogEntry,
   DeliveryState,
@@ -8,105 +8,89 @@ import {
   Restaurant,
 } from '../types/delivery.types';
 import { deliveryReducer } from './delivery.reducer';
+import { DeliveryContext } from './delivery-context-value';
 import {
-  buildDefaultRouteStopIds,
-  getDeliveryPickupBatchKey,
-} from '../utils/pickup-batches';
+  advanceLiveSimulation,
+  getInitialCourierPosition,
+  type MapPosition,
+} from '../live/live-simulation-engine';
+import { getAutoAssignableCourier } from '../utils/courier-assignment';
 import {
   DEFAULT_RESTAURANT_MAX_DELIVERY_TIME,
   DEFAULT_RESTAURANT_PREPARATION_TIME,
   ISRAELI_NAMES,
   RESTAURANTS_DATA,
+  createInitialDeliveryState,
   initialState,
   mergeSeededRestaurants,
   normalizeCouriers,
   normalizeDeliveryPreparationTime,
 } from './delivery-bootstrap';
+import { sanitizeLoadedDeliveryState } from './delivery-state-sanitizer';
 
 const STORAGE_KEY = 'sendi-delivery-state';
+const STATE_EPOCH_KEY = 'sendi-delivery-state-epoch';
 const LIVE_MANAGER_ON_SHIFT_ONLY_STORAGE_KEY = 'sendi-live-manager-on-shift-only';
 const LIVE_MANAGER_ROUTE_STOP_ORDERS_STORAGE_KEY = 'sendi-live-manager-route-stop-orders';
 const LIVE_MANAGER_COURIER_POSITIONS_STORAGE_KEY = 'sendi-live-manager-courier-positions';
 const LIVE_MANAGER_COURIER_POSITIONS_TS_STORAGE_KEY = 'sendi-live-manager-courier-positions-ts';
-const COURIER_MOVE_SPEED = 0.00012;
+const SIMULATION_TICK_MS = 5000;
+const MIN_GLOBAL_DELIVERY_GAP_MS = 12000;
+const MIN_ACTIVE_SIMULATED_DELIVERIES = 8;
+const MAX_ACTIVE_SIMULATED_DELIVERIES = 48;
+const ACTIVE_DELIVERIES_PER_RESTAURANT = 2;
+const ACTIVE_DELIVERIES_PER_ON_SHIFT_COURIER = 4;
+const INITIAL_RESTAURANT_STAGGER_MIN_MS = 2500;
+const INITIAL_RESTAURANT_STAGGER_RANGE_MS = 27500;
+const RESET_STORAGE_KEYS = [
+  STORAGE_KEY,
+  LIVE_MANAGER_ON_SHIFT_ONLY_STORAGE_KEY,
+  LIVE_MANAGER_ROUTE_STOP_ORDERS_STORAGE_KEY,
+  LIVE_MANAGER_COURIER_POSITIONS_STORAGE_KEY,
+  LIVE_MANAGER_COURIER_POSITIONS_TS_STORAGE_KEY,
+  'liveManagerPanelSize',
+  'shifts-collapsed-templates',
+  'deliveries-column-order',
+  'deliveries-visible-columns',
+  'couriers-visible-columns-v1',
+  'restaurants-column-order-v3',
+  'restaurants-visible-columns-v1',
+  'delivery_zones_v1',
+] as const;
+const RESET_STORAGE_KEY_PREFIXES = [
+  'sendi-live-manager-',
+  'deliveries-',
+  'couriers-',
+  'restaurants-',
+  'shifts-',
+  'delivery_zones_',
+] as const;
 
-type MapPosition = {
-  lat: number;
-  lng: number;
+const createStorageEpoch = () =>
+  `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
+const ensureStorageEpoch = (storage: Storage) => {
+  const existing = storage.getItem(STATE_EPOCH_KEY);
+  if (existing) return existing;
+
+  const next = createStorageEpoch();
+  storage.setItem(STATE_EPOCH_KEY, next);
+  return next;
 };
 
-const COURIER_FALLBACK_POSITIONS: MapPosition[] = [
-  { lat: 32.0700, lng: 34.7735 }, { lat: 32.0752, lng: 34.7731 },
-  { lat: 32.0800, lng: 34.7728 }, { lat: 32.0626, lng: 34.7738 },
-  { lat: 32.0643, lng: 34.7769 }, { lat: 32.0718, lng: 34.7669 },
-  { lat: 32.0765, lng: 34.7662 }, { lat: 32.0653, lng: 34.7755 },
-  { lat: 32.0760, lng: 34.7643 }, { lat: 32.0820, lng: 34.7836 },
-  { lat: 32.0646, lng: 34.7742 }, { lat: 32.0649, lng: 34.7698 },
-  { lat: 32.0864, lng: 34.7781 }, { lat: 32.0562, lng: 34.7718 },
-  { lat: 32.0830, lng: 34.7900 }, { lat: 32.0899, lng: 34.7793 },
-  { lat: 32.0834, lng: 34.8096 }, { lat: 32.0783, lng: 34.8088 },
-  { lat: 32.0808, lng: 34.8050 }, { lat: 32.0700, lng: 34.8135 },
-  { lat: 32.0533, lng: 34.7583 }, { lat: 32.0175, lng: 34.7783 },
-  { lat: 32.0230, lng: 34.7535 }, { lat: 32.0968, lng: 34.7730 },
-];
+const shouldClearOnSystemReset = (key: string) =>
+  RESET_STORAGE_KEYS.includes(key as (typeof RESET_STORAGE_KEYS)[number]) ||
+  RESET_STORAGE_KEY_PREFIXES.some((prefix) => key.startsWith(prefix));
 
-const hasValidPosition = (value: Partial<MapPosition> | null | undefined): value is MapPosition =>
-  typeof value?.lat === 'number' &&
-  Number.isFinite(value.lat) &&
-  typeof value?.lng === 'number' &&
-  Number.isFinite(value.lng);
+const clearSystemResetStorage = (storage: Storage) => {
+  const keys = Array.from({ length: storage.length }, (_, index) => storage.key(index))
+    .filter((key): key is string => !!key);
 
-const toRadians = (value: number) => (value * Math.PI) / 180;
-
-const getDistanceKm = (from: MapPosition, to: MapPosition) => {
-  const earthRadiusKm = 6371;
-  const latDiff = toRadians(to.lat - from.lat);
-  const lngDiff = toRadians(to.lng - from.lng);
-  const fromLat = toRadians(from.lat);
-  const toLat = toRadians(to.lat);
-
-  const a =
-    Math.sin(latDiff / 2) ** 2 +
-    Math.cos(fromLat) * Math.cos(toLat) * Math.sin(lngDiff / 2) ** 2;
-
-  return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-};
-
-const estimateTravelMinutes = (from: MapPosition | null, to: MapPosition | null) => {
-  if (!from || !to) return 8;
-  const distanceKm = getDistanceKm(from, to);
-  const minutes = (distanceKm / 18) * 60;
-  return Math.max(4, Math.round(minutes) + 2);
-};
-
-const getPickupReadyAt = (deliveries: Delivery[]) => {
-  const readyTimes = deliveries
-    .map((delivery) => {
-      if (delivery.pickedUpAt) return null;
-      if (delivery.orderReadyTime) return new Date(delivery.orderReadyTime);
-      if (typeof delivery.preparationTime === 'number') {
-        return new Date(new Date(delivery.createdAt).getTime() + delivery.preparationTime * 60000);
-      }
-      return null;
-    })
-    .filter((value): value is Date => value instanceof Date && !Number.isNaN(value.getTime()));
-
-  if (readyTimes.length === 0) return null;
-  return new Date(Math.max(...readyTimes.map((value) => value.getTime())));
-};
-
-const normalizeRouteStopOrder = (savedOrder: string[] | undefined, defaultStops: string[]) => {
-  if (!savedOrder || savedOrder.length === 0) {
-    return defaultStops;
-  }
-
-  const validStopIds = new Set(defaultStops);
-  const normalizedSavedStops = savedOrder.filter((stopId, index) => (
-    validStopIds.has(stopId) && savedOrder.indexOf(stopId) === index
-  ));
-  const missingStops = defaultStops.filter((stopId) => !normalizedSavedStops.includes(stopId));
-
-  return [...normalizedSavedStops, ...missingStops];
+  keys.forEach((key) => {
+    if (shouldClearOnSystemReset(key)) {
+      storage.removeItem(key);
+    }
+  });
 };
 
 const createActivityLogEntry = (action: DeliveryAction, state: DeliveryState): ActivityLogEntry | null => {
@@ -336,6 +320,62 @@ const getStoredCourierAssignPosition = (
   }
 };
 
+const getDeliveryCreatedAtMs = (delivery: Delivery) => {
+  const value = delivery.createdAt ?? delivery.creation_time;
+  const time = value instanceof Date ? value.getTime() : new Date(value).getTime();
+  return Number.isFinite(time) ? time : 0;
+};
+
+const isLiveActiveDelivery = (delivery: Delivery) =>
+  delivery.status === 'pending' || delivery.status === 'assigned' || delivery.status === 'delivering';
+
+const getActiveSimulatedDeliveryLimit = (state: DeliveryState) => {
+  const activeRestaurantCount = state.restaurants.filter((restaurant) => restaurant.isActive).length;
+  const activeCourierCount = state.couriers.filter((courier) => (
+    courier.isOnShift && courier.status !== 'offline'
+  )).length;
+
+  return Math.min(
+    MAX_ACTIVE_SIMULATED_DELIVERIES,
+    Math.max(
+      MIN_ACTIVE_SIMULATED_DELIVERIES,
+      activeRestaurantCount * ACTIVE_DELIVERIES_PER_RESTAURANT,
+      activeCourierCount * ACTIVE_DELIVERIES_PER_ON_SHIFT_COURIER
+    )
+  );
+};
+
+const matchesRestaurant = (delivery: Delivery, restaurant: Restaurant) =>
+  delivery.rest_id === restaurant.id ||
+  delivery.restaurantId === restaurant.id ||
+  delivery.restaurantName === restaurant.name ||
+  delivery.rest_name === restaurant.name;
+
+const getLatestDeliveryCreatedAtMs = (deliveries: Delivery[], restaurant?: Restaurant) =>
+  deliveries.reduce((latest, delivery) => {
+    if (restaurant && !matchesRestaurant(delivery, restaurant)) return latest;
+    return Math.max(latest, getDeliveryCreatedAtMs(delivery));
+  }, 0);
+
+const getRecentRestaurantDeliveryCount = (
+  deliveries: Delivery[],
+  restaurant: Restaurant,
+  nowMs: number
+) =>
+  deliveries.filter((delivery) => {
+    if (!matchesRestaurant(delivery, restaurant)) return false;
+    const createdAtMs = getDeliveryCreatedAtMs(delivery);
+    return createdAtMs > 0 && nowMs - createdAtMs < 60 * 60 * 1000;
+  }).length;
+
+const getStableRestaurantDelayMs = (restaurant: Restaurant) => {
+  const seed = `${restaurant.id}:${restaurant.name}`;
+  const hash = Array.from(seed).reduce((acc, char) => (
+    (acc * 31 + char.charCodeAt(0)) % INITIAL_RESTAURANT_STAGGER_RANGE_MS
+  ), 0);
+  return INITIAL_RESTAURANT_STAGGER_MIN_MS + hash;
+};
+
 const createAssignCourierPayload = (
   deliveryId: string,
   courierId: string,
@@ -351,6 +391,8 @@ const loadInitialState = (baseState: DeliveryState): DeliveryState => {
   if (typeof window === 'undefined') return baseState;
 
   try {
+    ensureStorageEpoch(window.localStorage);
+
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return baseState;
 
@@ -363,7 +405,7 @@ const loadInitialState = (baseState: DeliveryState): DeliveryState => {
       (parsed.couriers as Courier[] | undefined) ?? baseState.couriers
     );
 
-    return {
+    const loadedState = {
       ...baseState,
       ...parsed,
       couriers,
@@ -376,6 +418,8 @@ const loadInitialState = (baseState: DeliveryState): DeliveryState => {
         ...parsed.stats,
       },
     };
+
+    return sanitizeLoadedDeliveryState(loadedState);
   } catch (error) {
     console.warn('Failed to load persisted delivery state', error);
     return baseState;
@@ -383,30 +427,37 @@ const loadInitialState = (baseState: DeliveryState): DeliveryState => {
 };
 
 // Context Type
-interface DeliveryContextType {
-  state: DeliveryState;
-  dispatch: React.Dispatch<DeliveryAction>;
-  toggleSystem: () => void;
-  assignCourier: (deliveryId: string, courierId: string, pickupBatchId?: string) => void;
-  cancelDelivery: (deliveryId: string) => void;
-  unassignCourier: (deliveryId: string) => void;
-  updateDelivery: (deliveryId: string, updates: Partial<Delivery>) => void;
-  resetSystem: () => void;
-  addCourier: (courier: Courier) => void;
-  removeCourier: (courierId: string) => void;
-  addDeliveryBalance: (amount: number) => void;
-}
-
-const DeliveryContext = createContext<DeliveryContextType | undefined>(undefined);
-
 // Provider
 export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, rawDispatch] = useReducer(deliveryReducer, initialState, loadInitialState);
+  const [state, rawDispatch] = useReducer(
+    deliveryReducer,
+    initialState,
+    () => loadInitialState(createInitialDeliveryState())
+  );
   const stateRef = useRef(state);
+  const isResettingRef = useRef(false);
+  const storageEpochRef = useRef<string | null>(
+    typeof window === 'undefined' ? null : ensureStorageEpoch(window.localStorage)
+  );
 
   useEffect(() => {
     stateRef.current = state;
   }, [state]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key !== STATE_EPOCH_KEY || !event.newValue) return;
+      if (storageEpochRef.current === event.newValue) return;
+
+      isResettingRef.current = true;
+      window.location.reload();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   const dispatch = useCallback((action: DeliveryAction) => {
     rawDispatch(action);
@@ -423,8 +474,17 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    if (isResettingRef.current) return;
 
     try {
+      const currentEpoch = ensureStorageEpoch(window.localStorage);
+      if (storageEpochRef.current && currentEpoch !== storageEpochRef.current) {
+        isResettingRef.current = true;
+        window.location.reload();
+        return;
+      }
+
+      storageEpochRef.current = currentEpoch;
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch (error) {
       console.warn('Failed to persist delivery state', error);
@@ -447,6 +507,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const deliveryCounter = useRef(0);
   const courierPositionsRef = useRef<Map<string, MapPosition>>(new Map());
   const courierPositionTimestampsRef = useRef<Map<string, number>>(new Map());
+  const simulationOpenedAtRef = useRef<number | null>(null);
 
   const getStoredRouteStopOrders = useCallback((): Record<string, string[]> => {
     if (typeof window === 'undefined') return {};
@@ -459,33 +520,6 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch {
       return {};
     }
-  }, []);
-
-  const getInitialCourierPosition = useCallback((courier: Courier, index: number): MapPosition => {
-    const activeDeliveries = stateRef.current.deliveries.filter((delivery) =>
-      delivery.courierId === courier.id &&
-      (delivery.status === 'assigned' || delivery.status === 'delivering')
-    );
-
-    const pickupDelivery = activeDeliveries.find((delivery) =>
-      delivery.status === 'assigned' && delivery.arrivedAtRestaurantAt && !delivery.pickedUpAt
-    );
-    if (pickupDelivery && hasValidPosition({ lat: pickupDelivery.pickup_latitude, lng: pickupDelivery.pickup_longitude })) {
-      return {
-        lat: pickupDelivery.pickup_latitude as number,
-        lng: pickupDelivery.pickup_longitude as number,
-      };
-    }
-
-    const dropoffDelivery = activeDeliveries.find((delivery) => delivery.status === 'delivering');
-    if (dropoffDelivery && hasValidPosition({ lat: dropoffDelivery.dropoff_latitude, lng: dropoffDelivery.dropoff_longitude })) {
-      return {
-        lat: dropoffDelivery.dropoff_latitude as number,
-        lng: dropoffDelivery.dropoff_longitude as number,
-      };
-    }
-
-    return { ...COURIER_FALLBACK_POSITIONS[index % COURIER_FALLBACK_POSITIONS.length] };
   }, []);
 
   // Reuse the seeded restaurant id when the name matches.
@@ -548,7 +582,10 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     state.couriers.forEach((courier, index) => {
       if (courierPositionsRef.current.has(courier.id)) return;
-      courierPositionsRef.current.set(courier.id, getInitialCourierPosition(courier, index));
+      courierPositionsRef.current.set(
+        courier.id,
+        getInitialCourierPosition(courier, stateRef.current.deliveries, index)
+      );
       courierPositionTimestampsRef.current.set(courier.id, Date.now());
       changed = true;
     });
@@ -570,7 +607,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       LIVE_MANAGER_COURIER_POSITIONS_TS_STORAGE_KEY,
       JSON.stringify(Object.fromEntries(courierPositionTimestampsRef.current.entries()))
     );
-  }, [getInitialCourierPosition, state.couriers]);
+  }, [state.couriers]);
 
   // Real delivery addresses with GPS coordinates around central Israel.
 
@@ -603,6 +640,52 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     { address: 'בלפור 18, בת ים', city: 'בת ים', street: 'בלפור', building: '18', lat: 32.0230, lng: 34.7535, area: 'בת ים' },
   ];
 
+  const toRadians = (value: number) => (value * Math.PI) / 180;
+
+  const getCoordinateDistanceKm = (
+    from: { lat: number; lng: number },
+    to: { lat: number; lng: number }
+  ) => {
+    const earthRadiusKm = 6371;
+    const latDiff = toRadians(to.lat - from.lat);
+    const lngDiff = toRadians(to.lng - from.lng);
+    const fromLat = toRadians(from.lat);
+    const toLat = toRadians(to.lat);
+
+    const a =
+      Math.sin(latDiff / 2) ** 2 +
+      Math.cos(fromLat) * Math.cos(toLat) * Math.sin(lngDiff / 2) ** 2;
+
+    return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  };
+
+  const pickCustomerAddressForRestaurant = (
+    restaurant: Restaurant,
+    pickup: { lat: number; lng: number }
+  ) => {
+    const maxRadiusKm = Math.min(
+      5.5,
+      Math.max(2.4, (restaurant.maxDeliveryTime ?? DEFAULT_RESTAURANT_MAX_DELIVERY_TIME) / 8)
+    );
+
+    const rankedAddresses = REAL_ADDRESSES
+      .map((address) => ({
+        address,
+        distanceKm: getCoordinateDistanceKm(pickup, { lat: address.lat, lng: address.lng }),
+      }))
+      .sort((left, right) => left.distanceKm - right.distanceKm);
+
+    const sameCityAddresses = rankedAddresses.filter((item) => item.address.city === restaurant.city);
+    const nearbyAddresses = rankedAddresses.filter((item) => item.distanceKm <= maxRadiusKm);
+    const candidatePool = sameCityAddresses.length > 0
+      ? sameCityAddresses.slice(0, 8)
+      : nearbyAddresses.length > 0
+        ? nearbyAddresses
+        : rankedAddresses.slice(0, 8);
+
+    return candidatePool[Math.floor(Math.random() * candidatePool.length)].address;
+  };
+
   const generateDelivery = useCallback((restaurant: Restaurant): Delivery | null => {
     deliveryCounter.current += 1;
     const id = `D${Date.now()}-${deliveryCounter.current}-${Math.random().toString(36).substr(2, 9)}`;
@@ -612,10 +695,6 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const customerName = ISRAELI_NAMES[Math.floor(Math.random() * ISRAELI_NAMES.length)];
     const price = Math.floor(15 + Math.random() * 35); // 15-50 ILS
 
-    // Pick a realistic customer address from the demo pool.
-    const customerAddr = REAL_ADDRESSES[Math.floor(Math.random() * REAL_ADDRESSES.length)];
-    const area = customerAddr.area;
-
     // Reuse restaurant coordinates when available.
     const restaurantName = restaurant.name;
     const pickupLat = restaurant.lat || 32.0853;
@@ -623,12 +702,21 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const restStreet = restaurant.street ?? restaurantName;
     const restCity = restaurant.city ?? 'תל אביב';
     const restAddress = restaurant.address ?? `${restStreet}, ${restCity}`;
+    const customerAddr = pickCustomerAddressForRestaurant(restaurant, { lat: pickupLat, lng: pickupLng });
+    const area = customerAddr.area;
+    const directDistanceKm = getCoordinateDistanceKm(
+      { lat: pickupLat, lng: pickupLng },
+      { lat: customerAddr.lat, lng: customerAddr.lng }
+    );
+    const deliveryDistanceKm = Math.max(0.8, Math.round(directDistanceKm * 1.28 * 10) / 10);
+    const etaAfterPickupMinutes = Math.max(8, Math.round((deliveryDistanceKm / 18) * 60) + 3);
 
     const now = new Date();
     // Estimated arrival to restaurant: 5-15 minutes.
     const estimatedRestaurantTime = new Date(now.getTime() + (5 + Math.random() * 10) * 60000);
-    // Estimated arrival to customer: 20-40 minutes.
-    const estimatedCustomerTime = new Date(now.getTime() + (20 + Math.random() * 20) * 60000);
+    const estimatedCustomerTime = new Date(
+      estimatedRestaurantTime.getTime() + etaAfterPickupMinutes * 60000
+    );
 
     const restPrice = Math.floor(price * 0.7); // 70% of customer price
     const runnerPrice = Math.floor(price * 0.3); // 30% to courier
@@ -740,9 +828,9 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       dropoff_deviation: 0,
       delay_reason: undefined,
       delay_duration: 0,
-      delivery_distance: Math.floor(1 + Math.random() * 10), // 1-10 km
-      duration_to_client: Math.floor(15 + Math.random() * 30),
-      eta_after_pickup: Math.floor(10 + Math.random() * 20),
+      delivery_distance: deliveryDistanceKm,
+      duration_to_client: etaAfterPickupMinutes,
+      eta_after_pickup: etaAfterPickupMinutes,
       suplly_status: ['ממתין', 'בהכנה', 'מוכן'][Math.floor(Math.random() * 3)],
       
       // ========================================
@@ -808,7 +896,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       deliveredAt: null,
       arrivedAtRestaurantAt: null,
       arrivedAtCustomerAt: null,
-      estimatedTime: Math.floor(15 + Math.random() * 30),
+      estimatedTime: Math.max(15, cookTime + etaAfterPickupMinutes),
       estimatedArrivalAtRestaurant: estimatedRestaurantTime,
       estimatedArrivalAtCustomer: estimatedCustomerTime,
       orderReadyTime: Math.random() > 0.5 ? new Date(now.getTime() + cookTime * 60000) : null,
@@ -828,62 +916,100 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
   }, []);
 
-  // Each active restaurant generates deliveries at its own configured rate.
-  // Keep this independent from deliveryBalance so intervals stay stable.
+  // A single scheduler keeps the demo realistic and prevents HMR/reload bursts.
   const deliveryBalanceRef = useRef(state.deliveryBalance);
   useEffect(() => { deliveryBalanceRef.current = state.deliveryBalance; }, [state.deliveryBalance]);
 
   useEffect(() => {
-    if (!state.isSystemOpen) return;
+    if (!state.isSystemOpen) {
+      simulationOpenedAtRef.current = null;
+      return;
+    }
 
-    const activeRestaurants = state.restaurants.filter(r => r.isActive);
-    if (activeRestaurants.length === 0) return;
+    if (simulationOpenedAtRef.current === null) {
+      simulationOpenedAtRef.current = Date.now();
+    }
 
-    const intervals: NodeJS.Timeout[] = [];
+    const spawnEligibleDelivery = () => {
+      const stateNow = stateRef.current;
+      if (!stateNow.isSystemOpen || deliveryBalanceRef.current <= 0) return;
 
-    // Create a dedicated timer loop for every active restaurant.
-    activeRestaurants.forEach(restaurant => {
-      // Start with a short randomized delay.
-      const initialDelay = (Math.random() * 2000 + 1000) / state.timeMultiplier;
+      const speed = Math.max(stateNow.timeMultiplier || 1, 0.1);
+      const nowMs = Date.now();
+      const activeDeliveryCount = stateNow.deliveries.filter(isLiveActiveDelivery).length;
+      const activeDeliveryLimit = getActiveSimulatedDeliveryLimit(stateNow);
+      const activeCapacity = activeDeliveryLimit - activeDeliveryCount;
+      if (activeCapacity <= 0) return;
 
-      const spawn = () => {
-        if (deliveryBalanceRef.current <= 0) return;
-        for (let i = 0; i < restaurant.deliveryRate; i++) {
-          const newDelivery = generateDelivery(restaurant);
-          if (newDelivery) {
-            rawDispatch({ type: 'ADD_DELIVERY', payload: newDelivery });
-          }
+      const lastGlobalDeliveryMs = getLatestDeliveryCreatedAtMs(stateNow.deliveries);
+      if (lastGlobalDeliveryMs && nowMs - lastGlobalDeliveryMs < MIN_GLOBAL_DELIVERY_GAP_MS / speed) {
+        return;
+      }
+
+      const openedAtMs = simulationOpenedAtRef.current ?? nowMs;
+      const activeRestaurants = stateNow.restaurants.filter((restaurant) => restaurant.isActive);
+      const eligibleRestaurants = activeRestaurants
+        .map((restaurant) => {
+          const latestRestaurantDeliveryMs = getLatestDeliveryCreatedAtMs(stateNow.deliveries, restaurant);
+          const intervalMs = Math.max(1, restaurant.deliveryInterval || 10) * 60 * 1000 / speed;
+          const initialDelayMs = getStableRestaurantDelayMs(restaurant) / speed;
+          const dueAt = latestRestaurantDeliveryMs
+            ? latestRestaurantDeliveryMs + intervalMs
+            : openedAtMs + initialDelayMs;
+
+          return {
+            restaurant,
+            dueAt,
+            recentCount: getRecentRestaurantDeliveryCount(stateNow.deliveries, restaurant, nowMs),
+          };
+        })
+        .filter(({ dueAt, recentCount, restaurant }) =>
+          dueAt <= nowMs && recentCount < restaurant.maxDeliveriesPerHour
+        )
+        .sort((left, right) => (
+          left.dueAt - right.dueAt ||
+          left.recentCount - right.recentCount ||
+          left.restaurant.name.localeCompare(right.restaurant.name, 'he')
+        ));
+
+      const nextRestaurant = eligibleRestaurants[0]?.restaurant;
+      if (!nextRestaurant) return;
+
+      const deliveryCount = Math.min(
+        Math.max(1, nextRestaurant.deliveryRate || 1),
+        activeCapacity,
+        deliveryBalanceRef.current
+      );
+
+      for (let i = 0; i < deliveryCount; i++) {
+        const newDelivery = generateDelivery(nextRestaurant);
+        if (newDelivery) {
+          rawDispatch({ type: 'ADD_DELIVERY', payload: newDelivery });
         }
-      };
+      }
+    };
 
-      const initialTimeout = setTimeout(spawn, initialDelay);
-      intervals.push(initialTimeout);
-
-      // Repeat according to the restaurant delivery interval.
-      const intervalMs = (restaurant.deliveryInterval * 60 * 1000) / state.timeMultiplier;
-      const interval = setInterval(spawn, intervalMs);
-      intervals.push(interval);
-    });
+    const timerSpeed = Math.max(state.timeMultiplier || 1, 0.1);
+    const initialTimer = setTimeout(spawnEligibleDelivery, Math.max(1000, 1500 / timerSpeed));
+    const interval = setInterval(
+      spawnEligibleDelivery,
+      Math.max(1000, SIMULATION_TICK_MS / timerSpeed)
+    );
 
     return () => {
-      intervals.forEach(timer => {
-        clearInterval(timer);
-        clearTimeout(timer);
-      });
+      clearTimeout(initialTimer);
+      clearInterval(interval);
     };
-  }, [state.isSystemOpen, state.restaurants, state.timeMultiplier, generateDelivery, rawDispatch]);
+  }, [state.isSystemOpen, state.timeMultiplier, generateDelivery, rawDispatch]);
 
   // Auto-assign pending deliveries while the feature is enabled.
   useEffect(() => {
     if (!state.autoAssignEnabled) return;
 
     const interval = setInterval(() => {
-      // Find one pending delivery.
-      const pendingDelivery = state.deliveries.find(d => d.status === 'pending');
-      // Find one courier that can still take another delivery.
-      const availableCourier = state.couriers.find(c => 
-        c.status !== 'offline' && c.isOnShift && c.activeDeliveryIds.length < 2
-      );
+      const stateNow = stateRef.current;
+      const pendingDelivery = stateNow.deliveries.find((delivery) => delivery.status === 'pending');
+      const availableCourier = getAutoAssignableCourier(stateNow.couriers);
 
       if (pendingDelivery && availableCourier) {
         rawDispatch({
@@ -891,212 +1017,24 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           payload: createAssignCourierPayload(pendingDelivery.id, availableCourier.id),
         });
       }
-    }, 500); // Check twice per second for near-immediate auto assignment.
+    }, state.isSystemOpen ? 500 : 3000);
 
     return () => clearInterval(interval);
-  }, [state.autoAssignEnabled, state.deliveries, state.couriers]);
+  }, [state.autoAssignEnabled, state.isSystemOpen]);
 
-  // Keep assigning pending deliveries even when the system is closed, if auto-assign stays enabled.
+  // Global progress engine: keeps deliveries moving without the LIVE page open.
   useEffect(() => {
-    if (state.isSystemOpen || !state.autoAssignEnabled) return;
-
     const interval = setInterval(() => {
-      // Find one pending delivery.
-      const pendingDelivery = state.deliveries.find(d => d.status === 'pending');
-      
-      if (pendingDelivery) {
-        // Find one courier that can still take another delivery.
-        const availableCourier = state.couriers.find(c => 
-          c.status !== 'offline' && c.isOnShift && c.activeDeliveryIds.length < 2
-        );
-        
-        if (availableCourier) {
-          rawDispatch({
-            type: 'ASSIGN_COURIER',
-            payload: createAssignCourierPayload(pendingDelivery.id, availableCourier.id),
-          });
-        }
-      }
-    }, 3000); // Check every 3 seconds.
-
-    return () => clearInterval(interval);
-  }, [state.isSystemOpen, state.autoAssignEnabled, state.deliveries, state.couriers]);
-
-  // מנוע התקדמות גלובלי - ממשיך להזיז משלוחים גם בלי עמוד מנג'ר לייב פתוח
-  useEffect(() => {
-    const SPEED = COURIER_MOVE_SPEED;
-    const ARRIVE = 0.0003;
-
-    const interval = setInterval(() => {
-      const routeStopOrders = getStoredRouteStopOrders();
-      const stateNow = stateRef.current;
-      const posUpdates = new Map<string, MapPosition>();
-      const statusUpdates: Array<{ type: 'delivering' | 'complete' | 'arrived_pickup'; ids: string[] }> = [];
-      const phaseUpdates = new Map<string, Partial<Delivery>>();
-
-      stateNow.couriers.forEach((courier, index) => {
-        const activeDeliveries = stateNow.deliveries.filter((delivery) =>
-          delivery.courierId === courier.id &&
-          (delivery.status === 'assigned' || delivery.status === 'delivering')
-        );
-        if (activeDeliveries.length === 0) return;
-
-        const currentPosition =
-          posUpdates.get(courier.id) ??
-          courierPositionsRef.current.get(courier.id) ??
-          getInitialCourierPosition(courier, index);
-
-        if (!courierPositionsRef.current.has(courier.id)) {
-          posUpdates.set(courier.id, currentPosition);
-        }
-
-        const defaultStops = buildDefaultRouteStopIds(activeDeliveries);
-        const stopIds = normalizeRouteStopOrder(routeStopOrders[courier.id], defaultStops);
-
-        let nextStopType: 'pickup' | 'dropoff' | undefined;
-        let nextStopDeliveries: Delivery[] = [];
-        let nextStopPosition: MapPosition | null = null;
-
-        for (const stopId of stopIds) {
-          if (stopId.startsWith('pickup-group:')) {
-            const pickupBatchKey = stopId.replace('pickup-group:', '');
-            const pickupGroupDeliveries = activeDeliveries.filter((delivery) =>
-              getDeliveryPickupBatchKey(delivery) === pickupBatchKey &&
-              delivery.status === 'assigned'
-            );
-
-            if (pickupGroupDeliveries.length > 0) {
-              nextStopType = 'pickup';
-              nextStopDeliveries = pickupGroupDeliveries;
-              nextStopPosition = hasValidPosition({
-                lat: pickupGroupDeliveries[0].pickup_latitude,
-                lng: pickupGroupDeliveries[0].pickup_longitude,
-              })
-                ? {
-                    lat: pickupGroupDeliveries[0].pickup_latitude as number,
-                    lng: pickupGroupDeliveries[0].pickup_longitude as number,
-                  }
-                : null;
-              break;
-            }
-          } else {
-            const deliveryId = stopId.replace(/-dropoff$/, '');
-            const delivery = activeDeliveries.find((item) => item.id === deliveryId && item.status === 'delivering');
-            if (delivery) {
-              nextStopType = 'dropoff';
-              nextStopDeliveries = [delivery];
-              nextStopPosition = hasValidPosition({
-                lat: delivery.dropoff_latitude,
-                lng: delivery.dropoff_longitude,
-              })
-                ? {
-                    lat: delivery.dropoff_latitude as number,
-                    lng: delivery.dropoff_longitude as number,
-                  }
-                : null;
-              break;
-            }
-          }
-        }
-
-        if (!nextStopType || nextStopDeliveries.length === 0 || !nextStopPosition) return;
-
-        if (nextStopType === 'pickup') {
-          const activePickupIds = new Set(nextStopDeliveries.map((delivery) => delivery.id));
-
-          nextStopDeliveries.forEach((delivery) => {
-            if (!delivery.started_pickup) {
-              phaseUpdates.set(delivery.id, {
-                ...(phaseUpdates.get(delivery.id) ?? {}),
-                started_pickup: new Date(),
-              });
-            }
-          });
-
-          activeDeliveries
-            .filter(
-              (delivery) =>
-                delivery.status === 'assigned' &&
-                !activePickupIds.has(delivery.id) &&
-                !!delivery.started_pickup
-            )
-            .forEach((delivery) => {
-              phaseUpdates.set(delivery.id, {
-                ...(phaseUpdates.get(delivery.id) ?? {}),
-                started_pickup: null,
-              });
-            });
-        } else {
-          const activeDropoffIds = new Set(nextStopDeliveries.map((delivery) => delivery.id));
-
-          nextStopDeliveries.forEach((delivery) => {
-            if (!delivery.started_dropoff) {
-              phaseUpdates.set(delivery.id, {
-                ...(phaseUpdates.get(delivery.id) ?? {}),
-                started_dropoff: new Date(),
-              });
-            }
-          });
-
-          activeDeliveries
-            .filter(
-              (delivery) =>
-                delivery.status === 'delivering' &&
-                !activeDropoffIds.has(delivery.id) &&
-                !!delivery.started_dropoff
-            )
-            .forEach((delivery) => {
-              phaseUpdates.set(delivery.id, {
-                ...(phaseUpdates.get(delivery.id) ?? {}),
-                started_dropoff: null,
-              });
-            });
-        }
-
-        const dLat = nextStopPosition.lat - currentPosition.lat;
-        const dLng = nextStopPosition.lng - currentPosition.lng;
-        const dist = Math.sqrt(dLat * dLat + dLng * dLng);
-
-        if (dist < ARRIVE) {
-          posUpdates.set(courier.id, nextStopPosition);
-
-          if (nextStopType === 'pickup') {
-            const areAllOrdersReady = nextStopDeliveries.every((delivery) =>
-              delivery.order_ready ||
-              delivery.reportedOrderIsReady ||
-              (delivery.arrivedAtRestaurantAt &&
-                Date.now() - new Date(delivery.arrivedAtRestaurantAt).getTime() >=
-                  ((delivery.preparationTime || delivery.cook_time || 5) * 60000) / (stateNow.timeMultiplier || 1))
-            );
-
-            if (areAllOrdersReady) {
-              statusUpdates.push({ type: 'delivering', ids: nextStopDeliveries.map((delivery) => delivery.id) });
-            } else {
-              const notArrivedDeliveryIds = nextStopDeliveries
-                .filter((delivery) => !delivery.arrivedAtRestaurantAt)
-                .map((delivery) => delivery.id);
-
-              if (notArrivedDeliveryIds.length > 0) {
-                statusUpdates.push({ type: 'arrived_pickup', ids: notArrivedDeliveryIds });
-              }
-            }
-          } else {
-            statusUpdates.push({ type: 'complete', ids: nextStopDeliveries.map((delivery) => delivery.id) });
-          }
-        } else {
-          const ratio = Math.min(SPEED / dist, 1);
-          posUpdates.set(courier.id, {
-            lat: currentPosition.lat + dLat * ratio,
-            lng: currentPosition.lng + dLng * ratio,
-          });
-        }
+      const tick = advanceLiveSimulation({
+        state: stateRef.current,
+        currentPositions: courierPositionsRef.current,
+        currentTimestamps: courierPositionTimestampsRef.current,
+        routeStopOrders: getStoredRouteStopOrders(),
       });
 
-      if (posUpdates.size > 0) {
-        posUpdates.forEach((position, courierId) => {
-          courierPositionsRef.current.set(courierId, position);
-          courierPositionTimestampsRef.current.set(courierId, Date.now());
-        });
+      if (tick.positionChanged) {
+        courierPositionsRef.current = tick.courierPositions;
+        courierPositionTimestampsRef.current = tick.courierPositionTimestamps;
 
         if (typeof window !== 'undefined') {
           window.localStorage.setItem(
@@ -1110,18 +1048,20 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       }
 
-      phaseUpdates.forEach((updates, deliveryId) => {
+      tick.phaseUpdates.forEach((updates, deliveryId) => {
         rawDispatch({ type: 'UPDATE_DELIVERY', payload: { deliveryId, updates } });
       });
 
-      statusUpdates.forEach(({ type, ids }) => {
-        ids.forEach((id) => {
+      tick.statusUpdates.forEach(({ type, deliveryIds }) => {
+        deliveryIds.forEach((id) => {
+          const now = new Date();
+
           if (type === 'complete') {
             rawDispatch({ type: 'COMPLETE_DELIVERY', payload: id });
           } else if (type === 'arrived_pickup') {
             rawDispatch({
               type: 'UPDATE_DELIVERY',
-              payload: { deliveryId: id, updates: { arrivedAtRestaurantAt: new Date() } },
+              payload: { deliveryId: id, updates: { arrivedAtRestaurantAt: now, arrived_at_rest: now } },
             });
           } else if (type === 'delivering') {
             rawDispatch({
@@ -1130,8 +1070,11 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 deliveryId: id,
                 updates: {
                   status: 'delivering',
-                  pickedUpAt: new Date(),
-                  started_pickup: new Date(),
+                  arrivedAtRestaurantAt: now,
+                  arrived_at_rest: now,
+                  pickedUpAt: now,
+                  took_it_time: now,
+                  started_pickup: now,
                 },
               },
             });
@@ -1141,7 +1084,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [getInitialCourierPosition, getStoredRouteStopOrders]);
+  }, [getStoredRouteStopOrders]);
 
   const toggleSystem = () => {
     dispatch({ type: 'TOGGLE_SYSTEM' });
@@ -1167,19 +1110,26 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const resetSystem = () => {
+    const resetState = createInitialDeliveryState();
+    isResettingRef.current = true;
+    deliveryCounter.current = 0;
+    courierPositionsRef.current = new Map();
+    courierPositionTimestampsRef.current = new Map();
+    simulationOpenedAtRef.current = null;
+
     if (typeof window !== 'undefined') {
       try {
-        window.localStorage.removeItem(STORAGE_KEY);
-        window.localStorage.removeItem(LIVE_MANAGER_ON_SHIFT_ONLY_STORAGE_KEY);
-        window.localStorage.removeItem(LIVE_MANAGER_ROUTE_STOP_ORDERS_STORAGE_KEY);
-        window.localStorage.removeItem(LIVE_MANAGER_COURIER_POSITIONS_STORAGE_KEY);
-        window.localStorage.removeItem(LIVE_MANAGER_COURIER_POSITIONS_TS_STORAGE_KEY);
+        const nextEpoch = createStorageEpoch();
+        clearSystemResetStorage(window.localStorage);
+        window.localStorage.setItem(STATE_EPOCH_KEY, nextEpoch);
+        storageEpochRef.current = nextEpoch;
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(resetState));
       } catch (error) {
         console.warn('Failed to clear persisted delivery state', error);
       }
     }
 
-    dispatch({ type: 'RESET_SYSTEM', payload: initialState });
+    rawDispatch({ type: 'RESET_SYSTEM', payload: resetState });
 
     if (typeof window !== 'undefined') {
       window.location.reload();
@@ -1217,13 +1167,4 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       {children}
     </DeliveryContext.Provider>
   );
-};
-
-// Context consumer hook.
-export const useDelivery = () => {
-  const context = useContext(DeliveryContext);
-  if (context === undefined) {
-    throw new Error('useDelivery must be used within a DeliveryProvider');
-  }
-  return context;
 };

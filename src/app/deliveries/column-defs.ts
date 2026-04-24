@@ -1,6 +1,11 @@
 ﻿import { Delivery, Courier } from '../types/delivery.types';
 import { format } from 'date-fns';
 import { he } from 'date-fns/locale';
+import {
+  formatCurrency,
+  getDeliveryCourierBasePay,
+  getDeliveryCustomerCharge,
+} from '../utils/delivery-finance';
 import { getRestaurantChainId } from '../utils/restaurant-branding';
 
 // === Column Definition ===
@@ -16,7 +21,7 @@ export interface ColumnDef {
 const fmtDate = (d: Date | null | undefined) => d ? format(d, 'dd/MM HH:mm', { locale: he }) : '-';
 const fmtBool = (v: boolean | undefined | null) => v === true ? '✅' : v === false ? '❌' : '-';
 const fmtNum = (v: number | undefined | null, suffix?: string) => v != null ? `${v}${suffix || ''}` : '-';
-const fmtMoney = (v: number | undefined | null) => v != null ? `₪` : '-';
+const fmtMoney = (v: number | undefined | null) => v != null ? formatCurrency(v) : '-';
 const fmtCoord = (v: number | undefined | null) => v != null ? v.toFixed(5) : '-';
 const fmtStr = (v: string | undefined | null) => v || '-';
 const fmtCoordPair = (lat: number | undefined | null, lng: number | undefined | null) =>
@@ -125,10 +130,10 @@ export const ALL_COLUMNS: ColumnDef[] = [
   // ===== 💰 כלכלה =====
   { id: 'rest_price', label: 'מחיר מסעדה', sortable: true, type: 'money', getValue: d => fmtMoney(d.rest_price ?? d.restaurantPrice) },
   { id: 'rest_polygon_price', label: 'מחיר פוליגון', sortable: true, type: 'money', getValue: d => fmtMoney(d.rest_polygon_price) },
-  { id: 'runner_price', label: 'תשלום שליח', sortable: true, type: 'money', getValue: d => fmtMoney(d.runner_price ?? d.courierPayment) },
+  { id: 'runner_price', label: 'תשלום שליח', sortable: true, type: 'money', getValue: d => formatCurrency(getDeliveryCourierBasePay(d)) },
   { id: 'runner_tip', label: 'טיפ', sortable: true, type: 'money', getValue: d => fmtMoney(d.runner_tip) },
   { id: 'sum_cash', label: 'סכום מזומן', sortable: true, type: 'money', getValue: d => fmtMoney(d.sum_cash) },
-  { id: 'price', label: 'מחיר ללקוח', sortable: true, type: 'custom', getValue: d => `₪${d.price}` },
+  { id: 'price', label: 'מחיר ללקוח', sortable: true, type: 'custom', getValue: d => formatCurrency(getDeliveryCustomerCharge(d)) },
   { id: 'is_cash', label: 'מזומן', sortable: true, type: 'boolean', getValue: d => fmtBool(d.is_cash) },
   { id: 'commissionAmount', label: 'עמלה', sortable: true, type: 'money', getValue: d => fmtMoney(d.commissionAmount) },
 

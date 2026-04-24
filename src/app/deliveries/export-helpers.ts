@@ -1,4 +1,14 @@
 import type { Courier, Delivery } from '../types/delivery.types';
+import {
+  formatCurrency,
+  getDeliveryCashAmount,
+  getDeliveryCommission,
+  getDeliveryCourierBasePay,
+  getDeliveryCourierTip,
+  getDeliveryCustomerCharge,
+  getDeliveryRestaurantCharge,
+  sumDeliveryMoney,
+} from '../utils/delivery-finance';
 import { sanitizeExportFileName } from '../utils/export-utils';
 import { SUMMARY_FIELDS } from './export-config';
 
@@ -51,27 +61,12 @@ export const calculateGroupFinancials = (
 ): DeliveryGroupFinancials => {
   const delivered = deliveries.filter((delivery) => delivery.status === 'delivered');
   const cancelled = deliveries.filter((delivery) => delivery.status === 'cancelled');
-  const totalRevenue = delivered.reduce((sum, delivery) => sum + delivery.price, 0);
-  const totalCourierPay = deliveries.reduce(
-    (sum, delivery) => sum + (delivery.runner_price ?? delivery.courierPayment ?? 0),
-    0,
-  );
-  const totalTips = deliveries.reduce(
-    (sum, delivery) => sum + (delivery.runner_tip ?? 0),
-    0,
-  );
-  const totalCash = deliveries.reduce(
-    (sum, delivery) => sum + (delivery.sum_cash ?? 0),
-    0,
-  );
-  const totalCommission = deliveries.reduce(
-    (sum, delivery) => sum + (delivery.commissionAmount ?? 0),
-    0,
-  );
-  const totalRestPrice = deliveries.reduce(
-    (sum, delivery) => sum + (delivery.rest_price ?? delivery.restaurantPrice ?? 0),
-    0,
-  );
+  const totalRevenue = sumDeliveryMoney(delivered, getDeliveryCustomerCharge);
+  const totalCourierPay = sumDeliveryMoney(deliveries, getDeliveryCourierBasePay);
+  const totalTips = sumDeliveryMoney(deliveries, getDeliveryCourierTip);
+  const totalCash = sumDeliveryMoney(deliveries, getDeliveryCashAmount);
+  const totalCommission = sumDeliveryMoney(deliveries, getDeliveryCommission);
+  const totalRestPrice = sumDeliveryMoney(deliveries, getDeliveryRestaurantCharge);
   const profit = totalRevenue - totalCourierPay - totalCommission;
   const avgTime =
     delivered.length > 0
@@ -157,13 +152,13 @@ export const buildConfigSummaryRow = (
         ? `${Math.round((financials.deliveredCount / totalDeliveries) * 100)}%`
         : '0%',
     avgTime: financials.avgTime || '-',
-    totalRevenue: `₪${financials.totalRevenue.toLocaleString()}`,
-    totalRestPrice: `₪${financials.totalRestPrice.toLocaleString()}`,
-    totalCourierPay: `₪${financials.totalCourierPay.toLocaleString()}`,
-    totalTips: `₪${financials.totalTips.toLocaleString()}`,
-    totalCash: `₪${financials.totalCash.toLocaleString()}`,
-    totalCommission: `₪${financials.totalCommission.toLocaleString()}`,
-    profit: `₪${financials.profit.toLocaleString()}`,
+    totalRevenue: formatCurrency(financials.totalRevenue),
+    totalRestPrice: formatCurrency(financials.totalRestPrice),
+    totalCourierPay: formatCurrency(financials.totalCourierPay),
+    totalTips: formatCurrency(financials.totalTips),
+    totalCash: formatCurrency(financials.totalCash),
+    totalCommission: formatCurrency(financials.totalCommission),
+    profit: formatCurrency(financials.profit),
   };
 
   const row: Record<string, string | number> = {};

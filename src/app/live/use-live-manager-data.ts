@@ -1,11 +1,13 @@
-﻿import { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Delivery, DeliveryState } from '../types/delivery.types';
+import { getDeliveryCashAmount, getDeliveryCustomerCharge } from '../utils/delivery-finance';
 import { getDeliveryPickupBatchKey } from '../utils/pickup-batches';
-
-type MapPosition = {
-  lat: number;
-  lng: number;
-};
+import {
+  estimateTravelMinutes,
+  getPickupReadyAt,
+  hasValidPosition,
+  type MapPosition,
+} from './live-simulation-engine';
 
 type LiveManagerSortBy = 'time' | 'status' | 'restaurant' | 'address' | 'ready';
 type LiveManagerSortDirection = 'asc' | 'desc';
@@ -24,51 +26,6 @@ type UseLiveManagerDataParams = {
   sortDirection: LiveManagerSortDirection;
   state: DeliveryState;
   statusFilters: string[];
-};
-
-const hasValidPosition = (value: Partial<MapPosition> | null | undefined): value is MapPosition =>
-  typeof value?.lat === 'number' &&
-  Number.isFinite(value.lat) &&
-  typeof value?.lng === 'number' &&
-  Number.isFinite(value.lng);
-
-const toRadians = (value: number) => (value * Math.PI) / 180;
-
-const getDistanceKm = (from: MapPosition, to: MapPosition) => {
-  const earthRadiusKm = 6371;
-  const latDiff = toRadians(to.lat - from.lat);
-  const lngDiff = toRadians(to.lng - from.lng);
-  const fromLat = toRadians(from.lat);
-  const toLat = toRadians(to.lat);
-
-  const a =
-    Math.sin(latDiff / 2) ** 2 +
-    Math.cos(fromLat) * Math.cos(toLat) * Math.sin(lngDiff / 2) ** 2;
-
-  return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-};
-
-const estimateTravelMinutes = (from: MapPosition | null, to: MapPosition | null) => {
-  if (!from || !to) return 8;
-  const distanceKm = getDistanceKm(from, to);
-  const minutes = (distanceKm / 18) * 60;
-  return Math.max(4, Math.round(minutes) + 2);
-};
-
-const getPickupReadyAt = (deliveries: Delivery[]) => {
-  const readyTimes = deliveries
-    .map((delivery) => {
-      if (delivery.pickedUpAt) return null;
-      if (delivery.orderReadyTime) return new Date(delivery.orderReadyTime);
-      if (typeof delivery.preparationTime === 'number') {
-        return new Date(new Date(delivery.createdAt).getTime() + delivery.preparationTime * 60000);
-      }
-      return null;
-    })
-    .filter((value): value is Date => value instanceof Date && !Number.isNaN(value.getTime()));
-
-  if (readyTimes.length === 0) return null;
-  return new Date(Math.max(...readyTimes.map((value) => value.getTime())));
 };
 
 export const useLiveManagerData = ({
@@ -105,12 +62,13 @@ export const useLiveManagerData = ({
       );
       const phone = `05${(hash % 9) + 1}-${Math.floor((hash % 900) + 1000000).toString().substring(0, 7)}`;
       const paymentMethod = (hash % 2 === 0) ? 'cash' : 'credit';
-      const cashToCollect = paymentMethod === 'cash' ? delivery.price : 0;
+      const cashToCollect = paymentMethod === 'cash' ? getDeliveryCashAmount(delivery) : 0;
 
       return {
         id: delivery.orderNumber,
         deliveryId: delivery.id,
         restaurantId: delivery.restaurantId,
+        pickupBatchId: delivery.pickupBatchId,
         restaurantName: delivery.restaurantName,
         pickup: delivery.restaurantName,
         customerName: delivery.customerName,
@@ -119,7 +77,7 @@ export const useLiveManagerData = ({
         createdAt: new Date(delivery.createdAt).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
         createdAtTimestamp: new Date(delivery.createdAt).getTime(),
         readyBy: `${delivery.estimatedTime} דק׳`,
-        amountToCollect: delivery.price,
+        amountToCollect: getDeliveryCustomerCharge(delivery),
         courierId: delivery.courierId ?? null,
         courierName: courier?.name || null,
         phone,
@@ -143,9 +101,11 @@ export const useLiveManagerData = ({
     return state.restaurants
       .filter((restaurant) => restaurant.isActive)
       .map((restaurant) => ({
+        id: restaurant.id,
         name: restaurant.name,
         lat: restaurant.lat,
         lng: restaurant.lng,
+        isActive: restaurant.isActive,
       }));
   }, [state.restaurants]);
 
@@ -153,12 +113,21 @@ export const useLiveManagerData = ({
     return state.couriers
       .filter((courier) => courier.status !== 'offline')
       .map((courier, index) => {
+        const hasActiveDelivery = state.deliveries.some((delivery) =>
+          delivery.courierId === courier.id &&
+          (delivery.status === 'assigned' || delivery.status === 'delivering')
+        );
+        const enginePos = courierPositions.get(courier.id);
+
+        if (hasActiveDelivery && enginePos) {
+          return { ...courier, lat: enginePos.lat, lng: enginePos.lng };
+        }
+
         const simPos = simPositions.get(courier.name) ?? simPositions.get(`sim_${index}`);
         if (simPos) {
           return { ...courier, lat: simPos.lat, lng: simPos.lng };
         }
 
-        const enginePos = courierPositions.get(courier.id);
         if (enginePos) {
           return { ...courier, lat: enginePos.lat, lng: enginePos.lng };
         }
@@ -166,7 +135,7 @@ export const useLiveManagerData = ({
         const fallbackPosition = courierFallbackPositions[index % courierFallbackPositions.length];
         return { ...courier, lat: fallbackPosition.lat, lng: fallbackPosition.lng };
       });
-  }, [courierFallbackPositions, courierPositions, simPositions, state.couriers]);
+  }, [courierFallbackPositions, courierPositions, simPositions, state.couriers, state.deliveries]);
 
   const mapCouriers = useMemo(() => (
     shiftFilter === 'shift'

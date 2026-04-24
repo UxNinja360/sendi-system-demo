@@ -1,6 +1,6 @@
 ﻿import React from 'react';
 import { useNavigate } from 'react-router';
-import { useDelivery } from '../context/delivery.context';
+import { useDelivery } from '../context/delivery-context-value';
 import { SharedDeliverySidePanelShell } from '../deliveries/shared-delivery-side-panel-shell';
 import type { Delivery } from '../types/delivery.types';
 

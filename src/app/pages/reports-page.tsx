@@ -9,7 +9,7 @@ import {
   X,
 } from 'lucide-react';
 import { format as formatDate } from 'date-fns';
-import { useDelivery } from '../context/delivery.context';
+import { useDelivery } from '../context/delivery-context-value';
 import { getWorkedMinutesWithinRange } from '../utils/shift-work';
 import { PageToolbar } from '../components/common/page-toolbar';
 import {
@@ -17,6 +17,12 @@ import {
   type PeriodMode,
 } from '../components/common/toolbar-period-control';
 import { useReportsExport } from '../reports/use-reports-export';
+import {
+  getDeliveryCommission,
+  getDeliveryCourierBasePay,
+  getDeliveryCustomerCharge,
+  sumDeliveryMoney,
+} from '../utils/delivery-finance';
 
 const buildShiftBounds = (dateKey: string, startTime: string, endTime: string) => {
   const [year, month, day] = dateKey.split('-').map(Number);
@@ -144,12 +150,8 @@ export const ReportsPage: React.FC = () => {
               .length,
             cancelledCount: deliveries.filter((delivery) => delivery.status === 'cancelled')
               .length,
-            revenue: deliveries.reduce((sum, delivery) => sum + (delivery.price || 0), 0),
-            courierPay: deliveries.reduce(
-              (sum, delivery) =>
-                sum + (delivery.runner_price ?? delivery.courierPayment ?? 0),
-              0,
-            ),
+            revenue: sumDeliveryMoney(deliveries, getDeliveryCustomerCharge),
+            courierPay: sumDeliveryMoney(deliveries, getDeliveryCourierBasePay),
           };
         })
         .filter((report) => report.deliveries.length > 0 || report.assignments.length > 0),
@@ -175,11 +177,8 @@ export const ReportsPage: React.FC = () => {
               .length,
             cancelledCount: deliveries.filter((delivery) => delivery.status === 'cancelled')
               .length,
-            revenue: deliveries.reduce((sum, delivery) => sum + (delivery.price || 0), 0),
-            commission: deliveries.reduce(
-              (sum, delivery) => sum + (delivery.commissionAmount || 0),
-              0,
-            ),
+            revenue: sumDeliveryMoney(deliveries, getDeliveryCustomerCharge),
+            commission: sumDeliveryMoney(deliveries, getDeliveryCommission),
           };
         })
         .filter((report) => report.deliveries.length > 0),

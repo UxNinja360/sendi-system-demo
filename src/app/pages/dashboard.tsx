@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 import { ClipboardList, Store, TrendingUp, Users } from 'lucide-react';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { PageToolbar } from '../components/common/page-toolbar';
-import { useDelivery } from '../context/delivery.context';
+import { useDelivery } from '../context/delivery-context-value';
 import { useTheme } from '../context/theme.context';
 
 const openStatuses = ['pending', 'assigned', 'delivering'] as const;

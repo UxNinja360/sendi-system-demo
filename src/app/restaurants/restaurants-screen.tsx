@@ -1,6 +1,6 @@
 ﻿import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Power, Download, Store as StoreIcon, Trash2, X, Sparkles, Search, Filter, FileText, FileSpreadsheet } from 'lucide-react';
-import { useDelivery } from '../context/delivery.context';
+import { Power, Download, Store as StoreIcon, Trash2, X, FileText, FileSpreadsheet } from 'lucide-react';
+import { useDelivery } from '../context/delivery-context-value';
 import { useNavigate } from 'react-router';
 import { Delivery, Restaurant } from '../types/delivery.types';
 import { format } from 'date-fns';
@@ -9,13 +9,21 @@ import { saveAs } from 'file-saver';
 import { toast } from 'sonner';
 import { ListColumnsPanel } from '../components/common/list-columns-panel';
 import { ListExportDrawer } from '../components/common/list-export-drawer';
-import { ListInlineFilters } from '../components/common/list-inline-filters';
 import { PageToolbar } from '../components/common/page-toolbar';
 import { ListSidePanel } from '../components/common/list-side-panel';
 import { SelectionActionBar } from '../components/common/selection-action-bar';
-import { type SingleSelectFilterOption } from '../components/common/list-filter-controls';
 import { ListToolbarActions } from '../components/common/list-toolbar-actions';
 import { getRestaurantChainId } from '../utils/restaurant-branding';
+import {
+  formatCurrency,
+  getDeliveryCashAmount,
+  getDeliveryCommission,
+  getDeliveryCourierBasePay,
+  getDeliveryCourierTip,
+  getDeliveryCustomerCharge,
+  getDeliveryRestaurantCharge,
+  sumDeliveryMoney,
+} from '../utils/delivery-finance';
 import {
   createExcelWorkbook,
   exportRowsToExcel,
@@ -62,12 +70,12 @@ type RestaurantRow = {
 const calcFinancials = (dels: Delivery[]) => {
   const delivered = dels.filter(d => d.status === 'delivered');
   const cancelled = dels.filter(d => d.status === 'cancelled');
-  const totalRevenue = delivered.reduce((s, d) => s + d.price, 0);
-  const totalCourierPay = dels.reduce((s, d) => s + (d.runner_price ?? d.courierPayment ?? 0), 0);
-  const totalTips = dels.reduce((s, d) => s + (d.runner_tip ?? 0), 0);
-  const totalCash = dels.reduce((s, d) => s + (d.sum_cash ?? 0), 0);
-  const totalCommission = dels.reduce((s, d) => s + (d.commissionAmount ?? 0), 0);
-  const totalRestPrice = dels.reduce((s, d) => s + (d.rest_price ?? d.restaurantPrice ?? 0), 0);
+  const totalRevenue = sumDeliveryMoney(delivered, getDeliveryCustomerCharge);
+  const totalCourierPay = sumDeliveryMoney(dels, getDeliveryCourierBasePay);
+  const totalTips = sumDeliveryMoney(dels, getDeliveryCourierTip);
+  const totalCash = sumDeliveryMoney(dels, getDeliveryCashAmount);
+  const totalCommission = sumDeliveryMoney(dels, getDeliveryCommission);
+  const totalRestPrice = sumDeliveryMoney(dels, getDeliveryRestaurantCharge);
   const profit = totalRevenue - totalCourierPay - totalCommission;
   const avgTime = delivered.length > 0
     ? Math.round(delivered.reduce((s, d) => {
@@ -118,11 +126,6 @@ type RestaurantColId = typeof RESTAURANT_COLS[number]['id'];
 type RestaurantSortableColumnId = RestaurantColId;
 const COL_ORDER_KEY = 'restaurants-column-order-v3';
 const RESTAURANT_VISIBLE_COLUMNS_KEY = 'restaurants-visible-columns-v1';
-const RESTAURANT_STATUS_FILTER_OPTIONS: SingleSelectFilterOption[] = [
-  { id: 'all', label: 'סטטוס' },
-  { id: 'active', label: 'פעיל' },
-  { id: 'inactive', label: 'לא פעיל' },
-];
 const RESTAURANT_COLUMN_CATEGORIES = [
   {
     id: 'core',
@@ -157,9 +160,6 @@ export const RestaurantsScreen: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newRestaurant, setNewRestaurant] = useState({ name: '', phone: '', address: '', type: 'מסעדה' });
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
-  const [cityFilter, setCityFilter] = useState<string>('all');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
   const [sortColumn, setSortColumn] = useState<RestaurantSortableColumnId>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [isExportOpen, setIsExportOpen] = useState(false);
@@ -252,9 +252,6 @@ export const RestaurantsScreen: React.FC = () => {
     chainId: r.chainId || getRestaurantChainId(r.name),
   })), [state.restaurants, deliveriesCountByRestaurant]);
 
-  const uniqueCities = useMemo(() => [...new Set(restaurants.map(r => r.city))].sort((a, b) => a.localeCompare(b, 'he')), [restaurants]);
-  const uniqueTypes = useMemo(() => [...new Set(restaurants.map(r => r.type))].sort((a, b) => a.localeCompare(b, 'he')), [restaurants]);
-
   const handleRestaurantSort = useCallback((columnId: RestaurantSortableColumnId) => {
     if (sortColumn === columnId) {
       setSortDirection((current) => (current === 'asc' ? 'desc' : 'asc'));
@@ -272,12 +269,7 @@ export const RestaurantsScreen: React.FC = () => {
         r.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
         r.contactPerson.toLowerCase().includes(searchQuery.toLowerCase()) ||
         r.phone.includes(searchQuery);
-      const matchesStatus = statusFilter === 'all' ||
-        (statusFilter === 'active' && r.isActive) ||
-        (statusFilter === 'inactive' && !r.isActive);
-      const matchesCity = cityFilter === 'all' || r.city === cityFilter;
-      const matchesType = typeFilter === 'all' || r.type === typeFilter;
-      return matchesSearch && matchesStatus && matchesCity && matchesType;
+      return matchesSearch;
     });
 
     const direction = sortDirection === 'asc' ? 1 : -1;
@@ -304,7 +296,7 @@ export const RestaurantsScreen: React.FC = () => {
           return 0;
       }
     });
-  }, [restaurants, searchQuery, statusFilter, cityFilter, typeFilter, sortColumn, sortDirection]);
+  }, [restaurants, searchQuery, sortColumn, sortDirection]);
 
   // Stats
   const stats = useMemo(() => ({
@@ -314,75 +306,13 @@ export const RestaurantsScreen: React.FC = () => {
     inactive: restaurants.filter(r => !r.isActive).length,
   }), [restaurants, filteredRestaurants]);
 
-  const statusCounts = useMemo(() => ({
-    all: restaurants.length,
-    active: restaurants.filter(r => r.isActive).length,
-    inactive: restaurants.filter(r => !r.isActive).length,
-  }), [restaurants]);
-  const restaurantStatusFilterOptions = useMemo(
-    () =>
-      RESTAURANT_STATUS_FILTER_OPTIONS.map((option) => ({
-        ...option,
-        count:
-          option.id === 'all'
-            ? undefined
-            : statusCounts[option.id as keyof typeof statusCounts],
-      })),
-    [statusCounts],
-  );
-  const cityFilterOptions = useMemo<SingleSelectFilterOption[]>(
-    () => [{ id: 'all', label: 'עיר' }, ...uniqueCities.map((city) => ({ id: city, label: city }))],
-    [uniqueCities],
-  );
-  const typeFilterOptions = useMemo<SingleSelectFilterOption[]>(
-    () => [{ id: 'all', label: 'סוג' }, ...uniqueTypes.map((type) => ({ id: type, label: type }))],
-    [uniqueTypes],
-  );
-  const restaurantInlineFilters = useMemo(
-    () => [
-      {
-        key: 'status',
-        value: statusFilter,
-        onChange: (value: string) => setStatusFilter(value as typeof statusFilter),
-        options: restaurantStatusFilterOptions,
-        defaultLabel: 'סטטוס',
-      },
-      {
-        key: 'city',
-        value: cityFilter,
-        onChange: setCityFilter,
-        options: cityFilterOptions,
-        defaultLabel: 'עיר',
-      },
-      {
-        key: 'type',
-        value: typeFilter,
-        onChange: setTypeFilter,
-        options: typeFilterOptions,
-        defaultLabel: 'סוג',
-      },
-    ],
-    [
-      cityFilter,
-      cityFilterOptions,
-      restaurantStatusFilterOptions,
-      statusFilter,
-      typeFilter,
-      typeFilterOptions,
-    ],
-  );
-
-  // Check active filters
-  const hasActiveFilters = searchQuery || statusFilter !== 'all' || cityFilter !== 'all' || typeFilter !== 'all';
+  // Selection state
   const allVisibleRestaurantsSelected = filteredRestaurants.length > 0 && filteredRestaurants.every(restaurant => selectedRestaurantIds.has(restaurant.restaurantId));
   const someVisibleRestaurantsSelected = filteredRestaurants.some(restaurant => selectedRestaurantIds.has(restaurant.restaurantId));
 
   // Clear handlers
   const handleClearAll = () => {
     setSearchQuery('');
-    setStatusFilter('all');
-    setCityFilter('all');
-    setTypeFilter('all');
   };
 
   const handleToggleSelectRestaurant = (restaurantId: string) => {
@@ -549,13 +479,13 @@ export const RestaurantsScreen: React.FC = () => {
       { 'פרט': 'אחוז הצלחה', 'ערך': deliveries.length > 0 ? `${Math.round((f.deliveredCount / deliveries.length) * 100)}%` : '0%' },
       { 'פרט': 'זמן ממוצע (דק׳)', 'ערך': f.avgTime || '-' },
       { 'פרט': '', 'ערך': '' },
-      { 'פרט': 'הכנסות', 'ערך': `₪${f.totalRevenue.toLocaleString()}` },
-      { 'פרט': 'מחיר מסעדה', 'ערך': `₪${f.totalRestPrice.toLocaleString()}` },
-      { 'פרט': 'תשלום שליח', 'ערך': `₪${f.totalCourierPay.toLocaleString()}` },
-      { 'פרט': 'טיפים', 'ערך': `₪${f.totalTips.toLocaleString()}` },
-      { 'פרט': 'מזומן', 'ערך': `₪${f.totalCash.toLocaleString()}` },
-      { 'פרט': 'עמלות', 'ערך': `₪${f.totalCommission.toLocaleString()}` },
-      { 'פרט': 'רווח נקי', 'ערך': `₪${f.profit.toLocaleString()}` },
+      { 'פרט': 'הכנסות', 'ערך': formatCurrency(f.totalRevenue) },
+      { 'פרט': 'מחיר מסעדה', 'ערך': formatCurrency(f.totalRestPrice) },
+      { 'פרט': 'תשלום שליח', 'ערך': formatCurrency(f.totalCourierPay) },
+      { 'פרט': 'טיפים', 'ערך': formatCurrency(f.totalTips) },
+      { 'פרט': 'מזומן', 'ערך': formatCurrency(f.totalCash) },
+      { 'פרט': 'עמלות', 'ערך': formatCurrency(f.totalCommission) },
+      { 'פרט': 'רווח נקי', 'ערך': formatCurrency(f.profit) },
     ];
 
     const workbook = createExcelWorkbook({
@@ -737,7 +667,6 @@ export const RestaurantsScreen: React.FC = () => {
               onToggleColumns={() => { setColumnsOpen(true); setIsExportOpen(false); }}
             />
           }
-          controls={<ListInlineFilters filters={restaurantInlineFilters} />}
           actions={
             <ListToolbarActions
               searchQuery={searchQuery}

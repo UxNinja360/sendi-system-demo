@@ -37,9 +37,10 @@ import {
   // icons
 } from 'lucide-react';
 import { AppLogo } from '../icons/app-logo';
-import { useDelivery } from '../../context/delivery.context';
+import { useDelivery } from '../../context/delivery-context-value';
 import { useTheme } from '../../context/theme.context';
 import { useLanguage } from '../../context/language.context';
+import { getDeliveryCustomerCharge } from '../../utils/delivery-finance';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 interface SidebarProps {
@@ -72,7 +73,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
   ).length;
   const walletRevenue = state.deliveries
     .filter(delivery => delivery.status === 'delivered')
-    .reduce((sum, delivery) => sum + (delivery.price ?? 0), 0);
+    .reduce((sum, delivery) => sum + getDeliveryCustomerCharge(delivery), 0);
   
   // Load collapsed state from localStorage
   const [isCollapsed, setIsCollapsed] = useState(() => {

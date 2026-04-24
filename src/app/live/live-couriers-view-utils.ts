@@ -121,22 +121,26 @@ export const deliveriesToRouteStops = (
   const pickupGroups = new Map<string, Delivery[]>();
 
   deliveries.forEach((order) => {
-    const pickupGroupKey = getDeliveryPickupBatchKey(order);
-    const groupedOrders = pickupGroups.get(pickupGroupKey);
+    const pickupStillNeeded = order.status !== 'delivering' && !order.pickedUpAt;
 
-    if (groupedOrders) {
-      groupedOrders.push(order);
-    } else {
-      pickupGroups.set(pickupGroupKey, [order]);
-      stops.push({
-        id: getPickupGroupStopId(pickupGroupKey),
-        deliveryId: order.id,
-        deliveryIds: [order.id],
-        type: 'pickup',
-        order,
-        orders: [order],
-        isPreview,
-      });
+    if (pickupStillNeeded) {
+      const pickupGroupKey = getDeliveryPickupBatchKey(order);
+      const groupedOrders = pickupGroups.get(pickupGroupKey);
+
+      if (groupedOrders) {
+        groupedOrders.push(order);
+      } else {
+        pickupGroups.set(pickupGroupKey, [order]);
+        stops.push({
+          id: getPickupGroupStopId(pickupGroupKey),
+          deliveryId: order.id,
+          deliveryIds: [order.id],
+          type: 'pickup',
+          order,
+          orders: [order],
+          isPreview,
+        });
+      }
     }
 
     stops.push({

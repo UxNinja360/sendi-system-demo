@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { useDelivery } from '../context/delivery.context';
+import { useDelivery } from '../context/delivery-context-value';
 import {
   ArrowRight,
   Store,
@@ -16,6 +16,7 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { he } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { formatCurrency, getDeliveryCustomerCharge, sumDeliveryMoney } from '../utils/delivery-finance';
 import { getRestaurantChainId } from '../utils/restaurant-branding';
 
 export function RestaurantDetailsScreen() {
@@ -41,7 +42,7 @@ export function RestaurantDetailsScreen() {
     (delivery) => delivery.status === 'delivered'
   );
 
-  const totalRevenue = completedDeliveries.reduce((sum, delivery) => sum + delivery.price, 0);
+  const totalRevenue = sumDeliveryMoney(completedDeliveries, getDeliveryCustomerCharge);
   const averagePrice =
     completedDeliveries.length > 0 ? totalRevenue / completedDeliveries.length : 0;
 
@@ -166,7 +167,7 @@ export function RestaurantDetailsScreen() {
                 </div>
                 <div>
                   <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">הכנסות</div>
-                  <div className="text-2xl font-bold text-[#16a34a] dark:text-[#22c55e]">₪{totalRevenue}</div>
+                  <div className="text-2xl font-bold text-[#16a34a] dark:text-[#22c55e]">{formatCurrency(totalRevenue)}</div>
                 </div>
               </div>
             </div>
@@ -179,7 +180,7 @@ export function RestaurantDetailsScreen() {
                 <div>
                   <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">ממוצע הזמנה</div>
                   <div className="text-2xl font-bold text-[#0d0d12] dark:text-[#fafafa]">
-                    ₪{Math.round(averagePrice)}
+                    {formatCurrency(Math.round(averagePrice))}
                   </div>
                 </div>
               </div>
@@ -331,7 +332,7 @@ export function RestaurantDetailsScreen() {
                             ? 'בוטל'
                             : 'פעיל'}
                       </span>
-                      <div className="text-sm font-bold text-[#16a34a] dark:text-[#22c55e]">₪{delivery.price}</div>
+                      <div className="text-sm font-bold text-[#16a34a] dark:text-[#22c55e]">{formatCurrency(getDeliveryCustomerCharge(delivery))}</div>
                       <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">
                         {formatDistanceToNow(delivery.createdAt, { addSuffix: true, locale: he })}
                       </div>

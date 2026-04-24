@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Grid3x3, List } from 'lucide-react';
 
-import { useDelivery } from '../context/delivery.context';
+import { useDelivery } from '../context/delivery-context-value';
 import { PageToolbar } from '../components/common/page-toolbar';
 import { ToolbarSearchControl } from '../components/common/toolbar-search-control';
 

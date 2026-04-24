@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router';
-import { useDelivery } from '../context/delivery.context';
+import { useDelivery } from '../context/delivery-context-value';
 import { 
   ArrowRight, Bike, MapPin, Phone, Clock, TrendingUp,
   Package, CheckCircle2, DollarSign, Star, Activity,
@@ -12,6 +12,7 @@ import { useState, useMemo } from 'react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import CountUp from 'react-countup';
 import { formatWorkedDuration, getAssignmentWorkedMinutes, getWorkedMinutesWithinRange } from '../utils/shift-work';
+import { formatCurrency, getDeliveryCourierBasePay, sumDeliveryMoney } from '../utils/delivery-finance';
 import { toast } from 'sonner';
 
 // מערכת הישגים ותגים
@@ -81,7 +82,7 @@ export function CourierDetailsScreen() {
   const cancelledDeliveries = courierDeliveries.filter(d => d.status === 'cancelled');
 
   // חישוב סטטיסטיקות
-  const totalEarnings = completedDeliveries.reduce((sum, d) => sum + d.price, 0);
+  const totalEarnings = sumDeliveryMoney(completedDeliveries, getDeliveryCourierBasePay);
   const averageDeliveryTime = completedDeliveries.length > 0 
     ? Math.round(completedDeliveries.reduce((sum, d) => sum + d.estimatedTime, 0) / completedDeliveries.length)
     : 0;
@@ -111,7 +112,7 @@ export function CourierDetailsScreen() {
         totalDeliveries: completed.length,
         avgTime,
         rating: c.rating,
-        earnings: completed.reduce((sum, d) => sum + d.price, 0)
+        earnings: sumDeliveryMoney(completed, getDeliveryCourierBasePay)
       };
     });
   }, [state.couriers, state.deliveries]);
@@ -174,7 +175,7 @@ export function CourierDetailsScreen() {
       }
       
       days[dateKey].deliveries += 1;
-      days[dateKey].earnings += delivery.price;
+      days[dateKey].earnings += getDeliveryCourierBasePay(delivery);
       days[dateKey].avgTime += delivery.estimatedTime;
     });
     
@@ -982,7 +983,7 @@ export function CourierDetailsScreen() {
                     <div className="flex items-center gap-4">
                       <div className="text-left">
                         <div className="text-sm font-bold text-[#16a34a] dark:text-[#22c55e]">
-                          ₪{delivery.price}
+                          {formatCurrency(getDeliveryCourierBasePay(delivery))}
                         </div>
                         <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">
                           {delivery.estimatedTime} דק'

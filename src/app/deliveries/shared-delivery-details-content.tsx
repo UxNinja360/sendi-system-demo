@@ -4,6 +4,14 @@ import { format } from 'date-fns';
 import { he } from 'date-fns/locale';
 import type { Courier, Delivery } from '../types/delivery.types';
 import { formatAddressWithArea } from '../utils/delivery-presenters';
+import {
+  formatCurrency,
+  getDeliveryCashAmount,
+  getDeliveryCourierBasePay,
+  getDeliveryCourierTip,
+  getDeliveryCustomerCharge,
+  getDeliveryRestaurantCharge,
+} from '../utils/delivery-finance';
 
 const initials = (name: string) =>
   name
@@ -55,12 +63,17 @@ export const SharedDeliveryDetailsContent: React.FC<Props> = ({ delivery, courie
     { label: 'נמסר', time: delivery.deliveredAt, done: !!delivery.deliveredAt },
   ];
   const doneCount = timelineSteps.filter((step) => step.done).length;
+  const customerCharge = getDeliveryCustomerCharge(delivery);
+  const restaurantCharge = getDeliveryRestaurantCharge(delivery);
+  const courierPay = getDeliveryCourierBasePay(delivery);
+  const courierTip = getDeliveryCourierTip(delivery);
+  const cashAmount = getDeliveryCashAmount(delivery);
 
   return (
     <div className="pb-2">
       <SectionTitle>פרטי הזמנה</SectionTitle>
       <div className="border-t border-[#f5f5f5] dark:border-[#1a1a1a]">
-        <InfoRow label="מחיר" value={`₪${delivery.price}`} green />
+        <InfoRow label="מחיר" value={formatCurrency(customerCharge)} green />
         <InfoRow label="זמן משוער" value={`${delivery.estimatedTime} דק׳`} />
         {delivery.delivery_distance ? (
           <InfoRow label="מרחק" value={`${delivery.delivery_distance.toFixed(1)} ק"מ`} />
@@ -70,14 +83,14 @@ export const SharedDeliveryDetailsContent: React.FC<Props> = ({ delivery, courie
             label="תשלום"
             value={
               <span className="font-semibold text-green-600 dark:text-green-400">
-                💵 מזומן ₪{delivery.sum_cash || delivery.price}
+                💵 מזומן {formatCurrency(cashAmount)}
               </span>
             }
           />
         ) : null}
-        {delivery.restaurantPrice ? <InfoRow label="חיוב מסעדה" value={`₪${delivery.restaurantPrice}`} /> : null}
-        {delivery.courierPayment ? <InfoRow label="תשלום שליח" value={`₪${delivery.courierPayment}`} /> : null}
-        {delivery.runner_tip ? <InfoRow label="טיפ" value={`₪${delivery.runner_tip}`} /> : null}
+        {restaurantCharge > 0 ? <InfoRow label="חיוב מסעדה" value={formatCurrency(restaurantCharge)} /> : null}
+        {courierPay > 0 ? <InfoRow label="תשלום שליח" value={formatCurrency(courierPay)} /> : null}
+        {courierTip > 0 ? <InfoRow label="טיפ" value={formatCurrency(courierTip)} /> : null}
       </div>
 
       <SectionTitle>פרטי מסעדה</SectionTitle>

@@ -1,6 +1,6 @@
-﻿import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
-import { FileText } from 'lucide-react';
+import { FileText, Power } from 'lucide-react';
 import { useTheme } from '../context/theme.context';
 import {
   createRestaurantIcon,
@@ -16,7 +16,32 @@ import {
   MapMarker,
   Order,
 } from './leaflet-map-utils';
+import { buildSimulatedGpsRoutePath } from './route-geometry';
 import 'leaflet/dist/leaflet.css';
+
+type RoutePoint = [number, number];
+
+const ACTIVE_COURIER_ROUTE_STYLE: L.PolylineOptions = {
+  color: '#22c55e',
+  weight: 3,
+  opacity: 0.92,
+  dashArray: '8 7',
+  lineCap: 'round',
+  lineJoin: 'round',
+};
+
+const SELECTED_PENDING_ROUTE_STYLE: L.PolylineOptions = {
+  color: '#6366f1',
+  weight: 3,
+  opacity: 0.9,
+  lineCap: 'round',
+  lineJoin: 'round',
+};
+
+const isValidRoutePoint = (point: RoutePoint | null | undefined): point is RoutePoint =>
+  Array.isArray(point) &&
+  point.length === 2 &&
+  point.every((value) => Number.isFinite(value));
 
 interface LeafletMapProps {
   orders: Order[];
@@ -35,6 +60,8 @@ interface LeafletMapProps {
   selectedDeliveryIds?: Set<string>;
   onOrderClick?: (deliveryId: string) => void;
   onOrderShowDetails?: (deliveryId: string) => void;
+  onRestaurantShowDetails?: (restaurantId: string) => void;
+  onRestaurantToggleActive?: (restaurantId: string) => void;
   onCourierClick?: (courierId: string) => void;
   onMapClick?: () => void;
 }
@@ -57,6 +84,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   selectedDeliveryIds,
   onOrderClick,
   onOrderShowDetails,
+  onRestaurantShowDetails,
+  onRestaurantToggleActive,
   onCourierClick,
   onMapClick,
 }) => {
@@ -75,7 +104,9 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
-    order: Order;
+    item:
+      | { type: 'order'; order: Order }
+      | { type: 'restaurant'; restaurant: MapMarker };
   } | null>(null);
 
   const closeContextMenu = useCallback(() => setContextMenu(null), []);
@@ -108,6 +139,16 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   };
 
   const routeDataOrders = routeOrders ?? orders;
+  const selectedRouteOrder = selectedId
+    ? routeDataOrders.find((order) => order.id === selectedId || order.deliveryId === selectedId)
+    : null;
+  const selectedRouteCourierId =
+    selectedRouteOrder?.courierId &&
+    selectedRouteOrder.status !== 'delivered' &&
+    selectedRouteOrder.status !== 'cancelled'
+      ? selectedRouteOrder.courierId
+      : null;
+  const routeCourierId = highlightedCourierId ?? selectedRouteCourierId;
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -182,6 +223,22 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   useEffect(() => {
     if (!mapRef.current) return;
 
+    const drawRouteLine = (points: RoutePoint[], options: L.PolylineOptions) => {
+      if (!mapRef.current) return;
+
+      const validPoints = points.filter(isValidRoutePoint);
+      if (validPoints.length < 2) return;
+
+      const routePath = buildSimulatedGpsRoutePath(
+        validPoints.map(([lat, lng]) => ({ lat, lng }))
+      ).map((point) => [point.lat, point.lng] as RoutePoint);
+      const line = L.polyline(
+        routePath,
+        options
+      ).addTo(mapRef.current);
+      routeLinesRef.current.push(line);
+    };
+
     // Clear existing markers
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
@@ -192,19 +249,19 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     routeLinesRef.current.forEach(line => line.remove());
     routeLinesRef.current = [];
 
-    // Draw route for highlighted courier
-    if (highlightedCourierId) {
-      const courier = couriers.find(c => c.id === highlightedCourierId);
+    // Draw route for the highlighted courier, or for the courier of the selected active delivery.
+    if (routeCourierId) {
+      const courier = couriers.find(c => c.id === routeCourierId);
       if (courier) {
         const courierOrders = routeDataOrders.filter(o =>
-          o.courierId === highlightedCourierId &&
+          o.courierId === routeCourierId &&
           o.status !== 'delivered' && o.status !== 'cancelled'
         );
         const orderById = Object.fromEntries(courierOrders.map(o => [o.deliveryId, o]));
 
-        // Build the route line using the saved stop order.
+        // Build one planned route line using the saved stop order.
         const routePoints: [number, number][] = [[courier.lat, courier.lng]];
-        const stopIds: string[] = routeStopOrders?.[highlightedCourierId] ?? [];
+        const stopIds: string[] = routeStopOrders?.[routeCourierId] ?? [];
 
         // If no custom stop order exists, fall back to pickup-then-dropoff.
         const defaultStops = courierOrders.flatMap((order, index, orders) => {
@@ -242,34 +299,26 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
             const deliveryId = stopId.replace(/-dropoff$/, '');
             const order = orderById[deliveryId];
             if (!order) continue;
-            // Add dropoff points only for orders that are not delivered yet.
-            if (order.status !== 'delivered') {
+            if (order.status !== 'delivered' && order.status !== 'cancelled') {
               routePoints.push([order.lat, order.lng]);
             }
           }
         }
 
         if (routePoints.length > 1) {
-          const line = L.polyline(routePoints, {
-            color: '#22c55e',
-            weight: 2.5,
-            opacity: 0.8,
-            dashArray: '6 5',
-          }).addTo(mapRef.current!);
-          routeLinesRef.current.push(line);
+          drawRouteLine(routePoints, ACTIVE_COURIER_ROUTE_STYLE);
         }
       }
     }
 
     // Draw restaurant-to-customer route for a selected unassigned delivery.
-    if (selectedId && !highlightedCourierId) {
+    if (selectedId && !routeCourierId) {
       const sel = orders.find(o => o.id === selectedId || o.deliveryId === selectedId);
       if (sel && sel.pickupLat && sel.pickupLng && !sel.courierId && sel.status === 'pending') {
-        const line = L.polyline(
+        drawRouteLine(
           [[sel.pickupLat, sel.pickupLng], [sel.lat, sel.lng]],
-          { color: '#6366f1', weight: 3, opacity: 0.85, dashArray: '8 5' }
-        ).addTo(mapRef.current!);
-        routeLinesRef.current.push(line);
+          SELECTED_PENDING_ROUTE_STYLE,
+        );
       }
     }
 
@@ -288,21 +337,46 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       marker.on('mouseout', () => {
         onRestaurantHover?.(null);
       });
-      
+
+      const markerEl = marker.getElement();
+      if (markerEl) {
+        markerEl.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const rect = mapContainerRef.current?.getBoundingClientRect();
+          if (!rect) return;
+          setContextMenu({
+            x: (e as MouseEvent).clientX - rect.left,
+            y: (e as MouseEvent).clientY - rect.top,
+            item: { type: 'restaurant', restaurant },
+          });
+        });
+      }
+
       markersRef.current.push(marker);
     });
 
-    const courierRenderPositions = computeCourierRenderPositions(couriers, restaurants, mapRef.current);
+    const activeCourierIds = new Set<string>(
+      routeDataOrders
+        .filter((order) =>
+          !!order.courierId &&
+          order.status !== 'delivered' &&
+          order.status !== 'cancelled',
+        )
+        .map((order) => order.courierId as string),
+    );
+    const courierRenderPositions = computeCourierRenderPositions(
+      couriers.filter((courier) => !activeCourierIds.has(courier.id)),
+      restaurants,
+      mapRef.current,
+    );
 
     // Add courier markers
     couriers.forEach((courier) => {
-      const hasActiveDelivery = routeDataOrders.some(
-        order =>
-          order.courierId === courier.id &&
-          order.status !== 'delivered' &&
-          order.status !== 'cancelled',
-      );
-      const [courierLat, courierLng] = courierRenderPositions.get(courier.id) ?? [courier.lat, courier.lng];
+      const hasActiveDelivery = activeCourierIds.has(courier.id);
+      const [courierLat, courierLng] = hasActiveDelivery
+        ? [courier.lat, courier.lng]
+        : courierRenderPositions.get(courier.id) ?? [courier.lat, courier.lng];
       const marker = L.marker([courierLat, courierLng], {
         icon: makeCourierIcon(courier.name, hasActiveDelivery, courier.isOnShift !== false),
         zIndexOffset: 900,
@@ -324,7 +398,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       // reapply classes after (re)creation
       const el = marker.getElement();
       if (el) {
-        if (courier.id === highlightedCourierId) el.classList.add('marker-route-active');
+        if (courier.id === routeCourierId) el.classList.add('marker-route-active');
         if (courier.id === hoveredCourierId) el.classList.add('marker-hover-persist');
       }
     });
@@ -362,7 +436,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
           setContextMenu({
             x: (e as MouseEvent).clientX - rect.left,
             y: (e as MouseEvent).clientY - rect.top,
-            order: captured,
+            item: { type: 'order', order: captured },
           });
         });
       }
@@ -378,7 +452,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       }
     });
 
-  }, [orders, routeDataOrders, couriers, restaurants, onOrderHover, onCourierHover, onRestaurantHover, onOrderClick, onCourierClick, themeClasses, highlightedCourierId, hoveredOrderId, hoveredCourierId, routeStopOrders, selectedDeliveryIds, zoomVersion, selectedId]);
+    return undefined;
+  }, [orders, routeDataOrders, couriers, restaurants, onOrderHover, onCourierHover, onRestaurantHover, onOrderClick, onCourierClick, themeClasses, routeCourierId, hoveredOrderId, hoveredCourierId, routeStopOrders, selectedDeliveryIds, zoomVersion, selectedId]);
 
   useEffect(() => {
     if (!selectedId || !mapRef.current) {
@@ -440,19 +515,19 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
 
   // Visual highlight for the courier whose route is shown
   useEffect(() => {
-    if (highlightedCourierId) {
-      const marker = courierMarkersRef.current.get(highlightedCourierId);
+    if (routeCourierId) {
+      const marker = courierMarkersRef.current.get(routeCourierId);
       const el = marker?.getElement();
       if (el) el.classList.add('marker-route-active');
     }
     return () => {
-      if (highlightedCourierId) {
-        const marker = courierMarkersRef.current.get(highlightedCourierId);
+      if (routeCourierId) {
+        const marker = courierMarkersRef.current.get(routeCourierId);
         const el = marker?.getElement();
         if (el) el.classList.remove('marker-route-active');
       }
     };
-  }, [highlightedCourierId]);
+  }, [routeCourierId]);
 
 
   return (
@@ -473,22 +548,55 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
           {/* Header */}
           <div className="px-3 pt-2.5 pb-1.5 border-b border-[#f0f0f0] dark:border-[#2a2a2a]">
             <p className="text-[11px] font-semibold text-[#737373] dark:text-[#737373] leading-none truncate" dir="rtl">
-              {contextMenu.order.customerName || contextMenu.order.address || `#${contextMenu.order.deliveryId}`}
+              {contextMenu.item.type === 'order'
+                ? (contextMenu.item.order.customerName || contextMenu.item.order.address || `#${contextMenu.item.order.deliveryId}`)
+                : (contextMenu.item.restaurant.name || 'מסעדה')}
             </p>
           </div>
           {/* Actions */}
           <div className="py-1">
-            <button
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[#171717] dark:text-[#e5e5e5] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors text-right"
-              dir="rtl"
-              onClick={() => {
-                onOrderShowDetails?.(contextMenu.order.deliveryId);
-                closeContextMenu();
-              }}
-            >
-              <FileText className="w-3.5 h-3.5 text-[#737373] shrink-0" />
-              <span>????? ?????</span>
-            </button>
+            {contextMenu.item.type === 'order' ? (
+              <button
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[#171717] dark:text-[#e5e5e5] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors text-right"
+                dir="rtl"
+                onClick={() => {
+                  onOrderShowDetails?.(contextMenu.item.order.deliveryId);
+                  closeContextMenu();
+                }}
+              >
+                <FileText className="w-3.5 h-3.5 text-[#737373] shrink-0" />
+                <span>פרטים מלאים</span>
+              </button>
+            ) : (
+              <>
+                <button
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[#171717] dark:text-[#e5e5e5] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors text-right"
+                  dir="rtl"
+                  onClick={() => {
+                    if (contextMenu.item.restaurant.id) {
+                      onRestaurantShowDetails?.(contextMenu.item.restaurant.id);
+                    }
+                    closeContextMenu();
+                  }}
+                >
+                  <FileText className="w-3.5 h-3.5 text-[#737373] shrink-0" />
+                  <span>פרטי מסעדה</span>
+                </button>
+                <button
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[#171717] dark:text-[#e5e5e5] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors text-right"
+                  dir="rtl"
+                  onClick={() => {
+                    if (contextMenu.item.restaurant.id) {
+                      onRestaurantToggleActive?.(contextMenu.item.restaurant.id);
+                    }
+                    closeContextMenu();
+                  }}
+                >
+                  <Power className="w-3.5 h-3.5 text-[#737373] shrink-0" />
+                  <span>{contextMenu.item.restaurant.isActive ? 'השבת מסעדה' : 'הפעל מסעדה'}</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}

@@ -8,6 +8,7 @@ import {
   getPickupGroupStopId,
   getRestaurantPickupBaseKey,
 } from '../utils/pickup-batches';
+import { MAX_ACTIVE_DELIVERIES_PER_COURIER } from '../utils/courier-assignment';
 
 type LiveTab = 'deliveries' | 'couriers';
 
@@ -132,7 +133,19 @@ export const useLiveAssignmentFlow = ({
 
     if (selectedDeliveries.length === 0) return false;
 
-    return true;
+    const activeDeliveryIds = new Set(
+      deliveries
+        .filter((delivery) =>
+          delivery.courierId === courierId &&
+          delivery.status !== 'delivered' &&
+          delivery.status !== 'cancelled'
+        )
+        .map((delivery) => delivery.id)
+    );
+
+    selectedDeliveries.forEach((delivery) => activeDeliveryIds.add(delivery.id));
+
+    return activeDeliveryIds.size <= MAX_ACTIVE_DELIVERIES_PER_COURIER;
   }, [couriers, deliveries, validSelectedDeliveryIds]);
 
   useEffect(() => {
@@ -352,13 +365,6 @@ export const useLiveAssignmentFlow = ({
         smartStops.push(stopId);
       }
       smartStops.push(`${delivery.id}-dropoff`);
-    });
-
-    deliveringDeliveries.forEach((delivery) => {
-      const stopId = getPickupGroupStopId(getDeliveryPickupBatchKey(delivery));
-      if (!smartStops.includes(stopId)) {
-        smartStops.push(stopId);
-      }
     });
 
     if (smartStops.length > 0) {

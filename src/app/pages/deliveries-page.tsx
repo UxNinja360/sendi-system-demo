@@ -1,6 +1,6 @@
 ﻿import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { format as formatDate } from 'date-fns';
-import { useDelivery } from '../context/delivery.context';
+import { useDelivery } from '../context/delivery-context-value';
 import { Delivery, DeliveryStatus } from '../types/delivery.types';
 import { DeliveriesSidePanel } from '../deliveries/deliveries-side-panel';
 import { DeliveriesTableSection } from '../deliveries/deliveries-table-section';
@@ -17,6 +17,7 @@ import { ToolbarPeriodControl } from '../components/common/toolbar-period-contro
 import { ListInlineFilters } from '../components/common/list-inline-filters';
 import { ListToolbarActions } from '../components/common/list-toolbar-actions';
 import { SelectionActionBar } from '../components/common/selection-action-bar';
+import { getDeliveryCustomerCharge, sumDeliveryMoney } from '../utils/delivery-finance';
 
 const calculateTimeRemaining = (delivery: Delivery): number | null => {
   if (delivery.status === 'delivered' || delivery.status === 'cancelled') return null;
@@ -359,7 +360,7 @@ export const DeliveriesPage: React.FC = () => {
     delivered: filteredDeliveries.filter(d => d.status === 'delivered').length,
     cancelled: filteredDeliveries.filter(d => d.status === 'cancelled').length,
     pending: filteredDeliveries.filter(d => d.status === 'pending').length,
-    revenue: filteredDeliveries.reduce((s, d) => s + (d.price ?? 0), 0),
+    revenue: sumDeliveryMoney(filteredDeliveries, getDeliveryCustomerCharge),
   }), [filteredDeliveries]);
 
   const deliveryStatusOptions = useMemo(

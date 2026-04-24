@@ -1,15 +1,18 @@
-﻿import L from 'leaflet';
+import L from 'leaflet';
 
 export interface MapMarker {
+  id?: string;
   lat: number;
   lng: number;
   name?: string;
+  isActive?: boolean;
 }
 
 export interface Order {
   id: string;
   deliveryId: string;
   restaurantId?: string;
+  pickupBatchId?: string | null;
   lat: number;
   lng: number;
   pickupLat?: number;
@@ -32,6 +35,7 @@ export interface Courier {
 }
 
 export const getPickupGroupKey = (order: Order) => (
+  order.pickupBatchId ||
   order.restaurantId ||
   `${order.restaurantName ?? ''}:${order.pickupLat ?? ''}:${order.pickupLng ?? ''}`
 );
@@ -75,7 +79,6 @@ export const computeOrderRenderPositions = (
 
   return result;
 };
-
 export const computeCourierRenderPositions = (
   couriers: Courier[],
   restaurants: MapMarker[],
