@@ -245,7 +245,7 @@ export const Dashboard: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5] dark:bg-[#0a0a0a] flex flex-col">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#f5f5f5] dark:bg-[#0a0a0a]">
       <PageToolbar
         title="דשבורד"
         onToggleMobileSidebar={() =>
@@ -258,8 +258,8 @@ export const Dashboard: React.FC = () => {
         }
       />
 
-      <div className="flex-1 py-6">
-        <div className="w-full max-w-[90rem] mx-auto px-4 md:px-6 space-y-4 pb-8">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className="mx-auto w-full max-w-[90rem] space-y-4 px-4 py-6 pb-8 md:px-6">
           <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
             {(() => {
               const filledBar = Math.min(20, Math.round((activeDeliveries / Math.max(activeDeliveries + 4, 10)) * 20));

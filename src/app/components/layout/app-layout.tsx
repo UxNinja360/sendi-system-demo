@@ -57,7 +57,7 @@ export const AppLayout: React.FC = () => {
 
         <div
           className={`relative flex-1 w-full bg-[#fafafa] dark:bg-[#0a0a0a] ${
-            isLivePage || location.pathname === '/deliveries'
+            isLivePage || location.pathname === '/deliveries' || location.pathname === '/dashboard'
               ? 'overflow-hidden flex flex-col'
               : 'overflow-y-auto scroll-smooth'
           }`}
