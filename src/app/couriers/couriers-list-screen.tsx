@@ -1,102 +1,128 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { FileSpreadsheet, FileText, Filter, Package, Phone, Plus, Power, Star, Trash2, User, X, Clock, LogOut, Search, Sparkles } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { ListInlineFilters } from '../components/common/list-inline-filters';
-import { PageToolbar } from '../components/common/page-toolbar';
-import { SelectionActionBar } from '../components/common/selection-action-bar';
-import { useDelivery } from '../context/delivery-context-value';
-import { Courier } from '../types/delivery.types';
 import {
-  EntityActionMenu,
-  EntityActionMenuDivider,
-  EntityActionMenuHeader,
-  EntityActionMenuItem,
-  EntityActionMenuOverlay,
-} from '../components/common/entity-action-menu';
+  Bike,
+  Clock,
+  FileSpreadsheet,
+  FileText,
+  LogOut,
+  Package,
+  Plus,
+  Power,
+  Search,
+  Star,
+  Trash2,
+  User,
+  X,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { EntityActionMenu, EntityActionMenuDivider, EntityActionMenuHeader, EntityActionMenuItem, EntityActionMenuOverlay } from '../components/common/entity-action-menu';
+import { EntityEmptyState } from '../components/common/entity-empty-state';
+import { EntityRowActionTrigger } from '../components/common/entity-row-action-trigger';
+import { EntityTableActionsCell, EntityTableActionsHeader, EntityTableHeaderCheckbox, EntityTableRowCheckbox } from '../components/common/entity-table-shell';
+import { EntityTableHeaderCell } from '../components/common/entity-table-header-cell';
+import { ENTITY_TABLE_DATA_CELL_CLASS, ENTITY_TABLE_ROW_CLASS, ENTITY_TABLE_WIDTHS } from '../components/common/entity-table-shared';
 import { ListColumnsPanel } from '../components/common/list-columns-panel';
 import { ListExportDrawer } from '../components/common/list-export-drawer';
 import { type SingleSelectFilterOption } from '../components/common/list-filter-controls';
-import { exportRowsToExcel } from '../utils/export-utils';
-import { EntityEmptyState, EntityNoResultsState } from '../components/common/entity-empty-state';
-import { EntityRowActionTrigger } from '../components/common/entity-row-action-trigger';
-import { ListTableSection } from '../components/common/list-table-section';
+import { ListInlineFilters } from '../components/common/list-inline-filters';
 import { ListSidePanel } from '../components/common/list-side-panel';
+import { ListTableSection } from '../components/common/list-table-section';
 import { ListToolbarActions } from '../components/common/list-toolbar-actions';
-import { EntityTableHeaderCell } from '../components/common/entity-table-header-cell';
-import {
-  EntityTableActionsCell,
-  EntityTableHeaderCheckbox,
-  EntityTableRowCheckbox,
-  EntityTableShell,
-} from '../components/common/entity-table-shell';
-import {
-  ENTITY_TABLE_ACTIONS_HEAD_CLASS,
-  ENTITY_TABLE_DATA_CELL_CLASS,
-  ENTITY_TABLE_ROW_CLASS,
-  ENTITY_TABLE_WIDTHS,
-} from '../components/common/entity-table-shared';
+import { PageToolbar } from '../components/common/page-toolbar';
+import { SelectionActionBar } from '../components/common/selection-action-bar';
+import { useDelivery } from '../context/delivery-context-value';
 import { DELIVERY_STORAGE_KEYS } from '../context/delivery-storage';
+import { Courier } from '../types/delivery.types';
+import { exportRowsToExcel } from '../utils/export-utils';
 
 const TEXT = {
-  pageTitle: '\u05e9\u05dc\u05d9\u05d7\u05d9\u05dd',
-  available: '\u05d6\u05de\u05d9\u05df',
-  busy: '\u05ea\u05e4\u05d5\u05e1',
-  offline: '\u05dc\u05d0 \u05de\u05d7\u05d5\u05d1\u05e8',
-  cannotDelete: '\u05d0\u05d9 \u05d0\u05e4\u05e9\u05e8 \u05dc\u05de\u05d7\u05d5\u05e7 \u05e9\u05dc\u05d9\u05d7 \u05e2\u05dd \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd \u05e4\u05e2\u05d9\u05dc\u05d9\u05dd.',
-  deleted: '\u05d4\u05e9\u05dc\u05d9\u05d7',
-  deletedSuffix: '\u05e0\u05de\u05d7\u05e7.',
-  headers: [
-    '\u05e9\u05dd \u05e9\u05dc\u05d9\u05d7',
-    '\u05d7\u05d9\u05d1\u05d5\u05e8',
-    '\u05de\u05e9\u05de\u05e8\u05ea',
-    '\u05d6\u05de\u05d9\u05e0\u05d5\u05ea',
-    '\u05e1\u05d5\u05d2 \u05e8\u05db\u05d1',
-    '\u05e9\u05d9\u05d8\u05ea \u05d4\u05e2\u05e1\u05e7\u05d4',
-    '\u05d8\u05dc\u05e4\u05d5\u05df',
-    '\u05d3\u05d9\u05e8\u05d5\u05d2',
-    '\u05e1\u05da \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
-    '\u05de\u05e9\u05dc\u05d5\u05d7 \u05e0\u05d5\u05db\u05d7\u05d9',
-    '\u05e4\u05e2\u05d5\u05dc\u05d5\u05ea',
-  ],
-  activateCourier: '\u05d4\u05e4\u05e2\u05dc \u05e9\u05dc\u05d9\u05d7',
-  disableCourier: '\u05d4\u05e9\u05d1\u05ea \u05e9\u05dc\u05d9\u05d7',
-  more: '\u05e2\u05d5\u05d3',
-  deleteCourier: '\u05de\u05d7\u05e7 \u05e9\u05dc\u05d9\u05d7',
-  noCouriers: '\u05dc\u05d0 \u05e0\u05de\u05e6\u05d0\u05d5 \u05e9\u05dc\u05d9\u05d7\u05d9\u05dd',
-  noResultsPrefix: '\u05dc\u05d0 \u05e0\u05de\u05e6\u05d0\u05d5 \u05ea\u05d5\u05e6\u05d0\u05d5\u05ea \u05dc\u05d7\u05d9\u05e4\u05d5\u05e9',
-  changeFilters: '\u05e0\u05e1\u05d4 \u05dc\u05e9\u05e0\u05d5\u05ea \u05d0\u05ea \u05d4\u05e4\u05d9\u05dc\u05d8\u05e8\u05d9\u05dd',
-  clearFilters: '\u05e0\u05e7\u05d4 \u05e4\u05d9\u05dc\u05d8\u05e8\u05d9\u05dd',
-  addCourier: '\u05d4\u05d5\u05e1\u05e3 \u05e9\u05dc\u05d9\u05d7',
-  deliveriesSuffix: '\u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
-  deliveryLabel: '\u05de\u05e9\u05dc\u05d5\u05d7',
-  activate: '\u05d4\u05e4\u05e2\u05dc',
-  disable: '\u05d4\u05e9\u05d1\u05ea',
-  addNewCourier: '\u05d4\u05d5\u05e1\u05e3 \u05e9\u05dc\u05d9\u05d7 \u05d7\u05d3\u05e9',
-  fullName: '\u05e9\u05dd \u05de\u05dc\u05d0',
-  enterFullName: '\u05d4\u05d6\u05df \u05e9\u05dd \u05de\u05dc\u05d0',
-  vehicleType: '\u05e1\u05d5\u05d2 \u05e8\u05db\u05d1',
-  employmentType: '\u05e9\u05d9\u05d8\u05ea \u05d4\u05e2\u05e1\u05e7\u05d4',
-  phone: '\u05d8\u05dc\u05e4\u05d5\u05df',
-  enterPhone: '\u05d4\u05d6\u05df \u05de\u05e1\u05e4\u05e8 \u05d8\u05dc\u05e4\u05d5\u05df',
-  cancel: '\u05d1\u05d9\u05d8\u05d5\u05dc',
+  pageTitle: 'שליחים',
+  addCourier: 'הוסף שליח',
+  addNewCourier: 'הוסף שליח חדש',
+  fullName: 'שם מלא',
+  enterFullName: 'הזן שם מלא',
+  phone: 'טלפון',
+  enterPhone: 'הזן מספר טלפון',
+  vehicleType: 'סוג רכב',
+  cancel: 'ביטול',
+  available: 'זמין',
+  busy: 'בתפוסה',
+  offline: 'לא מחובר',
+  connected: 'מחובר',
+  notConnected: 'לא מחובר',
+  onShift: 'במשמרת',
+  offShift: 'לא במשמרת',
+  free: 'פנוי',
+  inDelivery: 'במשלוח',
+  activate: 'הפעל',
+  disable: 'השבת',
+  startShift: 'התחל משמרת',
+  endShift: 'סיים משמרת',
+  details: 'פרטים מלאים',
+  deleteCourier: 'מחק שליח',
+  exportSelected: 'ייצוא נבחרים',
+  noActiveCouriers: 'לא נבחרו שליחים לפעולה',
+  cannotDelete: 'אי אפשר למחוק שליח עם משלוחים פעילים.',
+  cannotDisableActive: 'אי אפשר להשבית שליח עם משלוח פעיל.',
+  cannotStartOffline: 'אי אפשר להתחיל משמרת לשליח לא מחובר.',
+  deliveriesSuffix: 'משלוחים',
+  deliveryLabel: 'משלוח',
+  more: 'עוד',
 } as const;
 
+type CourierColumnId =
+  | 'name'
+  | 'connection'
+  | 'shift'
+  | 'availability'
+  | 'vehicleType'
+  | 'employmentType'
+  | 'phone'
+  | 'rating'
+  | 'totalDeliveries'
+  | 'currentDelivery'
+  | 'actions';
+
+type SortableCourierColumnId = Exclude<CourierColumnId, 'actions'>;
+
+type CourierStats = {
+  total: number;
+  filtered: number;
+  available: number;
+  busy: number;
+  offline: number;
+  onShift: number;
+  withActiveDelivery: number;
+};
+
 const VEHICLE_TYPES: Courier['vehicleType'][] = ['אופנוע', 'רכב', 'קורקינט'];
-const COURIER_VISIBLE_COLUMNS_KEY = DELIVERY_STORAGE_KEYS.couriersVisibleColumns;
+const COURIER_VISIBLE_COLUMNS_KEY = `${DELIVERY_STORAGE_KEYS.couriersVisibleColumns}:product-v2`;
+const DEFAULT_COURIER_VISIBLE_COLUMNS: CourierColumnId[] = [
+  'name',
+  'connection',
+  'shift',
+  'availability',
+  'phone',
+  'currentDelivery',
+  'totalDeliveries',
+];
+
 const COURIER_STATUS_FILTER_OPTIONS: SingleSelectFilterOption[] = [
   { id: 'all', label: 'סטטוס' },
   { id: 'available', label: 'זמין' },
   { id: 'busy', label: 'תפוס' },
   { id: 'offline', label: 'לא מחובר' },
 ];
+
 const COURIER_DELIVERY_FILTER_OPTIONS: SingleSelectFilterOption[] = [
   { id: 'all', label: 'משלוחים' },
   { id: 'with_delivery', label: 'עם משלוח פעיל' },
   { id: 'without_delivery', label: 'ללא משלוח' },
 ];
-const COURIER_COLUMNS = [
+
+const COURIER_COLUMNS: { id: CourierColumnId; label: string }[] = [
   { id: 'name', label: 'שם שליח' },
   { id: 'connection', label: 'חיבור' },
   { id: 'shift', label: 'משמרת' },
@@ -108,7 +134,10 @@ const COURIER_COLUMNS = [
   { id: 'totalDeliveries', label: 'סך משלוחים' },
   { id: 'currentDelivery', label: 'משלוח נוכחי' },
   { id: 'actions', label: 'פעולות' },
-] as const;
+];
+
+const COURIER_ACTION_COLUMN = COURIER_COLUMNS.find((column) => column.id === 'actions')!;
+
 const COURIER_COLUMN_CATEGORIES = [
   {
     id: 'core',
@@ -125,46 +154,30 @@ const COURIER_COLUMN_CATEGORIES = [
     id: 'profile',
     label: 'פרופיל',
     columns: [
+      { id: 'phone', label: 'טלפון' },
       { id: 'vehicleType', label: 'סוג רכב' },
       { id: 'employmentType', label: 'שיטת העסקה' },
-      { id: 'phone', label: 'טלפון' },
       { id: 'rating', label: 'דירוג' },
       { id: 'totalDeliveries', label: 'סך משלוחים' },
     ],
   },
 ] as const;
-type SortableCourierColumnId =
-  | 'name'
-  | 'connection'
-  | 'shift'
-  | 'availability'
-  | 'vehicleType'
-  | 'employmentType'
-  | 'phone'
-  | 'rating'
-  | 'totalDeliveries'
-  | 'currentDelivery';
 
-const getCourierColumnWidth = (columnId: (typeof COURIER_COLUMNS)[number]['id']) => {
+const getCourierColumnWidth = (columnId: CourierColumnId) => {
   switch (columnId) {
     case 'name':
       return ENTITY_TABLE_WIDTHS.name;
     case 'connection':
-      return ENTITY_TABLE_WIDTHS.sm;
     case 'shift':
-      return ENTITY_TABLE_WIDTHS.sm;
     case 'availability':
-      return ENTITY_TABLE_WIDTHS.sm;
     case 'vehicleType':
-      return ENTITY_TABLE_WIDTHS.sm;
     case 'employmentType':
+    case 'totalDeliveries':
       return ENTITY_TABLE_WIDTHS.sm;
     case 'phone':
       return ENTITY_TABLE_WIDTHS.phone;
     case 'rating':
       return ENTITY_TABLE_WIDTHS.xs;
-    case 'totalDeliveries':
-      return ENTITY_TABLE_WIDTHS.sm;
     case 'currentDelivery':
       return ENTITY_TABLE_WIDTHS.md;
     case 'actions':
@@ -174,38 +187,112 @@ const getCourierColumnWidth = (columnId: (typeof COURIER_COLUMNS)[number]['id'])
   }
 };
 
+const getStatusLabel = (status: Courier['status']) => {
+  if (status === 'available') return TEXT.available;
+  if (status === 'busy') return TEXT.busy;
+  return TEXT.offline;
+};
+
+const getStatusColor = (status: Courier['status']) => {
+  if (status === 'available') return 'text-[#16a34a] dark:text-[#9fe870]';
+  if (status === 'busy') return 'text-[#f97316] dark:text-[#ffa94d]';
+  return 'text-[#737373] dark:text-[#a3a3a3]';
+};
+
+const CourierOverviewStrip: React.FC<{ stats: CourierStats; hasFilters: boolean }> = ({ stats, hasFilters }) => {
+  const items = [
+    { label: 'סה״כ שליחים', value: stats.total.toLocaleString('he-IL') },
+    { label: 'זמינים', value: stats.available.toLocaleString('he-IL'), tone: 'success' },
+    { label: 'במשלוח', value: stats.busy.toLocaleString('he-IL'), tone: 'warning' },
+    { label: 'במשמרת', value: stats.onShift.toLocaleString('he-IL') },
+    { label: 'לא מחוברים', value: stats.offline.toLocaleString('he-IL') },
+    { label: 'עם משלוח פעיל', value: stats.withActiveDelivery.toLocaleString('he-IL') },
+    ...(hasFilters ? [{ label: 'תוצאות', value: stats.filtered.toLocaleString('he-IL'), tone: 'focus' }] : []),
+  ];
+
+  return (
+    <div className="shrink-0 border-b border-[#e5e5e5] bg-white px-5 py-2.5 dark:border-[#262626] dark:bg-[#171717]">
+      <div className="flex max-w-full flex-wrap items-center gap-x-5 gap-y-2">
+        {items.map((item) => (
+          <div key={item.label} className="flex min-w-0 items-baseline gap-2">
+            <span
+              className={`text-sm font-semibold tabular-nums ${
+                item.tone === 'success'
+                  ? 'text-[#16a34a] dark:text-[#9fe870]'
+                  : item.tone === 'warning'
+                    ? 'text-[#f97316] dark:text-[#ffa94d]'
+                    : 'text-[#0d0d12] dark:text-[#fafafa]'
+              }`}
+            >
+              {item.value}
+            </span>
+            <span className="truncate text-xs text-[#737373] dark:text-[#a3a3a3]">{item.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const CourierNoResultsState: React.FC<{ searchQuery: string; onClear: () => void }> = ({ searchQuery, onClear }) => (
+  <div className="flex flex-col items-center justify-center px-4 py-20">
+    <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-xl bg-[#f5f5f5] dark:bg-[#262626]">
+      <Search className="h-10 w-10 text-[#737373] dark:text-[#a3a3a3]" />
+    </div>
+    <h3 className="mb-2 text-xl font-bold text-[#0d0d12] dark:text-[#fafafa]">לא נמצאו שליחים</h3>
+    <p className="mb-5 max-w-md text-center text-sm text-[#737373] dark:text-[#a3a3a3]">
+      {searchQuery ? `אין התאמה לחיפוש "${searchQuery}"` : 'אין שליחים שתואמים לסינון הנוכחי'}
+    </p>
+    <button
+      type="button"
+      onClick={onClear}
+      className="rounded-lg border border-[#d4d4d4] bg-white px-4 py-2 text-sm font-semibold text-[#0d0d12] transition-colors hover:bg-[#f5f5f5] dark:border-[#404040] dark:bg-[#171717] dark:text-[#fafafa] dark:hover:bg-[#262626]"
+    >
+      נקה סינון
+    </button>
+  </div>
+);
+
 export const CouriersListScreen: React.FC = () => {
   const { state, dispatch } = useDelivery();
   const navigate = useNavigate();
-
   const [searchQuery, setSearchQuery] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'busy' | 'offline'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | Courier['status']>('all');
   const [deliveryFilter, setDeliveryFilter] = useState<'all' | 'with_delivery' | 'without_delivery'>('all');
   const [sortColumn, setSortColumn] = useState<SortableCourierColumnId>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
+  const [columnsOpen, setColumnsOpen] = useState(false);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; courier: Courier } | null>(null);
+  const [selectedCourierIds, setSelectedCourierIds] = useState<Set<string>>(new Set());
   const [newCourier, setNewCourier] = useState<{ name: string; phone: string; vehicleType: Courier['vehicleType'] }>({
     name: '',
     phone: '',
     vehicleType: 'אופנוע',
   });
-  const [isExportOpen, setIsExportOpen] = useState(false);
-  const [columnsOpen, setColumnsOpen] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(() => {
     try {
       const saved = localStorage.getItem(COURIER_VISIBLE_COLUMNS_KEY);
       if (saved) {
         const parsed = JSON.parse(saved) as string[];
         const valid = new Set(COURIER_COLUMNS.map((column) => column.id));
-        const filtered = parsed.filter((id) => valid.has(id));
+        const filtered = parsed.filter((id) => valid.has(id as CourierColumnId) && id !== 'actions');
         if (filtered.length > 0) return new Set(filtered);
       }
     } catch {}
-    return new Set(COURIER_COLUMNS.map((column) => column.id));
+    return new Set(DEFAULT_COURIER_VISIBLE_COLUMNS);
   });
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; courier: Courier } | null>(null);
-  const [selectedCourierIds, setSelectedCourierIds] = useState<Set<string>>(new Set());
+
+  const activeDeliveriesByCourier = useMemo(() => {
+    const map = new Map<string, typeof state.deliveries[number]>();
+    state.deliveries.forEach((delivery) => {
+      if (!delivery.courierId) return;
+      if (delivery.status === 'delivered' || delivery.status === 'cancelled') return;
+      if (!map.has(delivery.courierId)) map.set(delivery.courierId, delivery);
+    });
+    return map;
+  }, [state.deliveries]);
 
   useEffect(() => {
     try {
@@ -213,49 +300,49 @@ export const CouriersListScreen: React.FC = () => {
     } catch {}
   }, [visibleColumns]);
 
-  const filteredCouriers = useMemo(() => {
-    let filtered = state.couriers;
+  const visibleCourierColumns = useMemo(() => {
+    const dataColumns = COURIER_COLUMNS.filter((column) => column.id !== 'actions' && visibleColumns.has(column.id));
+    return [...dataColumns, COURIER_ACTION_COLUMN];
+  }, [visibleColumns]);
 
-    if (searchQuery) {
-      filtered = filtered.filter(
-        courier =>
-          courier.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          courier.phone.toLowerCase().includes(searchQuery.toLowerCase()),
+  const filteredCouriers = useMemo(() => {
+    const normalizedSearch = searchQuery.trim().toLowerCase();
+    let couriers = state.couriers;
+
+    if (normalizedSearch) {
+      couriers = couriers.filter((courier) =>
+        courier.name.toLowerCase().includes(normalizedSearch) ||
+        courier.phone.toLowerCase().includes(normalizedSearch),
       );
     }
 
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(courier => courier.status === statusFilter);
+      couriers = couriers.filter((courier) => courier.status === statusFilter);
     }
 
     if (deliveryFilter !== 'all') {
-      filtered = filtered.filter(courier => {
-        const hasActiveDelivery = state.deliveries.some(
-          delivery =>
-            delivery.courierId === courier.id &&
-            (delivery.status === 'assigned' || delivery.status === 'delivering'),
-        );
+      couriers = couriers.filter((courier) => {
+        const hasActiveDelivery = activeDeliveriesByCourier.has(courier.id);
         return deliveryFilter === 'with_delivery' ? hasActiveDelivery : !hasActiveDelivery;
       });
     }
 
     const direction = sortDirection === 'asc' ? 1 : -1;
     const connectionOrder = { available: 0, busy: 1, offline: 2 };
-    const shiftValue = (courier: Courier) => (courier.isOnShift ? 1 : 0);
     const availabilityValue = (courier: Courier) => {
       if (courier.status === 'busy') return 0;
       if (courier.status === 'offline' || !courier.isOnShift) return 2;
       return 1;
     };
 
-    return [...filtered].sort((a, b) => {
+    return [...couriers].sort((a, b) => {
       switch (sortColumn) {
         case 'name':
           return a.name.localeCompare(b.name, 'he') * direction;
         case 'connection':
           return (connectionOrder[a.status] - connectionOrder[b.status]) * direction;
         case 'shift':
-          return (shiftValue(a) - shiftValue(b)) * direction;
+          return ((a.isOnShift ? 1 : 0) - (b.isOnShift ? 1 : 0)) * direction;
         case 'availability':
           return (availabilityValue(a) - availabilityValue(b)) * direction;
         case 'vehicleType':
@@ -269,80 +356,45 @@ export const CouriersListScreen: React.FC = () => {
         case 'totalDeliveries':
           return (a.totalDeliveries - b.totalDeliveries) * direction;
         case 'currentDelivery': {
-          const aDelivery = state.deliveries.find(
-            delivery =>
-              delivery.courierId === a.id &&
-              delivery.status !== 'delivered' &&
-              delivery.status !== 'cancelled',
-          );
-          const bDelivery = state.deliveries.find(
-            delivery =>
-              delivery.courierId === b.id &&
-              delivery.status !== 'delivered' &&
-              delivery.status !== 'cancelled',
-          );
-          const aValue = aDelivery?.orderNumber ?? '';
-          const bValue = bDelivery?.orderNumber ?? '';
-          return aValue.localeCompare(bValue, 'he') * direction;
+          const aDelivery = activeDeliveriesByCourier.get(a.id)?.orderNumber ?? '';
+          const bDelivery = activeDeliveriesByCourier.get(b.id)?.orderNumber ?? '';
+          return aDelivery.localeCompare(bDelivery, 'he') * direction;
         }
         default:
           return 0;
       }
     });
-  }, [deliveryFilter, searchQuery, sortColumn, sortDirection, state.couriers, state.deliveries, statusFilter]);
-  const visibleCourierColumns = useMemo(
-    () => COURIER_COLUMNS.filter((column) => visibleColumns.has(column.id)),
-    [visibleColumns],
-  );
+  }, [activeDeliveriesByCourier, deliveryFilter, searchQuery, sortColumn, sortDirection, state.couriers, statusFilter]);
 
-  const handleCourierSort = (columnId: SortableCourierColumnId) => {
-    if (sortColumn === columnId) {
-      setSortDirection((current) => (current === 'asc' ? 'desc' : 'asc'));
-      return;
-    }
-
-    setSortColumn(columnId);
-    setSortDirection('asc');
-  };
-
-  const stats = useMemo(
-    () => ({
-      total: state.couriers.length,
-      filtered: filteredCouriers.length,
-      available: state.couriers.filter(courier => courier.status === 'available').length,
-      busy: state.couriers.filter(courier => courier.status === 'busy').length,
-      offline: state.couriers.filter(courier => courier.status === 'offline').length,
-    }),
-    [filteredCouriers.length, state.couriers],
-  );
+  const stats = useMemo<CourierStats>(() => ({
+    total: state.couriers.length,
+    filtered: filteredCouriers.length,
+    available: state.couriers.filter((courier) => courier.status === 'available').length,
+    busy: state.couriers.filter((courier) => courier.status === 'busy').length,
+    offline: state.couriers.filter((courier) => courier.status === 'offline').length,
+    onShift: state.couriers.filter((courier) => courier.isOnShift).length,
+    withActiveDelivery: activeDeliveriesByCourier.size,
+  }), [activeDeliveriesByCourier.size, filteredCouriers.length, state.couriers]);
 
   const statusCounts = useMemo(
     () => ({
-      all: state.couriers.length,
-      available: state.couriers.filter(courier => courier.status === 'available').length,
-      busy: state.couriers.filter(courier => courier.status === 'busy').length,
-      offline: state.couriers.filter(courier => courier.status === 'offline').length,
+      available: stats.available,
+      busy: stats.busy,
+      offline: stats.offline,
     }),
-    [state.couriers],
+    [stats.available, stats.busy, stats.offline],
   );
-  const courierStatusFilterOptions = useMemo(
-    () =>
-      COURIER_STATUS_FILTER_OPTIONS.map((option) => ({
-        ...option,
-        count:
-          option.id === 'all'
-            ? undefined
-            : statusCounts[option.id as keyof typeof statusCounts],
-      })),
-    [statusCounts],
-  );
+
   const courierInlineFilters = useMemo(
     () => [
       {
         key: 'status',
         value: statusFilter,
         onChange: (value: string) => setStatusFilter(value as typeof statusFilter),
-        options: courierStatusFilterOptions,
+        options: COURIER_STATUS_FILTER_OPTIONS.map((option) => ({
+          ...option,
+          count: option.id === 'all' ? undefined : statusCounts[option.id as keyof typeof statusCounts],
+        })),
         defaultLabel: 'סטטוס',
       },
       {
@@ -353,12 +405,13 @@ export const CouriersListScreen: React.FC = () => {
         defaultLabel: 'משלוחים',
       },
     ],
-    [courierStatusFilterOptions, deliveryFilter, statusFilter],
+    [deliveryFilter, statusCounts, statusFilter],
   );
 
-  const hasActiveFilters = searchQuery || statusFilter !== 'all' || deliveryFilter !== 'all';
-  const allVisibleCouriersSelected = filteredCouriers.length > 0 && filteredCouriers.every(courier => selectedCourierIds.has(courier.id));
-  const someVisibleCouriersSelected = filteredCouriers.some(courier => selectedCourierIds.has(courier.id));
+  const hasActiveFilters = Boolean(searchQuery.trim() || statusFilter !== 'all' || deliveryFilter !== 'all');
+  const allVisibleCouriersSelected =
+    filteredCouriers.length > 0 && filteredCouriers.every((courier) => selectedCourierIds.has(courier.id));
+  const someVisibleCouriersSelected = filteredCouriers.some((courier) => selectedCourierIds.has(courier.id));
 
   const handleClearAll = () => {
     setSearchQuery('');
@@ -366,55 +419,49 @@ export const CouriersListScreen: React.FC = () => {
     setDeliveryFilter('all');
   };
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'available':
-        return TEXT.available;
-      case 'busy':
-        return TEXT.busy;
-      case 'offline':
-        return TEXT.offline;
-      default:
-        return status;
+  const handleCourierSort = (columnId: SortableCourierColumnId) => {
+    if (sortColumn === columnId) {
+      setSortDirection((current) => (current === 'asc' ? 'desc' : 'asc'));
+      return;
     }
+    setSortColumn(columnId);
+    setSortDirection('asc');
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'available': return 'text-[#16a34a] dark:text-[#9fe870]';
-      case 'busy':      return 'text-[#f97316] dark:text-[#ffa94d]';
-      case 'offline':   return 'text-[#737373] dark:text-[#a3a3a3]';
-      default:          return 'text-[#737373] dark:text-[#a3a3a3]';
-    }
+  const getCurrentDelivery = (courierId: string) => activeDeliveriesByCourier.get(courierId) ?? null;
+
+  const handleToggleSelectCourier = (courierId: string) => {
+    setSelectedCourierIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(courierId)) next.delete(courierId);
+      else next.add(courierId);
+      return next;
+    });
   };
 
-  const getCurrentDelivery = (courierId: string) =>
-    state.deliveries.find(
-      delivery =>
-        delivery.courierId === courierId &&
-        delivery.status !== 'delivered' &&
-        delivery.status !== 'cancelled',
-    );
+  const handleToggleSelectAllCouriers = () => {
+    setSelectedCourierIds((prev) => {
+      const next = new Set(prev);
+      if (allVisibleCouriersSelected) {
+        filteredCouriers.forEach((courier) => next.delete(courier.id));
+      } else {
+        filteredCouriers.forEach((courier) => next.add(courier.id));
+      }
+      return next;
+    });
+  };
 
-  const getCourierExportCellValue = (
-    courier: Courier,
-    columnId: (typeof COURIER_COLUMNS)[number]['id'],
-  ) => {
+  const getCourierExportCellValue = (courier: Courier, columnId: CourierColumnId) => {
     const currentDelivery = getCurrentDelivery(courier.id);
-
     switch (columnId) {
       case 'name':
         return courier.name;
       case 'connection':
-        return courier.status === 'offline' ? 'לא מחובר' : 'מחובר';
+        return courier.status === 'offline' ? TEXT.notConnected : TEXT.connected;
       case 'shift':
-        return courier.isOnShift ? 'במשמרת' : 'לא במשמרת';
+        return courier.isOnShift ? TEXT.onShift : TEXT.offShift;
       case 'availability':
-        return courier.status === 'busy'
-          ? 'במשלוח'
-          : courier.status === 'offline' || !courier.isOnShift
-            ? '-'
-            : 'פנוי';
+        return courier.status === 'busy' ? TEXT.inDelivery : courier.status === 'offline' || !courier.isOnShift ? '-' : TEXT.free;
       case 'vehicleType':
         return courier.vehicleType;
       case 'employmentType':
@@ -426,9 +473,7 @@ export const CouriersListScreen: React.FC = () => {
       case 'totalDeliveries':
         return courier.totalDeliveries;
       case 'currentDelivery':
-        return currentDelivery
-          ? currentDelivery.api_short_order_id || currentDelivery.id.slice(0, 6)
-          : '-';
+        return currentDelivery ? currentDelivery.api_short_order_id || currentDelivery.id.slice(0, 6) : '-';
       case 'actions':
         return '';
       default:
@@ -447,15 +492,11 @@ export const CouriersListScreen: React.FC = () => {
     }
 
     const exportColumns = visibleCourierColumns.filter((column) => column.id !== 'actions');
-    const rows = couriersToExport.map((courier) => {
-      const row: Record<string, string | number> = {};
-
-      exportColumns.forEach((column) => {
-        row[column.label] = getCourierExportCellValue(courier, column.id);
-      });
-
-      return row;
-    });
+    const rows = couriersToExport.map((courier) =>
+      Object.fromEntries(
+        exportColumns.map((column) => [column.label, getCourierExportCellValue(courier, column.id)]),
+      ),
+    );
 
     exportRowsToExcel({
       rows,
@@ -466,169 +507,75 @@ export const CouriersListScreen: React.FC = () => {
     toast.success(`יוצאו ${couriersToExport.length} שליחים ל-Excel`);
   };
 
-  const handleToggleSelectCourier = (courierId: string) => {
-    setSelectedCourierIds(prev => {
-      const next = new Set(prev);
-      if (next.has(courierId)) next.delete(courierId);
-      else next.add(courierId);
-      return next;
-    });
-  };
-
-  const handleToggleSelectAllCouriers = () => {
-    setSelectedCourierIds(prev => {
-      const next = new Set(prev);
-      if (allVisibleCouriersSelected) {
-        filteredCouriers.forEach(courier => next.delete(courier.id));
-      } else {
-        filteredCouriers.forEach(courier => next.add(courier.id));
-      }
-      return next;
-    });
-  };
-
   const handleBulkSetCourierStatus = (targetStatus: Courier['status']) => {
     const selectedCouriers = state.couriers.filter((courier) => selectedCourierIds.has(courier.id));
     if (selectedCouriers.length === 0) {
-      toast.error('לא נבחרו שליחים לפעולה');
+      toast.error(TEXT.noActiveCouriers);
       return;
     }
 
-    const couriersWithActiveDeliveries = new Set(
-      state.deliveries
-        .filter((delivery) => delivery.status === 'assigned' || delivery.status === 'delivering')
-        .map((delivery) => delivery.courierId)
-        .filter((courierId): courierId is string => Boolean(courierId)),
-    );
-
     const eligibleCouriers = selectedCouriers.filter((courier) => {
-      if (targetStatus === 'available') {
-        return courier.status === 'offline';
-      }
-
-      return courier.status !== 'offline' && !couriersWithActiveDeliveries.has(courier.id);
+      if (targetStatus === 'available') return courier.status === 'offline';
+      return courier.status !== 'offline' && !activeDeliveriesByCourier.has(courier.id);
     });
 
     eligibleCouriers.forEach((courier) => {
-      dispatch({
-        type: 'UPDATE_COURIER_STATUS',
-        payload: {
-          courierId: courier.id,
-          status: targetStatus,
-        },
-      });
+      dispatch({ type: 'UPDATE_COURIER_STATUS', payload: { courierId: courier.id, status: targetStatus } });
     });
-
-    const alreadyInTargetStatusCount = selectedCouriers.filter((courier) =>
-      targetStatus === 'available' ? courier.status !== 'offline' : courier.status === 'offline',
-    ).length;
-    const blockedByActiveDeliveriesCount =
-      targetStatus === 'offline'
-        ? selectedCouriers.filter(
-            (courier) => courier.status !== 'offline' && couriersWithActiveDeliveries.has(courier.id),
-          ).length
-        : 0;
-
-    const summary = [
-      eligibleCouriers.length > 0
-        ? targetStatus === 'available'
-          ? `הופעלו ${eligibleCouriers.length} שליחים`
-          : `הושבתו ${eligibleCouriers.length} שליחים`
-        : null,
-      alreadyInTargetStatusCount > 0
-        ? targetStatus === 'available'
-          ? `${alreadyInTargetStatusCount} כבר היו פעילים`
-          : `${alreadyInTargetStatusCount} כבר היו מושבתים`
-        : null,
-      blockedByActiveDeliveriesCount > 0
-        ? `${blockedByActiveDeliveriesCount} לא הושבתו כי יש להם משלוחים פעילים`
-        : null,
-    ]
-      .filter(Boolean)
-      .join('. ');
 
     if (eligibleCouriers.length > 0) {
       setSelectedCourierIds(new Set());
-      toast.success(summary);
+      toast.success(targetStatus === 'available'
+        ? `הופעלו ${eligibleCouriers.length} שליחים`
+        : `הושבתו ${eligibleCouriers.length} שליחים`);
       return;
     }
 
-    toast.error(summary || 'לא בוצע שינוי בשליחים שנבחרו');
+    toast.error(targetStatus === 'offline' ? TEXT.cannotDisableActive : 'לא בוצע שינוי בשליחים שנבחרו');
   };
 
   const handleBulkStartShift = () => {
     const selectedCouriers = state.couriers.filter((courier) => selectedCourierIds.has(courier.id));
     if (selectedCouriers.length === 0) {
-      toast.error('לא נבחרו שליחים לפעולה');
+      toast.error(TEXT.noActiveCouriers);
       return;
     }
 
-    const eligibleCouriers = selectedCouriers.filter(
-      (courier) => courier.status !== 'offline' && !courier.isOnShift,
-    );
-
-    eligibleCouriers.forEach((courier) => {
-      dispatch({ type: 'START_COURIER_SHIFT', payload: { courierId: courier.id } });
-    });
-
-    const offlineCouriersCount = selectedCouriers.filter((courier) => courier.status === 'offline').length;
-    const alreadyOnShiftCount = selectedCouriers.filter(
-      (courier) => courier.status !== 'offline' && courier.isOnShift,
-    ).length;
-
-    const summary = [
-      eligibleCouriers.length > 0 ? `החלה משמרת ל-${eligibleCouriers.length} שליחים` : null,
-      alreadyOnShiftCount > 0 ? `${alreadyOnShiftCount} כבר היו במשמרת` : null,
-      offlineCouriersCount > 0 ? `${offlineCouriersCount} לא חוברו ולכן לא התחילו משמרת` : null,
-    ]
-      .filter(Boolean)
-      .join('. ');
+    const eligibleCouriers = selectedCouriers.filter((courier) => courier.status !== 'offline' && !courier.isOnShift);
+    eligibleCouriers.forEach((courier) => dispatch({ type: 'START_COURIER_SHIFT', payload: { courierId: courier.id } }));
 
     if (eligibleCouriers.length > 0) {
       setSelectedCourierIds(new Set());
-      toast.success(summary);
+      toast.success(`התחילה משמרת ל-${eligibleCouriers.length} שליחים`);
       return;
     }
 
-    toast.error(summary || 'לא בוצע שינוי במשמרות של השליחים שנבחרו');
+    toast.error('לא נמצאו שליחים שניתן להתחיל להם משמרת');
   };
 
   const handleBulkEndShift = () => {
     const selectedCouriers = state.couriers.filter((courier) => selectedCourierIds.has(courier.id));
     if (selectedCouriers.length === 0) {
-      toast.error('לא נבחרו שליחים לפעולה');
+      toast.error(TEXT.noActiveCouriers);
       return;
     }
 
     const eligibleCouriers = selectedCouriers.filter((courier) => courier.isOnShift);
-
-    eligibleCouriers.forEach((courier) => {
-      dispatch({ type: 'END_COURIER_SHIFT', payload: { courierId: courier.id } });
-    });
-
-    const alreadyOffShiftCount = selectedCouriers.length - eligibleCouriers.length;
-    const summary = [
-      eligibleCouriers.length > 0 ? `הסתיימה משמרת ל-${eligibleCouriers.length} שליחים` : null,
-      alreadyOffShiftCount > 0 ? `${alreadyOffShiftCount} כבר לא היו במשמרת` : null,
-    ]
-      .filter(Boolean)
-      .join('. ');
+    eligibleCouriers.forEach((courier) => dispatch({ type: 'END_COURIER_SHIFT', payload: { courierId: courier.id } }));
 
     if (eligibleCouriers.length > 0) {
       setSelectedCourierIds(new Set());
-      toast.success(summary);
+      toast.success(`הסתיימה משמרת ל-${eligibleCouriers.length} שליחים`);
       return;
     }
 
-    toast.error(summary || 'לא בוצע שינוי במשמרות של השליחים שנבחרו');
+    toast.error('לא נמצאו שליחים שנמצאים במשמרת');
   };
 
   const addCourier = () => {
-    if (!newCourier.name.trim() || !newCourier.phone.trim()) {
-      return;
-    }
+    if (!newCourier.name.trim() || !newCourier.phone.trim()) return;
 
-    const newCourierObj: Courier = {
+    const courier: Courier = {
       id: `c${Date.now()}`,
       name: newCourier.name.trim(),
       phone: newCourier.phone.trim(),
@@ -644,9 +591,10 @@ export const CouriersListScreen: React.FC = () => {
       totalDeliveries: 0,
     };
 
-    dispatch({ type: 'ADD_COURIER', payload: newCourierObj });
+    dispatch({ type: 'ADD_COURIER', payload: courier });
     setIsModalOpen(false);
     setNewCourier({ name: '', phone: '', vehicleType: 'אופנוע' });
+    toast.success(`השליח ${courier.name} נוסף`);
   };
 
   const handleModalClose = () => {
@@ -654,86 +602,59 @@ export const CouriersListScreen: React.FC = () => {
     setNewCourier({ name: '', phone: '', vehicleType: 'אופנוע' });
   };
 
-  const closeCourierActionsMenu = () => {
-    setContextMenu(null);
-  };
+  const closeCourierActionsMenu = () => setContextMenu(null);
 
-  const toggleCourierPower = (courierId: string, currentStatus: string) => {
-    const hasActiveDelivery = state.deliveries.some(
-      delivery =>
-        delivery.courierId === courierId &&
-        (delivery.status === 'assigned' || delivery.status === 'delivering'),
-    );
-
-    if (hasActiveDelivery && currentStatus !== 'offline') {
+  const toggleCourierPower = (courier: Courier) => {
+    if (courier.status !== 'offline' && activeDeliveriesByCourier.has(courier.id)) {
+      toast.error(TEXT.cannotDisableActive);
       return;
     }
 
     dispatch({
       type: 'UPDATE_COURIER_STATUS',
-      payload: {
-        courierId,
-        status: currentStatus === 'offline' ? 'available' : 'offline',
-      },
+      payload: { courierId: courier.id, status: courier.status === 'offline' ? 'available' : 'offline' },
     });
   };
 
   const handleToggleShift = (courier: Courier) => {
     closeCourierActionsMenu();
-    if (courier.status === 'offline') {
-      toast.error(`אי אפשר להתחיל משמרת ל${courier.name} כשהוא לא מחובר`);
+    if (!courier.isOnShift && courier.status === 'offline') {
+      toast.error(TEXT.cannotStartOffline);
       return;
     }
+
     if (courier.isOnShift) {
       dispatch({ type: 'END_COURIER_SHIFT', payload: { courierId: courier.id } });
       toast.success(`משמרת ${courier.name} הסתיימה`);
-    } else {
-      dispatch({ type: 'START_COURIER_SHIFT', payload: { courierId: courier.id } });
-      toast.success(`משמרת ${courier.name} התחילה`);
+      return;
     }
+
+    dispatch({ type: 'START_COURIER_SHIFT', payload: { courierId: courier.id } });
+    toast.success(`משמרת ${courier.name} התחילה`);
   };
 
   const handleRemoveCourier = (courier: Courier, event: React.MouseEvent) => {
     event.stopPropagation();
     closeCourierActionsMenu();
 
-    if (courier.activeDeliveryIds.length > 0) {
+    if (activeDeliveriesByCourier.has(courier.id) || courier.activeDeliveryIds.length > 0) {
       toast.error(TEXT.cannotDelete);
       return;
     }
 
     dispatch({ type: 'REMOVE_COURIER', payload: courier.id });
-    toast.success(`${TEXT.deleted} ${courier.name} ${TEXT.deletedSuffix}`);
+    toast.success(`השליח ${courier.name} נמחק`);
   };
 
-  const openCourierActionsMenu = (
-    courier: Courier,
-    event: React.MouseEvent<HTMLButtonElement>,
-  ) => {
+  const openCourierActionsMenu = (courier: Courier, event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     const triggerRect = event.currentTarget.getBoundingClientRect();
-    const nextX = Math.max(8, triggerRect.left - 132);
-    const nextY = triggerRect.bottom + 8;
-
-    setContextMenu((prev) => {
-      if (
-        prev &&
-        prev.courier.id === courier.id &&
-        Math.abs(prev.x - nextX) < 2 &&
-        Math.abs(prev.y - nextY) < 2
-      ) {
-        return null;
-      }
-
-      return { x: nextX, y: nextY, courier };
-    });
+    setContextMenu({ x: Math.max(8, triggerRect.left - 132), y: triggerRect.bottom + 8, courier });
   };
 
-  const renderCourierCell = (
-    columnId: (typeof COURIER_COLUMNS)[number]['id'],
-    courier: Courier,
-    currentDelivery: ReturnType<typeof getCurrentDelivery>,
-  ) => {
+  const renderCourierCell = (columnId: CourierColumnId, courier: Courier) => {
+    const currentDelivery = getCurrentDelivery(courier.id);
+
     switch (columnId) {
       case 'name':
         return (
@@ -747,7 +668,7 @@ export const CouriersListScreen: React.FC = () => {
         return (
           <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
             <span className={`whitespace-nowrap text-xs font-medium ${courier.status === 'offline' ? 'text-[#737373] dark:text-[#a3a3a3]' : 'text-[#16a34a] dark:text-[#9fe870]'}`}>
-              {courier.status === 'offline' ? 'לא מחובר' : 'מחובר'}
+              {courier.status === 'offline' ? TEXT.notConnected : TEXT.connected}
             </span>
           </td>
         );
@@ -755,7 +676,7 @@ export const CouriersListScreen: React.FC = () => {
         return (
           <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
             <span className={`whitespace-nowrap text-xs font-medium ${courier.isOnShift ? 'text-[#a78bfa] dark:text-[#c4b5fd]' : 'text-[#737373] dark:text-[#525252]'}`}>
-              {courier.isOnShift ? 'במשמרת' : 'לא במשמרת'}
+              {courier.isOnShift ? TEXT.onShift : TEXT.offShift}
             </span>
           </td>
         );
@@ -769,7 +690,7 @@ export const CouriersListScreen: React.FC = () => {
                   ? 'text-[#737373] dark:text-[#a3a3a3]'
                   : 'text-[#16a34a] dark:text-[#9fe870]'
             }`}>
-              {courier.status === 'busy' ? 'במשלוח' : courier.status === 'offline' || !courier.isOnShift ? '-' : 'פנוי'}
+              {courier.status === 'busy' ? TEXT.inDelivery : courier.status === 'offline' || !courier.isOnShift ? '-' : TEXT.free}
             </span>
           </td>
         );
@@ -823,14 +744,8 @@ export const CouriersListScreen: React.FC = () => {
         );
       case 'actions':
         return (
-          <EntityTableActionsCell key={columnId}>
-            <EntityRowActionTrigger
-              onClick={event => {
-                event.stopPropagation();
-                openCourierActionsMenu(courier, event);
-              }}
-              title={TEXT.more}
-            />
+          <EntityTableActionsCell key={columnId} onClick={(event) => event.stopPropagation()}>
+            <EntityRowActionTrigger onClick={(event) => openCourierActionsMenu(courier, event)} title={TEXT.more} />
           </EntityTableActionsCell>
         );
       default:
@@ -840,7 +755,7 @@ export const CouriersListScreen: React.FC = () => {
 
   return (
     <>
-      <div className="flex flex-row h-full overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]" dir="ltr">
+      <div className="flex h-full flex-row overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]" dir="ltr">
         <ListSidePanel isOpen={isExportOpen || columnsOpen}>
           {isExportOpen && (
             <ListExportDrawer
@@ -864,126 +779,68 @@ export const CouriersListScreen: React.FC = () => {
               visibleColumns={visibleColumns}
               setVisibleColumns={setVisibleColumns}
               categories={[...COURIER_COLUMN_CATEGORIES]}
-              defaultVisibleColumns={COURIER_COLUMNS.map((column) => column.id)}
+              defaultVisibleColumns={DEFAULT_COURIER_VISIBLE_COLUMNS}
               title="עמודות שליחים"
               description="בחר אילו פרטים יופיעו בטבלת השליחים"
-              presetsKey="couriers-column-presets-v1"
+              presetsKey="couriers-column-presets-v2"
             />
           )}
         </ListSidePanel>
 
-        <div className="flex-1 min-w-0 overflow-hidden flex flex-col" dir="rtl">
-        <PageToolbar
-          title={TEXT.pageTitle}
-          count={filteredCouriers.length}
-          onToggleMobileSidebar={() => (window as any).toggleMobileSidebar?.()}
-          primaryActionLabel={TEXT.addCourier}
-          primaryActionIcon={<Plus className="h-3.5 w-3.5" />}
-          onPrimaryAction={() => setIsModalOpen(true)}
-          primaryActionDataOnboarding="add-courier-btn"
-          headerControls={
-            <ListToolbarActions
-              showSearch={false}
-              columnsOpen={columnsOpen}
-              onToggleColumns={() => { setColumnsOpen(true); setIsExportOpen(false); }}
-              onExport={() => { setIsExportOpen((v) => !v); setColumnsOpen(false); }}
-            />
-          }
-          controls={<ListInlineFilters filters={courierInlineFilters} />}
-          actions={
-            <ListToolbarActions
-              searchQuery={searchQuery}
-              onSearchQueryChange={setSearchQuery}
-              searchPlaceholder="חפש שליח או מספר טלפון..."
-              searchWidthClass="w-48"
-              showColumnsToggle={false}
-              showExportButton={false}
-            />
-          }
-          summary={`${filteredCouriers.length} שליחים`}
-        />
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden" dir="rtl">
+          <PageToolbar
+            title={TEXT.pageTitle}
+            count={filteredCouriers.length}
+            onToggleMobileSidebar={() => (window as any).toggleMobileSidebar?.()}
+            primaryActionLabel={TEXT.addCourier}
+            primaryActionIcon={<Plus className="h-3.5 w-3.5" />}
+            onPrimaryAction={() => setIsModalOpen(true)}
+            primaryActionDataOnboarding="add-courier-btn"
+            showPeriodControl={false}
+            headerControls={
+              <ListToolbarActions
+                showSearch={false}
+                columnsOpen={columnsOpen}
+                onToggleColumns={() => { setColumnsOpen(true); setIsExportOpen(false); }}
+                onExport={() => { setIsExportOpen((value) => !value); setColumnsOpen(false); }}
+              />
+            }
+            controls={<ListInlineFilters filters={courierInlineFilters} />}
+            actions={
+              <ListToolbarActions
+                searchQuery={searchQuery}
+                onSearchQueryChange={setSearchQuery}
+                searchPlaceholder="חפש שליח או מספר טלפון..."
+                searchWidthClass="w-48"
+                showColumnsToggle={false}
+                showExportButton={false}
+              />
+            }
+            summary={
+              hasActiveFilters
+                ? `${filteredCouriers.length} מתוך ${state.couriers.length} שליחים`
+                : `${stats.available} זמינים · ${stats.busy} במשלוח · ${stats.onShift} במשמרת`
+            }
+          />
 
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          {viewMode === 'list' ? (
-            <div className="flex-1 min-h-0 flex flex-col">
-              {filteredCouriers.length === 0 ? (
-                <div className="bg-white dark:bg-[#171717]">
-                  {state.couriers.length === 0 ? (
-                    <EntityEmptyState
-                      icon={<User className="h-12 w-12 text-[#9fe870]" />}
-                      title="טרם נוספו שליחים"
-                      description="כאשר יתווספו שליחים למערכת, הם יופיעו כאן עם כל הפרטים והאפשרויות לניהול מתקדם"
-                      footerText="המערכת מוכנה לקבלת שליחים חדשים"
-                    />
-                  ) : (
-                    <EntityNoResultsState
-                      description={searchQuery ? `לא נמצאו שליחים לחיפוש "${searchQuery}"` : 'הפילטרים שבחרת לא מצאו שליחים תואמים'}
-                      onClearAll={handleClearAll}
-                    />
-                  )}
-                </div>
-              ) : (
-                <>
-                <ListTableSection isEmpty={false} emptyState={null}>
-                <EntityTableShell
-                  ariaLabel="טבלת שליחים"
-                  colgroup={
-                    <colgroup>
-                      <col style={{ width: ENTITY_TABLE_WIDTHS.checkbox }} />
-                      {visibleCourierColumns.map((column) => (
-                        <col key={column.id} style={{ width: getCourierColumnWidth(column.id) }} />
-                      ))}
-                    </colgroup>
-                  }
-                  headerRow={
-                    <tr>
-                      <EntityTableHeaderCheckbox
-                        checked={allVisibleCouriersSelected}
-                        indeterminate={someVisibleCouriersSelected}
-                        onChange={handleToggleSelectAllCouriers}
-                      />
-                      {visibleCourierColumns.map((column) => (
-                        column.id === 'actions' ? (
-                          <th
-                            key={column.id}
-                            className={`${ENTITY_TABLE_ACTIONS_HEAD_CLASS} ${column.id === 'actions' ? '' : 'pr-2 pl-2'}`}
-                          >
-                            <span className="sr-only">{column.label}</span>
-                          </th>
-                        ) : (
-                          <EntityTableHeaderCell
-                          key={column.id}
-                            label={column.label}
-                            onSort={() => handleCourierSort(column.id as SortableCourierColumnId)}
-                            sortDirection={sortColumn === column.id ? sortDirection : null}
-                          />
-                        )
-                      ))}
-                    </tr>
-                  }
-                >
-                  {filteredCouriers.map((courier) => {
-                    const currentDelivery = getCurrentDelivery(courier.id);
+          <CourierOverviewStrip stats={stats} hasFilters={hasActiveFilters} />
 
-                    return (
-                      <tr
-                        key={courier.id}
-                        onContextMenu={(e) => {
-                          e.preventDefault();
-                          setContextMenu({ x: e.clientX, y: e.clientY, courier });
-                        }}
-                        className={`${ENTITY_TABLE_ROW_CLASS} cursor-default`}
-                      >
-                        <EntityTableRowCheckbox
-                          checked={selectedCourierIds.has(courier.id)}
-                          onChange={() => handleToggleSelectCourier(courier.id)}
-                        />
-                        {visibleCourierColumns.map((column) => renderCourierCell(column.id, courier, currentDelivery))}
-                      </tr>
-                    );
-                  })}
-                </EntityTableShell>
-                </ListTableSection>
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <ListTableSection
+              isEmpty={filteredCouriers.length === 0}
+              emptyState={
+                state.couriers.length === 0 ? (
+                  <EntityEmptyState
+                    icon={<Bike className="h-12 w-12 text-[#9fe870]" />}
+                    title="טרם נוספו שליחים"
+                    description="כאשר יתווספו שליחים למערכת, הם יופיעו כאן עם זמינות, משמרת ומשלוח פעיל."
+                    footerText="המערכת מוכנה לקבלת שליחים חדשים"
+                  />
+                ) : (
+                  <CourierNoResultsState searchQuery={searchQuery} onClear={handleClearAll} />
+                )
+              }
+              selectionBar={
                 <SelectionActionBar
                   selectedCount={selectedCourierIds.size}
                   selectionLabel={`נבחרו ${selectedCourierIds.size} שליחים`}
@@ -1023,133 +880,63 @@ export const CouriersListScreen: React.FC = () => {
                         onClick={handleExportVisibleCouriers}
                         className="rounded-lg border border-[#d4d4d4] bg-white px-4 py-2 text-sm font-bold text-[#0d0d12] transition-colors hover:bg-[#f5f5f5] dark:border-[#404040] dark:bg-[#171717] dark:text-[#fafafa] dark:hover:bg-[#262626]"
                       >
-                        ייצוא נבחרים
+                        {TEXT.exportSelected}
                       </button>
                     </>
                   }
                 />
-                </>
-              )}
-            </div>
-          ) : (
-            <div className="flex-1 overflow-auto p-6">
-              {filteredCouriers.length === 0 ? (
-                <div className="bg-white dark:bg-[#171717] rounded-2xl">
-                  {state.couriers.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20 px-4">
-                      <div className="relative">
-                        <div className="w-24 h-24 bg-gradient-to-br from-[#9fe870]/20 to-[#9fe870]/5 rounded-2xl flex items-center justify-center mb-6">
-                          <User className="w-12 h-12 text-[#9fe870]" />
-                        </div>
-                        <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-[#9fe870] to-[#8ed960] rounded-full flex items-center justify-center shadow-lg">
-                          <Sparkles className="w-4 h-4 text-white" />
-                        </div>
-                      </div>
-                      <h3 className="text-xl font-bold text-[#0d0d12] dark:text-[#fafafa] mb-2">טרם נוספו שליחים</h3>
-                      <p className="text-sm text-[#737373] dark:text-[#a3a3a3] text-center max-w-md mb-6">
-                        כאשר יתווספו שליחים למערכת, הם יופיעו כאן עם כל הפרטים והאפשרויות לניהול מתקדם
-                      </p>
-                      <div className="flex items-center gap-2 px-4 py-2 bg-[#f5f5f5] dark:bg-[#0a0a0a] rounded-lg border border-[#e5e5e5] dark:border-[#262626]">
-                        <div className="w-2 h-2 bg-[#9fe870] rounded-full animate-pulse" />
-                        <span className="text-xs text-[#737373] dark:text-[#a3a3a3]">המערכת מוכנה לקבלת שליחים חדשים</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-20 px-4">
-                      <div className="relative">
-                        <div className="w-24 h-24 bg-gradient-to-br from-amber-500/20 to-amber-500/5 rounded-2xl flex items-center justify-center mb-6">
-                          <Search className="w-12 h-12 text-amber-500" />
-                        </div>
-                      </div>
-                      <h3 className="text-xl font-bold text-[#0d0d12] dark:text-[#fafafa] mb-2">לא נמצאו תוצאות</h3>
-                      <p className="text-sm text-[#737373] dark:text-[#a3a3a3] text-center max-w-md mb-4">
-                        {searchQuery ? `לא נמצאו שליחים לחיפוש "${searchQuery}"` : 'הפילטרים שבחרת לא מצאו שליחים תואמים'}
-                      </p>
-                      <button
-                        onClick={handleClearAll}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-l from-[#9fe870] to-[#8ed960] text-[#0d0d12] rounded-xl text-sm font-medium hover:from-[#8ed960] hover:to-[#7dc850] transition-all shadow-lg shadow-[#9fe870]/30"
-                      >
-                        <Filter className="w-4 h-4" />
-                        נקה את כל הפילטרים
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredCouriers.map(courier => {
-                  const currentDelivery = getCurrentDelivery(courier.id);
-
-                  return (
-                    <div
-                      key={courier.id}
-                      onClick={() => navigate(`/courier/${courier.id}`)}
-                      className="cursor-pointer rounded-xl border border-[#e5e5e5] bg-white p-4 transition-shadow hover:shadow-lg dark:border-[#262626] dark:bg-[#171717]"
-                    >
-                      <div className="mb-3 flex items-start justify-between">
-                        <div className="flex items-center gap-2">
-                          <User className="h-5 w-5 text-[#16a34a] dark:text-[#22c55e]" />
-                          <span className="font-semibold text-[#0d0d12] dark:text-[#fafafa]">{courier.name}</span>
-                        </div>
-                        <span className={`text-xs font-medium ${getStatusColor(courier.status)}`}>
-                          {getStatusLabel(courier.status)}
-                        </span>
-                      </div>
-                      <div className="mb-3 space-y-2">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Phone className="h-3.5 w-3.5 text-[#737373] dark:text-[#a3a3a3]" />
-                          <span className="direction-ltr text-[#666d80] dark:text-[#a3a3a3]">{courier.phone}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <span className="text-[#737373] dark:text-[#a3a3a3]">{TEXT.vehicleType}</span>
-                          <span className="text-[#666d80] dark:text-[#a3a3a3]">{courier.vehicleType}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                          <span className="text-[#0d0d12] dark:text-[#fafafa]">
-                            {courier.rating.toFixed(1)} {'\u00b7'} {courier.totalDeliveries} {TEXT.deliveriesSuffix}
-                          </span>
-                        </div>
-                        {currentDelivery && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <Package className="h-3.5 w-3.5 text-blue-500" />
-                            <span className="text-blue-600 dark:text-blue-400">
-                              {TEXT.deliveryLabel} {currentDelivery.api_short_order_id || currentDelivery.id.slice(0, 6)}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                        <button
-                          onClick={event => {
-                            event.stopPropagation();
-                            toggleCourierPower(courier.id, courier.status);
-                          }}
-                          className={`flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all sm:flex-1 ${
-                            courier.status !== 'offline'
-                              ? 'bg-[#ecfae2] text-[#16a34a] hover:bg-[#dcf5d2] dark:bg-[#163300] dark:text-[#9fe870] dark:hover:bg-[#1f4500]'
-                              : 'bg-[#f5f5f5] text-[#737373] hover:bg-[#e5e5e5] dark:bg-[#262626] dark:text-[#a3a3a3] dark:hover:bg-[#404040]'
-                          }`}
-                        >
-                          <Power className="h-4 w-4" />
-                          <span>{courier.status === 'offline' ? TEXT.activate : TEXT.disable}</span>
-                        </button>
-                        <div className="relative self-end sm:self-auto">
-                          <EntityRowActionTrigger
-                            onClick={event => openCourierActionsMenu(courier, event)}
-                            title={TEXT.more}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              )}
-            </div>
-          )}
+              }
+              ariaLabel="טבלת שליחים"
+              colgroup={
+                <colgroup>
+                  <col style={{ width: ENTITY_TABLE_WIDTHS.checkbox }} />
+                  {visibleCourierColumns.map((column) => (
+                    <col key={column.id} style={{ width: getCourierColumnWidth(column.id) }} />
+                  ))}
+                </colgroup>
+              }
+              headerRow={
+                <tr>
+                  <EntityTableHeaderCheckbox
+                    checked={allVisibleCouriersSelected}
+                    indeterminate={someVisibleCouriersSelected}
+                    onChange={handleToggleSelectAllCouriers}
+                  />
+                  {visibleCourierColumns.map((column) => (
+                    column.id === 'actions' ? (
+                      <EntityTableActionsHeader key={column.id} label={column.label} />
+                    ) : (
+                      <EntityTableHeaderCell
+                        key={column.id}
+                        label={column.label}
+                        onSort={() => handleCourierSort(column.id as SortableCourierColumnId)}
+                        sortDirection={sortColumn === column.id ? sortDirection : null}
+                      />
+                    )
+                  ))}
+                </tr>
+              }
+            >
+              {filteredCouriers.map((courier) => (
+                <tr
+                  key={courier.id}
+                  onClick={() => navigate(`/courier/${courier.id}`)}
+                  onContextMenu={(event) => {
+                    event.preventDefault();
+                    setContextMenu({ x: event.clientX, y: event.clientY, courier });
+                  }}
+                  className={`${ENTITY_TABLE_ROW_CLASS} cursor-pointer`}
+                >
+                  <EntityTableRowCheckbox
+                    checked={selectedCourierIds.has(courier.id)}
+                    onChange={() => handleToggleSelectCourier(courier.id)}
+                  />
+                  {visibleCourierColumns.map((column) => renderCourierCell(column.id, courier))}
+                </tr>
+              ))}
+            </ListTableSection>
+          </div>
         </div>
-      </div>
       </div>
 
       {isModalOpen && (
@@ -1159,11 +946,13 @@ export const CouriersListScreen: React.FC = () => {
         >
           <div
             className="w-full max-w-md rounded-2xl border border-[#e5e5e5] bg-white p-6 dark:border-[#262626] dark:bg-[#171717]"
-            onClick={event => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
+            dir="rtl"
           >
             <div className="mb-6 flex items-center justify-between">
               <h2 className="text-xl font-bold text-[#0d0d12] dark:text-[#fafafa]">{TEXT.addNewCourier}</h2>
               <button
+                type="button"
                 onClick={handleModalClose}
                 className="rounded-lg p-2 transition-colors hover:bg-[#f5f5f5] dark:hover:bg-[#262626]"
               >
@@ -1176,9 +965,10 @@ export const CouriersListScreen: React.FC = () => {
                 <input
                   type="text"
                   value={newCourier.name}
-                  onChange={event => setNewCourier({ ...newCourier, name: event.target.value })}
+                  onChange={(event) => setNewCourier({ ...newCourier, name: event.target.value })}
                   className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-[#262626] dark:bg-[#0a0a0a] dark:text-[#fafafa]"
                   placeholder={TEXT.enterFullName}
+                  autoFocus
                 />
               </div>
               <div>
@@ -1186,7 +976,7 @@ export const CouriersListScreen: React.FC = () => {
                 <input
                   type="tel"
                   value={newCourier.phone}
-                  onChange={event => setNewCourier({ ...newCourier, phone: event.target.value })}
+                  onChange={(event) => setNewCourier({ ...newCourier, phone: event.target.value })}
                   className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-[#262626] dark:bg-[#0a0a0a] dark:text-[#fafafa]"
                   placeholder={TEXT.enterPhone}
                 />
@@ -1195,10 +985,10 @@ export const CouriersListScreen: React.FC = () => {
                 <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-[#a3a3a3]">{TEXT.vehicleType}</label>
                 <select
                   value={newCourier.vehicleType}
-                  onChange={event => setNewCourier({ ...newCourier, vehicleType: event.target.value as Courier['vehicleType'] })}
+                  onChange={(event) => setNewCourier({ ...newCourier, vehicleType: event.target.value as Courier['vehicleType'] })}
                   className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-[#262626] dark:bg-[#0a0a0a] dark:text-[#fafafa]"
                 >
-                  {VEHICLE_TYPES.map(vehicleType => (
+                  {VEHICLE_TYPES.map((vehicleType) => (
                     <option key={vehicleType} value={vehicleType}>
                       {vehicleType}
                     </option>
@@ -1208,6 +998,7 @@ export const CouriersListScreen: React.FC = () => {
             </div>
             <div className="mt-6 flex gap-3">
               <button
+                type="button"
                 onClick={addCourier}
                 disabled={!newCourier.name.trim() || !newCourier.phone.trim()}
                 className="flex-1 rounded-lg bg-[#9fe870] px-4 py-2.5 font-medium text-[#0d0d12] transition-colors hover:bg-[#8fd65f] disabled:bg-[#e5e5e5] disabled:text-[#a3a3a3]"
@@ -1215,6 +1006,7 @@ export const CouriersListScreen: React.FC = () => {
                 {TEXT.addCourier}
               </button>
               <button
+                type="button"
                 onClick={handleModalClose}
                 className="rounded-lg bg-[#f5f5f5] px-4 py-2.5 font-medium text-[#0d0d12] transition-colors hover:bg-[#e5e5e5] dark:bg-[#262626] dark:text-[#fafafa] dark:hover:bg-[#404040]"
               >
@@ -1225,7 +1017,6 @@ export const CouriersListScreen: React.FC = () => {
         </div>
       )}
 
-      {/* Right-click context menu */}
       <EntityActionMenuOverlay
         open={Boolean(contextMenu)}
         position={contextMenu ? { x: contextMenu.x, y: contextMenu.y } : null}
@@ -1234,43 +1025,42 @@ export const CouriersListScreen: React.FC = () => {
         {contextMenu && (
           <EntityActionMenu
             style={{ top: contextMenu.y, left: contextMenu.x }}
-            onClick={(e) => e.stopPropagation()}
-            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
+            onPointerDown={(event) => event.stopPropagation()}
           >
             <EntityActionMenuHeader
               title={contextMenu.courier.name}
               subtitle={
                 <div className="flex items-center gap-1.5">
-                {contextMenu.courier.status === 'offline' ? (
-                  <span className="text-[11px] font-medium text-[#737373] dark:text-[#a3a3a3]">לא מחובר</span>
-                ) : contextMenu.courier.status === 'busy' ? (
-                  <span className="text-[11px] font-medium text-[#f97316] dark:text-[#ffa94d]">במשלוח</span>
-                ) : (
-                  <span className="text-[11px] font-medium text-[#16a34a] dark:text-[#9fe870]">זמין לקבלת משלוחים</span>
-                )}
-                <span className="text-[10px] text-[#525252] dark:text-[#737373]">·</span>
-                <span className={`text-[11px] font-medium ${contextMenu.courier.isOnShift ? 'text-[#a78bfa] dark:text-[#c4b5fd]' : 'text-[#737373] dark:text-[#525252]'}`}>
-                  {contextMenu.courier.isOnShift ? 'במשמרת' : 'לא במשמרת'}
-                </span>
+                  <span className={`text-[11px] font-medium ${getStatusColor(contextMenu.courier.status)}`}>
+                    {getStatusLabel(contextMenu.courier.status)}
+                  </span>
+                  <span className="text-[10px] text-[#525252] dark:text-[#737373]">·</span>
+                  <span className={`text-[11px] font-medium ${contextMenu.courier.isOnShift ? 'text-[#a78bfa] dark:text-[#c4b5fd]' : 'text-[#737373] dark:text-[#525252]'}`}>
+                    {contextMenu.courier.isOnShift ? TEXT.onShift : TEXT.offShift}
+                  </span>
                 </div>
               }
             />
 
             <EntityActionMenuItem
-              onClick={() => { closeCourierActionsMenu(); navigate(`/courier/${contextMenu.courier.id}`); }}
+              onClick={() => {
+                closeCourierActionsMenu();
+                navigate(`/courier/${contextMenu.courier.id}`);
+              }}
               icon={<FileText className="w-3.5 h-3.5 text-[#737373] dark:text-[#a3a3a3]" />}
             >
-              פרטים מלאים
+              {TEXT.details}
             </EntityActionMenuItem>
 
             <EntityActionMenuItem
               onClick={() => {
-                toggleCourierPower(contextMenu.courier.id, contextMenu.courier.status);
+                toggleCourierPower(contextMenu.courier);
                 closeCourierActionsMenu();
               }}
               icon={<Power className="w-3.5 h-3.5 text-[#16a34a] dark:text-[#9fe870]" />}
             >
-              {contextMenu.courier.status === 'offline' ? TEXT.activateCourier : TEXT.disableCourier}
+              {contextMenu.courier.status === 'offline' ? TEXT.activate : TEXT.disable}
             </EntityActionMenuItem>
 
             <EntityActionMenuItem
@@ -1284,17 +1074,17 @@ export const CouriersListScreen: React.FC = () => {
                 )
               }
             >
-              {contextMenu.courier.isOnShift ? 'סיים משמרת' : 'התחל משמרת'}
+              {contextMenu.courier.isOnShift ? TEXT.endShift : TEXT.startShift}
             </EntityActionMenuItem>
 
             <EntityActionMenuDivider />
 
             <EntityActionMenuItem
-              onClick={(e) => handleRemoveCourier(contextMenu.courier, e)}
+              onClick={(event) => handleRemoveCourier(contextMenu.courier, event)}
               icon={<Trash2 className="w-3.5 h-3.5" />}
               danger
             >
-              מחק שליח
+              {TEXT.deleteCourier}
             </EntityActionMenuItem>
           </EntityActionMenu>
         )}
@@ -1302,4 +1092,3 @@ export const CouriersListScreen: React.FC = () => {
     </>
   );
 };
-

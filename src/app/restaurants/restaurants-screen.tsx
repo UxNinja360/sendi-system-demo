@@ -1,5 +1,5 @@
 ﻿import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Power, Download, Store as StoreIcon, Trash2, X, FileText, FileSpreadsheet } from 'lucide-react';
+import { Power, Download, Search, Store as StoreIcon, Trash2, X, FileText, FileSpreadsheet } from 'lucide-react';
 import { useDelivery } from '../context/delivery-context-value';
 import { useNavigate } from 'react-router';
 import { Delivery, Restaurant } from '../types/delivery.types';
@@ -39,7 +39,7 @@ import {
   EntityActionMenuOverlay,
 } from '../components/common/entity-action-menu';
 import { EntityRowActionTrigger } from '../components/common/entity-row-action-trigger';
-import { EntityEmptyState, EntityNoResultsState } from '../components/common/entity-empty-state';
+import { EntityEmptyState } from '../components/common/entity-empty-state';
 import { EntityTableHeaderCell } from '../components/common/entity-table-header-cell';
 import {
   EntityTableActionsCell,
@@ -63,6 +63,14 @@ type RestaurantRow = {
   id: number; restaurantId: string; name: string; status: 'פעיל' | 'לא פעיל';
   isActive: boolean; totalDeliveries: number; linkedHubs: string[];
   contactPerson: string; phone: string; city: string; street: string; username: string; type: string; chainId: string;
+};
+
+type RestaurantStats = {
+  total: number;
+  filtered: number;
+  active: number;
+  inactive: number;
+  withDeliveries: number;
 };
 
 // ═══════════════════════════════════════
@@ -126,7 +134,15 @@ const getRestaurantColumnWidth = (columnId: RestaurantColId) => {
 type RestaurantColId = typeof RESTAURANT_COLS[number]['id'];
 type RestaurantSortableColumnId = RestaurantColId;
 const COL_ORDER_KEY = DELIVERY_STORAGE_KEYS.restaurantsColumnOrder;
-const RESTAURANT_VISIBLE_COLUMNS_KEY = DELIVERY_STORAGE_KEYS.restaurantsVisibleColumns;
+const DEFAULT_RESTAURANT_VISIBLE_COLUMNS: RestaurantColId[] = [
+  'name',
+  'status',
+  'address',
+  'phone',
+  'contact',
+  'deliveries',
+];
+const RESTAURANT_VISIBLE_COLUMNS_KEY = `${DELIVERY_STORAGE_KEYS.restaurantsVisibleColumns}:product-v2`;
 const RESTAURANT_COLUMN_CATEGORIES = [
   {
     id: 'core',
@@ -134,8 +150,6 @@ const RESTAURANT_COLUMN_CATEGORIES = [
     columns: [
       { id: 'name', label: 'מסעדה' },
       { id: 'status', label: 'סטטוס' },
-      { id: 'type', label: 'סוג' },
-      { id: 'chainId', label: 'מזהה רשת' },
       { id: 'deliveries', label: 'סך משלוחים' },
     ],
   },
@@ -148,7 +162,77 @@ const RESTAURANT_COLUMN_CATEGORIES = [
       { id: 'contact', label: 'איש קשר' },
     ],
   },
+  {
+    id: 'details',
+    label: 'פרטים נוספים',
+    columns: [
+      { id: 'type', label: 'סוג' },
+      { id: 'chainId', label: 'מזהה רשת' },
+    ],
+  },
 ] as const;
+
+const RestaurantOverviewStrip: React.FC<{ stats: RestaurantStats; hasSearch: boolean }> = ({
+  stats,
+  hasSearch,
+}) => {
+  const items = [
+    { label: 'סה״כ מסעדות', value: stats.total.toLocaleString('he-IL') },
+    { label: 'פעילות', value: stats.active.toLocaleString('he-IL'), tone: 'success' },
+    { label: 'כבויות', value: stats.inactive.toLocaleString('he-IL') },
+    { label: 'עם משלוחים', value: stats.withDeliveries.toLocaleString('he-IL') },
+    ...(hasSearch
+      ? [{ label: 'תוצאות חיפוש', value: stats.filtered.toLocaleString('he-IL'), tone: 'focus' }]
+      : []),
+  ];
+
+  return (
+    <div className="shrink-0 border-b border-[#e5e5e5] bg-white px-5 py-2.5 dark:border-[#262626] dark:bg-[#171717]">
+      <div className="flex max-w-full flex-wrap items-center gap-x-5 gap-y-2">
+        {items.map((item) => (
+          <div key={item.label} className="flex min-w-0 items-baseline gap-2">
+            <span
+              className={`text-sm font-semibold tabular-nums ${
+                item.tone === 'success'
+                  ? 'text-[#16a34a] dark:text-[#9fe870]'
+                  : item.tone === 'focus'
+                    ? 'text-[#0d0d12] dark:text-[#fafafa]'
+                    : 'text-[#0d0d12] dark:text-[#fafafa]'
+              }`}
+            >
+              {item.value}
+            </span>
+            <span className="truncate text-xs text-[#737373] dark:text-[#a3a3a3]">
+              {item.label}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const RestaurantNoResultsState: React.FC<{ query: string; onClear: () => void }> = ({
+  query,
+  onClear,
+}) => (
+  <div className="flex flex-col items-center justify-center px-4 py-20">
+    <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-xl bg-[#f5f5f5] dark:bg-[#262626]">
+      <Search className="h-10 w-10 text-[#737373] dark:text-[#a3a3a3]" />
+    </div>
+    <h3 className="mb-2 text-xl font-bold text-[#0d0d12] dark:text-[#fafafa]">לא נמצאו מסעדות</h3>
+    <p className="mb-5 max-w-md text-center text-sm text-[#737373] dark:text-[#a3a3a3]">
+      {query ? `אין התאמה לחיפוש "${query}"` : 'אין מסעדות שתואמות לחיפוש הנוכחי'}
+    </p>
+    <button
+      type="button"
+      onClick={onClear}
+      className="rounded-lg border border-[#d4d4d4] bg-white px-4 py-2 text-sm font-semibold text-[#0d0d12] transition-colors hover:bg-[#f5f5f5] dark:border-[#404040] dark:bg-[#171717] dark:text-[#fafafa] dark:hover:bg-[#262626]"
+    >
+      נקה חיפוש
+    </button>
+  </div>
+);
 
 // ═══════════════════════════════════════
 // Component
@@ -195,7 +279,7 @@ export const RestaurantsScreen: React.FC = () => {
         if (filtered.length > 0) return new Set(filtered);
       }
     } catch {}
-    return new Set(RESTAURANT_COLS.map((col) => col.id));
+    return new Set(DEFAULT_RESTAURANT_VISIBLE_COLUMNS);
   });
 
   const orderedCols = useMemo(() => {
@@ -305,6 +389,7 @@ export const RestaurantsScreen: React.FC = () => {
     filtered: filteredRestaurants.length,
     active: restaurants.filter(r => r.isActive).length,
     inactive: restaurants.filter(r => !r.isActive).length,
+    withDeliveries: restaurants.filter(r => r.totalDeliveries > 0).length,
   }), [restaurants, filteredRestaurants]);
 
   // Selection state
@@ -644,7 +729,7 @@ export const RestaurantsScreen: React.FC = () => {
               visibleColumns={visibleColumns}
               setVisibleColumns={setVisibleColumns}
               categories={[...RESTAURANT_COLUMN_CATEGORIES]}
-              defaultVisibleColumns={RESTAURANT_COLS.map((column) => column.id)}
+              defaultVisibleColumns={DEFAULT_RESTAURANT_VISIBLE_COLUMNS}
               title="עמודות מסעדות"
               description="בחר אילו פרטים יופיעו בטבלת המסעדות"
               presetsKey="restaurants-column-presets-v1"
@@ -660,6 +745,7 @@ export const RestaurantsScreen: React.FC = () => {
           onToggleMobileSidebar={() => (window as any).toggleMobileSidebar?.()}
           primaryActionLabel="הוסף מסעדה"
           onPrimaryAction={() => setIsAddModalOpen(true)}
+          showPeriodControl={false}
           headerControls={
             <ListToolbarActions
               showSearch={false}
@@ -678,8 +764,14 @@ export const RestaurantsScreen: React.FC = () => {
               showExportButton={false}
             />
           }
-          summary={`${filteredRestaurants.length} מסעדות`}
+          summary={
+            searchQuery.trim()
+              ? `${filteredRestaurants.length} מתוך ${restaurants.length} מסעדות`
+              : `${stats.active} פעילות · ${stats.inactive} כבויות`
+          }
         />
+
+        <RestaurantOverviewStrip stats={stats} hasSearch={Boolean(searchQuery.trim())} />
 
         {/* Content */}
         <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
@@ -696,14 +788,7 @@ export const RestaurantsScreen: React.FC = () => {
                     footerText="המערכת מוכנה לקבלת מסעדות חדשות"
                   />
                 ) : (
-                  <EntityNoResultsState
-                    description={
-                      searchQuery
-                        ? `לא נמצאו מסעדות לחיפוש "${searchQuery}"`
-                        : 'הפילטרים שבחרת לא מצאו מסעדות תואמות'
-                    }
-                    onClearAll={handleClearAll}
-                  />
+                  <RestaurantNoResultsState query={searchQuery} onClear={handleClearAll} />
                 )
               }
               selectionBar={
@@ -793,12 +878,13 @@ export const RestaurantsScreen: React.FC = () => {
               {filteredRestaurants.map((restaurant, idx) => (
                 <tr
                   key={restaurant.restaurantId}
+                  onClick={() => navigate(`/restaurant/${restaurant.restaurantId}`)}
                   onContextMenu={(e) => {
                     e.preventDefault();
                     setContextMenuPos({ x: e.clientX, y: e.clientY });
                     setOpenActionsRestaurantId(restaurant.restaurantId);
                   }}
-                  className={`${ENTITY_TABLE_ROW_CLASS} cursor-default`}
+                  className={`${ENTITY_TABLE_ROW_CLASS} cursor-pointer`}
                 >
                   <EntityTableRowCheckbox
                     checked={selectedRestaurantIds.has(restaurant.restaurantId)}
@@ -926,6 +1012,17 @@ export const RestaurantsScreen: React.FC = () => {
                 icon={<Power className="w-3.5 h-3.5 text-[#16a34a] dark:text-[#9fe870]" />}
               >
                 {restaurant.isActive ? 'השבת מסעדה' : 'הפעל מסעדה'}
+              </EntityActionMenuItem>
+
+              <EntityActionMenuItem
+                onClick={() => {
+                  handleExportSingleRestaurant(restaurant.id, restaurant.name);
+                  setContextMenuPos(null);
+                  setOpenActionsRestaurantId(null);
+                }}
+                icon={<Download className="w-3.5 h-3.5 text-[#737373] dark:text-[#a3a3a3]" />}
+              >
+                ייצא דוח מסעדה
               </EntityActionMenuItem>
 
               <EntityActionMenuDivider />

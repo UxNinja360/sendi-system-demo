@@ -1,0 +1,2688 @@
+﻿{
+    "deliveriesDesktop":  {
+                              "url":  "http://127.0.0.1:5173/deliveries?__codex_ui_review=cdp",
+                              "title":  "Sendi",
+                              "viewport":  {
+                                               "w":  1735,
+                                               "h":  1229
+                                           },
+                              "headings":  [
+                                               "טרם נוצרו משלוחים"
+                                           ],
+                              "buttons":  [
+                                              {
+                                                  "text":  "מנג׳ר לייב 0",
+                                                  "aria":  "מנג׳ר לייב",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "דשבורד",
+                                                  "aria":  "דשבורד",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "משלוחים",
+                                                  "aria":  "משלוחים",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "מסעדות",
+                                                  "aria":  "מסעדות",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "שליחים",
+                                                  "aria":  "שליחים",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "משמרות",
+                                                  "aria":  "משמרות",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "אזורי משלוח",
+                                                  "aria":  "אזורי משלוח",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "תמחור לפי מרחק",
+                                                  "aria":  "תמחור לפי מרחק",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "שעות פעילות",
+                                                  "aria":  "שעות פעילות",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "דוחות",
+                                                  "aria":  "דוחות",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "ביצועים",
+                                                  "aria":  "ביצועים",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "יומן פעולות",
+                                                  "aria":  "יומן פעולות",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "Tel Aviv - Runners",
+                                                  "aria":  "Tel Aviv - Runners",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "ארנק ₪0",
+                                                  "aria":  "",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "יתרת משלוחים 500",
+                                                  "aria":  "",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "הגדרות",
+                                                  "aria":  "",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "ראשי",
+                                                  "aria":  "",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "משלוחים",
+                                                  "aria":  "",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "משלוח חדש",
+                                                  "aria":  "",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "אפריל 2026",
+                                                  "aria":  "",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "סטטוס",
+                                                  "aria":  "",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "מסעדה",
+                                                  "aria":  "",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "שליח",
+                                                  "aria":  "",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "עמודות",
+                                                  "aria":  "עמודות",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "ייצוא",
+                                                  "aria":  "ייצוא",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              }
+                                          ],
+                              "inputs":  [
+
+                                         ],
+                              "headers":  [
+
+                                          ],
+                              "rows":  0,
+                              "badText":  [
+
+                                          ],
+                              "horizontalOverflow":  0,
+                              "overflowNodes":  [
+
+                                                ],
+                              "navActive":  [
+                                                {
+                                                    "text":  "מנג׳ר לייב 0",
+                                                    "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                },
+                                                {
+                                                    "text":  "דשבורד",
+                                                    "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                },
+                                                {
+                                                    "text":  "משלוחים",
+                                                    "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 bg-[#f5f5f5] text-[#16a34a] dark:bg-[#262626] dark:text-[#22c55e]"
+                                                },
+                                                {
+                                                    "text":  "מסעדות",
+                                                    "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                },
+                                                {
+                                                    "text":  "שליחים",
+                                                    "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                },
+                                                {
+                                                    "text":  "משמרות",
+                                                    "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                },
+                                                {
+                                                    "text":  "אזורי משלוח",
+                                                    "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                },
+                                                {
+                                                    "text":  "תמחור לפי מרחק",
+                                                    "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                },
+                                                {
+                                                    "text":  "שעות פעילות",
+                                                    "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                },
+                                                {
+                                                    "text":  "דוחות",
+                                                    "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                },
+                                                {
+                                                    "text":  "ביצועים",
+                                                    "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                },
+                                                {
+                                                    "text":  "יומן פעולות",
+                                                    "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                },
+                                                {
+                                                    "text":  "Tel Aviv - Runners",
+                                                    "cls":  "w-full cursor-pointer border-b border-[#e5e5e5] px-4 py-3 text-right transition-colors dark:border-[#262626] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a]"
+                                                },
+                                                {
+                                                    "text":  "ארנק ₪0",
+                                                    "cls":  "w-full cursor-pointer border-b border-[#e5e5e5] px-4 py-3 text-right transition-colors dark:border-[#262626] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a]"
+                                                },
+                                                {
+                                                    "text":  "יתרת משלוחים 500",
+                                                    "cls":  "w-full cursor-pointer border-b border-[#e5e5e5] px-4 py-3 text-right transition-colors dark:border-[#262626] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a]"
+                                                },
+                                                {
+                                                    "text":  "",
+                                                    "cls":  "relative h-5 w-10 rounded-full transition-colors cursor-not-allowed bg-[#e5e5e5] opacity-50 dark:bg-[#404040]"
+                                                },
+                                                {
+                                                    "text":  "",
+                                                    "cls":  "relative h-5 w-10 rounded-full transition-colors bg-[#e5e5e5] dark:bg-[#404040]"
+                                                },
+                                                {
+                                                    "text":  "הגדרות",
+                                                    "cls":  "w-full cursor-pointer px-4 py-3 text-right transition-colors text-[#36394a] hover:bg-[#f5f5f5] dark:text-[#d4d4d4] dark:hover:bg-[#404040]"
+                                                },
+                                                {
+                                                    "text":  "ראשי",
+                                                    "cls":  "flex min-w-0 items-center gap-1 rounded-md px-2 py-1 transition-colors hover:bg-[#f0f0f0] hover:text-[#0d0d12] dark:hover:bg-[#171717] dark:hover:text-[#fafafa]"
+                                                },
+                                                {
+                                                    "text":  "משלוחים",
+                                                    "cls":  "min-w-0 truncate rounded-md px-2 py-1 font-medium text-[#0d0d12] transition-colors hover:bg-[#f0f0f0] dark:text-[#fafafa] dark:hover:bg-[#171717]"
+                                                },
+                                                {
+                                                    "text":  "משלוח חדש",
+                                                    "cls":  "inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-[#9fe870] px-3 py-1.5 text-sm font-semibold text-[#0d0d12] transition-colors hover:bg-[#8fd65f]"
+                                                },
+                                                {
+                                                    "text":  "",
+                                                    "cls":  "flex h-9 w-9 items-center justify-center rounded-[4px] border border-[#e5e5e5] bg-white transition-colors hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:hover:bg-[#202020]"
+                                                },
+                                                {
+                                                    "text":  "אפריל 2026",
+                                                    "cls":  "flex h-9 min-w-[118px] items-center justify-center gap-1.5 rounded-[4px] border px-3 text-sm font-medium transition-colors sm:min-w-[150px] sm:gap-2 sm:px-4 border-[#e5e5e5] bg-white text-[#0d0d12] dark:border-[#262626] dark:bg-[#171717] dark:text-[#fafafa]"
+                                                },
+                                                {
+                                                    "text":  "",
+                                                    "cls":  "flex h-9 w-9 items-center justify-center rounded-[4px] border border-[#e5e5e5] bg-white transition-colors hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:hover:bg-[#202020]"
+                                                },
+                                                {
+                                                    "text":  "סטטוס",
+                                                    "cls":  "flex h-9 items-center gap-1.5 rounded-[4px] border px-3 text-sm font-medium transition-colors border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
+                                                },
+                                                {
+                                                    "text":  "מסעדה",
+                                                    "cls":  "flex h-9 items-center gap-1.5 rounded-[4px] border px-3 text-sm font-medium transition-colors border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
+                                                },
+                                                {
+                                                    "text":  "שליח",
+                                                    "cls":  "flex h-9 items-center gap-1.5 rounded-[4px] border px-3 text-sm font-medium transition-colors border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
+                                                },
+                                                {
+                                                    "text":  "",
+                                                    "cls":  "flex h-9 w-9 items-center justify-center rounded-[4px] border text-sm font-medium transition-colors border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
+                                                },
+                                                {
+                                                    "text":  "עמודות",
+                                                    "cls":  "flex h-9 w-9 shrink-0 items-center justify-center rounded-[4px] border transition-colors border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
+                                                },
+                                                {
+                                                    "text":  "ייצוא",
+                                                    "cls":  "flex h-9 w-9 shrink-0 items-center justify-center rounded-[4px] border border-[#e5e5e5] bg-white text-[#525252] transition-colors hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
+                                                }
+                                            ],
+                              "tableBox":  null,
+                              "bodyTextStart":  "Sendi ראשי מנג׳ר לייב 0 דשבורד תפעול משלוחים מסעדות שליחים משמרות אזורי משלוח תמחור לפי מרחק שעות פעילות נתונים דוחות ביצועים יומן פעולות Tel Aviv - Runners ארנק ₪0 יתרת משלוחים 500 קבלת משלוחים שיבוץ אוטומטי הגדרות ראשי משלוחים משלוחים משלוח חדש אפריל 2026 סטטוס מסעדה שליח 0 פעילים · 0 נמסרו 0 פעילים 0 ממתינים 0 משובצים 0 בדרך 0 ללא שליח 0 נמסרו ₪0 הכנסות טרם נוצרו משלוחים כאשר יתווספו משלוחים למערכת, הם יופיעו כאן עם כל הפרטים והאפשרויות לניהול מתקדם המערכת מוכנה לקבלת משלוחים חדשים"
+                          },
+    "clickCouriers":  {
+                          "ok":  true,
+                          "needle":  "שליחים",
+                          "text":  "שליחים",
+                          "href":  ""
+                      },
+    "couriersDesktop":  {
+                            "url":  "http://127.0.0.1:5173/couriers",
+                            "title":  "Sendi",
+                            "viewport":  {
+                                             "w":  1735,
+                                             "h":  1229
+                                         },
+                            "headings":  [
+
+                                         ],
+                            "buttons":  [
+                                            {
+                                                "text":  "מנג׳ר לייב 0",
+                                                "aria":  "מנג׳ר לייב",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "דשבורד",
+                                                "aria":  "דשבורד",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "משלוחים",
+                                                "aria":  "משלוחים",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "מסעדות",
+                                                "aria":  "מסעדות",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "שליחים",
+                                                "aria":  "שליחים",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "משמרות",
+                                                "aria":  "משמרות",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "אזורי משלוח",
+                                                "aria":  "אזורי משלוח",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "תמחור לפי מרחק",
+                                                "aria":  "תמחור לפי מרחק",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "שעות פעילות",
+                                                "aria":  "שעות פעילות",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "דוחות",
+                                                "aria":  "דוחות",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "ביצועים",
+                                                "aria":  "ביצועים",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "יומן פעולות",
+                                                "aria":  "יומן פעולות",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "Tel Aviv - Runners",
+                                                "aria":  "Tel Aviv - Runners",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "ארנק ₪0",
+                                                "aria":  "",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "יתרת משלוחים 500",
+                                                "aria":  "",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "הגדרות",
+                                                "aria":  "",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "ראשי",
+                                                "aria":  "",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "שליחים",
+                                                "aria":  "",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "הוסף שליח",
+                                                "aria":  "",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "סטטוס",
+                                                "aria":  "",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "משלוחים",
+                                                "aria":  "",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "עמודות",
+                                                "aria":  "עמודות",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "ייצוא",
+                                                "aria":  "ייצוא",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "שם שליח",
+                                                "aria":  "",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "חיבור",
+                                                "aria":  "",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "משמרת",
+                                                "aria":  "",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "זמינות",
+                                                "aria":  "",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "טלפון",
+                                                "aria":  "",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "סך משלוחים",
+                                                "aria":  "",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            },
+                                            {
+                                                "text":  "משלוח נוכחי",
+                                                "aria":  "",
+                                                "tag":  "BUTTON",
+                                                "href":  ""
+                                            }
+                                        ],
+                            "inputs":  [
+                                           {
+                                               "placeholder":  "",
+                                               "value":  "on",
+                                               "aria":  "",
+                                               "type":  "checkbox"
+                                           },
+                                           {
+                                               "placeholder":  "",
+                                               "value":  "on",
+                                               "aria":  "",
+                                               "type":  "checkbox"
+                                           },
+                                           {
+                                               "placeholder":  "",
+                                               "value":  "on",
+                                               "aria":  "",
+                                               "type":  "checkbox"
+                                           },
+                                           {
+                                               "placeholder":  "",
+                                               "value":  "on",
+                                               "aria":  "",
+                                               "type":  "checkbox"
+                                           },
+                                           {
+                                               "placeholder":  "",
+                                               "value":  "on",
+                                               "aria":  "",
+                                               "type":  "checkbox"
+                                           },
+                                           {
+                                               "placeholder":  "",
+                                               "value":  "on",
+                                               "aria":  "",
+                                               "type":  "checkbox"
+                                           },
+                                           {
+                                               "placeholder":  "",
+                                               "value":  "on",
+                                               "aria":  "",
+                                               "type":  "checkbox"
+                                           },
+                                           {
+                                               "placeholder":  "",
+                                               "value":  "on",
+                                               "aria":  "",
+                                               "type":  "checkbox"
+                                           },
+                                           {
+                                               "placeholder":  "",
+                                               "value":  "on",
+                                               "aria":  "",
+                                               "type":  "checkbox"
+                                           },
+                                           {
+                                               "placeholder":  "",
+                                               "value":  "on",
+                                               "aria":  "",
+                                               "type":  "checkbox"
+                                           },
+                                           {
+                                               "placeholder":  "",
+                                               "value":  "on",
+                                               "aria":  "",
+                                               "type":  "checkbox"
+                                           },
+                                           {
+                                               "placeholder":  "",
+                                               "value":  "on",
+                                               "aria":  "",
+                                               "type":  "checkbox"
+                                           },
+                                           {
+                                               "placeholder":  "",
+                                               "value":  "on",
+                                               "aria":  "",
+                                               "type":  "checkbox"
+                                           },
+                                           {
+                                               "placeholder":  "",
+                                               "value":  "on",
+                                               "aria":  "",
+                                               "type":  "checkbox"
+                                           },
+                                           {
+                                               "placeholder":  "",
+                                               "value":  "on",
+                                               "aria":  "",
+                                               "type":  "checkbox"
+                                           },
+                                           {
+                                               "placeholder":  "",
+                                               "value":  "on",
+                                               "aria":  "",
+                                               "type":  "checkbox"
+                                           },
+                                           {
+                                               "placeholder":  "",
+                                               "value":  "on",
+                                               "aria":  "",
+                                               "type":  "checkbox"
+                                           },
+                                           {
+                                               "placeholder":  "",
+                                               "value":  "on",
+                                               "aria":  "",
+                                               "type":  "checkbox"
+                                           },
+                                           {
+                                               "placeholder":  "",
+                                               "value":  "on",
+                                               "aria":  "",
+                                               "type":  "checkbox"
+                                           },
+                                           {
+                                               "placeholder":  "",
+                                               "value":  "on",
+                                               "aria":  "",
+                                               "type":  "checkbox"
+                                           },
+                                           {
+                                               "placeholder":  "",
+                                               "value":  "on",
+                                               "aria":  "",
+                                               "type":  "checkbox"
+                                           },
+                                           {
+                                               "placeholder":  "",
+                                               "value":  "on",
+                                               "aria":  "",
+                                               "type":  "checkbox"
+                                           },
+                                           {
+                                               "placeholder":  "",
+                                               "value":  "on",
+                                               "aria":  "",
+                                               "type":  "checkbox"
+                                           },
+                                           {
+                                               "placeholder":  "",
+                                               "value":  "on",
+                                               "aria":  "",
+                                               "type":  "checkbox"
+                                           },
+                                           {
+                                               "placeholder":  "",
+                                               "value":  "on",
+                                               "aria":  "",
+                                               "type":  "checkbox"
+                                           }
+                                       ],
+                            "headers":  [
+                                            "שם שליח",
+                                            "חיבור",
+                                            "משמרת",
+                                            "זמינות",
+                                            "טלפון",
+                                            "סך משלוחים",
+                                            "משלוח נוכחי",
+                                            "פעולות"
+                                        ],
+                            "rows":  24,
+                            "badText":  [
+
+                                        ],
+                            "horizontalOverflow":  0,
+                            "overflowNodes":  [
+                                                  {
+                                                      "tag":  "DIV",
+                                                      "text":  "שם שליח חיבור משמרת זמינות טלפון סך משלוחים משלוח נוכחי פעולות אביב משלוחים לא מ",
+                                                      "w":  1534,
+                                                      "h":  981,
+                                                      "sw":  1528,
+                                                      "sh":  1123,
+                                                      "cls":  "app-table-shell relative flex-1 overflow-auto min-w-0"
+                                                  },
+                                                  {
+                                                      "tag":  "SPAN",
+                                                      "text":  "פעולות",
+                                                      "w":  1,
+                                                      "h":  1,
+                                                      "sw":  49,
+                                                      "sh":  24,
+                                                      "cls":  "sr-only"
+                                                  }
+                                              ],
+                            "navActive":  [
+                                              {
+                                                  "text":  "מנג׳ר לייב 0",
+                                                  "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                              },
+                                              {
+                                                  "text":  "דשבורד",
+                                                  "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                              },
+                                              {
+                                                  "text":  "משלוחים",
+                                                  "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                              },
+                                              {
+                                                  "text":  "מסעדות",
+                                                  "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                              },
+                                              {
+                                                  "text":  "שליחים",
+                                                  "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 bg-[#f5f5f5] text-[#16a34a] dark:bg-[#262626] dark:text-[#22c55e]"
+                                              },
+                                              {
+                                                  "text":  "משמרות",
+                                                  "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                              },
+                                              {
+                                                  "text":  "אזורי משלוח",
+                                                  "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                              },
+                                              {
+                                                  "text":  "תמחור לפי מרחק",
+                                                  "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                              },
+                                              {
+                                                  "text":  "שעות פעילות",
+                                                  "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                              },
+                                              {
+                                                  "text":  "דוחות",
+                                                  "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                              },
+                                              {
+                                                  "text":  "ביצועים",
+                                                  "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                              },
+                                              {
+                                                  "text":  "יומן פעולות",
+                                                  "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                              },
+                                              {
+                                                  "text":  "Tel Aviv - Runners",
+                                                  "cls":  "w-full cursor-pointer border-b border-[#e5e5e5] px-4 py-3 text-right transition-colors dark:border-[#262626] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a]"
+                                              },
+                                              {
+                                                  "text":  "ארנק ₪0",
+                                                  "cls":  "w-full cursor-pointer border-b border-[#e5e5e5] px-4 py-3 text-right transition-colors dark:border-[#262626] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a]"
+                                              },
+                                              {
+                                                  "text":  "יתרת משלוחים 500",
+                                                  "cls":  "w-full cursor-pointer border-b border-[#e5e5e5] px-4 py-3 text-right transition-colors dark:border-[#262626] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a]"
+                                              },
+                                              {
+                                                  "text":  "",
+                                                  "cls":  "relative h-5 w-10 rounded-full transition-colors cursor-not-allowed bg-[#e5e5e5] opacity-50 dark:bg-[#404040]"
+                                              },
+                                              {
+                                                  "text":  "",
+                                                  "cls":  "relative h-5 w-10 rounded-full transition-colors bg-[#e5e5e5] dark:bg-[#404040]"
+                                              },
+                                              {
+                                                  "text":  "הגדרות",
+                                                  "cls":  "w-full cursor-pointer px-4 py-3 text-right transition-colors text-[#36394a] hover:bg-[#f5f5f5] dark:text-[#d4d4d4] dark:hover:bg-[#404040]"
+                                              },
+                                              {
+                                                  "text":  "ראשי",
+                                                  "cls":  "flex min-w-0 items-center gap-1 rounded-md px-2 py-1 transition-colors hover:bg-[#f0f0f0] hover:text-[#0d0d12] dark:hover:bg-[#171717] dark:hover:text-[#fafafa]"
+                                              },
+                                              {
+                                                  "text":  "שליחים",
+                                                  "cls":  "min-w-0 truncate rounded-md px-2 py-1 font-medium text-[#0d0d12] transition-colors hover:bg-[#f0f0f0] dark:text-[#fafafa] dark:hover:bg-[#171717]"
+                                              },
+                                              {
+                                                  "text":  "הוסף שליח",
+                                                  "cls":  "inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-[#9fe870] px-3 py-1.5 text-sm font-semibold text-[#0d0d12] transition-colors hover:bg-[#8fd65f]"
+                                              },
+                                              {
+                                                  "text":  "סטטוס",
+                                                  "cls":  "flex h-9 items-center gap-1.5 rounded-[4px] border px-3 text-sm font-medium transition-colors border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
+                                              },
+                                              {
+                                                  "text":  "משלוחים",
+                                                  "cls":  "flex h-9 items-center gap-1.5 rounded-[4px] border px-3 text-sm font-medium transition-colors border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
+                                              },
+                                              {
+                                                  "text":  "",
+                                                  "cls":  "flex h-9 w-9 items-center justify-center rounded-[4px] border text-sm font-medium transition-colors border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
+                                              },
+                                              {
+                                                  "text":  "עמודות",
+                                                  "cls":  "flex h-9 w-9 shrink-0 items-center justify-center rounded-[4px] border transition-colors border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
+                                              },
+                                              {
+                                                  "text":  "ייצוא",
+                                                  "cls":  "flex h-9 w-9 shrink-0 items-center justify-center rounded-[4px] border border-[#e5e5e5] bg-white text-[#525252] transition-colors hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
+                                              },
+                                              {
+                                                  "text":  "שם שליח",
+                                                  "cls":  "flex items-center gap-1 whitespace-nowrap text-xs font-medium text-[#666d80] transition-colors hover:text-[#16a34a] dark:text-[#a3a3a3] dark:hover:text-[#22c55e]"
+                                              },
+                                              {
+                                                  "text":  "חיבור",
+                                                  "cls":  "flex items-center gap-1 whitespace-nowrap text-xs font-medium text-[#666d80] transition-colors hover:text-[#16a34a] dark:text-[#a3a3a3] dark:hover:text-[#22c55e]"
+                                              },
+                                              {
+                                                  "text":  "משמרת",
+                                                  "cls":  "flex items-center gap-1 whitespace-nowrap text-xs font-medium text-[#666d80] transition-colors hover:text-[#16a34a] dark:text-[#a3a3a3] dark:hover:text-[#22c55e]"
+                                              },
+                                              {
+                                                  "text":  "זמינות",
+                                                  "cls":  "flex items-center gap-1 whitespace-nowrap text-xs font-medium text-[#666d80] transition-colors hover:text-[#16a34a] dark:text-[#a3a3a3] dark:hover:text-[#22c55e]"
+                                              }
+                                          ],
+                            "tableBox":  {
+                                             "x":  1,
+                                             "y":  248,
+                                             "w":  1528,
+                                             "h":  1123
+                                         },
+                            "bodyTextStart":  "Sendi ראשי מנג׳ר לייב 0 דשבורד תפעול משלוחים מסעדות שליחים משמרות אזורי משלוח תמחור לפי מרחק שעות פעילות נתונים דוחות ביצועים יומן פעולות Tel Aviv - Runners ארנק ₪0 יתרת משלוחים 500 קבלת משלוחים שיבוץ אוטומטי הגדרות ראשי שליחים שליחים הוסף שליח סטטוס משלוחים 0 זמינים · 0 במשלוח · 0 במשמרת 24 סה״כ שליחים 0 זמינים 0 במשלוח 0 במשמרת 24 לא מחוברים 0 עם משלוח פעיל שם שליח חיבור משמרת זמינות טלפון סך משלוחים משלוח נוכחי פעולות אביב משלוחים לא מחובר לא במשמרת - 050-8628579 0 - אדם שליח לא מחובר לא במשמרת - 050-3579210 0 - אורי מהיר לא מחובר לא במשמרת - 050-4020510 0 - איתי אקספרס לא מחובר לא במשמרת - 050-4872912 0 - אלון מהיר לא מחובר לא במשמרת - 050-5199012 0 - גל שליחויות לא מחובר לא במשמרת - 050-8705000 0 - דור בדרכים לא מחובר לא במשמרת - 050-2174174 0 - דני רץ לא מחובר לא במשמרת - 050-8243865 0 - יובל משלוחים לא מחובר לא במשמרת - 050-8164772 0 - יוני שליח לא מחובר לא במשמרת - 050-8158647 0 - לירון אקספרס לא מחובר לא במשמרת - 050-8569047 0 - מתן דליברי לא מחובר לא במשמרת - 050-4267407 0 - "
+                        },
+    "clickRestaurants":  {
+                             "ok":  true,
+                             "needle":  "מסעדות",
+                             "text":  "מסעדות",
+                             "href":  ""
+                         },
+    "restaurantsDesktop":  {
+                               "url":  "http://127.0.0.1:5173/restaurants",
+                               "title":  "Sendi",
+                               "viewport":  {
+                                                "w":  1735,
+                                                "h":  1229
+                                            },
+                               "headings":  [
+
+                                            ],
+                               "buttons":  [
+                                               {
+                                                   "text":  "מנג׳ר לייב 0",
+                                                   "aria":  "מנג׳ר לייב",
+                                                   "tag":  "BUTTON",
+                                                   "href":  ""
+                                               },
+                                               {
+                                                   "text":  "דשבורד",
+                                                   "aria":  "דשבורד",
+                                                   "tag":  "BUTTON",
+                                                   "href":  ""
+                                               },
+                                               {
+                                                   "text":  "משלוחים",
+                                                   "aria":  "משלוחים",
+                                                   "tag":  "BUTTON",
+                                                   "href":  ""
+                                               },
+                                               {
+                                                   "text":  "מסעדות",
+                                                   "aria":  "מסעדות",
+                                                   "tag":  "BUTTON",
+                                                   "href":  ""
+                                               },
+                                               {
+                                                   "text":  "שליחים",
+                                                   "aria":  "שליחים",
+                                                   "tag":  "BUTTON",
+                                                   "href":  ""
+                                               },
+                                               {
+                                                   "text":  "משמרות",
+                                                   "aria":  "משמרות",
+                                                   "tag":  "BUTTON",
+                                                   "href":  ""
+                                               },
+                                               {
+                                                   "text":  "אזורי משלוח",
+                                                   "aria":  "אזורי משלוח",
+                                                   "tag":  "BUTTON",
+                                                   "href":  ""
+                                               },
+                                               {
+                                                   "text":  "תמחור לפי מרחק",
+                                                   "aria":  "תמחור לפי מרחק",
+                                                   "tag":  "BUTTON",
+                                                   "href":  ""
+                                               },
+                                               {
+                                                   "text":  "שעות פעילות",
+                                                   "aria":  "שעות פעילות",
+                                                   "tag":  "BUTTON",
+                                                   "href":  ""
+                                               },
+                                               {
+                                                   "text":  "דוחות",
+                                                   "aria":  "דוחות",
+                                                   "tag":  "BUTTON",
+                                                   "href":  ""
+                                               },
+                                               {
+                                                   "text":  "ביצועים",
+                                                   "aria":  "ביצועים",
+                                                   "tag":  "BUTTON",
+                                                   "href":  ""
+                                               },
+                                               {
+                                                   "text":  "יומן פעולות",
+                                                   "aria":  "יומן פעולות",
+                                                   "tag":  "BUTTON",
+                                                   "href":  ""
+                                               },
+                                               {
+                                                   "text":  "Tel Aviv - Runners",
+                                                   "aria":  "Tel Aviv - Runners",
+                                                   "tag":  "BUTTON",
+                                                   "href":  ""
+                                               },
+                                               {
+                                                   "text":  "ארנק ₪0",
+                                                   "aria":  "",
+                                                   "tag":  "BUTTON",
+                                                   "href":  ""
+                                               },
+                                               {
+                                                   "text":  "יתרת משלוחים 500",
+                                                   "aria":  "",
+                                                   "tag":  "BUTTON",
+                                                   "href":  ""
+                                               },
+                                               {
+                                                   "text":  "הגדרות",
+                                                   "aria":  "",
+                                                   "tag":  "BUTTON",
+                                                   "href":  ""
+                                               },
+                                               {
+                                                   "text":  "ראשי",
+                                                   "aria":  "",
+                                                   "tag":  "BUTTON",
+                                                   "href":  ""
+                                               },
+                                               {
+                                                   "text":  "מסעדות",
+                                                   "aria":  "",
+                                                   "tag":  "BUTTON",
+                                                   "href":  ""
+                                               },
+                                               {
+                                                   "text":  "הוסף מסעדה",
+                                                   "aria":  "",
+                                                   "tag":  "BUTTON",
+                                                   "href":  ""
+                                               },
+                                               {
+                                                   "text":  "עמודות",
+                                                   "aria":  "עמודות",
+                                                   "tag":  "BUTTON",
+                                                   "href":  ""
+                                               },
+                                               {
+                                                   "text":  "ייצוא",
+                                                   "aria":  "ייצוא",
+                                                   "tag":  "BUTTON",
+                                                   "href":  ""
+                                               },
+                                               {
+                                                   "text":  "מסעדה",
+                                                   "aria":  "",
+                                                   "tag":  "BUTTON",
+                                                   "href":  ""
+                                               },
+                                               {
+                                                   "text":  "סטטוס",
+                                                   "aria":  "",
+                                                   "tag":  "BUTTON",
+                                                   "href":  ""
+                                               },
+                                               {
+                                                   "text":  "כתובת",
+                                                   "aria":  "",
+                                                   "tag":  "BUTTON",
+                                                   "href":  ""
+                                               },
+                                               {
+                                                   "text":  "טלפון",
+                                                   "aria":  "",
+                                                   "tag":  "BUTTON",
+                                                   "href":  ""
+                                               },
+                                               {
+                                                   "text":  "איש קשר",
+                                                   "aria":  "",
+                                                   "tag":  "BUTTON",
+                                                   "href":  ""
+                                               },
+                                               {
+                                                   "text":  "סך משלוחים",
+                                                   "aria":  "",
+                                                   "tag":  "BUTTON",
+                                                   "href":  ""
+                                               }
+                                           ],
+                               "inputs":  [
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              },
+                                              {
+                                                  "placeholder":  "",
+                                                  "value":  "on",
+                                                  "aria":  "",
+                                                  "type":  "checkbox"
+                                              }
+                                          ],
+                               "headers":  [
+                                               "מסעדה",
+                                               "סטטוס",
+                                               "כתובת",
+                                               "טלפון",
+                                               "איש קשר",
+                                               "סך משלוחים",
+                                               "פעולות"
+                                           ],
+                               "rows":  28,
+                               "badText":  [
+
+                                           ],
+                               "horizontalOverflow":  0,
+                               "overflowNodes":  [
+                                                     {
+                                                         "tag":  "DIV",
+                                                         "text":  "מסעדה סטטוס כתובת טלפון איש קשר סך משלוחים פעולות אל גאוצ׳ו לא פעיל ז׳בוטינסקי 7",
+                                                         "w":  1534,
+                                                         "h":  981,
+                                                         "sw":  1528,
+                                                         "sh":  1303,
+                                                         "cls":  "app-table-shell relative flex-1 overflow-auto min-w-0"
+                                                     },
+                                                     {
+                                                         "tag":  "SPAN",
+                                                         "text":  "פעולות",
+                                                         "w":  1,
+                                                         "h":  1,
+                                                         "sw":  49,
+                                                         "sh":  24,
+                                                         "cls":  "sr-only"
+                                                     }
+                                                 ],
+                               "navActive":  [
+                                                 {
+                                                     "text":  "מנג׳ר לייב 0",
+                                                     "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                 },
+                                                 {
+                                                     "text":  "דשבורד",
+                                                     "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                 },
+                                                 {
+                                                     "text":  "משלוחים",
+                                                     "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                 },
+                                                 {
+                                                     "text":  "מסעדות",
+                                                     "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 bg-[#f5f5f5] text-[#16a34a] dark:bg-[#262626] dark:text-[#22c55e]"
+                                                 },
+                                                 {
+                                                     "text":  "שליחים",
+                                                     "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                 },
+                                                 {
+                                                     "text":  "משמרות",
+                                                     "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                 },
+                                                 {
+                                                     "text":  "אזורי משלוח",
+                                                     "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                 },
+                                                 {
+                                                     "text":  "תמחור לפי מרחק",
+                                                     "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                 },
+                                                 {
+                                                     "text":  "שעות פעילות",
+                                                     "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                 },
+                                                 {
+                                                     "text":  "דוחות",
+                                                     "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                 },
+                                                 {
+                                                     "text":  "ביצועים",
+                                                     "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                 },
+                                                 {
+                                                     "text":  "יומן פעולות",
+                                                     "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                 },
+                                                 {
+                                                     "text":  "Tel Aviv - Runners",
+                                                     "cls":  "w-full cursor-pointer border-b border-[#e5e5e5] px-4 py-3 text-right transition-colors dark:border-[#262626] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a]"
+                                                 },
+                                                 {
+                                                     "text":  "ארנק ₪0",
+                                                     "cls":  "w-full cursor-pointer border-b border-[#e5e5e5] px-4 py-3 text-right transition-colors dark:border-[#262626] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a]"
+                                                 },
+                                                 {
+                                                     "text":  "יתרת משלוחים 500",
+                                                     "cls":  "w-full cursor-pointer border-b border-[#e5e5e5] px-4 py-3 text-right transition-colors dark:border-[#262626] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a]"
+                                                 },
+                                                 {
+                                                     "text":  "",
+                                                     "cls":  "relative h-5 w-10 rounded-full transition-colors cursor-not-allowed bg-[#e5e5e5] opacity-50 dark:bg-[#404040]"
+                                                 },
+                                                 {
+                                                     "text":  "",
+                                                     "cls":  "relative h-5 w-10 rounded-full transition-colors bg-[#e5e5e5] dark:bg-[#404040]"
+                                                 },
+                                                 {
+                                                     "text":  "הגדרות",
+                                                     "cls":  "w-full cursor-pointer px-4 py-3 text-right transition-colors text-[#36394a] hover:bg-[#f5f5f5] dark:text-[#d4d4d4] dark:hover:bg-[#404040]"
+                                                 },
+                                                 {
+                                                     "text":  "ראשי",
+                                                     "cls":  "flex min-w-0 items-center gap-1 rounded-md px-2 py-1 transition-colors hover:bg-[#f0f0f0] hover:text-[#0d0d12] dark:hover:bg-[#171717] dark:hover:text-[#fafafa]"
+                                                 },
+                                                 {
+                                                     "text":  "מסעדות",
+                                                     "cls":  "min-w-0 truncate rounded-md px-2 py-1 font-medium text-[#0d0d12] transition-colors hover:bg-[#f0f0f0] dark:text-[#fafafa] dark:hover:bg-[#171717]"
+                                                 },
+                                                 {
+                                                     "text":  "הוסף מסעדה",
+                                                     "cls":  "inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-[#9fe870] px-3 py-1.5 text-sm font-semibold text-[#0d0d12] transition-colors hover:bg-[#8fd65f]"
+                                                 },
+                                                 {
+                                                     "text":  "",
+                                                     "cls":  "flex h-9 w-9 items-center justify-center rounded-[4px] border text-sm font-medium transition-colors border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
+                                                 },
+                                                 {
+                                                     "text":  "עמודות",
+                                                     "cls":  "flex h-9 w-9 shrink-0 items-center justify-center rounded-[4px] border transition-colors border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
+                                                 },
+                                                 {
+                                                     "text":  "ייצוא",
+                                                     "cls":  "flex h-9 w-9 shrink-0 items-center justify-center rounded-[4px] border border-[#e5e5e5] bg-white text-[#525252] transition-colors hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
+                                                 },
+                                                 {
+                                                     "text":  "מסעדה",
+                                                     "cls":  "flex items-center gap-1 whitespace-nowrap text-xs font-medium text-[#666d80] transition-colors hover:text-[#16a34a] dark:text-[#a3a3a3] dark:hover:text-[#22c55e]"
+                                                 },
+                                                 {
+                                                     "text":  "סטטוס",
+                                                     "cls":  "flex items-center gap-1 whitespace-nowrap text-xs font-medium text-[#666d80] transition-colors hover:text-[#16a34a] dark:text-[#a3a3a3] dark:hover:text-[#22c55e]"
+                                                 },
+                                                 {
+                                                     "text":  "כתובת",
+                                                     "cls":  "flex items-center gap-1 whitespace-nowrap text-xs font-medium text-[#666d80] transition-colors hover:text-[#16a34a] dark:text-[#a3a3a3] dark:hover:text-[#22c55e]"
+                                                 },
+                                                 {
+                                                     "text":  "טלפון",
+                                                     "cls":  "flex items-center gap-1 whitespace-nowrap text-xs font-medium text-[#666d80] transition-colors hover:text-[#16a34a] dark:text-[#a3a3a3] dark:hover:text-[#22c55e]"
+                                                 },
+                                                 {
+                                                     "text":  "איש קשר",
+                                                     "cls":  "flex items-center gap-1 whitespace-nowrap text-xs font-medium text-[#666d80] transition-colors hover:text-[#16a34a] dark:text-[#a3a3a3] dark:hover:text-[#22c55e]"
+                                                 },
+                                                 {
+                                                     "text":  "סך משלוחים",
+                                                     "cls":  "flex items-center gap-1 whitespace-nowrap text-xs font-medium text-[#666d80] transition-colors hover:text-[#16a34a] dark:text-[#a3a3a3] dark:hover:text-[#22c55e]"
+                                                 }
+                                             ],
+                               "tableBox":  {
+                                                "x":  1,
+                                                "y":  248,
+                                                "w":  1528,
+                                                "h":  1303
+                                            },
+                               "bodyTextStart":  "Sendi ראשי מנג׳ר לייב 0 דשבורד תפעול משלוחים מסעדות שליחים משמרות אזורי משלוח תמחור לפי מרחק שעות פעילות נתונים דוחות ביצועים יומן פעולות Tel Aviv - Runners ארנק ₪0 יתרת משלוחים 500 קבלת משלוחים שיבוץ אוטומטי הגדרות ראשי מסעדות מסעדות הוסף מסעדה 0 פעילות · 28 כבויות 28 סה״כ מסעדות 0 פעילות 28 כבויות 0 עם משלוחים מסעדה סטטוס כתובת טלפון איש קשר סך משלוחים פעולות אל גאוצ׳ו לא פעיל ז׳בוטינסקי 7, רמת גן 03-7529988 יוסי אברהם 0 באנג בנגקוק לא פעיל שדרות ירושלים 4, יפו 03-6823355 דוד ישראלי 0 בורגר סלון לא פעיל שדרות רוטשילד 34, תל אביב 03-6881234 דנה לוי 0 בוריטו לוקו לא פעיל פלורנטין 33, תל אביב 03-5601122 משה כהן 0 דומינו\u0027ס אבן גבירול לא פעיל אבן גבירול 143, תל אביב 076-804-8974 משה כהן 0 דומינו\u0027ס הירקון כשר לא פעיל כ״ג יורדי הסירה 10, תל אביב 076-804-8950 דנה לוי 0 דומינו\u0027ס יגאל אלון לא פעיל יגאל אלון 90, תל אביב 076-804-8950 יוסי אברהם 0 דומינו\u0027ס פלורנטין לא פעיל פלורנטין 25, תל אביב 076-804-8950 רונית גולן 0 דומינו\u0027ס קרליבך לא פעיל קרליבך 29, תל אביב 076-804-8950 אבי זהבי 0 דומינו\u0027ס רמ"
+                           },
+    "deliveriesMobile":  {
+                             "url":  "http://127.0.0.1:5173/deliveries?__codex_ui_review=mobile",
+                             "title":  "Sendi",
+                             "viewport":  {
+                                              "w":  390,
+                                              "h":  844
+                                          },
+                             "headings":  [
+                                              "טרם נוצרו משלוחים"
+                                          ],
+                             "buttons":  [
+                                             {
+                                                 "text":  "Close menu",
+                                                 "aria":  "Close menu",
+                                                 "tag":  "BUTTON",
+                                                 "href":  ""
+                                             },
+                                             {
+                                                 "text":  "מנג׳ר לייב 0",
+                                                 "aria":  "מנג׳ר לייב",
+                                                 "tag":  "BUTTON",
+                                                 "href":  ""
+                                             },
+                                             {
+                                                 "text":  "דשבורד",
+                                                 "aria":  "דשבורד",
+                                                 "tag":  "BUTTON",
+                                                 "href":  ""
+                                             },
+                                             {
+                                                 "text":  "משלוחים",
+                                                 "aria":  "משלוחים",
+                                                 "tag":  "BUTTON",
+                                                 "href":  ""
+                                             },
+                                             {
+                                                 "text":  "מסעדות",
+                                                 "aria":  "מסעדות",
+                                                 "tag":  "BUTTON",
+                                                 "href":  ""
+                                             },
+                                             {
+                                                 "text":  "שליחים",
+                                                 "aria":  "שליחים",
+                                                 "tag":  "BUTTON",
+                                                 "href":  ""
+                                             },
+                                             {
+                                                 "text":  "משמרות",
+                                                 "aria":  "משמרות",
+                                                 "tag":  "BUTTON",
+                                                 "href":  ""
+                                             },
+                                             {
+                                                 "text":  "אזורי משלוח",
+                                                 "aria":  "אזורי משלוח",
+                                                 "tag":  "BUTTON",
+                                                 "href":  ""
+                                             },
+                                             {
+                                                 "text":  "תמחור לפי מרחק",
+                                                 "aria":  "תמחור לפי מרחק",
+                                                 "tag":  "BUTTON",
+                                                 "href":  ""
+                                             },
+                                             {
+                                                 "text":  "שעות פעילות",
+                                                 "aria":  "שעות פעילות",
+                                                 "tag":  "BUTTON",
+                                                 "href":  ""
+                                             },
+                                             {
+                                                 "text":  "דוחות",
+                                                 "aria":  "דוחות",
+                                                 "tag":  "BUTTON",
+                                                 "href":  ""
+                                             },
+                                             {
+                                                 "text":  "ביצועים",
+                                                 "aria":  "ביצועים",
+                                                 "tag":  "BUTTON",
+                                                 "href":  ""
+                                             },
+                                             {
+                                                 "text":  "יומן פעולות",
+                                                 "aria":  "יומן פעולות",
+                                                 "tag":  "BUTTON",
+                                                 "href":  ""
+                                             },
+                                             {
+                                                 "text":  "Tel Aviv - Runners",
+                                                 "aria":  "Tel Aviv - Runners",
+                                                 "tag":  "BUTTON",
+                                                 "href":  ""
+                                             },
+                                             {
+                                                 "text":  "ארנק ₪0",
+                                                 "aria":  "",
+                                                 "tag":  "BUTTON",
+                                                 "href":  ""
+                                             },
+                                             {
+                                                 "text":  "יתרת משלוחים 500",
+                                                 "aria":  "",
+                                                 "tag":  "BUTTON",
+                                                 "href":  ""
+                                             },
+                                             {
+                                                 "text":  "הגדרות",
+                                                 "aria":  "",
+                                                 "tag":  "BUTTON",
+                                                 "href":  ""
+                                             },
+                                             {
+                                                 "text":  "ראשי",
+                                                 "aria":  "",
+                                                 "tag":  "BUTTON",
+                                                 "href":  ""
+                                             },
+                                             {
+                                                 "text":  "משלוחים",
+                                                 "aria":  "",
+                                                 "tag":  "BUTTON",
+                                                 "href":  ""
+                                             },
+                                             {
+                                                 "text":  "משלוח חדש",
+                                                 "aria":  "",
+                                                 "tag":  "BUTTON",
+                                                 "href":  ""
+                                             },
+                                             {
+                                                 "text":  "אפר 2026",
+                                                 "aria":  "",
+                                                 "tag":  "BUTTON",
+                                                 "href":  ""
+                                             },
+                                             {
+                                                 "text":  "פילטרים",
+                                                 "aria":  "פילטרים",
+                                                 "tag":  "BUTTON",
+                                                 "href":  ""
+                                             },
+                                             {
+                                                 "text":  "עמודות",
+                                                 "aria":  "עמודות",
+                                                 "tag":  "BUTTON",
+                                                 "href":  ""
+                                             },
+                                             {
+                                                 "text":  "ייצוא",
+                                                 "aria":  "ייצוא",
+                                                 "tag":  "BUTTON",
+                                                 "href":  ""
+                                             }
+                                         ],
+                             "inputs":  [
+
+                                        ],
+                             "headers":  [
+
+                                         ],
+                             "rows":  0,
+                             "badText":  [
+
+                                         ],
+                             "horizontalOverflow":  0,
+                             "overflowNodes":  [
+                                                   {
+                                                       "tag":  "DIV",
+                                                       "text":  "ראשי מנג׳ר לייב 0 דשבורד תפעול משלוחים מסעדות שליחים משמרות אזורי משלוח תמחור לפ",
+                                                       "w":  239,
+                                                       "h":  535,
+                                                       "sw":  233,
+                                                       "sh":  651,
+                                                       "cls":  "flex-1 cursor-pointer overflow-y-auto bg-[#fafafa] py-2 scrollbar-thin scrollbar"
+                                                   }
+                                               ],
+                             "navActive":  [
+                                               {
+                                                   "text":  "Close menu",
+                                                   "cls":  "text-[#737373] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:text-[#fafafa] md:hidden"
+                                               },
+                                               {
+                                                   "text":  "מנג׳ר לייב 0",
+                                                   "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                               },
+                                               {
+                                                   "text":  "דשבורד",
+                                                   "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                               },
+                                               {
+                                                   "text":  "משלוחים",
+                                                   "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 bg-[#f5f5f5] text-[#16a34a] dark:bg-[#262626] dark:text-[#22c55e]"
+                                               },
+                                               {
+                                                   "text":  "מסעדות",
+                                                   "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                               },
+                                               {
+                                                   "text":  "שליחים",
+                                                   "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                               },
+                                               {
+                                                   "text":  "משמרות",
+                                                   "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                               },
+                                               {
+                                                   "text":  "אזורי משלוח",
+                                                   "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                               },
+                                               {
+                                                   "text":  "תמחור לפי מרחק",
+                                                   "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                               },
+                                               {
+                                                   "text":  "שעות פעילות",
+                                                   "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                               },
+                                               {
+                                                   "text":  "דוחות",
+                                                   "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                               },
+                                               {
+                                                   "text":  "ביצועים",
+                                                   "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                               },
+                                               {
+                                                   "text":  "יומן פעולות",
+                                                   "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                               },
+                                               {
+                                                   "text":  "Tel Aviv - Runners",
+                                                   "cls":  "w-full cursor-pointer border-b border-[#e5e5e5] px-4 py-3 text-right transition-colors dark:border-[#262626] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a]"
+                                               },
+                                               {
+                                                   "text":  "ארנק ₪0",
+                                                   "cls":  "w-full cursor-pointer border-b border-[#e5e5e5] px-4 py-3 text-right transition-colors dark:border-[#262626] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a]"
+                                               },
+                                               {
+                                                   "text":  "יתרת משלוחים 500",
+                                                   "cls":  "w-full cursor-pointer border-b border-[#e5e5e5] px-4 py-3 text-right transition-colors dark:border-[#262626] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a]"
+                                               },
+                                               {
+                                                   "text":  "",
+                                                   "cls":  "relative h-5 w-10 rounded-full transition-colors cursor-not-allowed bg-[#e5e5e5] opacity-50 dark:bg-[#404040]"
+                                               },
+                                               {
+                                                   "text":  "",
+                                                   "cls":  "relative h-5 w-10 rounded-full transition-colors bg-[#e5e5e5] dark:bg-[#404040]"
+                                               },
+                                               {
+                                                   "text":  "הגדרות",
+                                                   "cls":  "w-full cursor-pointer px-4 py-3 text-right transition-colors text-[#36394a] hover:bg-[#f5f5f5] dark:text-[#d4d4d4] dark:hover:bg-[#404040]"
+                                               },
+                                               {
+                                                   "text":  "ראשי",
+                                                   "cls":  "flex min-w-0 items-center gap-1 rounded-md px-2 py-1 transition-colors hover:bg-[#f0f0f0] hover:text-[#0d0d12] dark:hover:bg-[#171717] dark:hover:text-[#fafafa]"
+                                               },
+                                               {
+                                                   "text":  "משלוחים",
+                                                   "cls":  "min-w-0 truncate rounded-md px-2 py-1 font-medium text-[#0d0d12] transition-colors hover:bg-[#f0f0f0] dark:text-[#fafafa] dark:hover:bg-[#171717]"
+                                               },
+                                               {
+                                                   "text":  "",
+                                                   "cls":  "rounded-lg p-1.5 text-[#737373] transition-colors hover:bg-[#f5f5f5] dark:hover:bg-[#262626] md:hidden"
+                                               },
+                                               {
+                                                   "text":  "משלוח חדש",
+                                                   "cls":  "inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-[#9fe870] px-3 py-1.5 text-sm font-semibold text-[#0d0d12] transition-colors hover:bg-[#8fd65f]"
+                                               },
+                                               {
+                                                   "text":  "",
+                                                   "cls":  "flex h-9 w-9 items-center justify-center rounded-[4px] border border-[#e5e5e5] bg-white transition-colors hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:hover:bg-[#202020]"
+                                               },
+                                               {
+                                                   "text":  "אפר 2026",
+                                                   "cls":  "flex h-9 min-w-[118px] items-center justify-center gap-1.5 rounded-[4px] border px-3 text-sm font-medium transition-colors sm:min-w-[150px] sm:gap-2 sm:px-4 border-[#e5e5e5] bg-white text-[#0d0d12] dark:border-[#262626] dark:bg-[#171717] dark:text-[#fafafa]"
+                                               },
+                                               {
+                                                   "text":  "",
+                                                   "cls":  "flex h-9 w-9 items-center justify-center rounded-[4px] border border-[#e5e5e5] bg-white transition-colors hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:hover:bg-[#202020]"
+                                               },
+                                               {
+                                                   "text":  "פילטרים",
+                                                   "cls":  "flex h-9 items-center gap-1.5 rounded-[4px] border px-3 text-sm font-medium transition-colors border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020] md:hidden"
+                                               },
+                                               {
+                                                   "text":  "",
+                                                   "cls":  "flex h-9 w-9 items-center justify-center rounded-[4px] border text-sm font-medium transition-colors border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
+                                               },
+                                               {
+                                                   "text":  "עמודות",
+                                                   "cls":  "flex h-9 w-9 shrink-0 items-center justify-center rounded-[4px] border transition-colors border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
+                                               },
+                                               {
+                                                   "text":  "ייצוא",
+                                                   "cls":  "flex h-9 w-9 shrink-0 items-center justify-center rounded-[4px] border border-[#e5e5e5] bg-white text-[#525252] transition-colors hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
+                                               }
+                                           ],
+                             "tableBox":  null,
+                             "bodyTextStart":  "Sendi ראשי מנג׳ר לייב 0 דשבורד תפעול משלוחים מסעדות שליחים משמרות אזורי משלוח תמחור לפי מרחק שעות פעילות נתונים דוחות ביצועים יומן פעולות Tel Aviv - Runners ארנק ₪0 יתרת משלוחים 500 קבלת משלוחים שיבוץ אוטומטי הגדרות ראשי משלוחים משלוחים משלוח חדש אפר 2026 0 פעילים · 0 נמסרו 0 פעילים 0 ממתינים 0 משובצים 0 בדרך 0 ללא שליח 0 נמסרו ₪0 הכנסות טרם נוצרו משלוחים כאשר יתווספו משלוחים למערכת, הם יופיעו כאן עם כל הפרטים והאפשרויות לניהול מתקדם המערכת מוכנה לקבלת משלוחים חדשים"
+                         },
+    "couriersMobile":  {
+                           "url":  "http://127.0.0.1:5173/couriers?__codex_ui_review=mobile",
+                           "title":  "Sendi",
+                           "viewport":  {
+                                            "w":  390,
+                                            "h":  844
+                                        },
+                           "headings":  [
+
+                                        ],
+                           "buttons":  [
+                                           {
+                                               "text":  "Close menu",
+                                               "aria":  "Close menu",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "מנג׳ר לייב 0",
+                                               "aria":  "מנג׳ר לייב",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "דשבורד",
+                                               "aria":  "דשבורד",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "משלוחים",
+                                               "aria":  "משלוחים",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "מסעדות",
+                                               "aria":  "מסעדות",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "שליחים",
+                                               "aria":  "שליחים",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "משמרות",
+                                               "aria":  "משמרות",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "אזורי משלוח",
+                                               "aria":  "אזורי משלוח",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "תמחור לפי מרחק",
+                                               "aria":  "תמחור לפי מרחק",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "שעות פעילות",
+                                               "aria":  "שעות פעילות",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "דוחות",
+                                               "aria":  "דוחות",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "ביצועים",
+                                               "aria":  "ביצועים",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "יומן פעולות",
+                                               "aria":  "יומן פעולות",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "Tel Aviv - Runners",
+                                               "aria":  "Tel Aviv - Runners",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "ארנק ₪0",
+                                               "aria":  "",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "יתרת משלוחים 500",
+                                               "aria":  "",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "הגדרות",
+                                               "aria":  "",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "ראשי",
+                                               "aria":  "",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "שליחים",
+                                               "aria":  "",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "הוסף שליח",
+                                               "aria":  "",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "פילטרים",
+                                               "aria":  "פילטרים",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "עמודות",
+                                               "aria":  "עמודות",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "ייצוא",
+                                               "aria":  "ייצוא",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "שם שליח",
+                                               "aria":  "",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "חיבור",
+                                               "aria":  "",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "משמרת",
+                                               "aria":  "",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "זמינות",
+                                               "aria":  "",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "טלפון",
+                                               "aria":  "",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "סך משלוחים",
+                                               "aria":  "",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           },
+                                           {
+                                               "text":  "משלוח נוכחי",
+                                               "aria":  "",
+                                               "tag":  "BUTTON",
+                                               "href":  ""
+                                           }
+                                       ],
+                           "inputs":  [
+                                          {
+                                              "placeholder":  "",
+                                              "value":  "on",
+                                              "aria":  "",
+                                              "type":  "checkbox"
+                                          },
+                                          {
+                                              "placeholder":  "",
+                                              "value":  "on",
+                                              "aria":  "",
+                                              "type":  "checkbox"
+                                          },
+                                          {
+                                              "placeholder":  "",
+                                              "value":  "on",
+                                              "aria":  "",
+                                              "type":  "checkbox"
+                                          },
+                                          {
+                                              "placeholder":  "",
+                                              "value":  "on",
+                                              "aria":  "",
+                                              "type":  "checkbox"
+                                          },
+                                          {
+                                              "placeholder":  "",
+                                              "value":  "on",
+                                              "aria":  "",
+                                              "type":  "checkbox"
+                                          },
+                                          {
+                                              "placeholder":  "",
+                                              "value":  "on",
+                                              "aria":  "",
+                                              "type":  "checkbox"
+                                          },
+                                          {
+                                              "placeholder":  "",
+                                              "value":  "on",
+                                              "aria":  "",
+                                              "type":  "checkbox"
+                                          },
+                                          {
+                                              "placeholder":  "",
+                                              "value":  "on",
+                                              "aria":  "",
+                                              "type":  "checkbox"
+                                          },
+                                          {
+                                              "placeholder":  "",
+                                              "value":  "on",
+                                              "aria":  "",
+                                              "type":  "checkbox"
+                                          },
+                                          {
+                                              "placeholder":  "",
+                                              "value":  "on",
+                                              "aria":  "",
+                                              "type":  "checkbox"
+                                          },
+                                          {
+                                              "placeholder":  "",
+                                              "value":  "on",
+                                              "aria":  "",
+                                              "type":  "checkbox"
+                                          },
+                                          {
+                                              "placeholder":  "",
+                                              "value":  "on",
+                                              "aria":  "",
+                                              "type":  "checkbox"
+                                          },
+                                          {
+                                              "placeholder":  "",
+                                              "value":  "on",
+                                              "aria":  "",
+                                              "type":  "checkbox"
+                                          },
+                                          {
+                                              "placeholder":  "",
+                                              "value":  "on",
+                                              "aria":  "",
+                                              "type":  "checkbox"
+                                          },
+                                          {
+                                              "placeholder":  "",
+                                              "value":  "on",
+                                              "aria":  "",
+                                              "type":  "checkbox"
+                                          },
+                                          {
+                                              "placeholder":  "",
+                                              "value":  "on",
+                                              "aria":  "",
+                                              "type":  "checkbox"
+                                          },
+                                          {
+                                              "placeholder":  "",
+                                              "value":  "on",
+                                              "aria":  "",
+                                              "type":  "checkbox"
+                                          },
+                                          {
+                                              "placeholder":  "",
+                                              "value":  "on",
+                                              "aria":  "",
+                                              "type":  "checkbox"
+                                          },
+                                          {
+                                              "placeholder":  "",
+                                              "value":  "on",
+                                              "aria":  "",
+                                              "type":  "checkbox"
+                                          },
+                                          {
+                                              "placeholder":  "",
+                                              "value":  "on",
+                                              "aria":  "",
+                                              "type":  "checkbox"
+                                          },
+                                          {
+                                              "placeholder":  "",
+                                              "value":  "on",
+                                              "aria":  "",
+                                              "type":  "checkbox"
+                                          },
+                                          {
+                                              "placeholder":  "",
+                                              "value":  "on",
+                                              "aria":  "",
+                                              "type":  "checkbox"
+                                          },
+                                          {
+                                              "placeholder":  "",
+                                              "value":  "on",
+                                              "aria":  "",
+                                              "type":  "checkbox"
+                                          },
+                                          {
+                                              "placeholder":  "",
+                                              "value":  "on",
+                                              "aria":  "",
+                                              "type":  "checkbox"
+                                          },
+                                          {
+                                              "placeholder":  "",
+                                              "value":  "on",
+                                              "aria":  "",
+                                              "type":  "checkbox"
+                                          }
+                                      ],
+                           "headers":  [
+                                           "שם שליח",
+                                           "חיבור",
+                                           "משמרת",
+                                           "זמינות",
+                                           "טלפון",
+                                           "סך משלוחים",
+                                           "משלוח נוכחי",
+                                           "פעולות"
+                                       ],
+                           "rows":  24,
+                           "badText":  [
+
+                                       ],
+                           "horizontalOverflow":  0,
+                           "overflowNodes":  [
+                                                 {
+                                                     "tag":  "DIV",
+                                                     "text":  "ראשי מנג׳ר לייב 0 דשבורד תפעול משלוחים מסעדות שליחים משמרות אזורי משלוח תמחור לפ",
+                                                     "w":  239,
+                                                     "h":  535,
+                                                     "sw":  233,
+                                                     "sh":  651,
+                                                     "cls":  "flex-1 cursor-pointer overflow-y-auto bg-[#fafafa] py-2 scrollbar-thin scrollbar"
+                                                 },
+                                                 {
+                                                     "tag":  "DIV",
+                                                     "text":  "שם שליח חיבור משמרת זמינות טלפון סך משלוחים משלוח נוכחי פעולות אביב משלוחים לא מ",
+                                                     "w":  389,
+                                                     "h":  568,
+                                                     "sw":  693,
+                                                     "sh":  1123,
+                                                     "cls":  "app-table-shell relative flex-1 overflow-auto min-w-0"
+                                                 },
+                                                 {
+                                                     "tag":  "SPAN",
+                                                     "text":  "פעולות",
+                                                     "w":  1,
+                                                     "h":  1,
+                                                     "sw":  49,
+                                                     "sh":  24,
+                                                     "cls":  "sr-only"
+                                                 }
+                                             ],
+                           "navActive":  [
+                                             {
+                                                 "text":  "Close menu",
+                                                 "cls":  "text-[#737373] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:text-[#fafafa] md:hidden"
+                                             },
+                                             {
+                                                 "text":  "מנג׳ר לייב 0",
+                                                 "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                             },
+                                             {
+                                                 "text":  "דשבורד",
+                                                 "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                             },
+                                             {
+                                                 "text":  "משלוחים",
+                                                 "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                             },
+                                             {
+                                                 "text":  "מסעדות",
+                                                 "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                             },
+                                             {
+                                                 "text":  "שליחים",
+                                                 "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 bg-[#f5f5f5] text-[#16a34a] dark:bg-[#262626] dark:text-[#22c55e]"
+                                             },
+                                             {
+                                                 "text":  "משמרות",
+                                                 "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                             },
+                                             {
+                                                 "text":  "אזורי משלוח",
+                                                 "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                             },
+                                             {
+                                                 "text":  "תמחור לפי מרחק",
+                                                 "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                             },
+                                             {
+                                                 "text":  "שעות פעילות",
+                                                 "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                             },
+                                             {
+                                                 "text":  "דוחות",
+                                                 "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                             },
+                                             {
+                                                 "text":  "ביצועים",
+                                                 "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                             },
+                                             {
+                                                 "text":  "יומן פעולות",
+                                                 "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                             },
+                                             {
+                                                 "text":  "Tel Aviv - Runners",
+                                                 "cls":  "w-full cursor-pointer border-b border-[#e5e5e5] px-4 py-3 text-right transition-colors dark:border-[#262626] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a]"
+                                             },
+                                             {
+                                                 "text":  "ארנק ₪0",
+                                                 "cls":  "w-full cursor-pointer border-b border-[#e5e5e5] px-4 py-3 text-right transition-colors dark:border-[#262626] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a]"
+                                             },
+                                             {
+                                                 "text":  "יתרת משלוחים 500",
+                                                 "cls":  "w-full cursor-pointer border-b border-[#e5e5e5] px-4 py-3 text-right transition-colors dark:border-[#262626] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a]"
+                                             },
+                                             {
+                                                 "text":  "",
+                                                 "cls":  "relative h-5 w-10 rounded-full transition-colors cursor-not-allowed bg-[#e5e5e5] opacity-50 dark:bg-[#404040]"
+                                             },
+                                             {
+                                                 "text":  "",
+                                                 "cls":  "relative h-5 w-10 rounded-full transition-colors bg-[#e5e5e5] dark:bg-[#404040]"
+                                             },
+                                             {
+                                                 "text":  "הגדרות",
+                                                 "cls":  "w-full cursor-pointer px-4 py-3 text-right transition-colors text-[#36394a] hover:bg-[#f5f5f5] dark:text-[#d4d4d4] dark:hover:bg-[#404040]"
+                                             },
+                                             {
+                                                 "text":  "ראשי",
+                                                 "cls":  "flex min-w-0 items-center gap-1 rounded-md px-2 py-1 transition-colors hover:bg-[#f0f0f0] hover:text-[#0d0d12] dark:hover:bg-[#171717] dark:hover:text-[#fafafa]"
+                                             },
+                                             {
+                                                 "text":  "שליחים",
+                                                 "cls":  "min-w-0 truncate rounded-md px-2 py-1 font-medium text-[#0d0d12] transition-colors hover:bg-[#f0f0f0] dark:text-[#fafafa] dark:hover:bg-[#171717]"
+                                             },
+                                             {
+                                                 "text":  "",
+                                                 "cls":  "rounded-lg p-1.5 text-[#737373] transition-colors hover:bg-[#f5f5f5] dark:hover:bg-[#262626] md:hidden"
+                                             },
+                                             {
+                                                 "text":  "הוסף שליח",
+                                                 "cls":  "inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-[#9fe870] px-3 py-1.5 text-sm font-semibold text-[#0d0d12] transition-colors hover:bg-[#8fd65f]"
+                                             },
+                                             {
+                                                 "text":  "פילטרים",
+                                                 "cls":  "flex h-9 items-center gap-1.5 rounded-[4px] border px-3 text-sm font-medium transition-colors border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020] md:hidden"
+                                             },
+                                             {
+                                                 "text":  "",
+                                                 "cls":  "flex h-9 w-9 items-center justify-center rounded-[4px] border text-sm font-medium transition-colors border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
+                                             },
+                                             {
+                                                 "text":  "עמודות",
+                                                 "cls":  "flex h-9 w-9 shrink-0 items-center justify-center rounded-[4px] border transition-colors border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
+                                             },
+                                             {
+                                                 "text":  "ייצוא",
+                                                 "cls":  "flex h-9 w-9 shrink-0 items-center justify-center rounded-[4px] border border-[#e5e5e5] bg-white text-[#525252] transition-colors hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
+                                             },
+                                             {
+                                                 "text":  "שם שליח",
+                                                 "cls":  "flex items-center gap-1 whitespace-nowrap text-xs font-medium text-[#666d80] transition-colors hover:text-[#16a34a] dark:text-[#a3a3a3] dark:hover:text-[#22c55e]"
+                                             },
+                                             {
+                                                 "text":  "חיבור",
+                                                 "cls":  "flex items-center gap-1 whitespace-nowrap text-xs font-medium text-[#666d80] transition-colors hover:text-[#16a34a] dark:text-[#a3a3a3] dark:hover:text-[#22c55e]"
+                                             },
+                                             {
+                                                 "text":  "משמרת",
+                                                 "cls":  "flex items-center gap-1 whitespace-nowrap text-xs font-medium text-[#666d80] transition-colors hover:text-[#16a34a] dark:text-[#a3a3a3] dark:hover:text-[#22c55e]"
+                                             }
+                                         ],
+                           "tableBox":  {
+                                            "x":  -309,
+                                            "y":  276,
+                                            "w":  693,
+                                            "h":  1123
+                                        },
+                           "bodyTextStart":  "Sendi ראשי מנג׳ר לייב 0 דשבורד תפעול משלוחים מסעדות שליחים משמרות אזורי משלוח תמחור לפי מרחק שעות פעילות נתונים דוחות ביצועים יומן פעולות Tel Aviv - Runners ארנק ₪0 יתרת משלוחים 500 קבלת משלוחים שיבוץ אוטומטי הגדרות ראשי שליחים שליחים הוסף שליח 0 זמינים · 0 במשלוח · 0 במשמרת 24 סה״כ שליחים 0 זמינים 0 במשלוח 0 במשמרת 24 לא מחוברים 0 עם משלוח פעיל שם שליח חיבור משמרת זמינות טלפון סך משלוחים משלוח נוכחי פעולות אביב משלוחים לא מחובר לא במשמרת - 050-8628579 0 - אדם שליח לא מחובר לא במשמרת - 050-3579210 0 - אורי מהיר לא מחובר לא במשמרת - 050-4020510 0 - איתי אקספרס לא מחובר לא במשמרת - 050-4872912 0 - אלון מהיר לא מחובר לא במשמרת - 050-5199012 0 - גל שליחויות לא מחובר לא במשמרת - 050-8705000 0 - דור בדרכים לא מחובר לא במשמרת - 050-2174174 0 - דני רץ לא מחובר לא במשמרת - 050-8243865 0 - יובל משלוחים לא מחובר לא במשמרת - 050-8164772 0 - יוני שליח לא מחובר לא במשמרת - 050-8158647 0 - לירון אקספרס לא מחובר לא במשמרת - 050-8569047 0 - מתן דליברי לא מחובר לא במשמרת - 050-4267407 0 - נועם דליברי לא"
+                       },
+    "restaurantsMobile":  {
+                              "url":  "http://127.0.0.1:5173/restaurants?__codex_ui_review=mobile",
+                              "title":  "Sendi",
+                              "viewport":  {
+                                               "w":  390,
+                                               "h":  844
+                                           },
+                              "headings":  [
+
+                                           ],
+                              "buttons":  [
+                                              {
+                                                  "text":  "Close menu",
+                                                  "aria":  "Close menu",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "מנג׳ר לייב 0",
+                                                  "aria":  "מנג׳ר לייב",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "דשבורד",
+                                                  "aria":  "דשבורד",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "משלוחים",
+                                                  "aria":  "משלוחים",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "מסעדות",
+                                                  "aria":  "מסעדות",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "שליחים",
+                                                  "aria":  "שליחים",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "משמרות",
+                                                  "aria":  "משמרות",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "אזורי משלוח",
+                                                  "aria":  "אזורי משלוח",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "תמחור לפי מרחק",
+                                                  "aria":  "תמחור לפי מרחק",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "שעות פעילות",
+                                                  "aria":  "שעות פעילות",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "דוחות",
+                                                  "aria":  "דוחות",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "ביצועים",
+                                                  "aria":  "ביצועים",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "יומן פעולות",
+                                                  "aria":  "יומן פעולות",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "Tel Aviv - Runners",
+                                                  "aria":  "Tel Aviv - Runners",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "ארנק ₪0",
+                                                  "aria":  "",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "יתרת משלוחים 500",
+                                                  "aria":  "",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "הגדרות",
+                                                  "aria":  "",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "ראשי",
+                                                  "aria":  "",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "מסעדות",
+                                                  "aria":  "",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "הוסף מסעדה",
+                                                  "aria":  "",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "עמודות",
+                                                  "aria":  "עמודות",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "ייצוא",
+                                                  "aria":  "ייצוא",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "מסעדה",
+                                                  "aria":  "",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "סטטוס",
+                                                  "aria":  "",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "כתובת",
+                                                  "aria":  "",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "טלפון",
+                                                  "aria":  "",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "איש קשר",
+                                                  "aria":  "",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              },
+                                              {
+                                                  "text":  "סך משלוחים",
+                                                  "aria":  "",
+                                                  "tag":  "BUTTON",
+                                                  "href":  ""
+                                              }
+                                          ],
+                              "inputs":  [
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             },
+                                             {
+                                                 "placeholder":  "",
+                                                 "value":  "on",
+                                                 "aria":  "",
+                                                 "type":  "checkbox"
+                                             }
+                                         ],
+                              "headers":  [
+                                              "מסעדה",
+                                              "סטטוס",
+                                              "כתובת",
+                                              "טלפון",
+                                              "איש קשר",
+                                              "סך משלוחים",
+                                              "פעולות"
+                                          ],
+                              "rows":  28,
+                              "badText":  [
+
+                                          ],
+                              "horizontalOverflow":  0,
+                              "overflowNodes":  [
+                                                    {
+                                                        "tag":  "DIV",
+                                                        "text":  "ראשי מנג׳ר לייב 0 דשבורד תפעול משלוחים מסעדות שליחים משמרות אזורי משלוח תמחור לפ",
+                                                        "w":  239,
+                                                        "h":  535,
+                                                        "sw":  233,
+                                                        "sh":  651,
+                                                        "cls":  "flex-1 cursor-pointer overflow-y-auto bg-[#fafafa] py-2 scrollbar-thin scrollbar"
+                                                    },
+                                                    {
+                                                        "tag":  "DIV",
+                                                        "text":  "מסעדה סטטוס כתובת טלפון איש קשר סך משלוחים פעולות אל גאוצ׳ו לא פעיל ז׳בוטינסקי 7",
+                                                        "w":  389,
+                                                        "h":  596,
+                                                        "sw":  777,
+                                                        "sh":  1303,
+                                                        "cls":  "app-table-shell relative flex-1 overflow-auto min-w-0"
+                                                    },
+                                                    {
+                                                        "tag":  "SPAN",
+                                                        "text":  "פעולות",
+                                                        "w":  1,
+                                                        "h":  1,
+                                                        "sw":  49,
+                                                        "sh":  24,
+                                                        "cls":  "sr-only"
+                                                    }
+                                                ],
+                              "navActive":  [
+                                                {
+                                                    "text":  "Close menu",
+                                                    "cls":  "text-[#737373] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:text-[#fafafa] md:hidden"
+                                                },
+                                                {
+                                                    "text":  "מנג׳ר לייב 0",
+                                                    "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                },
+                                                {
+                                                    "text":  "דשבורד",
+                                                    "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                },
+                                                {
+                                                    "text":  "משלוחים",
+                                                    "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                },
+                                                {
+                                                    "text":  "מסעדות",
+                                                    "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 bg-[#f5f5f5] text-[#16a34a] dark:bg-[#262626] dark:text-[#22c55e]"
+                                                },
+                                                {
+                                                    "text":  "שליחים",
+                                                    "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                },
+                                                {
+                                                    "text":  "משמרות",
+                                                    "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                },
+                                                {
+                                                    "text":  "אזורי משלוח",
+                                                    "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                },
+                                                {
+                                                    "text":  "תמחור לפי מרחק",
+                                                    "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                },
+                                                {
+                                                    "text":  "שעות פעילות",
+                                                    "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                },
+                                                {
+                                                    "text":  "דוחות",
+                                                    "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                },
+                                                {
+                                                    "text":  "ביצועים",
+                                                    "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                },
+                                                {
+                                                    "text":  "יומן פעולות",
+                                                    "cls":  "mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]"
+                                                },
+                                                {
+                                                    "text":  "Tel Aviv - Runners",
+                                                    "cls":  "w-full cursor-pointer border-b border-[#e5e5e5] px-4 py-3 text-right transition-colors dark:border-[#262626] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a]"
+                                                },
+                                                {
+                                                    "text":  "ארנק ₪0",
+                                                    "cls":  "w-full cursor-pointer border-b border-[#e5e5e5] px-4 py-3 text-right transition-colors dark:border-[#262626] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a]"
+                                                },
+                                                {
+                                                    "text":  "יתרת משלוחים 500",
+                                                    "cls":  "w-full cursor-pointer border-b border-[#e5e5e5] px-4 py-3 text-right transition-colors dark:border-[#262626] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a]"
+                                                },
+                                                {
+                                                    "text":  "",
+                                                    "cls":  "relative h-5 w-10 rounded-full transition-colors cursor-not-allowed bg-[#e5e5e5] opacity-50 dark:bg-[#404040]"
+                                                },
+                                                {
+                                                    "text":  "",
+                                                    "cls":  "relative h-5 w-10 rounded-full transition-colors bg-[#e5e5e5] dark:bg-[#404040]"
+                                                },
+                                                {
+                                                    "text":  "הגדרות",
+                                                    "cls":  "w-full cursor-pointer px-4 py-3 text-right transition-colors text-[#36394a] hover:bg-[#f5f5f5] dark:text-[#d4d4d4] dark:hover:bg-[#404040]"
+                                                },
+                                                {
+                                                    "text":  "ראשי",
+                                                    "cls":  "flex min-w-0 items-center gap-1 rounded-md px-2 py-1 transition-colors hover:bg-[#f0f0f0] hover:text-[#0d0d12] dark:hover:bg-[#171717] dark:hover:text-[#fafafa]"
+                                                },
+                                                {
+                                                    "text":  "מסעדות",
+                                                    "cls":  "min-w-0 truncate rounded-md px-2 py-1 font-medium text-[#0d0d12] transition-colors hover:bg-[#f0f0f0] dark:text-[#fafafa] dark:hover:bg-[#171717]"
+                                                },
+                                                {
+                                                    "text":  "",
+                                                    "cls":  "rounded-lg p-1.5 text-[#737373] transition-colors hover:bg-[#f5f5f5] dark:hover:bg-[#262626] md:hidden"
+                                                },
+                                                {
+                                                    "text":  "הוסף מסעדה",
+                                                    "cls":  "inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-[#9fe870] px-3 py-1.5 text-sm font-semibold text-[#0d0d12] transition-colors hover:bg-[#8fd65f]"
+                                                },
+                                                {
+                                                    "text":  "",
+                                                    "cls":  "flex h-9 w-9 items-center justify-center rounded-[4px] border text-sm font-medium transition-colors border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
+                                                },
+                                                {
+                                                    "text":  "עמודות",
+                                                    "cls":  "flex h-9 w-9 shrink-0 items-center justify-center rounded-[4px] border transition-colors border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
+                                                },
+                                                {
+                                                    "text":  "ייצוא",
+                                                    "cls":  "flex h-9 w-9 shrink-0 items-center justify-center rounded-[4px] border border-[#e5e5e5] bg-white text-[#525252] transition-colors hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
+                                                },
+                                                {
+                                                    "text":  "מסעדה",
+                                                    "cls":  "flex items-center gap-1 whitespace-nowrap text-xs font-medium text-[#666d80] transition-colors hover:text-[#16a34a] dark:text-[#a3a3a3] dark:hover:text-[#22c55e]"
+                                                },
+                                                {
+                                                    "text":  "סטטוס",
+                                                    "cls":  "flex items-center gap-1 whitespace-nowrap text-xs font-medium text-[#666d80] transition-colors hover:text-[#16a34a] dark:text-[#a3a3a3] dark:hover:text-[#22c55e]"
+                                                },
+                                                {
+                                                    "text":  "כתובת",
+                                                    "cls":  "flex items-center gap-1 whitespace-nowrap text-xs font-medium text-[#666d80] transition-colors hover:text-[#16a34a] dark:text-[#a3a3a3] dark:hover:text-[#22c55e]"
+                                                },
+                                                {
+                                                    "text":  "טלפון",
+                                                    "cls":  "flex items-center gap-1 whitespace-nowrap text-xs font-medium text-[#666d80] transition-colors hover:text-[#16a34a] dark:text-[#a3a3a3] dark:hover:text-[#22c55e]"
+                                                }
+                                            ],
+                              "tableBox":  {
+                                               "x":  -393,
+                                               "y":  248,
+                                               "w":  777,
+                                               "h":  1303
+                                           },
+                              "bodyTextStart":  "Sendi ראשי מנג׳ר לייב 0 דשבורד תפעול משלוחים מסעדות שליחים משמרות אזורי משלוח תמחור לפי מרחק שעות פעילות נתונים דוחות ביצועים יומן פעולות Tel Aviv - Runners ארנק ₪0 יתרת משלוחים 500 קבלת משלוחים שיבוץ אוטומטי הגדרות ראשי מסעדות מסעדות הוסף מסעדה 0 פעילות · 28 כבויות 28 סה״כ מסעדות 0 פעילות 28 כבויות 0 עם משלוחים מסעדה סטטוס כתובת טלפון איש קשר סך משלוחים פעולות אל גאוצ׳ו לא פעיל ז׳בוטינסקי 7, רמת גן 03-7529988 יוסי אברהם 0 באנג בנגקוק לא פעיל שדרות ירושלים 4, יפו 03-6823355 דוד ישראלי 0 בורגר סלון לא פעיל שדרות רוטשילד 34, תל אביב 03-6881234 דנה לוי 0 בוריטו לוקו לא פעיל פלורנטין 33, תל אביב 03-5601122 משה כהן 0 דומינו\u0027ס אבן גבירול לא פעיל אבן גבירול 143, תל אביב 076-804-8974 משה כהן 0 דומינו\u0027ס הירקון כשר לא פעיל כ״ג יורדי הסירה 10, תל אביב 076-804-8950 דנה לוי 0 דומינו\u0027ס יגאל אלון לא פעיל יגאל אלון 90, תל אביב 076-804-8950 יוסי אברהם 0 דומינו\u0027ס פלורנטין לא פעיל פלורנטין 25, תל אביב 076-804-8950 רונית גולן 0 דומינו\u0027ס קרליבך לא פעיל קרליבך 29, תל אביב 076-804-8950 אבי זהבי 0 דומינו\u0027ס רמ"
+                          }
+}

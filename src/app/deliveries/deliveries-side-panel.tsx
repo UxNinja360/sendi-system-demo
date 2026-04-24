@@ -17,6 +17,8 @@ type DeliveriesSidePanelProps = {
   deliveryCount: number;
   selectedCount: number;
   groupCounts: React.ComponentProps<typeof ExportDrawer>['groupCounts'];
+  columnCategories?: React.ComponentProps<typeof ListColumnsPanel>['categories'];
+  defaultVisibleColumns?: Iterable<string>;
 };
 
 export const DeliveriesSidePanel: React.FC<DeliveriesSidePanelProps> = ({
@@ -31,6 +33,8 @@ export const DeliveriesSidePanel: React.FC<DeliveriesSidePanelProps> = ({
   deliveryCount,
   selectedCount,
   groupCounts,
+  columnCategories,
+  defaultVisibleColumns,
 }) => {
   return (
     <ListSidePanel isOpen={exportOpen || columnsOpen}>
@@ -60,7 +64,11 @@ export const DeliveriesSidePanel: React.FC<DeliveriesSidePanelProps> = ({
           setIsOpen={setColumnsOpen}
           visibleColumns={visibleColumns}
           setVisibleColumns={setVisibleColumns}
-          title="עמודות"
+          categories={columnCategories}
+          defaultVisibleColumns={defaultVisibleColumns}
+          title="עמודות משלוחים"
+          description="בחר אילו פרטים יופיעו בטבלת המשלוחים"
+          presetsKey="deliveries-column-presets-v2"
         />
       )}
     </ListSidePanel>

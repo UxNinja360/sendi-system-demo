@@ -1,35 +1,32 @@
-﻿import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router';
+import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router';
 import {
-  LayoutDashboard,
   Activity,
-  Users,
   BarChart,
-  Settings,
-  X,
-  ChevronLeft,
-  Sidebar as SidebarIcon,
-  Store,
-  HelpCircle,
-  Package,
-  Power,
   Bike,
   Calendar,
-  TrendingUp,
-  Ruler,
+  ChevronLeft,
   Clock,
-
   FileText,
+  LayoutDashboard,
   Map,
+  Package,
+  Power,
+  Ruler,
+  Settings,
+  Sidebar as SidebarIcon,
+  Store,
+  TrendingUp,
+  Users,
   Wallet,
+  X,
 } from 'lucide-react';
-import { AppLogo } from '../icons/app-logo';
-import { useDelivery } from '../../context/delivery-context-value';
-import { useLanguage } from '../../context/language.context';
-import { getDeliveryCustomerCharge } from '../../utils/delivery-finance';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
-import { SIDEBAR_NAV_SECTIONS, isNavItemActive } from '../../app-navigation';
+import { getNavItemById, isNavItemActive, SIDEBAR_NAV_SECTIONS } from '../../app-navigation';
 import type { AppNavIconKey, AppNavItem } from '../../app-navigation';
+import { useDelivery } from '../../context/delivery-context-value';
+import { getDeliveryCustomerCharge } from '../../utils/delivery-finance';
+import { AppLogo } from '../icons/app-logo';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 interface SidebarProps {
   onLogout: () => void;
@@ -41,14 +38,38 @@ interface SidebarIconTooltipProps {
   className?: string;
 }
 
-const SidebarIconTooltip: React.FC<SidebarIconTooltipProps> = ({ label, children, className }) => (
-  <Tooltip>
-    <TooltipTrigger asChild>
-      <div className={className}>{children}</div>
-    </TooltipTrigger>
-    <TooltipContent side="left">{label}</TooltipContent>
-  </Tooltip>
-);
+const LABELS = {
+  selectBusiness: '\u05d1\u05d7\u05d9\u05e8\u05ea \u05e2\u05e1\u05e7',
+  acceptDeliveries: '\u05e7\u05d1\u05dc\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
+  autoAssign: '\u05e9\u05d9\u05d1\u05d5\u05e5 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9',
+  noActiveCouriers: '\u05d0\u05d9 \u05d0\u05e4\u05e9\u05e8 \u05dc\u05e4\u05ea\u05d5\u05d7 \u05e7\u05d1\u05dc\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd \u05d1\u05dc\u05d9 \u05e9\u05dc\u05d9\u05d7\u05d9\u05dd \u05e4\u05e2\u05d9\u05dc\u05d9\u05dd',
+  systemClosed: '\u05de\u05e2\u05e8\u05db\u05ea \u05e1\u05d2\u05d5\u05e8\u05d4',
+  settings: '\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea',
+  wallet: '\u05d0\u05e8\u05e0\u05e7',
+  deliveryBalance: '\u05d9\u05ea\u05e8\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
+};
+
+const BUSINESSES = [
+  'Tel Aviv - Runners',
+  'Mr. Delivery',
+  'Delivery Champion',
+  'Express Deliveries',
+  'Jerusalem Couriers',
+  'Haifa Delivery',
+  'Beer Sheva Couriers',
+  'Netanya Deliveries',
+  'Petah Tikva Delivery',
+  'Rishon LeZion Couriers',
+  'Ashdod Express',
+  'Ramat Gan Deliveries',
+  'Bnei Brak Delivery',
+];
+
+const ONBOARDING_BY_ID: Record<string, string> = {
+  live: 'nav-live',
+  restaurants: 'nav-restaurants',
+  couriers: 'nav-couriers',
+};
 
 const NAV_ICON_MAP: Record<AppNavIconKey, React.FC<React.SVGProps<SVGSVGElement>>> = {
   activity: Activity,
@@ -68,107 +89,96 @@ const NAV_ICON_MAP: Record<AppNavIconKey, React.FC<React.SVGProps<SVGSVGElement>
   wallet: Wallet,
 };
 
-export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
+const SidebarIconTooltip: React.FC<SidebarIconTooltipProps> = ({ label, children, className }) => (
+  <Tooltip>
+    <TooltipTrigger asChild>
+      <div className={className}>{children}</div>
+    </TooltipTrigger>
+    <TooltipContent side="left">{label}</TooltipContent>
+  </Tooltip>
+);
+
+export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { state, dispatch } = useDelivery();
-  const { t } = useLanguage();
-  const activeDeliveriesCount = state.deliveries.filter(
-    delivery => delivery.status !== 'delivered' && delivery.status !== 'cancelled'
-  ).length;
-  const walletRevenue = state.deliveries
-    .filter(delivery => delivery.status === 'delivered')
-    .reduce((sum, delivery) => sum + getDeliveryCustomerCharge(delivery), 0);
-  
-  // Load collapsed state from localStorage
+  const [isBusinessPopupOpen, setIsBusinessPopupOpen] = useState(false);
+  const [selectedBusiness, setSelectedBusiness] = useState(BUSINESSES[0]);
+  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768);
   const [isCollapsed, setIsCollapsed] = useState(() => {
     try {
-      if (window.innerWidth < 768) {
-        return false;
-      }
-
+      if (window.innerWidth < 768) return false;
       const saved = localStorage.getItem('sidebar-collapsed');
       return saved ? JSON.parse(saved) : false;
     } catch {
       return false;
     }
   });
-  
-  const [isBusinessPopupOpen, setIsBusinessPopupOpen] = useState(false);
-  const [selectedBusiness, setSelectedBusiness] = useState('Tel Aviv - Runners');
-  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 768);
-  const businesses = [
-    'Tel Aviv - Runners',
-    'Mr. Delivery',
-    'Delivery Champion',
-    'Express Deliveries',
-    'Jerusalem Couriers',
-    'Haifa Delivery',
-    'Beer Sheva Couriers',
-    'Netanya Deliveries',
-    'Petah Tikva Delivery',
-    'Rishon LeZion Couriers',
-    'Ashdod Express',
-    'Ramat Gan Deliveries',
-    'Bnei Brak Delivery',
-  ];
+
+  const isExpanded = !isCollapsed || !isDesktop;
+  const activeCouriersCount = state.couriers.filter((courier) => courier.status !== 'offline').length;
+  const activeDeliveriesCount = state.deliveries.filter(
+    (delivery) => delivery.status !== 'delivered' && delivery.status !== 'cancelled'
+  ).length;
+  const walletRevenue = state.deliveries
+    .filter((delivery) => delivery.status === 'delivered')
+    .reduce((sum, delivery) => sum + getDeliveryCustomerCharge(delivery), 0);
+  const isSystemToggleDisabled = !state.isSystemOpen && activeCouriersCount === 0;
+  const walletItem = getNavItemById('wallet');
+  const balanceItem = getNavItemById('delivery-balance');
+  const settingsItem = getNavItemById('settings');
 
   useEffect(() => {
     const handleResize = () => {
       const desktop = window.innerWidth >= 768;
       setIsDesktop(desktop);
-
-      if (!desktop) {
-        setIsCollapsed(false);
-      }
+      if (!desktop) setIsCollapsed(false);
     };
+
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-  
-  // Save collapsed state to localStorage when it changes
+
   useEffect(() => {
     try {
       localStorage.setItem('sidebar-collapsed', JSON.stringify(isCollapsed));
     } catch {
-      // Ignore storage failures and keep the in-memory state working.
+      // Storage can fail in restricted contexts; the in-memory state is enough.
     }
   }, [isCollapsed]);
 
-  // Expose toggle function globally for TopBar
   useEffect(() => {
-    (window as any).toggleMobileSidebar = () => setIsCollapsed(prev => !prev);
+    (window as any).toggleMobileSidebar = () => setIsCollapsed((prev) => !prev);
     return () => {
       delete (window as any).toggleMobileSidebar;
     };
   }, []);
 
-  const toggleMobileMenu = () => setIsCollapsed(!isCollapsed);
   const closeMobileMenu = () => {
-    // Close sidebar - set isCollapsed to false (in mobile this hides the sidebar)
-    if (!isDesktop) {
-      setIsCollapsed(false);
-    }
+    if (!isDesktop) setIsCollapsed(false);
   };
+
+  const toggleMobileMenu = () => setIsCollapsed(!isCollapsed);
+
   const handleNav = (path: string) => {
     navigate(path);
     closeMobileMenu();
   };
 
   const getNavBadge = (item: AppNavItem) => {
-    if (item.badge === 'activeDeliveries') {
-      return activeDeliveriesCount.toLocaleString('he-IL');
-    }
-
-    if (item.badge === 'deliveryBalance') {
-      return state.deliveryBalance.toLocaleString('he-IL');
-    }
-
-    if (item.badge === 'walletRevenue') {
-      return `₪${Math.round(walletRevenue).toLocaleString('he-IL')}`;
-    }
-
+    if (item.badge === 'activeDeliveries') return activeDeliveriesCount.toLocaleString('he-IL');
+    if (item.badge === 'deliveryBalance') return state.deliveryBalance.toLocaleString('he-IL');
+    if (item.badge === 'walletRevenue') return `₪${Math.round(walletRevenue).toLocaleString('he-IL')}`;
     return null;
+  };
+
+  const toggleSystem = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (isSystemToggleDisabled) {
+      alert(LABELS.noActiveCouriers);
+      return;
+    }
+    dispatch({ type: 'TOGGLE_SYSTEM' });
   };
 
   const renderNavItem = (item: AppNavItem) => {
@@ -177,23 +187,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
     const badge = getNavBadge(item);
 
     return (
-      <div
+      <button
         key={item.id}
-        data-onboarding={item.id === 'live' ? 'nav-live' : item.id === 'restaurants' ? 'nav-restaurants' : item.id === 'couriers' ? 'nav-couriers' : undefined}
-        onClick={(e) => {
-          e.stopPropagation();
+        type="button"
+        data-onboarding={ONBOARDING_BY_ID[item.id]}
+        onClick={(event) => {
+          event.stopPropagation();
           handleNav(item.path);
         }}
-        className={`
-          mx-2 mb-1 rounded-lg cursor-pointer transition-all duration-200 relative
-          ${isActive
-            ? 'bg-[#f5f5f5] dark:bg-[#262626] text-[#16a34a] dark:text-[#22c55e]'
-            : 'text-[#737373] dark:text-[#a3a3a3] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a] hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
-          }
-        `}
+        className={`mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 ${
+          isActive
+            ? 'bg-[#f5f5f5] text-[#16a34a] dark:bg-[#262626] dark:text-[#22c55e]'
+            : 'text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]'
+        }`}
+        aria-label={item.label}
       >
-        {!isCollapsed || !isDesktop ? (
-          <div className="flex items-center gap-3 px-4 py-2.5">
+        {isExpanded ? (
+          <span className="flex items-center gap-3 px-4 py-2.5">
             <Icon size={19} className="shrink-0 stroke-[1.8px]" />
             <span className="min-w-0 flex-1 truncate text-sm font-medium">{item.label}</span>
             {badge && (
@@ -201,7 +211,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
                 {badge}
               </span>
             )}
-          </div>
+          </span>
         ) : (
           <SidebarIconTooltip
             label={badge ? `${item.label} • ${badge}` : item.label}
@@ -210,64 +220,68 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
             <Icon size={19} className="stroke-[1.8px]" />
           </SidebarIconTooltip>
         )}
-      </div>
+      </button>
     );
   };
 
+  const footerItemClass = (isActive: boolean) =>
+    `w-full cursor-pointer border-b border-[#e5e5e5] px-4 py-3 text-right transition-colors dark:border-[#262626] ${
+      isActive
+        ? 'bg-[#f5f5f5] dark:bg-[#1a1a1a]'
+        : 'hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a]'
+    }`;
+
   return (
     <>
-      {/* Mobile Overlay */}
       {!isDesktop && isCollapsed && (
-        <div 
-          className="fixed inset-0 bg-black/60 z-[100] backdrop-blur-sm"
+        <div
+          className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm"
           onClick={closeMobileMenu}
         />
       )}
 
-      {/* Business Selector Popup - Full Screen Modal */}
       {isBusinessPopupOpen && (
         <>
-          <div 
-            className="fixed inset-0 bg-black/50 z-[200] backdrop-blur-sm" 
+          <div
+            className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm"
             onClick={() => setIsBusinessPopupOpen(false)}
           />
-          <div className="fixed inset-0 z-[201] flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col">
-              {/* Header */}
-              <div className="px-6 py-4 border-b border-[#e5e5e5] dark:border-[#262626]">
+          <div className="fixed inset-0 z-[201] flex items-center justify-center p-4" dir="rtl">
+            <div className="flex max-h-[80vh] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-[#e5e5e5] bg-white shadow-2xl dark:border-[#262626] dark:bg-[#171717]">
+              <div className="border-b border-[#e5e5e5] px-6 py-4 dark:border-[#262626]">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-[#0d0d12] dark:text-[#fafafa]">{t('sidebar.selectBusiness')}</h3>
-                  <button 
+                  <h3 className="text-lg font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                    {LABELS.selectBusiness}
+                  </h3>
+                  <button
+                    type="button"
                     onClick={() => setIsBusinessPopupOpen(false)}
-                    className="text-[#737373] dark:text-[#a3a3a3] hover:text-[#0d0d12] dark:hover:text-[#fafafa] transition-colors"
+                    className="text-[#737373] transition-colors hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:text-[#fafafa]"
+                    aria-label="Close"
                   >
                     <X size={20} />
                   </button>
                 </div>
               </div>
-              
-              {/* Business List */}
+
               <div className="flex-1 overflow-y-auto p-4">
-                {businesses.map((business, idx) => (
-                  <div
-                    key={idx}
+                {BUSINESSES.map((business) => (
+                  <button
+                    key={business}
+                    type="button"
                     onClick={() => {
                       setSelectedBusiness(business);
                       setIsBusinessPopupOpen(false);
                     }}
-                    className={`
-                      px-4 py-3 rounded-lg cursor-pointer text-sm transition-colors mb-1
-                      ${selectedBusiness === business 
-                        ? 'bg-[#9fe870] text-[#0d0d12] font-medium' 
-                        : 'text-[#36394a] dark:text-[#d4d4d4] hover:bg-[#f5f5f5] dark:hover:bg-[#262626]'
-                      }
-                    `}
+                    className={`mb-1 flex w-full items-center gap-3 rounded-lg px-4 py-3 text-right text-sm transition-colors ${
+                      selectedBusiness === business
+                        ? 'bg-[#9fe870] font-medium text-[#0d0d12]'
+                        : 'text-[#36394a] hover:bg-[#f5f5f5] dark:text-[#d4d4d4] dark:hover:bg-[#262626]'
+                    }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <Store size={18} className="shrink-0" />
-                      <span className="truncate">{business}</span>
-                    </div>
-                  </div>
+                    <Store size={18} className="shrink-0" />
+                    <span className="truncate">{business}</span>
+                  </button>
                 ))}
               </div>
             </div>
@@ -275,88 +289,80 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
         </>
       )}
 
-      {/* Desktop & Mobile Sidebar */}
-      <div 
-        onClick={(e) => {
-          // Toggle sidebar when clicking on empty areas (not on interactive elements)
-          if (e.target === e.currentTarget) {
-            setIsCollapsed(!isCollapsed);
-          }
+      <div
+        dir="rtl"
+        onClick={(event) => {
+          if (event.target === event.currentTarget) setIsCollapsed(!isCollapsed);
         }}
-        className={`
-          app-shell-height fixed md:static inset-y-0 right-0 bg-[#fafafa] dark:bg-[#0a0a0a] border-l border-[#e5e5e5] dark:border-[#262626] flex flex-col shadow-xl md:shadow-none
-          ${isCollapsed ? 'translate-x-0 z-[110] md:z-50' : 'translate-x-full md:translate-x-0 z-[110] md:z-50'}
-        `}
+        className={`app-shell-height fixed inset-y-0 right-0 z-[110] flex flex-col border-l border-[#e5e5e5] bg-[#fafafa] shadow-xl dark:border-[#262626] dark:bg-[#0a0a0a] md:static md:z-50 md:shadow-none ${
+          isCollapsed ? 'translate-x-0' : 'translate-x-full md:translate-x-0'
+        }`}
         style={{
           width: isDesktop ? (isCollapsed ? '60px' : '200px') : '240px',
-          transition: isDesktop ? 'width 300ms cubic-bezier(0.4, 0, 0.2, 1)' : 'transform 300ms cubic-bezier(0.4, 0, 0.2, 1)',
+          transition: isDesktop
+            ? 'width 300ms cubic-bezier(0.4, 0, 0.2, 1)'
+            : 'transform 300ms cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
-        
-        {/* Header / Logo Area */}
-        <div 
-          onClick={() => {
-            // Toggle sidebar in both desktop and mobile
-            setIsCollapsed(!isCollapsed);
-          }}
-          className="app-safe-header flex items-center justify-between border-b border-[#e5e5e5] dark:border-[#262626] shrink-0 bg-[#fafafa] dark:bg-[#0a0a0a] cursor-pointer hover:bg-[#f0f0f0] dark:hover:bg-[#111111] transition-colors px-[16px] py-[0px]"
+        <div
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="app-safe-header flex shrink-0 cursor-pointer items-center justify-between border-b border-[#e5e5e5] bg-[#fafafa] px-4 py-0 transition-colors hover:bg-[#f0f0f0] dark:border-[#262626] dark:bg-[#0a0a0a] dark:hover:bg-[#111111]"
         >
-           <div className="flex items-center gap-2 md:hidden">
-              <AppLogo size={20} className="text-[#02B74F]" />
-              <span className="font-bold text-base text-[#0d0d12] dark:text-[#fafafa] tracking-tight">Sendi</span>
-           </div>
-           
-           {!isCollapsed && (
-             <div className="hidden md:flex items-center gap-2">
-                <AppLogo size={20} className="text-[#02B74F]" />
-                <span className="font-bold text-base text-[#0d0d12] dark:text-[#fafafa] tracking-tight">Sendi</span>
-             </div>
-           )}
-           {isCollapsed && (
-              <div className="hidden md:flex mx-auto">
-                <AppLogo size={20} className="text-[#02B74F]" />
-              </div>
-           )}
-           
-           {/* Mobile Close Button */}
-           <button 
-             onClick={(e) => {
-               e.stopPropagation(); // Prevent parent div onClick
-               closeMobileMenu();
-             }} 
-             className="md:hidden text-[#737373] dark:text-[#a3a3a3] hover:text-[#0d0d12] dark:hover:text-[#fafafa]"
-           >
-             <X size={18} />
-           </button>
+          <div className="flex items-center gap-2 md:hidden">
+            <AppLogo size={20} className="text-[#02B74F]" />
+            <span className="text-base font-bold tracking-tight text-[#0d0d12] dark:text-[#fafafa]">Sendi</span>
+          </div>
 
-            {/* Desktop Collapse Indicator */}
-            {!isCollapsed && (
-              <div className="hidden md:block text-[#737373] dark:text-[#a3a3a3]">
-                 <SidebarIcon size={16} />
-              </div>
-            )}
+          {!isCollapsed && (
+            <div className="hidden items-center gap-2 md:flex">
+              <AppLogo size={20} className="text-[#02B74F]" />
+              <span className="text-base font-bold tracking-tight text-[#0d0d12] dark:text-[#fafafa]">Sendi</span>
+            </div>
+          )}
+
+          {isCollapsed && (
+            <div className="mx-auto hidden md:flex">
+              <AppLogo size={20} className="text-[#02B74F]" />
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              closeMobileMenu();
+            }}
+            className="text-[#737373] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:text-[#fafafa] md:hidden"
+            aria-label="Close menu"
+          >
+            <X size={18} />
+          </button>
+
+          {!isCollapsed && (
+            <div className="hidden text-[#737373] dark:text-[#a3a3a3] md:block">
+              <SidebarIcon size={16} />
+            </div>
+          )}
         </div>
 
-        {/* Menu Items */}
-        <div 
-          onClick={(e) => {
-            // Toggle sidebar when clicking on empty space in menu area
-            if (e.target === e.currentTarget) {
+        <div
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
               if (!isDesktop) {
-                setIsCollapsed(false); // Mobile: close
+                setIsCollapsed(false);
               } else {
-                setIsCollapsed(!isCollapsed); // Desktop: toggle
+                setIsCollapsed(!isCollapsed);
               }
             }
           }}
-          className="flex-1 overflow-y-auto py-2 scrollbar-thin scrollbar-thumb-[#d4d4d4] dark:scrollbar-thumb-[#404040] bg-[#fafafa] dark:bg-[#0a0a0a] cursor-pointer"
+          className="flex-1 cursor-pointer overflow-y-auto bg-[#fafafa] py-2 scrollbar-thin scrollbar-thumb-[#d4d4d4] dark:bg-[#0a0a0a] dark:scrollbar-thumb-[#404040]"
         >
           {SIDEBAR_NAV_SECTIONS.map((section, sectionIndex) => (
             <React.Fragment key={section.id}>
               {sectionIndex > 0 && (
-                <div className="my-2 mx-4 border-t border-[#e5e5e5] dark:border-[#262626]" />
+                <div className="mx-4 my-2 border-t border-[#e5e5e5] dark:border-[#262626]" />
               )}
-              {(!isCollapsed || !isDesktop) && (
+              {isExpanded && (
                 <div className="px-4 pb-1 pt-2 text-[10px] font-bold uppercase tracking-wider text-[#a3a3a3] dark:text-[#555]">
                   {section.label}
                 </div>
@@ -364,580 +370,193 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
               {section.items.map(renderNavItem)}
             </React.Fragment>
           ))}
-          <div className="hidden" aria-hidden="true">
-          {/* Live manager */}
-          <div
-            data-onboarding="nav-live"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNav('/live');
-            }}
-            className={`
-              mx-2 mb-1 rounded-lg cursor-pointer transition-all duration-200 relative
-              ${location.pathname === '/live'
-                ? 'bg-[#f5f5f5] dark:bg-[#262626] text-[#16a34a] dark:text-[#22c55e]' 
-                : 'text-[#737373] dark:text-[#a3a3a3] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a] hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
-              }
-            `}
-          >
-            {!isCollapsed || !isDesktop ? (
-              <div className="flex items-center gap-3 px-4 py-2.5">
-                <Activity size={19} className="shrink-0 stroke-[1.8px]" />
-                <span className="min-w-0 flex-1 truncate text-sm font-medium">{t('nav.live')}</span>
-                <span className="shrink-0 text-[11px] font-medium tabular-nums text-[#a3a3a3] dark:text-[#737373]">
-                  {activeDeliveriesCount}
-                </span>
-              </div>
-            ) : (
-              <SidebarIconTooltip
-                label={`${t('nav.live')} • ${activeDeliveriesCount}`}
-                className="flex items-center justify-center py-2.5"
-              >
-                <Activity size={19} className="stroke-[1.8px]" />
-              </SidebarIconTooltip>
-            )}
-          </div>
-
-          {/* Divider */}
-          <div className="my-2 mx-4 border-t border-[#e5e5e5] dark:border-[#262626]" />
-
-          {/* Dashboard */}
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNav('/dashboard');
-            }}
-            className={`
-              mx-2 mb-1 rounded-lg cursor-pointer transition-all duration-200 relative
-              ${location.pathname === '/dashboard'
-                ? 'bg-[#f5f5f5] dark:bg-[#262626] text-[#16a34a] dark:text-[#22c55e]' 
-                : 'text-[#737373] dark:text-[#a3a3a3] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a] hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
-              }
-            `}
-          >
-            {!isCollapsed || !isDesktop ? (
-              <div className="flex items-center gap-3 px-4 py-2.5">
-                <LayoutDashboard size={19} className="shrink-0 stroke-[1.8px]" />
-                <span className="text-sm font-medium truncate">{t('nav.dashboard')}</span>
-              </div>
-            ) : (
-              <SidebarIconTooltip label={t('nav.dashboard')} className="flex items-center justify-center py-2.5">
-                <LayoutDashboard size={19} className="stroke-[1.8px]" />
-              </SidebarIconTooltip>
-            )}
-          </div>
-
-          {/* Divider */}
-          <div className="my-2 mx-4 border-t border-[#e5e5e5] dark:border-[#262626]" />
-
-          {/* משלוחים */}
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNav('/deliveries');
-            }}
-            className={`
-              mx-2 mb-1 rounded-lg cursor-pointer transition-all duration-200 relative
-              ${location.pathname === '/deliveries'
-                ? 'bg-[#f5f5f5] dark:bg-[#262626] text-[#16a34a] dark:text-[#22c55e]'
-                : 'text-[#737373] dark:text-[#a3a3a3] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a] hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
-              }
-            `}
-          >
-            {!isCollapsed || !isDesktop ? (
-              <div className="flex items-center gap-3 px-4 py-2.5">
-                <Package size={19} className="shrink-0 stroke-[1.8px]" />
-                <span className="text-sm font-medium truncate">{t('nav.history')}</span>
-              </div>
-            ) : (
-              <SidebarIconTooltip label={t('nav.history')} className="flex items-center justify-center py-2.5">
-                <Package size={19} className="stroke-[1.8px]" />
-              </SidebarIconTooltip>
-            )}
-          </div>
-
-          <div className="my-2 mx-4 border-t border-[#e5e5e5] dark:border-[#262626]" />
-
-          {/* מסעדות */}
-          <div
-            data-onboarding="nav-restaurants"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNav('/restaurants');
-            }}
-            className={`
-              mx-2 mb-1 rounded-lg cursor-pointer transition-all duration-200 relative
-              ${location.pathname === '/restaurants'
-                ? 'bg-[#f5f5f5] dark:bg-[#262626] text-[#16a34a] dark:text-[#22c55e]'
-                : 'text-[#737373] dark:text-[#a3a3a3] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a] hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
-              }
-            `}
-          >
-            {!isCollapsed || !isDesktop ? (
-              <div className="flex items-center gap-3 px-4 py-2.5">
-                <Store size={19} className="shrink-0 stroke-[1.8px]" />
-                <span className="text-sm font-medium truncate">מסעדות</span>
-              </div>
-            ) : (
-              <SidebarIconTooltip label="מסעדות" className="flex items-center justify-center py-2.5">
-                <Store size={19} className="stroke-[1.8px]" />
-              </SidebarIconTooltip>
-            )}
-          </div>
-
-          {/* שליחים */}
-          <div
-            data-onboarding="nav-couriers"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNav('/couriers');
-            }}
-            className={`
-              mx-2 mb-1 rounded-lg cursor-pointer transition-all duration-200 relative
-              ${location.pathname === '/couriers'
-                ? 'bg-[#f5f5f5] dark:bg-[#262626] text-[#16a34a] dark:text-[#22c55e]'
-                : 'text-[#737373] dark:text-[#a3a3a3] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a] hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
-              }
-            `}
-          >
-            {!isCollapsed || !isDesktop ? (
-              <div className="flex items-center gap-3 px-4 py-2.5">
-                <Bike size={19} className="shrink-0 stroke-[1.8px]" />
-                <span className="text-sm font-medium truncate">שליחים</span>
-              </div>
-            ) : (
-              <SidebarIconTooltip label="שליחים" className="flex items-center justify-center py-2.5">
-                <Bike size={19} className="stroke-[1.8px]" />
-              </SidebarIconTooltip>
-            )}
-          </div>
-
-          {/* משמרות */}
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNav('/couriers/shifts');
-            }}
-            className={`
-              mx-2 mb-1 rounded-lg cursor-pointer transition-all duration-200 relative
-              ${location.pathname === '/couriers/shifts'
-                ? 'bg-[#f5f5f5] dark:bg-[#262626] text-[#16a34a] dark:text-[#22c55e]'
-                : 'text-[#737373] dark:text-[#a3a3a3] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a] hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
-              }
-            `}
-          >
-            {!isCollapsed || !isDesktop ? (
-              <div className="flex items-center gap-3 px-4 py-2.5">
-                <Calendar size={19} className="shrink-0 stroke-[1.8px]" />
-                <span className="text-sm font-medium truncate">משמרות</span>
-              </div>
-            ) : (
-              <SidebarIconTooltip label="משמרות" className="flex items-center justify-center py-2.5">
-                <Calendar size={19} className="stroke-[1.8px]" />
-              </SidebarIconTooltip>
-            )}
-          </div>
-
-          <div className="my-2 mx-4 border-t border-[#e5e5e5] dark:border-[#262626]" />
-
-          {/* אזורי משלוח */}
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNav('/zones');
-            }}
-            className={`
-              mx-2 mb-1 rounded-lg cursor-pointer transition-all duration-200 relative
-              ${location.pathname === '/zones'
-                ? 'bg-[#f5f5f5] dark:bg-[#262626] text-[#16a34a] dark:text-[#22c55e]'
-                : 'text-[#737373] dark:text-[#a3a3a3] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a] hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
-              }
-            `}
-          >
-            {!isCollapsed || !isDesktop ? (
-              <div className="flex items-center gap-3 px-4 py-2.5">
-                <Map size={19} className="shrink-0 stroke-[1.8px]" />
-                <span className="text-sm font-medium truncate">אזורי משלוח</span>
-              </div>
-            ) : (
-              <SidebarIconTooltip label="אזורי משלוח" className="flex items-center justify-center py-2.5">
-                <Map size={19} className="stroke-[1.8px]" />
-              </SidebarIconTooltip>
-            )}
-          </div>
-
-          {/* תמחור לפי מרחק */}
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNav('/distance-pricing');
-            }}
-            className={`
-              mx-2 mb-1 rounded-lg cursor-pointer transition-all duration-200 relative
-              ${location.pathname === '/distance-pricing'
-                ? 'bg-[#f5f5f5] dark:bg-[#262626] text-[#16a34a] dark:text-[#22c55e]'
-                : 'text-[#737373] dark:text-[#a3a3a3] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a] hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
-              }
-            `}
-          >
-            {!isCollapsed || !isDesktop ? (
-              <div className="flex items-center gap-3 px-4 py-2.5">
-                <Ruler size={19} className="shrink-0 stroke-[1.8px]" />
-                <span className="text-sm font-medium truncate">תמחור לפי מרחק</span>
-              </div>
-            ) : (
-              <SidebarIconTooltip label="תמחור לפי מרחק" className="flex items-center justify-center py-2.5">
-                <Ruler size={19} className="stroke-[1.8px]" />
-              </SidebarIconTooltip>
-            )}
-          </div>
-
-          {/* שעות פעילות */}
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNav('/hours');
-            }}
-            className={`
-              mx-2 mb-1 rounded-lg cursor-pointer transition-all duration-200 relative
-              ${location.pathname === '/hours'
-                ? 'bg-[#f5f5f5] dark:bg-[#262626] text-[#16a34a] dark:text-[#22c55e]'
-                : 'text-[#737373] dark:text-[#a3a3a3] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a] hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
-              }
-            `}
-          >
-            {!isCollapsed || !isDesktop ? (
-              <div className="flex items-center gap-3 px-4 py-2.5">
-                <Clock size={19} className="shrink-0 stroke-[1.8px]" />
-                <span className="text-sm font-medium truncate">שעות פעילות</span>
-              </div>
-            ) : (
-              <SidebarIconTooltip label="שעות פעילות" className="flex items-center justify-center py-2.5">
-                <Clock size={19} className="stroke-[1.8px]" />
-              </SidebarIconTooltip>
-            )}
-          </div>
-
-          <div className="my-2 mx-4 border-t border-[#e5e5e5] dark:border-[#262626]" />
-
-          {/* דוחות */}
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNav('/reports');
-            }}
-            className={`
-              mx-2 mb-1 rounded-lg cursor-pointer transition-all duration-200 relative
-              ${location.pathname === '/reports'
-                ? 'bg-[#f5f5f5] dark:bg-[#262626] text-[#16a34a] dark:text-[#22c55e]'
-                : 'text-[#737373] dark:text-[#a3a3a3] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a] hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
-              }
-            `}
-          >
-            {!isCollapsed || !isDesktop ? (
-              <div className="flex items-center gap-3 px-4 py-2.5">
-                <FileText size={19} className="shrink-0 stroke-[1.8px]" />
-                <span className="text-sm font-medium truncate">{t('sidebar.reports')}</span>
-              </div>
-            ) : (
-              <SidebarIconTooltip label={t('sidebar.reports')} className="flex items-center justify-center py-2.5">
-                <FileText size={19} className="stroke-[1.8px]" />
-              </SidebarIconTooltip>
-            )}
-          </div>
-
-          {/* ביצועים */}
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNav('/performance');
-            }}
-            className={`
-              mx-2 mb-1 rounded-lg cursor-pointer transition-all duration-200 relative
-              ${location.pathname === '/performance'
-                ? 'bg-[#f5f5f5] dark:bg-[#262626] text-[#16a34a] dark:text-[#22c55e]'
-                : 'text-[#737373] dark:text-[#a3a3a3] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a] hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
-              }
-            `}
-          >
-            {!isCollapsed || !isDesktop ? (
-              <div className="flex items-center gap-3 px-4 py-2.5">
-                <TrendingUp size={19} className="shrink-0 stroke-[1.8px]" />
-                <span className="text-sm font-medium truncate">ביצועים</span>
-              </div>
-            ) : (
-              <SidebarIconTooltip label="ביצועים" className="flex items-center justify-center py-2.5">
-                <TrendingUp size={19} className="stroke-[1.8px]" />
-              </SidebarIconTooltip>
-            )}
-          </div>
-
-          {/* יומן פעולות */}
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNav('/log');
-            }}
-            className={`
-              mx-2 mb-1 rounded-lg cursor-pointer transition-all duration-200 relative
-              ${location.pathname === '/log'
-                ? 'bg-[#f5f5f5] dark:bg-[#262626] text-[#16a34a] dark:text-[#22c55e]'
-                : 'text-[#737373] dark:text-[#a3a3a3] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a] hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
-              }
-            `}
-          >
-            {!isCollapsed || !isDesktop ? (
-              <div className="flex items-center gap-3 px-4 py-2.5">
-                <FileText size={19} className="shrink-0 stroke-[1.8px]" />
-                <span className="text-sm font-medium truncate">יומן פעולות</span>
-              </div>
-            ) : (
-              <SidebarIconTooltip label="יומן פעולות" className="flex items-center justify-center py-2.5">
-                <FileText size={19} className="stroke-[1.8px]" />
-              </SidebarIconTooltip>
-            )}
-          </div>
-
-          </div>
         </div>
 
-        {/* Footer */}
-        <div className="border-t border-[#e5e5e5] dark:border-[#262626] mt-auto shrink-0">
-           {/* Business Selector - Mobile & Desktop combined */}
-           {(!isCollapsed || !isDesktop) ? (
-             <div className="px-4 py-3 border-b border-[#e5e5e5] dark:border-[#262626]">
-               <div
-                 onClick={() => setIsBusinessPopupOpen(!isBusinessPopupOpen)}
-                 className="flex items-center gap-2 text-xs text-[#666d80] dark:text-[#a3a3a3] cursor-pointer hover:text-[#9fe870] dark:hover:text-[#9fe870] transition-colors"
-               >
-                 <Store size={14} className="shrink-0" />
-                 <span className="truncate">{selectedBusiness}</span>
-                 <ChevronLeft size={12} className="shrink-0" />
-               </div>
-             </div>
-           ) : (
-              <div className="hidden md:block px-4 py-3 border-b border-[#e5e5e5] dark:border-[#262626]">
-               {!isCollapsed ? (
-                 <div
-                   onClick={() => setIsBusinessPopupOpen(!isBusinessPopupOpen)}
-                   className="flex items-center gap-2 text-xs text-[#666d80] dark:text-[#a3a3a3] cursor-pointer hover:text-[#9fe870] dark:hover:text-[#9fe870] transition-colors"
-                 >
-                   <Store size={14} className="shrink-0" />
-                   <span className="truncate">{selectedBusiness}</span>
-                   <ChevronLeft size={12} className="shrink-0" />
-                 </div>
-               ) : (
-                 <div
-                   onClick={() => setIsBusinessPopupOpen(!isBusinessPopupOpen)}
-                   className="flex justify-center cursor-pointer"
-                 >
-                   <Store size={15} className="text-[#666d80] dark:text-[#a3a3a3] hover:text-[#9fe870] dark:hover:text-[#9fe870] transition-colors" />
-                 </div>
-               )}
-             </div>
-           )}
+        <div className="mt-auto shrink-0 border-t border-[#e5e5e5] dark:border-[#262626]">
+          <button
+            type="button"
+            onClick={() => setIsBusinessPopupOpen(!isBusinessPopupOpen)}
+            className={footerItemClass(false)}
+            aria-label={selectedBusiness}
+          >
+            {isExpanded ? (
+              <span className="flex items-center gap-2 text-xs text-[#666d80] transition-colors hover:text-[#9fe870] dark:text-[#a3a3a3] dark:hover:text-[#9fe870]">
+                <Store size={14} className="shrink-0" />
+                <span className="truncate">{selectedBusiness}</span>
+                <ChevronLeft size={12} className="shrink-0" />
+              </span>
+            ) : (
+              <SidebarIconTooltip label={selectedBusiness} className="hidden justify-center md:flex">
+                <Store size={15} className="text-[#666d80] transition-colors hover:text-[#9fe870] dark:text-[#a3a3a3] dark:hover:text-[#9fe870]" />
+              </SidebarIconTooltip>
+            )}
+          </button>
 
-           <div
-             onClick={() => handleNav('/wallet')}
-             className={`px-4 py-3 border-b border-[#e5e5e5] dark:border-[#262626] cursor-pointer transition-colors ${
-               location.pathname === '/wallet'
-                 ? 'bg-[#f5f5f5] dark:bg-[#1a1a1a]'
-                 : 'hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a]'
-             }`}
-           >
-             {(!isCollapsed || !isDesktop) ? (
-               <div className="flex items-center justify-between gap-2">
-                 <div className="flex items-center gap-2">
-                    <Wallet size={16} className="text-[#16a34a] dark:text-[#9fe870] shrink-0" />
-                   <span className="text-xs text-[#666d80] dark:text-[#a3a3a3]">ארנק</span>
-                 </div>
-                 <span className="text-xs font-bold text-[#16a34a] dark:text-[#9fe870]">
-                   ₪{Math.round(walletRevenue).toLocaleString('he-IL')}
-                 </span>
-               </div>
-             ) : (
-               <SidebarIconTooltip label="ארנק" className="hidden md:flex flex-col items-center gap-1">
-                 <Wallet size={16} className="text-[#16a34a] dark:text-[#9fe870]" />
-                 <span className="text-[10px] font-bold text-[#16a34a] dark:text-[#9fe870]">
-                   {walletRevenue > 999 ? `${Math.floor(walletRevenue / 1000)}K` : Math.round(walletRevenue)}
-                 </span>
-               </SidebarIconTooltip>
-             )}
-           </div>
-
-           {/* Delivery Balance Indicator */}
-           <div 
-            onClick={() => handleNav('/delivery-balance')}
-            className="px-4 py-3 border-b border-[#e5e5e5] dark:border-[#262626] cursor-pointer hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a] transition-colors"
-           >
-             {(!isCollapsed || !isDesktop) ? (
-               <div className="flex items-center justify-between gap-2">
-                 <div className="flex items-center gap-2">
-                   <Package size={16} className="text-[#0fcdd3] shrink-0" />
-                   <span className="text-xs text-[#666d80] dark:text-[#a3a3a3]">{t('sidebar.deliveryBalance')}</span>
-                 </div>
-                 <span className={`text-xs font-bold ${
-                   state.deliveryBalance <= 100
-                     ? 'text-[#dc2626] dark:text-[#f87171]' 
-                     : 'text-[#f59e0b] dark:text-[#fbbf24]'
-                 }`}>
-                   {state.deliveryBalance.toLocaleString('he-IL')}
-                 </span>
-               </div>
-             ) : (
-               <SidebarIconTooltip
-                 label={t('sidebar.deliveryBalance')}
-                 className="hidden md:flex flex-col items-center gap-1"
-               >
-                 <Package size={16} className="text-[#0fcdd3]" />
-                 <span className={`text-[10px] font-bold ${
-                   state.deliveryBalance <= 100
-                     ? 'text-[#dc2626] dark:text-[#f87171]' 
-                     : 'text-[#f59e0b] dark:text-[#fbbf24]'
-                 }`}>
-                   {state.deliveryBalance > 999 ? `${Math.floor(state.deliveryBalance / 1000)}K` : state.deliveryBalance}
-                 </span>
-               </SidebarIconTooltip>
-             )}
-           </div>
-
-           {/* System Control */}
-           <div className="px-4 py-3 border-b border-[#e5e5e5] dark:border-[#262626]">
-             {(!isCollapsed || !isDesktop) ? (
-               <div className="space-y-3">
-                  {/* Accept deliveries */}
-                 <div data-onboarding="system-toggle" className="flex items-center justify-between">
-                   <span className="text-xs text-[#666d80] dark:text-[#a3a3a3]">{t('sidebar.acceptDeliveries')}</span>
-                   <button
-                     onClick={(e) => {
-                       e.stopPropagation();
-                       if (!state.isSystemOpen && state.couriers.filter(c => c.status !== 'offline').length === 0) {
-                         alert(t('sidebar.noActiveCouriers'));
-                         return;
-                       }
-                       dispatch({ type: 'TOGGLE_SYSTEM' });
-                     }}
-                     disabled={!state.isSystemOpen && state.couriers.filter(c => c.status !== 'offline').length === 0}
-                     className={`relative w-10 h-5 rounded-full transition-colors ${
-                       state.isSystemOpen
-                         ? 'bg-[#02B74F]'
-                         : state.couriers.filter(c => c.status !== 'offline').length === 0
-                         ? 'bg-[#e5e5e5] dark:bg-[#404040] opacity-50 cursor-not-allowed'
-                         : 'bg-[#e5e5e5] dark:bg-[#404040] cursor-pointer'
-                     }`}
-                   >
-                     <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${
-                       state.isSystemOpen ? 'right-0.5' : 'left-0.5'
-                     }`} />
-                   </button>
-                 </div>
-
-                  {/* Auto assign */}
-                 <div className="flex items-center justify-between">
-                   <span className="text-xs text-[#666d80] dark:text-[#a3a3a3]">{t('sidebar.autoAssign')}</span>
-                   <button
-                     onClick={(e) => {
-                       e.stopPropagation();
-                       dispatch({ type: 'TOGGLE_AUTO_ASSIGN' });
-                     }}
-                     className={`relative w-10 h-5 rounded-full transition-colors ${
-                       state.autoAssignEnabled ? 'bg-[#02B74F]' : 'bg-[#e5e5e5] dark:bg-[#404040]'
-                     }`}
-                   >
-                     <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${
-                       state.autoAssignEnabled ? 'right-0.5' : 'left-0.5'
-                     }`} />
-                   </button>
-                 </div>
-
-               </div>
+          <button
+            type="button"
+            onClick={() => handleNav(walletItem?.path ?? '/wallet')}
+            className={footerItemClass(location.pathname === (walletItem?.path ?? '/wallet'))}
+          >
+            {isExpanded ? (
+              <span className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2">
+                  <Wallet size={16} className="shrink-0 text-[#16a34a] dark:text-[#9fe870]" />
+                  <span className="text-xs text-[#666d80] dark:text-[#a3a3a3]">
+                    {walletItem?.label ?? LABELS.wallet}
+                  </span>
+                </span>
+                <span className="text-xs font-bold text-[#16a34a] dark:text-[#9fe870]">
+                  ₪{Math.round(walletRevenue).toLocaleString('he-IL')}
+                </span>
+              </span>
             ) : (
               <SidebarIconTooltip
-                label={state.isSystemOpen ? t('sidebar.acceptDeliveries') : '\u05de\u05e2\u05e8\u05db\u05ea \u05e1\u05d2\u05d5\u05e8\u05d4'}
-                className="hidden md:flex flex-col items-center gap-1"
+                label={walletItem?.label ?? LABELS.wallet}
+                className="hidden flex-col items-center gap-1 md:flex"
               >
-                <Power className={`w-4 h-4 transition-colors ${
-                  state.isSystemOpen ? 'text-[#02B74F]' : 'text-[#dc2626]'
-                }`} />
+                <Wallet size={16} className="text-[#16a34a] dark:text-[#9fe870]" />
+                <span className="text-[10px] font-bold text-[#16a34a] dark:text-[#9fe870]">
+                  {walletRevenue > 999 ? `${Math.floor(walletRevenue / 1000)}K` : Math.round(walletRevenue)}
+                </span>
+              </SidebarIconTooltip>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleNav(balanceItem?.path ?? '/delivery-balance')}
+            className={footerItemClass(location.pathname === (balanceItem?.path ?? '/delivery-balance'))}
+          >
+            {isExpanded ? (
+              <span className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2">
+                  <Package size={16} className="shrink-0 text-[#0fcdd3]" />
+                  <span className="text-xs text-[#666d80] dark:text-[#a3a3a3]">
+                    {balanceItem?.label ?? LABELS.deliveryBalance}
+                  </span>
+                </span>
+                <span
+                  className={`text-xs font-bold ${
+                    state.deliveryBalance <= 100
+                      ? 'text-[#dc2626] dark:text-[#f87171]'
+                      : 'text-[#f59e0b] dark:text-[#fbbf24]'
+                  }`}
+                >
+                  {state.deliveryBalance.toLocaleString('he-IL')}
+                </span>
+              </span>
+            ) : (
+              <SidebarIconTooltip
+                label={balanceItem?.label ?? LABELS.deliveryBalance}
+                className="hidden flex-col items-center gap-1 md:flex"
+              >
+                <Package size={16} className="text-[#0fcdd3]" />
+                <span
+                  className={`text-[10px] font-bold ${
+                    state.deliveryBalance <= 100
+                      ? 'text-[#dc2626] dark:text-[#f87171]'
+                      : 'text-[#f59e0b] dark:text-[#fbbf24]'
+                  }`}
+                >
+                  {state.deliveryBalance > 999 ? `${Math.floor(state.deliveryBalance / 1000)}K` : state.deliveryBalance}
+                </span>
+              </SidebarIconTooltip>
+            )}
+          </button>
+
+          <div className="border-b border-[#e5e5e5] px-4 py-3 dark:border-[#262626]">
+            {isExpanded ? (
+              <div className="space-y-3">
+                <div data-onboarding="system-toggle" className="flex items-center justify-between gap-3">
+                  <span className="text-xs text-[#666d80] dark:text-[#a3a3a3]">
+                    {LABELS.acceptDeliveries}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={toggleSystem}
+                    disabled={isSystemToggleDisabled}
+                    className={`relative h-5 w-10 rounded-full transition-colors ${
+                      state.isSystemOpen
+                        ? 'bg-[#02B74F]'
+                        : isSystemToggleDisabled
+                          ? 'cursor-not-allowed bg-[#e5e5e5] opacity-50 dark:bg-[#404040]'
+                          : 'bg-[#e5e5e5] dark:bg-[#404040]'
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+                        state.isSystemOpen ? 'right-0.5' : 'left-0.5'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xs text-[#666d80] dark:text-[#a3a3a3]">
+                    {LABELS.autoAssign}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      dispatch({ type: 'TOGGLE_AUTO_ASSIGN' });
+                    }}
+                    className={`relative h-5 w-10 rounded-full transition-colors ${
+                      state.autoAssignEnabled ? 'bg-[#02B74F]' : 'bg-[#e5e5e5] dark:bg-[#404040]'
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+                        state.autoAssignEnabled ? 'right-0.5' : 'left-0.5'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <SidebarIconTooltip
+                label={state.isSystemOpen ? LABELS.acceptDeliveries : LABELS.systemClosed}
+                className="hidden justify-center md:flex"
+              >
+                <button
+                  type="button"
+                  onClick={toggleSystem}
+                  disabled={isSystemToggleDisabled}
+                  className="flex items-center justify-center"
+                >
+                  <Power className={`h-4 w-4 transition-colors ${state.isSystemOpen ? 'text-[#02B74F]' : 'text-[#dc2626]'}`} />
+                </button>
               </SidebarIconTooltip>
             )}
           </div>
 
-           {/* Help & Settings - Mobile */}
-           <div className="md:hidden flex flex-col">
-             <div 
-               onClick={() => handleNav('/settings')}
-               className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors ${
-                 location.pathname.startsWith('/settings') ? 'bg-[#0d0d12] dark:bg-[#262626] text-[#fafafa] dark:text-[#fafafa]' : 'text-[#36394a] dark:text-[#d4d4d4] hover:bg-[#f5f5f5] dark:hover:bg-[#404040]'
-               }`}
-             >
-               <Settings size={20} className="stroke-[1.5px]" />
-               <span className="text-sm font-medium">{t('sidebar.settings')}</span>
-             </div>
-             <div 
-               onClick={() => handleNav('/help')}
-               className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors ${
-                 location.pathname === '/help' ? 'bg-[#0d0d12] dark:bg-[#262626] text-[#fafafa] dark:text-[#fafafa]' : 'text-[#36394a] dark:text-[#d4d4d4] hover:bg-[#f5f5f5] dark:hover:bg-[#404040]'
-               }`}
-             >
-               <HelpCircle size={20} className="stroke-[1.5px]" />
-               <span className="text-sm font-medium">{t('sidebar.help')}</span>
-             </div>
-           </div>
-           
-           {/* Help & Settings - Desktop Collapsed */}
-           {isCollapsed ? (
-             <div className="hidden md:flex flex-col p-2 gap-2">
-               <div 
-                 onClick={() => handleNav('/settings')}
-                 className={`flex items-center justify-center p-2.5 cursor-pointer transition-colors rounded-md mx-1 ${
-                   location.pathname.startsWith('/settings') ? 'bg-[#0d0d12] dark:bg-[#262626] text-[#fafafa] dark:text-[#fafafa]' : 'text-[#36394a] dark:text-[#d4d4d4] hover:bg-[#f5f5f5] dark:hover:bg-[#404040]'
-                 }`}
-               >
-                 <SidebarIconTooltip label={t('sidebar.systemSettings')} className="flex items-center justify-center">
-                   <Settings size={20} className="stroke-[1.5px]" />
-                 </SidebarIconTooltip>
-               </div>
-               <div 
-                 onClick={() => handleNav('/help')}
-                 className={`flex items-center justify-center p-2.5 cursor-pointer transition-colors rounded-md mx-1 ${
-                   location.pathname === '/help' ? 'bg-[#0d0d12] dark:bg-[#262626] text-[#fafafa] dark:text-[#fafafa]' : 'text-[#36394a] dark:text-[#d4d4d4] hover:bg-[#f5f5f5] dark:hover:bg-[#404040]'
-                 }`}
-               >
-                 <SidebarIconTooltip label={t('sidebar.help')} className="flex items-center justify-center">
-                   <HelpCircle size={20} className="stroke-[1.5px]" />
-                 </SidebarIconTooltip>
-               </div>
-             </div>
-           ) : (
-             /* Help & Settings - Desktop Expanded */
-             <div className="hidden md:flex flex-col p-2">
-               <div 
-                 onClick={() => handleNav('/settings')}
-                 className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors ${
-                   location.pathname.startsWith('/settings') ? 'bg-[#0d0d12] dark:bg-[#262626] text-[#fafafa] dark:text-[#fafafa]' : 'text-[#36394a] dark:text-[#d4d4d4] hover:bg-[#f5f5f5] dark:hover:bg-[#404040]'
-                 }`}
-               >
-                 <Settings size={20} className="stroke-[1.5px]" />
-                 <span className="text-sm font-medium">{t('sidebar.systemSettings')}</span>
-               </div>
-               <div 
-                 onClick={() => handleNav('/help')}
-                 className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors ${
-                   location.pathname === '/help' ? 'bg-[#0d0d12] dark:bg-[#262626] text-[#fafafa] dark:text-[#fafafa]' : 'text-[#36394a] dark:text-[#d4d4d4] hover:bg-[#f5f5f5] dark:hover:bg-[#404040]'
-                 }`}
-               >
-                 <HelpCircle size={20} className="stroke-[1.5px]" />
-                 <span className="text-sm font-medium">{t('sidebar.help')}</span>
-               </div>
-             </div>
-           )}
+          <button
+            type="button"
+            onClick={() => handleNav(settingsItem?.path ?? '/settings')}
+            className={`w-full cursor-pointer px-4 py-3 text-right transition-colors ${
+              location.pathname.startsWith(settingsItem?.path ?? '/settings')
+                ? 'bg-[#f5f5f5] text-[#16a34a] dark:bg-[#262626] dark:text-[#22c55e]'
+                : 'text-[#36394a] hover:bg-[#f5f5f5] dark:text-[#d4d4d4] dark:hover:bg-[#404040]'
+            }`}
+          >
+            {isExpanded ? (
+              <span className="flex items-center gap-3">
+                <Settings size={20} className="shrink-0 stroke-[1.5px]" />
+                <span className="truncate text-sm font-medium">{settingsItem?.label ?? LABELS.settings}</span>
+              </span>
+            ) : (
+              <SidebarIconTooltip
+                label={settingsItem?.label ?? LABELS.settings}
+                className="hidden items-center justify-center md:flex"
+              >
+                <Settings size={20} className="stroke-[1.5px]" />
+              </SidebarIconTooltip>
+            )}
+          </button>
         </div>
       </div>
-      
-      <div id="mobile-menu-trigger" className="hidden" onClick={toggleMobileMenu}></div>
+
+      <div id="mobile-menu-trigger" className="hidden" onClick={toggleMobileMenu} />
     </>
   );
 };
-
-

@@ -1,0 +1,183 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/@fs/C:\\Users\\reala\\OneDrive\\Desktop\\sendi\\se.io SYSTEM DEMO\\src\\app\\live\\live-couriers-toolbar.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=2e7cf56d"; const Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"]; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/live/live-couriers-toolbar.tsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+import { ArrowUpDown } from "/node_modules/.vite/deps/lucide-react.js?v=f457fbae";
+const sortOptionLabels = {
+  status: "לפי סטטוס",
+  available: "לפי זמינות",
+  active: "לפי משלוחים פעילים",
+  total: "לפי סך משלוחים",
+  rating: "לפי דירוג",
+  name: "לפי שם (א״ב)"
+};
+const activeSortLabel = {
+  status: "סטטוס",
+  available: "זמינות",
+  active: "משלוחים פעילים",
+  total: "סך משלוחים",
+  rating: "דירוג",
+  name: "שם (א״ב)"
+};
+export const LiveCouriersToolbar = ({
+  displayedCouriersCount,
+  sortedCouriersCount,
+  sortBy,
+  sortDirection,
+  showSortMenu,
+  onToggleSortMenu,
+  onCloseSortMenu,
+  onSelectSort,
+  onToggleSortDirection
+}) => {
+  return /* @__PURE__ */ jsxDEV("div", { className: "sticky top-0 z-10 border-b border-[#e5e5e5] bg-[#fafafa] p-3 dark:border-[#262626] dark:bg-[#0a0a0a]", children: /* @__PURE__ */ jsxDEV("div", { className: "flex items-center justify-between gap-2", children: [
+    /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-2 text-right text-xs text-[#737373] dark:text-[#a3a3a3]", children: /* @__PURE__ */ jsxDEV("span", { children: [
+      "מציג ",
+      displayedCouriersCount,
+      " / ",
+      sortedCouriersCount,
+      " שליחים"
+    ] }, void 0, true, {
+      fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/live/live-couriers-toolbar.tsx",
+      lineNumber: 70,
+      columnNumber: 11
+    }, this) }, void 0, false, {
+      fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/live/live-couriers-toolbar.tsx",
+      lineNumber: 69,
+      columnNumber: 9
+    }, this),
+    /* @__PURE__ */ jsxDEV("div", { className: "flex flex-shrink-0 items-center gap-2", children: [
+      /* @__PURE__ */ jsxDEV("div", { className: "relative", children: [
+        /* @__PURE__ */ jsxDEV(
+          "button",
+          {
+            onClick: onToggleSortMenu,
+            className: "rounded-lg px-2 py-1 text-xs transition-colors hover:bg-white dark:hover:bg-[#171717]",
+            title: "בחר קטגוריית מיון",
+            children: /* @__PURE__ */ jsxDEV("span", { className: "text-[#737373] dark:text-[#a3a3a3]", children: [
+              "לפי: ",
+              /* @__PURE__ */ jsxDEV("span", { className: "font-bold text-[#22c55e]", children: activeSortLabel[sortBy] }, void 0, false, {
+                fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/live/live-couriers-toolbar.tsx",
+                lineNumber: 81,
+                columnNumber: 22
+              }, this)
+            ] }, void 0, true, {
+              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/live/live-couriers-toolbar.tsx",
+              lineNumber: 80,
+              columnNumber: 15
+            }, this)
+          },
+          void 0,
+          false,
+          {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/live/live-couriers-toolbar.tsx",
+            lineNumber: 75,
+            columnNumber: 13
+          },
+          this
+        ),
+        showSortMenu && /* @__PURE__ */ jsxDEV(Fragment, { children: [
+          /* @__PURE__ */ jsxDEV("div", { className: "fixed inset-0 z-40", onClick: onCloseSortMenu }, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/live/live-couriers-toolbar.tsx",
+            lineNumber: 87,
+            columnNumber: 17
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { className: "absolute left-0 z-50 mt-2 w-52 overflow-hidden rounded-xl border border-[#e5e5e5] bg-white shadow-2xl dark:border-[#262626] dark:bg-[#171717]", children: Object.keys(sortOptionLabels).map(
+            (option) => /* @__PURE__ */ jsxDEV(
+              "button",
+              {
+                onClick: () => onSelectSort(option),
+                className: `w-full px-4 py-2.5 text-right text-sm transition-colors ${sortBy === option ? "bg-[#f0fdf4] font-bold text-[#22c55e] dark:bg-[#0a2f1a]" : "text-[#0d0d12] hover:bg-[#fafafa] dark:text-[#fafafa] dark:hover:bg-[#262626]"}`,
+                children: sortOptionLabels[option]
+              },
+              option,
+              false,
+              {
+                fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/live/live-couriers-toolbar.tsx",
+                lineNumber: 90,
+                columnNumber: 17
+              },
+              this
+            )
+          ) }, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/live/live-couriers-toolbar.tsx",
+            lineNumber: 88,
+            columnNumber: 17
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/live/live-couriers-toolbar.tsx",
+          lineNumber: 86,
+          columnNumber: 13
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/live/live-couriers-toolbar.tsx",
+        lineNumber: 74,
+        columnNumber: 11
+      }, this),
+      /* @__PURE__ */ jsxDEV(
+        "button",
+        {
+          onClick: onToggleSortDirection,
+          className: "rounded-lg p-2 transition-colors hover:bg-white dark:hover:bg-[#171717]",
+          title: sortDirection === "asc" ? "מיון עולה" : "מיון יורד",
+          children: /* @__PURE__ */ jsxDEV(ArrowUpDown, { className: "h-4 w-4 text-[#22c55e]" }, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/live/live-couriers-toolbar.tsx",
+            lineNumber: 112,
+            columnNumber: 13
+          }, this)
+        },
+        void 0,
+        false,
+        {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/live/live-couriers-toolbar.tsx",
+          lineNumber: 107,
+          columnNumber: 11
+        },
+        this
+      )
+    ] }, void 0, true, {
+      fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/live/live-couriers-toolbar.tsx",
+      lineNumber: 73,
+      columnNumber: 9
+    }, this)
+  ] }, void 0, true, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/live/live-couriers-toolbar.tsx",
+    lineNumber: 68,
+    columnNumber: 7
+  }, this) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/live/live-couriers-toolbar.tsx",
+    lineNumber: 67,
+    columnNumber: 5
+  }, this);
+};
+_c = LiveCouriersToolbar;
+var _c;
+$RefreshReg$(_c, "LiveCouriersToolbar");
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/live/live-couriers-toolbar.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/live/live-couriers-toolbar.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,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QUFBQTtBQUFBLFNBaURBO0FBRUo7QUFBRVUsS0EvRFdkO0FBQXVELElBQUFjO0FBQUEsYUFBQUEsSUFBQSIsIm5hbWVzIjpbIkFycm93VXBEb3duIiwic29ydE9wdGlvbkxhYmVscyIsInN0YXR1cyIsImF2YWlsYWJsZSIsImFjdGl2ZSIsInRvdGFsIiwicmF0aW5nIiwibmFtZSIsImFjdGl2ZVNvcnRMYWJlbCIsIkxpdmVDb3VyaWVyc1Rvb2xiYXIiLCJkaXNwbGF5ZWRDb3VyaWVyc0NvdW50Iiwic29ydGVkQ291cmllcnNDb3VudCIsInNvcnRCeSIsInNvcnREaXJlY3Rpb24iLCJzaG93U29ydE1lbnUiLCJvblRvZ2dsZVNvcnRNZW51Iiwib25DbG9zZVNvcnRNZW51Iiwib25TZWxlY3RTb3J0Iiwib25Ub2dnbGVTb3J0RGlyZWN0aW9uIiwiT2JqZWN0Iiwia2V5cyIsIm1hcCIsIm9wdGlvbiIsIl9jIl0sImlnbm9yZUxpc3QiOltdLCJzb3VyY2VzIjpbImxpdmUtY291cmllcnMtdG9vbGJhci50c3giXSwic291cmNlc0NvbnRlbnQiOlsi77u/aW1wb3J0IFJlYWN0IGZyb20gJ3JlYWN0JztcclxuaW1wb3J0IHsgQXJyb3dVcERvd24gfSBmcm9tICdsdWNpZGUtcmVhY3QnO1xyXG5cclxudHlwZSBMaXZlQ291cmllcnNTb3J0QnkgPSAnc3RhdHVzJyB8ICduYW1lJyB8ICdhY3RpdmUnIHwgJ3RvdGFsJyB8ICdyYXRpbmcnIHwgJ2F2YWlsYWJsZSc7XHJcblxyXG50eXBlIExpdmVDb3VyaWVyc1Rvb2xiYXJQcm9wcyA9IHtcclxuICBkaXNwbGF5ZWRDb3VyaWVyc0NvdW50OiBudW1iZXI7XHJcbiAgc29ydGVkQ291cmllcnNDb3VudDogbnVtYmVyO1xyXG4gIHNvcnRCeTogTGl2ZUNvdXJpZXJzU29ydEJ5O1xyXG4gIHNvcnREaXJlY3Rpb246ICdhc2MnIHwgJ2Rlc2MnO1xyXG4gIHNob3dTb3J0TWVudTogYm9vbGVhbjtcclxuICBvblRvZ2dsZVNvcnRNZW51OiAoKSA9PiB2b2lkO1xyXG4gIG9uQ2xvc2VTb3J0TWVudTogKCkgPT4gdm9pZDtcclxuICBvblNlbGVjdFNvcnQ6IChzb3J0Qnk6IExpdmVDb3VyaWVyc1NvcnRCeSkgPT4gdm9pZDtcclxuICBvblRvZ2dsZVNvcnREaXJlY3Rpb246ICgpID0+IHZvaWQ7XHJcbn07XHJcblxyXG5jb25zdCBzb3J0T3B0aW9uTGFiZWxzOiBSZWNvcmQ8TGl2ZUNvdXJpZXJzU29ydEJ5LCBzdHJpbmc+ID0ge1xyXG4gIHN0YXR1czogJ9ec16TXmSDXodeY15jXldehJyxcclxuICBhdmFpbGFibGU6ICfXnNek15kg15bXnteZ16DXldeqJyxcclxuICBhY3RpdmU6ICfXnNek15kg157Xqdec15XXl9eZ150g16TXoteZ15zXmdedJyxcclxuICB0b3RhbDogJ9ec16TXmSDXodeaINee16nXnNeV15fXmdedJyxcclxuICByYXRpbmc6ICfXnNek15kg15PXmdeo15XXkicsXHJcbiAgbmFtZTogJ9ec16TXmSDXqdedICjXkNe015EpJyxcclxufTtcclxuXHJcbmNvbnN0IGFjdGl2ZVNvcnRMYWJlbDogUmVjb3JkPExpdmVDb3VyaWVyc1NvcnRCeSwgc3RyaW5nPiA9IHtcclxuICBzdGF0dXM6ICfXodeY15jXldehJyxcclxuICBhdmFpbGFibGU6ICfXltee15nXoNeV16onLFxyXG4gIGFjdGl2ZTogJ9ee16nXnNeV15fXmdedINek16LXmdec15nXnScsXHJcbiAgdG90YWw6ICfXodeaINee16nXnNeV15fXmdedJyxcclxuICByYXRpbmc6ICfXk9eZ16jXldeSJyxcclxuICBuYW1lOiAn16nXnSAo15DXtNeRKScsXHJcbn07XHJcblxyXG5leHBvcnQgY29uc3QgTGl2ZUNvdXJpZXJzVG9vbGJhcjogUmVhY3QuRkM8TGl2ZUNvdXJpZXJzVG9vbGJhclByb3BzPiA9ICh7XHJcbiAgZGlzcGxheWVkQ291cmllcnNDb3VudCxcclxuICBzb3J0ZWRDb3VyaWVyc0NvdW50LFxyXG4gIHNvcnRCeSxcclxuICBzb3J0RGlyZWN0aW9uLFxyXG4gIHNob3dTb3J0TWVudSxcclxuICBvblRvZ2dsZVNvcnRNZW51LFxyXG4gIG9uQ2xvc2VTb3J0TWVudSxcclxuICBvblNlbGVjdFNvcnQsXHJcbiAgb25Ub2dnbGVTb3J0RGlyZWN0aW9uLFxyXG59KSA9PiB7XHJcbiAgcmV0dXJuIChcclxuICAgIDxkaXYgY2xhc3NOYW1lPVwic3RpY2t5IHRvcC0wIHotMTAgYm9yZGVyLWIgYm9yZGVyLVsjZTVlNWU1XSBiZy1bI2ZhZmFmYV0gcC0zIGRhcms6Ym9yZGVyLVsjMjYyNjI2XSBkYXJrOmJnLVsjMGEwYTBhXVwiPlxyXG4gICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktYmV0d2VlbiBnYXAtMlwiPlxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIgdGV4dC1yaWdodCB0ZXh0LXhzIHRleHQtWyM3MzczNzNdIGRhcms6dGV4dC1bI2EzYTNhM11cIj5cclxuICAgICAgICAgIDxzcGFuPtee16bXmdeSIHtkaXNwbGF5ZWRDb3VyaWVyc0NvdW50fSAvIHtzb3J0ZWRDb3VyaWVyc0NvdW50fSDXqdec15nXl9eZ1508L3NwYW4+XHJcbiAgICAgICAgPC9kaXY+XHJcblxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBmbGV4LXNocmluay0wIGl0ZW1zLWNlbnRlciBnYXAtMlwiPlxyXG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJyZWxhdGl2ZVwiPlxyXG4gICAgICAgICAgICA8YnV0dG9uXHJcbiAgICAgICAgICAgICAgb25DbGljaz17b25Ub2dnbGVTb3J0TWVudX1cclxuICAgICAgICAgICAgICBjbGFzc05hbWU9XCJyb3VuZGVkLWxnIHB4LTIgcHktMSB0ZXh0LXhzIHRyYW5zaXRpb24tY29sb3JzIGhvdmVyOmJnLXdoaXRlIGRhcms6aG92ZXI6YmctWyMxNzE3MTddXCJcclxuICAgICAgICAgICAgICB0aXRsZT1cIteR15fXqCDXp9eY15LXldeo15nXmdeqINee15nXldefXCJcclxuICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQtWyM3MzczNzNdIGRhcms6dGV4dC1bI2EzYTNhM11cIj5cclxuICAgICAgICAgICAgICAgINec16TXmTogPHNwYW4gY2xhc3NOYW1lPVwiZm9udC1ib2xkIHRleHQtWyMyMmM1NWVdXCI+e2FjdGl2ZVNvcnRMYWJlbFtzb3J0QnldfTwvc3Bhbj5cclxuICAgICAgICAgICAgICA8L3NwYW4+XHJcbiAgICAgICAgICAgIDwvYnV0dG9uPlxyXG5cclxuICAgICAgICAgICAge3Nob3dTb3J0TWVudSAmJiAoXHJcbiAgICAgICAgICAgICAgPD5cclxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZml4ZWQgaW5zZXQtMCB6LTQwXCIgb25DbGljaz17b25DbG9zZVNvcnRNZW51fSAvPlxyXG4gICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJhYnNvbHV0ZSBsZWZ0LTAgei01MCBtdC0yIHctNTIgb3ZlcmZsb3ctaGlkZGVuIHJvdW5kZWQteGwgYm9yZGVyIGJvcmRlci1bI2U1ZTVlNV0gYmctd2hpdGUgc2hhZG93LTJ4bCBkYXJrOmJvcmRlci1bIzI2MjYyNl0gZGFyazpiZy1bIzE3MTcxN11cIj5cclxuICAgICAgICAgICAgICAgICAgeyhPYmplY3Qua2V5cyhzb3J0T3B0aW9uTGFiZWxzKSBhcyBMaXZlQ291cmllcnNTb3J0QnlbXSkubWFwKChvcHRpb24pID0+IChcclxuICAgICAgICAgICAgICAgICAgICA8YnV0dG9uXHJcbiAgICAgICAgICAgICAgICAgICAgICBrZXk9e29wdGlvbn1cclxuICAgICAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IG9uU2VsZWN0U29ydChvcHRpb24pfVxyXG4gICAgICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPXtgdy1mdWxsIHB4LTQgcHktMi41IHRleHQtcmlnaHQgdGV4dC1zbSB0cmFuc2l0aW9uLWNvbG9ycyAke1xyXG4gICAgICAgICAgICAgICAgICAgICAgICBzb3J0QnkgPT09IG9wdGlvblxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgID8gJ2JnLVsjZjBmZGY0XSBmb250LWJvbGQgdGV4dC1bIzIyYzU1ZV0gZGFyazpiZy1bIzBhMmYxYV0nXHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgOiAndGV4dC1bIzBkMGQxMl0gaG92ZXI6YmctWyNmYWZhZmFdIGRhcms6dGV4dC1bI2ZhZmFmYV0gZGFyazpob3ZlcjpiZy1bIzI2MjYyNl0nXHJcbiAgICAgICAgICAgICAgICAgICAgICB9YH1cclxuICAgICAgICAgICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgICAgICAgICB7c29ydE9wdGlvbkxhYmVsc1tvcHRpb25dfVxyXG4gICAgICAgICAgICAgICAgICAgIDwvYnV0dG9uPlxyXG4gICAgICAgICAgICAgICAgICApKX1cclxuICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgIDwvPlxyXG4gICAgICAgICAgICApfVxyXG4gICAgICAgICAgPC9kaXY+XHJcblxyXG4gICAgICAgICAgPGJ1dHRvblxyXG4gICAgICAgICAgICBvbkNsaWNrPXtvblRvZ2dsZVNvcnREaXJlY3Rpb259XHJcbiAgICAgICAgICAgIGNsYXNzTmFtZT1cInJvdW5kZWQtbGcgcC0yIHRyYW5zaXRpb24tY29sb3JzIGhvdmVyOmJnLXdoaXRlIGRhcms6aG92ZXI6YmctWyMxNzE3MTddXCJcclxuICAgICAgICAgICAgdGl0bGU9e3NvcnREaXJlY3Rpb24gPT09ICdhc2MnID8gJ9ee15nXldefINei15XXnNeUJyA6ICfXnteZ15XXnyDXmdeV16jXkyd9XHJcbiAgICAgICAgICA+XHJcbiAgICAgICAgICAgIDxBcnJvd1VwRG93biBjbGFzc05hbWU9XCJoLTQgdy00IHRleHQtWyMyMmM1NWVdXCIgLz5cclxuICAgICAgICAgIDwvYnV0dG9uPlxyXG4gICAgICAgIDwvZGl2PlxyXG4gICAgICA8L2Rpdj5cclxuICAgIDwvZGl2PlxyXG4gICk7XHJcbn07XHJcblxyXG4iXSwiZmlsZSI6IkM6L1VzZXJzL3JlYWxhL09uZURyaXZlL0Rlc2t0b3Avc2VuZGkvc2UuaW8gU1lTVEVNIERFTU8vc3JjL2FwcC9saXZlL2xpdmUtY291cmllcnMtdG9vbGJhci50c3gifQ==

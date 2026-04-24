@@ -1,0 +1,5 @@
+2026/04/25-01:29:07.150 24fc Creating DB C:\Users\reala\OneDrive\Desktop\sendi\se.io SYSTEM DEMO\.tmp-edge-ui-review-cdp2\Default\EdgeCoupons/coupons_data.db since it was missing.
+2026/04/25-01:29:07.154 24fc Reusing MANIFEST C:\Users\reala\OneDrive\Desktop\sendi\se.io SYSTEM DEMO\.tmp-edge-ui-review-cdp2\Default\EdgeCoupons/coupons_data.db/MANIFEST-000001
+2026/04/25-01:29:07.303 3308 Level-0 table #5: started
+2026/04/25-01:29:07.306 3308 Level-0 table #5: 682121 bytes OK
+2026/04/25-01:29:07.307 3308 Delete type=0 #3

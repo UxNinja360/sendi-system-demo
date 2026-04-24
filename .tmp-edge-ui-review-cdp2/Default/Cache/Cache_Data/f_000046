@@ -1,0 +1,797 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/@fs/C:\\Users\\reala\\OneDrive\\Desktop\\sendi\\se.io SYSTEM DEMO\\src\\app\\deliveries\\delivery-table-row.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=2e7cf56d"; const Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"]; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+var _s = $RefreshSig$();
+import __vite__cjsImport3_react from "/node_modules/.vite/deps/react.js?v=2e7cf56d"; const useState = __vite__cjsImport3_react["useState"]; const useRef = __vite__cjsImport3_react["useRef"]; const useEffect = __vite__cjsImport3_react["useEffect"];
+import {
+  Copy,
+  UserPlus,
+  XCircle,
+  CheckCircle2,
+  FileText,
+  Info,
+  Edit,
+  RotateCcw
+} from "/node_modules/.vite/deps/lucide-react.js?v=f457fbae";
+import { toast } from "/node_modules/.vite/deps/sonner.js?v=4080ec44";
+import {
+  EntityTableActionsCell,
+  EntityTableRowCheckbox
+} from "/src/app/components/common/entity-table-shell.tsx";
+import { EntityRowActionTrigger } from "/src/app/components/common/entity-row-action-trigger.tsx";
+import {
+  ENTITY_TABLE_DATA_CELL_CLASS,
+  ENTITY_TABLE_ROW_CLASS
+} from "/src/app/components/common/entity-table-shared.ts";
+import { ALL_COLUMNS, CUSTOM_COLUMN_IDS, COLUMN_MAP } from "/src/app/deliveries/column-defs.ts";
+import { STATUS_CONFIG } from "/src/app/deliveries/status-config.ts";
+import { formatCurrency, getDeliveryCustomerCharge } from "/src/app/utils/delivery-finance.ts";
+export const DeliveryTableRow = ({
+  delivery,
+  courier,
+  timeRemaining,
+  formatTime,
+  visibleColumns,
+  onNavigate,
+  isSelected,
+  onToggleSelect,
+  onOpenDrawer,
+  onStatusChange,
+  onCancelDelivery,
+  onCompleteDelivery,
+  onUnassignCourier,
+  onEditDelivery,
+  isDrawerTarget,
+  orderedColumns
+}) => {
+  _s();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [contextMenuPos, setContextMenuPos] = useState(null);
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+  const menuRef = useRef(null);
+  const statusRef = useRef(null);
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+        setContextMenuPos(null);
+      }
+      if (statusRef.current && !statusRef.current.contains(e.target)) setStatusDropdownOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+  const config = STATUS_CONFIG[delivery.status];
+  const StatusIcon = config.icon;
+  const heightClasses = { py: "py-2.5", text: "text-xs", iconSize: "w-3.5 h-3.5" };
+  const dataCellClassName = `${ENTITY_TABLE_DATA_CELL_CLASS} ${heightClasses.text}`;
+  const handleStatusChange = (newStatus) => {
+    if (newStatus === delivery.status) return;
+    if (newStatus === "cancelled") {
+      onCancelDelivery(delivery.id);
+    } else if (newStatus === "delivered") {
+      onCompleteDelivery(delivery.id);
+    } else {
+      onStatusChange(delivery.id, newStatus);
+    }
+    setStatusDropdownOpen(false);
+    toast.success(`סטטוס עודכן ל${STATUS_CONFIG[newStatus].label}`);
+  };
+  const handleCopyOrderNumber = () => {
+    navigator.clipboard.writeText(delivery.orderNumber);
+    toast.success(`מספר הזמנה ${delivery.orderNumber} הועתק`);
+    setMenuOpen(false);
+    setContextMenuPos(null);
+  };
+  const closeMenus = () => {
+    setMenuOpen(false);
+    setContextMenuPos(null);
+    setStatusDropdownOpen(false);
+  };
+  const renderCustomCell = (colId) => {
+    switch (colId) {
+      case "orderNumber":
+        return /* @__PURE__ */ jsxDEV("td", { className: dataCellClassName, children: /* @__PURE__ */ jsxDEV(
+          "span",
+          {
+            className: `${heightClasses.text} text-[#0d0d12] dark:text-[#fafafa] font-medium whitespace-nowrap`,
+            children: delivery.orderNumber
+          },
+          void 0,
+          false,
+          {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+            lineNumber: 141,
+            columnNumber: 13
+          },
+          this
+        ) }, colId, false, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+          lineNumber: 140,
+          columnNumber: 11
+        }, this);
+      case "status":
+        return /* @__PURE__ */ jsxDEV("td", { className: dataCellClassName, children: /* @__PURE__ */ jsxDEV("span", { className: `font-medium whitespace-nowrap ${config.tableColor}`, children: config.label }, void 0, false, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+          lineNumber: 152,
+          columnNumber: 13
+        }, this) }, colId, false, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+          lineNumber: 151,
+          columnNumber: 11
+        }, this);
+      case "courier":
+        return /* @__PURE__ */ jsxDEV("td", { className: dataCellClassName, children: courier ? /* @__PURE__ */ jsxDEV("span", { className: "text-[#0d0d12] dark:text-[#fafafa] font-medium whitespace-nowrap", children: courier.name }, void 0, false, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+          lineNumber: 162,
+          columnNumber: 13
+        }, this) : /* @__PURE__ */ jsxDEV("span", { className: "text-[#737373] dark:text-[#a3a3a3]", children: "-" }, void 0, false, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+          lineNumber: 164,
+          columnNumber: 13
+        }, this) }, colId, false, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+          lineNumber: 160,
+          columnNumber: 11
+        }, this);
+      case "timeRemaining":
+        return /* @__PURE__ */ jsxDEV("td", { className: dataCellClassName, children: timeRemaining !== null ? /* @__PURE__ */ jsxDEV("span", { className: "text-[#3b82f6] dark:text-[#60a5fa] font-medium", children: formatTime(timeRemaining) }, void 0, false, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+          lineNumber: 173,
+          columnNumber: 13
+        }, this) : /* @__PURE__ */ jsxDEV("span", { className: "text-[#737373] dark:text-[#a3a3a3]", children: "-" }, void 0, false, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+          lineNumber: 175,
+          columnNumber: 13
+        }, this) }, colId, false, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+          lineNumber: 171,
+          columnNumber: 11
+        }, this);
+      case "price":
+        return /* @__PURE__ */ jsxDEV("td", { className: `${dataCellClassName} text-[#16a34a] dark:text-[#22c55e] font-bold whitespace-nowrap`, children: formatCurrency(getDeliveryCustomerCharge(delivery)) }, colId, false, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+          lineNumber: 182,
+          columnNumber: 11
+        }, this);
+      default:
+        return null;
+    }
+  };
+  const getTextStyle = (colId, type) => {
+    const col = COLUMN_MAP.get(colId);
+    if (!col) return "text-[#666d80] dark:text-[#a3a3a3]";
+    if (["rest_name", "client_name"].includes(colId)) {
+      return "text-[#0d0d12] dark:text-[#fafafa] font-medium";
+    }
+    if (type === "money") {
+      return "text-[#16a34a] dark:text-[#22c55e]";
+    }
+    if (colId.includes("_id") || colId === "id" || colId.includes("Id") || colId === "zipcode" || colId === "sms_code") {
+      return "text-[#666d80] dark:text-[#a3a3a3] font-mono";
+    }
+    return "text-[#666d80] dark:text-[#a3a3a3]";
+  };
+  return /* @__PURE__ */ jsxDEV(
+    "tr",
+    {
+      onContextMenu: (e) => {
+        e.preventDefault();
+        setStatusDropdownOpen(false);
+        setContextMenuPos({ x: e.clientX, y: e.clientY });
+        setMenuOpen(true);
+      },
+      className: `${ENTITY_TABLE_ROW_CLASS} group last:border-b-0 cursor-default ${isDrawerTarget ? "bg-[#dcfce7]/50 hover:bg-[#dcfce7]/50 dark:bg-[#14532d]/30 dark:hover:bg-[#14532d]/30" : isSelected ? "bg-[#dbeafe]/50 hover:bg-[#dbeafe]/50 dark:bg-[#1e3a8a]/20 dark:hover:bg-[#1e3a8a]/20" : ""}`,
+      children: [
+        /* @__PURE__ */ jsxDEV(
+          EntityTableRowCheckbox,
+          {
+            checked: isSelected,
+            onChange: () => onToggleSelect(delivery.id)
+          },
+          void 0,
+          false,
+          {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+            lineNumber: 228,
+            columnNumber: 7
+          },
+          this
+        ),
+        (orderedColumns || ALL_COLUMNS).map((col) => {
+          if (!visibleColumns.has(col.id)) return null;
+          if (CUSTOM_COLUMN_IDS.has(col.id)) {
+            return renderCustomCell(col.id);
+          }
+          const value = col.getValue(delivery, { courier, timeRemaining, formatTime });
+          const textStyle = getTextStyle(col.id, col.type);
+          const isLongText = ["text"].includes(col.type) && (col.id.includes("address") || col.id.includes("comment") || col.id.includes("remark") || col.id.includes("feedback") || col.id.includes("answer") || col.id.includes("notes") || col.id === "api_str_order_id" || col.id === "client_full_address");
+          return /* @__PURE__ */ jsxDEV(
+            "td",
+            {
+              className: `${dataCellClassName} ${textStyle} whitespace-nowrap ${isLongText ? "max-w-[180px] truncate" : ""}`,
+              children: value
+            },
+            col.id,
+            false,
+            {
+              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+              lineNumber: 252,
+              columnNumber: 11
+            },
+            this
+          );
+        }),
+        /* @__PURE__ */ jsxDEV(
+          EntityTableActionsCell,
+          {
+            className: heightClasses.py,
+            contentClassName: "items-center justify-end gap-0.5",
+            onClick: (e) => e.stopPropagation(),
+            children: /* @__PURE__ */ jsxDEV("div", { className: "flex items-center justify-end gap-0.5", "data-no-row-click": true, children: [
+              /* @__PURE__ */ jsxDEV(
+                "button",
+                {
+                  onClick: () => onOpenDrawer(delivery.id),
+                  style: { display: "none" },
+                  className: "p-1 rounded-lg hover:bg-[#f0fdf4] dark:hover:bg-[#052e16] text-[#16a34a] dark:text-[#9fe870] transition-opacity",
+                  title: "פרטים מלאים",
+                  children: /* @__PURE__ */ jsxDEV(Info, { className: heightClasses.iconSize }, void 0, false, {
+                    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                    lineNumber: 275,
+                    columnNumber: 13
+                  }, this)
+                },
+                void 0,
+                false,
+                {
+                  fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                  lineNumber: 269,
+                  columnNumber: 11
+                },
+                this
+              ),
+              onEditDelivery && /* @__PURE__ */ jsxDEV(
+                "button",
+                {
+                  onClick: () => onEditDelivery(delivery.id),
+                  style: { display: "none" },
+                  className: "p-1 rounded-lg hover:bg-[#f0fdf4] dark:hover:bg-[#052e16] text-[#16a34a] dark:text-[#9fe870] transition-opacity",
+                  title: "ערוך משלוח",
+                  children: /* @__PURE__ */ jsxDEV(Edit, { className: heightClasses.iconSize }, void 0, false, {
+                    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                    lineNumber: 284,
+                    columnNumber: 15
+                  }, this)
+                },
+                void 0,
+                false,
+                {
+                  fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                  lineNumber: 278,
+                  columnNumber: 11
+                },
+                this
+              ),
+              /* @__PURE__ */ jsxDEV("div", { className: "relative", ref: menuRef, children: [
+                /* @__PURE__ */ jsxDEV(
+                  EntityRowActionTrigger,
+                  {
+                    onClick: (e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setContextMenuPos({ x: rect.left, y: rect.bottom + 4 });
+                      setMenuOpen(true);
+                    },
+                    title: `פעולות למשלוח ${delivery.orderNumber}`
+                  },
+                  void 0,
+                  false,
+                  {
+                    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                    lineNumber: 288,
+                    columnNumber: 11
+                  },
+                  this
+                ),
+                menuOpen && contextMenuPos && /* @__PURE__ */ jsxDEV(
+                  "div",
+                  {
+                    className: "fixed z-50 w-[220px] bg-white dark:bg-[#1a1a1a] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl shadow-2xl overflow-hidden py-1",
+                    style: { top: contextMenuPos.y, left: contextMenuPos.x },
+                    children: [
+                      /* @__PURE__ */ jsxDEV("div", { className: "px-3 py-2 border-b border-[#f5f5f5] dark:border-[#262626] mb-1", children: [
+                        /* @__PURE__ */ jsxDEV("p", { className: "text-xs font-semibold text-[#0d0d12] dark:text-[#fafafa] truncate", children: [
+                          "#",
+                          delivery.orderNumber
+                        ] }, void 0, true, {
+                          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                          lineNumber: 303,
+                          columnNumber: 17
+                        }, this),
+                        /* @__PURE__ */ jsxDEV("p", { className: `text-[11px] font-medium mt-0.5 ${config.tableColor}`, children: config.label }, void 0, false, {
+                          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                          lineNumber: 304,
+                          columnNumber: 17
+                        }, this)
+                      ] }, void 0, true, {
+                        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                        lineNumber: 302,
+                        columnNumber: 15
+                      }, this),
+                      /* @__PURE__ */ jsxDEV(
+                        "button",
+                        {
+                          onClick: () => {
+                            onOpenDrawer(delivery.id);
+                            closeMenus();
+                          },
+                          className: "w-full text-right px-3 py-2.5 text-xs font-medium text-[#16a34a] dark:text-[#9fe870] hover:bg-[#f0fdf4] dark:hover:bg-[#052e16] transition-colors flex items-center gap-2.5",
+                          children: [
+                            /* @__PURE__ */ jsxDEV(Info, { className: "w-3.5 h-3.5" }, void 0, false, {
+                              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                              lineNumber: 310,
+                              columnNumber: 17
+                            }, this),
+                            /* @__PURE__ */ jsxDEV("span", { children: "פרטים מלאים" }, void 0, false, {
+                              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                              lineNumber: 311,
+                              columnNumber: 17
+                            }, this)
+                          ]
+                        },
+                        void 0,
+                        true,
+                        {
+                          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                          lineNumber: 306,
+                          columnNumber: 15
+                        },
+                        this
+                      ),
+                      /* @__PURE__ */ jsxDEV(
+                        "button",
+                        {
+                          onClick: () => {
+                            onNavigate();
+                            closeMenus();
+                          },
+                          className: "w-full text-right px-3 py-2.5 text-xs hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors flex items-center gap-2.5",
+                          children: [
+                            /* @__PURE__ */ jsxDEV(FileText, { className: "w-3.5 h-3.5 text-[#737373]" }, void 0, false, {
+                              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                              lineNumber: 317,
+                              columnNumber: 17
+                            }, this),
+                            /* @__PURE__ */ jsxDEV("span", { className: "font-medium text-[#0d0d12] dark:text-[#fafafa]", children: "צפה בעמוד מלא" }, void 0, false, {
+                              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                              lineNumber: 318,
+                              columnNumber: 17
+                            }, this)
+                          ]
+                        },
+                        void 0,
+                        true,
+                        {
+                          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                          lineNumber: 313,
+                          columnNumber: 15
+                        },
+                        this
+                      ),
+                      /* @__PURE__ */ jsxDEV(
+                        "button",
+                        {
+                          onClick: handleCopyOrderNumber,
+                          className: "w-full text-right px-3 py-2.5 text-xs hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors flex items-center gap-2.5",
+                          children: [
+                            /* @__PURE__ */ jsxDEV(Copy, { className: "w-3.5 h-3.5 text-[#737373]" }, void 0, false, {
+                              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                              lineNumber: 324,
+                              columnNumber: 17
+                            }, this),
+                            /* @__PURE__ */ jsxDEV("span", { className: "font-medium text-[#0d0d12] dark:text-[#fafafa]", children: "העתק מספר הזמנה" }, void 0, false, {
+                              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                              lineNumber: 325,
+                              columnNumber: 17
+                            }, this)
+                          ]
+                        },
+                        void 0,
+                        true,
+                        {
+                          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                          lineNumber: 320,
+                          columnNumber: 15
+                        },
+                        this
+                      ),
+                      onEditDelivery && /* @__PURE__ */ jsxDEV(Fragment, { children: [
+                        /* @__PURE__ */ jsxDEV("div", { className: "h-px bg-[#e5e5e5] dark:bg-[#262626]" }, void 0, false, {
+                          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                          lineNumber: 330,
+                          columnNumber: 19
+                        }, this),
+                        /* @__PURE__ */ jsxDEV(
+                          "button",
+                          {
+                            onClick: () => {
+                              onEditDelivery(delivery.id);
+                              closeMenus();
+                            },
+                            className: "w-full text-right px-3 py-2.5 text-xs hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors flex items-center gap-2.5",
+                            children: [
+                              /* @__PURE__ */ jsxDEV(Edit, { className: "w-3.5 h-3.5 text-[#9fe870]" }, void 0, false, {
+                                fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                                lineNumber: 335,
+                                columnNumber: 21
+                              }, this),
+                              /* @__PURE__ */ jsxDEV("span", { className: "font-medium text-[#0d0d12] dark:text-[#fafafa]", children: "ערוך משלוח" }, void 0, false, {
+                                fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                                lineNumber: 336,
+                                columnNumber: 21
+                              }, this)
+                            ]
+                          },
+                          void 0,
+                          true,
+                          {
+                            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                            lineNumber: 331,
+                            columnNumber: 19
+                          },
+                          this
+                        )
+                      ] }, void 0, true, {
+                        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                        lineNumber: 329,
+                        columnNumber: 15
+                      }, this),
+                      delivery.status === "pending" && /* @__PURE__ */ jsxDEV(Fragment, { children: [
+                        /* @__PURE__ */ jsxDEV("div", { className: "h-px bg-[#e5e5e5] dark:bg-[#262626]" }, void 0, false, {
+                          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                          lineNumber: 343,
+                          columnNumber: 19
+                        }, this),
+                        /* @__PURE__ */ jsxDEV(
+                          "button",
+                          {
+                            onClick: () => {
+                              onOpenDrawer(delivery.id);
+                              closeMenus();
+                            },
+                            className: "w-full text-right px-3 py-2.5 text-xs font-medium text-[#0fcdd3] hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-colors flex items-center gap-2.5",
+                            children: [
+                              /* @__PURE__ */ jsxDEV(UserPlus, { className: "w-3.5 h-3.5" }, void 0, false, {
+                                fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                                lineNumber: 348,
+                                columnNumber: 21
+                              }, this),
+                              /* @__PURE__ */ jsxDEV("span", { children: "שיבוץ שליח" }, void 0, false, {
+                                fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                                lineNumber: 349,
+                                columnNumber: 21
+                              }, this)
+                            ]
+                          },
+                          void 0,
+                          true,
+                          {
+                            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                            lineNumber: 344,
+                            columnNumber: 19
+                          },
+                          this
+                        ),
+                        /* @__PURE__ */ jsxDEV(
+                          "button",
+                          {
+                            onClick: () => {
+                              onCancelDelivery(delivery.id);
+                              closeMenus();
+                            },
+                            className: "w-full text-right px-3 py-2.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2.5",
+                            children: [
+                              /* @__PURE__ */ jsxDEV(XCircle, { className: "w-3.5 h-3.5" }, void 0, false, {
+                                fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                                lineNumber: 355,
+                                columnNumber: 21
+                              }, this),
+                              /* @__PURE__ */ jsxDEV("span", { children: "ביטול משלוח" }, void 0, false, {
+                                fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                                lineNumber: 356,
+                                columnNumber: 21
+                              }, this)
+                            ]
+                          },
+                          void 0,
+                          true,
+                          {
+                            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                            lineNumber: 351,
+                            columnNumber: 19
+                          },
+                          this
+                        )
+                      ] }, void 0, true, {
+                        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                        lineNumber: 342,
+                        columnNumber: 15
+                      }, this),
+                      delivery.status === "assigned" && /* @__PURE__ */ jsxDEV(Fragment, { children: [
+                        /* @__PURE__ */ jsxDEV("div", { className: "h-px bg-[#e5e5e5] dark:bg-[#262626]" }, void 0, false, {
+                          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                          lineNumber: 363,
+                          columnNumber: 19
+                        }, this),
+                        /* @__PURE__ */ jsxDEV(
+                          "button",
+                          {
+                            onClick: () => {
+                              onOpenDrawer(delivery.id);
+                              closeMenus();
+                            },
+                            className: "w-full text-right px-3 py-2.5 text-xs font-medium text-[#0fcdd3] hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-colors flex items-center gap-2.5",
+                            children: [
+                              /* @__PURE__ */ jsxDEV(Edit, { className: "w-3.5 h-3.5" }, void 0, false, {
+                                fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                                lineNumber: 368,
+                                columnNumber: 21
+                              }, this),
+                              /* @__PURE__ */ jsxDEV("span", { children: "שינוי שליח" }, void 0, false, {
+                                fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                                lineNumber: 369,
+                                columnNumber: 21
+                              }, this)
+                            ]
+                          },
+                          void 0,
+                          true,
+                          {
+                            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                            lineNumber: 364,
+                            columnNumber: 19
+                          },
+                          this
+                        ),
+                        onUnassignCourier && /* @__PURE__ */ jsxDEV(
+                          "button",
+                          {
+                            onClick: () => {
+                              onUnassignCourier(delivery.id);
+                              closeMenus();
+                            },
+                            className: "w-full text-right px-3 py-2.5 text-xs font-medium text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors flex items-center gap-2.5",
+                            children: [
+                              /* @__PURE__ */ jsxDEV(RotateCcw, { className: "w-3.5 h-3.5" }, void 0, false, {
+                                fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                                lineNumber: 376,
+                                columnNumber: 23
+                              }, this),
+                              /* @__PURE__ */ jsxDEV("span", { children: "ביטול שיבוץ" }, void 0, false, {
+                                fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                                lineNumber: 377,
+                                columnNumber: 23
+                              }, this)
+                            ]
+                          },
+                          void 0,
+                          true,
+                          {
+                            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                            lineNumber: 372,
+                            columnNumber: 17
+                          },
+                          this
+                        ),
+                        /* @__PURE__ */ jsxDEV(
+                          "button",
+                          {
+                            onClick: () => {
+                              onCancelDelivery(delivery.id);
+                              closeMenus();
+                            },
+                            className: "w-full text-right px-3 py-2.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2.5",
+                            children: [
+                              /* @__PURE__ */ jsxDEV(XCircle, { className: "w-3.5 h-3.5" }, void 0, false, {
+                                fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                                lineNumber: 384,
+                                columnNumber: 21
+                              }, this),
+                              /* @__PURE__ */ jsxDEV("span", { children: "ביטול משלוח" }, void 0, false, {
+                                fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                                lineNumber: 385,
+                                columnNumber: 21
+                              }, this)
+                            ]
+                          },
+                          void 0,
+                          true,
+                          {
+                            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                            lineNumber: 380,
+                            columnNumber: 19
+                          },
+                          this
+                        )
+                      ] }, void 0, true, {
+                        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                        lineNumber: 362,
+                        columnNumber: 15
+                      }, this),
+                      delivery.status === "delivering" && /* @__PURE__ */ jsxDEV(Fragment, { children: [
+                        /* @__PURE__ */ jsxDEV("div", { className: "h-px bg-[#e5e5e5] dark:bg-[#262626]" }, void 0, false, {
+                          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                          lineNumber: 392,
+                          columnNumber: 19
+                        }, this),
+                        /* @__PURE__ */ jsxDEV(
+                          "button",
+                          {
+                            onClick: () => {
+                              onOpenDrawer(delivery.id);
+                              closeMenus();
+                            },
+                            className: "w-full text-right px-3 py-2.5 text-xs font-medium text-[#0fcdd3] hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-colors flex items-center gap-2.5",
+                            children: [
+                              /* @__PURE__ */ jsxDEV(Edit, { className: "w-3.5 h-3.5" }, void 0, false, {
+                                fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                                lineNumber: 397,
+                                columnNumber: 21
+                              }, this),
+                              /* @__PURE__ */ jsxDEV("span", { children: "שינוי שליח" }, void 0, false, {
+                                fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                                lineNumber: 398,
+                                columnNumber: 21
+                              }, this)
+                            ]
+                          },
+                          void 0,
+                          true,
+                          {
+                            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                            lineNumber: 393,
+                            columnNumber: 19
+                          },
+                          this
+                        ),
+                        /* @__PURE__ */ jsxDEV(
+                          "button",
+                          {
+                            onClick: () => {
+                              onCompleteDelivery(delivery.id);
+                              closeMenus();
+                            },
+                            className: "w-full text-right px-3 py-2.5 text-xs font-medium text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors flex items-center gap-2.5",
+                            children: [
+                              /* @__PURE__ */ jsxDEV(CheckCircle2, { className: "w-3.5 h-3.5" }, void 0, false, {
+                                fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                                lineNumber: 404,
+                                columnNumber: 21
+                              }, this),
+                              /* @__PURE__ */ jsxDEV("span", { children: "סימון כנמסר" }, void 0, false, {
+                                fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                                lineNumber: 405,
+                                columnNumber: 21
+                              }, this)
+                            ]
+                          },
+                          void 0,
+                          true,
+                          {
+                            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                            lineNumber: 400,
+                            columnNumber: 19
+                          },
+                          this
+                        ),
+                        /* @__PURE__ */ jsxDEV(
+                          "button",
+                          {
+                            onClick: () => {
+                              onCancelDelivery(delivery.id);
+                              closeMenus();
+                            },
+                            className: "w-full text-right px-3 py-2.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2.5",
+                            children: [
+                              /* @__PURE__ */ jsxDEV(XCircle, { className: "w-3.5 h-3.5" }, void 0, false, {
+                                fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                                lineNumber: 411,
+                                columnNumber: 21
+                              }, this),
+                              /* @__PURE__ */ jsxDEV("span", { children: "ביטול משלוח" }, void 0, false, {
+                                fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                                lineNumber: 412,
+                                columnNumber: 21
+                              }, this)
+                            ]
+                          },
+                          void 0,
+                          true,
+                          {
+                            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                            lineNumber: 407,
+                            columnNumber: 19
+                          },
+                          this
+                        )
+                      ] }, void 0, true, {
+                        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                        lineNumber: 391,
+                        columnNumber: 15
+                      }, this)
+                    ]
+                  },
+                  void 0,
+                  true,
+                  {
+                    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                    lineNumber: 297,
+                    columnNumber: 13
+                  },
+                  this
+                )
+              ] }, void 0, true, {
+                fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+                lineNumber: 287,
+                columnNumber: 11
+              }, this)
+            ] }, void 0, true, {
+              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+              lineNumber: 267,
+              columnNumber: 9
+            }, this)
+          },
+          void 0,
+          false,
+          {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+            lineNumber: 262,
+            columnNumber: 7
+          },
+          this
+        )
+      ]
+    },
+    void 0,
+    true,
+    {
+      fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx",
+      lineNumber: 213,
+      columnNumber: 5
+    },
+    this
+  );
+};
+_s(DeliveryTableRow, "Nc/qGkBR7PP5EjTmahuhiTMVTuA=");
+_c = DeliveryTableRow;
+var _c;
+$RefreshReg$(_c, "DeliveryTableRow");
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-table-row.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,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QUFBO0FBQUEsMEJBTG5CO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQSx3QkFNQTtBQUFBLDJCQXRCRjtBQUFBO0FBQUE7QUFBQTtBQUFBLDZCQXVCQTtBQUFBO0FBQUE7QUFBQSxrQkFySEo7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBLGdCQXVIQTtBQUFBLG1CQWpJRjtBQUFBO0FBQUE7QUFBQTtBQUFBLHFCQW1JQTtBQUFBLGlCQXZKRjtBQUFBO0FBQUE7QUFBQTtBQUFBLG1CQXdKQTtBQUFBO0FBQUEsVUE3SkY7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBLFFBOEpBO0FBQUE7QUFBQTtBQUFBLElBL01GO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQSxFQWdOQTtBQUVKO0FBQUVwQyxHQXBXV2pCLGtCQUFpRDtBQUFBLEtBQWpEQTtBQUFpRCxJQUFBa0Y7QUFBQSxhQUFBQSxJQUFBIiwibmFtZXMiOlsidXNlU3RhdGUiLCJ1c2VSZWYiLCJ1c2VFZmZlY3QiLCJDb3B5IiwiVXNlclBsdXMiLCJYQ2lyY2xlIiwiQ2hlY2tDaXJjbGUyIiwiRmlsZVRleHQiLCJJbmZvIiwiRWRpdCIsIlJvdGF0ZUNjdyIsInRvYXN0IiwiRW50aXR5VGFibGVBY3Rpb25zQ2VsbCIsIkVudGl0eVRhYmxlUm93Q2hlY2tib3giLCJFbnRpdHlSb3dBY3Rpb25UcmlnZ2VyIiwiRU5USVRZX1RBQkxFX0RBVEFfQ0VMTF9DTEFTUyIsIkVOVElUWV9UQUJMRV9ST1dfQ0xBU1MiLCJBTExfQ09MVU1OUyIsIkNVU1RPTV9DT0xVTU5fSURTIiwiQ09MVU1OX01BUCIsIlNUQVRVU19DT05GSUciLCJmb3JtYXRDdXJyZW5jeSIsImdldERlbGl2ZXJ5Q3VzdG9tZXJDaGFyZ2UiLCJEZWxpdmVyeVRhYmxlUm93IiwiZGVsaXZlcnkiLCJjb3VyaWVyIiwidGltZVJlbWFpbmluZyIsImZvcm1hdFRpbWUiLCJ2aXNpYmxlQ29sdW1ucyIsIm9uTmF2aWdhdGUiLCJpc1NlbGVjdGVkIiwib25Ub2dnbGVTZWxlY3QiLCJvbk9wZW5EcmF3ZXIiLCJvblN0YXR1c0NoYW5nZSIsIm9uQ2FuY2VsRGVsaXZlcnkiLCJvbkNvbXBsZXRlRGVsaXZlcnkiLCJvblVuYXNzaWduQ291cmllciIsIm9uRWRpdERlbGl2ZXJ5IiwiaXNEcmF3ZXJUYXJnZXQiLCJvcmRlcmVkQ29sdW1ucyIsIl9zIiwibWVudU9wZW4iLCJzZXRNZW51T3BlbiIsImNvbnRleHRNZW51UG9zIiwic2V0Q29udGV4dE1lbnVQb3MiLCJzdGF0dXNEcm9wZG93bk9wZW4iLCJzZXRTdGF0dXNEcm9wZG93bk9wZW4iLCJtZW51UmVmIiwic3RhdHVzUmVmIiwiaGFuZGxlQ2xpY2tPdXRzaWRlIiwiZSIsImN1cnJlbnQiLCJjb250YWlucyIsInRhcmdldCIsImRvY3VtZW50IiwiYWRkRXZlbnRMaXN0ZW5lciIsInJlbW92ZUV2ZW50TGlzdGVuZXIiLCJjb25maWciLCJzdGF0dXMiLCJTdGF0dXNJY29uIiwiaWNvbiIsImhlaWdodENsYXNzZXMiLCJweSIsInRleHQiLCJpY29uU2l6ZSIsImRhdGFDZWxsQ2xhc3NOYW1lIiwiaGFuZGxlU3RhdHVzQ2hhbmdlIiwibmV3U3RhdHVzIiwiaWQiLCJzdWNjZXNzIiwibGFiZWwiLCJoYW5kbGVDb3B5T3JkZXJOdW1iZXIiLCJuYXZpZ2F0b3IiLCJjbGlwYm9hcmQiLCJ3cml0ZVRleHQiLCJvcmRlck51bWJlciIsImNsb3NlTWVudXMiLCJyZW5kZXJDdXN0b21DZWxsIiwiY29sSWQiLCJ0YWJsZUNvbG9yIiwibmFtZSIsImdldFRleHRTdHlsZSIsInR5cGUiLCJjb2wiLCJnZXQiLCJpbmNsdWRlcyIsInByZXZlbnREZWZhdWx0IiwieCIsImNsaWVudFgiLCJ5IiwiY2xpZW50WSIsIm1hcCIsImhhcyIsInZhbHVlIiwiZ2V0VmFsdWUiLCJ0ZXh0U3R5bGUiLCJpc0xvbmdUZXh0Iiwic3RvcFByb3BhZ2F0aW9uIiwiZGlzcGxheSIsInJlY3QiLCJjdXJyZW50VGFyZ2V0IiwiZ2V0Qm91bmRpbmdDbGllbnRSZWN0IiwibGVmdCIsImJvdHRvbSIsInRvcCIsIl9jIl0sImlnbm9yZUxpc3QiOltdLCJzb3VyY2VzIjpbImRlbGl2ZXJ5LXRhYmxlLXJvdy50c3giXSwic291cmNlc0NvbnRlbnQiOlsi77u/aW1wb3J0IFJlYWN0LCB7IHVzZVN0YXRlLCB1c2VSZWYsIHVzZUVmZmVjdCB9IGZyb20gJ3JlYWN0JztcclxuaW1wb3J0IHsgRGVsaXZlcnksIENvdXJpZXIsIERlbGl2ZXJ5U3RhdHVzIH0gZnJvbSAnLi4vdHlwZXMvZGVsaXZlcnkudHlwZXMnO1xyXG5pbXBvcnQge1xyXG4gIENvcHksXHJcbiAgVXNlclBsdXMsXHJcbiAgWENpcmNsZSxcclxuICBDaGVja0NpcmNsZTIsXHJcbiAgQ2hldnJvbkRvd24sXHJcbiAgRmlsZVRleHQsXHJcbiAgSW5mbyxcclxuICBFZGl0LFxyXG4gIFJvdGF0ZUNjdyxcclxufSBmcm9tICdsdWNpZGUtcmVhY3QnO1xyXG5pbXBvcnQgeyB0b2FzdCB9IGZyb20gJ3Nvbm5lcic7XG5pbXBvcnQge1xuICBFbnRpdHlUYWJsZUFjdGlvbnNDZWxsLFxuICBFbnRpdHlUYWJsZVJvd0NoZWNrYm94LFxufSBmcm9tICcuLi9jb21wb25lbnRzL2NvbW1vbi9lbnRpdHktdGFibGUtc2hlbGwnO1xuaW1wb3J0IHsgRW50aXR5Um93QWN0aW9uVHJpZ2dlciB9IGZyb20gJy4uL2NvbXBvbmVudHMvY29tbW9uL2VudGl0eS1yb3ctYWN0aW9uLXRyaWdnZXInO1xuaW1wb3J0IHtcbiAgRU5USVRZX1RBQkxFX0RBVEFfQ0VMTF9DTEFTUyxcbiAgRU5USVRZX1RBQkxFX1JPV19DTEFTUyxcbn0gZnJvbSAnLi4vY29tcG9uZW50cy9jb21tb24vZW50aXR5LXRhYmxlLXNoYXJlZCc7XG5pbXBvcnQgeyBBTExfQ09MVU1OUywgQ1VTVE9NX0NPTFVNTl9JRFMsIENPTFVNTl9NQVAgfSBmcm9tICcuL2NvbHVtbi1kZWZzJztcbmltcG9ydCB0eXBlIHsgQ29sdW1uRGVmIH0gZnJvbSAnLi9jb2x1bW4tZGVmcyc7XG5pbXBvcnQgeyBTVEFUVVNfQ09ORklHLCBBTExfU1RBVFVTRVMgfSBmcm9tICcuL3N0YXR1cy1jb25maWcnO1xuaW1wb3J0IHsgZm9ybWF0Q3VycmVuY3ksIGdldERlbGl2ZXJ5Q3VzdG9tZXJDaGFyZ2UgfSBmcm9tICcuLi91dGlscy9kZWxpdmVyeS1maW5hbmNlJztcblxyXG5pbnRlcmZhY2UgRGVsaXZlcnlUYWJsZVJvd1Byb3BzIHtcbiAgZGVsaXZlcnk6IERlbGl2ZXJ5O1xyXG4gIGNvdXJpZXI6IENvdXJpZXIgfCBudWxsO1xyXG4gIHRpbWVSZW1haW5pbmc6IG51bWJlciB8IG51bGw7XHJcbiAgZm9ybWF0VGltZTogKHNlY29uZHM6IG51bWJlcikgPT4gc3RyaW5nO1xyXG4gIHZpc2libGVDb2x1bW5zOiBTZXQ8c3RyaW5nPjtcclxuICBvbk5hdmlnYXRlOiAoKSA9PiB2b2lkO1xyXG4gIGlzU2VsZWN0ZWQ6IGJvb2xlYW47XHJcbiAgb25Ub2dnbGVTZWxlY3Q6IChpZDogc3RyaW5nKSA9PiB2b2lkO1xyXG4gIG9uT3BlbkRyYXdlcjogKGlkOiBzdHJpbmcpID0+IHZvaWQ7XHJcbiAgb25TdGF0dXNDaGFuZ2U6IChkZWxpdmVyeUlkOiBzdHJpbmcsIHN0YXR1czogRGVsaXZlcnlTdGF0dXMpID0+IHZvaWQ7XHJcbiAgb25DYW5jZWxEZWxpdmVyeTogKGRlbGl2ZXJ5SWQ6IHN0cmluZykgPT4gdm9pZDtcclxuICBvbkNvbXBsZXRlRGVsaXZlcnk6IChkZWxpdmVyeUlkOiBzdHJpbmcpID0+IHZvaWQ7XHJcbiAgb25VbmFzc2lnbkNvdXJpZXI/OiAoZGVsaXZlcnlJZDogc3RyaW5nKSA9PiB2b2lkO1xyXG4gIG9uRWRpdERlbGl2ZXJ5PzogKGRlbGl2ZXJ5SWQ6IHN0cmluZykgPT4gdm9pZDtcclxuICBpc0RyYXdlclRhcmdldD86IGJvb2xlYW47XG4gIG9yZGVyZWRDb2x1bW5zPzogQ29sdW1uRGVmW107XG59XG5cclxuZXhwb3J0IGNvbnN0IERlbGl2ZXJ5VGFibGVSb3c6IFJlYWN0LkZDPERlbGl2ZXJ5VGFibGVSb3dQcm9wcz4gPSAoe1xyXG4gIGRlbGl2ZXJ5LFxyXG4gIGNvdXJpZXIsXHJcbiAgdGltZVJlbWFpbmluZyxcclxuICBmb3JtYXRUaW1lLFxyXG4gIHZpc2libGVDb2x1bW5zLFxyXG4gIG9uTmF2aWdhdGUsXHJcbiAgaXNTZWxlY3RlZCxcclxuICBvblRvZ2dsZVNlbGVjdCxcclxuICBvbk9wZW5EcmF3ZXIsXHJcbiAgb25TdGF0dXNDaGFuZ2UsXHJcbiAgb25DYW5jZWxEZWxpdmVyeSxcclxuICBvbkNvbXBsZXRlRGVsaXZlcnksXHJcbiAgb25VbmFzc2lnbkNvdXJpZXIsXHJcbiAgb25FZGl0RGVsaXZlcnksXG4gIGlzRHJhd2VyVGFyZ2V0LFxuICBvcmRlcmVkQ29sdW1ucyxcbn0pID0+IHtcbiAgY29uc3QgW21lbnVPcGVuLCBzZXRNZW51T3Blbl0gPSB1c2VTdGF0ZShmYWxzZSk7XHJcbiAgY29uc3QgW2NvbnRleHRNZW51UG9zLCBzZXRDb250ZXh0TWVudVBvc10gPSB1c2VTdGF0ZTx7IHg6IG51bWJlcjsgeTogbnVtYmVyIH0gfCBudWxsPihudWxsKTtcclxuICBjb25zdCBbc3RhdHVzRHJvcGRvd25PcGVuLCBzZXRTdGF0dXNEcm9wZG93bk9wZW5dID0gdXNlU3RhdGUoZmFsc2UpO1xyXG4gIGNvbnN0IG1lbnVSZWYgPSB1c2VSZWY8SFRNTERpdkVsZW1lbnQ+KG51bGwpO1xyXG4gIGNvbnN0IHN0YXR1c1JlZiA9IHVzZVJlZjxIVE1MRGl2RWxlbWVudD4obnVsbCk7XHJcblxyXG4gIHVzZUVmZmVjdCgoKSA9PiB7XHJcbiAgICBjb25zdCBoYW5kbGVDbGlja091dHNpZGUgPSAoZTogTW91c2VFdmVudCkgPT4ge1xyXG4gICAgICBpZiAobWVudVJlZi5jdXJyZW50ICYmICFtZW51UmVmLmN1cnJlbnQuY29udGFpbnMoZS50YXJnZXQgYXMgTm9kZSkpIHtcclxuICAgICAgICBzZXRNZW51T3BlbihmYWxzZSk7XHJcbiAgICAgICAgc2V0Q29udGV4dE1lbnVQb3MobnVsbCk7XHJcbiAgICAgIH1cclxuICAgICAgaWYgKHN0YXR1c1JlZi5jdXJyZW50ICYmICFzdGF0dXNSZWYuY3VycmVudC5jb250YWlucyhlLnRhcmdldCBhcyBOb2RlKSkgc2V0U3RhdHVzRHJvcGRvd25PcGVuKGZhbHNlKTtcclxuICAgIH07XHJcbiAgICBkb2N1bWVudC5hZGRFdmVudExpc3RlbmVyKCdtb3VzZWRvd24nLCBoYW5kbGVDbGlja091dHNpZGUpO1xyXG4gICAgcmV0dXJuICgpID0+IGRvY3VtZW50LnJlbW92ZUV2ZW50TGlzdGVuZXIoJ21vdXNlZG93bicsIGhhbmRsZUNsaWNrT3V0c2lkZSk7XHJcbiAgfSwgW10pO1xyXG5cclxuICBjb25zdCBjb25maWcgPSBTVEFUVVNfQ09ORklHW2RlbGl2ZXJ5LnN0YXR1c107XHJcbiAgY29uc3QgU3RhdHVzSWNvbiA9IGNvbmZpZy5pY29uO1xyXG5cclxuICBjb25zdCBoZWlnaHRDbGFzc2VzID0geyBweTogJ3B5LTIuNScsIHRleHQ6ICd0ZXh0LXhzJywgaWNvblNpemU6ICd3LTMuNSBoLTMuNScgfTtcbiAgY29uc3QgZGF0YUNlbGxDbGFzc05hbWUgPSBgJHtFTlRJVFlfVEFCTEVfREFUQV9DRUxMX0NMQVNTfSAke2hlaWdodENsYXNzZXMudGV4dH1gO1xuXHJcbiAgY29uc3QgaGFuZGxlU3RhdHVzQ2hhbmdlID0gKG5ld1N0YXR1czogRGVsaXZlcnlTdGF0dXMpID0+IHtcclxuICAgIGlmIChuZXdTdGF0dXMgPT09IGRlbGl2ZXJ5LnN0YXR1cykgcmV0dXJuO1xyXG4gICAgaWYgKG5ld1N0YXR1cyA9PT0gJ2NhbmNlbGxlZCcpIHtcclxuICAgICAgb25DYW5jZWxEZWxpdmVyeShkZWxpdmVyeS5pZCk7XHJcbiAgICB9IGVsc2UgaWYgKG5ld1N0YXR1cyA9PT0gJ2RlbGl2ZXJlZCcpIHtcclxuICAgICAgb25Db21wbGV0ZURlbGl2ZXJ5KGRlbGl2ZXJ5LmlkKTtcclxuICAgIH0gZWxzZSB7XHJcbiAgICAgIG9uU3RhdHVzQ2hhbmdlKGRlbGl2ZXJ5LmlkLCBuZXdTdGF0dXMpO1xyXG4gICAgfVxyXG4gICAgc2V0U3RhdHVzRHJvcGRvd25PcGVuKGZhbHNlKTtcclxuICAgIHRvYXN0LnN1Y2Nlc3MoYNeh15jXmNeV16Eg16LXldeT15vXnyDXnCR7U1RBVFVTX0NPTkZJR1tuZXdTdGF0dXNdLmxhYmVsfWApO1xyXG4gIH07XHJcblxyXG4gIGNvbnN0IGhhbmRsZUNvcHlPcmRlck51bWJlciA9ICgpID0+IHtcclxuICAgIG5hdmlnYXRvci5jbGlwYm9hcmQud3JpdGVUZXh0KGRlbGl2ZXJ5Lm9yZGVyTnVtYmVyKTtcclxuICAgIHRvYXN0LnN1Y2Nlc3MoYNee16HXpNeoINeU15bXnteg15QgJHtkZWxpdmVyeS5vcmRlck51bWJlcn0g15TXldei16rXp2ApO1xyXG4gICAgc2V0TWVudU9wZW4oZmFsc2UpO1xyXG4gICAgc2V0Q29udGV4dE1lbnVQb3MobnVsbCk7XHJcbiAgfTtcclxuXHJcbiAgY29uc3QgY2xvc2VNZW51cyA9ICgpID0+IHtcclxuICAgIHNldE1lbnVPcGVuKGZhbHNlKTtcclxuICAgIHNldENvbnRleHRNZW51UG9zKG51bGwpO1xyXG4gICAgc2V0U3RhdHVzRHJvcGRvd25PcGVuKGZhbHNlKTtcclxuICB9O1xyXG5cclxuICAvLyBDdXN0b20gY2VsbCByZW5kZXJlcnMgZm9yIHNwZWNpYWwgY29sdW1uc1xyXG4gIGNvbnN0IHJlbmRlckN1c3RvbUNlbGwgPSAoY29sSWQ6IHN0cmluZyk6IFJlYWN0LlJlYWN0Tm9kZSA9PiB7XHJcbiAgICBzd2l0Y2ggKGNvbElkKSB7XHJcbiAgICAgIGNhc2UgJ29yZGVyTnVtYmVyJzpcbiAgICAgICAgcmV0dXJuIChcbiAgICAgICAgICA8dGQga2V5PXtjb2xJZH0gY2xhc3NOYW1lPXtkYXRhQ2VsbENsYXNzTmFtZX0+XG4gICAgICAgICAgICA8c3BhblxuICAgICAgICAgICAgICBjbGFzc05hbWU9e2Ake2hlaWdodENsYXNzZXMudGV4dH0gdGV4dC1bIzBkMGQxMl0gZGFyazp0ZXh0LVsjZmFmYWZhXSBmb250LW1lZGl1bSB3aGl0ZXNwYWNlLW5vd3JhcGB9XG4gICAgICAgICAgICA+XG4gICAgICAgICAgICAgIHtkZWxpdmVyeS5vcmRlck51bWJlcn1cbiAgICAgICAgICAgIDwvc3Bhbj5cbiAgICAgICAgICA8L3RkPlxuICAgICAgICApO1xuXHJcbiAgICAgIGNhc2UgJ3N0YXR1cyc6XHJcbiAgICAgICAgcmV0dXJuIChcclxuICAgICAgICAgIDx0ZCBrZXk9e2NvbElkfSBjbGFzc05hbWU9e2RhdGFDZWxsQ2xhc3NOYW1lfT5cbiAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT17YGZvbnQtbWVkaXVtIHdoaXRlc3BhY2Utbm93cmFwICR7Y29uZmlnLnRhYmxlQ29sb3J9YH0+XHJcbiAgICAgICAgICAgICAge2NvbmZpZy5sYWJlbH1cclxuICAgICAgICAgICAgPC9zcGFuPlxyXG4gICAgICAgICAgPC90ZD5cclxuICAgICAgICApO1xyXG5cclxuICAgICAgY2FzZSAnY291cmllcic6XHJcbiAgICAgICAgcmV0dXJuIChcclxuICAgICAgICAgIDx0ZCBrZXk9e2NvbElkfSBjbGFzc05hbWU9e2RhdGFDZWxsQ2xhc3NOYW1lfT5cbiAgICAgICAgICAgIHtjb3VyaWVyID8gKFxyXG4gICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQtWyMwZDBkMTJdIGRhcms6dGV4dC1bI2ZhZmFmYV0gZm9udC1tZWRpdW0gd2hpdGVzcGFjZS1ub3dyYXBcIj57Y291cmllci5uYW1lfTwvc3Bhbj5cclxuICAgICAgICAgICAgKSA6IChcclxuICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LVsjNzM3MzczXSBkYXJrOnRleHQtWyNhM2EzYTNdXCI+LTwvc3Bhbj5cclxuICAgICAgICAgICAgKX1cclxuICAgICAgICAgIDwvdGQ+XHJcbiAgICAgICAgKTtcclxuXHJcbiAgICAgIGNhc2UgJ3RpbWVSZW1haW5pbmcnOlxyXG4gICAgICAgIHJldHVybiAoXHJcbiAgICAgICAgICA8dGQga2V5PXtjb2xJZH0gY2xhc3NOYW1lPXtkYXRhQ2VsbENsYXNzTmFtZX0+XG4gICAgICAgICAgICB7dGltZVJlbWFpbmluZyAhPT0gbnVsbCA/IChcclxuICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LVsjM2I4MmY2XSBkYXJrOnRleHQtWyM2MGE1ZmFdIGZvbnQtbWVkaXVtXCI+e2Zvcm1hdFRpbWUodGltZVJlbWFpbmluZyl9PC9zcGFuPlxyXG4gICAgICAgICAgICApIDogKFxyXG4gICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQtWyM3MzczNzNdIGRhcms6dGV4dC1bI2EzYTNhM11cIj4tPC9zcGFuPlxyXG4gICAgICAgICAgICApfVxyXG4gICAgICAgICAgPC90ZD5cclxuICAgICAgICApO1xyXG5cclxuICAgICAgY2FzZSAncHJpY2UnOlxuICAgICAgICByZXR1cm4gKFxuICAgICAgICAgIDx0ZCBrZXk9e2NvbElkfSBjbGFzc05hbWU9e2Ake2RhdGFDZWxsQ2xhc3NOYW1lfSB0ZXh0LVsjMTZhMzRhXSBkYXJrOnRleHQtWyMyMmM1NWVdIGZvbnQtYm9sZCB3aGl0ZXNwYWNlLW5vd3JhcGB9PlxuICAgICAgICAgICAge2Zvcm1hdEN1cnJlbmN5KGdldERlbGl2ZXJ5Q3VzdG9tZXJDaGFyZ2UoZGVsaXZlcnkpKX1cbiAgICAgICAgICA8L3RkPlxuICAgICAgICApO1xuXHJcbiAgICAgIGRlZmF1bHQ6XHJcbiAgICAgICAgcmV0dXJuIG51bGw7XHJcbiAgICB9XHJcbiAgfTtcclxuXHJcbiAgLy8gU3R5bGUgZm9yIHRleHQtYmFzZWQgY29sdW1ucyBiYXNlZCBvbiB0eXBlXHJcbiAgY29uc3QgZ2V0VGV4dFN0eWxlID0gKGNvbElkOiBzdHJpbmcsIHR5cGU6IHN0cmluZyk6IHN0cmluZyA9PiB7XHJcbiAgICBjb25zdCBjb2wgPSBDT0xVTU5fTUFQLmdldChjb2xJZCk7XHJcbiAgICBpZiAoIWNvbCkgcmV0dXJuICd0ZXh0LVsjNjY2ZDgwXSBkYXJrOnRleHQtWyNhM2EzYTNdJztcclxuXHJcbiAgICAvLyBCb2xkIHByaW1hcnkgZmllbGRzXHJcbiAgICBpZiAoWydyZXN0X25hbWUnLCAnY2xpZW50X25hbWUnXS5pbmNsdWRlcyhjb2xJZCkpIHtcclxuICAgICAgcmV0dXJuICd0ZXh0LVsjMGQwZDEyXSBkYXJrOnRleHQtWyNmYWZhZmFdIGZvbnQtbWVkaXVtJztcclxuICAgIH1cclxuICAgIC8vIE1vbmV5ID0gZ3JlZW5cclxuICAgIGlmICh0eXBlID09PSAnbW9uZXknKSB7XHJcbiAgICAgIHJldHVybiAndGV4dC1bIzE2YTM0YV0gZGFyazp0ZXh0LVsjMjJjNTVlXSc7XHJcbiAgICB9XHJcbiAgICAvLyBNb25vIGZvciBJRHNcclxuICAgIGlmIChjb2xJZC5pbmNsdWRlcygnX2lkJykgfHwgY29sSWQgPT09ICdpZCcgfHwgY29sSWQuaW5jbHVkZXMoJ0lkJykgfHwgY29sSWQgPT09ICd6aXBjb2RlJyB8fCBjb2xJZCA9PT0gJ3Ntc19jb2RlJykge1xyXG4gICAgICByZXR1cm4gJ3RleHQtWyM2NjZkODBdIGRhcms6dGV4dC1bI2EzYTNhM10gZm9udC1tb25vJztcclxuICAgIH1cclxuICAgIHJldHVybiAndGV4dC1bIzY2NmQ4MF0gZGFyazp0ZXh0LVsjYTNhM2EzXSc7XHJcbiAgfTtcclxuXHJcbiAgcmV0dXJuIChcclxuICAgIDx0clxyXG4gICAgICBvbkNvbnRleHRNZW51PXsoZSkgPT4ge1xyXG4gICAgICAgIGUucHJldmVudERlZmF1bHQoKTtcclxuICAgICAgICBzZXRTdGF0dXNEcm9wZG93bk9wZW4oZmFsc2UpO1xyXG4gICAgICAgIHNldENvbnRleHRNZW51UG9zKHsgeDogZS5jbGllbnRYLCB5OiBlLmNsaWVudFkgfSk7XHJcbiAgICAgICAgc2V0TWVudU9wZW4odHJ1ZSk7XHJcbiAgICAgIH19XHJcbiAgICAgIGNsYXNzTmFtZT17YCR7RU5USVRZX1RBQkxFX1JPV19DTEFTU30gZ3JvdXAgbGFzdDpib3JkZXItYi0wIGN1cnNvci1kZWZhdWx0ICR7XG4gICAgICAgIGlzRHJhd2VyVGFyZ2V0XG4gICAgICAgICAgPyAnYmctWyNkY2ZjZTddLzUwIGhvdmVyOmJnLVsjZGNmY2U3XS81MCBkYXJrOmJnLVsjMTQ1MzJkXS8zMCBkYXJrOmhvdmVyOmJnLVsjMTQ1MzJkXS8zMCdcbiAgICAgICAgICA6IGlzU2VsZWN0ZWRcbiAgICAgICAgICAgID8gJ2JnLVsjZGJlYWZlXS81MCBob3ZlcjpiZy1bI2RiZWFmZV0vNTAgZGFyazpiZy1bIzFlM2E4YV0vMjAgZGFyazpob3ZlcjpiZy1bIzFlM2E4YV0vMjAnXG4gICAgICAgICAgICA6ICcnXG4gICAgICB9YH1cbiAgICA+XHJcbiAgICAgIDxFbnRpdHlUYWJsZVJvd0NoZWNrYm94XHJcbiAgICAgICAgY2hlY2tlZD17aXNTZWxlY3RlZH1cclxuICAgICAgICBvbkNoYW5nZT17KCkgPT4gb25Ub2dnbGVTZWxlY3QoZGVsaXZlcnkuaWQpfVxyXG4gICAgICAvPlxyXG5cclxuICAgICAgey8qIERhdGEgY29sdW1ucyAtIGRyaXZlbiBieSBjb2x1bW4tZGVmcyAqL31cclxuICAgICAgeyhvcmRlcmVkQ29sdW1ucyB8fCBBTExfQ09MVU1OUykubWFwKGNvbCA9PiB7XHJcbiAgICAgICAgaWYgKCF2aXNpYmxlQ29sdW1ucy5oYXMoY29sLmlkKSkgcmV0dXJuIG51bGw7XHJcblxyXG4gICAgICAgIC8vIEN1c3RvbSBjb2x1bW5zIGdldCBzcGVjaWFsIHJlbmRlcmluZ1xyXG4gICAgICAgIGlmIChDVVNUT01fQ09MVU1OX0lEUy5oYXMoY29sLmlkKSkge1xyXG4gICAgICAgICAgcmV0dXJuIHJlbmRlckN1c3RvbUNlbGwoY29sLmlkKTtcclxuICAgICAgICB9XHJcblxyXG4gICAgICAgIC8vIEdlbmVyaWMgcmVuZGVyaW5nIGZvciBhbGwgb3RoZXIgY29sdW1uc1xyXG4gICAgICAgIGNvbnN0IHZhbHVlID0gY29sLmdldFZhbHVlKGRlbGl2ZXJ5LCB7IGNvdXJpZXIsIHRpbWVSZW1haW5pbmcsIGZvcm1hdFRpbWUgfSk7XHJcbiAgICAgICAgY29uc3QgdGV4dFN0eWxlID0gZ2V0VGV4dFN0eWxlKGNvbC5pZCwgY29sLnR5cGUpO1xyXG4gICAgICAgIGNvbnN0IGlzTG9uZ1RleHQgPSBbJ3RleHQnXS5pbmNsdWRlcyhjb2wudHlwZSkgJiYgKFxyXG4gICAgICAgICAgY29sLmlkLmluY2x1ZGVzKCdhZGRyZXNzJykgfHwgY29sLmlkLmluY2x1ZGVzKCdjb21tZW50JykgfHwgY29sLmlkLmluY2x1ZGVzKCdyZW1hcmsnKSB8fFxyXG4gICAgICAgICAgY29sLmlkLmluY2x1ZGVzKCdmZWVkYmFjaycpIHx8IGNvbC5pZC5pbmNsdWRlcygnYW5zd2VyJykgfHwgY29sLmlkLmluY2x1ZGVzKCdub3RlcycpIHx8XHJcbiAgICAgICAgICBjb2wuaWQgPT09ICdhcGlfc3RyX29yZGVyX2lkJyB8fCBjb2wuaWQgPT09ICdjbGllbnRfZnVsbF9hZGRyZXNzJ1xyXG4gICAgICAgICk7XHJcblxyXG4gICAgICAgIHJldHVybiAoXHJcbiAgICAgICAgICA8dGRcclxuICAgICAgICAgICAga2V5PXtjb2wuaWR9XHJcbiAgICAgICAgICAgIGNsYXNzTmFtZT17YCR7ZGF0YUNlbGxDbGFzc05hbWV9ICR7dGV4dFN0eWxlfSB3aGl0ZXNwYWNlLW5vd3JhcCAke2lzTG9uZ1RleHQgPyAnbWF4LXctWzE4MHB4XSB0cnVuY2F0ZScgOiAnJ31gfVxuICAgICAgICAgID5cclxuICAgICAgICAgICAge3ZhbHVlfVxyXG4gICAgICAgICAgPC90ZD5cclxuICAgICAgICApO1xyXG4gICAgICB9KX1cclxuXHJcbiAgICAgIHsvKiBBY3Rpb25zIGNvbHVtbiAqL31cbiAgICAgIDxFbnRpdHlUYWJsZUFjdGlvbnNDZWxsXG4gICAgICAgIGNsYXNzTmFtZT17aGVpZ2h0Q2xhc3Nlcy5weX1cbiAgICAgICAgY29udGVudENsYXNzTmFtZT1cIml0ZW1zLWNlbnRlciBqdXN0aWZ5LWVuZCBnYXAtMC41XCJcbiAgICAgICAgb25DbGljaz17KGUpID0+IGUuc3RvcFByb3BhZ2F0aW9uKCl9XG4gICAgICA+XG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1lbmQgZ2FwLTAuNVwiIGRhdGEtbm8tcm93LWNsaWNrPlxyXG4gICAgICAgICAgey8qIFF1aWNrIGFjdGlvbnMg4oCUIHZpc2libGUgb24gcm93IGhvdmVyICovfVxyXG4gICAgICAgICAgPGJ1dHRvblxyXG4gICAgICAgICAgICBvbkNsaWNrPXsoKSA9PiBvbk9wZW5EcmF3ZXIoZGVsaXZlcnkuaWQpfVxyXG4gICAgICAgICAgICBzdHlsZT17eyBkaXNwbGF5OiAnbm9uZScgfX1cclxuICAgICAgICAgICAgY2xhc3NOYW1lPVwicC0xIHJvdW5kZWQtbGcgaG92ZXI6YmctWyNmMGZkZjRdIGRhcms6aG92ZXI6YmctWyMwNTJlMTZdIHRleHQtWyMxNmEzNGFdIGRhcms6dGV4dC1bIzlmZTg3MF0gdHJhbnNpdGlvbi1vcGFjaXR5XCJcclxuICAgICAgICAgICAgdGl0bGU9XCLXpNeo15jXmdedINee15zXkNeZ151cIlxyXG4gICAgICAgICAgPlxyXG4gICAgICAgICAgICA8SW5mbyBjbGFzc05hbWU9e2hlaWdodENsYXNzZXMuaWNvblNpemV9IC8+XHJcbiAgICAgICAgICA8L2J1dHRvbj5cclxuICAgICAgICAgIHtvbkVkaXREZWxpdmVyeSAmJiAoXHJcbiAgICAgICAgICAgIDxidXR0b25cclxuICAgICAgICAgICAgICBvbkNsaWNrPXsoKSA9PiBvbkVkaXREZWxpdmVyeShkZWxpdmVyeS5pZCl9XHJcbiAgICAgICAgICAgICAgc3R5bGU9e3sgZGlzcGxheTogJ25vbmUnIH19XHJcbiAgICAgICAgICAgICAgY2xhc3NOYW1lPVwicC0xIHJvdW5kZWQtbGcgaG92ZXI6YmctWyNmMGZkZjRdIGRhcms6aG92ZXI6YmctWyMwNTJlMTZdIHRleHQtWyMxNmEzNGFdIGRhcms6dGV4dC1bIzlmZTg3MF0gdHJhbnNpdGlvbi1vcGFjaXR5XCJcclxuICAgICAgICAgICAgICB0aXRsZT1cItei16jXldeaINee16nXnNeV15dcIlxyXG4gICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgPEVkaXQgY2xhc3NOYW1lPXtoZWlnaHRDbGFzc2VzLmljb25TaXplfSAvPlxyXG4gICAgICAgICAgICA8L2J1dHRvbj5cclxuICAgICAgICAgICl9XHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInJlbGF0aXZlXCIgcmVmPXttZW51UmVmfT5cclxuICAgICAgICAgIDxFbnRpdHlSb3dBY3Rpb25UcmlnZ2VyXHJcbiAgICAgICAgICAgIG9uQ2xpY2s9eyhlKSA9PiB7XHJcbiAgICAgICAgICAgICAgY29uc3QgcmVjdCA9IChlLmN1cnJlbnRUYXJnZXQgYXMgSFRNTEJ1dHRvbkVsZW1lbnQpLmdldEJvdW5kaW5nQ2xpZW50UmVjdCgpO1xyXG4gICAgICAgICAgICAgIHNldENvbnRleHRNZW51UG9zKHsgeDogcmVjdC5sZWZ0LCB5OiByZWN0LmJvdHRvbSArIDQgfSk7XHJcbiAgICAgICAgICAgICAgc2V0TWVudU9wZW4odHJ1ZSk7XHJcbiAgICAgICAgICAgIH19XHJcbiAgICAgICAgICAgIHRpdGxlPXtg16TXoteV15zXldeqINec157Xqdec15XXlyAke2RlbGl2ZXJ5Lm9yZGVyTnVtYmVyfWB9XHJcbiAgICAgICAgICAvPlxyXG4gICAgICAgICAge21lbnVPcGVuICYmIGNvbnRleHRNZW51UG9zICYmIChcclxuICAgICAgICAgICAgPGRpdlxyXG4gICAgICAgICAgICAgIGNsYXNzTmFtZT1cImZpeGVkIHotNTAgdy1bMjIwcHhdIGJnLXdoaXRlIGRhcms6YmctWyMxYTFhMWFdIGJvcmRlciBib3JkZXItWyNlNWU1ZTVdIGRhcms6Ym9yZGVyLVsjMmEyYTJhXSByb3VuZGVkLXhsIHNoYWRvdy0yeGwgb3ZlcmZsb3ctaGlkZGVuIHB5LTFcIlxyXG4gICAgICAgICAgICAgIHN0eWxlPXt7IHRvcDogY29udGV4dE1lbnVQb3MueSwgbGVmdDogY29udGV4dE1lbnVQb3MueCB9fVxyXG4gICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgey8qINeb15XXqteo16og4oCUINee16HXpNeoINeU15bXnteg15QgKyDXodeY15jXldehICovfVxyXG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicHgtMyBweS0yIGJvcmRlci1iIGJvcmRlci1bI2Y1ZjVmNV0gZGFyazpib3JkZXItWyMyNjI2MjZdIG1iLTFcIj5cclxuICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQteHMgZm9udC1zZW1pYm9sZCB0ZXh0LVsjMGQwZDEyXSBkYXJrOnRleHQtWyNmYWZhZmFdIHRydW5jYXRlXCI+I3tkZWxpdmVyeS5vcmRlck51bWJlcn08L3A+XHJcbiAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9e2B0ZXh0LVsxMXB4XSBmb250LW1lZGl1bSBtdC0wLjUgJHtjb25maWcudGFibGVDb2xvcn1gfT57Y29uZmlnLmxhYmVsfTwvcD5cclxuICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICA8YnV0dG9uXHJcbiAgICAgICAgICAgICAgICBvbkNsaWNrPXsoKSA9PiB7IG9uT3BlbkRyYXdlcihkZWxpdmVyeS5pZCk7IGNsb3NlTWVudXMoKTsgfX1cclxuICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cInctZnVsbCB0ZXh0LXJpZ2h0IHB4LTMgcHktMi41IHRleHQteHMgZm9udC1tZWRpdW0gdGV4dC1bIzE2YTM0YV0gZGFyazp0ZXh0LVsjOWZlODcwXSBob3ZlcjpiZy1bI2YwZmRmNF0gZGFyazpob3ZlcjpiZy1bIzA1MmUxNl0gdHJhbnNpdGlvbi1jb2xvcnMgZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIuNVwiXHJcbiAgICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgICAgPEluZm8gY2xhc3NOYW1lPVwidy0zLjUgaC0zLjVcIiAvPlxyXG4gICAgICAgICAgICAgICAgPHNwYW4+16TXqNeY15nXnSDXntec15DXmdedPC9zcGFuPlxyXG4gICAgICAgICAgICAgIDwvYnV0dG9uPlxyXG4gICAgICAgICAgICAgIDxidXR0b25cclxuICAgICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHsgb25OYXZpZ2F0ZSgpOyBjbG9zZU1lbnVzKCk7IH19XHJcbiAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJ3LWZ1bGwgdGV4dC1yaWdodCBweC0zIHB5LTIuNSB0ZXh0LXhzIGhvdmVyOmJnLVsjZjVmNWY1XSBkYXJrOmhvdmVyOmJnLVsjMjYyNjI2XSB0cmFuc2l0aW9uLWNvbG9ycyBmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMi41XCJcclxuICAgICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgICA8RmlsZVRleHQgY2xhc3NOYW1lPVwidy0zLjUgaC0zLjUgdGV4dC1bIzczNzM3M11cIiAvPlxyXG4gICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwiZm9udC1tZWRpdW0gdGV4dC1bIzBkMGQxMl0gZGFyazp0ZXh0LVsjZmFmYWZhXVwiPtem16TXlCDXkdei157XldeTINee15zXkDwvc3Bhbj5cclxuICAgICAgICAgICAgICA8L2J1dHRvbj5cclxuICAgICAgICAgICAgICA8YnV0dG9uXHJcbiAgICAgICAgICAgICAgICBvbkNsaWNrPXtoYW5kbGVDb3B5T3JkZXJOdW1iZXJ9XHJcbiAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJ3LWZ1bGwgdGV4dC1yaWdodCBweC0zIHB5LTIuNSB0ZXh0LXhzIGhvdmVyOmJnLVsjZjVmNWY1XSBkYXJrOmhvdmVyOmJnLVsjMjYyNjI2XSB0cmFuc2l0aW9uLWNvbG9ycyBmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMi41XCJcclxuICAgICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgICA8Q29weSBjbGFzc05hbWU9XCJ3LTMuNSBoLTMuNSB0ZXh0LVsjNzM3MzczXVwiIC8+XHJcbiAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJmb250LW1lZGl1bSB0ZXh0LVsjMGQwZDEyXSBkYXJrOnRleHQtWyNmYWZhZmFdXCI+15TXoteq16cg157Xodek16gg15TXltee16DXlDwvc3Bhbj5cclxuICAgICAgICAgICAgICA8L2J1dHRvbj5cclxuXHJcbiAgICAgICAgICAgICAge29uRWRpdERlbGl2ZXJ5ICYmIChcclxuICAgICAgICAgICAgICAgIDw+XHJcbiAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiaC1weCBiZy1bI2U1ZTVlNV0gZGFyazpiZy1bIzI2MjYyNl1cIiAvPlxyXG4gICAgICAgICAgICAgICAgICA8YnV0dG9uXHJcbiAgICAgICAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4geyBvbkVkaXREZWxpdmVyeShkZWxpdmVyeS5pZCk7IGNsb3NlTWVudXMoKTsgfX1cclxuICAgICAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJ3LWZ1bGwgdGV4dC1yaWdodCBweC0zIHB5LTIuNSB0ZXh0LXhzIGhvdmVyOmJnLVsjZjVmNWY1XSBkYXJrOmhvdmVyOmJnLVsjMjYyNjI2XSB0cmFuc2l0aW9uLWNvbG9ycyBmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMi41XCJcclxuICAgICAgICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgICAgICAgIDxFZGl0IGNsYXNzTmFtZT1cInctMy41IGgtMy41IHRleHQtWyM5ZmU4NzBdXCIgLz5cclxuICAgICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJmb250LW1lZGl1bSB0ZXh0LVsjMGQwZDEyXSBkYXJrOnRleHQtWyNmYWZhZmFdXCI+16LXqNeV15og157Xqdec15XXlzwvc3Bhbj5cclxuICAgICAgICAgICAgICAgICAgPC9idXR0b24+XHJcbiAgICAgICAgICAgICAgICA8Lz5cclxuICAgICAgICAgICAgICApfVxyXG5cclxuICAgICAgICAgICAgICB7ZGVsaXZlcnkuc3RhdHVzID09PSAncGVuZGluZycgJiYgKFxyXG4gICAgICAgICAgICAgICAgPD5cclxuICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJoLXB4IGJnLVsjZTVlNWU1XSBkYXJrOmJnLVsjMjYyNjI2XVwiIC8+XHJcbiAgICAgICAgICAgICAgICAgIDxidXR0b25cclxuICAgICAgICAgICAgICAgICAgICBvbkNsaWNrPXsoKSA9PiB7IG9uT3BlbkRyYXdlcihkZWxpdmVyeS5pZCk7IGNsb3NlTWVudXMoKTsgfX1cclxuICAgICAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJ3LWZ1bGwgdGV4dC1yaWdodCBweC0zIHB5LTIuNSB0ZXh0LXhzIGZvbnQtbWVkaXVtIHRleHQtWyMwZmNkZDNdIGhvdmVyOmJnLWN5YW4tNTAgZGFyazpob3ZlcjpiZy1jeWFuLTkwMC8yMCB0cmFuc2l0aW9uLWNvbG9ycyBmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMi41XCJcclxuICAgICAgICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgICAgICAgIDxVc2VyUGx1cyBjbGFzc05hbWU9XCJ3LTMuNSBoLTMuNVwiIC8+XHJcbiAgICAgICAgICAgICAgICAgICAgPHNwYW4+16nXmdeR15XXpSDXqdec15nXlzwvc3Bhbj5cclxuICAgICAgICAgICAgICAgICAgPC9idXR0b24+XHJcbiAgICAgICAgICAgICAgICAgIDxidXR0b25cclxuICAgICAgICAgICAgICAgICAgICBvbkNsaWNrPXsoKSA9PiB7IG9uQ2FuY2VsRGVsaXZlcnkoZGVsaXZlcnkuaWQpOyBjbG9zZU1lbnVzKCk7IH19XHJcbiAgICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwidy1mdWxsIHRleHQtcmlnaHQgcHgtMyBweS0yLjUgdGV4dC14cyBmb250LW1lZGl1bSB0ZXh0LXJlZC02MDAgZGFyazp0ZXh0LXJlZC00MDAgaG92ZXI6YmctcmVkLTUwIGRhcms6aG92ZXI6YmctcmVkLTkwMC8yMCB0cmFuc2l0aW9uLWNvbG9ycyBmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMi41XCJcclxuICAgICAgICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgICAgICAgIDxYQ2lyY2xlIGNsYXNzTmFtZT1cInctMy41IGgtMy41XCIgLz5cclxuICAgICAgICAgICAgICAgICAgICA8c3Bhbj7XkdeZ15jXldecINee16nXnNeV15c8L3NwYW4+XHJcbiAgICAgICAgICAgICAgICAgIDwvYnV0dG9uPlxyXG4gICAgICAgICAgICAgICAgPC8+XHJcbiAgICAgICAgICAgICAgKX1cclxuXHJcbiAgICAgICAgICAgICAge2RlbGl2ZXJ5LnN0YXR1cyA9PT0gJ2Fzc2lnbmVkJyAmJiAoXHJcbiAgICAgICAgICAgICAgICA8PlxyXG4gICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImgtcHggYmctWyNlNWU1ZTVdIGRhcms6YmctWyMyNjI2MjZdXCIgLz5cclxuICAgICAgICAgICAgICAgICAgPGJ1dHRvblxyXG4gICAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHsgb25PcGVuRHJhd2VyKGRlbGl2ZXJ5LmlkKTsgY2xvc2VNZW51cygpOyB9fVxyXG4gICAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cInctZnVsbCB0ZXh0LXJpZ2h0IHB4LTMgcHktMi41IHRleHQteHMgZm9udC1tZWRpdW0gdGV4dC1bIzBmY2RkM10gaG92ZXI6YmctY3lhbi01MCBkYXJrOmhvdmVyOmJnLWN5YW4tOTAwLzIwIHRyYW5zaXRpb24tY29sb3JzIGZsZXggaXRlbXMtY2VudGVyIGdhcC0yLjVcIlxyXG4gICAgICAgICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgICAgICAgPEVkaXQgY2xhc3NOYW1lPVwidy0zLjUgaC0zLjVcIiAvPlxyXG4gICAgICAgICAgICAgICAgICAgIDxzcGFuPtep15nXoNeV15kg16nXnNeZ15c8L3NwYW4+XHJcbiAgICAgICAgICAgICAgICAgIDwvYnV0dG9uPlxyXG4gICAgICAgICAgICAgICAgICB7b25VbmFzc2lnbkNvdXJpZXIgJiYgKFxyXG4gICAgICAgICAgICAgICAgICAgIDxidXR0b25cclxuICAgICAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHsgb25VbmFzc2lnbkNvdXJpZXIoZGVsaXZlcnkuaWQpOyBjbG9zZU1lbnVzKCk7IH19XHJcbiAgICAgICAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJ3LWZ1bGwgdGV4dC1yaWdodCBweC0zIHB5LTIuNSB0ZXh0LXhzIGZvbnQtbWVkaXVtIHRleHQtb3JhbmdlLTYwMCBkYXJrOnRleHQtb3JhbmdlLTQwMCBob3ZlcjpiZy1vcmFuZ2UtNTAgZGFyazpob3ZlcjpiZy1vcmFuZ2UtOTAwLzIwIHRyYW5zaXRpb24tY29sb3JzIGZsZXggaXRlbXMtY2VudGVyIGdhcC0yLjVcIlxyXG4gICAgICAgICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgICAgICAgIDxSb3RhdGVDY3cgY2xhc3NOYW1lPVwidy0zLjUgaC0zLjVcIiAvPlxyXG4gICAgICAgICAgICAgICAgICAgICAgPHNwYW4+15HXmdeY15XXnCDXqdeZ15HXldelPC9zcGFuPlxyXG4gICAgICAgICAgICAgICAgICAgIDwvYnV0dG9uPlxyXG4gICAgICAgICAgICAgICAgICApfVxyXG4gICAgICAgICAgICAgICAgICA8YnV0dG9uXHJcbiAgICAgICAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4geyBvbkNhbmNlbERlbGl2ZXJ5KGRlbGl2ZXJ5LmlkKTsgY2xvc2VNZW51cygpOyB9fVxyXG4gICAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cInctZnVsbCB0ZXh0LXJpZ2h0IHB4LTMgcHktMi41IHRleHQteHMgZm9udC1tZWRpdW0gdGV4dC1yZWQtNjAwIGRhcms6dGV4dC1yZWQtNDAwIGhvdmVyOmJnLXJlZC01MCBkYXJrOmhvdmVyOmJnLXJlZC05MDAvMjAgdHJhbnNpdGlvbi1jb2xvcnMgZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIuNVwiXHJcbiAgICAgICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgICAgICA8WENpcmNsZSBjbGFzc05hbWU9XCJ3LTMuNSBoLTMuNVwiIC8+XHJcbiAgICAgICAgICAgICAgICAgICAgPHNwYW4+15HXmdeY15XXnCDXntep15zXldeXPC9zcGFuPlxyXG4gICAgICAgICAgICAgICAgICA8L2J1dHRvbj5cclxuICAgICAgICAgICAgICAgIDwvPlxyXG4gICAgICAgICAgICAgICl9XHJcblxyXG4gICAgICAgICAgICAgIHsoZGVsaXZlcnkuc3RhdHVzID09PSAnZGVsaXZlcmluZycpICYmIChcclxuICAgICAgICAgICAgICAgIDw+XHJcbiAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiaC1weCBiZy1bI2U1ZTVlNV0gZGFyazpiZy1bIzI2MjYyNl1cIiAvPlxyXG4gICAgICAgICAgICAgICAgICA8YnV0dG9uXHJcbiAgICAgICAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4geyBvbk9wZW5EcmF3ZXIoZGVsaXZlcnkuaWQpOyBjbG9zZU1lbnVzKCk7IH19XHJcbiAgICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwidy1mdWxsIHRleHQtcmlnaHQgcHgtMyBweS0yLjUgdGV4dC14cyBmb250LW1lZGl1bSB0ZXh0LVsjMGZjZGQzXSBob3ZlcjpiZy1jeWFuLTUwIGRhcms6aG92ZXI6YmctY3lhbi05MDAvMjAgdHJhbnNpdGlvbi1jb2xvcnMgZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIuNVwiXHJcbiAgICAgICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgICAgICA8RWRpdCBjbGFzc05hbWU9XCJ3LTMuNSBoLTMuNVwiIC8+XHJcbiAgICAgICAgICAgICAgICAgICAgPHNwYW4+16nXmdeg15XXmSDXqdec15nXlzwvc3Bhbj5cclxuICAgICAgICAgICAgICAgICAgPC9idXR0b24+XHJcbiAgICAgICAgICAgICAgICAgIDxidXR0b25cclxuICAgICAgICAgICAgICAgICAgICBvbkNsaWNrPXsoKSA9PiB7IG9uQ29tcGxldGVEZWxpdmVyeShkZWxpdmVyeS5pZCk7IGNsb3NlTWVudXMoKTsgfX1cclxuICAgICAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJ3LWZ1bGwgdGV4dC1yaWdodCBweC0zIHB5LTIuNSB0ZXh0LXhzIGZvbnQtbWVkaXVtIHRleHQtZ3JlZW4tNjAwIGRhcms6dGV4dC1ncmVlbi00MDAgaG92ZXI6YmctZ3JlZW4tNTAgZGFyazpob3ZlcjpiZy1ncmVlbi05MDAvMjAgdHJhbnNpdGlvbi1jb2xvcnMgZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIuNVwiXHJcbiAgICAgICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgICAgICA8Q2hlY2tDaXJjbGUyIGNsYXNzTmFtZT1cInctMy41IGgtMy41XCIgLz5cclxuICAgICAgICAgICAgICAgICAgICA8c3Bhbj7XodeZ157XldefINeb16DXnteh16g8L3NwYW4+XHJcbiAgICAgICAgICAgICAgICAgIDwvYnV0dG9uPlxyXG4gICAgICAgICAgICAgICAgICA8YnV0dG9uXHJcbiAgICAgICAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4geyBvbkNhbmNlbERlbGl2ZXJ5KGRlbGl2ZXJ5LmlkKTsgY2xvc2VNZW51cygpOyB9fVxyXG4gICAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cInctZnVsbCB0ZXh0LXJpZ2h0IHB4LTMgcHktMi41IHRleHQteHMgZm9udC1tZWRpdW0gdGV4dC1yZWQtNjAwIGRhcms6dGV4dC1yZWQtNDAwIGhvdmVyOmJnLXJlZC01MCBkYXJrOmhvdmVyOmJnLXJlZC05MDAvMjAgdHJhbnNpdGlvbi1jb2xvcnMgZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIuNVwiXHJcbiAgICAgICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgICAgICA8WENpcmNsZSBjbGFzc05hbWU9XCJ3LTMuNSBoLTMuNVwiIC8+XHJcbiAgICAgICAgICAgICAgICAgICAgPHNwYW4+15HXmdeY15XXnCDXntep15zXldeXPC9zcGFuPlxyXG4gICAgICAgICAgICAgICAgICA8L2J1dHRvbj5cclxuICAgICAgICAgICAgICAgIDwvPlxyXG4gICAgICAgICAgICAgICl9XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgKX1cclxuICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgIDwvZGl2PlxyXG4gICAgICA8L0VudGl0eVRhYmxlQWN0aW9uc0NlbGw+XHJcbiAgICA8L3RyPlxyXG4gICk7XHJcbn07XHJcblxyXG4iXSwiZmlsZSI6IkM6L1VzZXJzL3JlYWxhL09uZURyaXZlL0Rlc2t0b3Avc2VuZGkvc2UuaW8gU1lTVEVNIERFTU8vc3JjL2FwcC9kZWxpdmVyaWVzL2RlbGl2ZXJ5LXRhYmxlLXJvdy50c3gifQ==

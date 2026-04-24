@@ -5,7 +5,7 @@ import { Delivery, DeliveryStatus } from '../types/delivery.types';
 import { DeliveriesSidePanel } from '../deliveries/deliveries-side-panel';
 import { DeliveriesTableSection } from '../deliveries/deliveries-table-section';
 import { DeliveriesOverlays } from '../deliveries/deliveries-overlays';
-import { STATUS_LABELS, DEFAULT_VISIBLE_COLUMNS } from '../deliveries/status-config';
+import { STATUS_LABELS } from '../deliveries/status-config';
 import { ALL_COLUMNS, COLUMN_MAP } from '../deliveries/column-defs';
 import type { ColumnDef } from '../deliveries/column-defs';
 import { toast } from 'sonner';
@@ -41,8 +41,69 @@ const formatTime = (seconds: number): string => {
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')} דקות`;
 };
 
+const PRODUCT_DEFAULT_VISIBLE_COLUMNS = new Set([
+  'orderNumber',
+  'creation_time',
+  'status',
+  'rest_name',
+  'client_name',
+  'client_full_address',
+  'courier',
+  'timeRemaining',
+  'price',
+  'runner_price',
+]);
 const COLUMN_ORDER_STORAGE_KEY = DELIVERY_STORAGE_KEYS.deliveriesColumnOrder;
-const VISIBLE_COLUMNS_STORAGE_KEY = DELIVERY_STORAGE_KEYS.deliveriesVisibleColumns;
+const VISIBLE_COLUMNS_STORAGE_KEY = `${DELIVERY_STORAGE_KEYS.deliveriesVisibleColumns}:product-v2`;
+const DELIVERY_COLUMN_CATEGORIES = [
+  {
+    id: 'core',
+    label: 'ליבה תפעולית',
+    columns: [
+      { id: 'orderNumber', label: 'מספר הזמנה' },
+      { id: 'creation_time', label: 'זמן יצירה' },
+      { id: 'status', label: 'סטטוס' },
+      { id: 'rest_name', label: 'מסעדה' },
+      { id: 'client_name', label: 'לקוח' },
+      { id: 'client_full_address', label: 'כתובת לקוח' },
+      { id: 'courier', label: 'שליח' },
+      { id: 'timeRemaining', label: 'זמן נותר' },
+    ],
+  },
+  {
+    id: 'money',
+    label: 'כסף',
+    columns: [
+      { id: 'price', label: 'מחיר ללקוח' },
+      { id: 'runner_price', label: 'תשלום שליח' },
+      { id: 'runner_tip', label: 'טיפ' },
+      { id: 'sum_cash', label: 'מזומן' },
+      { id: 'rest_price', label: 'מחיר מסעדה' },
+    ],
+  },
+  {
+    id: 'timeline',
+    label: 'ציר זמן',
+    columns: [
+      { id: 'coupled_time', label: 'זמן שיוך' },
+      { id: 'arrived_at_rest', label: 'הגעה למסעדה' },
+      { id: 'took_it_time', label: 'זמן איסוף' },
+      { id: 'arrived_at_client', label: 'הגעה ללקוח' },
+      { id: 'delivered_time', label: 'זמן מסירה' },
+    ],
+  },
+  {
+    id: 'details',
+    label: 'פרטים נוספים',
+    columns: [
+      { id: 'restaurantAddress', label: 'כתובת מסעדה' },
+      { id: 'client_phone', label: 'טלפון לקוח' },
+      { id: 'delivery_distance', label: 'מרחק משלוח' },
+      { id: 'priority', label: 'עדיפות' },
+      { id: 'comment', label: 'הערת מערכת' },
+    ],
+  },
+] as const;
 const STATUS_CHIP_CONFIG = [
   { status: 'pending'    as DeliveryStatus, label: 'ממתין', dot: 'bg-orange-500', active: 'bg-orange-500/10 text-orange-600 dark:text-orange-400' },
   { status: 'assigned'   as DeliveryStatus, label: 'שובץ',  dot: 'bg-yellow-500', active: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400' },
@@ -50,6 +111,58 @@ const STATUS_CHIP_CONFIG = [
   { status: 'delivered'  as DeliveryStatus, label: 'נמסר',  dot: 'bg-green-500',  active: 'bg-green-500/10 text-green-600 dark:text-green-400' },
   { status: 'cancelled'  as DeliveryStatus, label: 'בוטל',  dot: 'bg-red-500',    active: 'bg-red-500/10 text-red-600 dark:text-red-400' },
 ];
+
+type DeliveriesOverviewStats = {
+  total: number;
+  filtered: number;
+  active: number;
+  pending: number;
+  assigned: number;
+  delivering: number;
+  delivered: number;
+  cancelled: number;
+  unassigned: number;
+  revenue: number;
+};
+
+const DeliveriesOverviewStrip: React.FC<{
+  stats: DeliveriesOverviewStats;
+  hasFilters: boolean;
+}> = ({ stats, hasFilters }) => {
+  const items = [
+    { label: 'פעילים', value: stats.active.toLocaleString('he-IL'), tone: 'focus' },
+    { label: 'ממתינים', value: stats.pending.toLocaleString('he-IL'), tone: 'warning' },
+    { label: 'משובצים', value: stats.assigned.toLocaleString('he-IL') },
+    { label: 'בדרך', value: stats.delivering.toLocaleString('he-IL') },
+    { label: 'ללא שליח', value: stats.unassigned.toLocaleString('he-IL'), tone: 'warning' },
+    { label: 'נמסרו', value: stats.delivered.toLocaleString('he-IL'), tone: 'success' },
+    { label: 'הכנסות', value: `₪${Math.round(stats.revenue).toLocaleString('he-IL')}` },
+    ...(hasFilters ? [{ label: 'תוצאות', value: stats.filtered.toLocaleString('he-IL') }] : []),
+  ];
+
+  return (
+    <div className="shrink-0 border-b border-[#e5e5e5] bg-white px-5 py-2.5 dark:border-[#262626] dark:bg-[#171717]">
+      <div className="flex max-w-full flex-wrap items-center gap-x-5 gap-y-2">
+        {items.map((item) => (
+          <div key={item.label} className="flex min-w-0 items-baseline gap-2">
+            <span
+              className={`text-sm font-semibold tabular-nums ${
+                item.tone === 'success'
+                  ? 'text-[#16a34a] dark:text-[#9fe870]'
+                  : item.tone === 'warning'
+                    ? 'text-[#f97316] dark:text-[#ffa94d]'
+                    : 'text-[#0d0d12] dark:text-[#fafafa]'
+              }`}
+            >
+              {item.value}
+            </span>
+            <span className="truncate text-xs text-[#737373] dark:text-[#a3a3a3]">{item.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const getDeliveryColumnWidth = (columnId: string) => {
   switch (columnId) {
@@ -156,7 +269,7 @@ export const DeliveriesPage: React.FC = () => {
     } catch (e) {
       console.warn('Failed to load visible columns from localStorage:', e);
     }
-    return new Set(DEFAULT_VISIBLE_COLUMNS);
+    return new Set(PRODUCT_DEFAULT_VISIBLE_COLUMNS);
   });
   const [exportOpen, setExportOpen] = useState(false);
   const [newDeliveryOpen, setNewDeliveryOpen] = useState(false);
@@ -341,14 +454,29 @@ export const DeliveriesPage: React.FC = () => {
     total: state.deliveries.length,
   }), [state.deliveries]);
 
-  const filteredStats = useMemo(() => ({
-    total: filteredDeliveries.length,
-    pending: filteredDeliveries.filter(d => d.status === 'pending').length,
-    assigned: filteredDeliveries.filter(d => d.status === 'assigned').length,
-    delivering: filteredDeliveries.filter(d => d.status === 'delivering').length,
-    delivered: filteredDeliveries.filter(d => d.status === 'delivered').length,
-    cancelled: filteredDeliveries.filter(d => d.status === 'cancelled').length,
-  }), [filteredDeliveries]);
+  const filteredStats = useMemo<DeliveriesOverviewStats>(() => {
+    const pending = filteredDeliveries.filter(d => d.status === 'pending').length;
+    const assigned = filteredDeliveries.filter(d => d.status === 'assigned').length;
+    const delivering = filteredDeliveries.filter(d => d.status === 'delivering').length;
+    const delivered = filteredDeliveries.filter(d => d.status === 'delivered').length;
+    const cancelled = filteredDeliveries.filter(d => d.status === 'cancelled').length;
+
+    return {
+      total: state.deliveries.length,
+      filtered: filteredDeliveries.length,
+      active: pending + assigned + delivering,
+      pending,
+      assigned,
+      delivering,
+      delivered,
+      cancelled,
+      unassigned: filteredDeliveries.filter(d => !d.courierId && d.status !== 'delivered' && d.status !== 'cancelled').length,
+      revenue: sumDeliveryMoney(
+        filteredDeliveries.filter(d => d.status === 'delivered'),
+        getDeliveryCustomerCharge,
+      ),
+    };
+  }, [filteredDeliveries, state.deliveries.length]);
 
   const emptyStateMode = useMemo<'no-data' | 'no-results' | 'filtered-empty'>(() => {
     if (stats.total === 0) return 'no-data';
@@ -447,6 +575,12 @@ export const DeliveriesPage: React.FC = () => {
       toggleStatusFilter,
     ],
   );
+  const hasOperationalFilters = Boolean(
+    searchQuery.trim() ||
+    statusFilters.size > 0 ||
+    selectedRestaurants.size > 0 ||
+    selectedCouriers.size > 0
+  );
 
   return (
     <>
@@ -464,9 +598,11 @@ export const DeliveriesPage: React.FC = () => {
           }}
           visibleColumns={visibleColumns}
           setVisibleColumns={setVisibleColumns}
-          deliveryCount={filteredStats.total}
+          deliveryCount={filteredStats.filtered}
           selectedCount={selectedIds.size}
           groupCounts={reportGroupCounts}
+          columnCategories={[...DELIVERY_COLUMN_CATEGORIES]}
+          defaultVisibleColumns={PRODUCT_DEFAULT_VISIBLE_COLUMNS}
         />
 
         <div className="flex-1 min-w-0 overflow-hidden flex flex-col" dir="rtl">
@@ -519,8 +655,14 @@ export const DeliveriesPage: React.FC = () => {
                 showExportButton={false}
               />
             }
-            summary={`${filteredStats.total} משלוחים`}
+            summary={
+              hasOperationalFilters
+                ? `${filteredStats.filtered} מתוך ${filteredStats.total} משלוחים`
+                : `${filteredStats.active} פעילים · ${filteredStats.delivered} נמסרו`
+            }
           />
+
+          <DeliveriesOverviewStrip stats={filteredStats} hasFilters={hasOperationalFilters} />
 
           <div className="flex-1 min-h-0 flex flex-col">
             <DeliveriesTableSection

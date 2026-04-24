@@ -1,0 +1,1255 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/@fs/C:\\Users\\reala\\OneDrive\\Desktop\\sendi\\se.io SYSTEM DEMO\\src\\app\\deliveries\\delivery-edit-dialog.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=2e7cf56d"; const Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"]; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+var _s = $RefreshSig$();
+import __vite__cjsImport3_react from "/node_modules/.vite/deps/react.js?v=2e7cf56d"; const useState = __vite__cjsImport3_react["useState"]; const useEffect = __vite__cjsImport3_react["useEffect"];
+import {
+  X,
+  Save,
+  RotateCcw,
+  Package,
+  Store,
+  User,
+  Bike,
+  Clock,
+  Gauge,
+  DollarSign,
+  Signal,
+  AlertCircle
+} from "/node_modules/.vite/deps/lucide-react.js?v=f457fbae";
+import { toast } from "/node_modules/.vite/deps/sonner.js?v=4080ec44";
+const tabs = [
+  { id: "core", label: "ליבה", icon: Package, color: "text-blue-600" },
+  { id: "origin", label: "מסעדה", icon: Store, color: "text-purple-600" },
+  { id: "target", label: "לקוח", icon: User, color: "text-green-600" },
+  { id: "actor", label: "שליח", icon: Bike, color: "text-orange-600" },
+  { id: "timeline", label: "זמנים", icon: Clock, color: "text-cyan-600" },
+  { id: "mechanics", label: "ביצועים", icon: Gauge, color: "text-pink-600" },
+  { id: "economy", label: "כספים", icon: DollarSign, color: "text-emerald-600" },
+  { id: "meta", label: "מטא", icon: Signal, color: "text-indigo-600" }
+];
+export const DeliveryEditDialog = ({
+  delivery,
+  isOpen,
+  onClose,
+  onSave
+}) => {
+  _s();
+  const [activeTab, setActiveTab] = useState("core");
+  const [formData, setFormData] = useState({});
+  const [hasChanges, setHasChanges] = useState(false);
+  useEffect(() => {
+    if (delivery) {
+      setFormData({ ...delivery });
+      setHasChanges(false);
+    }
+  }, [delivery]);
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    if (isOpen) {
+      document.addEventListener("keydown", handleKeyDown);
+      return () => document.removeEventListener("keydown", handleKeyDown);
+    }
+  }, [isOpen, onClose]);
+  if (!isOpen || !delivery) return null;
+  const handleChange = (field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    setHasChanges(true);
+  };
+  const handleSave = () => {
+    if (!hasChanges) {
+      toast.info("לא בוצעו שינויים");
+      return;
+    }
+    onSave(delivery.id, formData);
+    toast.success("המשלוח עודכן בהצלחה");
+    onClose();
+  };
+  const handleReset = () => {
+    setFormData({ ...delivery });
+    setHasChanges(false);
+    toast.info("השינויים אופסו");
+  };
+  return /* @__PURE__ */ jsxDEV(Fragment, { children: [
+    /* @__PURE__ */ jsxDEV(
+      "div",
+      {
+        className: "fixed inset-0 bg-black/50 dark:bg-black/70 z-[60] transition-opacity",
+        onClick: onClose
+      },
+      void 0,
+      false,
+      {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+        lineNumber: 120,
+        columnNumber: 7
+      },
+      this
+    ),
+    /* @__PURE__ */ jsxDEV("div", { className: "fixed inset-0 z-[61] flex items-center justify-center p-4 pointer-events-none", children: /* @__PURE__ */ jsxDEV("div", { className: "bg-white dark:bg-[#0f0f0f] rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col pointer-events-auto animate-in zoom-in-95 duration-200", children: [
+      /* @__PURE__ */ jsxDEV("div", { className: "shrink-0 px-6 py-4 border-b border-[#e5e5e5] dark:border-[#262626] flex items-center justify-between", children: [
+        /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-3", children: [
+          /* @__PURE__ */ jsxDEV("div", { className: "p-2 bg-[#9fe870]/10 rounded-xl", children: /* @__PURE__ */ jsxDEV(Package, { className: "w-5 h-5 text-[#9fe870]" }, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+            lineNumber: 132,
+            columnNumber: 17
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+            lineNumber: 131,
+            columnNumber: 15
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { children: [
+            /* @__PURE__ */ jsxDEV("h2", { className: "text-lg font-bold text-[#0d0d12] dark:text-[#fafafa]", children: "עריכת משלוח" }, void 0, false, {
+              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+              lineNumber: 135,
+              columnNumber: 17
+            }, this),
+            /* @__PURE__ */ jsxDEV("p", { className: "text-xs text-[#737373] dark:text-[#a3a3a3]", children: [
+              "הזמנה #",
+              delivery.orderNumber
+            ] }, void 0, true, {
+              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+              lineNumber: 136,
+              columnNumber: 17
+            }, this)
+          ] }, void 0, true, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+            lineNumber: 134,
+            columnNumber: 15
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+          lineNumber: 130,
+          columnNumber: 13
+        }, this),
+        /* @__PURE__ */ jsxDEV(
+          "button",
+          {
+            onClick: onClose,
+            className: "p-2 rounded-lg hover:bg-[#f5f5f5] dark:hover:bg-[#262626] text-[#737373] transition-colors",
+            title: "סגור (ESC)",
+            children: /* @__PURE__ */ jsxDEV(X, { className: "w-5 h-5" }, void 0, false, {
+              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+              lineNumber: 144,
+              columnNumber: 15
+            }, this)
+          },
+          void 0,
+          false,
+          {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+            lineNumber: 139,
+            columnNumber: 13
+          },
+          this
+        )
+      ] }, void 0, true, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+        lineNumber: 129,
+        columnNumber: 11
+      }, this),
+      /* @__PURE__ */ jsxDEV("div", { className: "shrink-0 px-6 border-b border-[#e5e5e5] dark:border-[#262626] flex gap-1 overflow-x-auto scrollbar-hide", children: tabs.map((tab) => {
+        const Icon = tab.icon;
+        const isActive = activeTab === tab.id;
+        return /* @__PURE__ */ jsxDEV(
+          "button",
+          {
+            onClick: () => setActiveTab(tab.id),
+            className: `flex items-center gap-2 px-4 py-3 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${isActive ? `border-[#9fe870] ${tab.color} bg-[#9fe870]/5` : "border-transparent text-[#737373] hover:text-[#0d0d12] dark:hover:text-[#fafafa] hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a]"}`,
+            children: [
+              /* @__PURE__ */ jsxDEV(Icon, { className: `w-4 h-4 ${isActive ? tab.color : ""}` }, void 0, false, {
+                fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+                lineNumber: 163,
+                columnNumber: 19
+              }, this),
+              tab.label
+            ]
+          },
+          tab.id,
+          true,
+          {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+            lineNumber: 154,
+            columnNumber: 17
+          },
+          this
+        );
+      }) }, void 0, false, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+        lineNumber: 149,
+        columnNumber: 11
+      }, this),
+      /* @__PURE__ */ jsxDEV("div", { className: "flex-1 overflow-y-auto px-6 py-4", children: [
+        activeTab === "core" && /* @__PURE__ */ jsxDEV(CoreTab, { formData, onChange: handleChange }, void 0, false, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+          lineNumber: 172,
+          columnNumber: 38
+        }, this),
+        activeTab === "origin" && /* @__PURE__ */ jsxDEV(OriginTab, { formData, onChange: handleChange }, void 0, false, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+          lineNumber: 173,
+          columnNumber: 40
+        }, this),
+        activeTab === "target" && /* @__PURE__ */ jsxDEV(TargetTab, { formData, onChange: handleChange }, void 0, false, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+          lineNumber: 174,
+          columnNumber: 40
+        }, this),
+        activeTab === "actor" && /* @__PURE__ */ jsxDEV(ActorTab, { formData, onChange: handleChange }, void 0, false, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+          lineNumber: 175,
+          columnNumber: 39
+        }, this),
+        activeTab === "timeline" && /* @__PURE__ */ jsxDEV(TimelineTab, { formData, onChange: handleChange }, void 0, false, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+          lineNumber: 176,
+          columnNumber: 42
+        }, this),
+        activeTab === "mechanics" && /* @__PURE__ */ jsxDEV(MechanicsTab, { formData, onChange: handleChange }, void 0, false, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+          lineNumber: 177,
+          columnNumber: 43
+        }, this),
+        activeTab === "economy" && /* @__PURE__ */ jsxDEV(EconomyTab, { formData, onChange: handleChange }, void 0, false, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+          lineNumber: 178,
+          columnNumber: 41
+        }, this),
+        activeTab === "meta" && /* @__PURE__ */ jsxDEV(MetaTab, { formData, onChange: handleChange }, void 0, false, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+          lineNumber: 179,
+          columnNumber: 38
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+        lineNumber: 171,
+        columnNumber: 11
+      }, this),
+      /* @__PURE__ */ jsxDEV("div", { className: "shrink-0 px-6 py-4 border-t border-[#e5e5e5] dark:border-[#262626] flex items-center justify-between gap-3", children: [
+        /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-2 text-xs text-[#737373]", children: hasChanges && /* @__PURE__ */ jsxDEV(Fragment, { children: [
+          /* @__PURE__ */ jsxDEV(AlertCircle, { className: "w-4 h-4 text-[#f59e0b]" }, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+            lineNumber: 187,
+            columnNumber: 19
+          }, this),
+          /* @__PURE__ */ jsxDEV("span", { children: "יש שינויים שלא נשמרו" }, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+            lineNumber: 188,
+            columnNumber: 19
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+          lineNumber: 186,
+          columnNumber: 15
+        }, this) }, void 0, false, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+          lineNumber: 184,
+          columnNumber: 13
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-2", children: [
+          /* @__PURE__ */ jsxDEV(
+            "button",
+            {
+              onClick: handleReset,
+              disabled: !hasChanges,
+              className: "flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#737373] hover:text-[#0d0d12] dark:hover:text-[#fafafa] disabled:opacity-40 disabled:cursor-not-allowed transition-colors",
+              children: [
+                /* @__PURE__ */ jsxDEV(RotateCcw, { className: "w-4 h-4" }, void 0, false, {
+                  fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+                  lineNumber: 198,
+                  columnNumber: 17
+                }, this),
+                "איפוס"
+              ]
+            },
+            void 0,
+            true,
+            {
+              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+              lineNumber: 193,
+              columnNumber: 15
+            },
+            this
+          ),
+          /* @__PURE__ */ jsxDEV(
+            "button",
+            {
+              onClick: onClose,
+              className: "px-4 py-2 text-sm font-medium text-[#0d0d12] dark:text-[#fafafa] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] rounded-lg transition-colors",
+              children: "ביטול"
+            },
+            void 0,
+            false,
+            {
+              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+              lineNumber: 201,
+              columnNumber: 15
+            },
+            this
+          ),
+          /* @__PURE__ */ jsxDEV(
+            "button",
+            {
+              onClick: handleSave,
+              className: "flex items-center gap-2 px-4 py-2 bg-[#9fe870] hover:bg-[#8fd65f] text-[#0d0d12] rounded-lg text-sm font-medium transition-colors",
+              children: [
+                /* @__PURE__ */ jsxDEV(Save, { className: "w-4 h-4" }, void 0, false, {
+                  fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+                  lineNumber: 211,
+                  columnNumber: 17
+                }, this),
+                "שמור שינויים"
+              ]
+            },
+            void 0,
+            true,
+            {
+              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+              lineNumber: 207,
+              columnNumber: 15
+            },
+            this
+          )
+        ] }, void 0, true, {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+          lineNumber: 192,
+          columnNumber: 13
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+        lineNumber: 183,
+        columnNumber: 11
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+      lineNumber: 127,
+      columnNumber: 9
+    }, this) }, void 0, false, {
+      fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+      lineNumber: 126,
+      columnNumber: 7
+    }, this)
+  ] }, void 0, true, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 118,
+    columnNumber: 5
+  }, this);
+};
+_s(DeliveryEditDialog, "XlYrXFwOjngLLfEOC71eDUgPKKY=");
+_c = DeliveryEditDialog;
+const FormField = ({ label, value, onChange, type = "text", options, placeholder, disabled }) => {
+  return /* @__PURE__ */ jsxDEV("div", { className: "space-y-1.5", children: [
+    /* @__PURE__ */ jsxDEV("label", { className: "block text-xs font-medium text-[#737373] dark:text-[#a3a3a3]", children: label }, void 0, false, {
+      fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+      lineNumber: 242,
+      columnNumber: 7
+    }, this),
+    type === "select" && options ? /* @__PURE__ */ jsxDEV(
+      "select",
+      {
+        value: value || "",
+        onChange: (e) => onChange(e.target.value),
+        disabled,
+        className: "w-full px-3 py-2 text-sm bg-[#fafafa] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870] disabled:opacity-50",
+        children: [
+          /* @__PURE__ */ jsxDEV("option", { value: "", children: "בחר..." }, void 0, false, {
+            fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+            lineNumber: 250,
+            columnNumber: 11
+          }, this),
+          options.map(
+            (opt) => /* @__PURE__ */ jsxDEV("option", { value: opt.value, children: opt.label }, opt.value, false, {
+              fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+              lineNumber: 252,
+              columnNumber: 9
+            }, this)
+          )
+        ]
+      },
+      void 0,
+      true,
+      {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+        lineNumber: 244,
+        columnNumber: 7
+      },
+      this
+    ) : type === "checkbox" ? /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-2", children: [
+      /* @__PURE__ */ jsxDEV(
+        "input",
+        {
+          type: "checkbox",
+          checked: value || false,
+          onChange: (e) => onChange(e.target.checked),
+          disabled,
+          className: "w-4 h-4 rounded border-[#e5e5e5] dark:border-[#262626] text-[#9fe870] focus:ring-2 focus:ring-[#9fe870] disabled:opacity-50"
+        },
+        void 0,
+        false,
+        {
+          fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+          lineNumber: 257,
+          columnNumber: 11
+        },
+        this
+      ),
+      /* @__PURE__ */ jsxDEV("span", { className: "text-xs text-[#0d0d12] dark:text-[#fafafa]", children: value ? "כן" : "לא" }, void 0, false, {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+        lineNumber: 264,
+        columnNumber: 11
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+      lineNumber: 256,
+      columnNumber: 7
+    }, this) : type === "textarea" ? /* @__PURE__ */ jsxDEV(
+      "textarea",
+      {
+        value: value || "",
+        onChange: (e) => onChange(e.target.value),
+        placeholder,
+        disabled,
+        rows: 3,
+        className: "w-full px-3 py-2 text-sm bg-[#fafafa] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870] disabled:opacity-50 resize-none"
+      },
+      void 0,
+      false,
+      {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+        lineNumber: 267,
+        columnNumber: 7
+      },
+      this
+    ) : type === "datetime-local" ? /* @__PURE__ */ jsxDEV(
+      "input",
+      {
+        type: "datetime-local",
+        value: value ? new Date(value).toISOString().slice(0, 16) : "",
+        onChange: (e) => onChange(e.target.value ? new Date(e.target.value) : null),
+        disabled,
+        className: "w-full px-3 py-2 text-sm bg-[#fafafa] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870] disabled:opacity-50"
+      },
+      void 0,
+      false,
+      {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+        lineNumber: 276,
+        columnNumber: 7
+      },
+      this
+    ) : /* @__PURE__ */ jsxDEV(
+      "input",
+      {
+        type,
+        value: value || "",
+        onChange: (e) => onChange(type === "number" ? parseFloat(e.target.value) || 0 : e.target.value),
+        placeholder,
+        disabled,
+        className: "w-full px-3 py-2 text-sm bg-[#fafafa] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870] disabled:opacity-50"
+      },
+      void 0,
+      false,
+      {
+        fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+        lineNumber: 284,
+        columnNumber: 7
+      },
+      this
+    )
+  ] }, void 0, true, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 241,
+    columnNumber: 5
+  }, this);
+};
+_c2 = FormField;
+const CoreTab = ({ formData, onChange }) => /* @__PURE__ */ jsxDEV("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-4", children: [
+  /* @__PURE__ */ jsxDEV(FormField, { label: "מספר הזמנה", value: formData.orderNumber, onChange: (v) => onChange("orderNumber", v), disabled: true }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 299,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "מזהה קצר API", value: formData.api_short_order_id, onChange: (v) => onChange("api_short_order_id", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 300,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "מזהה ארוך API", value: formData.api_str_order_id, onChange: (v) => onChange("api_str_order_id", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 301,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(
+    FormField,
+    {
+      label: "סטטוס",
+      value: formData.status,
+      onChange: (v) => onChange("status", v),
+      type: "select",
+      options: [
+        { value: "pending", label: "ממתין" },
+        { value: "assigned", label: "שובץ" },
+        { value: "delivered", label: "נמסר" },
+        { value: "cancelled", label: "בוטל" }
+      ]
+    },
+    void 0,
+    false,
+    {
+      fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+      lineNumber: 302,
+      columnNumber: 5
+    },
+    this
+  ),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "עדיפות", value: formData.priority, onChange: (v) => onChange("priority", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 314,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "מספר חבילה", value: formData.pack_num, onChange: (v) => onChange("pack_num", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 315,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "משלוח API", value: formData.is_api, onChange: (v) => onChange("is_api", v), type: "checkbox" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 316,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "הופעל", value: formData.is_started, onChange: (v) => onChange("is_started", v), type: "checkbox" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 317,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "אושר", value: formData.is_approved, onChange: (v) => onChange("is_approved", v), type: "checkbox" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 318,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "דורש אישור", value: formData.is_requires_approval, onChange: (v) => onChange("is_requires_approval", v), type: "checkbox" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 319,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "הזמנה סגורה", value: formData.close_order, onChange: (v) => onChange("close_order", v), type: "checkbox" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 320,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV("div", { className: "md:col-span-2", children: /* @__PURE__ */ jsxDEV(FormField, { label: "הערה", value: formData.comment, onChange: (v) => onChange("comment", v), type: "textarea" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 322,
+    columnNumber: 7
+  }, this) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 321,
+    columnNumber: 5
+  }, this)
+] }, void 0, true, {
+  fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+  lineNumber: 298,
+  columnNumber: 1
+}, this);
+_c3 = CoreTab;
+const OriginTab = ({ formData, onChange }) => /* @__PURE__ */ jsxDEV("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-4", children: [
+  /* @__PURE__ */ jsxDEV(FormField, { label: "שם מסעדה", value: formData.rest_name, onChange: (v) => onChange("rest_name", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 329,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "מזהה מסעדה", value: formData.rest_id, onChange: (v) => onChange("rest_id", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 330,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "מזהה סניף", value: formData.branch_id, onChange: (v) => onChange("branch_id", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 331,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "שם סניף", value: formData.branchName, onChange: (v) => onChange("branchName", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 332,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "עיר", value: formData.rest_city, onChange: (v) => onChange("rest_city", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 333,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "רחוב", value: formData.rest_street, onChange: (v) => onChange("rest_street", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 334,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "בניין", value: formData.rest_building, onChange: (v) => onChange("rest_building", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 335,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "כתובת מלאה", value: formData.restaurantAddress, onChange: (v) => onChange("restaurantAddress", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 336,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "קו רוחב (Latitude)", value: formData.pickup_latitude, onChange: (v) => onChange("pickup_latitude", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 337,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "קו אורך (Longitude)", value: formData.pickup_longitude, onChange: (v) => onChange("pickup_longitude", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 338,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "סוג הכנה", value: formData.cook_type, onChange: (v) => onChange("cook_type", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 339,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "זמן הכנה", value: formData.cook_time, onChange: (v) => onChange("cook_time", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 340,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "הזמנה מוכנה", value: formData.order_ready, onChange: (v) => onChange("order_ready", v), type: "checkbox" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 341,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "דווח כמוכן", value: formData.reported_order_is_ready, onChange: (v) => onChange("reported_order_is_ready", v), type: "checkbox" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 342,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "אושר על ידי מסעדה", value: formData.rest_approve, onChange: (v) => onChange("rest_approve", v), type: "checkbox" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 343,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "מסעדה ממתינה לזמן הכנה", value: formData.rest_waits_for_cook_time, onChange: (v) => onChange("rest_waits_for_cook_time", v), type: "checkbox" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 344,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "משקאות", value: formData.is_drinks_exist, onChange: (v) => onChange("is_drinks_exist", v), type: "checkbox" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 345,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "רטבים", value: formData.is_sauces_exist, onChange: (v) => onChange("is_sauces_exist", v), type: "checkbox" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 346,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "ETA אחרון מסעדה", value: formData.rest_last_eta, onChange: (v) => onChange("rest_last_eta", v), type: "datetime-local" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 347,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "ETA מאושר מסעדה", value: formData.rest_approved_eta, onChange: (v) => onChange("rest_approved_eta", v), type: "datetime-local" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 348,
+    columnNumber: 5
+  }, this)
+] }, void 0, true, {
+  fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+  lineNumber: 328,
+  columnNumber: 1
+}, this);
+_c4 = OriginTab;
+const TargetTab = ({ formData, onChange }) => /* @__PURE__ */ jsxDEV("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-4", children: [
+  /* @__PURE__ */ jsxDEV(FormField, { label: "שם לקוח", value: formData.client_name, onChange: (v) => onChange("client_name", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 354,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "טלפון לקוח", value: formData.client_phone, onChange: (v) => onChange("client_phone", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 355,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "מזהה לקוח", value: formData.client_id, onChange: (v) => onChange("client_id", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 356,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV("div", { className: "md:col-span-2", children: /* @__PURE__ */ jsxDEV(FormField, { label: "כתובת מלאה", value: formData.client_full_address, onChange: (v) => onChange("client_full_address", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 358,
+    columnNumber: 7
+  }, this) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 357,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "עיר", value: formData.client_city, onChange: (v) => onChange("client_city", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 360,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "רחוב", value: formData.client_street, onChange: (v) => onChange("client_street", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 361,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "בניין", value: formData.client_building, onChange: (v) => onChange("client_building", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 362,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "כניסה", value: formData.client_entry, onChange: (v) => onChange("client_entry", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 363,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "קומה", value: formData.client_floor, onChange: (v) => onChange("client_floor", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 364,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "דירה", value: formData.client_apartment, onChange: (v) => onChange("client_apartment", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 365,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "מיקוד", value: formData.zipcode, onChange: (v) => onChange("zipcode", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 366,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "קו רוחב (Latitude)", value: formData.dropoff_latitude, onChange: (v) => onChange("dropoff_latitude", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 367,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "קו אורך (Longitude)", value: formData.dropoff_longitude, onChange: (v) => onChange("dropoff_longitude", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 368,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV("div", { className: "md:col-span-2", children: /* @__PURE__ */ jsxDEV(FormField, { label: "הערת לקוח", value: formData.client_comment, onChange: (v) => onChange("client_comment", v), type: "textarea" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 370,
+    columnNumber: 7
+  }, this) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 369,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "כתובת שגויה", value: formData.wrong_address, onChange: (v) => onChange("wrong_address", v), type: "checkbox" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 372,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "לקוח הסכים למקום", value: formData.client_agree_to_place, onChange: (v) => onChange("client_agree_to_place", v), type: "checkbox" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 373,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "URL חתימה", value: formData.signature_url, onChange: (v) => onChange("signature_url", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 374,
+    columnNumber: 5
+  }, this)
+] }, void 0, true, {
+  fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+  lineNumber: 353,
+  columnNumber: 1
+}, this);
+_c5 = TargetTab;
+const ActorTab = ({ formData, onChange }) => /* @__PURE__ */ jsxDEV("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-4", children: [
+  /* @__PURE__ */ jsxDEV(FormField, { label: "מזהה שליח", value: formData.runner_id, onChange: (v) => onChange("runner_id", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 380,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "שם שליח", value: formData.courierName, onChange: (v) => onChange("courierName", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 381,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "מזהה שליח ממתין", value: formData.pending_runner_id, onChange: (v) => onChange("pending_runner_id", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 382,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "מזהה שליח משמרת", value: formData.shift_runner_id, onChange: (v) => onChange("shift_runner_id", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 383,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "מזהה שליח שהגיע למסעדה", value: formData.arrived_at_rest_runner_id, onChange: (v) => onChange("arrived_at_rest_runner_id", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 384,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(
+    FormField,
+    {
+      label: "סוג רכב",
+      value: formData.vehicle_type,
+      onChange: (v) => onChange("vehicle_type", v),
+      type: "select",
+      options: [
+        { value: "bike", label: "אופניים" },
+        { value: "scooter", label: "קטנוע" },
+        { value: "car", label: "רכב" }
+      ]
+    },
+    void 0,
+    false,
+    {
+      fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+      lineNumber: 385,
+      columnNumber: 5
+    },
+    this
+  ),
+  /* @__PURE__ */ jsxDEV(
+    FormField,
+    {
+      label: "סוג העסקה",
+      value: formData.courierEmploymentType,
+      onChange: (v) => onChange("courierEmploymentType", v),
+      type: "select",
+      options: [
+        { value: "שעתי", label: "שעתי" },
+        { value: "חודשי", label: "חודשי" }
+      ]
+    },
+    void 0,
+    false,
+    {
+      fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+      lineNumber: 396,
+      columnNumber: 5
+    },
+    this
+  ),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "דירוג שליח", value: formData.courierRating, onChange: (v) => onChange("courierRating", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 406,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "שויך באלגוריתם", value: formData.algo_runner, onChange: (v) => onChange("algo_runner", v), type: "checkbox" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 407,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "צומד על ידי", value: formData.coupled_by, onChange: (v) => onChange("coupled_by", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 408,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "קו רוחב בעת שיוך", value: formData.runner_at_assigning_latitude, onChange: (v) => onChange("runner_at_assigning_latitude", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 409,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "קו אורך בעת שיוך", value: formData.runner_at_assigning_longitude, onChange: (v) => onChange("runner_at_assigning_longitude", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 410,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "התחלת מסלול", value: formData.is_orbit_start, onChange: (v) => onChange("is_orbit_start", v), type: "checkbox" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 411,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "אזור", value: formData.area, onChange: (v) => onChange("area", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 412,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "מזהה אזור", value: formData.area_id, onChange: (v) => onChange("area_id", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 413,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "מזהה אזור משלוח", value: formData.delivery_area_id, onChange: (v) => onChange("delivery_area_id", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 414,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "שם פוליגון ראשי", value: formData.main_polygon_name, onChange: (v) => onChange("main_polygon_name", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 415,
+    columnNumber: 5
+  }, this)
+] }, void 0, true, {
+  fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+  lineNumber: 379,
+  columnNumber: 1
+}, this);
+_c6 = ActorTab;
+const TimelineTab = ({ formData, onChange }) => /* @__PURE__ */ jsxDEV("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-4", children: [
+  /* @__PURE__ */ jsxDEV(FormField, { label: "זמן יצירה", value: formData.creation_time, onChange: (v) => onChange("creation_time", v), type: "datetime-local" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 421,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "זמן דחיפה", value: formData.push_time, onChange: (v) => onChange("push_time", v), type: "datetime-local" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 422,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "זמן צוותים", value: formData.coupled_time, onChange: (v) => onChange("coupled_time", v), type: "datetime-local" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 423,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "התחיל איסוף", value: formData.started_pickup, onChange: (v) => onChange("started_pickup", v), type: "datetime-local" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 424,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "הגיע למסעדה", value: formData.arrived_at_rest, onChange: (v) => onChange("arrived_at_rest", v), type: "datetime-local" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 425,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "לקח את ההזמנה", value: formData.took_it_time, onChange: (v) => onChange("took_it_time", v), type: "datetime-local" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 426,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "התחיל מסירה", value: formData.started_dropoff, onChange: (v) => onChange("started_dropoff", v), type: "datetime-local" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 427,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "הגיע ללקוח", value: formData.arrived_at_client, onChange: (v) => onChange("arrived_at_client", v), type: "datetime-local" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 428,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "זמן מסירה", value: formData.delivered_time, onChange: (v) => onChange("delivered_time", v), type: "datetime-local" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 429,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "זמן ביטול", value: formData.cancelledAt, onChange: (v) => onChange("cancelledAt", v), type: "datetime-local" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 430,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "זמן משוער (דקות)", value: formData.estimatedTime, onChange: (v) => onChange("estimatedTime", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 431,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "ETA למסעדה", value: formData.estimatedArrivalAtRestaurant, onChange: (v) => onChange("estimatedArrivalAtRestaurant", v), type: "datetime-local" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 432,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "ETA ללקוח", value: formData.estimatedArrivalAtCustomer, onChange: (v) => onChange("estimatedArrivalAtCustomer", v), type: "datetime-local" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 433,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "זמן הכנת הזמנה", value: formData.orderReadyTime, onChange: (v) => onChange("orderReadyTime", v), type: "datetime-local" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 434,
+    columnNumber: 5
+  }, this)
+] }, void 0, true, {
+  fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+  lineNumber: 420,
+  columnNumber: 1
+}, this);
+_c7 = TimelineTab;
+const MechanicsTab = ({ formData, onChange }) => /* @__PURE__ */ jsxDEV("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-4", children: [
+  /* @__PURE__ */ jsxDEV(FormField, { label: "זמן מסירה מתוכנן", value: formData.should_delivered_time, onChange: (v) => onChange("should_delivered_time", v), type: "datetime-local" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 440,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "זמן מקסימלי למסירה (דקות)", value: formData.max_time_to_deliver, onChange: (v) => onChange("max_time_to_deliver", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 441,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "זמן מינימלי לאספקה (דקות)", value: formData.min_time_to_suplly, onChange: (v) => onChange("min_time_to_suplly", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 442,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "זמן מקסימלי לאספקה (דקות)", value: formData.max_time_to_suplly, onChange: (v) => onChange("max_time_to_suplly", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 443,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "דקות איחור", value: formData.minutes_late, onChange: (v) => onChange("minutes_late", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 444,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "סטיית איסוף (דקות)", value: formData.pickup_deviation, onChange: (v) => onChange("pickup_deviation", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 445,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "סטיית מסירה (דקות)", value: formData.dropoff_deviation, onChange: (v) => onChange("dropoff_deviation", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 446,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "סיבת עיכוב", value: formData.delay_reason, onChange: (v) => onChange("delay_reason", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 447,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "משך עיכוב (דקות)", value: formData.delay_duration, onChange: (v) => onChange("delay_duration", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 448,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "מרחק משלוח (קמ)", value: formData.delivery_distance, onChange: (v) => onChange("delivery_distance", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 449,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "משך ללקוח (דקות)", value: formData.duration_to_client, onChange: (v) => onChange("duration_to_client", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 450,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "ETA לאחר איסוף (דקות)", value: formData.eta_after_pickup, onChange: (v) => onChange("eta_after_pickup", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 451,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "סטטוס אספקה", value: formData.suplly_status, onChange: (v) => onChange("suplly_status", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 452,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "בוטל לאחר איסוף", value: formData.cancelledAfterPickup, onChange: (v) => onChange("cancelledAfterPickup", v), type: "checkbox" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 453,
+    columnNumber: 5
+  }, this)
+] }, void 0, true, {
+  fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+  lineNumber: 439,
+  columnNumber: 1
+}, this);
+_c8 = MechanicsTab;
+const EconomyTab = ({ formData, onChange }) => /* @__PURE__ */ jsxDEV("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-4", children: [
+  /* @__PURE__ */ jsxDEV(FormField, { label: "מחיר משלוח (₪)", value: formData.price, onChange: (v) => onChange("price", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 459,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "חיוב מסעדה (₪)", value: formData.rest_price, onChange: (v) => onChange("rest_price", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 460,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "מחיר פוליגון מסעדה (₪)", value: formData.rest_polygon_price, onChange: (v) => onChange("rest_polygon_price", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 461,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "תשלום שליח (₪)", value: formData.runner_price, onChange: (v) => onChange("runner_price", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 462,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "טיפ שליח (₪)", value: formData.runner_tip, onChange: (v) => onChange("runner_tip", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 463,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "סכום מזומן (₪)", value: formData.sum_cash, onChange: (v) => onChange("sum_cash", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 464,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "תשלום במזומן", value: formData.is_cash, onChange: (v) => onChange("is_cash", v), type: "checkbox" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 465,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "עמלה (₪)", value: formData.commissionAmount, onChange: (v) => onChange("commissionAmount", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 466,
+    columnNumber: 5
+  }, this)
+] }, void 0, true, {
+  fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+  lineNumber: 458,
+  columnNumber: 1
+}, this);
+_c9 = EconomyTab;
+const MetaTab = ({ formData, onChange }) => /* @__PURE__ */ jsxDEV("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-4", children: [
+  /* @__PURE__ */ jsxDEV(FormField, { label: "סוג API", value: formData.api_type, onChange: (v) => onChange("api_type", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 472,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "מקור API", value: formData.api_source, onChange: (v) => onChange("api_source", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 473,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "פלטפורמת מקור", value: formData.source_platform, onChange: (v) => onChange("source_platform", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 474,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "מזהה אתר", value: formData.website_id, onChange: (v) => onChange("website_id", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 475,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "מזהה Comax", value: formData.comax_id, onChange: (v) => onChange("comax_id", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 476,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "מזהה הזמנת אב", value: formData.parent_mishloha_order_id, onChange: (v) => onChange("parent_mishloha_order_id", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 477,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "מזהה הזמנה משויכת", value: formData.associated_api_order_id, onChange: (v) => onChange("associated_api_order_id", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 478,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "מזהה קצר משויך", value: formData.associated_short_api_order_id, onChange: (v) => onChange("associated_short_api_order_id", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 479,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "סטטוס SMS", value: formData.sms_status, onChange: (v) => onChange("sms_status", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 480,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "קוד SMS", value: formData.sms_code, onChange: (v) => onChange("sms_code", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 481,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "נצפה במעקב", value: formData.tracker_viewed, onChange: (v) => onChange("tracker_viewed", v), type: "checkbox" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 482,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV("div", { className: "md:col-span-2", children: /* @__PURE__ */ jsxDEV(FormField, { label: "הערת שליח בלקיחה", value: formData.runner_took_comment, onChange: (v) => onChange("runner_took_comment", v), type: "textarea" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 484,
+    columnNumber: 7
+  }, this) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 483,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV("div", { className: "md:col-span-2", children: /* @__PURE__ */ jsxDEV(FormField, { label: "הערת שליח במסירה", value: formData.runner_delivered_comment, onChange: (v) => onChange("runner_delivered_comment", v), type: "textarea" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 487,
+    columnNumber: 7
+  }, this) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 486,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "דירוג לקוח לשליח", value: formData.client_runner_rank, onChange: (v) => onChange("client_runner_rank", v), type: "number" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 489,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV("div", { className: "md:col-span-2", children: /* @__PURE__ */ jsxDEV(FormField, { label: "הערת לקוח", value: formData.client_remark, onChange: (v) => onChange("client_remark", v), type: "textarea" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 491,
+    columnNumber: 7
+  }, this) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 490,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV(FormField, { label: "סטטוס פידבק", value: formData.feedback_status, onChange: (v) => onChange("feedback_status", v) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 493,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV("div", { className: "md:col-span-2", children: /* @__PURE__ */ jsxDEV(FormField, { label: "תשובה ראשונה", value: formData.feedback_first_answer, onChange: (v) => onChange("feedback_first_answer", v), type: "textarea" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 495,
+    columnNumber: 7
+  }, this) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 494,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV("div", { className: "md:col-span-2", children: /* @__PURE__ */ jsxDEV(FormField, { label: "תשובה שנייה", value: formData.feedback_second_answer, onChange: (v) => onChange("feedback_second_answer", v), type: "textarea" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 498,
+    columnNumber: 7
+  }, this) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 497,
+    columnNumber: 5
+  }, this),
+  /* @__PURE__ */ jsxDEV("div", { className: "md:col-span-2", children: /* @__PURE__ */ jsxDEV(FormField, { label: "תשובה שלישית", value: formData.feedback_third_answer, onChange: (v) => onChange("feedback_third_answer", v), type: "textarea" }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 501,
+    columnNumber: 7
+  }, this) }, void 0, false, {
+    fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+    lineNumber: 500,
+    columnNumber: 5
+  }, this)
+] }, void 0, true, {
+  fileName: "C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx",
+  lineNumber: 471,
+  columnNumber: 1
+}, this);
+_c0 = MetaTab;
+var _c, _c2, _c3, _c4, _c5, _c6, _c7, _c8, _c9, _c0;
+$RefreshReg$(_c, "DeliveryEditDialog");
+$RefreshReg$(_c2, "FormField");
+$RefreshReg$(_c3, "CoreTab");
+$RefreshReg$(_c4, "OriginTab");
+$RefreshReg$(_c5, "TargetTab");
+$RefreshReg$(_c6, "ActorTab");
+$RefreshReg$(_c7, "TimelineTab");
+$RefreshReg$(_c8, "MechanicsTab");
+$RefreshReg$(_c9, "EconomyTab");
+$RefreshReg$(_c0, "MetaTab");
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/reala/OneDrive/Desktop/sendi/se.io SYSTEM DEMO/src/app/deliveries/delivery-edit-dialog.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,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ZSxPQUFPdEMsU0FBUzBLLHVCQUF1QixVQUFVLENBQUNwSSxNQUFNZCxTQUFTLHlCQUF5QmMsQ0FBQyxHQUFHLE1BQUssY0FBbkk7QUFBQTtBQUFBO0FBQUE7QUFBQSxTQUE2SSxLQUQvSTtBQUFBO0FBQUE7QUFBQTtBQUFBLFNBRUE7QUFBQSxFQUNBLHVCQUFDLFNBQUksV0FBVSxpQkFDYixpQ0FBQyxhQUFVLE9BQU0sZUFBYyxPQUFPdEMsU0FBUzJLLHdCQUF3QixVQUFVLENBQUNySSxNQUFNZCxTQUFTLDBCQUEwQmMsQ0FBQyxHQUFHLE1BQUssY0FBcEk7QUFBQTtBQUFBO0FBQUE7QUFBQSxTQUE4SSxLQURoSjtBQUFBO0FBQUE7QUFBQTtBQUFBLFNBRUE7QUFBQSxFQUNBLHVCQUFDLFNBQUksV0FBVSxpQkFDYixpQ0FBQyxhQUFVLE9BQU0sZ0JBQWUsT0FBT3RDLFNBQVM0Syx1QkFBdUIsVUFBVSxDQUFDdEksTUFBTWQsU0FBUyx5QkFBeUJjLENBQUMsR0FBRyxNQUFLLGNBQW5JO0FBQUE7QUFBQTtBQUFBO0FBQUEsU0FBNkksS0FEL0k7QUFBQTtBQUFBO0FBQUE7QUFBQSxTQUVBO0FBQUEsS0EvQkY7QUFBQTtBQUFBO0FBQUE7QUFBQSxPQWdDQTtBQUNBdUksTUFsQ0lwQjtBQUEyQixJQUFBcUIsSUFBQTFJLEtBQUFjLEtBQUFzQixLQUFBbUIsS0FBQW1CLEtBQUFnQixLQUFBZ0IsS0FBQVUsS0FBQXFCO0FBQUEsYUFBQUMsSUFBQTtBQUFBLGFBQUExSSxLQUFBO0FBQUEsYUFBQWMsS0FBQTtBQUFBLGFBQUFzQixLQUFBO0FBQUEsYUFBQW1CLEtBQUE7QUFBQSxhQUFBbUIsS0FBQTtBQUFBLGFBQUFnQixLQUFBO0FBQUEsYUFBQWdCLEtBQUE7QUFBQSxhQUFBVSxLQUFBO0FBQUEsYUFBQXFCLEtBQUEiLCJuYW1lcyI6WyJ1c2VTdGF0ZSIsInVzZUVmZmVjdCIsIlgiLCJTYXZlIiwiUm90YXRlQ2N3IiwiUGFja2FnZSIsIlN0b3JlIiwiVXNlciIsIkJpa2UiLCJDbG9jayIsIkdhdWdlIiwiRG9sbGFyU2lnbiIsIlNpZ25hbCIsIkFsZXJ0Q2lyY2xlIiwidG9hc3QiLCJ0YWJzIiwiaWQiLCJsYWJlbCIsImljb24iLCJjb2xvciIsIkRlbGl2ZXJ5RWRpdERpYWxvZyIsImRlbGl2ZXJ5IiwiaXNPcGVuIiwib25DbG9zZSIsIm9uU2F2ZSIsIl9zIiwiYWN0aXZlVGFiIiwic2V0QWN0aXZlVGFiIiwiZm9ybURhdGEiLCJzZXRGb3JtRGF0YSIsImhhc0NoYW5nZXMiLCJzZXRIYXNDaGFuZ2VzIiwiaGFuZGxlS2V5RG93biIsImUiLCJrZXkiLCJkb2N1bWVudCIsImFkZEV2ZW50TGlzdGVuZXIiLCJyZW1vdmVFdmVudExpc3RlbmVyIiwiaGFuZGxlQ2hhbmdlIiwiZmllbGQiLCJ2YWx1ZSIsInByZXYiLCJoYW5kbGVTYXZlIiwiaW5mbyIsInN1Y2Nlc3MiLCJoYW5kbGVSZXNldCIsIm9yZGVyTnVtYmVyIiwibWFwIiwidGFiIiwiSWNvbiIsImlzQWN0aXZlIiwiRm9ybUZpZWxkIiwib25DaGFuZ2UiLCJ0eXBlIiwib3B0aW9ucyIsInBsYWNlaG9sZGVyIiwiZGlzYWJsZWQiLCJ0YXJnZXQiLCJvcHQiLCJjaGVja2VkIiwiRGF0ZSIsInRvSVNPU3RyaW5nIiwic2xpY2UiLCJwYXJzZUZsb2F0IiwiX2MyIiwiQ29yZVRhYiIsInYiLCJhcGlfc2hvcnRfb3JkZXJfaWQiLCJhcGlfc3RyX29yZGVyX2lkIiwic3RhdHVzIiwicHJpb3JpdHkiLCJwYWNrX251bSIsImlzX2FwaSIsImlzX3N0YXJ0ZWQiLCJpc19hcHByb3ZlZCIsImlzX3JlcXVpcmVzX2FwcHJvdmFsIiwiY2xvc2Vfb3JkZXIiLCJjb21tZW50IiwiX2MzIiwiT3JpZ2luVGFiIiwicmVzdF9uYW1lIiwicmVzdF9pZCIsImJyYW5jaF9pZCIsImJyYW5jaE5hbWUiLCJyZXN0X2NpdHkiLCJyZXN0X3N0cmVldCIsInJlc3RfYnVpbGRpbmciLCJyZXN0YXVyYW50QWRkcmVzcyIsInBpY2t1cF9sYXRpdHVkZSIsInBpY2t1cF9sb25naXR1ZGUiLCJjb29rX3R5cGUiLCJjb29rX3RpbWUiLCJvcmRlcl9yZWFkeSIsInJlcG9ydGVkX29yZGVyX2lzX3JlYWR5IiwicmVzdF9hcHByb3ZlIiwicmVzdF93YWl0c19mb3JfY29va190aW1lIiwiaXNfZHJpbmtzX2V4aXN0IiwiaXNfc2F1Y2VzX2V4aXN0IiwicmVzdF9sYXN0X2V0YSIsInJlc3RfYXBwcm92ZWRfZXRhIiwiX2M0IiwiVGFyZ2V0VGFiIiwiY2xpZW50X25hbWUiLCJjbGllbnRfcGhvbmUiLCJjbGllbnRfaWQiLCJjbGllbnRfZnVsbF9hZGRyZXNzIiwiY2xpZW50X2NpdHkiLCJjbGllbnRfc3RyZWV0IiwiY2xpZW50X2J1aWxkaW5nIiwiY2xpZW50X2VudHJ5IiwiY2xpZW50X2Zsb29yIiwiY2xpZW50X2FwYXJ0bWVudCIsInppcGNvZGUiLCJkcm9wb2ZmX2xhdGl0dWRlIiwiZHJvcG9mZl9sb25naXR1ZGUiLCJjbGllbnRfY29tbWVudCIsIndyb25nX2FkZHJlc3MiLCJjbGllbnRfYWdyZWVfdG9fcGxhY2UiLCJzaWduYXR1cmVfdXJsIiwiX2M1IiwiQWN0b3JUYWIiLCJydW5uZXJfaWQiLCJjb3VyaWVyTmFtZSIsInBlbmRpbmdfcnVubmVyX2lkIiwic2hpZnRfcnVubmVyX2lkIiwiYXJyaXZlZF9hdF9yZXN0X3J1bm5lcl9pZCIsInZlaGljbGVfdHlwZSIsImNvdXJpZXJFbXBsb3ltZW50VHlwZSIsImNvdXJpZXJSYXRpbmciLCJhbGdvX3J1bm5lciIsImNvdXBsZWRfYnkiLCJydW5uZXJfYXRfYXNzaWduaW5nX2xhdGl0dWRlIiwicnVubmVyX2F0X2Fzc2lnbmluZ19sb25naXR1ZGUiLCJpc19vcmJpdF9zdGFydCIsImFyZWEiLCJhcmVhX2lkIiwiZGVsaXZlcnlfYXJlYV9pZCIsIm1haW5fcG9seWdvbl9uYW1lIiwiX2M2IiwiVGltZWxpbmVUYWIiLCJjcmVhdGlvbl90aW1lIiwicHVzaF90aW1lIiwiY291cGxlZF90aW1lIiwic3RhcnRlZF9waWNrdXAiLCJhcnJpdmVkX2F0X3Jlc3QiLCJ0b29rX2l0X3RpbWUiLCJzdGFydGVkX2Ryb3BvZmYiLCJhcnJpdmVkX2F0X2NsaWVudCIsImRlbGl2ZXJlZF90aW1lIiwiY2FuY2VsbGVkQXQiLCJlc3RpbWF0ZWRUaW1lIiwiZXN0aW1hdGVkQXJyaXZhbEF0UmVzdGF1cmFudCIsImVzdGltYXRlZEFycml2YWxBdEN1c3RvbWVyIiwib3JkZXJSZWFkeVRpbWUiLCJfYzciLCJNZWNoYW5pY3NUYWIiLCJzaG91bGRfZGVsaXZlcmVkX3RpbWUiLCJtYXhfdGltZV90b19kZWxpdmVyIiwibWluX3RpbWVfdG9fc3VwbGx5IiwibWF4X3RpbWVfdG9fc3VwbGx5IiwibWludXRlc19sYXRlIiwicGlja3VwX2RldmlhdGlvbiIsImRyb3BvZmZfZGV2aWF0aW9uIiwiZGVsYXlfcmVhc29uIiwiZGVsYXlfZHVyYXRpb24iLCJkZWxpdmVyeV9kaXN0YW5jZSIsImR1cmF0aW9uX3RvX2NsaWVudCIsImV0YV9hZnRlcl9waWNrdXAiLCJzdXBsbHlfc3RhdHVzIiwiY2FuY2VsbGVkQWZ0ZXJQaWNrdXAiLCJfYzgiLCJFY29ub215VGFiIiwicHJpY2UiLCJyZXN0X3ByaWNlIiwicmVzdF9wb2x5Z29uX3ByaWNlIiwicnVubmVyX3ByaWNlIiwicnVubmVyX3RpcCIsInN1bV9jYXNoIiwiaXNfY2FzaCIsImNvbW1pc3Npb25BbW91bnQiLCJfYzkiLCJNZXRhVGFiIiwiYXBpX3R5cGUiLCJhcGlfc291cmNlIiwic291cmNlX3BsYXRmb3JtIiwid2Vic2l0ZV9pZCIsImNvbWF4X2lkIiwicGFyZW50X21pc2hsb2hhX29yZGVyX2lkIiwiYXNzb2NpYXRlZF9hcGlfb3JkZXJfaWQiLCJhc3NvY2lhdGVkX3Nob3J0X2FwaV9vcmRlcl9pZCIsInNtc19zdGF0dXMiLCJzbXNfY29kZSIsInRyYWNrZXJfdmlld2VkIiwicnVubmVyX3Rvb2tfY29tbWVudCIsInJ1bm5lcl9kZWxpdmVyZWRfY29tbWVudCIsImNsaWVudF9ydW5uZXJfcmFuayIsImNsaWVudF9yZW1hcmsiLCJmZWVkYmFja19zdGF0dXMiLCJmZWVkYmFja19maXJzdF9hbnN3ZXIiLCJmZWVkYmFja19zZWNvbmRfYW5zd2VyIiwiZmVlZGJhY2tfdGhpcmRfYW5zd2VyIiwiX2MwIiwiX2MiXSwiaWdub3JlTGlzdCI6W10sInNvdXJjZXMiOlsiZGVsaXZlcnktZWRpdC1kaWFsb2cudHN4Il0sInNvdXJjZXNDb250ZW50IjpbIu+7v2ltcG9ydCBSZWFjdCwgeyB1c2VTdGF0ZSwgdXNlRWZmZWN0IH0gZnJvbSAncmVhY3QnO1xyXG5pbXBvcnQgeyBEZWxpdmVyeSwgRGVsaXZlcnlTdGF0dXMgfSBmcm9tICcuLi90eXBlcy9kZWxpdmVyeS50eXBlcyc7XHJcbmltcG9ydCB7IFxyXG4gIFgsIFxyXG4gIFNhdmUsIFxyXG4gIFJvdGF0ZUNjdyxcclxuICBQYWNrYWdlLFxyXG4gIFN0b3JlLFxyXG4gIFVzZXIsXHJcbiAgQmlrZSxcclxuICBDbG9jayxcclxuICBHYXVnZSxcclxuICBEb2xsYXJTaWduLFxyXG4gIFNpZ25hbCxcclxuICBBbGVydENpcmNsZSxcclxufSBmcm9tICdsdWNpZGUtcmVhY3QnO1xyXG5pbXBvcnQgeyB0b2FzdCB9IGZyb20gJ3Nvbm5lcic7XHJcblxyXG5pbnRlcmZhY2UgRGVsaXZlcnlFZGl0RGlhbG9nUHJvcHMge1xyXG4gIGRlbGl2ZXJ5OiBEZWxpdmVyeSB8IG51bGw7XHJcbiAgaXNPcGVuOiBib29sZWFuO1xyXG4gIG9uQ2xvc2U6ICgpID0+IHZvaWQ7XHJcbiAgb25TYXZlOiAoZGVsaXZlcnlJZDogc3RyaW5nLCB1cGRhdGVzOiBQYXJ0aWFsPERlbGl2ZXJ5PikgPT4gdm9pZDtcclxufVxyXG5cclxudHlwZSBUYWJJZCA9ICdjb3JlJyB8ICdvcmlnaW4nIHwgJ3RhcmdldCcgfCAnYWN0b3InIHwgJ3RpbWVsaW5lJyB8ICdtZWNoYW5pY3MnIHwgJ2Vjb25vbXknIHwgJ21ldGEnO1xyXG5cclxuaW50ZXJmYWNlIFRhYiB7XHJcbiAgaWQ6IFRhYklkO1xyXG4gIGxhYmVsOiBzdHJpbmc7XHJcbiAgaWNvbjogUmVhY3QuQ29tcG9uZW50VHlwZTx7IGNsYXNzTmFtZT86IHN0cmluZyB9PjtcclxuICBjb2xvcjogc3RyaW5nO1xyXG59XHJcblxyXG5jb25zdCB0YWJzOiBUYWJbXSA9IFtcclxuICB7IGlkOiAnY29yZScsIGxhYmVsOiAn15zXmdeR15QnLCBpY29uOiBQYWNrYWdlLCBjb2xvcjogJ3RleHQtYmx1ZS02MDAnIH0sXHJcbiAgeyBpZDogJ29yaWdpbicsIGxhYmVsOiAn157Xodei15PXlCcsIGljb246IFN0b3JlLCBjb2xvcjogJ3RleHQtcHVycGxlLTYwMCcgfSxcclxuICB7IGlkOiAndGFyZ2V0JywgbGFiZWw6ICfXnNen15XXlycsIGljb246IFVzZXIsIGNvbG9yOiAndGV4dC1ncmVlbi02MDAnIH0sXHJcbiAgeyBpZDogJ2FjdG9yJywgbGFiZWw6ICfXqdec15nXlycsIGljb246IEJpa2UsIGNvbG9yOiAndGV4dC1vcmFuZ2UtNjAwJyB9LFxyXG4gIHsgaWQ6ICd0aW1lbGluZScsIGxhYmVsOiAn15bXnteg15nXnScsIGljb246IENsb2NrLCBjb2xvcjogJ3RleHQtY3lhbi02MDAnIH0sXHJcbiAgeyBpZDogJ21lY2hhbmljcycsIGxhYmVsOiAn15HXmdem15XXoteZ150nLCBpY29uOiBHYXVnZSwgY29sb3I6ICd0ZXh0LXBpbmstNjAwJyB9LFxyXG4gIHsgaWQ6ICdlY29ub215JywgbGFiZWw6ICfXm9eh16TXmdedJywgaWNvbjogRG9sbGFyU2lnbiwgY29sb3I6ICd0ZXh0LWVtZXJhbGQtNjAwJyB9LFxyXG4gIHsgaWQ6ICdtZXRhJywgbGFiZWw6ICfXnteY15AnLCBpY29uOiBTaWduYWwsIGNvbG9yOiAndGV4dC1pbmRpZ28tNjAwJyB9LFxyXG5dO1xyXG5cclxuZXhwb3J0IGNvbnN0IERlbGl2ZXJ5RWRpdERpYWxvZzogUmVhY3QuRkM8RGVsaXZlcnlFZGl0RGlhbG9nUHJvcHM+ID0gKHtcclxuICBkZWxpdmVyeSxcclxuICBpc09wZW4sXHJcbiAgb25DbG9zZSxcclxuICBvblNhdmUsXHJcbn0pID0+IHtcclxuICBjb25zdCBbYWN0aXZlVGFiLCBzZXRBY3RpdmVUYWJdID0gdXNlU3RhdGU8VGFiSWQ+KCdjb3JlJyk7XHJcbiAgY29uc3QgW2Zvcm1EYXRhLCBzZXRGb3JtRGF0YV0gPSB1c2VTdGF0ZTxQYXJ0aWFsPERlbGl2ZXJ5Pj4oe30pO1xyXG4gIGNvbnN0IFtoYXNDaGFuZ2VzLCBzZXRIYXNDaGFuZ2VzXSA9IHVzZVN0YXRlKGZhbHNlKTtcclxuXHJcbiAgLy8gSW5pdGlhbGl6ZSBmb3JtIGRhdGEgd2hlbiBkZWxpdmVyeSBjaGFuZ2VzXHJcbiAgdXNlRWZmZWN0KCgpID0+IHtcclxuICAgIGlmIChkZWxpdmVyeSkge1xyXG4gICAgICBzZXRGb3JtRGF0YSh7IC4uLmRlbGl2ZXJ5IH0pO1xyXG4gICAgICBzZXRIYXNDaGFuZ2VzKGZhbHNlKTtcclxuICAgIH1cclxuICB9LCBbZGVsaXZlcnldKTtcclxuXHJcbiAgLy8gQ2xvc2Ugd2l0aCBFU0NcclxuICB1c2VFZmZlY3QoKCkgPT4ge1xyXG4gICAgY29uc3QgaGFuZGxlS2V5RG93biA9IChlOiBLZXlib2FyZEV2ZW50KSA9PiB7XHJcbiAgICAgIGlmIChlLmtleSA9PT0gJ0VzY2FwZScpIG9uQ2xvc2UoKTtcclxuICAgIH07XHJcbiAgICBpZiAoaXNPcGVuKSB7XHJcbiAgICAgIGRvY3VtZW50LmFkZEV2ZW50TGlzdGVuZXIoJ2tleWRvd24nLCBoYW5kbGVLZXlEb3duKTtcclxuICAgICAgcmV0dXJuICgpID0+IGRvY3VtZW50LnJlbW92ZUV2ZW50TGlzdGVuZXIoJ2tleWRvd24nLCBoYW5kbGVLZXlEb3duKTtcclxuICAgIH1cclxuICB9LCBbaXNPcGVuLCBvbkNsb3NlXSk7XHJcblxyXG4gIGlmICghaXNPcGVuIHx8ICFkZWxpdmVyeSkgcmV0dXJuIG51bGw7XHJcblxyXG4gIGNvbnN0IGhhbmRsZUNoYW5nZSA9IChmaWVsZDoga2V5b2YgRGVsaXZlcnksIHZhbHVlOiBhbnkpID0+IHtcclxuICAgIHNldEZvcm1EYXRhKHByZXYgPT4gKHsgLi4ucHJldiwgW2ZpZWxkXTogdmFsdWUgfSkpO1xyXG4gICAgc2V0SGFzQ2hhbmdlcyh0cnVlKTtcclxuICB9O1xyXG5cclxuICBjb25zdCBoYW5kbGVTYXZlID0gKCkgPT4ge1xyXG4gICAgaWYgKCFoYXNDaGFuZ2VzKSB7XHJcbiAgICAgIHRvYXN0LmluZm8oJ9ec15Ag15HXldem16LXlSDXqdeZ16DXldeZ15nXnScpO1xyXG4gICAgICByZXR1cm47XHJcbiAgICB9XHJcbiAgICBvblNhdmUoZGVsaXZlcnkuaWQsIGZvcm1EYXRhKTtcclxuICAgIHRvYXN0LnN1Y2Nlc3MoJ9eU157Xqdec15XXlyDXoteV15PXm9efINeR15TXptec15fXlCcpO1xyXG4gICAgb25DbG9zZSgpO1xyXG4gIH07XHJcblxyXG4gIGNvbnN0IGhhbmRsZVJlc2V0ID0gKCkgPT4ge1xyXG4gICAgc2V0Rm9ybURhdGEoeyAuLi5kZWxpdmVyeSB9KTtcclxuICAgIHNldEhhc0NoYW5nZXMoZmFsc2UpO1xyXG4gICAgdG9hc3QuaW5mbygn15TXqdeZ16DXldeZ15nXnSDXkNeV16TXodeVJyk7XHJcbiAgfTtcclxuXHJcbiAgcmV0dXJuIChcclxuICAgIDw+XHJcbiAgICAgIHsvKiBCYWNrZHJvcCAqL31cclxuICAgICAgPGRpdlxyXG4gICAgICAgIGNsYXNzTmFtZT1cImZpeGVkIGluc2V0LTAgYmctYmxhY2svNTAgZGFyazpiZy1ibGFjay83MCB6LVs2MF0gdHJhbnNpdGlvbi1vcGFjaXR5XCJcclxuICAgICAgICBvbkNsaWNrPXtvbkNsb3NlfVxyXG4gICAgICAvPlxyXG5cclxuICAgICAgey8qIERpYWxvZyAqL31cclxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJmaXhlZCBpbnNldC0wIHotWzYxXSBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBwLTQgcG9pbnRlci1ldmVudHMtbm9uZVwiPlxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiYmctd2hpdGUgZGFyazpiZy1bIzBmMGYwZl0gcm91bmRlZC0yeGwgc2hhZG93LTJ4bCB3LWZ1bGwgbWF4LXctNHhsIG1heC1oLVs5MHZoXSBmbGV4IGZsZXgtY29sIHBvaW50ZXItZXZlbnRzLWF1dG8gYW5pbWF0ZS1pbiB6b29tLWluLTk1IGR1cmF0aW9uLTIwMFwiPlxyXG4gICAgICAgICAgey8qIEhlYWRlciAqL31cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic2hyaW5rLTAgcHgtNiBweS00IGJvcmRlci1iIGJvcmRlci1bI2U1ZTVlNV0gZGFyazpib3JkZXItWyMyNjI2MjZdIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktYmV0d2VlblwiPlxyXG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0zXCI+XHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJwLTIgYmctWyM5ZmU4NzBdLzEwIHJvdW5kZWQteGxcIj5cclxuICAgICAgICAgICAgICAgIDxQYWNrYWdlIGNsYXNzTmFtZT1cInctNSBoLTUgdGV4dC1bIzlmZTg3MF1cIiAvPlxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgIDxkaXY+XHJcbiAgICAgICAgICAgICAgICA8aDIgY2xhc3NOYW1lPVwidGV4dC1sZyBmb250LWJvbGQgdGV4dC1bIzBkMGQxMl0gZGFyazp0ZXh0LVsjZmFmYWZhXVwiPtei16jXmdeb16og157Xqdec15XXlzwvaDI+XHJcbiAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXhzIHRleHQtWyM3MzczNzNdIGRhcms6dGV4dC1bI2EzYTNhM11cIj7XlNeW157XoNeUICN7ZGVsaXZlcnkub3JkZXJOdW1iZXJ9PC9wPlxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgPGJ1dHRvblxyXG4gICAgICAgICAgICAgIG9uQ2xpY2s9e29uQ2xvc2V9XHJcbiAgICAgICAgICAgICAgY2xhc3NOYW1lPVwicC0yIHJvdW5kZWQtbGcgaG92ZXI6YmctWyNmNWY1ZjVdIGRhcms6aG92ZXI6YmctWyMyNjI2MjZdIHRleHQtWyM3MzczNzNdIHRyYW5zaXRpb24tY29sb3JzXCJcclxuICAgICAgICAgICAgICB0aXRsZT1cIteh15LXldeoIChFU0MpXCJcclxuICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgIDxYIGNsYXNzTmFtZT1cInctNSBoLTVcIiAvPlxyXG4gICAgICAgICAgICA8L2J1dHRvbj5cclxuICAgICAgICAgIDwvZGl2PlxyXG5cclxuICAgICAgICAgIHsvKiBUYWJzICovfVxyXG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzaHJpbmstMCBweC02IGJvcmRlci1iIGJvcmRlci1bI2U1ZTVlNV0gZGFyazpib3JkZXItWyMyNjI2MjZdIGZsZXggZ2FwLTEgb3ZlcmZsb3cteC1hdXRvIHNjcm9sbGJhci1oaWRlXCI+XHJcbiAgICAgICAgICAgIHt0YWJzLm1hcCgodGFiKSA9PiB7XHJcbiAgICAgICAgICAgICAgY29uc3QgSWNvbiA9IHRhYi5pY29uO1xyXG4gICAgICAgICAgICAgIGNvbnN0IGlzQWN0aXZlID0gYWN0aXZlVGFiID09PSB0YWIuaWQ7XHJcbiAgICAgICAgICAgICAgcmV0dXJuIChcclxuICAgICAgICAgICAgICAgIDxidXR0b25cclxuICAgICAgICAgICAgICAgICAga2V5PXt0YWIuaWR9XHJcbiAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHNldEFjdGl2ZVRhYih0YWIuaWQpfVxyXG4gICAgICAgICAgICAgICAgICBjbGFzc05hbWU9e2BmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMiBweC00IHB5LTMgdGV4dC14cyBmb250LW1lZGl1bSBib3JkZXItYi0yIHRyYW5zaXRpb24tY29sb3JzIHdoaXRlc3BhY2Utbm93cmFwICR7XHJcbiAgICAgICAgICAgICAgICAgICAgaXNBY3RpdmVcclxuICAgICAgICAgICAgICAgICAgICAgID8gYGJvcmRlci1bIzlmZTg3MF0gJHt0YWIuY29sb3J9IGJnLVsjOWZlODcwXS81YFxyXG4gICAgICAgICAgICAgICAgICAgICAgOiAnYm9yZGVyLXRyYW5zcGFyZW50IHRleHQtWyM3MzczNzNdIGhvdmVyOnRleHQtWyMwZDBkMTJdIGRhcms6aG92ZXI6dGV4dC1bI2ZhZmFmYV0gaG92ZXI6YmctWyNmNWY1ZjVdIGRhcms6aG92ZXI6YmctWyMxYTFhMWFdJ1xyXG4gICAgICAgICAgICAgICAgICB9YH1cclxuICAgICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgICAgPEljb24gY2xhc3NOYW1lPXtgdy00IGgtNCAke2lzQWN0aXZlID8gdGFiLmNvbG9yIDogJyd9YH0gLz5cclxuICAgICAgICAgICAgICAgICAge3RhYi5sYWJlbH1cclxuICAgICAgICAgICAgICAgIDwvYnV0dG9uPlxyXG4gICAgICAgICAgICAgICk7XHJcbiAgICAgICAgICAgIH0pfVxyXG4gICAgICAgICAgPC9kaXY+XHJcblxyXG4gICAgICAgICAgey8qIENvbnRlbnQgLSBzY3JvbGxhYmxlICovfVxyXG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4LTEgb3ZlcmZsb3cteS1hdXRvIHB4LTYgcHktNFwiPlxyXG4gICAgICAgICAgICB7YWN0aXZlVGFiID09PSAnY29yZScgJiYgPENvcmVUYWIgZm9ybURhdGE9e2Zvcm1EYXRhfSBvbkNoYW5nZT17aGFuZGxlQ2hhbmdlfSAvPn1cclxuICAgICAgICAgICAge2FjdGl2ZVRhYiA9PT0gJ29yaWdpbicgJiYgPE9yaWdpblRhYiBmb3JtRGF0YT17Zm9ybURhdGF9IG9uQ2hhbmdlPXtoYW5kbGVDaGFuZ2V9IC8+fVxyXG4gICAgICAgICAgICB7YWN0aXZlVGFiID09PSAndGFyZ2V0JyAmJiA8VGFyZ2V0VGFiIGZvcm1EYXRhPXtmb3JtRGF0YX0gb25DaGFuZ2U9e2hhbmRsZUNoYW5nZX0gLz59XHJcbiAgICAgICAgICAgIHthY3RpdmVUYWIgPT09ICdhY3RvcicgJiYgPEFjdG9yVGFiIGZvcm1EYXRhPXtmb3JtRGF0YX0gb25DaGFuZ2U9e2hhbmRsZUNoYW5nZX0gLz59XHJcbiAgICAgICAgICAgIHthY3RpdmVUYWIgPT09ICd0aW1lbGluZScgJiYgPFRpbWVsaW5lVGFiIGZvcm1EYXRhPXtmb3JtRGF0YX0gb25DaGFuZ2U9e2hhbmRsZUNoYW5nZX0gLz59XHJcbiAgICAgICAgICAgIHthY3RpdmVUYWIgPT09ICdtZWNoYW5pY3MnICYmIDxNZWNoYW5pY3NUYWIgZm9ybURhdGE9e2Zvcm1EYXRhfSBvbkNoYW5nZT17aGFuZGxlQ2hhbmdlfSAvPn1cclxuICAgICAgICAgICAge2FjdGl2ZVRhYiA9PT0gJ2Vjb25vbXknICYmIDxFY29ub215VGFiIGZvcm1EYXRhPXtmb3JtRGF0YX0gb25DaGFuZ2U9e2hhbmRsZUNoYW5nZX0gLz59XHJcbiAgICAgICAgICAgIHthY3RpdmVUYWIgPT09ICdtZXRhJyAmJiA8TWV0YVRhYiBmb3JtRGF0YT17Zm9ybURhdGF9IG9uQ2hhbmdlPXtoYW5kbGVDaGFuZ2V9IC8+fVxyXG4gICAgICAgICAgPC9kaXY+XHJcblxyXG4gICAgICAgICAgey8qIEZvb3RlciAqL31cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic2hyaW5rLTAgcHgtNiBweS00IGJvcmRlci10IGJvcmRlci1bI2U1ZTVlNV0gZGFyazpib3JkZXItWyMyNjI2MjZdIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktYmV0d2VlbiBnYXAtM1wiPlxyXG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yIHRleHQteHMgdGV4dC1bIzczNzM3M11cIj5cclxuICAgICAgICAgICAgICB7aGFzQ2hhbmdlcyAmJiAoXHJcbiAgICAgICAgICAgICAgICA8PlxyXG4gICAgICAgICAgICAgICAgICA8QWxlcnRDaXJjbGUgY2xhc3NOYW1lPVwidy00IGgtNCB0ZXh0LVsjZjU5ZTBiXVwiIC8+XHJcbiAgICAgICAgICAgICAgICAgIDxzcGFuPteZ16kg16nXmdeg15XXmdeZ150g16nXnNeQINeg16nXnteo15U8L3NwYW4+XHJcbiAgICAgICAgICAgICAgICA8Lz5cclxuICAgICAgICAgICAgICApfVxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMlwiPlxyXG4gICAgICAgICAgICAgIDxidXR0b25cclxuICAgICAgICAgICAgICAgIG9uQ2xpY2s9e2hhbmRsZVJlc2V0fVxyXG4gICAgICAgICAgICAgICAgZGlzYWJsZWQ9eyFoYXNDaGFuZ2VzfVxyXG4gICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIgcHgtNCBweS0yIHRleHQtc20gZm9udC1tZWRpdW0gdGV4dC1bIzczNzM3M10gaG92ZXI6dGV4dC1bIzBkMGQxMl0gZGFyazpob3Zlcjp0ZXh0LVsjZmFmYWZhXSBkaXNhYmxlZDpvcGFjaXR5LTQwIGRpc2FibGVkOmN1cnNvci1ub3QtYWxsb3dlZCB0cmFuc2l0aW9uLWNvbG9yc1wiXHJcbiAgICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgICAgPFJvdGF0ZUNjdyBjbGFzc05hbWU9XCJ3LTQgaC00XCIgLz5cclxuICAgICAgICAgICAgICAgINeQ15nXpNeV16FcclxuICAgICAgICAgICAgICA8L2J1dHRvbj5cclxuICAgICAgICAgICAgICA8YnV0dG9uXHJcbiAgICAgICAgICAgICAgICBvbkNsaWNrPXtvbkNsb3NlfVxyXG4gICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwicHgtNCBweS0yIHRleHQtc20gZm9udC1tZWRpdW0gdGV4dC1bIzBkMGQxMl0gZGFyazp0ZXh0LVsjZmFmYWZhXSBob3ZlcjpiZy1bI2Y1ZjVmNV0gZGFyazpob3ZlcjpiZy1bIzI2MjYyNl0gcm91bmRlZC1sZyB0cmFuc2l0aW9uLWNvbG9yc1wiXHJcbiAgICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgICAg15HXmdeY15XXnFxyXG4gICAgICAgICAgICAgIDwvYnV0dG9uPlxyXG4gICAgICAgICAgICAgIDxidXR0b25cclxuICAgICAgICAgICAgICAgIG9uQ2xpY2s9e2hhbmRsZVNhdmV9XHJcbiAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMiBweC00IHB5LTIgYmctWyM5ZmU4NzBdIGhvdmVyOmJnLVsjOGZkNjVmXSB0ZXh0LVsjMGQwZDEyXSByb3VuZGVkLWxnIHRleHQtc20gZm9udC1tZWRpdW0gdHJhbnNpdGlvbi1jb2xvcnNcIlxyXG4gICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgIDxTYXZlIGNsYXNzTmFtZT1cInctNCBoLTRcIiAvPlxyXG4gICAgICAgICAgICAgICAg16nXnteV16gg16nXmdeg15XXmdeZ151cclxuICAgICAgICAgICAgICA8L2J1dHRvbj5cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICA8L2Rpdj5cclxuICAgICAgPC9kaXY+XHJcbiAgICA8Lz5cclxuICApO1xyXG59O1xyXG5cclxuLy8gPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PVxyXG4vLyBUYWIgQ29tcG9uZW50c1xyXG4vLyA9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09XHJcblxyXG5pbnRlcmZhY2UgVGFiUHJvcHMge1xyXG4gIGZvcm1EYXRhOiBQYXJ0aWFsPERlbGl2ZXJ5PjtcclxuICBvbkNoYW5nZTogKGZpZWxkOiBrZXlvZiBEZWxpdmVyeSwgdmFsdWU6IGFueSkgPT4gdm9pZDtcclxufVxyXG5cclxuY29uc3QgRm9ybUZpZWxkOiBSZWFjdC5GQzx7XHJcbiAgbGFiZWw6IHN0cmluZztcclxuICB2YWx1ZTogYW55O1xyXG4gIG9uQ2hhbmdlOiAodmFsdWU6IGFueSkgPT4gdm9pZDtcclxuICB0eXBlPzogJ3RleHQnIHwgJ251bWJlcicgfCAnc2VsZWN0JyB8ICdjaGVja2JveCcgfCAnZGF0ZXRpbWUtbG9jYWwnIHwgJ3RleHRhcmVhJztcclxuICBvcHRpb25zPzogeyB2YWx1ZTogc3RyaW5nOyBsYWJlbDogc3RyaW5nIH1bXTtcclxuICBwbGFjZWhvbGRlcj86IHN0cmluZztcclxuICBkaXNhYmxlZD86IGJvb2xlYW47XHJcbn0+ID0gKHsgbGFiZWwsIHZhbHVlLCBvbkNoYW5nZSwgdHlwZSA9ICd0ZXh0Jywgb3B0aW9ucywgcGxhY2Vob2xkZXIsIGRpc2FibGVkIH0pID0+IHtcclxuICByZXR1cm4gKFxyXG4gICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTEuNVwiPlxyXG4gICAgICA8bGFiZWwgY2xhc3NOYW1lPVwiYmxvY2sgdGV4dC14cyBmb250LW1lZGl1bSB0ZXh0LVsjNzM3MzczXSBkYXJrOnRleHQtWyNhM2EzYTNdXCI+e2xhYmVsfTwvbGFiZWw+XHJcbiAgICAgIHt0eXBlID09PSAnc2VsZWN0JyAmJiBvcHRpb25zID8gKFxyXG4gICAgICAgIDxzZWxlY3RcclxuICAgICAgICAgIHZhbHVlPXt2YWx1ZSB8fCAnJ31cclxuICAgICAgICAgIG9uQ2hhbmdlPXsoZSkgPT4gb25DaGFuZ2UoZS50YXJnZXQudmFsdWUpfVxyXG4gICAgICAgICAgZGlzYWJsZWQ9e2Rpc2FibGVkfVxyXG4gICAgICAgICAgY2xhc3NOYW1lPVwidy1mdWxsIHB4LTMgcHktMiB0ZXh0LXNtIGJnLVsjZmFmYWZhXSBkYXJrOmJnLVsjMGEwYTBhXSBib3JkZXIgYm9yZGVyLVsjZTVlNWU1XSBkYXJrOmJvcmRlci1bIzI2MjYyNl0gcm91bmRlZC1sZyBmb2N1czpvdXRsaW5lLW5vbmUgZm9jdXM6cmluZy0yIGZvY3VzOnJpbmctWyM5ZmU4NzBdIGRpc2FibGVkOm9wYWNpdHktNTBcIlxyXG4gICAgICAgID5cclxuICAgICAgICAgIDxvcHRpb24gdmFsdWU9XCJcIj7XkdeX16guLi48L29wdGlvbj5cclxuICAgICAgICAgIHtvcHRpb25zLm1hcChvcHQgPT4gKFxyXG4gICAgICAgICAgICA8b3B0aW9uIGtleT17b3B0LnZhbHVlfSB2YWx1ZT17b3B0LnZhbHVlfT57b3B0LmxhYmVsfTwvb3B0aW9uPlxyXG4gICAgICAgICAgKSl9XHJcbiAgICAgICAgPC9zZWxlY3Q+XHJcbiAgICAgICkgOiB0eXBlID09PSAnY2hlY2tib3gnID8gKFxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTJcIj5cclxuICAgICAgICAgIDxpbnB1dFxyXG4gICAgICAgICAgICB0eXBlPVwiY2hlY2tib3hcIlxyXG4gICAgICAgICAgICBjaGVja2VkPXt2YWx1ZSB8fCBmYWxzZX1cclxuICAgICAgICAgICAgb25DaGFuZ2U9eyhlKSA9PiBvbkNoYW5nZShlLnRhcmdldC5jaGVja2VkKX1cclxuICAgICAgICAgICAgZGlzYWJsZWQ9e2Rpc2FibGVkfVxyXG4gICAgICAgICAgICBjbGFzc05hbWU9XCJ3LTQgaC00IHJvdW5kZWQgYm9yZGVyLVsjZTVlNWU1XSBkYXJrOmJvcmRlci1bIzI2MjYyNl0gdGV4dC1bIzlmZTg3MF0gZm9jdXM6cmluZy0yIGZvY3VzOnJpbmctWyM5ZmU4NzBdIGRpc2FibGVkOm9wYWNpdHktNTBcIlxyXG4gICAgICAgICAgLz5cclxuICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC1bIzBkMGQxMl0gZGFyazp0ZXh0LVsjZmFmYWZhXVwiPnt2YWx1ZSA/ICfXm9efJyA6ICfXnNeQJ308L3NwYW4+XHJcbiAgICAgICAgPC9kaXY+XHJcbiAgICAgICkgOiB0eXBlID09PSAndGV4dGFyZWEnID8gKFxyXG4gICAgICAgIDx0ZXh0YXJlYVxyXG4gICAgICAgICAgdmFsdWU9e3ZhbHVlIHx8ICcnfVxyXG4gICAgICAgICAgb25DaGFuZ2U9eyhlKSA9PiBvbkNoYW5nZShlLnRhcmdldC52YWx1ZSl9XHJcbiAgICAgICAgICBwbGFjZWhvbGRlcj17cGxhY2Vob2xkZXJ9XHJcbiAgICAgICAgICBkaXNhYmxlZD17ZGlzYWJsZWR9XHJcbiAgICAgICAgICByb3dzPXszfVxyXG4gICAgICAgICAgY2xhc3NOYW1lPVwidy1mdWxsIHB4LTMgcHktMiB0ZXh0LXNtIGJnLVsjZmFmYWZhXSBkYXJrOmJnLVsjMGEwYTBhXSBib3JkZXIgYm9yZGVyLVsjZTVlNWU1XSBkYXJrOmJvcmRlci1bIzI2MjYyNl0gcm91bmRlZC1sZyBmb2N1czpvdXRsaW5lLW5vbmUgZm9jdXM6cmluZy0yIGZvY3VzOnJpbmctWyM5ZmU4NzBdIGRpc2FibGVkOm9wYWNpdHktNTAgcmVzaXplLW5vbmVcIlxyXG4gICAgICAgIC8+XHJcbiAgICAgICkgOiB0eXBlID09PSAnZGF0ZXRpbWUtbG9jYWwnID8gKFxyXG4gICAgICAgIDxpbnB1dFxyXG4gICAgICAgICAgdHlwZT1cImRhdGV0aW1lLWxvY2FsXCJcclxuICAgICAgICAgIHZhbHVlPXt2YWx1ZSA/IG5ldyBEYXRlKHZhbHVlKS50b0lTT1N0cmluZygpLnNsaWNlKDAsIDE2KSA6ICcnfVxyXG4gICAgICAgICAgb25DaGFuZ2U9eyhlKSA9PiBvbkNoYW5nZShlLnRhcmdldC52YWx1ZSA/IG5ldyBEYXRlKGUudGFyZ2V0LnZhbHVlKSA6IG51bGwpfVxyXG4gICAgICAgICAgZGlzYWJsZWQ9e2Rpc2FibGVkfVxyXG4gICAgICAgICAgY2xhc3NOYW1lPVwidy1mdWxsIHB4LTMgcHktMiB0ZXh0LXNtIGJnLVsjZmFmYWZhXSBkYXJrOmJnLVsjMGEwYTBhXSBib3JkZXIgYm9yZGVyLVsjZTVlNWU1XSBkYXJrOmJvcmRlci1bIzI2MjYyNl0gcm91bmRlZC1sZyBmb2N1czpvdXRsaW5lLW5vbmUgZm9jdXM6cmluZy0yIGZvY3VzOnJpbmctWyM5ZmU4NzBdIGRpc2FibGVkOm9wYWNpdHktNTBcIlxyXG4gICAgICAgIC8+XHJcbiAgICAgICkgOiAoXHJcbiAgICAgICAgPGlucHV0XHJcbiAgICAgICAgICB0eXBlPXt0eXBlfVxyXG4gICAgICAgICAgdmFsdWU9e3ZhbHVlIHx8ICcnfVxyXG4gICAgICAgICAgb25DaGFuZ2U9eyhlKSA9PiBvbkNoYW5nZSh0eXBlID09PSAnbnVtYmVyJyA/IHBhcnNlRmxvYXQoZS50YXJnZXQudmFsdWUpIHx8IDAgOiBlLnRhcmdldC52YWx1ZSl9XHJcbiAgICAgICAgICBwbGFjZWhvbGRlcj17cGxhY2Vob2xkZXJ9XHJcbiAgICAgICAgICBkaXNhYmxlZD17ZGlzYWJsZWR9XHJcbiAgICAgICAgICBjbGFzc05hbWU9XCJ3LWZ1bGwgcHgtMyBweS0yIHRleHQtc20gYmctWyNmYWZhZmFdIGRhcms6YmctWyMwYTBhMGFdIGJvcmRlciBib3JkZXItWyNlNWU1ZTVdIGRhcms6Ym9yZGVyLVsjMjYyNjI2XSByb3VuZGVkLWxnIGZvY3VzOm91dGxpbmUtbm9uZSBmb2N1czpyaW5nLTIgZm9jdXM6cmluZy1bIzlmZTg3MF0gZGlzYWJsZWQ6b3BhY2l0eS01MFwiXHJcbiAgICAgICAgLz5cclxuICAgICAgKX1cclxuICAgIDwvZGl2PlxyXG4gICk7XHJcbn07XHJcblxyXG5jb25zdCBDb3JlVGFiOiBSZWFjdC5GQzxUYWJQcm9wcz4gPSAoeyBmb3JtRGF0YSwgb25DaGFuZ2UgfSkgPT4gKFxyXG4gIDxkaXYgY2xhc3NOYW1lPVwiZ3JpZCBncmlkLWNvbHMtMSBtZDpncmlkLWNvbHMtMiBnYXAtNFwiPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cItee16HXpNeoINeU15bXnteg15RcIiB2YWx1ZT17Zm9ybURhdGEub3JkZXJOdW1iZXJ9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ29yZGVyTnVtYmVyJywgdil9IGRpc2FibGVkIC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi157XlteU15Qg16fXpteoIEFQSVwiIHZhbHVlPXtmb3JtRGF0YS5hcGlfc2hvcnRfb3JkZXJfaWR9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ2FwaV9zaG9ydF9vcmRlcl9pZCcsIHYpfSAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cItee15bXlNeUINeQ16jXldeaIEFQSVwiIHZhbHVlPXtmb3JtRGF0YS5hcGlfc3RyX29yZGVyX2lkfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdhcGlfc3RyX29yZGVyX2lkJywgdil9IC8+XHJcbiAgICA8Rm9ybUZpZWxkXHJcbiAgICAgIGxhYmVsPVwi16HXmNeY15XXoVwiXHJcbiAgICAgIHZhbHVlPXtmb3JtRGF0YS5zdGF0dXN9XHJcbiAgICAgIG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ3N0YXR1cycsIHYpfVxyXG4gICAgICB0eXBlPVwic2VsZWN0XCJcclxuICAgICAgb3B0aW9ucz17W1xyXG4gICAgICAgIHsgdmFsdWU6ICdwZW5kaW5nJywgbGFiZWw6ICfXntee16rXmdefJyB9LFxyXG4gICAgICAgIHsgdmFsdWU6ICdhc3NpZ25lZCcsIGxhYmVsOiAn16nXldeR16UnIH0sXHJcbiAgICAgICAgeyB2YWx1ZTogJ2RlbGl2ZXJlZCcsIGxhYmVsOiAn16DXnteh16gnIH0sXHJcbiAgICAgICAgeyB2YWx1ZTogJ2NhbmNlbGxlZCcsIGxhYmVsOiAn15HXldeY15wnIH0sXHJcbiAgICAgIF19XHJcbiAgICAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cItei15PXmdek15XXqlwiIHZhbHVlPXtmb3JtRGF0YS5wcmlvcml0eX0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgncHJpb3JpdHknLCB2KX0gdHlwZT1cIm51bWJlclwiIC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi157Xodek16gg15fXkdeZ15zXlFwiIHZhbHVlPXtmb3JtRGF0YS5wYWNrX251bX0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgncGFja19udW0nLCB2KX0gLz5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXntep15zXldeXIEFQSVwiIHZhbHVlPXtmb3JtRGF0YS5pc19hcGl9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ2lzX2FwaScsIHYpfSB0eXBlPVwiY2hlY2tib3hcIiAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIteU15XXpNei15xcIiB2YWx1ZT17Zm9ybURhdGEuaXNfc3RhcnRlZH0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgnaXNfc3RhcnRlZCcsIHYpfSB0eXBlPVwiY2hlY2tib3hcIiAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIteQ15XXqdeoXCIgdmFsdWU9e2Zvcm1EYXRhLmlzX2FwcHJvdmVkfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdpc19hcHByb3ZlZCcsIHYpfSB0eXBlPVwiY2hlY2tib3hcIiAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIteT15XXqNepINeQ15nXqdeV16hcIiB2YWx1ZT17Zm9ybURhdGEuaXNfcmVxdWlyZXNfYXBwcm92YWx9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ2lzX3JlcXVpcmVzX2FwcHJvdmFsJywgdil9IHR5cGU9XCJjaGVja2JveFwiIC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi15TXltee16DXlCDXodeS15XXqNeUXCIgdmFsdWU9e2Zvcm1EYXRhLmNsb3NlX29yZGVyfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdjbG9zZV9vcmRlcicsIHYpfSB0eXBlPVwiY2hlY2tib3hcIiAvPlxyXG4gICAgPGRpdiBjbGFzc05hbWU9XCJtZDpjb2wtc3Bhbi0yXCI+XHJcbiAgICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXlNei16jXlFwiIHZhbHVlPXtmb3JtRGF0YS5jb21tZW50fSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdjb21tZW50Jywgdil9IHR5cGU9XCJ0ZXh0YXJlYVwiIC8+XHJcbiAgICA8L2Rpdj5cclxuICA8L2Rpdj5cclxuKTtcclxuXHJcbmNvbnN0IE9yaWdpblRhYjogUmVhY3QuRkM8VGFiUHJvcHM+ID0gKHsgZm9ybURhdGEsIG9uQ2hhbmdlIH0pID0+IChcclxuICA8ZGl2IGNsYXNzTmFtZT1cImdyaWQgZ3JpZC1jb2xzLTEgbWQ6Z3JpZC1jb2xzLTIgZ2FwLTRcIj5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXqdedINee16HXoteT15RcIiB2YWx1ZT17Zm9ybURhdGEucmVzdF9uYW1lfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdyZXN0X25hbWUnLCB2KX0gLz5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXnteW15TXlCDXnteh16LXk9eUXCIgdmFsdWU9e2Zvcm1EYXRhLnJlc3RfaWR9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ3Jlc3RfaWQnLCB2KX0gLz5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXnteW15TXlCDXodeg15nXo1wiIHZhbHVlPXtmb3JtRGF0YS5icmFuY2hfaWR9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ2JyYW5jaF9pZCcsIHYpfSAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cItep150g16HXoNeZ16NcIiB2YWx1ZT17Zm9ybURhdGEuYnJhbmNoTmFtZX0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgnYnJhbmNoTmFtZScsIHYpfSAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cItei15nXqFwiIHZhbHVlPXtmb3JtRGF0YS5yZXN0X2NpdHl9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ3Jlc3RfY2l0eScsIHYpfSAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIteo15fXldeRXCIgdmFsdWU9e2Zvcm1EYXRhLnJlc3Rfc3RyZWV0fSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdyZXN0X3N0cmVldCcsIHYpfSAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIteR16DXmdeZ159cIiB2YWx1ZT17Zm9ybURhdGEucmVzdF9idWlsZGluZ30gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgncmVzdF9idWlsZGluZycsIHYpfSAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIteb16rXldeR16og157XnNeQ15RcIiB2YWx1ZT17Zm9ybURhdGEucmVzdGF1cmFudEFkZHJlc3N9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ3Jlc3RhdXJhbnRBZGRyZXNzJywgdil9IC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi16fXlSDXqNeV15fXkSAoTGF0aXR1ZGUpXCIgdmFsdWU9e2Zvcm1EYXRhLnBpY2t1cF9sYXRpdHVkZX0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgncGlja3VwX2xhdGl0dWRlJywgdil9IHR5cGU9XCJudW1iZXJcIiAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIten15Ug15DXldeo15ogKExvbmdpdHVkZSlcIiB2YWx1ZT17Zm9ybURhdGEucGlja3VwX2xvbmdpdHVkZX0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgncGlja3VwX2xvbmdpdHVkZScsIHYpfSB0eXBlPVwibnVtYmVyXCIgLz5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXodeV15Ig15TXm9eg15RcIiB2YWx1ZT17Zm9ybURhdGEuY29va190eXBlfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdjb29rX3R5cGUnLCB2KX0gLz5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXltee158g15TXm9eg15RcIiB2YWx1ZT17Zm9ybURhdGEuY29va190aW1lfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdjb29rX3RpbWUnLCB2KX0gdHlwZT1cIm51bWJlclwiIC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi15TXltee16DXlCDXnteV15vXoNeUXCIgdmFsdWU9e2Zvcm1EYXRhLm9yZGVyX3JlYWR5fSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdvcmRlcl9yZWFkeScsIHYpfSB0eXBlPVwiY2hlY2tib3hcIiAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIteT15XXldeXINeb157Xldeb159cIiB2YWx1ZT17Zm9ybURhdGEucmVwb3J0ZWRfb3JkZXJfaXNfcmVhZHl9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ3JlcG9ydGVkX29yZGVyX2lzX3JlYWR5Jywgdil9IHR5cGU9XCJjaGVja2JveFwiIC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi15DXldep16gg16LXnCDXmdeT15kg157Xodei15PXlFwiIHZhbHVlPXtmb3JtRGF0YS5yZXN0X2FwcHJvdmV9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ3Jlc3RfYXBwcm92ZScsIHYpfSB0eXBlPVwiY2hlY2tib3hcIiAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cItee16HXoteT15Qg157Xnteq15nXoNeUINec15bXntefINeU15vXoNeUXCIgdmFsdWU9e2Zvcm1EYXRhLnJlc3Rfd2FpdHNfZm9yX2Nvb2tfdGltZX0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgncmVzdF93YWl0c19mb3JfY29va190aW1lJywgdil9IHR5cGU9XCJjaGVja2JveFwiIC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi157Xqden15DXldeqXCIgdmFsdWU9e2Zvcm1EYXRhLmlzX2RyaW5rc19leGlzdH0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgnaXNfZHJpbmtzX2V4aXN0Jywgdil9IHR5cGU9XCJjaGVja2JveFwiIC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi16jXmNeR15nXnVwiIHZhbHVlPXtmb3JtRGF0YS5pc19zYXVjZXNfZXhpc3R9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ2lzX3NhdWNlc19leGlzdCcsIHYpfSB0eXBlPVwiY2hlY2tib3hcIiAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIkVUQSDXkNeX16jXldefINee16HXoteT15RcIiB2YWx1ZT17Zm9ybURhdGEucmVzdF9sYXN0X2V0YX0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgncmVzdF9sYXN0X2V0YScsIHYpfSB0eXBlPVwiZGF0ZXRpbWUtbG9jYWxcIiAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIkVUQSDXnteQ15XXqdeoINee16HXoteT15RcIiB2YWx1ZT17Zm9ybURhdGEucmVzdF9hcHByb3ZlZF9ldGF9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ3Jlc3RfYXBwcm92ZWRfZXRhJywgdil9IHR5cGU9XCJkYXRldGltZS1sb2NhbFwiIC8+XHJcbiAgPC9kaXY+XHJcbik7XHJcblxyXG5jb25zdCBUYXJnZXRUYWI6IFJlYWN0LkZDPFRhYlByb3BzPiA9ICh7IGZvcm1EYXRhLCBvbkNoYW5nZSB9KSA9PiAoXHJcbiAgPGRpdiBjbGFzc05hbWU9XCJncmlkIGdyaWQtY29scy0xIG1kOmdyaWQtY29scy0yIGdhcC00XCI+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi16nXnSDXnNen15XXl1wiIHZhbHVlPXtmb3JtRGF0YS5jbGllbnRfbmFtZX0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgnY2xpZW50X25hbWUnLCB2KX0gLz5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXmNec16TXldefINec16fXldeXXCIgdmFsdWU9e2Zvcm1EYXRhLmNsaWVudF9waG9uZX0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgnY2xpZW50X3Bob25lJywgdil9IC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi157XlteU15Qg15zXp9eV15dcIiB2YWx1ZT17Zm9ybURhdGEuY2xpZW50X2lkfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdjbGllbnRfaWQnLCB2KX0gLz5cclxuICAgIDxkaXYgY2xhc3NOYW1lPVwibWQ6Y29sLXNwYW4tMlwiPlxyXG4gICAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi15vXqteV15HXqiDXntec15DXlFwiIHZhbHVlPXtmb3JtRGF0YS5jbGllbnRfZnVsbF9hZGRyZXNzfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdjbGllbnRfZnVsbF9hZGRyZXNzJywgdil9IC8+XHJcbiAgICA8L2Rpdj5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXoteZ16hcIiB2YWx1ZT17Zm9ybURhdGEuY2xpZW50X2NpdHl9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ2NsaWVudF9jaXR5Jywgdil9IC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi16jXl9eV15FcIiB2YWx1ZT17Zm9ybURhdGEuY2xpZW50X3N0cmVldH0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgnY2xpZW50X3N0cmVldCcsIHYpfSAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIteR16DXmdeZ159cIiB2YWx1ZT17Zm9ybURhdGEuY2xpZW50X2J1aWxkaW5nfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdjbGllbnRfYnVpbGRpbmcnLCB2KX0gLz5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXm9eg15nXodeUXCIgdmFsdWU9e2Zvcm1EYXRhLmNsaWVudF9lbnRyeX0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgnY2xpZW50X2VudHJ5Jywgdil9IC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi16fXldee15RcIiB2YWx1ZT17Zm9ybURhdGEuY2xpZW50X2Zsb29yfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdjbGllbnRfZmxvb3InLCB2KX0gLz5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXk9eZ16jXlFwiIHZhbHVlPXtmb3JtRGF0YS5jbGllbnRfYXBhcnRtZW50fSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdjbGllbnRfYXBhcnRtZW50Jywgdil9IC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi157Xmden15XXk1wiIHZhbHVlPXtmb3JtRGF0YS56aXBjb2RlfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCd6aXBjb2RlJywgdil9IC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi16fXlSDXqNeV15fXkSAoTGF0aXR1ZGUpXCIgdmFsdWU9e2Zvcm1EYXRhLmRyb3BvZmZfbGF0aXR1ZGV9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ2Ryb3BvZmZfbGF0aXR1ZGUnLCB2KX0gdHlwZT1cIm51bWJlclwiIC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi16fXlSDXkNeV16jXmiAoTG9uZ2l0dWRlKVwiIHZhbHVlPXtmb3JtRGF0YS5kcm9wb2ZmX2xvbmdpdHVkZX0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgnZHJvcG9mZl9sb25naXR1ZGUnLCB2KX0gdHlwZT1cIm51bWJlclwiIC8+XHJcbiAgICA8ZGl2IGNsYXNzTmFtZT1cIm1kOmNvbC1zcGFuLTJcIj5cclxuICAgICAgPEZvcm1GaWVsZCBsYWJlbD1cIteU16LXqNeqINec16fXldeXXCIgdmFsdWU9e2Zvcm1EYXRhLmNsaWVudF9jb21tZW50fSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdjbGllbnRfY29tbWVudCcsIHYpfSB0eXBlPVwidGV4dGFyZWFcIiAvPlxyXG4gICAgPC9kaXY+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi15vXqteV15HXqiDXqdeS15XXmdeUXCIgdmFsdWU9e2Zvcm1EYXRhLndyb25nX2FkZHJlc3N9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ3dyb25nX2FkZHJlc3MnLCB2KX0gdHlwZT1cImNoZWNrYm94XCIgLz5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXnNen15XXlyDXlNeh15vXmdedINec157Xp9eV151cIiB2YWx1ZT17Zm9ybURhdGEuY2xpZW50X2FncmVlX3RvX3BsYWNlfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdjbGllbnRfYWdyZWVfdG9fcGxhY2UnLCB2KX0gdHlwZT1cImNoZWNrYm94XCIgLz5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCJVUkwg15fXqteZ157XlFwiIHZhbHVlPXtmb3JtRGF0YS5zaWduYXR1cmVfdXJsfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdzaWduYXR1cmVfdXJsJywgdil9IC8+XHJcbiAgPC9kaXY+XHJcbik7XHJcblxyXG5jb25zdCBBY3RvclRhYjogUmVhY3QuRkM8VGFiUHJvcHM+ID0gKHsgZm9ybURhdGEsIG9uQ2hhbmdlIH0pID0+IChcclxuICA8ZGl2IGNsYXNzTmFtZT1cImdyaWQgZ3JpZC1jb2xzLTEgbWQ6Z3JpZC1jb2xzLTIgZ2FwLTRcIj5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXnteW15TXlCDXqdec15nXl1wiIHZhbHVlPXtmb3JtRGF0YS5ydW5uZXJfaWR9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ3J1bm5lcl9pZCcsIHYpfSAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cItep150g16nXnNeZ15dcIiB2YWx1ZT17Zm9ybURhdGEuY291cmllck5hbWV9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ2NvdXJpZXJOYW1lJywgdil9IC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi157XlteU15Qg16nXnNeZ15cg157Xnteq15nXn1wiIHZhbHVlPXtmb3JtRGF0YS5wZW5kaW5nX3J1bm5lcl9pZH0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgncGVuZGluZ19ydW5uZXJfaWQnLCB2KX0gLz5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXnteW15TXlCDXqdec15nXlyDXntep157XqNeqXCIgdmFsdWU9e2Zvcm1EYXRhLnNoaWZ0X3J1bm5lcl9pZH0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgnc2hpZnRfcnVubmVyX2lkJywgdil9IC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi157XlteU15Qg16nXnNeZ15cg16nXlNeS15nXoiDXnNee16HXoteT15RcIiB2YWx1ZT17Zm9ybURhdGEuYXJyaXZlZF9hdF9yZXN0X3J1bm5lcl9pZH0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgnYXJyaXZlZF9hdF9yZXN0X3J1bm5lcl9pZCcsIHYpfSAvPlxyXG4gICAgPEZvcm1GaWVsZFxyXG4gICAgICBsYWJlbD1cIteh15XXkiDXqNeb15FcIlxyXG4gICAgICB2YWx1ZT17Zm9ybURhdGEudmVoaWNsZV90eXBlfVxyXG4gICAgICBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCd2ZWhpY2xlX3R5cGUnLCB2KX1cclxuICAgICAgdHlwZT1cInNlbGVjdFwiXHJcbiAgICAgIG9wdGlvbnM9e1tcclxuICAgICAgICB7IHZhbHVlOiAnYmlrZScsIGxhYmVsOiAn15DXldek16DXmdeZ150nIH0sXHJcbiAgICAgICAgeyB2YWx1ZTogJ3Njb290ZXInLCBsYWJlbDogJ9en15jXoNeV16InIH0sXHJcbiAgICAgICAgeyB2YWx1ZTogJ2NhcicsIGxhYmVsOiAn16jXm9eRJyB9LFxyXG4gICAgICBdfVxyXG4gICAgLz5cclxuICAgIDxGb3JtRmllbGRcclxuICAgICAgbGFiZWw9XCLXodeV15Ig15TXoteh16fXlFwiXHJcbiAgICAgIHZhbHVlPXtmb3JtRGF0YS5jb3VyaWVyRW1wbG95bWVudFR5cGV9XHJcbiAgICAgIG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ2NvdXJpZXJFbXBsb3ltZW50VHlwZScsIHYpfVxyXG4gICAgICB0eXBlPVwic2VsZWN0XCJcclxuICAgICAgb3B0aW9ucz17W1xyXG4gICAgICAgIHsgdmFsdWU6ICfXqdei16rXmScsIGxhYmVsOiAn16nXoteq15knIH0sXHJcbiAgICAgICAgeyB2YWx1ZTogJ9eX15XXk9ep15knLCBsYWJlbDogJ9eX15XXk9ep15knIH0sXHJcbiAgICAgIF19XHJcbiAgICAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIteT15nXqNeV15Ig16nXnNeZ15dcIiB2YWx1ZT17Zm9ybURhdGEuY291cmllclJhdGluZ30gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgnY291cmllclJhdGluZycsIHYpfSB0eXBlPVwibnVtYmVyXCIgLz5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXqdeV15nXmiDXkdeQ15zXkteV16jXmdeq151cIiB2YWx1ZT17Zm9ybURhdGEuYWxnb19ydW5uZXJ9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ2FsZ29fcnVubmVyJywgdil9IHR5cGU9XCJjaGVja2JveFwiIC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi16bXldee15Mg16LXnCDXmdeT15lcIiB2YWx1ZT17Zm9ybURhdGEuY291cGxlZF9ieX0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgnY291cGxlZF9ieScsIHYpfSAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIten15Ug16jXldeX15Eg15HXoteqINep15nXldeaXCIgdmFsdWU9e2Zvcm1EYXRhLnJ1bm5lcl9hdF9hc3NpZ25pbmdfbGF0aXR1ZGV9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ3J1bm5lcl9hdF9hc3NpZ25pbmdfbGF0aXR1ZGUnLCB2KX0gdHlwZT1cIm51bWJlclwiIC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi16fXlSDXkNeV16jXmiDXkdei16og16nXmdeV15pcIiB2YWx1ZT17Zm9ybURhdGEucnVubmVyX2F0X2Fzc2lnbmluZ19sb25naXR1ZGV9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ3J1bm5lcl9hdF9hc3NpZ25pbmdfbG9uZ2l0dWRlJywgdil9IHR5cGU9XCJudW1iZXJcIiAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIteU16rXl9ec16og157Xodec15XXnFwiIHZhbHVlPXtmb3JtRGF0YS5pc19vcmJpdF9zdGFydH0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgnaXNfb3JiaXRfc3RhcnQnLCB2KX0gdHlwZT1cImNoZWNrYm94XCIgLz5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXkNeW15XXqFwiIHZhbHVlPXtmb3JtRGF0YS5hcmVhfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdhcmVhJywgdil9IC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi157XlteU15Qg15DXlteV16hcIiB2YWx1ZT17Zm9ybURhdGEuYXJlYV9pZH0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgnYXJlYV9pZCcsIHYpfSAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cItee15bXlNeUINeQ15bXldeoINee16nXnNeV15dcIiB2YWx1ZT17Zm9ybURhdGEuZGVsaXZlcnlfYXJlYV9pZH0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgnZGVsaXZlcnlfYXJlYV9pZCcsIHYpfSAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cItep150g16TXldec15nXkteV158g16jXkNep15lcIiB2YWx1ZT17Zm9ybURhdGEubWFpbl9wb2x5Z29uX25hbWV9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ21haW5fcG9seWdvbl9uYW1lJywgdil9IC8+XHJcbiAgPC9kaXY+XHJcbik7XHJcblxyXG5jb25zdCBUaW1lbGluZVRhYjogUmVhY3QuRkM8VGFiUHJvcHM+ID0gKHsgZm9ybURhdGEsIG9uQ2hhbmdlIH0pID0+IChcclxuICA8ZGl2IGNsYXNzTmFtZT1cImdyaWQgZ3JpZC1jb2xzLTEgbWQ6Z3JpZC1jb2xzLTIgZ2FwLTRcIj5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXltee158g15nXpteZ16jXlFwiIHZhbHVlPXtmb3JtRGF0YS5jcmVhdGlvbl90aW1lfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdjcmVhdGlvbl90aW1lJywgdil9IHR5cGU9XCJkYXRldGltZS1sb2NhbFwiIC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi15bXntefINeT15fXmdek15RcIiB2YWx1ZT17Zm9ybURhdGEucHVzaF90aW1lfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdwdXNoX3RpbWUnLCB2KX0gdHlwZT1cImRhdGV0aW1lLWxvY2FsXCIgLz5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXltee158g16bXldeV16rXmdedXCIgdmFsdWU9e2Zvcm1EYXRhLmNvdXBsZWRfdGltZX0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgnY291cGxlZF90aW1lJywgdil9IHR5cGU9XCJkYXRldGltZS1sb2NhbFwiIC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi15TXqteX15nXnCDXkNeZ16HXldejXCIgdmFsdWU9e2Zvcm1EYXRhLnN0YXJ0ZWRfcGlja3VwfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdzdGFydGVkX3BpY2t1cCcsIHYpfSB0eXBlPVwiZGF0ZXRpbWUtbG9jYWxcIiAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIteU15LXmdeiINec157Xodei15PXlFwiIHZhbHVlPXtmb3JtRGF0YS5hcnJpdmVkX2F0X3Jlc3R9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ2Fycml2ZWRfYXRfcmVzdCcsIHYpfSB0eXBlPVwiZGF0ZXRpbWUtbG9jYWxcIiAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cItec16fXlyDXkNeqINeU15TXltee16DXlFwiIHZhbHVlPXtmb3JtRGF0YS50b29rX2l0X3RpbWV9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ3Rvb2tfaXRfdGltZScsIHYpfSB0eXBlPVwiZGF0ZXRpbWUtbG9jYWxcIiAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIteU16rXl9eZ15wg157XodeZ16jXlFwiIHZhbHVlPXtmb3JtRGF0YS5zdGFydGVkX2Ryb3BvZmZ9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ3N0YXJ0ZWRfZHJvcG9mZicsIHYpfSB0eXBlPVwiZGF0ZXRpbWUtbG9jYWxcIiAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIteU15LXmdeiINec15zXp9eV15dcIiB2YWx1ZT17Zm9ybURhdGEuYXJyaXZlZF9hdF9jbGllbnR9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ2Fycml2ZWRfYXRfY2xpZW50Jywgdil9IHR5cGU9XCJkYXRldGltZS1sb2NhbFwiIC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi15bXntefINee16HXmdeo15RcIiB2YWx1ZT17Zm9ybURhdGEuZGVsaXZlcmVkX3RpbWV9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ2RlbGl2ZXJlZF90aW1lJywgdil9IHR5cGU9XCJkYXRldGltZS1sb2NhbFwiIC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi15bXntefINeR15nXmNeV15xcIiB2YWx1ZT17Zm9ybURhdGEuY2FuY2VsbGVkQXR9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ2NhbmNlbGxlZEF0Jywgdil9IHR5cGU9XCJkYXRldGltZS1sb2NhbFwiIC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi15bXntefINee16nXldei16ggKNeT16fXldeqKVwiIHZhbHVlPXtmb3JtRGF0YS5lc3RpbWF0ZWRUaW1lfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdlc3RpbWF0ZWRUaW1lJywgdil9IHR5cGU9XCJudW1iZXJcIiAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIkVUQSDXnNee16HXoteT15RcIiB2YWx1ZT17Zm9ybURhdGEuZXN0aW1hdGVkQXJyaXZhbEF0UmVzdGF1cmFudH0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgnZXN0aW1hdGVkQXJyaXZhbEF0UmVzdGF1cmFudCcsIHYpfSB0eXBlPVwiZGF0ZXRpbWUtbG9jYWxcIiAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIkVUQSDXnNec16fXldeXXCIgdmFsdWU9e2Zvcm1EYXRhLmVzdGltYXRlZEFycml2YWxBdEN1c3RvbWVyfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdlc3RpbWF0ZWRBcnJpdmFsQXRDdXN0b21lcicsIHYpfSB0eXBlPVwiZGF0ZXRpbWUtbG9jYWxcIiAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIteW157XnyDXlNeb16DXqiDXlNeW157XoNeUXCIgdmFsdWU9e2Zvcm1EYXRhLm9yZGVyUmVhZHlUaW1lfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdvcmRlclJlYWR5VGltZScsIHYpfSB0eXBlPVwiZGF0ZXRpbWUtbG9jYWxcIiAvPlxyXG4gIDwvZGl2PlxyXG4pO1xyXG5cclxuY29uc3QgTWVjaGFuaWNzVGFiOiBSZWFjdC5GQzxUYWJQcm9wcz4gPSAoeyBmb3JtRGF0YSwgb25DaGFuZ2UgfSkgPT4gKFxyXG4gIDxkaXYgY2xhc3NOYW1lPVwiZ3JpZCBncmlkLWNvbHMtMSBtZDpncmlkLWNvbHMtMiBnYXAtNFwiPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIteW157XnyDXnteh15nXqNeUINee16rXldeb16DXn1wiIHZhbHVlPXtmb3JtRGF0YS5zaG91bGRfZGVsaXZlcmVkX3RpbWV9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ3Nob3VsZF9kZWxpdmVyZWRfdGltZScsIHYpfSB0eXBlPVwiZGF0ZXRpbWUtbG9jYWxcIiAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIteW157XnyDXnten16HXmdee15zXmSDXnNee16HXmdeo15QgKNeT16fXldeqKVwiIHZhbHVlPXtmb3JtRGF0YS5tYXhfdGltZV90b19kZWxpdmVyfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdtYXhfdGltZV90b19kZWxpdmVyJywgdil9IHR5cGU9XCJudW1iZXJcIiAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIteW157XnyDXnteZ16DXmdee15zXmSDXnNeQ16HXpNen15QgKNeT16fXldeqKVwiIHZhbHVlPXtmb3JtRGF0YS5taW5fdGltZV90b19zdXBsbHl9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ21pbl90aW1lX3RvX3N1cGxseScsIHYpfSB0eXBlPVwibnVtYmVyXCIgLz5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXltee158g157Xp9eh15nXntec15kg15zXkNeh16TXp9eUICjXk9en15XXqilcIiB2YWx1ZT17Zm9ybURhdGEubWF4X3RpbWVfdG9fc3VwbGx5fSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdtYXhfdGltZV90b19zdXBsbHknLCB2KX0gdHlwZT1cIm51bWJlclwiIC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi15PXp9eV16og15DXmdeX15XXqFwiIHZhbHVlPXtmb3JtRGF0YS5taW51dGVzX2xhdGV9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ21pbnV0ZXNfbGF0ZScsIHYpfSB0eXBlPVwibnVtYmVyXCIgLz5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXodeY15nXmdeqINeQ15nXodeV16MgKNeT16fXldeqKVwiIHZhbHVlPXtmb3JtRGF0YS5waWNrdXBfZGV2aWF0aW9ufSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdwaWNrdXBfZGV2aWF0aW9uJywgdil9IHR5cGU9XCJudW1iZXJcIiAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIteh15jXmdeZ16og157XodeZ16jXlCAo15PXp9eV16opXCIgdmFsdWU9e2Zvcm1EYXRhLmRyb3BvZmZfZGV2aWF0aW9ufSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdkcm9wb2ZmX2RldmlhdGlvbicsIHYpfSB0eXBlPVwibnVtYmVyXCIgLz5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXodeZ15HXqiDXoteZ15vXldeRXCIgdmFsdWU9e2Zvcm1EYXRhLmRlbGF5X3JlYXNvbn0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgnZGVsYXlfcmVhc29uJywgdil9IC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi157XqdeaINei15nXm9eV15EgKNeT16fXldeqKVwiIHZhbHVlPXtmb3JtRGF0YS5kZWxheV9kdXJhdGlvbn0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgnZGVsYXlfZHVyYXRpb24nLCB2KX0gdHlwZT1cIm51bWJlclwiIC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi157XqNeX16cg157Xqdec15XXlyAo16fXnilcIiB2YWx1ZT17Zm9ybURhdGEuZGVsaXZlcnlfZGlzdGFuY2V9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ2RlbGl2ZXJ5X2Rpc3RhbmNlJywgdil9IHR5cGU9XCJudW1iZXJcIiAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cItee16nXmiDXnNec16fXldeXICjXk9en15XXqilcIiB2YWx1ZT17Zm9ybURhdGEuZHVyYXRpb25fdG9fY2xpZW50fSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdkdXJhdGlvbl90b19jbGllbnQnLCB2KX0gdHlwZT1cIm51bWJlclwiIC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwiRVRBINec15DXl9eoINeQ15nXodeV16MgKNeT16fXldeqKVwiIHZhbHVlPXtmb3JtRGF0YS5ldGFfYWZ0ZXJfcGlja3VwfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdldGFfYWZ0ZXJfcGlja3VwJywgdil9IHR5cGU9XCJudW1iZXJcIiAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIteh15jXmNeV16Eg15DXodek16fXlFwiIHZhbHVlPXtmb3JtRGF0YS5zdXBsbHlfc3RhdHVzfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdzdXBsbHlfc3RhdHVzJywgdil9IC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi15HXldeY15wg15zXkNeX16gg15DXmdeh15XXo1wiIHZhbHVlPXtmb3JtRGF0YS5jYW5jZWxsZWRBZnRlclBpY2t1cH0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgnY2FuY2VsbGVkQWZ0ZXJQaWNrdXAnLCB2KX0gdHlwZT1cImNoZWNrYm94XCIgLz5cclxuICA8L2Rpdj5cclxuKTtcclxuXHJcbmNvbnN0IEVjb25vbXlUYWI6IFJlYWN0LkZDPFRhYlByb3BzPiA9ICh7IGZvcm1EYXRhLCBvbkNoYW5nZSB9KSA9PiAoXHJcbiAgPGRpdiBjbGFzc05hbWU9XCJncmlkIGdyaWQtY29scy0xIG1kOmdyaWQtY29scy0yIGdhcC00XCI+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi157Xl9eZ16gg157Xqdec15XXlyAo4oKqKVwiIHZhbHVlPXtmb3JtRGF0YS5wcmljZX0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgncHJpY2UnLCB2KX0gdHlwZT1cIm51bWJlclwiIC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi15fXmdeV15Eg157Xodei15PXlCAo4oKqKVwiIHZhbHVlPXtmb3JtRGF0YS5yZXN0X3ByaWNlfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdyZXN0X3ByaWNlJywgdil9IHR5cGU9XCJudW1iZXJcIiAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cItee15fXmdeoINek15XXnNeZ15LXldefINee16HXoteT15QgKOKCqilcIiB2YWx1ZT17Zm9ybURhdGEucmVzdF9wb2x5Z29uX3ByaWNlfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdyZXN0X3BvbHlnb25fcHJpY2UnLCB2KX0gdHlwZT1cIm51bWJlclwiIC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi16rXqdec15XXnSDXqdec15nXlyAo4oKqKVwiIHZhbHVlPXtmb3JtRGF0YS5ydW5uZXJfcHJpY2V9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ3J1bm5lcl9wcmljZScsIHYpfSB0eXBlPVwibnVtYmVyXCIgLz5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXmNeZ16Qg16nXnNeZ15cgKOKCqilcIiB2YWx1ZT17Zm9ybURhdGEucnVubmVyX3RpcH0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgncnVubmVyX3RpcCcsIHYpfSB0eXBlPVwibnVtYmVyXCIgLz5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXodeb15XXnSDXnteW15XXntefICjigqopXCIgdmFsdWU9e2Zvcm1EYXRhLnN1bV9jYXNofSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdzdW1fY2FzaCcsIHYpfSB0eXBlPVwibnVtYmVyXCIgLz5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXqtep15zXldedINeR157XlteV157Xn1wiIHZhbHVlPXtmb3JtRGF0YS5pc19jYXNofSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdpc19jYXNoJywgdil9IHR5cGU9XCJjaGVja2JveFwiIC8+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi16LXntec15QgKOKCqilcIiB2YWx1ZT17Zm9ybURhdGEuY29tbWlzc2lvbkFtb3VudH0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgnY29tbWlzc2lvbkFtb3VudCcsIHYpfSB0eXBlPVwibnVtYmVyXCIgLz5cclxuICA8L2Rpdj5cclxuKTtcclxuXHJcbmNvbnN0IE1ldGFUYWI6IFJlYWN0LkZDPFRhYlByb3BzPiA9ICh7IGZvcm1EYXRhLCBvbkNoYW5nZSB9KSA9PiAoXHJcbiAgPGRpdiBjbGFzc05hbWU9XCJncmlkIGdyaWQtY29scy0xIG1kOmdyaWQtY29scy0yIGdhcC00XCI+XHJcbiAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi16HXldeSIEFQSVwiIHZhbHVlPXtmb3JtRGF0YS5hcGlfdHlwZX0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgnYXBpX3R5cGUnLCB2KX0gLz5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXnten15XXqCBBUElcIiB2YWx1ZT17Zm9ybURhdGEuYXBpX3NvdXJjZX0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgnYXBpX3NvdXJjZScsIHYpfSAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cItek15zXmNek15XXqNee16og157Xp9eV16hcIiB2YWx1ZT17Zm9ybURhdGEuc291cmNlX3BsYXRmb3JtfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdzb3VyY2VfcGxhdGZvcm0nLCB2KX0gLz5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXnteW15TXlCDXkNeq16hcIiB2YWx1ZT17Zm9ybURhdGEud2Vic2l0ZV9pZH0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgnd2Vic2l0ZV9pZCcsIHYpfSAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cItee15bXlNeUIENvbWF4XCIgdmFsdWU9e2Zvcm1EYXRhLmNvbWF4X2lkfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdjb21heF9pZCcsIHYpfSAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cItee15bXlNeUINeU15bXnteg16og15DXkVwiIHZhbHVlPXtmb3JtRGF0YS5wYXJlbnRfbWlzaGxvaGFfb3JkZXJfaWR9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ3BhcmVudF9taXNobG9oYV9vcmRlcl9pZCcsIHYpfSAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cItee15bXlNeUINeU15bXnteg15Qg157XqdeV15nXm9eqXCIgdmFsdWU9e2Zvcm1EYXRhLmFzc29jaWF0ZWRfYXBpX29yZGVyX2lkfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdhc3NvY2lhdGVkX2FwaV9vcmRlcl9pZCcsIHYpfSAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cItee15bXlNeUINen16bXqCDXntep15XXmdeaXCIgdmFsdWU9e2Zvcm1EYXRhLmFzc29jaWF0ZWRfc2hvcnRfYXBpX29yZGVyX2lkfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdhc3NvY2lhdGVkX3Nob3J0X2FwaV9vcmRlcl9pZCcsIHYpfSAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIteh15jXmNeV16EgU01TXCIgdmFsdWU9e2Zvcm1EYXRhLnNtc19zdGF0dXN9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ3Ntc19zdGF0dXMnLCB2KX0gLz5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXp9eV15MgU01TXCIgdmFsdWU9e2Zvcm1EYXRhLnNtc19jb2RlfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdzbXNfY29kZScsIHYpfSAvPlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIteg16bXpNeUINeR157Xoten15FcIiB2YWx1ZT17Zm9ybURhdGEudHJhY2tlcl92aWV3ZWR9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ3RyYWNrZXJfdmlld2VkJywgdil9IHR5cGU9XCJjaGVja2JveFwiIC8+XHJcbiAgICA8ZGl2IGNsYXNzTmFtZT1cIm1kOmNvbC1zcGFuLTJcIj5cclxuICAgICAgPEZvcm1GaWVsZCBsYWJlbD1cIteU16LXqNeqINep15zXmdeXINeR15zXp9eZ15fXlFwiIHZhbHVlPXtmb3JtRGF0YS5ydW5uZXJfdG9va19jb21tZW50fSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdydW5uZXJfdG9va19jb21tZW50Jywgdil9IHR5cGU9XCJ0ZXh0YXJlYVwiIC8+XHJcbiAgICA8L2Rpdj5cclxuICAgIDxkaXYgY2xhc3NOYW1lPVwibWQ6Y29sLXNwYW4tMlwiPlxyXG4gICAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi15TXoteo16og16nXnNeZ15cg15HXnteh15nXqNeUXCIgdmFsdWU9e2Zvcm1EYXRhLnJ1bm5lcl9kZWxpdmVyZWRfY29tbWVudH0gb25DaGFuZ2U9eyh2KSA9PiBvbkNoYW5nZSgncnVubmVyX2RlbGl2ZXJlZF9jb21tZW50Jywgdil9IHR5cGU9XCJ0ZXh0YXJlYVwiIC8+XHJcbiAgICA8L2Rpdj5cclxuICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXk9eZ16jXldeSINec16fXldeXINec16nXnNeZ15dcIiB2YWx1ZT17Zm9ybURhdGEuY2xpZW50X3J1bm5lcl9yYW5rfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdjbGllbnRfcnVubmVyX3JhbmsnLCB2KX0gdHlwZT1cIm51bWJlclwiIC8+XHJcbiAgICA8ZGl2IGNsYXNzTmFtZT1cIm1kOmNvbC1zcGFuLTJcIj5cclxuICAgICAgPEZvcm1GaWVsZCBsYWJlbD1cIteU16LXqNeqINec16fXldeXXCIgdmFsdWU9e2Zvcm1EYXRhLmNsaWVudF9yZW1hcmt9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ2NsaWVudF9yZW1hcmsnLCB2KX0gdHlwZT1cInRleHRhcmVhXCIgLz5cclxuICAgIDwvZGl2PlxyXG4gICAgPEZvcm1GaWVsZCBsYWJlbD1cIteh15jXmNeV16Eg16TXmdeT15HXp1wiIHZhbHVlPXtmb3JtRGF0YS5mZWVkYmFja19zdGF0dXN9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ2ZlZWRiYWNrX3N0YXR1cycsIHYpfSAvPlxyXG4gICAgPGRpdiBjbGFzc05hbWU9XCJtZDpjb2wtc3Bhbi0yXCI+XHJcbiAgICAgIDxGb3JtRmllbGQgbGFiZWw9XCLXqtep15XXkdeUINeo15DXqdeV16DXlFwiIHZhbHVlPXtmb3JtRGF0YS5mZWVkYmFja19maXJzdF9hbnN3ZXJ9IG9uQ2hhbmdlPXsodikgPT4gb25DaGFuZ2UoJ2ZlZWRiYWNrX2ZpcnN0X2Fuc3dlcicsIHYpfSB0eXBlPVwidGV4dGFyZWFcIiAvPlxyXG4gICAgPC9kaXY+XHJcbiAgICA8ZGl2IGNsYXNzTmFtZT1cIm1kOmNvbC1zcGFuLTJcIj5cclxuICAgICAgPEZvcm1GaWVsZCBsYWJlbD1cIteq16nXldeR15Qg16nXoNeZ15nXlFwiIHZhbHVlPXtmb3JtRGF0YS5mZWVkYmFja19zZWNvbmRfYW5zd2VyfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdmZWVkYmFja19zZWNvbmRfYW5zd2VyJywgdil9IHR5cGU9XCJ0ZXh0YXJlYVwiIC8+XHJcbiAgICA8L2Rpdj5cclxuICAgIDxkaXYgY2xhc3NOYW1lPVwibWQ6Y29sLXNwYW4tMlwiPlxyXG4gICAgICA8Rm9ybUZpZWxkIGxhYmVsPVwi16rXqdeV15HXlCDXqdec15nXqdeZ16pcIiB2YWx1ZT17Zm9ybURhdGEuZmVlZGJhY2tfdGhpcmRfYW5zd2VyfSBvbkNoYW5nZT17KHYpID0+IG9uQ2hhbmdlKCdmZWVkYmFja190aGlyZF9hbnN3ZXInLCB2KX0gdHlwZT1cInRleHRhcmVhXCIgLz5cclxuICAgIDwvZGl2PlxyXG4gIDwvZGl2PlxyXG4pO1xyXG5cclxuIl0sImZpbGUiOiJDOi9Vc2Vycy9yZWFsYS9PbmVEcml2ZS9EZXNrdG9wL3NlbmRpL3NlLmlvIFNZU1RFTSBERU1PL3NyYy9hcHAvZGVsaXZlcmllcy9kZWxpdmVyeS1lZGl0LWRpYWxvZy50c3gifQ==
