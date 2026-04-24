@@ -1,18 +1,11 @@
 ﻿import React from 'react';
 import { useNavigate } from 'react-router';
-import { Activity, CheckCircle, ClipboardList, Clock, Store, TrendingUp, Users, XCircle } from 'lucide-react';
+import { ClipboardList, Store, TrendingUp, Users } from 'lucide-react';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useDelivery } from '../context/delivery.context';
 import { useTheme } from '../context/theme.context';
 
 const openStatuses = ['pending', 'assigned', 'delivering'] as const;
-const ago = (date: Date) => {
-  const minutes = Math.round((Date.now() - date.getTime()) / 60000);
-  if (minutes <= 0) return 'עכשיו';
-  if (minutes < 60) return `לפני ${minutes} דק׳`;
-  return `לפני ${Math.round(minutes / 60)} ש׳`;
-};
-
 const PERIOD_LABELS = {
   hour: 'שעה',
   today: 'היום',
@@ -29,12 +22,6 @@ export const Dashboard: React.FC = () => {
   const { isDark } = useTheme();
   const navigate = useNavigate();
   const [selectedPeriod, setSelectedPeriod] = React.useState<'hour' | 'today' | 'week'>('hour');
-  const [currentTime, setCurrentTime] = React.useState(new Date());
-
-  React.useEffect(() => {
-    const timer = window.setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => window.clearInterval(timer);
-  }, []);
 
   const activeDeliveries = state.deliveries.filter((d) => openStatuses.includes(d.status)).length;
   const pending = state.deliveries.filter((d) => d.status === 'pending').length;
@@ -45,23 +32,13 @@ export const Dashboard: React.FC = () => {
   const activeCouriers = state.couriers.filter((c) => c.status !== 'offline');
   const connectedCouriers = activeCouriers.length;
   const totalCouriers = state.couriers.length;
-  const busyCouriers = activeCouriers.filter((c) => c.status === 'busy').length;
-  // "פנוי" = במשמרת פעילה + אין משלוח פעיל
-  const freeCouriers = state.couriers.filter((c) => c.isOnShift && c.status === 'available').length;
   const couriersOnShift = state.couriers.filter((c) => c.isOnShift).length;
-  const couriersInFieldNow = state.couriers.filter((courier) =>
-    state.deliveries.some((delivery) => delivery.courierId === courier.id && openStatuses.includes(delivery.status))
-  ).length;
 
   const activeRestaurantsNow = state.restaurants.filter((restaurant) =>
     state.deliveries.some((delivery) => delivery.restaurantId === restaurant.id && openStatuses.includes(delivery.status))
   ).length;
   const activeRestaurants = state.restaurants.filter((restaurant) => restaurant.isActive).length;
   const totalRestaurants = state.restaurants.length;
-  const courierDeliveryRatioValue =
-    activeDeliveries > 0
-      ? `${couriersOnShift}:${activeDeliveries}`
-      : `${couriersOnShift}:0`;
   const deliveriesPerOnShiftCourier =
     couriersOnShift > 0 ? (activeDeliveries / couriersOnShift).toFixed(1) : '0.0';
   const freeOnShiftCouriers = state.couriers.filter((c) => c.isOnShift && c.status === 'available').length;
@@ -99,8 +76,6 @@ export const Dashboard: React.FC = () => {
   const totalToday = completedToday + cancelledToday;
   const completionRate = totalToday > 0 ? Math.round((completedToday / totalToday) * 100) : 0;
 
-  const waitMinutes = (createdAt: string) => Math.round((Date.now() - new Date(createdAt).getTime()) / 60000);
-
   const busyRestaurantsNow = state.restaurants
     .map((restaurant) => {
       const openCount = state.deliveries.filter(
@@ -111,55 +86,6 @@ export const Dashboard: React.FC = () => {
     .filter(({ openCount }) => openCount >= 6)
     .sort((a, b) => b.openCount - a.openCount)
     .slice(0, 5);
-
-  const dashboardEvents = (() => {
-    const events: { id: string; type: 'late' | 'cancelled' | 'completed'; title: string; details: string; time: Date }[] = [];
-
-    state.deliveries
-      .filter((d) => d.status === 'cancelled')
-      .slice(-3)
-      .forEach((d) => {
-        const restaurant = state.restaurants.find((r) => r.id === d.restaurantId);
-        events.push({
-          id: `cancel-${d.id}`,
-          type: 'cancelled',
-          title: 'משלוח בוטל',
-          details: restaurant?.name ?? 'מסעדה',
-          time: new Date(d.cancelledAt || d.createdAt),
-        });
-      });
-
-    state.deliveries
-      .filter((d) => d.status === 'delivered' && d.deliveredAt)
-      .sort((a, b) => new Date(b.deliveredAt!).getTime() - new Date(a.deliveredAt!).getTime())
-      .slice(0, 3)
-      .forEach((d) => {
-        const restaurant = state.restaurants.find((r) => r.id === d.restaurantId);
-        events.push({
-          id: `done-${d.id}`,
-          type: 'completed',
-          title: 'משלוח נמסר',
-          details: restaurant?.name ?? 'מסעדה',
-          time: new Date(d.deliveredAt!),
-        });
-      });
-
-    state.deliveries
-      .filter((d) => ['pending', 'assigned'].includes(d.status))
-      .filter((d) => waitMinutes(d.createdAt) > 25)
-      .forEach((d) => {
-        const restaurant = state.restaurants.find((r) => r.id === d.restaurantId);
-        events.push({
-          id: `late-${d.id}`,
-          type: 'late',
-          title: 'משלוח מתעכב',
-          details: `${restaurant?.name ?? 'מסעדה'} · ${waitMinutes(d.createdAt)} דק׳ המתנה`,
-          time: new Date(d.createdAt),
-        });
-      });
-
-    return events.sort((a, b) => b.time.getTime() - a.time.getTime()).slice(0, 8);
-  })();
 
   const getChartData = React.useMemo(() => {
     const now = new Date();
