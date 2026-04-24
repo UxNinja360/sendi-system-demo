@@ -33,6 +33,18 @@ body {
   background: #0a0a0a;
 }
 
+.app-shell-height {
+  height: 100vh;
+  min-height: 100vh;
+}
+
+@supports (height: 100svh) {
+  .app-shell-height {
+    height: 100svh;
+    min-height: 100svh;
+  }
+}
+
 .app-safe-header {
   box-sizing: border-box;
   min-height: var(--app-topbar-offset);
@@ -41,7 +53,26 @@ body {
 
 .app-safe-side-panel {
   top: var(--app-topbar-offset);
-  height: calc(100dvh - var(--app-topbar-offset));
+  height: calc(100vh - var(--app-topbar-offset));
+}
+
+@supports (height: 100svh) {
+  .app-safe-side-panel {
+    height: calc(100svh - var(--app-topbar-offset));
+  }
+}
+
+@media (min-width: 768px) {
+  @supports (height: 100dvh) {
+    .app-shell-height {
+      height: 100dvh;
+      min-height: 100dvh;
+    }
+
+    .app-safe-side-panel {
+      height: calc(100dvh - var(--app-topbar-offset));
+    }
+  }
 }
 
 .app-toolbar-shell {
@@ -68,12 +99,6 @@ body {
   -webkit-overflow-scrolling: auto;
   overflow-anchor: none;
   background: inherit;
-}
-
-@supports not (height: 100dvh) {
-  .app-safe-side-panel {
-    height: calc(100vh - var(--app-topbar-offset));
-  }
 }
 
 /* Leaflet custom marker styles */

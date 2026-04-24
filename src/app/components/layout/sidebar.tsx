@@ -242,7 +242,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
           }
         }}
         className={`
-          fixed md:static inset-y-0 right-0 bg-[#fafafa] dark:bg-[#0a0a0a] border-l border-[#e5e5e5] dark:border-[#262626] flex flex-col shadow-xl md:shadow-none h-[100dvh] min-h-screen
+          app-shell-height fixed md:static inset-y-0 right-0 bg-[#fafafa] dark:bg-[#0a0a0a] border-l border-[#e5e5e5] dark:border-[#262626] flex flex-col shadow-xl md:shadow-none
           ${isCollapsed ? 'translate-x-0 z-[110] md:z-50' : 'translate-x-full md:translate-x-0 z-[110] md:z-50'}
         `}
         style={{

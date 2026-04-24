@@ -62,7 +62,7 @@ export const AppLayout: React.FC = () => {
   const isLoading = navigation.state === 'loading';
 
   return (
-    <div className="flex h-[100dvh] min-h-screen w-full overflow-hidden bg-[#fafafa] text-[#0d0d12] transition-colors duration-300 dark:bg-[#0a0a0a] dark:text-[#fafafa]">
+    <div className="app-shell-height flex w-full overflow-hidden bg-[#fafafa] text-[#0d0d12] transition-colors duration-300 dark:bg-[#0a0a0a] dark:text-[#fafafa]">
       <Toaster />
 
       <Sidebar onLogout={handleLogout} />
