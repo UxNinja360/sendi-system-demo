@@ -967,12 +967,11 @@ export const CouriersListScreen: React.FC = () => {
                     return (
                       <tr
                         key={courier.id}
-                        onClick={() => navigate(`/courier/${courier.id}`)}
                         onContextMenu={(e) => {
                           e.preventDefault();
                           setContextMenu({ x: e.clientX, y: e.clientY, courier });
                         }}
-                        className={ENTITY_TABLE_ROW_CLASS}
+                        className={`${ENTITY_TABLE_ROW_CLASS} cursor-default`}
                       >
                         <EntityTableRowCheckbox
                           checked={selectedCourierIds.has(courier.id)}

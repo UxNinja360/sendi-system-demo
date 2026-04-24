@@ -123,12 +123,11 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
       case 'orderNumber':
         return (
           <td key={colId} className={`pr-2 pl-2 ${heightClasses.py}`}>
-            <button
-              onClick={() => onOpenDrawer(delivery.id)}
-              className={`${heightClasses.text} text-[#0d0d12] dark:text-[#fafafa] font-medium hover:text-[#16a34a] dark:hover:text-[#9fe870] hover:underline underline-offset-2 transition-colors cursor-pointer whitespace-nowrap`}
+            <span
+              className={`${heightClasses.text} text-[#0d0d12] dark:text-[#fafafa] font-medium whitespace-nowrap`}
             >
               {delivery.orderNumber}
-            </button>
+            </span>
           </td>
         );
 

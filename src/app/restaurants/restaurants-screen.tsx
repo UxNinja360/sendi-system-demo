@@ -863,13 +863,12 @@ export const RestaurantsScreen: React.FC = () => {
               {filteredRestaurants.map((restaurant, idx) => (
                 <tr
                   key={restaurant.restaurantId}
-                  onClick={() => navigate(`/restaurant/${restaurant.restaurantId}`)}
                   onContextMenu={(e) => {
                     e.preventDefault();
                     setContextMenuPos({ x: e.clientX, y: e.clientY });
                     setOpenActionsRestaurantId(restaurant.restaurantId);
                   }}
-                  className={ENTITY_TABLE_ROW_CLASS}
+                  className={`${ENTITY_TABLE_ROW_CLASS} cursor-default`}
                 >
                   <EntityTableRowCheckbox
                     checked={selectedRestaurantIds.has(restaurant.restaurantId)}
