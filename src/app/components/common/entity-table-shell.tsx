@@ -100,7 +100,7 @@ export const EntityTableShell: React.FC<EntityTableShellProps> = ({
         const atBottom = element.scrollTop >= maxScrollTop - 1;
 
         if (atTop && deltaY > 0) {
-          return;
+          event.preventDefault();
         }
 
         if (atBottom && deltaY < 0) {
