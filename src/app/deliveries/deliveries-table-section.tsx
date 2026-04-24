@@ -7,16 +7,15 @@ import type { ColumnDef } from './column-defs';
 import {
   EntityTableActionsHeader,
   EntityTableHeaderCheckbox,
-  EntityTableShell,
 } from '../components/common/entity-table-shell';
 import { EntityTableHeaderCell } from '../components/common/entity-table-header-cell';
+import { ListTableSection } from '../components/common/list-table-section';
 
 type DeliveriesTableSectionProps = {
   filteredDeliveries: Delivery[];
   emptyStateMode: 'no-data' | 'no-results' | 'filtered-empty';
   onClearFilters: () => void;
   totalCount: number;
-  canScrollLeft: boolean;
   tableScrollRef: React.RefObject<HTMLDivElement | null>;
   isDragging: boolean;
   onMouseDown: (event: React.MouseEvent) => void;
@@ -43,6 +42,7 @@ type DeliveriesTableSectionProps = {
   onEditDelivery: (deliveryId: string) => void;
   drawerDeliveryId: string | null;
   rowHeight: RowHeight;
+  selectionBar?: React.ReactNode;
 };
 
 export const DeliveriesTableSection: React.FC<DeliveriesTableSectionProps> = ({
@@ -50,7 +50,6 @@ export const DeliveriesTableSection: React.FC<DeliveriesTableSectionProps> = ({
   emptyStateMode,
   onClearFilters,
   totalCount,
-  canScrollLeft,
   tableScrollRef,
   isDragging,
   onMouseDown,
@@ -77,6 +76,7 @@ export const DeliveriesTableSection: React.FC<DeliveriesTableSectionProps> = ({
   onEditDelivery,
   drawerDeliveryId,
   rowHeight,
+  selectionBar,
 }) => {
   const navigate = useNavigate();
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -116,105 +116,96 @@ export const DeliveriesTableSection: React.FC<DeliveriesTableSectionProps> = ({
   };
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col">
-      {filteredDeliveries.length === 0 ? (
-        <div className="bg-white dark:bg-[#171717]">
-          <EnhancedEmptyState
-            mode={emptyStateMode}
-            onClearFilters={onClearFilters}
-            totalCount={totalCount}
+    <ListTableSection
+      isEmpty={filteredDeliveries.length === 0}
+      emptyState={
+        <EnhancedEmptyState
+          mode={emptyStateMode}
+          onClearFilters={onClearFilters}
+          totalCount={totalCount}
+        />
+      }
+      selectionBar={selectionBar}
+      ariaLabel="טבלת משלוחים"
+      scrollContainerRef={tableScrollRef}
+      wrapperClassName={`scroll-smooth flex-1 min-h-0 ${
+        isDragging ? 'cursor-grabbing select-none' : 'cursor-grab'
+      }`}
+      style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+      onMouseDown={onMouseDown}
+      onMouseMove={onMouseMove}
+      onMouseUp={onMouseUp}
+      onMouseLeave={onMouseUp}
+      colgroup={
+        <colgroup>
+          <col style={{ width: '44px' }} />
+          {orderedColumns
+            .filter((column) => visibleColumns.has(column.id))
+            .map((column) => (
+              <col key={column.id} style={{ width: getDeliveryColumnWidth(column.id) }} />
+            ))}
+          <col style={{ width: '40px' }} />
+        </colgroup>
+      }
+      headerRow={
+        <tr>
+          <EntityTableHeaderCheckbox
+            checked={selectedIds.size === filteredDeliveries.length && filteredDeliveries.length > 0}
+            indeterminate={selectedIds.size > 0 && selectedIds.size !== filteredDeliveries.length}
+            onChange={onToggleSelectAll}
           />
-        </div>
-      ) : (
-        <div className="relative flex min-h-0 flex-col overflow-hidden bg-white dark:bg-[#171717]">
-          {canScrollLeft && (
-            <div className="pointer-events-none absolute top-0 bottom-0 left-[48px] z-10 w-8 bg-gradient-to-r from-white/80 to-transparent dark:from-[#171717]/80" />
-          )}
+          {orderedColumns
+            .filter((column) => visibleColumns.has(column.id))
+            .map((column) => (
+              <EntityTableHeaderCell
+                key={column.id}
+                label={column.label}
+                draggable
+                onDragStart={(event) => handleDragStart(event, column.id)}
+                onDragOver={(event) => handleDragOver(event, column.id)}
+                onDragLeave={handleDragLeave}
+                onDrop={(event) => handleDrop(event, column.id)}
+                onDragEnd={handleDragEnd}
+                isDragging={draggingId === column.id}
+                isDragOver={dragOverId === column.id && draggingId !== column.id}
+                onSort={column.sortable ? () => onSort(column.id) : undefined}
+                sortDirection={sortColumn === column.id ? sortDirection : null}
+              />
+            ))}
+          <EntityTableActionsHeader />
+        </tr>
+      }
+    >
+      {filteredDeliveries.map((delivery) => {
+        const courier = delivery.courierId
+          ? couriers.find((candidate) => candidate.id === delivery.courierId) || null
+          : null;
+        const timeRemaining = calculateTimeRemaining(delivery);
 
-          <EntityTableShell
-            ariaLabel="טבלת משלוחים"
-            scrollContainerRef={tableScrollRef}
-            wrapperClassName={`scroll-smooth flex-1 min-h-0 ${
-              isDragging ? 'cursor-grabbing select-none' : 'cursor-grab'
-            }`}
-            style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
-            onMouseDown={onMouseDown}
-            onMouseMove={onMouseMove}
-            onMouseUp={onMouseUp}
-            onMouseLeave={onMouseUp}
-            colgroup={
-              <colgroup>
-                <col style={{ width: '44px' }} />
-                {orderedColumns
-                  .filter((column) => visibleColumns.has(column.id))
-                  .map((column) => (
-                    <col key={column.id} style={{ width: getDeliveryColumnWidth(column.id) }} />
-                  ))}
-                <col style={{ width: '40px' }} />
-              </colgroup>
-            }
-            headerRow={
-              <tr>
-                <EntityTableHeaderCheckbox
-                  checked={selectedIds.size === filteredDeliveries.length && filteredDeliveries.length > 0}
-                  indeterminate={selectedIds.size > 0 && selectedIds.size !== filteredDeliveries.length}
-                  onChange={onToggleSelectAll}
-                />
-                {orderedColumns
-                  .filter((column) => visibleColumns.has(column.id))
-                  .map((column) => (
-                    <EntityTableHeaderCell
-                      key={column.id}
-                      label={column.label}
-                      draggable
-                      onDragStart={(event) => handleDragStart(event, column.id)}
-                      onDragOver={(event) => handleDragOver(event, column.id)}
-                      onDragLeave={handleDragLeave}
-                      onDrop={(event) => handleDrop(event, column.id)}
-                      onDragEnd={handleDragEnd}
-                      isDragging={draggingId === column.id}
-                      isDragOver={dragOverId === column.id && draggingId !== column.id}
-                      onSort={column.sortable ? () => onSort(column.id) : undefined}
-                      sortDirection={sortColumn === column.id ? sortDirection : null}
-                    />
-                  ))}
-                <EntityTableActionsHeader />
-              </tr>
-            }
-          >
-            {filteredDeliveries.map((delivery) => {
-              const courier = delivery.courierId
-                ? couriers.find((candidate) => candidate.id === delivery.courierId) || null
-                : null;
-              const timeRemaining = calculateTimeRemaining(delivery);
-
-              return (
-                <DeliveryTableRow
-                  key={delivery.id}
-                  delivery={delivery}
-                  courier={courier}
-                  timeRemaining={timeRemaining}
-                  formatTime={formatTime}
-                  visibleColumns={visibleColumns}
-                  onNavigate={() => navigate(`/delivery/${delivery.id}`)}
-                  isSelected={selectedIds.has(delivery.id)}
-                  onToggleSelect={onToggleSelect}
-                  onOpenDrawer={onOpenDrawer}
-                  onStatusChange={onStatusChange}
-                  onCancelDelivery={onCancelDelivery}
-                  onCompleteDelivery={onCompleteDelivery}
-                  onUnassignCourier={onUnassignCourier}
-                  onEditDelivery={onEditDelivery}
-                  isDrawerTarget={drawerDeliveryId === delivery.id}
-                  orderedColumns={orderedColumns}
-                  rowHeight={rowHeight}
-                />
-              );
-            })}
-          </EntityTableShell>
-        </div>
-      )}
-    </div>
+        return (
+          <DeliveryTableRow
+            key={delivery.id}
+            delivery={delivery}
+            courier={courier}
+            timeRemaining={timeRemaining}
+            formatTime={formatTime}
+            visibleColumns={visibleColumns}
+            onNavigate={() => navigate(`/delivery/${delivery.id}`)}
+            isSelected={selectedIds.has(delivery.id)}
+            onToggleSelect={onToggleSelect}
+            onOpenDrawer={onOpenDrawer}
+            onStatusChange={onStatusChange}
+            onCancelDelivery={onCancelDelivery}
+            onCompleteDelivery={onCompleteDelivery}
+            onUnassignCourier={onUnassignCourier}
+            onEditDelivery={onEditDelivery}
+            isDrawerTarget={drawerDeliveryId === delivery.id}
+            orderedColumns={orderedColumns}
+            rowHeight={rowHeight}
+          />
+        );
+      })}
+    </ListTableSection>
   );
 };
 

@@ -10,7 +10,7 @@ import {
   ENTITY_TABLE_HEAD_CLASS,
 } from './entity-table-shared';
 
-type EntityTableShellProps = {
+export type EntityTableShellProps = {
   ariaLabel: string;
   colgroup: React.ReactNode;
   headerRow: React.ReactNode;

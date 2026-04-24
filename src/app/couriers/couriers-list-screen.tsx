@@ -21,6 +21,7 @@ import { type SingleSelectFilterOption } from '../components/common/list-filter-
 import { exportRowsToExcel } from '../utils/export-utils';
 import { EntityEmptyState, EntityNoResultsState } from '../components/common/entity-empty-state';
 import { EntityRowActionTrigger } from '../components/common/entity-row-action-trigger';
+import { ListTableSection } from '../components/common/list-table-section';
 import { ListSidePanel } from '../components/common/list-side-panel';
 import { ListToolbarActions } from '../components/common/list-toolbar-actions';
 import { EntityTableHeaderCell } from '../components/common/entity-table-header-cell';
@@ -922,6 +923,7 @@ export const CouriersListScreen: React.FC = () => {
                 </div>
               ) : (
                 <>
+                <ListTableSection isEmpty={false} emptyState={null}>
                 <EntityTableShell
                   ariaLabel="טבלת שליחים"
                   colgroup={
@@ -981,6 +983,7 @@ export const CouriersListScreen: React.FC = () => {
                     );
                   })}
                 </EntityTableShell>
+                </ListTableSection>
                 <SelectionActionBar
                   selectedCount={selectedCourierIds.size}
                   selectionLabel={`נבחרו ${selectedCourierIds.size} שליחים`}

@@ -352,26 +352,6 @@ export const DeliveriesPage: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [dragScrollLeft, setDragScrollLeft] = useState(0);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-
-  const updateScrollIndicators = useCallback(() => {
-    const el = tableScrollRef.current;
-    if (!el) return;
-    setCanScrollLeft(el.scrollLeft > 2);
-    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 2);
-  }, []);
-
-  useEffect(() => {
-    const el = tableScrollRef.current;
-    if (!el) return;
-    updateScrollIndicators();
-    el.addEventListener('scroll', updateScrollIndicators, { passive: true });
-    const ro = new ResizeObserver(updateScrollIndicators);
-    ro.observe(el);
-    return () => { el.removeEventListener('scroll', updateScrollIndicators); ro.disconnect(); };
-  }, [updateScrollIndicators]);
-
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     const el = tableScrollRef.current;
     if (!el) return;
@@ -584,7 +564,6 @@ export const DeliveriesPage: React.FC = () => {
               emptyStateMode={emptyStateMode}
               onClearFilters={handleClearAllFilters}
               totalCount={stats.total}
-              canScrollLeft={canScrollLeft}
               tableScrollRef={tableScrollRef}
               isDragging={isDragging}
               onMouseDown={handleMouseDown}
@@ -611,22 +590,24 @@ export const DeliveriesPage: React.FC = () => {
               onEditDelivery={handleOpenEdit}
               drawerDeliveryId={drawerDeliveryId}
               rowHeight={rowHeight}
-            />
-            <SelectionActionBar
-              selectedCount={selectedIds.size}
-              selectionLabel={`נבחרו ${selectedIds.size} משלוחים`}
-              onClear={() => setSelectedIds(new Set())}
-              actions={
-                <button
-                  type="button"
-                  onClick={() => {
-                    setExportOpen(true);
-                    setColumnsOpen(false);
-                  }}
-                  className="rounded-lg bg-[#16a34a] px-4 py-2 text-sm font-bold text-white shadow-md shadow-[#16a34a]/20 transition-colors hover:bg-[#15803d]"
-                >
-                  ייצוא נבחרים
-                </button>
+              selectionBar={
+                <SelectionActionBar
+                  selectedCount={selectedIds.size}
+                  selectionLabel={`נבחרו ${selectedIds.size} משלוחים`}
+                  onClear={() => setSelectedIds(new Set())}
+                  actions={
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setExportOpen(true);
+                        setColumnsOpen(false);
+                      }}
+                      className="rounded-lg bg-[#16a34a] px-4 py-2 text-sm font-bold text-white shadow-md shadow-[#16a34a]/20 transition-colors hover:bg-[#15803d]"
+                    >
+                      ייצוא נבחרים
+                    </button>
+                  }
+                />
               }
             />
 
