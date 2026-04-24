@@ -765,6 +765,7 @@ export const createInitialDeliveryState = (): DeliveryState => ({
   shifts: buildInitialShifts(),
   restaurants: RESTAURANTS_DATA.map((restaurant) => ({ ...restaurant })),
   customers: CUSTOMERS_DATA.map((customer) => ({ ...customer })),
+  courierRoutePlans: {},
   activityLogs: [],
   deliveryBalance: 500,
   stats: {

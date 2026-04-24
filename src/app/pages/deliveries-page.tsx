@@ -18,6 +18,7 @@ import { ListInlineFilters } from '../components/common/list-inline-filters';
 import { ListToolbarActions } from '../components/common/list-toolbar-actions';
 import { SelectionActionBar } from '../components/common/selection-action-bar';
 import { getDeliveryCustomerCharge, sumDeliveryMoney } from '../utils/delivery-finance';
+import { DELIVERY_STORAGE_KEYS } from '../context/delivery-storage';
 
 const calculateTimeRemaining = (delivery: Delivery): number | null => {
   if (delivery.status === 'delivered' || delivery.status === 'cancelled') return null;
@@ -40,8 +41,8 @@ const formatTime = (seconds: number): string => {
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')} דקות`;
 };
 
-const COLUMN_ORDER_STORAGE_KEY = 'deliveries-column-order';
-const VISIBLE_COLUMNS_STORAGE_KEY = 'deliveries-visible-columns';
+const COLUMN_ORDER_STORAGE_KEY = DELIVERY_STORAGE_KEYS.deliveriesColumnOrder;
+const VISIBLE_COLUMNS_STORAGE_KEY = DELIVERY_STORAGE_KEYS.deliveriesVisibleColumns;
 const STATUS_CHIP_CONFIG = [
   { status: 'pending'    as DeliveryStatus, label: 'ממתין', dot: 'bg-orange-500', active: 'bg-orange-500/10 text-orange-600 dark:text-orange-400' },
   { status: 'assigned'   as DeliveryStatus, label: 'שובץ',  dot: 'bg-yellow-500', active: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400' },

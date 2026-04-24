@@ -25,6 +25,9 @@ import { DistancePricingPage } from './pages/distance-pricing-page';
 import { DeliveryProvider } from './context/delivery.context';
 import { ThemeProvider } from './context/theme.context';
 import { LanguageProvider } from './context/language.context';
+import { getNavItemById } from './app-navigation';
+
+const routePath = (id: string) => getNavItemById(id)?.routePath ?? id;
 
 export const router = createBrowserRouter([
   {
@@ -55,53 +58,53 @@ export const router = createBrowserRouter([
       },
       // === Core ===
       {
-        path: 'dashboard',
+        path: routePath('dashboard'),
         element: <Dashboard />,
       },
       {
-        path: 'live',
+        path: routePath('live'),
         element: <LiveManager />,
       },
       // === Data ===
       {
-        path: 'deliveries',
+        path: routePath('deliveries'),
         element: <DeliveriesPage />,
       },
       {
-        path: 'reports',
+        path: routePath('reports'),
         element: <ReportsPage />,
       },
       {
-        path: 'performance',
+        path: routePath('performance'),
         element: <PerformancePage />,
       },
       {
-        path: 'log',
+        path: routePath('log'),
         element: <LogPage />,
       },
       {
-        path: 'delivery-balance',
+        path: routePath('delivery-balance'),
         element: <DeliveryBalancePage />,
       },
       {
-        path: 'wallet',
+        path: routePath('wallet'),
         element: <WalletPage />,
       },
       // === Entities ===
       {
-        path: 'couriers',
+        path: routePath('couriers'),
         element: <CouriersListPage />,
       },
       {
-        path: 'couriers/shifts',
+        path: routePath('courier-shifts'),
         element: <CouriersPage />,
       },
       {
-        path: 'restaurants',
+        path: routePath('restaurants'),
         element: <RestaurantsPage />,
       },
       {
-        path: 'customers',
+        path: routePath('customers'),
         element: <CustomersPage />,
       },
       // === Entity Details ===
@@ -124,19 +127,19 @@ export const router = createBrowserRouter([
       // === Business & Finance ===
       // === Settings ===
       {
-        path: 'settings',
+        path: routePath('settings'),
         element: <SettingsPage />,
       },
       {
-        path: 'hours',
+        path: routePath('hours'),
         element: <OperatingHoursPage />,
       },
       {
-        path: 'zones',
+        path: routePath('zones'),
         element: <DeliveryZonesPage />,
       },
       {
-        path: 'distance-pricing',
+        path: routePath('distance-pricing'),
         element: <DistancePricingPage />,
       },
 

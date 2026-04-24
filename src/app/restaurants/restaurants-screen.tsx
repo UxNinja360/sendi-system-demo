@@ -54,6 +54,7 @@ import {
   ENTITY_TABLE_ROW_CLASS,
   ENTITY_TABLE_WIDTHS,
 } from '../components/common/entity-table-shared';
+import { DELIVERY_STORAGE_KEYS } from '../context/delivery-storage';
 
 // ═══════════════════════════════════════
 // Types
@@ -124,8 +125,8 @@ const getRestaurantColumnWidth = (columnId: RestaurantColId) => {
 };
 type RestaurantColId = typeof RESTAURANT_COLS[number]['id'];
 type RestaurantSortableColumnId = RestaurantColId;
-const COL_ORDER_KEY = 'restaurants-column-order-v3';
-const RESTAURANT_VISIBLE_COLUMNS_KEY = 'restaurants-visible-columns-v1';
+const COL_ORDER_KEY = DELIVERY_STORAGE_KEYS.restaurantsColumnOrder;
+const RESTAURANT_VISIBLE_COLUMNS_KEY = DELIVERY_STORAGE_KEYS.restaurantsVisibleColumns;
 const RESTAURANT_COLUMN_CATEGORIES = [
   {
     id: 'core',

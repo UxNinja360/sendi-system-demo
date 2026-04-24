@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, type SetStateAction } from 'react';
 import { useNavigate } from 'react-router';
 import { useDelivery } from '../context/delivery-context-value';
 import { LiveDeliveriesTab } from '../live/live-deliveries-tab';
@@ -24,8 +24,10 @@ import type { Delivery } from '../types/delivery.types';
 import {
   buildDefaultRouteStopIds,
 } from '../utils/pickup-batches';
-const LIVE_MANAGER_ROUTE_STOP_ORDERS_STORAGE_KEY = 'sendi-live-manager-route-stop-orders';
-const LIVE_MANAGER_COURIER_POSITIONS_STORAGE_KEY = 'sendi-live-manager-courier-positions';
+import { DELIVERY_STORAGE_KEYS } from '../context/delivery-storage';
+
+const LIVE_MANAGER_ROUTE_STOP_ORDERS_STORAGE_KEY = DELIVERY_STORAGE_KEYS.liveRouteStopOrders;
+const LIVE_MANAGER_COURIER_POSITIONS_STORAGE_KEY = DELIVERY_STORAGE_KEYS.liveCourierPositions;
 
 // Live manager page shell.
 export const LiveManager: React.FC = () => {
@@ -79,18 +81,23 @@ export const LiveManager: React.FC = () => {
     couriers: state.couriers,
     setActiveTab,
   });
-  const [routeStopOrders, setRouteStopOrders] = useState<Record<string, string[]>>(() => {
-    if (typeof window === 'undefined') return {};
+  const routeStopOrders = state.courierRoutePlans;
+  const routeStopOrdersRef = useRef(routeStopOrders);
 
-    try {
-      const saved = window.localStorage.getItem(LIVE_MANAGER_ROUTE_STOP_ORDERS_STORAGE_KEY);
-      if (!saved) return {};
-      const parsed = JSON.parse(saved);
-      return parsed && typeof parsed === 'object' ? parsed : {};
-    } catch {
-      return {};
-    }
-  }); // Route stop order per courier.
+  useEffect(() => {
+    routeStopOrdersRef.current = routeStopOrders;
+  }, [routeStopOrders]);
+
+  const setRouteStopOrders = useCallback((updater: SetStateAction<Record<string, string[]>>) => {
+    const currentRouteStopOrders = routeStopOrdersRef.current;
+    const nextRouteStopOrders =
+      typeof updater === 'function' ? updater(currentRouteStopOrders) : updater;
+
+    dispatch({
+      type: 'SET_COURIER_ROUTE_PLANS',
+      payload: nextRouteStopOrders,
+    });
+  }, [dispatch]);
 
   const handleMapRestaurantShowDetails = useCallback((restaurantId: string) => {
     navigate(`/restaurant/${restaurantId}`);

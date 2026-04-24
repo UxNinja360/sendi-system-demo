@@ -5,43 +5,31 @@ import {
   Activity,
   Users,
   BarChart,
-  CreditCard,
   Settings,
-  LogOut,
   X,
   ChevronLeft,
-  ChevronRight,
   Sidebar as SidebarIcon,
-  ChevronDown,
   Store,
-  MapPin,
   HelpCircle,
-  Building2,
-  Radio,
   Package,
   Power,
   Bike,
   Calendar,
-  UserCircle,
-  Signal,
   TrendingUp,
   Ruler,
   Clock,
-  Zap,
 
   FileText,
   Map,
-  Palette,
-  User,
   Wallet,
-  // icons
 } from 'lucide-react';
 import { AppLogo } from '../icons/app-logo';
 import { useDelivery } from '../../context/delivery-context-value';
-import { useTheme } from '../../context/theme.context';
 import { useLanguage } from '../../context/language.context';
 import { getDeliveryCustomerCharge } from '../../utils/delivery-finance';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import { SIDEBAR_NAV_SECTIONS, isNavItemActive } from '../../app-navigation';
+import type { AppNavIconKey, AppNavItem } from '../../app-navigation';
 
 interface SidebarProps {
   onLogout: () => void;
@@ -62,11 +50,28 @@ const SidebarIconTooltip: React.FC<SidebarIconTooltipProps> = ({ label, children
   </Tooltip>
 );
 
+const NAV_ICON_MAP: Record<AppNavIconKey, React.FC<React.SVGProps<SVGSVGElement>>> = {
+  activity: Activity,
+  barChart: BarChart,
+  bike: Bike,
+  calendar: Calendar,
+  clock: Clock,
+  fileText: FileText,
+  layoutDashboard: LayoutDashboard,
+  map: Map,
+  package: Package,
+  ruler: Ruler,
+  settings: Settings,
+  store: Store,
+  trendingUp: TrendingUp,
+  users: Users,
+  wallet: Wallet,
+};
+
 export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { state, dispatch } = useDelivery();
-  const { isDark, toggleDark } = useTheme();
   const { t } = useLanguage();
   const activeDeliveriesCount = state.deliveries.filter(
     delivery => delivery.status !== 'delivered' && delivery.status !== 'cancelled'
@@ -92,7 +97,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
   const [isBusinessPopupOpen, setIsBusinessPopupOpen] = useState(false);
   const [selectedBusiness, setSelectedBusiness] = useState('Tel Aviv - Runners');
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 768);
-  const [isBalancePopupOpen, setIsBalancePopupOpen] = useState(false);
   const businesses = [
     'Tel Aviv - Runners',
     'Mr. Delivery',
@@ -139,23 +143,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
     };
   }, []);
 
-  interface MenuItem {
-    id?: string;
-    icon?: React.FC<React.SVGProps<SVGSVGElement>>;
-    label?: string;
-    divider?: boolean;
-  }
-
-  const menuItems: MenuItem[] = [
-    { id: '/live', icon: Activity, label: 'מנג׳ר לייב' },
-    { id: '/dashboard', icon: LayoutDashboard, label: 'דשבורד' },
-    { divider: true },
-    { id: '/deliveries', icon: Package, label: 'משלוחים' },
-    { id: '/couriers', icon: Bike, label: 'שליחים' },
-    { id: '/couriers/shifts', icon: Calendar, label: 'משמרות' },
-    { divider: true },
-  ];
-
   const toggleMobileMenu = () => setIsCollapsed(!isCollapsed);
   const closeMobileMenu = () => {
     // Close sidebar - set isCollapsed to false (in mobile this hides the sidebar)
@@ -168,17 +155,63 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
     closeMobileMenu();
   };
 
-  // Helper to check if a menu item is active
-  const isMenuItemActive = (menuPath: string) => {
-    if (menuPath === '/dashboard' || menuPath === '/live') {
-      return location.pathname === menuPath;
+  const getNavBadge = (item: AppNavItem) => {
+    if (item.badge === 'activeDeliveries') {
+      return activeDeliveriesCount.toLocaleString('he-IL');
     }
-    // Support for separate pages
-    if (menuPath === '/deliveries' || menuPath === '/couriers' || menuPath === '/couriers/shifts' || menuPath === '/restaurants' || menuPath === '/customers' || menuPath === '/zones' || menuPath === '/distance-pricing' || menuPath === '/hours' || menuPath === '/wallet' || menuPath === '/log' || menuPath === '/delivery-balance') {
-      return location.pathname === menuPath;
+
+    if (item.badge === 'deliveryBalance') {
+      return state.deliveryBalance.toLocaleString('he-IL');
     }
-    // /data pages removed - no longer needed
-    return false;
+
+    if (item.badge === 'walletRevenue') {
+      return `₪${Math.round(walletRevenue).toLocaleString('he-IL')}`;
+    }
+
+    return null;
+  };
+
+  const renderNavItem = (item: AppNavItem) => {
+    const Icon = NAV_ICON_MAP[item.icon];
+    const isActive = isNavItemActive(item, location.pathname);
+    const badge = getNavBadge(item);
+
+    return (
+      <div
+        key={item.id}
+        data-onboarding={item.id === 'live' ? 'nav-live' : item.id === 'restaurants' ? 'nav-restaurants' : item.id === 'couriers' ? 'nav-couriers' : undefined}
+        onClick={(e) => {
+          e.stopPropagation();
+          handleNav(item.path);
+        }}
+        className={`
+          mx-2 mb-1 rounded-lg cursor-pointer transition-all duration-200 relative
+          ${isActive
+            ? 'bg-[#f5f5f5] dark:bg-[#262626] text-[#16a34a] dark:text-[#22c55e]'
+            : 'text-[#737373] dark:text-[#a3a3a3] hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a] hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
+          }
+        `}
+      >
+        {!isCollapsed || !isDesktop ? (
+          <div className="flex items-center gap-3 px-4 py-2.5">
+            <Icon size={19} className="shrink-0 stroke-[1.8px]" />
+            <span className="min-w-0 flex-1 truncate text-sm font-medium">{item.label}</span>
+            {badge && (
+              <span className="shrink-0 text-[11px] font-medium tabular-nums text-[#a3a3a3] dark:text-[#737373]">
+                {badge}
+              </span>
+            )}
+          </div>
+        ) : (
+          <SidebarIconTooltip
+            label={badge ? `${item.label} • ${badge}` : item.label}
+            className="flex items-center justify-center py-2.5"
+          >
+            <Icon size={19} className="stroke-[1.8px]" />
+          </SidebarIconTooltip>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -318,6 +351,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
           }}
           className="flex-1 overflow-y-auto py-2 scrollbar-thin scrollbar-thumb-[#d4d4d4] dark:scrollbar-thumb-[#404040] bg-[#fafafa] dark:bg-[#0a0a0a] cursor-pointer"
         >
+          {SIDEBAR_NAV_SECTIONS.map((section, sectionIndex) => (
+            <React.Fragment key={section.id}>
+              {sectionIndex > 0 && (
+                <div className="my-2 mx-4 border-t border-[#e5e5e5] dark:border-[#262626]" />
+              )}
+              {(!isCollapsed || !isDesktop) && (
+                <div className="px-4 pb-1 pt-2 text-[10px] font-bold uppercase tracking-wider text-[#a3a3a3] dark:text-[#555]">
+                  {section.label}
+                </div>
+              )}
+              {section.items.map(renderNavItem)}
+            </React.Fragment>
+          ))}
+          <div className="hidden" aria-hidden="true">
           {/* Live manager */}
           <div
             data-onboarding="nav-live"
@@ -651,6 +698,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
             )}
           </div>
 
+          </div>
         </div>
 
         {/* Footer */}

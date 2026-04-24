@@ -37,6 +37,7 @@ import {
   ENTITY_TABLE_ROW_CLASS,
   ENTITY_TABLE_WIDTHS,
 } from '../components/common/entity-table-shared';
+import { DELIVERY_STORAGE_KEYS } from '../context/delivery-storage';
 
 const TEXT = {
   pageTitle: '\u05e9\u05dc\u05d9\u05d7\u05d9\u05dd',
@@ -83,7 +84,7 @@ const TEXT = {
 } as const;
 
 const VEHICLE_TYPES: Courier['vehicleType'][] = ['אופנוע', 'רכב', 'קורקינט'];
-const COURIER_VISIBLE_COLUMNS_KEY = 'couriers-visible-columns-v1';
+const COURIER_VISIBLE_COLUMNS_KEY = DELIVERY_STORAGE_KEYS.couriersVisibleColumns;
 const COURIER_STATUS_FILTER_OPTIONS: SingleSelectFilterOption[] = [
   { id: 'all', label: 'סטטוס' },
   { id: 'available', label: 'זמין' },

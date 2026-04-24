@@ -5,6 +5,9 @@ import { useDelivery } from '../context/delivery-context-value';
 import { Courier, DayOfWeek, ShiftSlotTemplate, ShiftTemplate, ShiftType } from '../types/delivery.types';
 import { useNavigate } from 'react-router';
 import { formatWorkedDuration, getAssignmentWorkedMinutes } from '../utils/shift-work';
+import { DELIVERY_STORAGE_KEYS } from '../context/delivery-storage';
+
+const COLLAPSED_TEMPLATES_STORAGE_KEY = DELIVERY_STORAGE_KEYS.shiftsCollapsedTemplates;
 
 // Time segment supports both arrow buttons and click-to-type input.
 const TimeSegment: React.FC<{
@@ -222,7 +225,7 @@ export const CouriersShifts: React.FC = () => {
   const [popupSearch, setPopupSearch] = useState('');
   const [collapsedTemplates, setCollapsedTemplates] = useState<Record<string, boolean>>(() => {
     try {
-      const saved = localStorage.getItem('shifts-collapsed-templates');
+      const saved = localStorage.getItem(COLLAPSED_TEMPLATES_STORAGE_KEY);
       return saved ? JSON.parse(saved) : {};
     } catch {
       return {};
@@ -614,7 +617,7 @@ export const CouriersShifts: React.FC = () => {
   const toggleTemplateCollapsed = (templateId: string) => {
     setCollapsedTemplates((prev) => {
       const next = { ...prev, [templateId]: !prev[templateId] };
-      try { localStorage.setItem('shifts-collapsed-templates', JSON.stringify(next)); } catch {}
+      try { localStorage.setItem(COLLAPSED_TEMPLATES_STORAGE_KEY, JSON.stringify(next)); } catch {}
       return next;
     });
   };

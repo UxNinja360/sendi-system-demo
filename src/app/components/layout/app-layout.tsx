@@ -5,6 +5,7 @@ import { Breadcrumbs } from './breadcrumbs';
 import { PageLoader } from '../ui/page-loader';
 import { LoadingBar } from '../ui/loading-bar';
 import { Toaster } from '../common/toaster';
+import { APP_MANAGED_SCROLL_PATHS } from '../../app-navigation';
 
 export const AppLayout: React.FC = () => {
   const [isPageLoading, setIsPageLoading] = useState(false);
@@ -42,23 +43,8 @@ export const AppLayout: React.FC = () => {
   };
 
   const isLivePage = location.pathname === '/live';
-  const managedScrollRoutes = new Set([
-    '/dashboard',
-    '/deliveries',
-    '/couriers',
-    '/couriers/shifts',
-    '/restaurants',
-    '/customers',
-    '/settings',
-    '/wallet',
-    '/delivery-balance',
-    '/reports',
-    '/performance',
-    '/log',
-    '/hours',
-    '/distance-pricing',
-  ]);
-  const isManagedScrollPage = isLivePage || managedScrollRoutes.has(location.pathname);
+  const isManagedScrollPage =
+    isLivePage || APP_MANAGED_SCROLL_PATHS.has(location.pathname);
   const isLoading = navigation.state === 'loading';
 
   return (

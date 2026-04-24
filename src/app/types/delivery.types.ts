@@ -376,6 +376,7 @@ export interface DeliveryState {
   shifts: WorkShift[];
   restaurants: Restaurant[];
   customers: Customer[];
+  courierRoutePlans: Record<string, string[]>;
   activityLogs: ActivityLogEntry[];
   deliveryBalance: number; // יתרת משלוחים זמינוים
   stats: {
@@ -468,6 +469,9 @@ export type DeliveryAction =
   | { type: 'COMPLETE_DELIVERY'; payload: string }
   | { type: 'ADD_DELIVERY_BALANCE'; payload: number } // הוספת יתרת משלוחים
   | { type: 'REORDER_DELIVERY'; payload: { deliveryId: string; newPriority: number } } // שינוי סדר משלוח בתוך שליח
+  | { type: 'SET_COURIER_ROUTE_PLANS'; payload: Record<string, string[]> }
+  | { type: 'SET_COURIER_ROUTE_PLAN'; payload: { courierId: string; stopIds: string[] } }
+  | { type: 'CLEAR_COURIER_ROUTE_PLAN'; payload: string }
   | { type: 'ADD_ACTIVITY_LOG'; payload: ActivityLogEntry }
   | { type: 'CLEAR_ACTIVITY_LOGS' }
   | { type: 'RESET_SYSTEM'; payload: DeliveryState };

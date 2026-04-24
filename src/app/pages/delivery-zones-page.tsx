@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Menu, Plus, Trash2, Pencil, Check, X, MapPin } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { DELIVERY_STORAGE_KEYS } from '../context/delivery-storage';
 
 interface Zone {
   id: string;
@@ -13,7 +14,7 @@ interface Zone {
 
 type StoredZone = Omit<Zone, 'polygon' | 'label'>;
 
-const STORAGE_KEY = 'delivery_zones_v1';
+const STORAGE_KEY = DELIVERY_STORAGE_KEYS.deliveryZones;
 
 function loadStoredZones(): StoredZone[] {
   try {

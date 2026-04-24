@@ -27,13 +27,18 @@ import {
   normalizeDeliveryPreparationTime,
 } from './delivery-bootstrap';
 import { sanitizeLoadedDeliveryState } from './delivery-state-sanitizer';
+import {
+  DELIVERY_STORAGE_KEYS,
+  clearSystemResetStorage,
+  createStorageEpoch,
+  ensureStorageEpoch,
+} from './delivery-storage';
 
-const STORAGE_KEY = 'sendi-delivery-state';
-const STATE_EPOCH_KEY = 'sendi-delivery-state-epoch';
-const LIVE_MANAGER_ON_SHIFT_ONLY_STORAGE_KEY = 'sendi-live-manager-on-shift-only';
-const LIVE_MANAGER_ROUTE_STOP_ORDERS_STORAGE_KEY = 'sendi-live-manager-route-stop-orders';
-const LIVE_MANAGER_COURIER_POSITIONS_STORAGE_KEY = 'sendi-live-manager-courier-positions';
-const LIVE_MANAGER_COURIER_POSITIONS_TS_STORAGE_KEY = 'sendi-live-manager-courier-positions-ts';
+const STORAGE_KEY = DELIVERY_STORAGE_KEYS.state;
+const STATE_EPOCH_KEY = DELIVERY_STORAGE_KEYS.stateEpoch;
+const LIVE_MANAGER_ROUTE_STOP_ORDERS_STORAGE_KEY = DELIVERY_STORAGE_KEYS.liveRouteStopOrders;
+const LIVE_MANAGER_COURIER_POSITIONS_STORAGE_KEY = DELIVERY_STORAGE_KEYS.liveCourierPositions;
+const LIVE_MANAGER_COURIER_POSITIONS_TS_STORAGE_KEY = DELIVERY_STORAGE_KEYS.liveCourierPositionTimestamps;
 const SIMULATION_TICK_MS = 5000;
 const MIN_GLOBAL_DELIVERY_GAP_MS = 12000;
 const MIN_ACTIVE_SIMULATED_DELIVERIES = 8;
@@ -42,56 +47,6 @@ const ACTIVE_DELIVERIES_PER_RESTAURANT = 2;
 const ACTIVE_DELIVERIES_PER_ON_SHIFT_COURIER = 4;
 const INITIAL_RESTAURANT_STAGGER_MIN_MS = 2500;
 const INITIAL_RESTAURANT_STAGGER_RANGE_MS = 27500;
-const RESET_STORAGE_KEYS = [
-  STORAGE_KEY,
-  LIVE_MANAGER_ON_SHIFT_ONLY_STORAGE_KEY,
-  LIVE_MANAGER_ROUTE_STOP_ORDERS_STORAGE_KEY,
-  LIVE_MANAGER_COURIER_POSITIONS_STORAGE_KEY,
-  LIVE_MANAGER_COURIER_POSITIONS_TS_STORAGE_KEY,
-  'liveManagerPanelSize',
-  'shifts-collapsed-templates',
-  'deliveries-column-order',
-  'deliveries-visible-columns',
-  'couriers-visible-columns-v1',
-  'restaurants-column-order-v3',
-  'restaurants-visible-columns-v1',
-  'delivery_zones_v1',
-] as const;
-const RESET_STORAGE_KEY_PREFIXES = [
-  'sendi-live-manager-',
-  'deliveries-',
-  'couriers-',
-  'restaurants-',
-  'shifts-',
-  'delivery_zones_',
-] as const;
-
-const createStorageEpoch = () =>
-  `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-
-const ensureStorageEpoch = (storage: Storage) => {
-  const existing = storage.getItem(STATE_EPOCH_KEY);
-  if (existing) return existing;
-
-  const next = createStorageEpoch();
-  storage.setItem(STATE_EPOCH_KEY, next);
-  return next;
-};
-
-const shouldClearOnSystemReset = (key: string) =>
-  RESET_STORAGE_KEYS.includes(key as (typeof RESET_STORAGE_KEYS)[number]) ||
-  RESET_STORAGE_KEY_PREFIXES.some((prefix) => key.startsWith(prefix));
-
-const clearSystemResetStorage = (storage: Storage) => {
-  const keys = Array.from({ length: storage.length }, (_, index) => storage.key(index))
-    .filter((key): key is string => !!key);
-
-  keys.forEach((key) => {
-    if (shouldClearOnSystemReset(key)) {
-      storage.removeItem(key);
-    }
-  });
-};
 
 const createActivityLogEntry = (action: DeliveryAction, state: DeliveryState): ActivityLogEntry | null => {
   const now = new Date();
@@ -387,6 +342,31 @@ const createAssignCourierPayload = (
   ...getStoredCourierAssignPosition(courierId),
 });
 
+const normalizeStoredRoutePlans = (value: unknown): Record<string, string[]> => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>)
+      .filter(([, stopIds]) => Array.isArray(stopIds))
+      .map(([courierId, stopIds]) => [
+        courierId,
+        (stopIds as unknown[]).filter((stopId): stopId is string => typeof stopId === 'string'),
+      ])
+  );
+};
+
+const readStoredRouteStopOrders = (): Record<string, string[]> => {
+  if (typeof window === 'undefined') return {};
+
+  try {
+    const raw = window.localStorage.getItem(LIVE_MANAGER_ROUTE_STOP_ORDERS_STORAGE_KEY);
+    if (!raw) return {};
+    return normalizeStoredRoutePlans(JSON.parse(raw));
+  } catch {
+    return {};
+  }
+};
+
 const loadInitialState = (baseState: DeliveryState): DeliveryState => {
   if (typeof window === 'undefined') return baseState;
 
@@ -404,12 +384,17 @@ const loadInitialState = (baseState: DeliveryState): DeliveryState => {
     const couriers = normalizeCouriers(
       (parsed.couriers as Courier[] | undefined) ?? baseState.couriers
     );
+    const courierRoutePlans =
+      'courierRoutePlans' in parsed
+        ? normalizeStoredRoutePlans(parsed.courierRoutePlans)
+        : readStoredRouteStopOrders();
 
     const loadedState = {
       ...baseState,
       ...parsed,
       couriers,
       restaurants,
+      courierRoutePlans,
       deliveries: ((parsed.deliveries as Delivery[] | undefined) ?? baseState.deliveries).map(delivery =>
         normalizeDeliveryPreparationTime(delivery, restaurants)
       ),
@@ -508,19 +493,6 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const courierPositionsRef = useRef<Map<string, MapPosition>>(new Map());
   const courierPositionTimestampsRef = useRef<Map<string, number>>(new Map());
   const simulationOpenedAtRef = useRef<number | null>(null);
-
-  const getStoredRouteStopOrders = useCallback((): Record<string, string[]> => {
-    if (typeof window === 'undefined') return {};
-
-    try {
-      const raw = window.localStorage.getItem(LIVE_MANAGER_ROUTE_STOP_ORDERS_STORAGE_KEY);
-      if (!raw) return {};
-      const parsed = JSON.parse(raw);
-      return parsed && typeof parsed === 'object' ? parsed : {};
-    } catch {
-      return {};
-    }
-  }, []);
 
   // Reuse the seeded restaurant id when the name matches.
   const getRestaurantId = (restaurantName: string): string => {
@@ -1029,7 +1001,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         state: stateRef.current,
         currentPositions: courierPositionsRef.current,
         currentTimestamps: courierPositionTimestampsRef.current,
-        routeStopOrders: getStoredRouteStopOrders(),
+        routeStopOrders: stateRef.current.courierRoutePlans,
       });
 
       if (tick.positionChanged) {
@@ -1084,7 +1056,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [getStoredRouteStopOrders]);
+  }, []);
 
   const toggleSystem = () => {
     dispatch({ type: 'TOGGLE_SYSTEM' });

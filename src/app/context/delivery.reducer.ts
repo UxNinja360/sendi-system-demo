@@ -17,6 +17,7 @@ import {
   hasValidPosition,
   type MapPosition,
 } from '../live/live-simulation-engine';
+import { reconcileCourierDeliveryInvariants } from './delivery-state-invariants';
 
 const getCourierStatusAfterLoadChange = (
   courierStatus: 'available' | 'busy' | 'offline',
@@ -1683,7 +1684,7 @@ const appendActivityLogEntry = (
   entry: DeliveryState['activityLogs'][number]
 ) => [entry, ...activityLogs].slice(0, 500);
 
-export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): DeliveryState => {
+const reduceDeliveryState = (state: DeliveryState, action: DeliveryAction): DeliveryState => {
   switch (action.type) {
     case 'TOGGLE_SYSTEM':
       return {
@@ -2232,6 +2233,31 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
       };
     }
 
+    case 'SET_COURIER_ROUTE_PLANS':
+      return {
+        ...state,
+        courierRoutePlans: action.payload,
+      };
+
+    case 'SET_COURIER_ROUTE_PLAN':
+      return {
+        ...state,
+        courierRoutePlans: {
+          ...state.courierRoutePlans,
+          [action.payload.courierId]: action.payload.stopIds,
+        },
+      };
+
+    case 'CLEAR_COURIER_ROUTE_PLAN': {
+      const { [action.payload]: _removedRoutePlan, ...remainingRoutePlans } =
+        state.courierRoutePlans;
+
+      return {
+        ...state,
+        courierRoutePlans: remainingRoutePlans,
+      };
+    }
+
     case 'ADD_ACTIVITY_LOG':
       return {
         ...state,
@@ -2251,3 +2277,6 @@ export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): D
       return state;
   }
 };
+
+export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): DeliveryState =>
+  reconcileCourierDeliveryInvariants(reduceDeliveryState(state, action));

@@ -1,8 +1,9 @@
 ﻿import { useCallback, useEffect, useState } from 'react';
 import { useLocation } from 'react-router';
+import { DELIVERY_STORAGE_KEYS } from '../context/delivery-storage';
 
-const LIVE_MANAGER_ON_SHIFT_ONLY_STORAGE_KEY = 'sendi-live-manager-on-shift-only';
-const LIVE_MANAGER_PANEL_SIZE_STORAGE_KEY = 'liveManagerPanelSize';
+const LIVE_MANAGER_ON_SHIFT_ONLY_STORAGE_KEY = DELIVERY_STORAGE_KEYS.liveOnShiftFilter;
+const LIVE_MANAGER_PANEL_SIZE_STORAGE_KEY = DELIVERY_STORAGE_KEYS.livePanelSize;
 
 type TabType = 'deliveries' | 'couriers';
 type SortBy = 'time' | 'status' | 'restaurant' | 'address' | 'ready';
