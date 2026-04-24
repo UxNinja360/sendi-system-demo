@@ -77,6 +77,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
   // Load collapsed state from localStorage
   const [isCollapsed, setIsCollapsed] = useState(() => {
     try {
+      if (window.innerWidth < 768) {
+        return false;
+      }
+
       const saved = localStorage.getItem('sidebar-collapsed');
       return saved ? JSON.parse(saved) : false;
     } catch {
@@ -108,6 +112,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
     const handleResize = () => {
       const desktop = window.innerWidth >= 768;
       setIsDesktop(desktop);
+
+      if (!desktop) {
+        setIsCollapsed(false);
+      }
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
