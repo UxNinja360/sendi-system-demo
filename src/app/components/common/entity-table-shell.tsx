@@ -136,7 +136,7 @@ export const EntityTableShell: React.FC<EntityTableShellProps> = ({
     };
   }, []);
 
-  useEffect(() => {
+  React.useLayoutEffect(() => {
     const element = containerRef.current;
     if (!element || hasInitializedHorizontalPositionRef.current) return;
 
@@ -144,39 +144,15 @@ export const EntityTableShell: React.FC<EntityTableShellProps> = ({
       const maxScrollLeft = element.scrollWidth - element.clientWidth;
       if (maxScrollLeft <= 0) return false;
 
+      const previousScrollBehavior = element.style.scrollBehavior;
+      element.style.scrollBehavior = 'auto';
       element.scrollLeft = maxScrollLeft;
+      element.style.scrollBehavior = previousScrollBehavior;
       hasInitializedHorizontalPositionRef.current = true;
       return true;
     };
 
-    if (alignToRtlStartEdge()) {
-      return;
-    }
-
-    const frame = requestAnimationFrame(() => {
-      alignToRtlStartEdge();
-    });
-
-    let resizeObserver: ResizeObserver | null = null;
-    if (!hasInitializedHorizontalPositionRef.current && typeof ResizeObserver !== 'undefined') {
-      resizeObserver = new ResizeObserver(() => {
-        if (alignToRtlStartEdge()) {
-          resizeObserver?.disconnect();
-        }
-      });
-
-      resizeObserver.observe(element);
-
-      const table = element.querySelector('table');
-      if (table) {
-        resizeObserver.observe(table);
-      }
-    }
-
-    return () => {
-      cancelAnimationFrame(frame);
-      resizeObserver?.disconnect();
-    };
+    alignToRtlStartEdge();
   }, []);
 
   return (
