@@ -1,5 +1,4 @@
 ﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Menu } from 'lucide-react';
 import { useDelivery } from '../context/delivery.context';
 import { Delivery } from '../types/delivery.types';
 import { LiveDeliveriesTab } from '../live/live-deliveries-tab';
@@ -774,17 +773,6 @@ export const LiveManager: React.FC = () => {
     <>
       {/* Main layout */}
       <div className="flex flex-col h-screen w-full overflow-hidden relative bg-[#f5f5f5] dark:bg-[#0a0a0a] touch-none">
-        
-        {/* Mobile menu button */}
-        <div className="md:hidden absolute top-4 right-4 z-50">
-          <button
-            onClick={openMobileSidebar}
-            className="p-3 bg-white dark:bg-[#171717] rounded-xl shadow-lg border border-[#e5e5e5] dark:border-[#262626] hover:bg-[#fafafa] dark:hover:bg-[#262626] active:scale-95 transition-all"
-          >
-            <Menu className="w-6 h-6 text-[#0d0d12] dark:text-white" />
-          </button>
-        </div>
-
         {/* Full-screen map */}
         <div className="absolute inset-0 z-0">
           <LeafletMap
