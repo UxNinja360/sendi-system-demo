@@ -53,26 +53,105 @@ export const EntityTableShell: React.FC<EntityTableShellProps> = ({
   onMouseUp,
   onMouseLeave,
   style,
-}) => (
-  <div
-    ref={scrollContainerRef}
-    className={['app-table-shell relative flex-1 overflow-auto min-w-0', wrapperClassName].filter(Boolean).join(' ')}
-    onMouseDown={onMouseDown}
-    onMouseMove={onMouseMove}
-    onMouseUp={onMouseUp}
-    onMouseLeave={onMouseLeave}
-    style={style}
-    dir="ltr"
-  >
-    <table className={tableClassName} role="grid" aria-label={ariaLabel} dir="rtl">
-      {colgroup}
-      <thead className={theadClassName}>
-        {headerRow}
-      </thead>
-      <tbody>{children}</tbody>
-    </table>
-  </div>
-);
+}) => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const touchStartRef = useRef<{
+    x: number;
+    y: number;
+  } | null>(null);
+
+  const setContainerRef = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      containerRef.current = node;
+
+      if (scrollContainerRef) {
+        scrollContainerRef.current = node;
+      }
+    },
+    [scrollContainerRef],
+  );
+
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element) return;
+
+    const handleTouchStart = (event: TouchEvent) => {
+      if (event.touches.length !== 1) return;
+
+      touchStartRef.current = {
+        x: event.touches[0].clientX,
+        y: event.touches[0].clientY,
+      };
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      const touchStart = touchStartRef.current;
+      if (!touchStart || event.touches.length !== 1) return;
+
+      const touch = event.touches[0];
+      const deltaX = touch.clientX - touchStart.x;
+      const deltaY = touch.clientY - touchStart.y;
+      const isVerticalGesture = Math.abs(deltaY) >= Math.abs(deltaX);
+
+      if (isVerticalGesture) {
+        const maxScrollTop = element.scrollHeight - element.clientHeight;
+        const atTop = element.scrollTop <= 0;
+        const atBottom = element.scrollTop >= maxScrollTop - 1;
+
+        if ((atTop && deltaY > 0) || (atBottom && deltaY < 0)) {
+          event.preventDefault();
+        }
+
+        return;
+      }
+
+      const maxScrollLeft = element.scrollWidth - element.clientWidth;
+      const atLeftEdge = element.scrollLeft <= 0;
+      const atRightEdge = element.scrollLeft >= maxScrollLeft - 1;
+
+      if ((atLeftEdge && deltaX > 0) || (atRightEdge && deltaX < 0)) {
+        event.preventDefault();
+      }
+    };
+
+    const clearTouchState = () => {
+      touchStartRef.current = null;
+    };
+
+    element.addEventListener('touchstart', handleTouchStart, { passive: true });
+    element.addEventListener('touchmove', handleTouchMove, { passive: false });
+    element.addEventListener('touchend', clearTouchState, { passive: true });
+    element.addEventListener('touchcancel', clearTouchState, { passive: true });
+
+    return () => {
+      element.removeEventListener('touchstart', handleTouchStart);
+      element.removeEventListener('touchmove', handleTouchMove);
+      element.removeEventListener('touchend', clearTouchState);
+      element.removeEventListener('touchcancel', clearTouchState);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={setContainerRef}
+      className={['app-table-shell relative flex-1 overflow-auto min-w-0', wrapperClassName].filter(Boolean).join(' ')}
+      onMouseDown={onMouseDown}
+      onMouseMove={onMouseMove}
+      onMouseUp={onMouseUp}
+      onMouseLeave={onMouseLeave}
+      style={style}
+      dir="ltr"
+    >
+      <table className={tableClassName} role="grid" aria-label={ariaLabel} dir="rtl">
+        {colgroup}
+        <thead className={theadClassName}>
+          {headerRow}
+        </thead>
+        <tbody>{children}</tbody>
+      </table>
+    </div>
+  );
+};
 
 export const EntityTableHeaderCheckbox: React.FC<EntityTableCheckboxProps> = ({
   checked,

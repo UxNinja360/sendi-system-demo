@@ -63,7 +63,7 @@ body {
   overflow-x: auto;
   overflow-y: auto;
   overscroll-behavior-x: none;
-  overscroll-behavior-y: contain;
+  overscroll-behavior-y: none;
   -webkit-overflow-scrolling: auto;
   overflow-anchor: none;
   background: inherit;
