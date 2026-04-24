@@ -1,7 +1,7 @@
 ﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Delivery, DeliveryStatus, Courier } from '../types/delivery.types';
-import { DeliveryTableRow, RowHeight } from './delivery-table-row';
+import { DeliveryTableRow } from './delivery-table-row';
 import { EnhancedEmptyState } from './enhanced-empty-state';
 import type { ColumnDef } from './column-defs';
 import {
@@ -42,7 +42,6 @@ type DeliveriesTableSectionProps = {
   onUnassignCourier: (deliveryId: string) => void;
   onEditDelivery: (deliveryId: string) => void;
   drawerDeliveryId: string | null;
-  rowHeight: RowHeight;
   selectionBar?: React.ReactNode;
 };
 
@@ -76,7 +75,6 @@ export const DeliveriesTableSection: React.FC<DeliveriesTableSectionProps> = ({
   onUnassignCourier,
   onEditDelivery,
   drawerDeliveryId,
-  rowHeight,
   selectionBar,
 }) => {
   const navigate = useNavigate();
@@ -202,7 +200,6 @@ export const DeliveriesTableSection: React.FC<DeliveriesTableSectionProps> = ({
             onEditDelivery={onEditDelivery}
             isDrawerTarget={drawerDeliveryId === delivery.id}
             orderedColumns={orderedColumns}
-            rowHeight={rowHeight}
           />
         );
       })}

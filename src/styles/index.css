@@ -78,13 +78,13 @@ body {
 .app-toolbar-shell {
   width: 100%;
   max-width: 100%;
-  overflow-x: hidden;
-  overscroll-behavior-x: none;
+  overflow: visible;
 }
 
 .app-toolbar-row {
   width: 100%;
   max-width: 100%;
+  overflow: visible;
   overscroll-behavior-x: contain;
   touch-action: pan-y;
 }

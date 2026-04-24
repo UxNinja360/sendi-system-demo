@@ -8,7 +8,6 @@ import { DeliveriesOverlays } from '../deliveries/deliveries-overlays';
 import { STATUS_LABELS, DEFAULT_VISIBLE_COLUMNS } from '../deliveries/status-config';
 import { ALL_COLUMNS, COLUMN_MAP } from '../deliveries/column-defs';
 import type { ColumnDef } from '../deliveries/column-defs';
-import type { RowHeight } from '../components/common/row-height-selector';
 import { toast } from 'sonner';
 import { useDeliveriesFilters } from '../deliveries/use-deliveries-filters';
 import { useDeliveriesExport } from '../deliveries/use-deliveries-export';
@@ -42,8 +41,6 @@ const formatTime = (seconds: number): string => {
 
 const COLUMN_ORDER_STORAGE_KEY = 'deliveries-column-order';
 const VISIBLE_COLUMNS_STORAGE_KEY = 'deliveries-visible-columns';
-const ROW_HEIGHT_STORAGE_KEY = 'deliveries-row-height';
-
 const STATUS_CHIP_CONFIG = [
   { status: 'pending'    as DeliveryStatus, label: 'ממתין', dot: 'bg-orange-500', active: 'bg-orange-500/10 text-orange-600 dark:text-orange-400' },
   { status: 'assigned'   as DeliveryStatus, label: 'שובץ',  dot: 'bg-yellow-500', active: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400' },
@@ -161,8 +158,6 @@ export const DeliveriesPage: React.FC = () => {
   });
   const [exportOpen, setExportOpen] = useState(false);
   const [newDeliveryOpen, setNewDeliveryOpen] = useState(false);
-  const [showRowHeightSelector, setShowRowHeightSelector] = useState(false);
-
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [courierSearch, setCourierSearch] = useState('');
   const [restaurantSearch, setRestaurantSearch] = useState('');
@@ -180,26 +175,6 @@ export const DeliveriesPage: React.FC = () => {
     if (customEndDate !== monthEnd) setCustomEndDate(monthEnd);
   }, [periodMode, monthAnchor, dateRange, customStartDate, customEndDate, setDateRange, setCustomStartDate, setCustomEndDate]);
 
-  const [rowHeight, setRowHeight] = useState<RowHeight>(() => {
-    try {
-      const saved = localStorage.getItem(ROW_HEIGHT_STORAGE_KEY);
-      if (saved && ['compact', 'normal', 'comfortable'].includes(saved)) {
-        return saved as RowHeight;
-      }
-    } catch (e) {
-      console.warn('Failed to load row height from localStorage:', e);
-    }
-    return 'normal';
-  });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(ROW_HEIGHT_STORAGE_KEY, rowHeight);
-    } catch (e) {
-      console.warn('Failed to save row height to localStorage:', e);
-    }
-  }, [rowHeight]);
-
   useEffect(() => {
     try {
       localStorage.setItem(VISIBLE_COLUMNS_STORAGE_KEY, JSON.stringify(Array.from(visibleColumns)));
@@ -207,19 +182,6 @@ export const DeliveriesPage: React.FC = () => {
       console.warn('Failed to save visible columns to localStorage:', e);
     }
   }, [visibleColumns]);
-
-  const toggleRowHeight = useCallback(() => {
-    setRowHeight(prev => {
-      let next: RowHeight;
-      if (prev === 'compact') next = 'normal';
-      else if (prev === 'normal') next = 'comfortable';
-      else next = 'compact';
-
-      const labels = { compact: 'קומפקטי', normal: 'רגיל', comfortable: 'נוח' };
-      toast.success(`גובה שורות: ${labels[next]}`);
-      return next;
-    });
-  }, []);
 
   const [columnOrder, setColumnOrder] = useState<string[]>(() => {
     try {
@@ -589,7 +551,6 @@ export const DeliveriesPage: React.FC = () => {
               onUnassignCourier={handleUnassignCourier}
               onEditDelivery={handleOpenEdit}
               drawerDeliveryId={drawerDeliveryId}
-              rowHeight={rowHeight}
               selectionBar={
                 <SelectionActionBar
                   selectedCount={selectedIds.size}
@@ -642,10 +603,6 @@ export const DeliveriesPage: React.FC = () => {
         editDeliveryOpen={!!editDeliveryId}
         onCloseEdit={handleCloseEdit}
         onSaveDelivery={handleSaveDelivery}
-        rowHeightSelectorOpen={showRowHeightSelector}
-        onCloseRowHeightSelector={() => setShowRowHeightSelector(false)}
-        rowHeight={rowHeight}
-        onRowHeightChange={setRowHeight}
       />
 
     </>

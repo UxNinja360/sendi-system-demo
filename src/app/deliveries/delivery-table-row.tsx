@@ -17,11 +17,13 @@ import {
   EntityTableRowCheckbox,
 } from '../components/common/entity-table-shell';
 import { EntityRowActionTrigger } from '../components/common/entity-row-action-trigger';
+import {
+  ENTITY_TABLE_DATA_CELL_CLASS,
+  ENTITY_TABLE_ROW_CLASS,
+} from '../components/common/entity-table-shared';
 import { ALL_COLUMNS, CUSTOM_COLUMN_IDS, COLUMN_MAP } from './column-defs';
 import type { ColumnDef } from './column-defs';
 import { STATUS_CONFIG, ALL_STATUSES } from './status-config';
-
-export type RowHeight = 'compact' | 'normal' | 'comfortable';
 
 interface DeliveryTableRowProps {
   delivery: Delivery;
@@ -40,7 +42,6 @@ interface DeliveryTableRowProps {
   onEditDelivery?: (deliveryId: string) => void;
   isDrawerTarget?: boolean;
   orderedColumns?: ColumnDef[];
-  rowHeight?: RowHeight;
 }
 
 export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
@@ -60,7 +61,6 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
   onEditDelivery,
   isDrawerTarget,
   orderedColumns,
-  rowHeight = 'normal',
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
@@ -83,13 +83,8 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
   const config = STATUS_CONFIG[delivery.status];
   const StatusIcon = config.icon;
 
-  // Row height configuration
-  const rowHeightConfig = {
-    compact: { py: 'py-1.5', text: 'text-[11px]', iconSize: 'w-3 h-3', gap: 'gap-1' },
-    normal: { py: 'py-2.5', text: 'text-xs', iconSize: 'w-3.5 h-3.5', gap: 'gap-1.5' },
-    comfortable: { py: 'py-3.5', text: 'text-sm', iconSize: 'w-4 h-4', gap: 'gap-2' },
-  };
-  const heightClasses = rowHeightConfig[rowHeight];
+  const heightClasses = { py: 'py-2.5', text: 'text-xs', iconSize: 'w-3.5 h-3.5' };
+  const dataCellClassName = `${ENTITY_TABLE_DATA_CELL_CLASS} ${heightClasses.text}`;
 
   const handleStatusChange = (newStatus: DeliveryStatus) => {
     if (newStatus === delivery.status) return;
@@ -122,7 +117,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
     switch (colId) {
       case 'orderNumber':
         return (
-          <td key={colId} className={`pr-2 pl-2 ${heightClasses.py}`}>
+          <td key={colId} className={dataCellClassName}>
             <span
               className={`${heightClasses.text} text-[#0d0d12] dark:text-[#fafafa] font-medium whitespace-nowrap`}
             >
@@ -133,7 +128,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
 
       case 'status':
         return (
-          <td key={colId} className={`pr-2 pl-2 ${heightClasses.py} ${heightClasses.text}`}>
+          <td key={colId} className={dataCellClassName}>
             <span className={`font-medium whitespace-nowrap ${config.tableColor}`}>
               {config.label}
             </span>
@@ -142,7 +137,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
 
       case 'courier':
         return (
-          <td key={colId} className={`pr-2 pl-2 ${heightClasses.py} ${heightClasses.text}`}>
+          <td key={colId} className={dataCellClassName}>
             {courier ? (
               <span className="text-[#0d0d12] dark:text-[#fafafa] font-medium whitespace-nowrap">{courier.name}</span>
             ) : (
@@ -153,7 +148,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
 
       case 'timeRemaining':
         return (
-          <td key={colId} className={`pr-2 pl-2 ${heightClasses.py} ${heightClasses.text}`}>
+          <td key={colId} className={dataCellClassName}>
             {timeRemaining !== null ? (
               <span className="text-[#3b82f6] dark:text-[#60a5fa] font-medium">{formatTime(timeRemaining)}</span>
             ) : (
@@ -164,7 +159,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
 
       case 'price':
         return (
-          <td key={colId} className={`pr-2 pl-2 ${heightClasses.py} ${heightClasses.text} text-[#16a34a] dark:text-[#22c55e] font-bold whitespace-nowrap`}>
+          <td key={colId} className={`${dataCellClassName} text-[#16a34a] dark:text-[#22c55e] font-bold whitespace-nowrap`}>
             ₪{delivery.price}
           </td>
         );
@@ -202,12 +197,12 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
         setContextMenuPos({ x: e.clientX, y: e.clientY });
         setMenuOpen(true);
       }}
-      className={`group border-b border-[#e5e5e5] dark:border-[#262626] last:border-b-0 transition-colors ${
+      className={`${ENTITY_TABLE_ROW_CLASS} group last:border-b-0 cursor-default ${
         isDrawerTarget
-          ? 'bg-[#dcfce7]/50 dark:bg-[#14532d]/30'
+          ? 'bg-[#dcfce7]/50 hover:bg-[#dcfce7]/50 dark:bg-[#14532d]/30 dark:hover:bg-[#14532d]/30'
           : isSelected
-            ? 'bg-[#dbeafe]/50 dark:bg-[#1e3a8a]/20'
-            : 'hover:bg-[#fafafa] dark:hover:bg-[#0a0a0a]'
+            ? 'bg-[#dbeafe]/50 hover:bg-[#dbeafe]/50 dark:bg-[#1e3a8a]/20 dark:hover:bg-[#1e3a8a]/20'
+            : ''
       }`}
     >
       <EntityTableRowCheckbox
@@ -236,7 +231,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
         return (
           <td
             key={col.id}
-            className={`pr-2 pl-2 ${heightClasses.py} ${heightClasses.text} ${textStyle} whitespace-nowrap ${isLongText ? 'max-w-[180px] truncate' : ''}`}
+            className={`${dataCellClassName} ${textStyle} whitespace-nowrap ${isLongText ? 'max-w-[180px] truncate' : ''}`}
           >
             {value}
           </td>

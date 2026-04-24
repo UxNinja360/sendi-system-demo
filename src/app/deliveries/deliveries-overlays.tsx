@@ -2,7 +2,6 @@
 import { Delivery, Courier, DeliveryStatus } from '../types/delivery.types';
 import { DeliveryEditDialog } from './delivery-edit-dialog';
 import { NewDeliveryDialog } from './new-delivery-dialog';
-import { RowHeightSelector, RowHeight } from '../components/common/row-height-selector';
 import { SharedDeliverySidePanelShell } from './shared-delivery-side-panel-shell';
 
 type SidePanelStats = {
@@ -39,10 +38,6 @@ type DeliveriesOverlaysProps = {
   editDeliveryOpen: boolean;
   onCloseEdit: () => void;
   onSaveDelivery: (deliveryId: string, updates: Partial<Delivery>) => void;
-  rowHeightSelectorOpen: boolean;
-  onCloseRowHeightSelector: () => void;
-  rowHeight: RowHeight;
-  onRowHeightChange: (height: RowHeight) => void;
 };
 
 export const DeliveriesOverlays: React.FC<DeliveriesOverlaysProps> = ({
@@ -71,10 +66,6 @@ export const DeliveriesOverlays: React.FC<DeliveriesOverlaysProps> = ({
   editDeliveryOpen,
   onCloseEdit,
   onSaveDelivery,
-  rowHeightSelectorOpen,
-  onCloseRowHeightSelector,
-  rowHeight,
-  onRowHeightChange,
 }) => {
   return (
     <>
@@ -121,13 +112,6 @@ export const DeliveriesOverlays: React.FC<DeliveriesOverlaysProps> = ({
         isOpen={editDeliveryOpen}
         onClose={onCloseEdit}
         onSave={onSaveDelivery}
-      />
-
-      <RowHeightSelector
-        isOpen={rowHeightSelectorOpen}
-        onClose={onCloseRowHeightSelector}
-        selectedHeight={rowHeight}
-        onHeightChange={onRowHeightChange}
       />
     </>
   );
