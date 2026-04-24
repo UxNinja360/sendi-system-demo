@@ -59,6 +59,7 @@ export const EntityTableShell: React.FC<EntityTableShellProps> = ({
     x: number;
     y: number;
   } | null>(null);
+  const hasInitializedHorizontalPositionRef = useRef(false);
 
   const setContainerRef = React.useCallback(
     (node: HTMLDivElement | null) => {
@@ -132,6 +133,49 @@ export const EntityTableShell: React.FC<EntityTableShellProps> = ({
       element.removeEventListener('touchmove', handleTouchMove);
       element.removeEventListener('touchend', clearTouchState);
       element.removeEventListener('touchcancel', clearTouchState);
+    };
+  }, []);
+
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element || hasInitializedHorizontalPositionRef.current) return;
+
+    const alignToRtlStartEdge = () => {
+      const maxScrollLeft = element.scrollWidth - element.clientWidth;
+      if (maxScrollLeft <= 0) return false;
+
+      element.scrollLeft = maxScrollLeft;
+      hasInitializedHorizontalPositionRef.current = true;
+      return true;
+    };
+
+    if (alignToRtlStartEdge()) {
+      return;
+    }
+
+    const frame = requestAnimationFrame(() => {
+      alignToRtlStartEdge();
+    });
+
+    let resizeObserver: ResizeObserver | null = null;
+    if (!hasInitializedHorizontalPositionRef.current && typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        if (alignToRtlStartEdge()) {
+          resizeObserver?.disconnect();
+        }
+      });
+
+      resizeObserver.observe(element);
+
+      const table = element.querySelector('table');
+      if (table) {
+        resizeObserver.observe(table);
+      }
+    }
+
+    return () => {
+      cancelAnimationFrame(frame);
+      resizeObserver?.disconnect();
     };
   }, []);
 
