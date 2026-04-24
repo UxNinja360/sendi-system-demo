@@ -62,8 +62,9 @@ export const EntityTableShell: React.FC<EntityTableShellProps> = ({
     onMouseUp={onMouseUp}
     onMouseLeave={onMouseLeave}
     style={style}
+    dir="ltr"
   >
-    <table className={tableClassName} role="grid" aria-label={ariaLabel}>
+    <table className={tableClassName} role="grid" aria-label={ariaLabel} dir="rtl">
       {colgroup}
       <thead className={theadClassName}>
         {headerRow}
