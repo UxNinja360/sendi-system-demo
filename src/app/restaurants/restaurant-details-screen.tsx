@@ -36,7 +36,7 @@ export function RestaurantDetailsScreen() {
       delivery.rest_name === restaurant?.name
   );
   const activeDeliveries = restaurantDeliveries.filter(
-    (delivery) => delivery.status !== 'delivered' && delivery.status !== 'cancelled'
+    (delivery) => delivery.status !== 'delivered' && delivery.status !== 'cancelled' && delivery.status !== 'expired'
   );
   const completedDeliveries = restaurantDeliveries.filter(
     (delivery) => delivery.status === 'delivered'
@@ -323,14 +323,18 @@ export function RestaurantDetailsScreen() {
                             ? 'bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-400'
                             : delivery.status === 'cancelled'
                               ? 'bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400'
-                              : 'bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400'
+                              : delivery.status === 'expired'
+                                ? 'bg-zinc-100 text-zinc-600 dark:bg-zinc-500/20 dark:text-zinc-300'
+                                : 'bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400'
                         }`}
                       >
                         {delivery.status === 'delivered'
                           ? 'נמסר'
                           : delivery.status === 'cancelled'
                             ? 'בוטל'
-                            : 'פעיל'}
+                            : delivery.status === 'expired'
+                              ? 'פג תוקף'
+                              : 'פעיל'}
                       </span>
                       <div className="text-sm font-bold text-[#16a34a] dark:text-[#22c55e]">{formatCurrency(getDeliveryCustomerCharge(delivery))}</div>
                       <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">

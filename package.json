@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite"
+    "dev": "vite",
+    "verify:business": "node scripts/verify-delivery-business-rules.mjs"
   },
   "dependencies": {
     "@radix-ui/react-tooltip": "1.1.8",

@@ -13,7 +13,6 @@ import {
   Zap,
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
-import { PageToolbar } from '../components/common/page-toolbar';
 import { useTheme } from '../context/theme.context';
 import { useLanguage } from '../context/language.context';
 import { useDelivery } from '../context/delivery-context-value';
@@ -196,12 +195,6 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]" dir="rtl">
-      <PageToolbar
-        title={TEXT.title}
-        summary={TEXT.subtitle}
-        onToggleMobileSidebar={() => (window as any).toggleMobileSidebar?.()}
-      />
-
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-3 py-3 md:px-5 md:py-5">
           <SectionCard

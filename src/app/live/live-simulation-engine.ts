@@ -80,7 +80,8 @@ export const getPickupReadyAt = (deliveries: Delivery[]) => {
       if (delivery.pickedUpAt) return null;
       if (delivery.orderReadyTime) return new Date(delivery.orderReadyTime);
       if (typeof delivery.preparationTime === 'number') {
-        return new Date(new Date(delivery.createdAt).getTime() + delivery.preparationTime * 60000);
+        const prepAnchor = delivery.assignedAt ?? delivery.coupled_time ?? delivery.createdAt;
+        return new Date(new Date(prepAnchor).getTime() + delivery.preparationTime * 60000);
       }
       return null;
     })
@@ -232,13 +233,13 @@ const isDeliveryReadyForPickup = (
     return true;
   }
 
-  const arrivedAtRestaurantMs = getDateTime(delivery.arrivedAtRestaurantAt);
-  if (!arrivedAtRestaurantMs) {
+  const prepAnchorMs = getDateTime(delivery.assignedAt ?? delivery.coupled_time);
+  if (!prepAnchorMs) {
     return false;
   }
 
   const prepMinutes = delivery.preparationTime || delivery.cook_time || 5;
-  return nowMs - arrivedAtRestaurantMs >= (prepMinutes * 60000) / (timeMultiplier || 1);
+  return nowMs - prepAnchorMs >= (prepMinutes * 60000) / (timeMultiplier || 1);
 };
 
 export const advanceLiveSimulation = ({

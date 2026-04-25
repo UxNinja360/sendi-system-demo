@@ -9,6 +9,7 @@ type SidePanelStats = {
   delivered: number;
   cancelled: number;
   pending: number;
+  expired?: number;
   revenue: number;
 };
 
@@ -17,6 +18,7 @@ type DeliveriesOverlaysProps = {
   drawerDelivery: Delivery | null;
   drawerCourier: Courier | null;
   allCouriers: Courier[];
+  deliveryBalance: number;
   onCloseDrawer: () => void;
   onDrawerPrev: () => void;
   onDrawerNext: () => void;
@@ -45,6 +47,7 @@ export const DeliveriesOverlays: React.FC<DeliveriesOverlaysProps> = ({
   drawerDelivery,
   drawerCourier,
   allCouriers,
+  deliveryBalance,
   onCloseDrawer,
   onDrawerPrev,
   onDrawerNext,
@@ -81,6 +84,7 @@ export const DeliveriesOverlays: React.FC<DeliveriesOverlaysProps> = ({
                 delivery={drawerDelivery}
                 courier={drawerCourier}
                 allCouriers={allCouriers}
+                deliveryBalance={deliveryBalance}
                 onClose={onCloseDrawer}
                 onNavigatePrev={onDrawerPrev}
                 onNavigateNext={onDrawerNext}

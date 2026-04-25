@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate, useNavigation } from 'react-router';
 import { Sidebar } from './sidebar';
 import { MobileNavigation } from './mobile-navigation';
@@ -11,6 +11,7 @@ import { APP_MANAGED_SCROLL_PATHS } from '../../app-navigation';
 
 export const AppLayout: React.FC = () => {
   const [isPageLoading, setIsPageLoading] = useState(false);
+  const [mobileMenuToggle, setMobileMenuToggle] = useState<(() => void) | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const navigation = useNavigation();
@@ -44,6 +45,14 @@ export const AppLayout: React.FC = () => {
     navigate('/login', { replace: true });
   };
 
+  const registerMobileMenuToggle = useCallback((toggle: (() => void) | null) => {
+    setMobileMenuToggle(() => toggle);
+  }, []);
+
+  const openMobileMenu = useCallback(() => {
+    mobileMenuToggle?.();
+  }, [mobileMenuToggle]);
+
   const isLivePage = location.pathname === '/live';
   const isManagedScrollPage =
     isLivePage || APP_MANAGED_SCROLL_PATHS.has(location.pathname);
@@ -53,7 +62,7 @@ export const AppLayout: React.FC = () => {
     <div className="app-shell-height flex w-full overflow-hidden bg-[#fafafa] text-[#0d0d12] transition-colors duration-300 dark:bg-[#0a0a0a] dark:text-[#fafafa]">
       <Toaster />
 
-      <Sidebar onLogout={handleLogout} />
+      <Sidebar onLogout={handleLogout} onMobileMenuToggleReady={registerMobileMenuToggle} />
 
       <div className="flex h-full w-full flex-1 flex-col overflow-hidden">
         {!isLivePage && <Breadcrumbs />}
@@ -78,8 +87,8 @@ export const AppLayout: React.FC = () => {
           </Suspense>
         </div>
 
-        {!isLivePage && <MobileNavigation />}
-        <MobileMenuNudge />
+        {!isLivePage && <MobileNavigation onOpenMenu={openMobileMenu} />}
+        <MobileMenuNudge onOpenMenu={openMobileMenu} />
       </div>
     </div>
   );

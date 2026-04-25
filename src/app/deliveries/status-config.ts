@@ -6,6 +6,7 @@ import {
   Navigation,
   CheckCircle2,
   XCircle,
+  ClockAlert,
 } from 'lucide-react';
 
 export interface StatusConfig {
@@ -82,6 +83,18 @@ export const STATUS_CONFIG: Record<DeliveryStatus, StatusConfig> = {
     icon: XCircle,
     dotColor: 'bg-red-500',
   },
+  expired: {
+    label: 'פג תוקף',
+    color: 'text-white',
+    bg: 'bg-zinc-500',
+    badgeColor: 'bg-zinc-500/10 text-zinc-700 dark:text-zinc-300',
+    tableColor: 'text-zinc-500 dark:text-zinc-300',
+    sidePanelColor: 'text-zinc-600 dark:text-zinc-300',
+    sidePanelBg: 'bg-zinc-50 dark:bg-zinc-900/50',
+    sidePanelBorder: 'border-zinc-200 dark:border-zinc-700',
+    icon: ClockAlert,
+    dotColor: 'bg-zinc-500',
+  },
 };
 
 export const STATUS_ORDER: DeliveryStatus[] = ['pending', 'assigned', 'delivering', 'delivered'];
@@ -92,6 +105,7 @@ export const ALL_STATUSES: { key: DeliveryStatus; label: string; icon: typeof Al
   { key: 'delivering', label: 'נאסף', icon: Navigation, color: 'text-indigo-500' },
   { key: 'delivered', label: 'נמסר', icon: CheckCircle2, color: 'text-green-500' },
   { key: 'cancelled', label: 'בוטל', icon: XCircle, color: 'text-red-500' },
+  { key: 'expired', label: 'פג תוקף', icon: ClockAlert, color: 'text-zinc-500' },
 ];
 
 export const STATUS_LABELS: Record<string, string> = {
@@ -100,10 +114,11 @@ export const STATUS_LABELS: Record<string, string> = {
   delivering: 'נאסף',
   delivered: 'נמסר',
   cancelled: 'בוטל',
+  expired: 'פג תוקף',
 };
 
 /** Default visible columns — uses new unified IDs */
 export const DEFAULT_VISIBLE_COLUMNS = new Set([
-  'orderNumber', 'creation_time', 'status', 'rest_name', 'client_full_address', 'courier',
+  'orderNumber', 'creation_time', 'offerExpiresAt', 'status', 'rest_name', 'client_full_address', 'courier',
 ]);
 

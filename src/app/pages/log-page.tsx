@@ -42,13 +42,6 @@ export const LogPage: React.FC = () => {
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#111111] text-[#fafafa]">
       <PageToolbar
-        title={TEXT.title}
-        count={visibleLogs.length}
-        showZeroCount
-        summary={`${visibleLogs.length}${TEXT.summarySuffix}`}
-        onToggleMobileSidebar={() =>
-          (window as Window & { toggleMobileSidebar?: () => void }).toggleMobileSidebar?.()
-        }
         headerActions={
           <button
             type="button"

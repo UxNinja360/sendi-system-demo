@@ -123,7 +123,9 @@ export const LiveRestaurantsView: React.FC = () => {
                                     ? 'bg-indigo-500'
                                     : order.status === 'delivered'
                                       ? 'bg-green-500'
-                                      : 'bg-red-500'
+                                      : order.status === 'expired'
+                                        ? 'bg-zinc-500'
+                                        : 'bg-red-500'
                             }`}
                           >
                             {order.status === 'pending'
@@ -134,7 +136,9 @@ export const LiveRestaurantsView: React.FC = () => {
                                   ? 'נאסף'
                                   : order.status === 'delivered'
                                     ? 'נמסר'
-                                    : 'בוטל'}
+                                    : order.status === 'expired'
+                                      ? 'פג תוקף'
+                                      : 'בוטל'}
                           </span>
                         </div>
 

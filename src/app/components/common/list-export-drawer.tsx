@@ -3,7 +3,7 @@ import { FileText } from 'lucide-react';
 
 import { ListSidePanelHeader } from './list-side-panel-header';
 
-type ListExportAction = {
+export type ListExportAction = {
   id: string;
   title: string;
   description: string;
@@ -19,7 +19,7 @@ type ListExportDrawerProps = {
 };
 
 export const ListExportDrawer: React.FC<ListExportDrawerProps> = ({
-  title = 'ייצוא',
+  title = '\u05d9\u05d9\u05e6\u05d5\u05d0',
   onClose,
   actions,
 }) => {

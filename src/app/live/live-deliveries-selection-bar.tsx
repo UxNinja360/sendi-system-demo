@@ -1,5 +1,8 @@
 ﻿import React from 'react';
-import { SelectionActionBar } from '../components/common/selection-action-bar';
+import {
+  SelectionActionBar,
+  SelectionActionButton,
+} from '../components/common/selection-action-bar';
 
 interface LiveDeliveriesSelectionBarProps {
   selectedCount: number;
@@ -14,17 +17,20 @@ export const LiveDeliveriesSelectionBar: React.FC<LiveDeliveriesSelectionBarProp
 }) => (
   <SelectionActionBar
     selectedCount={selectedCount}
-    selectionLabel={`נבחרו ${selectedCount} ${selectedCount === 1 ? 'משלוח' : 'משלוחים'}`}
+    entitySingular={'\u05de\u05e9\u05dc\u05d5\u05d7'}
+    entityPlural={'\u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd'}
     onClear={onClear}
-    clearLabel="ביטול"
+    clearLabel={'\u05d1\u05d9\u05d8\u05d5\u05dc'}
     actions={
-      <button
-        type="button"
+      <SelectionActionButton
         onClick={onAssign}
-        className="rounded-lg bg-[#22c55e] px-4 py-2 text-sm font-bold text-white shadow-md shadow-[#22c55e]/20 transition-colors hover:bg-[#16a34a]"
       >
-        שבץ {selectedCount} {selectedCount === 1 ? 'משלוח' : 'משלוחים'} ←
-      </button>
+        {'\u05e9\u05d1\u05e5'} {selectedCount}{' '}
+        {selectedCount === 1
+          ? '\u05de\u05e9\u05dc\u05d5\u05d7'
+          : '\u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd'}{' '}
+        &larr;
+      </SelectionActionButton>
     }
   />
 );

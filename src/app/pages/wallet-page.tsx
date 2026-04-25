@@ -92,9 +92,6 @@ export const WalletPage: React.FC = () => {
       dir="rtl"
     >
       <PageToolbar
-        title={TEXT.title}
-        summary={TEXT.summary}
-        onToggleMobileSidebar={() => (window as any).toggleMobileSidebar?.()}
         headerActions={
           <button
             type="button"

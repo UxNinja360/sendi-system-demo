@@ -34,9 +34,6 @@ export const CustomersScreen: React.FC = () => {
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]" dir="rtl">
       <PageToolbar
-        title="לקוחות"
-        count={filteredCustomers.length}
-        onToggleMobileSidebar={() => (window as any).toggleMobileSidebar?.()}
         actions={
           <>
             <ToolbarSearchControl
@@ -73,7 +70,6 @@ export const CustomersScreen: React.FC = () => {
             </div>
           </>
         }
-        summary={`מציג ${filteredCustomers.length} מתוך ${state.customers.length} לקוחות`}
       />
 
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">

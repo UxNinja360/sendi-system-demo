@@ -1,11 +1,33 @@
-﻿import React from 'react';
-import { PackageOpen, Search, Filter, Sparkles } from 'lucide-react';
+import React from 'react';
+import { PackageOpen } from 'lucide-react';
+
+import {
+  EntityEmptyState,
+  EntityNoResultsState,
+} from '../components/common/entity-empty-state';
 
 interface EnhancedEmptyStateProps {
   mode: 'no-data' | 'no-results' | 'filtered-empty';
   onClearFilters?: () => void;
   totalCount?: number;
 }
+
+const TEXT = {
+  noDataTitle:
+    '\u05d8\u05e8\u05dd \u05e0\u05d5\u05e6\u05e8\u05d5 \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
+  noDataDescription:
+    '\u05db\u05d0\u05e9\u05e8 \u05d9\u05ea\u05d5\u05d5\u05e1\u05e4\u05d5 \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd \u05dc\u05de\u05e2\u05e8\u05db\u05ea, \u05d4\u05dd \u05d9\u05d5\u05e4\u05d9\u05e2\u05d5 \u05db\u05d0\u05df \u05e2\u05dd \u05db\u05dc \u05d4\u05e4\u05e8\u05d8\u05d9\u05dd \u05d5\u05d4\u05d0\u05e4\u05e9\u05e8\u05d5\u05d9\u05d5\u05ea \u05dc\u05e0\u05d9\u05d4\u05d5\u05dc \u05de\u05ea\u05e7\u05d3\u05dd',
+  noDataFooter:
+    '\u05d4\u05de\u05e2\u05e8\u05db\u05ea \u05de\u05d5\u05db\u05e0\u05d4 \u05dc\u05e7\u05d1\u05dc\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd \u05d7\u05d3\u05e9\u05d9\u05dd',
+  noResultsDescription:
+    '\u05d4\u05d7\u05d9\u05e4\u05d5\u05e9 \u05dc\u05d0 \u05d4\u05e0\u05d9\u05d1 \u05ea\u05d5\u05e6\u05d0\u05d5\u05ea. \u05e0\u05e1\u05d4 \u05de\u05d9\u05dc\u05d5\u05ea \u05d7\u05d9\u05e4\u05d5\u05e9 \u05d0\u05d7\u05e8\u05d5\u05ea \u05d0\u05d5 \u05e0\u05e7\u05d4 \u05d0\u05ea \u05d4\u05d7\u05d9\u05e4\u05d5\u05e9.',
+  filteredTitle:
+    '\u05d0\u05d9\u05df \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd \u05d1\u05e1\u05d9\u05e0\u05d5\u05df \u05d6\u05d4',
+  filteredDescription:
+    '\u05d4\u05e4\u05d9\u05dc\u05d8\u05e8\u05d9\u05dd \u05e9\u05d1\u05d7\u05e8\u05ea \u05de\u05e6\u05de\u05e6\u05de\u05d9\u05dd \u05d9\u05d5\u05ea\u05e8 \u05de\u05d3\u05d9 \u05d0\u05ea \u05d4\u05ea\u05d5\u05e6\u05d0\u05d5\u05ea.',
+  totalPrefix:
+    '\u05e1\u05d4"\u05db \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd \u05d1\u05de\u05e2\u05e8\u05db\u05ea',
+} as const;
 
 export const EnhancedEmptyState: React.FC<EnhancedEmptyStateProps> = ({
   mode,
@@ -14,85 +36,31 @@ export const EnhancedEmptyState: React.FC<EnhancedEmptyStateProps> = ({
 }) => {
   if (mode === 'no-data') {
     return (
-      <div className="flex flex-col items-center justify-center py-20 px-4">
-        <div className="relative">
-          <div className="w-24 h-24 bg-gradient-to-br from-[#9fe870]/20 to-[#9fe870]/5 rounded-2xl flex items-center justify-center mb-6">
-            <PackageOpen className="w-12 h-12 text-[#9fe870]" />
-          </div>
-          <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-[#9fe870] to-[#8ed960] rounded-full flex items-center justify-center shadow-lg">
-            <Sparkles className="w-4 h-4 text-white" />
-          </div>
-        </div>
-        <h3 className="text-xl font-bold text-[#0d0d12] dark:text-[#fafafa] mb-2">
-          טרם נוצרו משלוחים
-        </h3>
-        <p className="text-sm text-[#737373] dark:text-[#a3a3a3] text-center max-w-md mb-6">
-          כאשר יתווספו משלוחים למערכת, הם יופיעו כאן עם כל הפרטים והאפשרויות לניהול מתקדם
-        </p>
-        <div className="flex items-center gap-2 px-4 py-2 bg-[#f5f5f5] dark:bg-[#171717] rounded-lg border border-[#e5e5e5] dark:border-[#262626]">
-          <div className="w-2 h-2 bg-[#9fe870] rounded-full animate-pulse" />
-          <span className="text-xs text-[#737373] dark:text-[#a3a3a3]">
-            המערכת מוכנה לקבלת משלוחים חדשים
-          </span>
-        </div>
-      </div>
+      <EntityEmptyState
+        icon={<PackageOpen className="h-12 w-12 text-[#9fe870]" />}
+        title={TEXT.noDataTitle}
+        description={TEXT.noDataDescription}
+        footerText={TEXT.noDataFooter}
+      />
     );
   }
 
   if (mode === 'no-results') {
     return (
-      <div className="flex flex-col items-center justify-center py-20 px-4">
-        <div className="relative">
-          <div className="w-24 h-24 bg-gradient-to-br from-amber-500/20 to-amber-500/5 rounded-2xl flex items-center justify-center mb-6">
-            <Search className="w-12 h-12 text-amber-500" />
-          </div>
-        </div>
-        <h3 className="text-xl font-bold text-[#0d0d12] dark:text-[#fafafa] mb-2">
-          לא נמצאו תוצאות
-        </h3>
-        <p className="text-sm text-[#737373] dark:text-[#a3a3a3] text-center max-w-md mb-4">
-          החיפוש שלך לא הניב תוצאות. נסה מילות חיפוש אחרות או נקה את החיפוש
-        </p>
-        <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-900/50">
-          <span className="text-xs font-medium text-amber-700 dark:text-amber-400">
-            💡 טיפ: נסה לחפש לפי מספר הזמנה, שם לקוח, או שם מסעדה
-          </span>
-        </div>
-      </div>
+      <EntityNoResultsState
+        description={TEXT.noResultsDescription}
+        onClearAll={onClearFilters}
+      />
     );
   }
 
-  // mode === 'filtered-empty'
   return (
-    <div className="flex flex-col items-center justify-center py-20 px-4">
-      <div className="relative">
-        <div className="w-24 h-24 bg-gradient-to-br from-blue-500/20 to-blue-500/5 rounded-2xl flex items-center justify-center mb-6">
-          <Filter className="w-12 h-12 text-blue-500" />
-        </div>
-      </div>
-      <h3 className="text-xl font-bold text-[#0d0d12] dark:text-[#fafafa] mb-2">
-        אין משלוחים בסינון זה
-      </h3>
-      <p className="text-sm text-[#737373] dark:text-[#a3a3a3] text-center max-w-md mb-4">
-        הפילטרים שבחרת מצמצמים יותר מדי את התוצאות
-      </p>
-      <div className="flex flex-col items-center gap-3">
-        <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-900/50">
-          <span className="text-xs font-medium text-blue-700 dark:text-blue-400">
-            📊 סה״כ משלוחים במערכת: {totalCount.toLocaleString()}
-          </span>
-        </div>
-        {onClearFilters && (
-          <button
-            onClick={onClearFilters}
-            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-l from-[#9fe870] to-[#8ed960] text-[#0d0d12] rounded-xl text-sm font-medium hover:from-[#8ed960] hover:to-[#7dc850] transition-all shadow-lg shadow-[#9fe870]/30"
-          >
-            <Filter className="w-4 h-4" />
-            נקה את כל הפילטרים
-          </button>
-        )}
-      </div>
-    </div>
+    <EntityNoResultsState
+      title={TEXT.filteredTitle}
+      description={`${TEXT.filteredDescription} ${TEXT.totalPrefix}: ${totalCount.toLocaleString(
+        'he-IL',
+      )}`}
+      onClearAll={onClearFilters}
+    />
   );
 };
-

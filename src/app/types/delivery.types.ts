@@ -4,7 +4,8 @@ export type DeliveryStatus =
   | 'assigned'     // שובץ לשליח
   | 'delivering'   // בדרך ללקוח
   | 'delivered'    // נמסר
-  | 'cancelled';   // בוטל
+  | 'cancelled'    // בוטל
+  | 'expired';     // פג תוקף
 
 // סטטוסים של שליח
 export type CourierStatus = 'available' | 'busy' | 'offline';
@@ -159,6 +160,8 @@ export interface DeliveryTimeline {
   started_dropoff?: Date | null;
   arrived_at_client?: Date | null;
   delivered_time?: Date | null;
+  offerExpiresAt?: Date | null;
+  expiredAt?: Date | null;
 }
 
 // 6. 📊 Mechanics & SLA - המתמטיקה והביצועים
@@ -192,6 +195,7 @@ export interface DeliveryEconomy {
   // תשלום לשליח
   runner_price?: number;
   runner_tip?: number;
+  deliveryCreditConsumedAt?: Date | null;
   
   // גבייה מהלקוח
   sum_cash?: number;
@@ -265,6 +269,7 @@ export interface Delivery extends
   courierRating?: number; // מיפוי ל-client_runner_rank
   createdAt: Date; // מיפוי ל-creation_time
   assignedAt: Date | null; // מיפוי ל-coupled_time
+  deliveryCreditConsumedAt?: Date | null;
   pickupBatchId?: string | null;
   pickedUpAt: Date | null; // מיפוי ל-took_it_time
   deliveredAt: Date | null; // מיפוי ל-delivered_time
@@ -278,6 +283,8 @@ export interface Delivery extends
   preparationTime?: number; // מיפוי ל-cook_time
   maxDeliveryTime?: number; // מיפוי ל-max_time_to_deliver
   cancelledAt?: Date | null;
+  offerExpiresAt?: Date | null;
+  expiredAt?: Date | null;
   cancelledAfterPickup?: boolean;
   orderPriority?: number; // מיפוי ל-priority
   customerRating?: number; // מיפוי ל-client_runner_rank
@@ -457,6 +464,7 @@ export type DeliveryAction =
   | { type: 'UPDATE_STATUS'; payload: { deliveryId: string; status: DeliveryStatus } }
   | { type: 'UPDATE_DELIVERY'; payload: { deliveryId: string; updates: Partial<Delivery> } } // עדכון משלוח כללי
   | { type: 'CANCEL_DELIVERY'; payload: string }
+  | { type: 'EXPIRE_DELIVERY_OFFERS'; payload?: Date }
   | { type: 'UNASSIGN_COURIER'; payload: string }
   | { type: 'DELETE_DELIVERY'; payload: string } // deliveryId - מחיקה ללא ביטול
   | { type: 'UPDATE_COURIER_STATUS'; payload: { courierId: string; status: CourierStatus } }

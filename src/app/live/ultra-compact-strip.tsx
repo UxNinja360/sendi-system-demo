@@ -73,7 +73,7 @@ export const UltraCompactStrip: React.FC<UltraCompactStripProps> = ({
   // Calculate elapsed minutes since order creation.
   const now = Date.now();
   const elapsed = Math.floor((now - order.createdAtTimestamp) / 60000);
-  const isCritical = elapsed >= 7 && order.status !== 'delivered' && order.status !== 'cancelled';
+  const isCritical = elapsed >= 7 && order.status !== 'delivered' && order.status !== 'cancelled' && order.status !== 'expired';
 
   // Visual styles per order status.
   const statusColors = {

@@ -9,6 +9,11 @@ import {
   getRestaurantPickupBaseKey,
 } from '../utils/pickup-batches';
 import { MAX_ACTIVE_DELIVERIES_PER_COURIER } from '../utils/courier-assignment';
+import { getCreditCostForAssignment } from '../utils/delivery-credits';
+import {
+  DELIVERY_ASSIGNMENT_BLOCK_COPY,
+  getDeliveryAssignmentBlockReason,
+} from '../utils/delivery-assignment';
 
 type LiveTab = 'deliveries' | 'couriers';
 
@@ -32,10 +37,11 @@ type LiveOrderItem = {
 
 type UseLiveAssignmentFlowParams = {
   allOrders: LiveOrderItem[];
-  assignCourier: (deliveryId: string, courierId: string, pickupBatchId?: string) => void;
+  assignCourier: (deliveryId: string, courierId: string, pickupBatchId?: string) => boolean;
   clearCourierSelection: () => void;
   clearOrderSelection: () => void;
   couriers: LiveCourierState[];
+  deliveryBalance: number;
   deliveries: Delivery[];
   focusOrderInDeliveries: (deliveryId: string) => void;
   isDeliveryAssignable: (delivery?: Delivery | null) => boolean;
@@ -64,6 +70,7 @@ export const useLiveAssignmentFlow = ({
   clearCourierSelection,
   clearOrderSelection,
   couriers,
+  deliveryBalance,
   deliveries,
   focusOrderInDeliveries,
   isDeliveryAssignable,
@@ -138,7 +145,8 @@ export const useLiveAssignmentFlow = ({
         .filter((delivery) =>
           delivery.courierId === courierId &&
           delivery.status !== 'delivered' &&
-          delivery.status !== 'cancelled'
+          delivery.status !== 'cancelled' &&
+          delivery.status !== 'expired'
         )
         .map((delivery) => delivery.id)
     );
@@ -157,13 +165,21 @@ export const useLiveAssignmentFlow = ({
 
   const handleOpenAssignMode = useCallback((deliveryId: string) => {
     const delivery = deliveries.find((item) => item.id === deliveryId);
-    if (!isDeliveryAssignable(delivery)) return;
+    if (!isDeliveryAssignable(delivery)) {
+      if (delivery) {
+        const blockReason = getDeliveryAssignmentBlockReason(delivery, { deliveryBalance });
+        if (blockReason) {
+          toast.error(DELIVERY_ASSIGNMENT_BLOCK_COPY[blockReason], { duration: 2500 });
+        }
+      }
+      return;
+    }
 
     setSelectedDeliveryIds(new Set([deliveryId]));
     clearCourierSelection();
     setAssignmentMode(true);
     setActiveTab('couriers');
-  }, [clearCourierSelection, deliveries, isDeliveryAssignable, setActiveTab]);
+  }, [clearCourierSelection, deliveries, deliveryBalance, isDeliveryAssignable, setActiveTab]);
 
   const handleOpenAssignForSelected = useCallback(() => {
     if (validSelectedDeliveryIds.size === 0) return;
@@ -298,18 +314,27 @@ export const useLiveAssignmentFlow = ({
 
     const courier = couriers.find((item) => item.id === selectedCourierId);
     const courierName = courier?.name || 'שליח';
-    const deliveryCount = validSelectedDeliveryIds.size;
     const selectedPickupBatchIdsByRestaurant = new Map<string, string>();
     const selectedPickupBatchIdsByDeliveryId = new Map<string, string>();
 
     const existingActiveDeliveries = deliveries.filter(
       (delivery) => delivery.courierId === selectedCourierId &&
         delivery.status !== 'delivered' &&
-        delivery.status !== 'cancelled'
+        delivery.status !== 'cancelled' &&
+        delivery.status !== 'expired'
     );
     const newDeliveryObjects = [...validSelectedDeliveryIds]
       .map((deliveryId) => deliveries.find((delivery) => delivery.id === deliveryId))
       .filter((delivery): delivery is Delivery => Boolean(delivery));
+    const requiredCredits = newDeliveryObjects.reduce(
+      (sum, delivery) => sum + getCreditCostForAssignment(delivery),
+      0
+    );
+
+    if (requiredCredits > deliveryBalance) {
+      toast.error('אין מספיק יתרת משלוחים לציוות.', { duration: 3000 });
+      return;
+    }
 
     const deliveringDeliveries = existingActiveDeliveries.filter((delivery) => delivery.status === 'delivering');
     const assignedDeliveries = existingActiveDeliveries.filter((delivery) => delivery.status === 'assigned');
@@ -367,6 +392,26 @@ export const useLiveAssignmentFlow = ({
       smartStops.push(`${delivery.id}-dropoff`);
     });
 
+    const assignedCount = [...validSelectedDeliveryIds].reduce((count, deliveryId) => {
+      const assigned = assignCourier(
+        deliveryId,
+        selectedCourierId,
+        selectedPickupBatchIdsByDeliveryId.get(deliveryId)
+      );
+      return assigned ? count + 1 : count;
+    }, 0);
+
+    if (assignedCount === 0) {
+      const firstBlockedDelivery = newDeliveryObjects.find((delivery) =>
+        getDeliveryAssignmentBlockReason(delivery, { deliveryBalance })
+      );
+      const blockReason = firstBlockedDelivery
+        ? getDeliveryAssignmentBlockReason(firstBlockedDelivery, { deliveryBalance })
+        : null;
+      toast.error(blockReason ? DELIVERY_ASSIGNMENT_BLOCK_COPY[blockReason] : 'לא ניתן לשבץ כרגע.', { duration: 3000 });
+      return;
+    }
+
     if (smartStops.length > 0) {
       setRouteStopOrders((current) => ({
         ...current,
@@ -374,18 +419,10 @@ export const useLiveAssignmentFlow = ({
       }));
     }
 
-    validSelectedDeliveryIds.forEach((deliveryId) => {
-      assignCourier(
-        deliveryId,
-        selectedCourierId,
-        selectedPickupBatchIdsByDeliveryId.get(deliveryId)
-      );
-    });
-
     toast.success(
-      deliveryCount === 1
+      assignedCount === 1
         ? `משלוח שובץ ל${courierName} ✓`
-        : `${deliveryCount} משלוחים שובצו ל${courierName} ✓`,
+        : `${assignedCount} משלוחים שובצו ל${courierName} ✓`,
       { duration: 2500 }
     );
 
@@ -397,6 +434,7 @@ export const useLiveAssignmentFlow = ({
     canCourierTakeSelectedDeliveries,
     clearCourierSelection,
     couriers,
+    deliveryBalance,
     deliveries,
     selectedCourierId,
     setRouteStopOrders,

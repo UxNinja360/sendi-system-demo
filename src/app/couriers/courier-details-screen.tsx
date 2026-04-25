@@ -76,7 +76,7 @@ export function CourierDetailsScreen() {
   // מציאת משלוחים של השליח
   const courierDeliveries = state.deliveries.filter(d => d.courierId === courierId);
   const activeDeliveries = courierDeliveries.filter(d => 
-    d.status !== 'delivered' && d.status !== 'cancelled'
+    d.status !== 'delivered' && d.status !== 'cancelled' && d.status !== 'expired'
   );
   const completedDeliveries = courierDeliveries.filter(d => d.status === 'delivered');
   const cancelledDeliveries = courierDeliveries.filter(d => d.status === 'cancelled');
@@ -950,11 +950,13 @@ export function CourierDetailsScreen() {
                       <div className={`p-2 rounded-lg ${
                         delivery.status === 'delivered' ? 'bg-green-100 dark:bg-green-500/20' :
                         delivery.status === 'cancelled' ? 'bg-red-100 dark:bg-red-500/20' :
+                        delivery.status === 'expired' ? 'bg-zinc-100 dark:bg-zinc-500/20' :
                         'bg-blue-100 dark:bg-blue-500/20'
                       }`}>
                         <Package size={16} className={
                           delivery.status === 'delivered' ? 'text-green-600 dark:text-green-400' :
                           delivery.status === 'cancelled' ? 'text-red-600 dark:text-red-400' :
+                          delivery.status === 'expired' ? 'text-zinc-600 dark:text-zinc-300' :
                           'text-blue-600 dark:text-blue-400'
                         } />
                       </div>
@@ -966,10 +968,12 @@ export function CourierDetailsScreen() {
                           <span className={`text-xs px-2 py-0.5 rounded-full ${
                             delivery.status === 'delivered' ? 'bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400' :
                             delivery.status === 'cancelled' ? 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400' :
+                            delivery.status === 'expired' ? 'bg-zinc-100 dark:bg-zinc-500/20 text-zinc-600 dark:text-zinc-300' :
                             'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400'
                           }`}>
                             {delivery.status === 'delivered' ? 'נמסר' :
-                             delivery.status === 'cancelled' ? 'בוטל' : 'פעיל'}
+                             delivery.status === 'cancelled' ? 'בוטל' :
+                             delivery.status === 'expired' ? 'פג תוקף' : 'פעיל'}
                           </span>
                         </div>
                         <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">

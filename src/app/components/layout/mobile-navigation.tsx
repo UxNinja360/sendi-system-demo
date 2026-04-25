@@ -3,6 +3,7 @@ import { Activity, Bike, LayoutDashboard, MoreHorizontal, Package } from 'lucide
 import { useLocation, useNavigate } from 'react-router';
 import { getNavItemById, isNavItemActive, type AppNavItem } from '../../app-navigation';
 import { useDelivery } from '../../context/delivery-context-value';
+import { isOperationalDelivery } from '../../utils/delivery-status';
 
 const MOBILE_NAV_IDS = ['live', 'dashboard', 'deliveries', 'couriers'] as const;
 
@@ -31,13 +32,15 @@ const getBadge = (item: AppNavItem, activeDeliveriesCount: number) => {
   return null;
 };
 
-export const MobileNavigation: React.FC = () => {
+type MobileNavigationProps = {
+  onOpenMenu: () => void;
+};
+
+export const MobileNavigation: React.FC<MobileNavigationProps> = ({ onOpenMenu }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { state } = useDelivery();
-  const activeDeliveriesCount = state.deliveries.filter(
-    (delivery) => delivery.status !== 'delivered' && delivery.status !== 'cancelled'
-  ).length;
+  const activeDeliveriesCount = state.deliveries.filter(isOperationalDelivery).length;
   const items = MOBILE_NAV_IDS
     .map((id) => getNavItemById(id))
     .filter((item): item is AppNavItem => Boolean(item));
@@ -85,7 +88,7 @@ export const MobileNavigation: React.FC = () => {
 
         <button
           type="button"
-          onClick={() => (window as Window & { toggleMobileSidebar?: () => void }).toggleMobileSidebar?.()}
+          onClick={onOpenMenu}
           aria-label="פתח תפריט"
           className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-md px-1 py-1.5 text-[10px] font-medium transition-colors ${
             !isPrimaryRouteActive

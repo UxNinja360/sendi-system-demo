@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Columns3, Download } from 'lucide-react';
 
 import { ToolbarSearchControl } from './toolbar-search-control';
+import { ToolbarIconButton } from './toolbar-icon-button';
 
 const TEXT = {
   columns: '\u05e2\u05de\u05d5\u05d3\u05d5\u05ea',
@@ -54,31 +55,23 @@ export const ListToolbarActions: React.FC<ListToolbarActionsProps> = ({
       ) : null}
 
       {canRenderColumnsToggle ? (
-        <button
-          type="button"
+        <ToolbarIconButton
           onClick={onToggleColumns}
+          label={TEXT.columns}
           title={TEXT.toggleColumns}
-          aria-label={TEXT.columns}
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[4px] border transition-colors ${
-            columnsOpen
-              ? 'border-[#e5e5e5] bg-[#f5f5f5] text-[#0d0d12] dark:border-[#262626] dark:bg-[#262626] dark:text-[#fafafa]'
-              : 'border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]'
-          }`}
+          active={columnsOpen}
         >
           <Columns3 className="h-3.5 w-3.5" />
-        </button>
+        </ToolbarIconButton>
       ) : null}
 
       {canRenderExportButton ? (
-        <button
-          type="button"
+        <ToolbarIconButton
           onClick={onExport}
-          title={TEXT.export}
-          aria-label={TEXT.export}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[4px] border border-[#e5e5e5] bg-white text-[#525252] transition-colors hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
+          label={TEXT.export}
         >
           <Download className="h-3.5 w-3.5" />
-        </button>
+        </ToolbarIconButton>
       ) : null}
     </div>
   );

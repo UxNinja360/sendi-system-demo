@@ -1,19 +1,43 @@
-﻿import React, { useState } from 'react';
-import { CheckCircle2, Package, Star, UserPlus, XCircle, ChevronDown as ChevronDownIcon } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ChevronDown as ChevronDownIcon,
+  Clock3,
+  Package,
+  Star,
+  UserPlus,
+  XCircle,
+} from 'lucide-react';
 import type { Courier, Delivery, DeliveryStatus } from '../types/delivery.types';
+import {
+  DELIVERY_ASSIGNMENT_BLOCK_COPY,
+  getDeliveryAssignmentBlockReason,
+  getDeliveryOfferRemainingSeconds,
+} from '../utils/delivery-assignment';
+import { toValidDate } from '../utils/delivery-offers';
 
 interface SharedDeliveryActionsProps {
   delivery: Delivery;
   allCouriers: Courier[];
+  deliveryBalance: number;
   onAssignCourier: (deliveryId: string, courierId: string) => void;
   onStatusChange: (deliveryId: string, status: DeliveryStatus) => void;
   onCancelDelivery: (deliveryId: string) => void;
   onCompleteDelivery: (deliveryId: string) => void;
 }
 
+const fmtSecs = (seconds: number) => {
+  if (seconds < 60) return `${seconds}ש׳`;
+  const minutes = Math.floor(seconds / 60);
+  const rest = seconds % 60;
+  return rest === 0 ? `${minutes} דק׳` : `${minutes}:${String(rest).padStart(2, '0')} דק׳`;
+};
+
 export const SharedDeliveryActions: React.FC<SharedDeliveryActionsProps> = ({
   delivery,
   allCouriers,
+  deliveryBalance,
   onAssignCourier,
   onStatusChange,
   onCancelDelivery,
@@ -21,29 +45,77 @@ export const SharedDeliveryActions: React.FC<SharedDeliveryActionsProps> = ({
 }) => {
   const [assignOpen, setAssignOpen] = useState(false);
   const [courierFilter, setCourierFilter] = useState('');
+  const [now, setNow] = useState(() => new Date());
 
-  const isFinal = delivery.status === 'delivered' || delivery.status === 'cancelled';
+  useEffect(() => {
+    if (!delivery.offerExpiresAt || delivery.status !== 'pending') return undefined;
+    const interval = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(interval);
+  }, [delivery.offerExpiresAt, delivery.status]);
+
+  const isFinal = delivery.status === 'delivered' || delivery.status === 'cancelled' || delivery.status === 'expired';
   const availableCouriers = allCouriers.filter(
     (item) => item.status !== 'offline' && (courierFilter === '' || item.name.includes(courierFilter))
   );
+  const assignableCourierCount = allCouriers.filter((item) => item.status !== 'offline').length;
+  const assignmentBlockReason = getDeliveryAssignmentBlockReason(delivery, {
+    deliveryBalance,
+    availableCourierCount: assignableCourierCount,
+    now,
+  });
+  const assignmentBlockCopy = assignmentBlockReason
+    ? DELIVERY_ASSIGNMENT_BLOCK_COPY[assignmentBlockReason]
+    : null;
+  const offerExpiresAt = toValidDate(delivery.offerExpiresAt);
+  const offerRemainingSeconds = getDeliveryOfferRemainingSeconds(delivery, now);
 
   if (isFinal) return null;
 
   return (
     <div className="shrink-0 px-4 py-3 border-b border-[#f0f0f0] dark:border-[#1f1f1f] flex flex-wrap gap-2">
       {delivery.status === 'pending' && (
-        <div className="relative">
+        <div className="relative flex flex-col gap-1.5">
+          {offerExpiresAt && (
+            <div className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium ${
+              assignmentBlockReason === 'offer_expired'
+                ? 'border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-300'
+                : 'border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-900/60 dark:bg-orange-950/30 dark:text-orange-300'
+            }`}>
+              <Clock3 className="h-3.5 w-3.5 shrink-0" />
+              <span>
+                {assignmentBlockReason === 'offer_expired'
+                  ? 'הצעת רשת פגה'
+                  : `הצעת רשת: ${offerRemainingSeconds !== null ? fmtSecs(offerRemainingSeconds) : '-'} לציוות`}
+              </span>
+            </div>
+          )}
+
           <button
+            disabled={Boolean(assignmentBlockReason)}
             onClick={() => {
+              if (assignmentBlockReason) return;
               setAssignOpen((prev) => !prev);
               setCourierFilter('');
             }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-[#9fe870] hover:bg-[#8dd960] text-[#0d0d12] transition-colors"
+            title={assignmentBlockCopy ?? 'שבץ שליח'}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
+              assignmentBlockReason
+                ? 'cursor-not-allowed bg-[#f5f5f5] text-[#a3a3a3] dark:bg-[#1f1f1f] dark:text-[#737373]'
+                : 'bg-[#9fe870] hover:bg-[#8dd960] text-[#0d0d12]'
+            }`}
           >
             <UserPlus className="w-3.5 h-3.5" />
-            שבץ שליח
+            {assignmentBlockReason ? 'שיבוץ חסום' : 'שבץ שליח'}
             <ChevronDownIcon className={`w-3 h-3 transition-transform ${assignOpen ? 'rotate-180' : ''}`} />
           </button>
+
+          {assignmentBlockCopy && (
+            <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#737373] dark:text-[#a3a3a3]">
+              <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-orange-500" />
+              <span>{assignmentBlockCopy}</span>
+            </div>
+          )}
+
           {assignOpen && (
             <div className="absolute top-full mt-1 right-0 z-50 w-52 bg-white dark:bg-[#1a1a1a] border border-[#e5e5e5] dark:border-[#262626] rounded-xl shadow-xl overflow-hidden">
               <div className="p-2 border-b border-[#f0f0f0] dark:border-[#262626]">
@@ -112,4 +184,3 @@ export const SharedDeliveryActions: React.FC<SharedDeliveryActionsProps> = ({
     </div>
   );
 };
-

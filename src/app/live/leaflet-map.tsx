@@ -145,7 +145,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   const selectedRouteCourierId =
     selectedRouteOrder?.courierId &&
     selectedRouteOrder.status !== 'delivered' &&
-    selectedRouteOrder.status !== 'cancelled'
+    selectedRouteOrder.status !== 'cancelled' &&
+    selectedRouteOrder.status !== 'expired'
       ? selectedRouteOrder.courierId
       : null;
   const routeCourierId = highlightedCourierId ?? selectedRouteCourierId;
@@ -255,7 +256,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       if (courier) {
         const courierOrders = routeDataOrders.filter(o =>
           o.courierId === routeCourierId &&
-          o.status !== 'delivered' && o.status !== 'cancelled'
+          o.status !== 'delivered' && o.status !== 'cancelled' && o.status !== 'expired'
         );
         const orderById = Object.fromEntries(courierOrders.map(o => [o.deliveryId, o]));
 
@@ -299,7 +300,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
             const deliveryId = stopId.replace(/-dropoff$/, '');
             const order = orderById[deliveryId];
             if (!order) continue;
-            if (order.status !== 'delivered' && order.status !== 'cancelled') {
+            if (order.status !== 'delivered' && order.status !== 'cancelled' && order.status !== 'expired') {
               routePoints.push([order.lat, order.lng]);
             }
           }
@@ -361,7 +362,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         .filter((order) =>
           !!order.courierId &&
           order.status !== 'delivered' &&
-          order.status !== 'cancelled',
+          order.status !== 'cancelled' &&
+          order.status !== 'expired',
         )
         .map((order) => order.courierId as string),
     );

@@ -362,8 +362,6 @@ export const ReportsPage: React.FC = () => {
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]">
       <div dir="rtl">
         <PageToolbar
-          title="דוחות"
-          onToggleMobileSidebar={() => (window as any).toggleMobileSidebar?.()}
           periodControl={
             <ToolbarPeriodControl
               periodMode={periodMode}
@@ -377,7 +375,6 @@ export const ReportsPage: React.FC = () => {
             />
           }
           actions={reportsToolbarActions}
-          summary={`${deliveriesInRange.length} משלוחים • ${courierReports.length} שליחים • ${restaurantReports.length} מסעדות`}
         />
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">

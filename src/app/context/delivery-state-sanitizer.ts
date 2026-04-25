@@ -1,8 +1,11 @@
 import type {
   CourierShiftAssignment,
+  Delivery,
+  Restaurant,
   DeliveryState,
   WorkShift,
 } from '../types/delivery.types';
+import { getDeliveryOfferExpiresAt } from '../utils/delivery-offers';
 
 const STALE_SHIFT_GRACE_MS = 10 * 60 * 1000;
 const EARLY_SHIFT_START_GRACE_MS = 4 * 60 * 60 * 1000;
@@ -33,6 +36,58 @@ const addMinutes = (date: Date, minutes: number) => {
   const next = new Date(date);
   next.setMinutes(next.getMinutes() + minutes);
   return next;
+};
+
+const pickPositiveNumber = (...values: Array<number | null | undefined>) => {
+  const value = values.find((item) => typeof item === 'number' && item > 0);
+  return value ?? null;
+};
+
+const normalizeDeliveryCreditTimers = (delivery: Delivery, restaurant?: Restaurant): Delivery => {
+  const assignedAt = getValidDate(delivery.assignedAt) ?? getValidDate(delivery.coupled_time);
+  const consumedAt =
+    getValidDate(delivery.deliveryCreditConsumedAt) ??
+    (assignedAt && (delivery.status !== 'pending' || Boolean(delivery.courierId))
+      ? assignedAt
+      : null);
+  const preparationTime = pickPositiveNumber(delivery.preparationTime, delivery.cook_time) ?? 0;
+  const maxDeliveryTime = pickPositiveNumber(delivery.maxDeliveryTime, delivery.max_time_to_deliver) ?? 30;
+  const createdAt = getValidDate(delivery.createdAt) ?? getValidDate(delivery.creation_time) ?? new Date();
+  const offerExpiresAt =
+    getValidDate(delivery.offerExpiresAt) ??
+    getDeliveryOfferExpiresAt(createdAt, restaurant);
+
+  if (!consumedAt) {
+    return {
+      ...delivery,
+      createdAt,
+      creation_time: getValidDate(delivery.creation_time) ?? createdAt,
+      deliveryCreditConsumedAt: null,
+      offerExpiresAt,
+      expiredAt: getValidDate(delivery.expiredAt),
+      orderReadyTime: null,
+      should_delivered_time: null,
+      preparationTime,
+      cook_time: preparationTime,
+      maxDeliveryTime,
+      max_time_to_deliver: maxDeliveryTime,
+    };
+  }
+
+  return {
+    ...delivery,
+    createdAt,
+    creation_time: getValidDate(delivery.creation_time) ?? createdAt,
+    deliveryCreditConsumedAt: consumedAt,
+    offerExpiresAt,
+    expiredAt: getValidDate(delivery.expiredAt),
+    orderReadyTime: getValidDate(delivery.orderReadyTime) ?? addMinutes(consumedAt, preparationTime),
+    should_delivered_time: getValidDate(delivery.should_delivered_time) ?? addMinutes(consumedAt, maxDeliveryTime),
+    preparationTime,
+    cook_time: preparationTime,
+    maxDeliveryTime,
+    max_time_to_deliver: maxDeliveryTime,
+  };
 };
 
 const getShiftBounds = (shift: WorkShift) => {
@@ -139,6 +194,15 @@ export const sanitizeLoadedDeliveryState = (
   now: Date = new Date()
 ): DeliveryState => {
   const activeByCourier = pickActiveAssignments(state, now);
+  const deliveries = state.deliveries.map((delivery) => {
+    const restaurant = state.restaurants.find((item) =>
+      item.id === delivery.restaurantId ||
+      item.id === delivery.rest_id ||
+      item.name === delivery.restaurantName ||
+      item.name === delivery.rest_name
+    );
+    return normalizeDeliveryCreditTimers(delivery, restaurant);
+  });
   const activeAssignmentIds = new Set(
     Array.from(activeByCourier.values()).map(({ assignment }) => assignment.id)
   );
@@ -167,7 +231,7 @@ export const sanitizeLoadedDeliveryState = (
   });
 
   const liveDeliveryIdsByCourier = new Map<string, string[]>();
-  state.deliveries.forEach((delivery) => {
+  deliveries.forEach((delivery) => {
     if (
       !delivery.courierId ||
       (delivery.status !== 'assigned' && delivery.status !== 'delivering')
@@ -214,6 +278,7 @@ export const sanitizeLoadedDeliveryState = (
 
   return {
     ...state,
+    deliveries,
     shifts,
     couriers,
   };

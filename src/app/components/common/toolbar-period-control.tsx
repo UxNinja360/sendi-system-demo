@@ -2,6 +2,7 @@ import React from 'react';
 import { Calendar, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { format as formatDate } from 'date-fns';
 import { he } from 'date-fns/locale';
+import { ToolbarIconButton } from './toolbar-icon-button';
 
 export type PeriodMode = 'current_month' | 'custom_range';
 
@@ -30,6 +31,8 @@ const WEEKDAY_LABELS = [
 ];
 
 const RESET_RANGE_LABEL = '\u05e0\u05e7\u05d4 \u05d8\u05d5\u05d5\u05d7';
+const PREVIOUS_MONTH_LABEL = '\u05d7\u05d5\u05d3\u05e9 \u05e7\u05d5\u05d3\u05dd';
+const NEXT_MONTH_LABEL = '\u05d7\u05d5\u05d3\u05e9 \u05d4\u05d1\u05d0';
 const PICK_START_LABEL =
   '\u05dc\u05d7\u05e5 \u05e2\u05dc \u05ea\u05d0\u05e8\u05d9\u05da \u05d4\u05ea\u05d7\u05dc\u05d4';
 const PICK_END_LABEL =
@@ -139,15 +142,14 @@ export const ToolbarPeriodControl: React.FC<ToolbarPeriodControlProps> = ({
   return (
     <div className="relative flex items-center gap-1" ref={popoverRef}>
       {periodMode !== 'custom_range' ? (
-        <button
-          type="button"
+        <ToolbarIconButton
           onClick={() =>
             setMonthAnchor((value) => new Date(value.getFullYear(), value.getMonth() - 1, 1))
           }
-          className="flex h-9 w-9 items-center justify-center rounded-[4px] border border-[#e5e5e5] bg-white transition-colors hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:hover:bg-[#202020]"
+          label={PREVIOUS_MONTH_LABEL}
         >
           <ChevronRight className="h-4 w-4" />
-        </button>
+        </ToolbarIconButton>
       ) : null}
 
       <button
@@ -165,31 +167,28 @@ export const ToolbarPeriodControl: React.FC<ToolbarPeriodControlProps> = ({
       </button>
 
       {periodMode !== 'custom_range' ? (
-        <button
-          type="button"
+        <ToolbarIconButton
           onClick={() =>
             setMonthAnchor((value) => new Date(value.getFullYear(), value.getMonth() + 1, 1))
           }
-          className="flex h-9 w-9 items-center justify-center rounded-[4px] border border-[#e5e5e5] bg-white transition-colors hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:hover:bg-[#202020]"
+          label={NEXT_MONTH_LABEL}
         >
           <ChevronLeft className="h-4 w-4" />
-        </button>
+        </ToolbarIconButton>
       ) : null}
 
       {periodMode === 'custom_range' ? (
-        <button
-          type="button"
+        <ToolbarIconButton
           onClick={() => {
             setPeriodMode('current_month');
             setDatePickerOpen(false);
             setPickingStart(true);
             onReset?.();
           }}
-          className="flex h-9 w-9 items-center justify-center rounded-[4px] border border-[#e5e5e5] bg-white transition-colors hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:hover:bg-[#202020]"
-          title={RESET_RANGE_LABEL}
+          label={RESET_RANGE_LABEL}
         >
           <X className="h-4 w-4 text-[#737373]" />
-        </button>
+        </ToolbarIconButton>
       ) : null}
 
       {datePickerOpen ? (

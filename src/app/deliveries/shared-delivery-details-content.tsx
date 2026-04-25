@@ -68,15 +68,19 @@ export const SharedDeliveryDetailsContent: React.FC<Props> = ({ delivery, courie
   const courierPay = getDeliveryCourierBasePay(delivery);
   const courierTip = getDeliveryCourierTip(delivery);
   const cashAmount = getDeliveryCashAmount(delivery);
+  const offerExpiresAt = delivery.offerExpiresAt ? new Date(delivery.offerExpiresAt) : null;
 
   return (
     <div className="pb-2">
       <SectionTitle>פרטי הזמנה</SectionTitle>
       <div className="border-t border-[#f5f5f5] dark:border-[#1a1a1a]">
-        <InfoRow label="מחיר" value={formatCurrency(customerCharge)} green />
+        <InfoRow label="חיוב משלוח" value={formatCurrency(customerCharge)} green />
         <InfoRow label="זמן משוער" value={`${delivery.estimatedTime} דק׳`} />
         {delivery.delivery_distance ? (
           <InfoRow label="מרחק" value={`${delivery.delivery_distance.toFixed(1)} ק"מ`} />
+        ) : null}
+        {offerExpiresAt && !Number.isNaN(offerExpiresAt.getTime()) ? (
+          <InfoRow label="תוקף הצעה" value={offerExpiresAt.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })} />
         ) : null}
         {delivery.is_cash ? (
           <InfoRow

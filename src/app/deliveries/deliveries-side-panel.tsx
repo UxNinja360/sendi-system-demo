@@ -1,15 +1,14 @@
 ﻿import React from 'react';
 import { Download } from 'lucide-react';
 import { ExportDrawer } from './export-drawer';
-import { ListColumnsPanel } from '../components/common/list-columns-panel';
-import { ListSidePanel } from '../components/common/list-side-panel';
+import { EntityListSidePanel } from '../components/common/entity-list-side-panel';
 import { ListSidePanelHeader } from '../components/common/list-side-panel-header';
+import { type ColumnCategory } from '../components/common/column-selector';
 
 type DeliveriesSidePanelProps = {
   exportOpen: boolean;
   columnsOpen: boolean;
   onCloseExport: () => void;
-  onCloseColumns: () => void;
   setColumnsOpen: React.Dispatch<React.SetStateAction<boolean>>;
   onExport: (config: Parameters<React.ComponentProps<typeof ExportDrawer>['onExport']>[0]) => void;
   visibleColumns: Set<string>;
@@ -17,7 +16,7 @@ type DeliveriesSidePanelProps = {
   deliveryCount: number;
   selectedCount: number;
   groupCounts: React.ComponentProps<typeof ExportDrawer>['groupCounts'];
-  columnCategories?: React.ComponentProps<typeof ListColumnsPanel>['categories'];
+  columnCategories?: ColumnCategory[];
   defaultVisibleColumns?: Iterable<string>;
 };
 
@@ -25,7 +24,6 @@ export const DeliveriesSidePanel: React.FC<DeliveriesSidePanelProps> = ({
   exportOpen,
   columnsOpen,
   onCloseExport,
-  onCloseColumns,
   setColumnsOpen,
   onExport,
   visibleColumns,
@@ -37,12 +35,14 @@ export const DeliveriesSidePanel: React.FC<DeliveriesSidePanelProps> = ({
   defaultVisibleColumns,
 }) => {
   return (
-    <ListSidePanel isOpen={exportOpen || columnsOpen}>
-      {exportOpen && (
+    <EntityListSidePanel
+      exportOpen={exportOpen}
+      columnsOpen={columnsOpen}
+      exportPanel={
         <>
           <ListSidePanelHeader
             icon={<Download className="h-4 w-4" />}
-            title="ייצוא"
+            title={'\u05d9\u05d9\u05e6\u05d5\u05d0'}
             onClose={onCloseExport}
           />
           <ExportDrawer
@@ -56,22 +56,19 @@ export const DeliveriesSidePanel: React.FC<DeliveriesSidePanelProps> = ({
             groupCounts={groupCounts}
           />
         </>
-      )}
-
-      {columnsOpen && (
-        <ListColumnsPanel
-          isOpen={columnsOpen}
-          setIsOpen={setColumnsOpen}
-          visibleColumns={visibleColumns}
-          setVisibleColumns={setVisibleColumns}
-          categories={columnCategories}
-          defaultVisibleColumns={defaultVisibleColumns}
-          title="עמודות משלוחים"
-          description="בחר אילו פרטים יופיעו בטבלת המשלוחים"
-          presetsKey="deliveries-column-presets-v2"
-        />
-      )}
-    </ListSidePanel>
+      }
+      columnsPanel={{
+        setIsOpen: setColumnsOpen,
+        visibleColumns,
+        setVisibleColumns,
+        categories: columnCategories,
+        defaultVisibleColumns,
+        title: '\u05e2\u05de\u05d5\u05d3\u05d5\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
+        description:
+          '\u05d1\u05d7\u05e8 \u05d0\u05d9\u05dc\u05d5 \u05e4\u05e8\u05d8\u05d9\u05dd \u05d9\u05d5\u05e4\u05d9\u05e2\u05d5 \u05d1\u05d8\u05d1\u05dc\u05ea \u05d4\u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
+        presetsKey: 'deliveries-column-presets-v2',
+      }}
+    />
   );
 };
 

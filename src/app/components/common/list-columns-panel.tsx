@@ -3,7 +3,7 @@ import { SlidersHorizontal } from 'lucide-react';
 import { type ColumnCategory, ColumnSelector } from './column-selector';
 import { ListSidePanelHeader } from './list-side-panel-header';
 
-type ListColumnsPanelProps = {
+export type ListColumnsPanelProps = {
   isOpen: boolean;
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
   visibleColumns: Set<string>;
@@ -22,7 +22,7 @@ export const ListColumnsPanel: React.FC<ListColumnsPanelProps> = ({
   setVisibleColumns,
   categories,
   defaultVisibleColumns,
-  title = 'עמודות',
+  title = '\u05e2\u05de\u05d5\u05d3\u05d5\u05ea',
   description,
   presetsKey,
 }) => {

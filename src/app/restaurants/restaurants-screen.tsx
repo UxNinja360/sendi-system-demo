@@ -7,11 +7,14 @@ import { format } from 'date-fns';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { toast } from 'sonner';
-import { ListColumnsPanel } from '../components/common/list-columns-panel';
+import { EntityListSidePanel } from '../components/common/entity-list-side-panel';
+import { EntityListShell } from '../components/common/entity-list-shell';
 import { ListExportDrawer } from '../components/common/list-export-drawer';
 import { PageToolbar } from '../components/common/page-toolbar';
-import { ListSidePanel } from '../components/common/list-side-panel';
-import { SelectionActionBar } from '../components/common/selection-action-bar';
+import {
+  SelectionActionBar,
+  SelectionActionButton,
+} from '../components/common/selection-action-bar';
 import { ListToolbarActions } from '../components/common/list-toolbar-actions';
 import { getRestaurantChainId } from '../utils/restaurant-branding';
 import {
@@ -540,7 +543,8 @@ export const RestaurantsScreen: React.FC = () => {
     const hasActiveDeliveries = state.deliveries.some(d =>
       d.restaurantId === restaurantId &&
       d.status !== 'delivered' &&
-      d.status !== 'cancelled'
+      d.status !== 'cancelled' &&
+      d.status !== 'expired'
     );
 
     if (hasActiveDeliveries) {
@@ -565,7 +569,7 @@ export const RestaurantsScreen: React.FC = () => {
       { 'פרט': 'אחוז הצלחה', 'ערך': deliveries.length > 0 ? `${Math.round((f.deliveredCount / deliveries.length) * 100)}%` : '0%' },
       { 'פרט': 'זמן ממוצע (דק׳)', 'ערך': f.avgTime || '-' },
       { 'פרט': '', 'ערך': '' },
-      { 'פרט': 'הכנסות', 'ערך': formatCurrency(f.totalRevenue) },
+      { 'פרט': 'חיובי משלוחים', 'ערך': formatCurrency(f.totalRevenue) },
       { 'פרט': 'מחיר מסעדה', 'ערך': formatCurrency(f.totalRestPrice) },
       { 'פרט': 'תשלום שליח', 'ערך': formatCurrency(f.totalCourierPay) },
       { 'פרט': 'טיפים', 'ערך': formatCurrency(f.totalTips) },
@@ -696,86 +700,80 @@ export const RestaurantsScreen: React.FC = () => {
   // ═══════════════════════════════════════
   return (
     <>
-      <div className="flex flex-row h-full overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]" dir="ltr">
-        <ListSidePanel isOpen={isExportOpen || columnsOpen}>
-          {isExportOpen && (
-            <ListExportDrawer
-              onClose={() => setIsExportOpen(false)}
-              actions={[
-                {
-                  id: 'visible-restaurants',
-                  title: 'ייצוא טבלת המסעדות',
-                  description: 'Excel עם העמודות המוצגות כרגע בטבלה',
-                  meta: `${selectedRestaurantIds.size > 0 ? selectedRestaurantIds.size : filteredRestaurants.length} מסעדות · ${visibleOrderedCols.length} עמודות`,
-                  icon: <FileSpreadsheet className="h-5 w-5" />,
-                  onClick: handleExportVisibleRestaurants,
-                },
-                {
-                  id: 'zip-per-restaurant',
-                  title: 'ייצוא ZIP לפי מסעדה',
-                  description: 'קובץ Excel נפרד לכל מסעדה עם המשלוחים שלה',
-                  meta: `${stats.total} מסעדות · ${state.deliveries.length} משלוחים`,
-                  icon: <Download className="h-5 w-5" />,
-                  onClick: handleExportZipPerRestaurant,
-                },
-              ]}
-            />
-          )}
-
-          {columnsOpen && (
-            <ListColumnsPanel
-              isOpen={columnsOpen}
-              setIsOpen={setColumnsOpen}
-              visibleColumns={visibleColumns}
-              setVisibleColumns={setVisibleColumns}
-              categories={[...RESTAURANT_COLUMN_CATEGORIES]}
-              defaultVisibleColumns={DEFAULT_RESTAURANT_VISIBLE_COLUMNS}
-              title="עמודות מסעדות"
-              description="בחר אילו פרטים יופיעו בטבלת המסעדות"
-              presetsKey="restaurants-column-presets-v1"
-            />
-          )}
-        </ListSidePanel>
-
-        <div className="flex-1 min-w-0 overflow-hidden flex flex-col" dir="rtl">
-
-        <PageToolbar
-          title="מסעדות"
-          count={state.restaurants.length}
-          onToggleMobileSidebar={() => (window as any).toggleMobileSidebar?.()}
-          primaryActionLabel="הוסף מסעדה"
-          onPrimaryAction={() => setIsAddModalOpen(true)}
-          showPeriodControl={false}
-          headerControls={
-            <ListToolbarActions
-              showSearch={false}
-              columnsOpen={columnsOpen}
-              onExport={() => { setIsExportOpen((v) => !v); setColumnsOpen(false); }}
-              onToggleColumns={() => { setColumnsOpen(true); setIsExportOpen(false); }}
-            />
-          }
-          actions={
-            <ListToolbarActions
-              searchQuery={searchQuery}
-              onSearchQueryChange={setSearchQuery}
-              searchPlaceholder="חפש מסעדה, עיר או איש קשר..."
-              searchWidthClass="w-52"
-              showColumnsToggle={false}
-              showExportButton={false}
-            />
-          }
-          summary={
-            searchQuery.trim()
-              ? `${filteredRestaurants.length} מתוך ${restaurants.length} מסעדות`
-              : `${stats.active} פעילות · ${stats.inactive} כבויות`
-          }
-        />
-
-        <RestaurantOverviewStrip stats={stats} hasSearch={Boolean(searchQuery.trim())} />
+      <EntityListShell
+        sidePanel={
+          <EntityListSidePanel
+            exportOpen={isExportOpen}
+            columnsOpen={columnsOpen}
+            exportPanel={
+              <ListExportDrawer
+                onClose={() => setIsExportOpen(false)}
+                actions={[
+                  {
+                    id: 'visible-restaurants',
+                    title: '\u05d9\u05d9\u05e6\u05d5\u05d0 \u05d8\u05d1\u05dc\u05ea \u05d4\u05de\u05e1\u05e2\u05d3\u05d5\u05ea',
+                    description:
+                      'Excel \u05e2\u05dd \u05d4\u05e2\u05de\u05d5\u05d3\u05d5\u05ea \u05d4\u05de\u05d5\u05e6\u05d2\u05d5\u05ea \u05db\u05e8\u05d2\u05e2 \u05d1\u05d8\u05d1\u05dc\u05d4',
+                    meta: `${selectedRestaurantIds.size > 0 ? selectedRestaurantIds.size : filteredRestaurants.length} \u05de\u05e1\u05e2\u05d3\u05d5\u05ea \u00b7 ${visibleOrderedCols.length} \u05e2\u05de\u05d5\u05d3\u05d5\u05ea`,
+                    icon: <FileSpreadsheet className="h-5 w-5" />,
+                    onClick: handleExportVisibleRestaurants,
+                  },
+                  {
+                    id: 'zip-per-restaurant',
+                    title: '\u05d9\u05d9\u05e6\u05d5\u05d0 ZIP \u05dc\u05e4\u05d9 \u05de\u05e1\u05e2\u05d3\u05d4',
+                    description:
+                      '\u05e7\u05d5\u05d1\u05e5 Excel \u05e0\u05e4\u05e8\u05d3 \u05dc\u05db\u05dc \u05de\u05e1\u05e2\u05d3\u05d4 \u05e2\u05dd \u05d4\u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd \u05e9\u05dc\u05d4',
+                    meta: `${stats.total} \u05de\u05e1\u05e2\u05d3\u05d5\u05ea \u00b7 ${state.deliveries.length} \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd`,
+                    icon: <Download className="h-5 w-5" />,
+                    onClick: handleExportZipPerRestaurant,
+                  },
+                ]}
+              />
+            }
+            columnsPanel={{
+              setIsOpen: setColumnsOpen,
+              visibleColumns,
+              setVisibleColumns,
+              categories: [...RESTAURANT_COLUMN_CATEGORIES],
+              defaultVisibleColumns: DEFAULT_RESTAURANT_VISIBLE_COLUMNS,
+              title: '\u05e2\u05de\u05d5\u05d3\u05d5\u05ea \u05de\u05e1\u05e2\u05d3\u05d5\u05ea',
+              description:
+                '\u05d1\u05d7\u05e8 \u05d0\u05d9\u05dc\u05d5 \u05e4\u05e8\u05d8\u05d9\u05dd \u05d9\u05d5\u05e4\u05d9\u05e2\u05d5 \u05d1\u05d8\u05d1\u05dc\u05ea \u05d4\u05de\u05e1\u05e2\u05d3\u05d5\u05ea',
+              presetsKey: 'restaurants-column-presets-v1',
+            }}
+          />
+        }
+        toolbar={
+          <PageToolbar
+            primaryActionLabel="הוסף מסעדה"
+            onPrimaryAction={() => setIsAddModalOpen(true)}
+            showPeriodControl={false}
+            headerControls={
+              <ListToolbarActions
+                showSearch={false}
+                columnsOpen={columnsOpen}
+                onExport={() => { setIsExportOpen((v) => !v); setColumnsOpen(false); }}
+                onToggleColumns={() => { setColumnsOpen((value) => !value); setIsExportOpen(false); }}
+              />
+            }
+            actions={
+              <ListToolbarActions
+                searchQuery={searchQuery}
+                onSearchQueryChange={setSearchQuery}
+                searchPlaceholder="חפש מסעדה, עיר או איש קשר..."
+                searchWidthClass="w-52"
+                showColumnsToggle={false}
+                showExportButton={false}
+              />
+            }
+          />
+        }
+        overview={
+          <RestaurantOverviewStrip stats={stats} hasSearch={Boolean(searchQuery.trim())} />
+        }
+      >
 
         {/* Content */}
-        <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-
             {/* Table / Empty state */}
             <ListTableSection
               isEmpty={filteredRestaurants.length === 0}
@@ -794,31 +792,28 @@ export const RestaurantsScreen: React.FC = () => {
               selectionBar={
                 <SelectionActionBar
                   selectedCount={selectedRestaurantIds.size}
-                  selectionLabel={`נבחרו ${selectedRestaurantIds.size} מסעדות`}
+                  entitySingular={'\u05de\u05e1\u05e2\u05d3\u05d4'}
+                  entityPlural={'\u05de\u05e1\u05e2\u05d3\u05d5\u05ea'}
                   onClear={() => setSelectedRestaurantIds(new Set())}
                   actions={
                     <>
-                      <button
-                        type="button"
+                      <SelectionActionButton
                         onClick={() => handleBulkSetRestaurantsActive(true)}
-                        className="rounded-lg bg-[#16a34a] px-4 py-2 text-sm font-bold text-white shadow-md shadow-[#16a34a]/20 transition-colors hover:bg-[#15803d]"
                       >
-                        הפעל
-                      </button>
-                      <button
-                        type="button"
+                        {'\u05d4\u05e4\u05e2\u05dc'}
+                      </SelectionActionButton>
+                      <SelectionActionButton
                         onClick={() => handleBulkSetRestaurantsActive(false)}
-                        className="rounded-lg bg-[#404040] px-4 py-2 text-sm font-bold text-white shadow-md shadow-black/10 transition-colors hover:bg-[#262626]"
+                        variant="neutral"
                       >
-                        השבת
-                      </button>
-                      <button
-                        type="button"
+                        {'\u05d4\u05e9\u05d1\u05ea'}
+                      </SelectionActionButton>
+                      <SelectionActionButton
                         onClick={handleExportVisibleRestaurants}
-                        className="rounded-lg border border-[#d4d4d4] bg-white px-4 py-2 text-sm font-bold text-[#0d0d12] transition-colors hover:bg-[#f5f5f5] dark:border-[#404040] dark:bg-[#171717] dark:text-[#fafafa] dark:hover:bg-[#262626]"
+                        variant="outline"
                       >
-                        ייצוא נבחרות
-                      </button>
+                        {'\u05d9\u05d9\u05e6\u05d5\u05d0 \u05e0\u05d1\u05d7\u05e8\u05d5\u05ea'}
+                      </SelectionActionButton>
                     </>
                   }
                 />
@@ -954,10 +949,7 @@ export const RestaurantsScreen: React.FC = () => {
                 </tr>
               ))}
             </ListTableSection>
-
-          </div>
-        </div>
-      </div>
+      </EntityListShell>
 
       <EntityActionMenuOverlay
         open={Boolean(contextMenuPos && openActionsRestaurantId)}

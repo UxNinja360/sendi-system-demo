@@ -40,6 +40,7 @@ export const OrderDetailsPanel: React.FC<OrderDetailsPanelProps> = ({ order, onC
             delivery={delivery}
             courier={courier}
             allCouriers={state.couriers}
+            deliveryBalance={state.deliveryBalance}
             onClose={onClose}
             onNavigatePrev={() => {}}
             onNavigateNext={() => {}}

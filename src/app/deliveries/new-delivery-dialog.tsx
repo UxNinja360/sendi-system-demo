@@ -57,7 +57,6 @@ export const NewDeliveryDialog: React.FC<NewDeliveryDialogProps> = ({
     const id = `D${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
     const orderNumber = `#${Math.floor(10000 + Math.random() * 90000)}`;
     const preparationTime = selectedRestaurant?.defaultPreparationTime ?? 15;
-    const orderReadyTime = new Date(now.getTime() + preparationTime * 60000);
 
     const newDelivery: Delivery = {
       id,
@@ -109,6 +108,9 @@ export const NewDeliveryDialog: React.FC<NewDeliveryDialogProps> = ({
       createdAt: now,
       creation_time: now,
       assignedAt: null,
+      deliveryCreditConsumedAt: null,
+      offerExpiresAt: null,
+      expiredAt: null,
       coupled_time: null,
       pickedUpAt: null,
       took_it_time: null,
@@ -122,9 +124,9 @@ export const NewDeliveryDialog: React.FC<NewDeliveryDialogProps> = ({
 
       // Estimates
       estimatedTime: 30,
-      estimatedArrivalAtRestaurant: new Date(now.getTime() + 10 * 60000),
-      estimatedArrivalAtCustomer: new Date(now.getTime() + (preparationTime + 15) * 60000),
-      orderReadyTime,
+      estimatedArrivalAtRestaurant: null,
+      estimatedArrivalAtCustomer: null,
+      orderReadyTime: null,
 
       // Mechanics
       preparationTime,
@@ -132,6 +134,7 @@ export const NewDeliveryDialog: React.FC<NewDeliveryDialogProps> = ({
       origin_cook_time: preparationTime,
       maxDeliveryTime: 45,
       max_time_to_deliver: 45,
+      should_delivered_time: null,
       orderPriority: 1,
       priority: 1,
       cancelledAfterPickup: false,
@@ -238,7 +241,7 @@ export const NewDeliveryDialog: React.FC<NewDeliveryDialogProps> = ({
 
             {/* Pricing */}
             <div className="grid grid-cols-2 gap-3">
-              <Field label="מחיר ללקוח (₪)">
+              <Field label="חיוב משלוח (₪)">
                 <input value={price} onChange={e => setPrice(e.target.value)} className={inputCls} placeholder="0" type="number" min="0" step="0.5" style={{ direction: 'ltr' }} />
               </Field>
               <Field label="תשלום לשליח (₪)">

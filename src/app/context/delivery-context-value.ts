@@ -5,7 +5,7 @@ export interface DeliveryContextType {
   state: DeliveryState;
   dispatch: Dispatch<DeliveryAction>;
   toggleSystem: () => void;
-  assignCourier: (deliveryId: string, courierId: string, pickupBatchId?: string) => void;
+  assignCourier: (deliveryId: string, courierId: string, pickupBatchId?: string) => boolean;
   cancelDelivery: (deliveryId: string) => void;
   unassignCourier: (deliveryId: string) => void;
   updateDelivery: (deliveryId: string, updates: Partial<Delivery>) => void;

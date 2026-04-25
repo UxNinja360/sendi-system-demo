@@ -293,9 +293,10 @@ export const useLiveManagerData = ({
     const delivering = state.deliveries.filter((delivery) => delivery.status === 'delivering').length;
     const delivered = state.deliveries.filter((delivery) => delivery.status === 'delivered').length;
     const cancelled = state.deliveries.filter((delivery) => delivery.status === 'cancelled').length;
+    const expired = state.deliveries.filter((delivery) => delivery.status === 'expired').length;
     const total = state.deliveries.length;
 
-    return { pending, assigned, delivering, delivered, cancelled, total };
+    return { pending, assigned, delivering, delivered, cancelled, expired, total };
   }, [state.deliveries]);
 
   const filteredOrders = useMemo(

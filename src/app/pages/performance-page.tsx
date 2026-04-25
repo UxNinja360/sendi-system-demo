@@ -79,8 +79,6 @@ export const PerformancePage: React.FC = () => {
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#f5f5f5] dark:bg-[#0a0a0a]">
       <div dir="rtl">
         <PageToolbar
-          title="ביצועים"
-          onToggleMobileSidebar={() => (window as any).toggleMobileSidebar?.()}
           periodControl={
             <ToolbarPeriodControl
               periodMode={periodMode}
@@ -93,7 +91,6 @@ export const PerformancePage: React.FC = () => {
               setCustomEndDate={setCustomEndDate}
             />
           }
-          summary={`${deliveriesInRange.length} משלוחים • ${couriersInRangeCount} שליחים • ${restaurantsInRangeCount} מסעדות`}
         />
       </div>
 

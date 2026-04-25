@@ -101,6 +101,8 @@ export const ALL_COLUMNS: ColumnDef[] = [
 
   // ===== ⏱️ ציר זמן =====
   { id: 'creation_time', label: 'זמן יצירה', sortable: true, type: 'date', getValue: d => fmtDate(d.creation_time || d.createdAt) },
+  { id: 'offerExpiresAt', label: 'תוקף הצעה', sortable: true, type: 'date', getValue: d => fmtDate(d.offerExpiresAt) },
+  { id: 'deliveryCreditConsumedAt', label: 'ניצול קרדיט', sortable: true, type: 'date', getValue: d => fmtDate(d.deliveryCreditConsumedAt) },
   { id: 'push_time', label: 'זמן דחיפה', sortable: true, type: 'date', getValue: d => fmtDate(d.push_time) },
   { id: 'coupled_time', label: 'זמן שיוך לשליח', sortable: true, type: 'date', getValue: d => fmtDate(d.coupled_time || d.assignedAt) },
   { id: 'started_pickup', label: 'התחיל איסוף', sortable: true, type: 'date', getValue: d => fmtDate(d.started_pickup) },
@@ -133,7 +135,7 @@ export const ALL_COLUMNS: ColumnDef[] = [
   { id: 'runner_price', label: 'תשלום שליח', sortable: true, type: 'money', getValue: d => formatCurrency(getDeliveryCourierBasePay(d)) },
   { id: 'runner_tip', label: 'טיפ', sortable: true, type: 'money', getValue: d => fmtMoney(d.runner_tip) },
   { id: 'sum_cash', label: 'סכום מזומן', sortable: true, type: 'money', getValue: d => fmtMoney(d.sum_cash) },
-  { id: 'price', label: 'מחיר ללקוח', sortable: true, type: 'custom', getValue: d => formatCurrency(getDeliveryCustomerCharge(d)) },
+  { id: 'price', label: 'חיוב משלוח', sortable: true, type: 'custom', getValue: d => formatCurrency(getDeliveryCustomerCharge(d)) },
   { id: 'is_cash', label: 'מזומן', sortable: true, type: 'boolean', getValue: d => fmtBool(d.is_cash) },
   { id: 'commissionAmount', label: 'עמלה', sortable: true, type: 'money', getValue: d => fmtMoney(d.commissionAmount) },
 

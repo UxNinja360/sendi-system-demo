@@ -25,6 +25,7 @@ import {
   buildDefaultRouteStopIds,
 } from '../utils/pickup-batches';
 import { DELIVERY_STORAGE_KEYS } from '../context/delivery-storage';
+import { getDeliveryAssignmentBlockReason } from '../utils/delivery-assignment';
 
 const LIVE_MANAGER_ROUTE_STOP_ORDERS_STORAGE_KEY = DELIVERY_STORAGE_KEYS.liveRouteStopOrders;
 const LIVE_MANAGER_COURIER_POSITIONS_STORAGE_KEY = DELIVERY_STORAGE_KEYS.liveCourierPositions;
@@ -257,8 +258,13 @@ export const LiveManager: React.FC = () => {
   const [hoveredRestaurantName, setHoveredRestaurantName] = useState<string | null>(null);
 
   const isDeliveryAssignable = useCallback((delivery?: Delivery | null) => {
-    return delivery?.status === 'pending';
-  }, []);
+    return Boolean(
+      delivery &&
+      getDeliveryAssignmentBlockReason(delivery, {
+        deliveryBalance: state.deliveryBalance,
+      }) === null
+    );
+  }, [state.deliveryBalance]);
 
   const {
     editDelivery,
@@ -327,6 +333,7 @@ export const LiveManager: React.FC = () => {
     clearCourierSelection,
     clearOrderSelection,
     couriers: state.couriers,
+    deliveryBalance: state.deliveryBalance,
     deliveries: state.deliveries,
     focusOrderInDeliveries,
     isDeliveryAssignable,

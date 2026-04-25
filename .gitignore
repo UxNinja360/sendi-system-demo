@@ -16,3 +16,11 @@ __pycache__/
 
 .codex/
 .claude/
+
+# Local browser/test artifacts
+.codex-ui-review/
+.tmp-edge*/
+.tmp-edge-*/
+.tmp-edge-ui-review*/
+dev-dist/
+edge-dom.txt

@@ -14,7 +14,11 @@ import {
   getInitialCourierPosition,
   type MapPosition,
 } from '../live/live-simulation-engine';
-import { getAutoAssignableCourier } from '../utils/courier-assignment';
+import { canCourierAcceptDelivery, getAutoAssignableCourier } from '../utils/courier-assignment';
+import {
+  canAssignDeliveryWithCredits,
+} from '../utils/delivery-credits';
+import { isDeliveryOfferExpired } from '../utils/delivery-offers';
 import {
   DEFAULT_RESTAURANT_MAX_DELIVERY_TIME,
   DEFAULT_RESTAURANT_PREPARATION_TIME,
@@ -684,12 +688,6 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const etaAfterPickupMinutes = Math.max(8, Math.round((deliveryDistanceKm / 18) * 60) + 3);
 
     const now = generatedAt;
-    // Estimated arrival to restaurant: 5-15 minutes.
-    const estimatedRestaurantTime = new Date(now.getTime() + (5 + Math.random() * 10) * 60000);
-    const estimatedCustomerTime = new Date(
-      estimatedRestaurantTime.getTime() + etaAfterPickupMinutes * 60000
-    );
-
     const restPrice = Math.floor(price * 0.7); // 70% of customer price
     const runnerPrice = Math.floor(price * 0.3); // 30% to courier
     const cookTime = restaurant.defaultPreparationTime ?? DEFAULT_RESTAURANT_PREPARATION_TIME;
@@ -726,12 +724,12 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       cook_type: ['רגיל', 'מהיר', 'איטי'][Math.floor(Math.random() * 3)],
       cook_time: cookTime,
       origin_cook_time: cookTime,
-      order_ready: Math.random() > 0.5,
-      reported_order_is_ready: Math.random() > 0.6,
+      order_ready: false,
+      reported_order_is_ready: false,
       rest_approve: Math.random() > 0.4,
       rest_waits_for_cook_time: Math.random() > 0.5,
-      rest_last_eta: Math.random() > 0.5 ? new Date(now.getTime() + cookTime * 60000) : null,
-      rest_approved_eta: Math.random() > 0.6 ? new Date(now.getTime() + cookTime * 60000) : null,
+      rest_last_eta: null,
+      rest_approved_eta: null,
       is_drinks_exist: Math.random() > 0.6,
       is_sauces_exist: Math.random() > 0.5,
       
@@ -791,7 +789,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // ========================================
       // 6. ðŸ“Š Mechanics & SLA
       // ========================================
-      should_delivered_time: new Date(now.getTime() + maxDeliveryTime * 60000),
+      should_delivered_time: null,
       max_time_to_deliver: maxDeliveryTime,
       min_time_to_suplly: Math.floor(15 + Math.random() * 10),
       max_time_to_suplly: Math.floor(30 + Math.random() * 15),
@@ -803,7 +801,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       delivery_distance: deliveryDistanceKm,
       duration_to_client: etaAfterPickupMinutes,
       eta_after_pickup: etaAfterPickupMinutes,
-      suplly_status: ['ממתין', 'בהכנה', 'מוכן'][Math.floor(Math.random() * 3)],
+      suplly_status: 'ממתין',
       
       // ========================================
       // 7. ðŸ’° Economy / Finances
@@ -864,15 +862,18 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       courierRating: undefined,
       createdAt: now,
       assignedAt: null,
+      deliveryCreditConsumedAt: null,
+      offerExpiresAt: null,
+      expiredAt: null,
       pickedUpAt: null,
       deliveredAt: null,
       arrivedAtRestaurantAt: null,
       arrivedAtCustomerAt: null,
       estimatedTime: Math.max(15, cookTime + etaAfterPickupMinutes),
-      estimatedArrivalAtRestaurant: estimatedRestaurantTime,
-      estimatedArrivalAtCustomer: estimatedCustomerTime,
-      orderReadyTime: Math.random() > 0.5 ? new Date(now.getTime() + cookTime * 60000) : null,
-      reportedOrderIsReady: Math.random() > 0.6,
+      estimatedArrivalAtRestaurant: null,
+      estimatedArrivalAtCustomer: null,
+      orderReadyTime: null,
+      reportedOrderIsReady: false,
       preparationTime: cookTime,
       maxDeliveryTime: maxDeliveryTime,
       cancelledAt: null,
@@ -889,9 +890,6 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   // A single scheduler keeps the demo realistic and prevents HMR/reload bursts.
-  const deliveryBalanceRef = useRef(state.deliveryBalance);
-  useEffect(() => { deliveryBalanceRef.current = state.deliveryBalance; }, [state.deliveryBalance]);
-
   useEffect(() => {
     if (!state.isSystemOpen) {
       simulationOpenedAtRef.current = null;
@@ -904,7 +902,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const spawnEligibleDelivery = (now: Date = new Date()) => {
       const stateNow = stateRef.current;
-      if (!stateNow.isSystemOpen || deliveryBalanceRef.current <= 0) return;
+      if (!stateNow.isSystemOpen) return;
 
       const speed = Math.max(stateNow.timeMultiplier || 1, 0.1);
       const nowMs = now.getTime();
@@ -949,8 +947,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       const deliveryCount = Math.min(
         Math.max(1, nextRestaurant.deliveryRate || 1),
-        activeCapacity,
-        deliveryBalanceRef.current
+        activeCapacity
       );
 
       for (let i = 0; i < deliveryCount; i++) {
@@ -1002,6 +999,30 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
   }, [state.isSystemOpen, state.timeMultiplier, generateDelivery, rawDispatch]);
 
+  useEffect(() => {
+    const expireOffers = () => {
+      rawDispatch({ type: 'EXPIRE_DELIVERY_OFFERS', payload: new Date() });
+    };
+
+    expireOffers();
+    const intervalId = window.setInterval(expireOffers, 10_000);
+    const handleVisibilityChange = () => {
+      if (typeof document === 'undefined' || document.hidden) return;
+      expireOffers();
+    };
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    }
+
+    return () => {
+      window.clearInterval(intervalId);
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      }
+    };
+  }, [rawDispatch]);
+
   // Auto-assign pending deliveries while the feature is enabled.
   useEffect(() => {
     if (!state.autoAssignEnabled) return;
@@ -1011,7 +1032,11 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const pendingDelivery = stateNow.deliveries.find((delivery) => delivery.status === 'pending');
       const availableCourier = getAutoAssignableCourier(stateNow.couriers);
 
-      if (pendingDelivery && availableCourier) {
+      if (
+        pendingDelivery &&
+        availableCourier &&
+        canAssignDeliveryWithCredits(stateNow, pendingDelivery)
+      ) {
         rawDispatch({
           type: 'ASSIGN_COURIER',
           payload: createAssignCourierPayload(pendingDelivery.id, availableCourier.id),
@@ -1158,10 +1183,27 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const assignCourier = (deliveryId: string, courierId: string, pickupBatchId?: string) => {
+    const stateNow = stateRef.current;
+    const delivery = stateNow.deliveries.find((item) => item.id === deliveryId);
+    const courier = stateNow.couriers.find((item) => item.id === courierId);
+    if (
+      !delivery ||
+      !courier ||
+      delivery.status === 'delivered' ||
+      delivery.status === 'cancelled' ||
+      delivery.status === 'expired' ||
+      isDeliveryOfferExpired(delivery, new Date()) ||
+      !canCourierAcceptDelivery(courier, deliveryId) ||
+      !canAssignDeliveryWithCredits(stateNow, delivery)
+    ) {
+      return false;
+    }
+
     dispatch({
       type: 'ASSIGN_COURIER',
       payload: createAssignCourierPayload(deliveryId, courierId, pickupBatchId),
     });
+    return true;
   };
 
   const cancelDelivery = (deliveryId: string) => {

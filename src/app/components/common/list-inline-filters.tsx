@@ -47,10 +47,10 @@ type ListInlineFiltersProps = {
 };
 
 const TEXT = {
-  filters: 'פילטרים',
-  close: 'סגור',
-  clear: 'נקה',
-  search: 'חיפוש',
+  filters: '\u05e4\u05d9\u05dc\u05d8\u05e8\u05d9\u05dd',
+  close: '\u05e1\u05d2\u05d5\u05e8',
+  clear: '\u05e0\u05e7\u05d4',
+  search: '\u05d7\u05d9\u05e4\u05d5\u05e9',
 } as const;
 
 const isMultiSelectFilter = (

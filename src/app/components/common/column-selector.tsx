@@ -113,7 +113,7 @@ export const COLUMN_CATEGORIES: ColumnCategory[] = [
       { id: 'runner_price', label: 'תשלום לשליח' },
       { id: 'runner_tip', label: 'טיפ לשליח' },
       { id: 'sum_cash', label: 'סכום מזומן' },
-      { id: 'price', label: 'מחיר ללקוח' },
+      { id: 'price', label: 'חיוב משלוח' },
       { id: 'is_cash', label: 'תשלום במזומן' },
       { id: 'commissionAmount', label: 'עמלה' },
     ],

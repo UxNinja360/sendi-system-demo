@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import {
   Activity,
@@ -25,11 +25,13 @@ import { getNavItemById, isNavItemActive, SIDEBAR_NAV_SECTIONS } from '../../app
 import type { AppNavIconKey, AppNavItem } from '../../app-navigation';
 import { useDelivery } from '../../context/delivery-context-value';
 import { getDeliveryCustomerCharge } from '../../utils/delivery-finance';
+import { isOperationalDelivery } from '../../utils/delivery-status';
 import { AppLogo } from '../icons/app-logo';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 interface SidebarProps {
   onLogout: () => void;
+  onMobileMenuToggleReady?: (toggle: (() => void) | null) => void;
 }
 
 interface SidebarIconTooltipProps {
@@ -98,7 +100,7 @@ const SidebarIconTooltip: React.FC<SidebarIconTooltipProps> = ({ label, children
   </Tooltip>
 );
 
-export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileMenuToggleReady }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { state, dispatch } = useDelivery();
@@ -117,9 +119,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout }) => {
 
   const isExpanded = !isCollapsed || !isDesktop;
   const activeCouriersCount = state.couriers.filter((courier) => courier.status !== 'offline').length;
-  const activeDeliveriesCount = state.deliveries.filter(
-    (delivery) => delivery.status !== 'delivered' && delivery.status !== 'cancelled'
-  ).length;
+  const activeDeliveriesCount = state.deliveries.filter(isOperationalDelivery).length;
   const walletRevenue = state.deliveries
     .filter((delivery) => delivery.status === 'delivered')
     .reduce((sum, delivery) => sum + getDeliveryCustomerCharge(delivery), 0);
@@ -147,18 +147,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout }) => {
     }
   }, [isCollapsed]);
 
-  useEffect(() => {
-    (window as any).toggleMobileSidebar = () => setIsCollapsed((prev) => !prev);
-    return () => {
-      delete (window as any).toggleMobileSidebar;
-    };
+  const toggleMobileMenu = useCallback(() => {
+    setIsCollapsed((prev) => !prev);
   }, []);
+
+  useEffect(() => {
+    onMobileMenuToggleReady?.(toggleMobileMenu);
+    return () => onMobileMenuToggleReady?.(null);
+  }, [onMobileMenuToggleReady, toggleMobileMenu]);
 
   const closeMobileMenu = () => {
     if (!isDesktop) setIsCollapsed(false);
   };
-
-  const toggleMobileMenu = () => setIsCollapsed(!isCollapsed);
 
   const handleNav = (path: string) => {
     navigate(path);
@@ -556,7 +556,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout }) => {
         </div>
       </div>
 
-      <div id="mobile-menu-trigger" className="hidden" onClick={toggleMobileMenu} />
     </>
   );
 };

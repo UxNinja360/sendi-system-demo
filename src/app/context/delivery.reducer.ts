@@ -11,6 +11,15 @@
 } from '../types/delivery.types';
 import { getDeliveryCustomerCharge } from '../utils/delivery-finance';
 import { canCourierAcceptDelivery } from '../utils/courier-assignment';
+import {
+  DELIVERY_CREDITS_PER_ASSIGNMENT,
+  canAssignDeliveryWithCredits,
+  getDeliveryCreditConsumedAt,
+} from '../utils/delivery-credits';
+import {
+  getDeliveryOfferExpiresAt,
+  isDeliveryOfferExpired,
+} from '../utils/delivery-offers';
 import { createPickupBatchId, getRestaurantPickupBaseKey } from '../utils/pickup-batches';
 import {
   estimateTravelMinutes,
@@ -135,6 +144,9 @@ const updateDeliveriesForStatusChange = (
       updated.pickedUpAt = updated.pickedUpAt ?? now;
       updated.took_it_time = updated.took_it_time ?? now;
       updated.started_pickup = updated.started_pickup ?? updated.assignedAt ?? now;
+    }
+    if (status === 'expired') {
+      updated.expiredAt = updated.expiredAt ?? now;
     }
 
     return updated;
@@ -1177,7 +1189,8 @@ const removeRestaurantState = (
     (delivery) =>
       delivery.restaurantId === restaurantId &&
       delivery.status !== 'delivered' &&
-      delivery.status !== 'cancelled'
+      delivery.status !== 'cancelled' &&
+      delivery.status !== 'expired'
   );
 
   if (hasActiveDeliveries) {
@@ -1457,12 +1470,6 @@ const getRestaurantCapacityDelayMinutes = (
   return Math.ceil((nextAvailableTime.getTime() - referenceTime.getTime()) / 1000 / 60);
 };
 
-const getValidDateValue = (value: Date | string | number | null | undefined) => {
-  if (!value) return null;
-  const date = value instanceof Date ? value : new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
-};
-
 const toMapPosition = (
   lat: number | null | undefined,
   lng: number | null | undefined
@@ -1487,26 +1494,50 @@ const getDeliveryTravelEstimateMinutes = (
   return estimateTravelMinutes(pickupPosition, dropoffPosition);
 };
 
+const toValidDateValue = (value: Date | string | number | null | undefined) => {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
 const normalizeIncomingDelivery = (payload: Delivery, restaurant: Restaurant) => {
+  const createdAt =
+    toValidDateValue(payload.createdAt) ??
+    toValidDateValue(payload.creation_time) ??
+    new Date();
   const preparationTime =
     typeof payload.preparationTime === 'number' && payload.preparationTime > 0
       ? payload.preparationTime
       : typeof payload.cook_time === 'number' && payload.cook_time > 0
         ? payload.cook_time
         : getRestaurantPreparationTime(restaurant);
-  const createdAt = new Date(payload.createdAt ?? payload.creation_time ?? new Date());
   const maxDeliveryTime =
     typeof payload.maxDeliveryTime === 'number' && payload.maxDeliveryTime > 0
       ? payload.maxDeliveryTime
       : typeof payload.max_time_to_deliver === 'number' && payload.max_time_to_deliver > 0
         ? payload.max_time_to_deliver
         : getRestaurantMaxDeliveryTime(restaurant);
-  const orderReadyTime =
-    payload.orderReadyTime ??
-    new Date(createdAt.getTime() + preparationTime * 60000);
+  const assignmentAnchor =
+    getDeliveryCreditConsumedAt(payload) ??
+    toValidDateValue(payload.assignedAt) ??
+    toValidDateValue(payload.coupled_time);
+  const orderReadyTime = assignmentAnchor
+    ? toValidDateValue(payload.orderReadyTime) ?? new Date(assignmentAnchor.getTime() + preparationTime * 60000)
+    : null;
+  const shouldDeliveredTime = assignmentAnchor
+    ? toValidDateValue(payload.should_delivered_time) ?? new Date(assignmentAnchor.getTime() + maxDeliveryTime * 60000)
+    : null;
+  const offerExpiresAt =
+    toValidDateValue(payload.offerExpiresAt) ??
+    getDeliveryOfferExpiresAt(createdAt, restaurant);
 
   return {
     ...payload,
+    createdAt,
+    creation_time: toValidDateValue(payload.creation_time) ?? createdAt,
+    deliveryCreditConsumedAt: getDeliveryCreditConsumedAt(payload),
+    offerExpiresAt,
+    expiredAt: toValidDateValue(payload.expiredAt),
     preparationTime,
     cook_time: preparationTime,
     origin_cook_time:
@@ -1516,14 +1547,30 @@ const normalizeIncomingDelivery = (payload: Delivery, restaurant: Restaurant) =>
     orderReadyTime,
     maxDeliveryTime,
     max_time_to_deliver: maxDeliveryTime,
-    should_delivered_time:
-      payload.should_delivered_time ??
-      new Date(createdAt.getTime() + maxDeliveryTime * 60000),
+    should_delivered_time: shouldDeliveredTime,
   };
 };
 
 const getRestaurantByName = (restaurants: Restaurant[], restaurantName: string) =>
   restaurants.find((restaurant) => restaurant.name === restaurantName);
+
+const expirePendingDeliveryOffers = (deliveries: Delivery[], now: Date) => {
+  let changed = false;
+
+  const nextDeliveries = deliveries.map((delivery) => {
+    if (!isDeliveryOfferExpired(delivery, now)) return delivery;
+
+    changed = true;
+    return {
+      ...delivery,
+      status: 'expired' as DeliveryStatus,
+      expiredAt: now,
+      comment: delivery.comment || 'חלון הציוות הבלעדי לרשת פג',
+    };
+  });
+
+  return changed ? nextDeliveries : deliveries;
+};
 
 const buildStateAfterAddingDelivery = (
   state: DeliveryState,
@@ -1533,16 +1580,14 @@ const buildStateAfterAddingDelivery = (
   maxAllowed: number
 ) => {
   const deliveries = [...state.deliveries, delivery];
-  const deliveryBalance = state.deliveryBalance - 1;
 
   console.log(
-    `Added delivery for ${restaurant.name} (${restaurant.type}), remaining balance: ${deliveryBalance}, hourly load: ${recentRestaurantDeliveries.length + 1}/${maxAllowed}`
+    `Added delivery for ${restaurant.name} (${restaurant.type}), available credits: ${state.deliveryBalance}, hourly load: ${recentRestaurantDeliveries.length + 1}/${maxAllowed}`
   );
 
   return {
     ...state,
     deliveries,
-    deliveryBalance,
     stats: calculateStats(deliveries),
   };
 };
@@ -1559,6 +1604,22 @@ const assignCourierState = (
     runner_at_assigning_latitude,
     runner_at_assigning_longitude,
   } = payload;
+  const targetDelivery = state.deliveries.find((item) => item.id === deliveryId);
+  if (
+    !targetDelivery ||
+    targetDelivery.status === 'delivered' ||
+    targetDelivery.status === 'cancelled' ||
+    targetDelivery.status === 'expired' ||
+    isDeliveryOfferExpired(targetDelivery, now)
+  ) {
+    return null;
+  }
+
+  if (!canAssignDeliveryWithCredits(state, targetDelivery)) {
+    console.warn('Attempted to assign a delivery without delivery credits.');
+    return null;
+  }
+
   const courier = state.couriers.find((item) => item.id === courierId);
   if (!courier || !canCourierAcceptDelivery(courier, deliveryId)) {
     return null;
@@ -1569,8 +1630,14 @@ const assignCourierState = (
       delivery.courierId === courierId &&
       delivery.id !== deliveryId &&
       delivery.status !== 'delivered' &&
-      delivery.status !== 'cancelled'
+      delivery.status !== 'cancelled' &&
+      delivery.status !== 'expired'
   );
+
+  const creditCost = getDeliveryCreditConsumedAt(targetDelivery)
+    ? 0
+    : DELIVERY_CREDITS_PER_ASSIGNMENT;
+  const deliveryCreditConsumedAt = getDeliveryCreditConsumedAt(targetDelivery) ?? now;
 
   const nextDeliveries = state.deliveries.map((delivery) => {
     if (delivery.id !== deliveryId) return delivery;
@@ -1604,10 +1671,27 @@ const assignCourierState = (
       pickupPosition,
       dropoffPosition
     );
+    const preparationTime =
+      typeof delivery.preparationTime === 'number' && delivery.preparationTime > 0
+        ? delivery.preparationTime
+        : typeof delivery.cook_time === 'number' && delivery.cook_time > 0
+          ? delivery.cook_time
+          : 0;
+    const maxDeliveryTime =
+      typeof delivery.maxDeliveryTime === 'number' && delivery.maxDeliveryTime > 0
+        ? delivery.maxDeliveryTime
+        : typeof delivery.max_time_to_deliver === 'number' && delivery.max_time_to_deliver > 0
+          ? delivery.max_time_to_deliver
+          : 30;
+    const orderReadyTime = new Date(
+      deliveryCreditConsumedAt.getTime() + preparationTime * 60000
+    );
+    const shouldDeliveredTime = new Date(
+      deliveryCreditConsumedAt.getTime() + maxDeliveryTime * 60000
+    );
     const estimatedRestaurantTime = new Date(
       startedPickupAt.getTime() + minutesToRestaurant * 60000
     );
-    const orderReadyTime = getValidDateValue(delivery.orderReadyTime);
     const pickupReadyTime =
       orderReadyTime && orderReadyTime > estimatedRestaurantTime
         ? orderReadyTime
@@ -1630,6 +1714,13 @@ const assignCourierState = (
       runner_at_assigning_longitude,
       estimatedArrivalAtRestaurant: estimatedRestaurantTime,
       estimatedArrivalAtCustomer: estimatedCustomerTime,
+      orderReadyTime,
+      rest_last_eta: orderReadyTime,
+      rest_approved_eta: orderReadyTime,
+      should_delivered_time: shouldDeliveredTime,
+      maxDeliveryTime,
+      max_time_to_deliver: maxDeliveryTime,
+      deliveryCreditConsumedAt,
     };
   });
 
@@ -1642,6 +1733,7 @@ const assignCourierState = (
   return {
     deliveries: nextDeliveries,
     couriers: nextCouriers,
+    deliveryBalance: state.deliveryBalance - creditCost,
   };
 };
 
@@ -1775,13 +1867,7 @@ const reduceDeliveryState = (state: DeliveryState, action: DeliveryAction): Deli
     }
 
     case 'ADD_DELIVERY': {
-      // Guard 1: don't create a delivery when there is no available balance.
-      if (state.deliveryBalance <= 0) {
-        console.warn('Attempted to add a delivery without remaining balance.');
-        return state;
-      }
-
-      // Guard 2: enforce restaurant hourly capacity based on restaurant type.
+      // Enforce restaurant hourly capacity based on restaurant type.
       const restaurant = getRestaurantByName(state.restaurants, action.payload.restaurantName);
       
       if (!restaurant) {
@@ -1932,6 +2018,18 @@ const reduceDeliveryState = (state: DeliveryState, action: DeliveryAction): Deli
 
     }
 
+    case 'EXPIRE_DELIVERY_OFFERS': {
+      const now = action.payload ?? new Date();
+      const nextDeliveries = expirePendingDeliveryOffers(state.deliveries, now);
+      if (nextDeliveries === state.deliveries) return state;
+
+      return {
+        ...state,
+        deliveries: nextDeliveries,
+        stats: calculateStats(nextDeliveries),
+      };
+    }
+
     case 'CANCEL_DELIVERY': {
       const deliveryId = action.payload;
       const delivery = state.deliveries.find(d => d.id === deliveryId);
@@ -1939,8 +2037,6 @@ const reduceDeliveryState = (state: DeliveryState, action: DeliveryAction): Deli
       // Track whether the cancellation happened after pickup already started.
       const cancelledAfterPickup = delivery?.status === 'delivering';
 
-      // Refund balance only when cancellation happens before the courier is already delivering.
-      const shouldRefund = delivery && ['pending', 'assigned'].includes(delivery.status);
       const cancelledAt = new Date();
       const deliveriesAfterCancellationNext = updateDeliveriesForCancellation(
         state.deliveries,
@@ -1972,7 +2068,6 @@ const reduceDeliveryState = (state: DeliveryState, action: DeliveryAction): Deli
         ...state,
         deliveries: nextDeliveries,
         couriers: nextCouriers,
-        deliveryBalance: shouldRefund ? state.deliveryBalance + 1 : state.deliveryBalance,
         stats: calculateStats(nextDeliveries),
       };
     }

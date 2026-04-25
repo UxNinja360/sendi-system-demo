@@ -22,6 +22,7 @@ interface SharedDeliverySidePanelShellProps {
   delivery: Delivery | null;
   courier: Courier | null;
   allCouriers: Courier[];
+  deliveryBalance: number;
   onClose: () => void;
   onNavigatePrev?: () => void;
   onNavigateNext?: () => void;
@@ -34,17 +35,17 @@ interface SharedDeliverySidePanelShellProps {
   onCancelDelivery: (deliveryId: string) => void;
   onCompleteDelivery: (deliveryId: string) => void;
   onEditDelivery: (deliveryId: string) => void;
-  stats?: { total: number; delivered: number; cancelled: number; pending: number; revenue: number };
+  stats?: { total: number; delivered: number; cancelled: number; pending: number; expired?: number; revenue: number };
 }
 
 const calcProgress = (delivery: Delivery) => {
-  if (delivery.status === 'cancelled') return 0;
+  if (delivery.status === 'cancelled' || delivery.status === 'expired') return 0;
   const index = STATUS_ORDER.indexOf(delivery.status);
   return index === -1 ? 0 : Math.round(((index + 1) / STATUS_ORDER.length) * 100);
 };
 
 const calcTimeRemaining = (delivery: Delivery): number | null => {
-  if (delivery.status === 'delivered' || delivery.status === 'cancelled') return null;
+  if (delivery.status === 'delivered' || delivery.status === 'cancelled' || delivery.status === 'expired') return null;
   const now = new Date();
   if (delivery.status === 'assigned' && delivery.estimatedArrivalAtRestaurant) {
     return Math.max(0, Math.floor((delivery.estimatedArrivalAtRestaurant.getTime() - now.getTime()) / 1000));
@@ -67,6 +68,7 @@ export const SharedDeliverySidePanelShell: React.FC<SharedDeliverySidePanelShell
   delivery,
   courier,
   allCouriers,
+  deliveryBalance,
   onClose,
   onNavigatePrev,
   onNavigateNext,
@@ -106,7 +108,7 @@ export const SharedDeliverySidePanelShell: React.FC<SharedDeliverySidePanelShell
               { label: 'סה"כ', value: stats.total, color: 'text-[#0d0d12] dark:text-[#fafafa]' },
               { label: 'נמסרו', value: stats.delivered, color: 'text-green-600 dark:text-green-400' },
               { label: 'ממתינים', value: stats.pending, color: 'text-orange-600 dark:text-orange-400' },
-              { label: 'בוטלו', value: stats.cancelled, color: 'text-red-600 dark:text-red-400' },
+              { label: 'פגו', value: stats.expired ?? 0, color: 'text-zinc-600 dark:text-zinc-300' },
             ].map(({ label, value, color }) => (
               <div key={label} className="bg-[#f5f5f5] dark:bg-[#1a1a1a] rounded-xl p-3 text-center">
                 <div className={`text-lg font-bold tabular-nums ${color}`}>{value}</div>
@@ -123,7 +125,7 @@ export const SharedDeliverySidePanelShell: React.FC<SharedDeliverySidePanelShell
   const StatusIcon = cfg.icon;
   const progress = calcProgress(delivery);
   const timeRemaining = calcTimeRemaining(delivery);
-  const isFinal = delivery.status === 'delivered' || delivery.status === 'cancelled';
+  const isFinal = delivery.status === 'delivered' || delivery.status === 'cancelled' || delivery.status === 'expired';
 
   return (
     <div className="h-full flex flex-col bg-white dark:bg-[#0f0f0f]" dir="rtl">
@@ -183,7 +185,7 @@ export const SharedDeliverySidePanelShell: React.FC<SharedDeliverySidePanelShell
             <div className="h-1.5 bg-white/60 dark:bg-black/20 rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-500"
-                style={{ width: `${progress}%`, backgroundColor: delivery.status === 'cancelled' ? '#dc2626' : '#16a34a' }}
+                style={{ width: `${progress}%`, backgroundColor: delivery.status === 'cancelled' || delivery.status === 'expired' ? '#71717a' : '#16a34a' }}
               />
             </div>
           ) : (
@@ -212,6 +214,7 @@ export const SharedDeliverySidePanelShell: React.FC<SharedDeliverySidePanelShell
       <SharedDeliveryActions
         delivery={delivery}
         allCouriers={allCouriers}
+        deliveryBalance={deliveryBalance}
         onAssignCourier={onAssignCourier}
         onStatusChange={onStatusChange}
         onCancelDelivery={onCancelDelivery}

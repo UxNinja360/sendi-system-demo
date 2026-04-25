@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Search, X } from 'lucide-react';
+import { ToolbarIconButton } from './toolbar-icon-button';
 
 interface ToolbarSearchControlProps {
   searchOpen: boolean;
@@ -9,6 +10,11 @@ interface ToolbarSearchControlProps {
   placeholder: string;
   widthClass?: string;
 }
+
+const TEXT = {
+  search: '\u05d7\u05d9\u05e4\u05d5\u05e9',
+  close: '\u05e1\u05d2\u05d5\u05e8',
+} as const;
 
 export const ToolbarSearchControl: React.FC<ToolbarSearchControlProps> = ({
   searchOpen,
@@ -56,23 +62,21 @@ export const ToolbarSearchControl: React.FC<ToolbarSearchControlProps> = ({
               onSearchOpenChange(false);
               onSearchQueryChange('');
             }}
+            title={TEXT.close}
+            aria-label={TEXT.close}
             className="rounded p-1 transition-colors hover:bg-[#f5f5f5] dark:hover:bg-[#262626]"
           >
             <X className="h-3.5 w-3.5 text-[#a3a3a3]" />
           </button>
         </div>
       ) : (
-        <button
-          type="button"
+        <ToolbarIconButton
           onClick={() => onSearchOpenChange(true)}
-          className={`flex h-9 w-9 items-center justify-center rounded-[4px] border text-sm font-medium transition-colors ${
-            searchQuery
-              ? 'border-[#9fe870]/40 bg-[#9fe870]/15 text-[#6bc84a]'
-              : 'border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]'
-          }`}
+          label={TEXT.search}
+          active={Boolean(searchQuery)}
         >
           <Search className="h-4 w-4" />
-        </button>
+        </ToolbarIconButton>
       )}
     </div>
   );

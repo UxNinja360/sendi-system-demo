@@ -3,7 +3,7 @@ import { useDelivery } from '../context/delivery-context-value';
 import {
   ArrowRight, MapPin, Phone, Clock,
   Bike, Package, CheckCircle2, XCircle, AlertCircle,
-  Navigation, Store, User
+  Navigation, Store, User, ClockAlert
 } from 'lucide-react';
 import { formatCurrency, getDeliveryCustomerCharge } from '../utils/delivery-finance';
 
@@ -33,6 +33,7 @@ export function DeliveryDetailsPage() {
     delivering: { label: 'בדרך ללקוח',   color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-500/10', icon: Bike },
     delivered:  { label: 'נמסר ללקוח',   color: 'text-green-600 dark:text-green-400',  bg: 'bg-green-50 dark:bg-green-500/10',  icon: CheckCircle2 },
     cancelled:  { label: 'בוטל',          color: 'text-red-600 dark:text-red-400',     bg: 'bg-red-50 dark:bg-red-500/10',     icon: XCircle },
+    expired:    { label: 'פג תוקף',       color: 'text-zinc-600 dark:text-zinc-300',   bg: 'bg-zinc-50 dark:bg-zinc-500/10',   icon: ClockAlert },
   };
 
   const cfg = statusConfig[delivery.status] ?? statusConfig.pending;
@@ -42,7 +43,7 @@ export function DeliveryDetailsPage() {
 
   const timelineSteps = [
     { label: 'הזמנה התקבלה',  done: true },
-    { label: 'שליח שובץ',      done: delivery.status !== 'pending' },
+    { label: 'שליח שובץ',      done: !['pending', 'expired'].includes(delivery.status) },
     { label: 'נאסף ממסעדה',    done: ['picking_up', 'delivering', 'delivered'].includes(delivery.status) },
     { label: 'בדרך ללקוח',     done: ['delivering', 'delivered'].includes(delivery.status) },
     { label: 'נמסר ללקוח',     done: delivery.status === 'delivered' },
@@ -59,7 +60,7 @@ export function DeliveryDetailsPage() {
     { label: 'זמן בטיפול',   value: `${elapsedMinutes} דק׳` },
     { label: 'כתובת מסירה',  value: delivery.address },
     { label: 'אזור',          value: delivery.area },
-    { label: 'מחיר',          value: formatCurrency(getDeliveryCustomerCharge(delivery)), highlight: true },
+    { label: 'חיוב משלוח',    value: formatCurrency(getDeliveryCustomerCharge(delivery)), highlight: true },
     ...(delivery.notes ? [{ label: 'הערות', value: delivery.notes }] : []),
   ];
 

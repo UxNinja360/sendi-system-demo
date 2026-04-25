@@ -4,23 +4,18 @@ import {
   ToolbarPeriodControl,
   type PeriodMode,
 } from './toolbar-period-control';
+import { ToolbarIconButton } from './toolbar-icon-button';
 
 type PageToolbarProps = {
-  title: string;
-  count?: number;
-  showZeroCount?: boolean;
-  onToggleMobileSidebar?: () => void;
   headerControls?: React.ReactNode;
   headerActions?: React.ReactNode;
   primaryActionLabel?: string;
-  primaryActionIcon?: React.ReactNode;
   onPrimaryAction?: () => void;
   primaryActionDataOnboarding?: string;
   showPeriodControl?: boolean;
   periodControl?: React.ReactNode;
   controls?: React.ReactNode;
   actions?: React.ReactNode;
-  summary?: React.ReactNode;
   controlsClassName?: string;
   actionsClassName?: string;
 };
@@ -92,18 +87,16 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
   const renderedPrimaryAction =
     headerActions ??
     (primaryActionLabel && onPrimaryAction ? (
-      <button
-        type="button"
+      <ToolbarIconButton
         data-onboarding={primaryActionDataOnboarding}
         onClick={() => setPrimaryActionMenuOpen((current) => !current)}
-        title={primaryActionLabel}
-        aria-label={primaryActionLabel}
+        label={primaryActionLabel}
         aria-haspopup="menu"
         aria-expanded={primaryActionMenuOpen}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[4px] border border-[#e5e5e5] bg-white text-[#525252] transition-colors hover:bg-[#f5f5f5] focus:outline-none focus:ring-2 focus:ring-[#9fe870]/40 dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
+        active={primaryActionMenuOpen}
       >
         <MoreHorizontal className="h-4 w-4" />
-      </button>
+      </ToolbarIconButton>
     ) : null);
   const hasToolbarRow = Boolean(
     renderedPrimaryAction || renderedPeriodControl || controls || actions || headerControls,

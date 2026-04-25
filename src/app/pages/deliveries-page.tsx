@@ -16,12 +16,20 @@ import { PageToolbar } from '../components/common/page-toolbar';
 import { ToolbarPeriodControl } from '../components/common/toolbar-period-control';
 import { ListInlineFilters } from '../components/common/list-inline-filters';
 import { ListToolbarActions } from '../components/common/list-toolbar-actions';
-import { SelectionActionBar } from '../components/common/selection-action-bar';
+import {
+  SelectionActionBar,
+  SelectionActionButton,
+} from '../components/common/selection-action-bar';
+import { EntityListShell } from '../components/common/entity-list-shell';
 import { getDeliveryCustomerCharge, sumDeliveryMoney } from '../utils/delivery-finance';
 import { DELIVERY_STORAGE_KEYS } from '../context/delivery-storage';
+import {
+  DELIVERY_ASSIGNMENT_BLOCK_COPY,
+  getDeliveryAssignmentBlockReason,
+} from '../utils/delivery-assignment';
 
 const calculateTimeRemaining = (delivery: Delivery): number | null => {
-  if (delivery.status === 'delivered' || delivery.status === 'cancelled') return null;
+  if (delivery.status === 'delivered' || delivery.status === 'cancelled' || delivery.status === 'expired') return null;
   const now = new Date();
   if (delivery.status === 'assigned' && delivery.estimatedArrivalAtRestaurant) {
     return Math.max(0, Math.floor((delivery.estimatedArrivalAtRestaurant.getTime() - now.getTime()) / 1000));
@@ -44,6 +52,7 @@ const formatTime = (seconds: number): string => {
 const PRODUCT_DEFAULT_VISIBLE_COLUMNS = new Set([
   'orderNumber',
   'creation_time',
+  'offerExpiresAt',
   'status',
   'rest_name',
   'client_name',
@@ -54,7 +63,7 @@ const PRODUCT_DEFAULT_VISIBLE_COLUMNS = new Set([
   'runner_price',
 ]);
 const COLUMN_ORDER_STORAGE_KEY = DELIVERY_STORAGE_KEYS.deliveriesColumnOrder;
-const VISIBLE_COLUMNS_STORAGE_KEY = `${DELIVERY_STORAGE_KEYS.deliveriesVisibleColumns}:product-v2`;
+const VISIBLE_COLUMNS_STORAGE_KEY = `${DELIVERY_STORAGE_KEYS.deliveriesVisibleColumns}:product-v3`;
 const DELIVERY_COLUMN_CATEGORIES = [
   {
     id: 'core',
@@ -62,6 +71,7 @@ const DELIVERY_COLUMN_CATEGORIES = [
     columns: [
       { id: 'orderNumber', label: 'מספר הזמנה' },
       { id: 'creation_time', label: 'זמן יצירה' },
+      { id: 'offerExpiresAt', label: 'תוקף הצעה' },
       { id: 'status', label: 'סטטוס' },
       { id: 'rest_name', label: 'מסעדה' },
       { id: 'client_name', label: 'לקוח' },
@@ -74,7 +84,7 @@ const DELIVERY_COLUMN_CATEGORIES = [
     id: 'money',
     label: 'כסף',
     columns: [
-      { id: 'price', label: 'מחיר ללקוח' },
+      { id: 'price', label: 'חיוב משלוח' },
       { id: 'runner_price', label: 'תשלום שליח' },
       { id: 'runner_tip', label: 'טיפ' },
       { id: 'sum_cash', label: 'מזומן' },
@@ -85,6 +95,7 @@ const DELIVERY_COLUMN_CATEGORIES = [
     id: 'timeline',
     label: 'ציר זמן',
     columns: [
+      { id: 'deliveryCreditConsumedAt', label: 'ניצול קרדיט' },
       { id: 'coupled_time', label: 'זמן שיוך' },
       { id: 'arrived_at_rest', label: 'הגעה למסעדה' },
       { id: 'took_it_time', label: 'זמן איסוף' },
@@ -110,6 +121,7 @@ const STATUS_CHIP_CONFIG = [
   { status: 'delivering' as DeliveryStatus, label: 'נאסף',  dot: 'bg-indigo-500', active: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400' },
   { status: 'delivered'  as DeliveryStatus, label: 'נמסר',  dot: 'bg-green-500',  active: 'bg-green-500/10 text-green-600 dark:text-green-400' },
   { status: 'cancelled'  as DeliveryStatus, label: 'בוטל',  dot: 'bg-red-500',    active: 'bg-red-500/10 text-red-600 dark:text-red-400' },
+  { status: 'expired'    as DeliveryStatus, label: 'פג תוקף', dot: 'bg-zinc-500', active: 'bg-zinc-500/10 text-zinc-600 dark:text-zinc-300' },
 ];
 
 type DeliveriesOverviewStats = {
@@ -121,6 +133,7 @@ type DeliveriesOverviewStats = {
   delivering: number;
   delivered: number;
   cancelled: number;
+  expired: number;
   revenue: number;
 };
 
@@ -134,7 +147,7 @@ const DeliveriesOverviewStrip: React.FC<{
     { label: 'משובצים', value: stats.assigned.toLocaleString('he-IL') },
     { label: 'בדרך', value: stats.delivering.toLocaleString('he-IL') },
     { label: 'נמסרו', value: stats.delivered.toLocaleString('he-IL'), tone: 'success' },
-    { label: 'הכנסות', value: `₪${Math.round(stats.revenue).toLocaleString('he-IL')}` },
+    { label: 'חיובים', value: `₪${Math.round(stats.revenue).toLocaleString('he-IL')}` },
     ...(hasFilters ? [{ label: 'תוצאות', value: stats.filtered.toLocaleString('he-IL') }] : []),
   ];
 
@@ -167,6 +180,8 @@ const getDeliveryColumnWidth = (columnId: string) => {
     case 'orderNumber':
       return '118px';
     case 'creation_time':
+    case 'offerExpiresAt':
+    case 'deliveryCreditConsumedAt':
     case 'coupled_time':
     case 'arrived_at_rest':
     case 'took_it_time':
@@ -307,7 +322,7 @@ export const DeliveriesPage: React.FC = () => {
         return [...validSaved, ...missing];
       }
     } catch { /* ignore */ }
-    const preferred = ['orderNumber', 'creation_time', 'status', 'rest_name', 'client_full_address', 'courier'];
+    const preferred = ['orderNumber', 'creation_time', 'offerExpiresAt', 'status', 'rest_name', 'client_full_address', 'courier'];
     const allIds = ALL_COLUMNS.map(c => c.id);
     const rest = allIds.filter(id => !preferred.includes(id));
     return [...preferred.filter(id => allIds.includes(id)), ...rest];
@@ -393,10 +408,23 @@ export const DeliveriesPage: React.FC = () => {
   }, [dispatch]);
 
   const handleAssignCourier = useCallback((deliveryId: string, courierId: string) => {
-    assignCourier(deliveryId, courierId);
+    const assigned = assignCourier(deliveryId, courierId);
+    if (!assigned) {
+      const delivery = state.deliveries.find((item) => item.id === deliveryId);
+      const availableCourierCount = state.couriers.filter((item) => item.status !== 'offline').length;
+      const blockReason = delivery
+        ? getDeliveryAssignmentBlockReason(delivery, {
+            deliveryBalance: state.deliveryBalance,
+            availableCourierCount,
+          })
+        : null;
+      toast.error(blockReason ? DELIVERY_ASSIGNMENT_BLOCK_COPY[blockReason] : 'לא ניתן לשבץ כרגע.');
+      return;
+    }
+
     const name = state.couriers.find(c => c.id === courierId)?.name ?? '';
     toast.success(`שליח שובץ${name ? ': ' + name : ''}`);
-  }, [assignCourier, state.couriers]);
+  }, [assignCourier, state.couriers, state.deliveries, state.deliveryBalance]);
 
   const handleCancelDelivery = useCallback((deliveryId: string) => {
     dispatch({ type: 'CANCEL_DELIVERY', payload: deliveryId });
@@ -458,6 +486,7 @@ export const DeliveriesPage: React.FC = () => {
     const delivering = filteredDeliveries.filter(d => d.status === 'delivering').length;
     const delivered = filteredDeliveries.filter(d => d.status === 'delivered').length;
     const cancelled = filteredDeliveries.filter(d => d.status === 'cancelled').length;
+    const expired = filteredDeliveries.filter(d => d.status === 'expired').length;
 
     return {
       total: state.deliveries.length,
@@ -468,6 +497,7 @@ export const DeliveriesPage: React.FC = () => {
       delivering,
       delivered,
       cancelled,
+      expired,
       revenue: sumDeliveryMoney(
         filteredDeliveries.filter(d => d.status === 'delivered'),
         getDeliveryCustomerCharge,
@@ -486,6 +516,7 @@ export const DeliveriesPage: React.FC = () => {
     delivered: filteredDeliveries.filter(d => d.status === 'delivered').length,
     cancelled: filteredDeliveries.filter(d => d.status === 'cancelled').length,
     pending: filteredDeliveries.filter(d => d.status === 'pending').length,
+    expired: filteredDeliveries.filter(d => d.status === 'expired').length,
     revenue: sumDeliveryMoney(filteredDeliveries, getDeliveryCustomerCharge),
   }), [filteredDeliveries]);
 
@@ -581,33 +612,28 @@ export const DeliveriesPage: React.FC = () => {
 
   return (
     <>
-      <div className="flex flex-row h-full overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]" dir="ltr">
-
-        <DeliveriesSidePanel
-          exportOpen={exportOpen}
-          columnsOpen={columnsOpen}
-          onCloseExport={() => setExportOpen(false)}
-          onCloseColumns={() => setColumnsOpen(false)}
-          setColumnsOpen={setColumnsOpen}
-          onExport={(config) => {
-            handleUnifiedExport(config);
-            setExportOpen(false);
-          }}
-          visibleColumns={visibleColumns}
-          setVisibleColumns={setVisibleColumns}
-          deliveryCount={filteredStats.filtered}
-          selectedCount={selectedIds.size}
-          groupCounts={reportGroupCounts}
-          columnCategories={[...DELIVERY_COLUMN_CATEGORIES]}
-          defaultVisibleColumns={PRODUCT_DEFAULT_VISIBLE_COLUMNS}
-        />
-
-        <div className="flex-1 min-w-0 overflow-hidden flex flex-col" dir="rtl">
-
+      <EntityListShell
+        sidePanel={
+          <DeliveriesSidePanel
+            exportOpen={exportOpen}
+            columnsOpen={columnsOpen}
+            onCloseExport={() => setExportOpen(false)}
+            setColumnsOpen={setColumnsOpen}
+            onExport={(config) => {
+              handleUnifiedExport(config);
+              setExportOpen(false);
+            }}
+            visibleColumns={visibleColumns}
+            setVisibleColumns={setVisibleColumns}
+            deliveryCount={filteredStats.filtered}
+            selectedCount={selectedIds.size}
+            groupCounts={reportGroupCounts}
+            columnCategories={[...DELIVERY_COLUMN_CATEGORIES]}
+            defaultVisibleColumns={PRODUCT_DEFAULT_VISIBLE_COLUMNS}
+          />
+        }
+        toolbar={
           <PageToolbar
-            title="משלוחים"
-            count={filteredDeliveries.length}
-            onToggleMobileSidebar={() => (window as any).toggleMobileSidebar?.()}
             primaryActionLabel="משלוח חדש"
             onPrimaryAction={() => setNewDeliveryOpen(true)}
             headerControls={
@@ -652,16 +678,12 @@ export const DeliveriesPage: React.FC = () => {
                 showExportButton={false}
               />
             }
-            summary={
-              hasOperationalFilters
-                ? `${filteredStats.filtered} מתוך ${filteredStats.total} משלוחים`
-                : `${filteredStats.active} פעילים · ${filteredStats.delivered} נמסרו`
-            }
           />
-
+        }
+        overview={
           <DeliveriesOverviewStrip stats={filteredStats} hasFilters={hasOperationalFilters} />
-
-          <div className="flex-1 min-h-0 flex flex-col">
+        }
+      >
             <DeliveriesTableSection
               filteredDeliveries={filteredDeliveries}
               emptyStateMode={emptyStateMode}
@@ -695,34 +717,30 @@ export const DeliveriesPage: React.FC = () => {
               selectionBar={
                 <SelectionActionBar
                   selectedCount={selectedIds.size}
-                  selectionLabel={`נבחרו ${selectedIds.size} משלוחים`}
+                  entitySingular={'\u05de\u05e9\u05dc\u05d5\u05d7'}
+                  entityPlural={'\u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd'}
                   onClear={() => setSelectedIds(new Set())}
                   actions={
-                    <button
-                      type="button"
+                    <SelectionActionButton
                       onClick={() => {
                         setExportOpen(true);
                         setColumnsOpen(false);
                       }}
-                      className="rounded-lg bg-[#16a34a] px-4 py-2 text-sm font-bold text-white shadow-md shadow-[#16a34a]/20 transition-colors hover:bg-[#15803d]"
                     >
-                      ייצוא נבחרים
-                    </button>
+                      {'\u05d9\u05d9\u05e6\u05d5\u05d0 \u05e0\u05d1\u05d7\u05e8\u05d9\u05dd'}
+                    </SelectionActionButton>
                   }
                 />
               }
             />
-
-          </div>
-        </div>
-
-      </div>
+      </EntityListShell>
 
       <DeliveriesOverlays
         drawerDeliveryId={drawerDeliveryId}
         drawerDelivery={drawerDelivery}
         drawerCourier={drawerCourier}
         allCouriers={state.couriers}
+        deliveryBalance={state.deliveryBalance}
         onCloseDrawer={handleCloseDrawer}
         onDrawerPrev={handleDrawerPrev}
         onDrawerNext={handleDrawerNext}

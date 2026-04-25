@@ -8,7 +8,6 @@ import {
   FileText,
   LogOut,
   Package,
-  Plus,
   Power,
   Search,
   Star,
@@ -19,25 +18,29 @@ import {
 import { toast } from 'sonner';
 import { EntityActionMenu, EntityActionMenuDivider, EntityActionMenuHeader, EntityActionMenuItem, EntityActionMenuOverlay } from '../components/common/entity-action-menu';
 import { EntityEmptyState } from '../components/common/entity-empty-state';
+import { EntityListSidePanel } from '../components/common/entity-list-side-panel';
+import { EntityListShell } from '../components/common/entity-list-shell';
 import { EntityRowActionTrigger } from '../components/common/entity-row-action-trigger';
 import { EntityTableActionsCell, EntityTableActionsHeader, EntityTableHeaderCheckbox, EntityTableRowCheckbox } from '../components/common/entity-table-shell';
 import { EntityTableHeaderCell } from '../components/common/entity-table-header-cell';
 import { ENTITY_TABLE_DATA_CELL_CLASS, ENTITY_TABLE_ROW_CLASS, ENTITY_TABLE_WIDTHS } from '../components/common/entity-table-shared';
-import { ListColumnsPanel } from '../components/common/list-columns-panel';
 import { ListExportDrawer } from '../components/common/list-export-drawer';
 import { type SingleSelectFilterOption } from '../components/common/list-filter-controls';
 import { ListInlineFilters } from '../components/common/list-inline-filters';
-import { ListSidePanel } from '../components/common/list-side-panel';
 import { ListTableSection } from '../components/common/list-table-section';
 import { ListToolbarActions } from '../components/common/list-toolbar-actions';
 import { PageToolbar } from '../components/common/page-toolbar';
-import { SelectionActionBar } from '../components/common/selection-action-bar';
+import {
+  SelectionActionBar,
+  SelectionActionButton,
+} from '../components/common/selection-action-bar';
 import { useDelivery } from '../context/delivery-context-value';
 import { DELIVERY_STORAGE_KEYS } from '../context/delivery-storage';
 import { Courier } from '../types/delivery.types';
 import { exportRowsToExcel } from '../utils/export-utils';
 
 const TEXT = {
+  searchPlaceholder: '\u05d7\u05e4\u05e9\u0020\u05e9\u05dc\u05d9\u05d7\u0020\u05d0\u05d5\u0020\u05de\u05e1\u05e4\u05e8\u0020\u05d8\u05dc\u05e4\u05d5\u05df...',
   pageTitle: 'שליחים',
   addCourier: 'הוסף שליח',
   addNewCourier: 'הוסף שליח חדש',
@@ -288,7 +291,7 @@ export const CouriersListScreen: React.FC = () => {
     const map = new Map<string, typeof state.deliveries[number]>();
     state.deliveries.forEach((delivery) => {
       if (!delivery.courierId) return;
-      if (delivery.status === 'delivered' || delivery.status === 'cancelled') return;
+      if (delivery.status === 'delivered' || delivery.status === 'cancelled' || delivery.status === 'expired') return;
       if (!map.has(delivery.courierId)) map.set(delivery.courierId, delivery);
     });
     return map;
@@ -755,45 +758,43 @@ export const CouriersListScreen: React.FC = () => {
 
   return (
     <>
-      <div className="flex h-full flex-row overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]" dir="ltr">
-        <ListSidePanel isOpen={isExportOpen || columnsOpen}>
-          {isExportOpen && (
-            <ListExportDrawer
-              onClose={() => setIsExportOpen(false)}
-              actions={[
-                {
-                  id: 'visible-couriers',
-                  title: 'ייצוא טבלת השליחים',
-                  description: 'Excel עם העמודות המוצגות כרגע בטבלה',
-                  meta: `${selectedCourierIds.size > 0 ? selectedCourierIds.size : filteredCouriers.length} שליחים · ${visibleCourierColumns.filter((column) => column.id !== 'actions').length} עמודות`,
-                  icon: <FileSpreadsheet className="h-5 w-5" />,
-                  onClick: handleExportVisibleCouriers,
-                },
-              ]}
-            />
-          )}
-          {columnsOpen && (
-            <ListColumnsPanel
-              isOpen={columnsOpen}
-              setIsOpen={setColumnsOpen}
-              visibleColumns={visibleColumns}
-              setVisibleColumns={setVisibleColumns}
-              categories={[...COURIER_COLUMN_CATEGORIES]}
-              defaultVisibleColumns={DEFAULT_COURIER_VISIBLE_COLUMNS}
-              title="עמודות שליחים"
-              description="בחר אילו פרטים יופיעו בטבלת השליחים"
-              presetsKey="couriers-column-presets-v2"
-            />
-          )}
-        </ListSidePanel>
-
-        <div className="flex min-w-0 flex-1 flex-col overflow-hidden" dir="rtl">
+      <EntityListShell
+        sidePanel={
+          <EntityListSidePanel
+            exportOpen={isExportOpen}
+            columnsOpen={columnsOpen}
+            exportPanel={
+              <ListExportDrawer
+                onClose={() => setIsExportOpen(false)}
+                actions={[
+                  {
+                    id: 'visible-couriers',
+                    title: '\u05d9\u05d9\u05e6\u05d5\u05d0 \u05d8\u05d1\u05dc\u05ea \u05d4\u05e9\u05dc\u05d9\u05d7\u05d9\u05dd',
+                    description:
+                      'Excel \u05e2\u05dd \u05d4\u05e2\u05de\u05d5\u05d3\u05d5\u05ea \u05d4\u05de\u05d5\u05e6\u05d2\u05d5\u05ea \u05db\u05e8\u05d2\u05e2 \u05d1\u05d8\u05d1\u05dc\u05d4',
+                    meta: `${selectedCourierIds.size > 0 ? selectedCourierIds.size : filteredCouriers.length} \u05e9\u05dc\u05d9\u05d7\u05d9\u05dd \u00b7 ${visibleCourierColumns.filter((column) => column.id !== 'actions').length} \u05e2\u05de\u05d5\u05d3\u05d5\u05ea`,
+                    icon: <FileSpreadsheet className="h-5 w-5" />,
+                    onClick: handleExportVisibleCouriers,
+                  },
+                ]}
+              />
+            }
+            columnsPanel={{
+              setIsOpen: setColumnsOpen,
+              visibleColumns,
+              setVisibleColumns,
+              categories: [...COURIER_COLUMN_CATEGORIES],
+              defaultVisibleColumns: DEFAULT_COURIER_VISIBLE_COLUMNS,
+              title: '\u05e2\u05de\u05d5\u05d3\u05d5\u05ea \u05e9\u05dc\u05d9\u05d7\u05d9\u05dd',
+              description:
+                '\u05d1\u05d7\u05e8 \u05d0\u05d9\u05dc\u05d5 \u05e4\u05e8\u05d8\u05d9\u05dd \u05d9\u05d5\u05e4\u05d9\u05e2\u05d5 \u05d1\u05d8\u05d1\u05dc\u05ea \u05d4\u05e9\u05dc\u05d9\u05d7\u05d9\u05dd',
+              presetsKey: 'couriers-column-presets-v2',
+            }}
+          />
+        }
+        toolbar={
           <PageToolbar
-            title={TEXT.pageTitle}
-            count={filteredCouriers.length}
-            onToggleMobileSidebar={() => (window as any).toggleMobileSidebar?.()}
             primaryActionLabel={TEXT.addCourier}
-            primaryActionIcon={<Plus className="h-3.5 w-3.5" />}
             onPrimaryAction={() => setIsModalOpen(true)}
             primaryActionDataOnboarding="add-courier-btn"
             showPeriodControl={false}
@@ -801,7 +802,7 @@ export const CouriersListScreen: React.FC = () => {
               <ListToolbarActions
                 showSearch={false}
                 columnsOpen={columnsOpen}
-                onToggleColumns={() => { setColumnsOpen(true); setIsExportOpen(false); }}
+                onToggleColumns={() => { setColumnsOpen((value) => !value); setIsExportOpen(false); }}
                 onExport={() => { setIsExportOpen((value) => !value); setColumnsOpen(false); }}
               />
             }
@@ -810,22 +811,18 @@ export const CouriersListScreen: React.FC = () => {
               <ListToolbarActions
                 searchQuery={searchQuery}
                 onSearchQueryChange={setSearchQuery}
-                searchPlaceholder="חפש שליח או מספר טלפון..."
+                searchPlaceholder={TEXT.searchPlaceholder}
                 searchWidthClass="w-48"
                 showColumnsToggle={false}
                 showExportButton={false}
               />
             }
-            summary={
-              hasActiveFilters
-                ? `${filteredCouriers.length} מתוך ${state.couriers.length} שליחים`
-                : `${stats.available} זמינים · ${stats.busy} במשלוח · ${stats.onShift} במשמרת`
-            }
           />
-
+        }
+        overview={
           <CourierOverviewStrip stats={stats} hasFilters={hasActiveFilters} />
-
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        }
+      >
             <ListTableSection
               isEmpty={filteredCouriers.length === 0}
               emptyState={
@@ -843,45 +840,40 @@ export const CouriersListScreen: React.FC = () => {
               selectionBar={
                 <SelectionActionBar
                   selectedCount={selectedCourierIds.size}
-                  selectionLabel={`נבחרו ${selectedCourierIds.size} שליחים`}
+                  entitySingular={'\u05e9\u05dc\u05d9\u05d7'}
+                  entityPlural={'\u05e9\u05dc\u05d9\u05d7\u05d9\u05dd'}
                   onClear={() => setSelectedCourierIds(new Set())}
                   actions={
                     <>
-                      <button
-                        type="button"
+                      <SelectionActionButton
                         onClick={() => handleBulkSetCourierStatus('available')}
-                        className="rounded-lg bg-[#16a34a] px-4 py-2 text-sm font-bold text-white shadow-md shadow-[#16a34a]/20 transition-colors hover:bg-[#15803d]"
                       >
-                        הפעל
-                      </button>
-                      <button
-                        type="button"
+                        {'\u05d4\u05e4\u05e2\u05dc'}
+                      </SelectionActionButton>
+                      <SelectionActionButton
                         onClick={() => handleBulkSetCourierStatus('offline')}
-                        className="rounded-lg bg-[#404040] px-4 py-2 text-sm font-bold text-white shadow-md shadow-black/10 transition-colors hover:bg-[#262626]"
+                        variant="neutral"
                       >
-                        השבת
-                      </button>
-                      <button
-                        type="button"
+                        {'\u05d4\u05e9\u05d1\u05ea'}
+                      </SelectionActionButton>
+                      <SelectionActionButton
                         onClick={handleBulkStartShift}
-                        className="rounded-lg bg-[#7c3aed] px-4 py-2 text-sm font-bold text-white shadow-md shadow-[#7c3aed]/20 transition-colors hover:bg-[#6d28d9]"
+                        variant="accent"
                       >
-                        התחל משמרת
-                      </button>
-                      <button
-                        type="button"
+                        {'\u05d4\u05ea\u05d7\u05dc \u05de\u05e9\u05de\u05e8\u05ea'}
+                      </SelectionActionButton>
+                      <SelectionActionButton
                         onClick={handleBulkEndShift}
-                        className="rounded-lg bg-[#ea580c] px-4 py-2 text-sm font-bold text-white shadow-md shadow-[#ea580c]/20 transition-colors hover:bg-[#c2410c]"
+                        variant="warning"
                       >
-                        סיים משמרת
-                      </button>
-                      <button
-                        type="button"
+                        {'\u05e1\u05d9\u05d9\u05dd \u05de\u05e9\u05de\u05e8\u05ea'}
+                      </SelectionActionButton>
+                      <SelectionActionButton
                         onClick={handleExportVisibleCouriers}
-                        className="rounded-lg border border-[#d4d4d4] bg-white px-4 py-2 text-sm font-bold text-[#0d0d12] transition-colors hover:bg-[#f5f5f5] dark:border-[#404040] dark:bg-[#171717] dark:text-[#fafafa] dark:hover:bg-[#262626]"
+                        variant="outline"
                       >
                         {TEXT.exportSelected}
-                      </button>
+                      </SelectionActionButton>
                     </>
                   }
                 />
@@ -935,9 +927,7 @@ export const CouriersListScreen: React.FC = () => {
                 </tr>
               ))}
             </ListTableSection>
-          </div>
-        </div>
-      </div>
+      </EntityListShell>
 
       {isModalOpen && (
         <div

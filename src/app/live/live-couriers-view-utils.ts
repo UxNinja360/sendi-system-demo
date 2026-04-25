@@ -103,7 +103,8 @@ export const getPickupReadyAt = (orders: Delivery[]) => {
       if (delivery.pickedUpAt) return null;
       if (delivery.orderReadyTime) return new Date(delivery.orderReadyTime);
       if (typeof delivery.preparationTime === 'number') {
-        return new Date(new Date(delivery.createdAt).getTime() + delivery.preparationTime * 60000);
+        const prepAnchor = delivery.assignedAt ?? delivery.coupled_time ?? delivery.createdAt;
+        return new Date(new Date(prepAnchor).getTime() + delivery.preparationTime * 60000);
       }
       return null;
     })

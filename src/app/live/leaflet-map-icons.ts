@@ -163,6 +163,7 @@ export const getOrderIcon = (status: string) => {
   if (status === 'assigned') return assignedOrderIcon;
   if (status === 'delivered') return deliveredOrderIcon;
   if (status === 'cancelled') return cancelledOrderIcon;
+  if (status === 'expired') return cancelledOrderIcon;
   return deliveringOrderIcon;
 };
 
@@ -172,6 +173,7 @@ export const getSelectedOrderIcon = (status: string) => {
   if (status === 'delivering') return makeSelectedOrderPin('#eab308', 'rgba(234,179,8,0.42)');
   if (status === 'delivered') return makeSelectedOrderPin('#16a34a', 'rgba(22,163,74,0.42)');
   if (status === 'cancelled') return makeSelectedOrderPin('#ef4444', 'rgba(239,68,68,0.42)');
+  if (status === 'expired') return makeSelectedOrderPin('#71717a', 'rgba(113,113,122,0.42)');
   return makeSelectedOrderPin('#6366f1', 'rgba(99,102,241,0.42)');
 };
 
