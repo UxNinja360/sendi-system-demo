@@ -25,10 +25,9 @@ export const Card: React.FC<CardProps> = ({
   return (
     <div 
       className={`
-        bg-app-surface border border-app-border-strong
-        rounded-xl
+        rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface
         ${paddingClasses[padding]}
-        ${hover ? 'hover:shadow-lg transition-shadow' : ''}
+        ${hover ? 'transition-shadow hover:shadow-[var(--app-shadow-panel)]' : ''}
         ${onClick ? 'cursor-pointer' : ''}
         ${className}
       `}
@@ -57,7 +56,7 @@ export const StatCard: React.FC<StatCardProps> = ({
   return (
     <Card>
       <div className="flex items-center gap-2 mb-2">
-        <div className={`p-2 rounded-lg ${iconBg}`}>
+        <div className={`rounded-[var(--app-radius-sm)] p-2 ${iconBg}`}>
           <div className={iconColor}>{icon}</div>
         </div>
         <span className="text-sm text-app-text-secondary">{label}</span>

@@ -1,11 +1,13 @@
 import React from 'react';
 import { useDelivery } from '../context/delivery-context-value';
 import { format as formatDate } from 'date-fns';
+import { TrendingUp } from 'lucide-react';
 import { PageToolbar } from '../components/common/page-toolbar';
 import {
   ToolbarPeriodControl,
   type PeriodMode,
 } from '../components/common/toolbar-period-control';
+import { ModuleScaffold } from '../components/common/module-scaffold';
 
 const matchesCourier = (
   delivery: any,
@@ -74,6 +76,14 @@ export const PerformancePage: React.FC = () => {
       deliveriesInRange.some((delivery) => matchesRestaurant(delivery, restaurant))
     ).length;
   }, [deliveriesInRange, state.restaurants]);
+  const deliveredCount = deliveriesInRange.filter((delivery) => delivery.status === 'delivered').length;
+  const cancelledCount = deliveriesInRange.filter((delivery) => delivery.status === 'cancelled').length;
+  const activeCount = deliveriesInRange.filter((delivery) =>
+    delivery.status === 'pending' || delivery.status === 'assigned' || delivery.status === 'delivering'
+  ).length;
+  const completionRate = deliveriesInRange.length > 0
+    ? Math.round((deliveredCount / deliveriesInRange.length) * 100)
+    : 0;
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#f5f5f5] dark:bg-[#0a0a0a]">
@@ -94,7 +104,61 @@ export const PerformancePage: React.FC = () => {
         />
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain" />
+      <div className="min-h-0 flex-1 overflow-hidden">
+        <ModuleScaffold
+          icon={<TrendingUp className="h-5 w-5" />}
+          title="ביצועים"
+          subtitle="מסך הביצועים צריך להפוך את הפעילות התפעולית לתמונה ברורה: איחורים, ניצול שליחים, מסעדות בעייתיות ועמידה בהתחייבויות."
+          statusLabel="מחובר חלקית"
+          statusTone="warning"
+          metrics={[
+            {
+              label: 'משלוחים בטווח',
+              value: deliveriesInRange.length.toLocaleString('he-IL'),
+              helper: 'לפי פילטר התאריך',
+              tone: 'info',
+            },
+            {
+              label: 'שיעור מסירה',
+              value: `${completionRate}%`,
+              helper: `${deliveredCount.toLocaleString('he-IL')} נמסרו`,
+              tone: completionRate >= 85 ? 'success' : 'warning',
+            },
+            {
+              label: 'פעילים עכשיו',
+              value: activeCount.toLocaleString('he-IL'),
+              helper: 'ממתינים, שובצו או בדרך',
+            },
+            {
+              label: 'בוטלו',
+              value: cancelledCount.toLocaleString('he-IL'),
+              helper: 'דורש סיבת ביטול בהמשך',
+              tone: cancelledCount > 0 ? 'warning' : 'default',
+            },
+          ]}
+          sections={[
+            {
+              title: 'מדדי מוצר שחייבים להיכנס',
+              description: 'זה המסך שיגיד לחברת משלוחים איפה היא מרוויחה זמן ואיפה היא מפסידה.',
+              items: [
+                'עמידה בזמן התחייבות מרגע שיבוץ ועד לקוח.',
+                'זמן המתנה במסעדה מול זמן הכנה.',
+                'איחורים לפי מסעדה, שליח, אזור ושעה ביום.',
+                'ניצול משמרות: כמה זמן שליח היה זמין מול עובד בפועל.',
+              ],
+            },
+            {
+              title: 'הנתונים שכבר קיימים בדמו',
+              description: 'אפשר להתחיל לחבר את המסך הזה בלי לחכות לבקאנד מלא.',
+              items: [
+                `${couriersInRangeCount.toLocaleString('he-IL')} שליחים הופיעו בפעילות בטווח.`,
+                `${restaurantsInRangeCount.toLocaleString('he-IL')} מסעדות יצרו משלוחים בטווח.`,
+                'קיימים זמני יצירה, שיבוץ, איסוף ומסירה שאפשר להפוך למדדים.',
+              ],
+            },
+          ]}
+        />
+      </div>
     </div>
   );
 };

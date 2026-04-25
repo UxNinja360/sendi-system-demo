@@ -105,7 +105,7 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
   return (
     <>
       {hasToolbarRow ? (
-        <div className="app-toolbar-shell sticky top-0 z-20 shrink-0 border-b border-[#e5e5e5] bg-white dark:border-[#1f1f1f] dark:bg-[#171717]">
+        <div className="app-toolbar-shell sticky top-0 z-20 shrink-0 border-b border-app-border bg-app-surface">
           <div className="app-toolbar-row overflow-visible px-3 py-2.5">
             <div className="flex max-w-full flex-nowrap items-center gap-1.5">
               {renderedPeriodControl ? (
@@ -138,7 +138,7 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
                   {primaryActionMenuOpen && primaryActionLabel && onPrimaryAction ? (
                     <div
                       role="menu"
-                      className="absolute left-0 top-full z-50 mt-2 min-w-40 overflow-hidden rounded-lg border border-[#e5e5e5] bg-white py-1 text-right shadow-xl dark:border-[#262626] dark:bg-[#171717]"
+                      className="absolute left-0 top-full z-50 mt-2 min-w-40 overflow-hidden rounded-[var(--app-radius-md)] border border-app-border bg-app-surface py-1 text-right shadow-[var(--app-shadow-panel)]"
                     >
                       <button
                         type="button"
@@ -147,10 +147,10 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
                           setPrimaryActionMenuOpen(false);
                           onPrimaryAction();
                         }}
-                        className="flex w-full items-center justify-between gap-3 px-3 py-2 text-sm font-medium text-[#0d0d12] transition-colors hover:bg-[#f5f5f5] dark:text-[#fafafa] dark:hover:bg-[#262626]"
+                      className="flex w-full items-center justify-between gap-3 px-3 py-2 text-sm font-medium text-app-text transition-colors hover:bg-app-surface-raised"
                       >
                         <span>{primaryActionLabel}</span>
-                        <Plus className="h-3.5 w-3.5 text-[#9fe870]" />
+                        <Plus className="h-3.5 w-3.5 text-app-brand" />
                       </button>
                     </div>
                   ) : null}

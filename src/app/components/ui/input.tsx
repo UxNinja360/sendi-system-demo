@@ -15,7 +15,7 @@ export const Input: React.FC<InputProps> = ({
     <div className="w-full">
       <div className="relative">
         {icon && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[#737373] dark:text-[#a3a3a3]">
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-app-text-secondary">
             {icon}
           </div>
         )}
@@ -24,22 +24,22 @@ export const Input: React.FC<InputProps> = ({
             w-full 
             ${icon ? 'pr-10' : 'pr-4'} 
             pl-4 py-2.5 
-            bg-[#f5f5f5] dark:bg-[#404040] 
-            border border-transparent 
-            focus:border-[#16a34a] dark:focus:border-[#22c55e] 
-            rounded-lg 
-            text-[#0d0d12] dark:text-[#fafafa] 
-            placeholder:text-[#a3a3a3] 
+            rounded-[var(--app-radius-sm)]
+            border border-transparent
+            bg-app-surface-raised
+            text-app-text
+            placeholder:text-app-text-muted
+            focus:border-app-brand-solid
             outline-none 
             transition-colors
-            ${error ? 'border-red-500 dark:border-red-400' : ''}
+            ${error ? 'border-app-error-text' : ''}
             ${className}
           `}
           {...props}
         />
       </div>
       {error && (
-        <p className="mt-1 text-xs text-red-500 dark:text-red-400">{error}</p>
+        <p className="mt-1 text-xs text-app-error-text">{error}</p>
       )}
     </div>
   );
@@ -61,7 +61,7 @@ export const Select: React.FC<SelectProps> = ({
     <div className="w-full">
       <div className="relative flex items-center">
         {icon && (
-          <div className="absolute right-3 pointer-events-none text-[#737373] dark:text-[#a3a3a3]">
+          <div className="pointer-events-none absolute right-3 text-app-text-secondary">
             {icon}
           </div>
         )}
@@ -70,15 +70,15 @@ export const Select: React.FC<SelectProps> = ({
             w-full 
             ${icon ? 'pr-10' : 'pr-4'} 
             pl-4 py-2.5 
-            bg-[#f5f5f5] dark:bg-[#404040] 
-            border border-transparent 
-            focus:border-[#16a34a] dark:focus:border-[#22c55e] 
-            rounded-lg 
-            text-[#0d0d12] dark:text-[#fafafa] 
+            rounded-[var(--app-radius-sm)]
+            border border-transparent
+            bg-app-surface-raised
+            text-app-text
+            focus:border-app-brand-solid
             outline-none 
             transition-colors 
             cursor-pointer
-            ${error ? 'border-red-500 dark:border-red-400' : ''}
+            ${error ? 'border-app-error-text' : ''}
             ${className}
           `}
           {...props}
@@ -87,7 +87,7 @@ export const Select: React.FC<SelectProps> = ({
         </select>
       </div>
       {error && (
-        <p className="mt-1 text-xs text-red-500 dark:text-red-400">{error}</p>
+        <p className="mt-1 text-xs text-app-error-text">{error}</p>
       )}
     </div>
   );

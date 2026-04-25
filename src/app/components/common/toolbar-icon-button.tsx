@@ -17,10 +17,10 @@ export const getToolbarIconButtonClassName = (
   className?: string,
 ) =>
   joinClassNames(
-    'flex h-9 w-9 shrink-0 items-center justify-center rounded-[4px] border transition-colors focus:outline-none focus:ring-2 focus:ring-[#9fe870]/40 disabled:cursor-not-allowed disabled:opacity-40',
+    'flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--app-radius-xs)] border transition-colors focus:outline-none focus:ring-2 focus:ring-app-brand/40 disabled:cursor-not-allowed disabled:opacity-40',
     active
-      ? 'border-[#9fe870]/40 bg-[#9fe870]/15 text-[#6bc84a]'
-      : 'border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]',
+      ? 'border-app-brand/40 bg-app-brand-subtle text-app-brand-text'
+      : 'border-app-border bg-app-surface text-app-text-secondary hover:bg-app-surface-raised',
     className,
   );
 

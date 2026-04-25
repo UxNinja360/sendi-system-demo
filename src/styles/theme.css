@@ -33,8 +33,10 @@
    * ─────────────────────────────────────────────────────────────────────── */
 
   /* Surface */
+  --app-background:         #fafafa;
   --app-surface:            #ffffff;
   --app-surface-raised:     #f5f5f5;
+  --app-surface-inset:      #f0f0f0;
   --app-interactive:        #f5f5f5;
   --app-interactive-hover:  #e5e5e5;
 
@@ -43,6 +45,7 @@
   --app-border-strong:      #d4d4d4;
 
   /* Text */
+  --app-text:               #0d0d12;
   --app-text-secondary:     #737373;
   --app-text-muted:         #a3a3a3;
 
@@ -68,10 +71,14 @@
   /* Status — info */
   --app-info-subtle:        #dbeafe;
   --app-info-text:          #3b82f6;
+  --app-radius-xs:          4px;
+  --app-radius-sm:          6px;
+  --app-radius-md:          8px;
+  --app-shadow-panel:       0 16px 40px rgba(13, 13, 18, 0.08);
 
   --font-size: 16px;
-  --background: #ffffff;
-  --foreground: oklch(0.145 0 0);
+  --background: var(--app-background);
+  --foreground: var(--app-text);
   --card: #ffffff;
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
@@ -111,14 +118,17 @@
 
 .dark {
   /* App semantic token overrides for dark mode */
+  --app-background:         #0a0a0a;
   --app-surface:            #171717;
-  --app-surface-raised:     #262626;
-  --app-interactive:        #404040;
-  --app-interactive-hover:  #525252;
+  --app-surface-raised:     #1f1f1f;
+  --app-surface-inset:      #111111;
+  --app-interactive:        #171717;
+  --app-interactive-hover:  #202020;
   --app-border:             #262626;
   --app-border-strong:      #404040;
+  --app-text:               #fafafa;
   --app-text-secondary:     #a3a3a3;
-  --app-text-muted:         #525252;
+  --app-text-muted:         #737373;
   --app-brand:              #22c55e;
   --app-brand-solid:        #22c55e;
   --app-brand-hover:        #16a34a;
@@ -132,9 +142,10 @@
   --app-error-text:         #f87171;
   --app-info-subtle:        #1e3a8a;
   --app-info-text:          #60a5fa;
+  --app-shadow-panel:       0 18px 42px rgba(0, 0, 0, 0.22);
 
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
+  --background: var(--app-background);
+  --foreground: var(--app-text);
   --card: oklch(0.145 0 0);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.145 0 0);
@@ -210,12 +221,15 @@
   --color-sidebar-ring: var(--sidebar-ring);
 
   /* App semantic tokens → Tailwind utility classes */
+  --color-app-background:        var(--app-background);
   --color-app-surface:           var(--app-surface);
   --color-app-surface-raised:    var(--app-surface-raised);
+  --color-app-surface-inset:     var(--app-surface-inset);
   --color-app-interactive:       var(--app-interactive);
   --color-app-interactive-hover: var(--app-interactive-hover);
   --color-app-border:            var(--app-border);
   --color-app-border-strong:     var(--app-border-strong);
+  --color-app-text:              var(--app-text);
   --color-app-text-secondary:    var(--app-text-secondary);
   --color-app-text-muted:        var(--app-text-muted);
   --color-app-brand:             var(--app-brand);

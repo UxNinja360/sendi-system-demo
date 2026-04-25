@@ -35,7 +35,7 @@ const DETAIL_HEADERS = [
   'נוצרה',
   'נאסף',
   'נמסר',
-  'מחיר',
+  'חיוב משלוח',
   'תשלום שליח',
 ];
 
@@ -68,6 +68,7 @@ export interface CourierReport {
   workedMinutes: number;
   deliveredCount: number;
   cancelledCount: number;
+  creditCount: number;
   revenue: number;
   courierPay: number;
 }
@@ -77,6 +78,8 @@ export interface RestaurantReport {
   deliveries: Delivery[];
   deliveredCount: number;
   cancelledCount: number;
+  expiredCount: number;
+  creditCount: number;
   revenue: number;
   commission: number;
 }
@@ -96,9 +99,9 @@ const buildDeliveryRows = (deliveries: Delivery[]) =>
     delivery.rest_name || delivery.restaurantName || '-',
     delivery.client_name || delivery.customerName || '-',
     delivery.client_full_address || delivery.address || '-',
-    formatDateTime(delivery.createdAt),
-    formatDateTime(delivery.pickedUpAt),
-    formatDateTime(delivery.deliveredAt),
+    formatDateTime(delivery.createdAt ?? delivery.creation_time),
+    formatDateTime(delivery.pickedUpAt ?? delivery.picked_up_time),
+    formatDateTime(delivery.deliveredAt ?? delivery.delivered_time),
     getDeliveryCustomerCharge(delivery),
     getDeliveryCourierBasePay(delivery),
   ]);
@@ -122,6 +125,7 @@ const buildCourierWorkbook = (
       { פרט: 'סה"כ משלוחים', ערך: report.deliveries.length },
       { פרט: 'נמסרו', ערך: report.deliveredCount },
       { פרט: 'בוטלו', ערך: report.cancelledCount },
+      { פרט: 'קרדיטים נוצלו', ערך: report.creditCount },
       { פרט: 'חיובי משלוחים', ערך: MONEY(report.revenue) },
       { פרט: 'תשלום שליח', ערך: MONEY(report.courierPay) },
     ],
@@ -197,6 +201,8 @@ const buildRestaurantWorkbook = (report: RestaurantReport) => {
       { פרט: 'סה"כ משלוחים', ערך: report.deliveries.length },
       { פרט: 'נמסרו', ערך: report.deliveredCount },
       { פרט: 'בוטלו', ערך: report.cancelledCount },
+      { פרט: 'קרדיטים לחיוב', ערך: report.creditCount },
+      { פרט: 'פגו ללא חיוב', ערך: report.expiredCount },
       { פרט: 'חיובי משלוחים', ערך: MONEY(report.revenue) },
       { פרט: 'עמלות', ערך: MONEY(report.commission) },
     ],
@@ -244,6 +250,7 @@ export const useReportsExport = ({
           'סה"כ משלוחים': report.deliveries.length,
           נמסרו: report.deliveredCount,
           בוטלו: report.cancelledCount,
+          'קרדיטים נוצלו': report.creditCount,
           'חיובי משלוחים': report.revenue,
           'תשלום שליח': report.courierPay,
         })),
@@ -282,6 +289,8 @@ export const useReportsExport = ({
         'סה"כ משלוחים': report.deliveries.length,
         נמסרו: report.deliveredCount,
         בוטלו: report.cancelledCount,
+        'קרדיטים לחיוב': report.creditCount,
+        'פגו ללא חיוב': report.expiredCount,
         'חיובי משלוחים': report.revenue,
         עמלות: report.commission,
       })),

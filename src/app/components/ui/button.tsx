@@ -19,14 +19,14 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props 
 }) => {
-  const baseClasses = 'inline-flex items-center justify-center gap-2 font-medium transition-colors rounded-[4px] outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseClasses = 'inline-flex items-center justify-center gap-2 rounded-[var(--app-radius-xs)] font-medium transition-colors outline-none focus:ring-2 focus:ring-app-brand/35 focus:ring-offset-2 focus:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50';
   
   const variantClasses = {
     primary: 'bg-app-brand-solid hover:bg-app-brand-hover text-white focus:ring-app-brand',
     secondary: 'bg-app-interactive hover:bg-app-interactive-hover text-foreground focus:ring-app-border-strong',
-    outline: 'border-2 border-app-brand-solid hover:bg-app-brand-solid text-app-brand-text hover:text-white focus:ring-app-brand dark:border-app-brand dark:hover:bg-app-brand dark:text-app-brand dark:hover:text-foreground',
+    outline: 'border-2 border-app-brand-solid text-app-brand-text hover:bg-app-brand-solid hover:text-white focus:ring-app-brand',
     ghost: 'hover:bg-app-surface-raised text-app-text-secondary hover:text-foreground focus:ring-app-border',
-    danger: 'bg-app-error-text hover:bg-[#dc2626] text-white focus:ring-app-error-text dark:bg-app-error-text dark:hover:bg-[#dc2626]',
+    danger: 'bg-app-error-text text-white hover:brightness-95 focus:ring-app-error-text',
   };
   
   const sizeClasses = {
@@ -67,13 +67,13 @@ export const IconButton: React.FC<IconButtonProps> = ({
   className = '',
   ...props 
 }) => {
-  const baseClasses = 'inline-flex items-center justify-center transition-colors rounded-[4px] outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseClasses = 'inline-flex items-center justify-center rounded-[var(--app-radius-xs)] transition-colors outline-none focus:ring-2 focus:ring-app-brand/35 disabled:cursor-not-allowed disabled:opacity-50';
   
   const variantClasses = {
     primary: 'bg-app-brand-solid hover:bg-app-brand-hover text-white focus:ring-app-brand',
     secondary: 'bg-app-interactive hover:bg-app-interactive-hover text-foreground focus:ring-app-border-strong',
     ghost: 'hover:bg-app-surface-raised text-app-text-secondary hover:text-foreground focus:ring-app-border',
-    danger: 'bg-app-error-text hover:bg-[#dc2626] text-white focus:ring-app-error-text dark:bg-app-error-text dark:hover:bg-[#dc2626]',
+    danger: 'bg-app-error-text text-white hover:brightness-95 focus:ring-app-error-text',
   };
   
   const sizeClasses = {
@@ -104,7 +104,7 @@ interface ButtonGroupProps {
 
 export const ButtonGroup: React.FC<ButtonGroupProps> = ({ children, className = '' }) => {
   return (
-    <div className={`flex items-center gap-2 bg-app-interactive p-1 rounded-[4px] ${className}`}>
+    <div className={`flex items-center gap-2 rounded-[var(--app-radius-sm)] bg-app-interactive p-1 ${className}`}>
       {children}
     </div>
   );

@@ -3,7 +3,6 @@ import { Outlet, useLocation, useNavigate, useNavigation } from 'react-router';
 import { Sidebar } from './sidebar';
 import { MobileNavigation } from './mobile-navigation';
 import { MobileMenuNudge } from './mobile-menu-nudge';
-import { Breadcrumbs } from './breadcrumbs';
 import { PageLoader } from '../ui/page-loader';
 import { LoadingBar } from '../ui/loading-bar';
 import { Toaster } from '../common/toaster';
@@ -65,8 +64,6 @@ export const AppLayout: React.FC = () => {
       <Sidebar onLogout={handleLogout} onMobileMenuToggleReady={registerMobileMenuToggle} />
 
       <div className="flex h-full w-full flex-1 flex-col overflow-hidden">
-        {!isLivePage && <Breadcrumbs />}
-
         <LoadingBar isLoading={isLoading || isPageLoading} />
 
         <div
