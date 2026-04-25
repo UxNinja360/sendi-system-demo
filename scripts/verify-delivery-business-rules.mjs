@@ -12,7 +12,10 @@ import {
   DELIVERY_ASSIGNMENT_BLOCK_COPY,
   getDeliveryAssignmentBlockReason,
 } from './src/app/utils/delivery-assignment';
-import { isOperationalDelivery } from './src/app/utils/delivery-status';
+import {
+  isOperationalDelivery,
+  isVisibleInDefaultDeliveriesView,
+} from './src/app/utils/delivery-status';
 
 const assert = (condition, message) => {
   if (!condition) {
@@ -176,6 +179,7 @@ const expiredBlockReason = getDeliveryAssignmentBlockReason(expiredNetwork, {
 });
 assert(expiredBlockReason === 'offer_expired', 'Expected offer_expired block reason');
 assert(!isOperationalDelivery(expiredNetwork), 'Expired delivery should not count as operational');
+assert(!isVisibleInDefaultDeliveriesView(expiredNetwork), 'Expired delivery should be hidden from the default deliveries view');
 
 const beforeExpiredAssignBalance = state.deliveryBalance;
 state = assign(state, 'network-expired', courier.id);
@@ -189,6 +193,7 @@ export const results = [
   'network offer expires after two minutes',
   'expired offer cannot be assigned',
   'expired offer is excluded from operational delivery counts',
+  'expired offer is hidden from the default deliveries view',
   'prep and SLA timers start at assignment',
 ];
 `;

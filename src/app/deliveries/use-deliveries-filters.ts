@@ -2,6 +2,7 @@
 import { DeliveryStatus, DeliveryState } from '../types/delivery.types';
 import { COLUMN_MAP } from './column-defs';
 import { useDebounce } from '../hooks/useDebounce';
+import { isVisibleInDefaultDeliveriesView } from '../utils/delivery-status';
 
 export const PAGE_SIZE_OPTIONS = [25, 50, 100, 200, 500] as const;
 
@@ -144,6 +145,7 @@ export function useDeliveriesFilters(state: DeliveryState) {
     if (selectedBranches.size > 0) filtered = filtered.filter(d => d.branchName != null && selectedBranches.has(d.branchName.trim()));
     if (selectedAreas.size > 0) filtered = filtered.filter(d => d.area != null && selectedAreas.has(d.area.trim()));
     if (statusFilters.size > 0) filtered = filtered.filter(d => statusFilters.has(d.status));
+    else filtered = filtered.filter(isVisibleInDefaultDeliveriesView);
     if (debouncedSearchQuery) {
       const query = debouncedSearchQuery.toLowerCase();
       filtered = filtered.filter(d => {
@@ -232,6 +234,7 @@ export function useDeliveriesFilters(state: DeliveryState) {
   const dateRangeStats = useMemo(() => {
     let filtered = state.deliveries;
     if (statusFilters.size > 0) filtered = filtered.filter(d => statusFilters.has(d.status));
+    else filtered = filtered.filter(isVisibleInDefaultDeliveriesView);
     if (selectedCouriers.size > 0) filtered = filtered.filter(d => d.courierId != null && selectedCouriers.has(d.courierId));
     if (selectedRestaurants.size > 0) filtered = filtered.filter(d => d.restaurantId != null && selectedRestaurants.has(d.restaurantId));
     if (selectedBranches.size > 0) filtered = filtered.filter(d => d.branchName != null && selectedBranches.has(d.branchName.trim()));
