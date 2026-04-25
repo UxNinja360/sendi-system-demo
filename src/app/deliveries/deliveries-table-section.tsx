@@ -17,11 +17,6 @@ type DeliveriesTableSectionProps = {
   emptyStateMode: 'no-data' | 'no-results' | 'filtered-empty';
   onClearFilters: () => void;
   totalCount: number;
-  tableScrollRef: React.RefObject<HTMLDivElement | null>;
-  isDragging: boolean;
-  onMouseDown: (event: React.MouseEvent) => void;
-  onMouseMove: (event: React.MouseEvent) => void;
-  onMouseUp: () => void;
   orderedColumns: ColumnDef[];
   visibleColumns: Set<string>;
   getDeliveryColumnWidth: (columnId: string) => string;
@@ -50,11 +45,6 @@ export const DeliveriesTableSection: React.FC<DeliveriesTableSectionProps> = ({
   emptyStateMode,
   onClearFilters,
   totalCount,
-  tableScrollRef,
-  isDragging,
-  onMouseDown,
-  onMouseMove,
-  onMouseUp,
   orderedColumns,
   visibleColumns,
   getDeliveryColumnWidth,
@@ -80,6 +70,9 @@ export const DeliveriesTableSection: React.FC<DeliveriesTableSectionProps> = ({
   const navigate = useNavigate();
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const allVisibleDeliveriesSelected =
+    filteredDeliveries.length > 0 && filteredDeliveries.every((delivery) => selectedIds.has(delivery.id));
+  const someVisibleDeliveriesSelected = filteredDeliveries.some((delivery) => selectedIds.has(delivery.id));
 
   const handleDragStart = (event: React.DragEvent<HTMLTableCellElement>, columnId: string) => {
     event.dataTransfer.effectAllowed = 'move';
@@ -126,15 +119,6 @@ export const DeliveriesTableSection: React.FC<DeliveriesTableSectionProps> = ({
       }
       selectionBar={selectionBar}
       ariaLabel="טבלת משלוחים"
-      scrollContainerRef={tableScrollRef}
-      wrapperClassName={`scroll-smooth flex-1 min-h-0 ${
-        isDragging ? 'cursor-grabbing select-none' : 'cursor-grab'
-      }`}
-      style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
-      onMouseDown={onMouseDown}
-      onMouseMove={onMouseMove}
-      onMouseUp={onMouseUp}
-      onMouseLeave={onMouseUp}
       colgroup={
         <colgroup>
           <col style={{ width: ENTITY_TABLE_WIDTHS.checkbox }} />
@@ -143,14 +127,14 @@ export const DeliveriesTableSection: React.FC<DeliveriesTableSectionProps> = ({
             .map((column) => (
               <col key={column.id} style={{ width: getDeliveryColumnWidth(column.id) }} />
             ))}
-          <col style={{ width: '40px' }} />
+          <col style={{ width: ENTITY_TABLE_WIDTHS.actions }} />
         </colgroup>
       }
       headerRow={
         <tr>
           <EntityTableHeaderCheckbox
-            checked={selectedIds.size === filteredDeliveries.length && filteredDeliveries.length > 0}
-            indeterminate={selectedIds.size > 0 && selectedIds.size !== filteredDeliveries.length}
+            checked={allVisibleDeliveriesSelected}
+            indeterminate={someVisibleDeliveriesSelected}
             onChange={onToggleSelectAll}
           />
           {orderedColumns

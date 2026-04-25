@@ -736,9 +736,6 @@ export const ReportsPage: React.FC = () => {
             </header>
 
             <section>
-              <div className="mb-2 text-xs font-semibold text-app-text-muted">
-                סיכום
-              </div>
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               {reportMetrics.map((metric) => (
                 <MetricCard

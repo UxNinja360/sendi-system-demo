@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+﻿import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { format as formatDate } from 'date-fns';
 import { useDelivery } from '../context/delivery-context-value';
 import { Delivery, DeliveryStatus } from '../types/delivery.types';
@@ -21,6 +21,7 @@ import {
   SelectionActionButton,
 } from '../components/common/selection-action-bar';
 import { EntityListShell } from '../components/common/entity-list-shell';
+import { ENTITY_TABLE_WIDTHS } from '../components/common/entity-table-shared';
 import { getDeliveryCustomerCharge, sumDeliveryMoney } from '../utils/delivery-finance';
 import { DELIVERY_STORAGE_KEYS } from '../context/delivery-storage';
 import {
@@ -51,19 +52,15 @@ const formatTime = (seconds: number): string => {
 
 const PRODUCT_DEFAULT_VISIBLE_COLUMNS = new Set([
   'orderNumber',
-  'creation_time',
-  'offerExpiresAt',
   'status',
   'rest_name',
   'client_name',
   'client_full_address',
   'courier',
   'timeRemaining',
-  'price',
-  'runner_price',
 ]);
-const COLUMN_ORDER_STORAGE_KEY = DELIVERY_STORAGE_KEYS.deliveriesColumnOrder;
-const VISIBLE_COLUMNS_STORAGE_KEY = `${DELIVERY_STORAGE_KEYS.deliveriesVisibleColumns}:product-v3`;
+const COLUMN_ORDER_STORAGE_KEY = `${DELIVERY_STORAGE_KEYS.deliveriesColumnOrder}:product-v2`;
+const VISIBLE_COLUMNS_STORAGE_KEY = `${DELIVERY_STORAGE_KEYS.deliveriesVisibleColumns}:product-v4`;
 const DELIVERY_COLUMN_CATEGORIES = [
   {
     id: 'core',
@@ -178,7 +175,7 @@ const DeliveriesOverviewStrip: React.FC<{
 const getDeliveryColumnWidth = (columnId: string) => {
   switch (columnId) {
     case 'orderNumber':
-      return '118px';
+      return ENTITY_TABLE_WIDTHS.md;
     case 'creation_time':
     case 'offerExpiresAt':
     case 'deliveryCreditConsumedAt':
@@ -189,41 +186,45 @@ const getDeliveryColumnWidth = (columnId: string) => {
     case 'started_dropoff':
     case 'arrived_at_client':
     case 'delivered_time':
-      return '132px';
+      return ENTITY_TABLE_WIDTHS.lg;
     case 'status':
-      return '86px';
+      return ENTITY_TABLE_WIDTHS.xs;
     case 'courier':
-      return '148px';
+      return ENTITY_TABLE_WIDTHS.name;
     case 'rest_name':
-      return '190px';
+      return ENTITY_TABLE_WIDTHS.name;
     case 'client_name':
-      return '150px';
+      return ENTITY_TABLE_WIDTHS.name;
     case 'client_full_address':
     case 'restaurantAddress':
-      return '220px';
+      return ENTITY_TABLE_WIDTHS.address;
     case 'timeRemaining':
-      return '108px';
+      return ENTITY_TABLE_WIDTHS.sm;
     case 'price':
-      return '96px';
+    case 'runner_price':
+    case 'runner_tip':
+    case 'sum_cash':
+    case 'rest_price':
+      return ENTITY_TABLE_WIDTHS.sm;
     default: {
       const column = COLUMN_MAP.get(columnId);
       if (!column) return '128px';
       switch (column.type) {
         case 'boolean':
-          return '88px';
+          return ENTITY_TABLE_WIDTHS.xs;
         case 'number':
-          return '96px';
+          return ENTITY_TABLE_WIDTHS.sm;
         case 'money':
-          return '104px';
+          return ENTITY_TABLE_WIDTHS.sm;
         case 'date':
-          return '132px';
+          return ENTITY_TABLE_WIDTHS.lg;
         case 'coord':
           return '156px';
         case 'custom':
-          return '120px';
+          return ENTITY_TABLE_WIDTHS.md;
         case 'text':
         default:
-          return '140px';
+          return ENTITY_TABLE_WIDTHS.lg;
       }
     }
   }
@@ -322,7 +323,7 @@ export const DeliveriesPage: React.FC = () => {
         return [...validSaved, ...missing];
       }
     } catch { /* ignore */ }
-    const preferred = ['orderNumber', 'creation_time', 'offerExpiresAt', 'status', 'rest_name', 'client_full_address', 'courier'];
+    const preferred = ['orderNumber', 'status', 'rest_name', 'client_name', 'client_full_address', 'courier', 'timeRemaining'];
     const allIds = ALL_COLUMNS.map(c => c.id);
     const rest = allIds.filter(id => !preferred.includes(id));
     return [...preferred.filter(id => allIds.includes(id)), ...rest];
@@ -373,9 +374,20 @@ export const DeliveriesPage: React.FC = () => {
   }, []);
 
   const handleToggleSelectAll = useCallback(() => {
-    if (selectedIds.size === filteredDeliveries.length) setSelectedIds(new Set());
-    else setSelectedIds(new Set(filteredDeliveries.map(d => d.id)));
-  }, [filteredDeliveries, selectedIds.size]);
+    setSelectedIds((previous) => {
+      const next = new Set(previous);
+      const allVisibleSelected =
+        filteredDeliveries.length > 0 && filteredDeliveries.every((delivery) => next.has(delivery.id));
+
+      if (allVisibleSelected) {
+        filteredDeliveries.forEach((delivery) => next.delete(delivery.id));
+      } else {
+        filteredDeliveries.forEach((delivery) => next.add(delivery.id));
+      }
+
+      return next;
+    });
+  }, [filteredDeliveries]);
 
   const handleOpenDrawer = useCallback((id: string) => {
     setDrawerDeliveryId(id);
@@ -450,31 +462,6 @@ export const DeliveriesPage: React.FC = () => {
   const editDelivery = useMemo(() =>
     editDeliveryId ? state.deliveries.find(d => d.id === editDeliveryId) || null : null
   , [editDeliveryId, state.deliveries]);
-
-  const tableScrollRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [dragScrollLeft, setDragScrollLeft] = useState(0);
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    const el = tableScrollRef.current;
-    if (!el) return;
-    if ('ontouchstart' in window) return;
-    if ((e.target as HTMLElement).closest('button, a, input, select')) return;
-    setIsDragging(true);
-    setStartX(e.pageX - el.offsetLeft);
-    setDragScrollLeft(el.scrollLeft);
-  }, []);
-
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    const el = tableScrollRef.current;
-    if (!el) return;
-    const x = e.pageX - el.offsetLeft;
-    el.scrollLeft = dragScrollLeft - (x - startX) * 1.5;
-  }, [isDragging, startX, dragScrollLeft]);
-
-  const handleMouseUp = useCallback(() => { setIsDragging(false); }, []);
 
   const stats = useMemo(() => ({
     total: state.deliveries.length,
@@ -689,11 +676,6 @@ export const DeliveriesPage: React.FC = () => {
               emptyStateMode={emptyStateMode}
               onClearFilters={handleClearAllFilters}
               totalCount={stats.total}
-              tableScrollRef={tableScrollRef}
-              isDragging={isDragging}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
               orderedColumns={orderedColumns}
               visibleColumns={visibleColumns}
               getDeliveryColumnWidth={getDeliveryColumnWidth}

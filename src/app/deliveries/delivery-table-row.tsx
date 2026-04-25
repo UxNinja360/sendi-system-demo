@@ -1,17 +1,23 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState } from 'react';
 import { Delivery, Courier, DeliveryStatus } from '../types/delivery.types';
 import {
   Copy,
   UserPlus,
   XCircle,
   CheckCircle2,
-  ChevronDown,
   FileText,
   Info,
   Edit,
   RotateCcw,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  EntityActionMenu,
+  EntityActionMenuDivider,
+  EntityActionMenuHeader,
+  EntityActionMenuItem,
+  EntityActionMenuOverlay,
+} from '../components/common/entity-action-menu';
 import {
   EntityTableActionsCell,
   EntityTableRowCheckbox,
@@ -23,7 +29,7 @@ import {
 } from '../components/common/entity-table-shared';
 import { ALL_COLUMNS, CUSTOM_COLUMN_IDS, COLUMN_MAP } from './column-defs';
 import type { ColumnDef } from './column-defs';
-import { STATUS_CONFIG, ALL_STATUSES } from './status-config';
+import { STATUS_CONFIG } from './status-config';
 import { formatCurrency, getDeliveryCustomerCharge } from '../utils/delivery-finance';
 
 interface DeliveryTableRowProps {
@@ -63,29 +69,11 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
   isDrawerTarget,
   orderedColumns,
 }) => {
-  const [menuOpen, setMenuOpen] = useState(false);
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
-  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const statusRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-        setContextMenuPos(null);
-      }
-      if (statusRef.current && !statusRef.current.contains(e.target as Node)) setStatusDropdownOpen(false);
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const config = STATUS_CONFIG[delivery.status];
-  const StatusIcon = config.icon;
 
-  const heightClasses = { py: 'py-2.5', text: 'text-xs', iconSize: 'w-3.5 h-3.5' };
-  const dataCellClassName = `${ENTITY_TABLE_DATA_CELL_CLASS} ${heightClasses.text}`;
+  const dataCellClassName = `${ENTITY_TABLE_DATA_CELL_CLASS} text-xs`;
 
   const handleStatusChange = (newStatus: DeliveryStatus) => {
     if (newStatus === delivery.status) return;
@@ -96,21 +84,17 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
     } else {
       onStatusChange(delivery.id, newStatus);
     }
-    setStatusDropdownOpen(false);
     toast.success(`סטטוס עודכן ל${STATUS_CONFIG[newStatus].label}`);
   };
 
   const handleCopyOrderNumber = () => {
     navigator.clipboard.writeText(delivery.orderNumber);
     toast.success(`מספר הזמנה ${delivery.orderNumber} הועתק`);
-    setMenuOpen(false);
     setContextMenuPos(null);
   };
 
   const closeMenus = () => {
-    setMenuOpen(false);
     setContextMenuPos(null);
-    setStatusDropdownOpen(false);
   };
 
   // Custom cell renderers for special columns
@@ -120,7 +104,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
         return (
           <td key={colId} className={dataCellClassName}>
             <span
-              className={`${heightClasses.text} text-[#0d0d12] dark:text-[#fafafa] font-medium whitespace-nowrap`}
+              className="text-xs text-[#0d0d12] dark:text-[#fafafa] font-medium whitespace-nowrap"
             >
               {delivery.orderNumber}
             </span>
@@ -192,13 +176,12 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
 
   return (
     <tr
+      onClick={onNavigate}
       onContextMenu={(e) => {
         e.preventDefault();
-        setStatusDropdownOpen(false);
         setContextMenuPos({ x: e.clientX, y: e.clientY });
-        setMenuOpen(true);
       }}
-      className={`${ENTITY_TABLE_ROW_CLASS} group last:border-b-0 cursor-default ${
+      className={`${ENTITY_TABLE_ROW_CLASS} cursor-pointer ${
         isDrawerTarget
           ? 'bg-[#dcfce7]/50 hover:bg-[#dcfce7]/50 dark:bg-[#14532d]/30 dark:hover:bg-[#14532d]/30'
           : isSelected
@@ -241,162 +224,137 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
 
       {/* Actions column */}
       <EntityTableActionsCell
-        className={heightClasses.py}
         contentClassName="items-center justify-end gap-0.5"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-end gap-0.5" data-no-row-click>
-          {/* Quick actions — visible on row hover */}
-          <button
-            onClick={() => onOpenDrawer(delivery.id)}
-            style={{ display: 'none' }}
-            className="p-1 rounded-lg hover:bg-[#f0fdf4] dark:hover:bg-[#052e16] text-[#16a34a] dark:text-[#9fe870] transition-opacity"
-            title="פרטים מלאים"
-          >
-            <Info className={heightClasses.iconSize} />
-          </button>
-          {onEditDelivery && (
-            <button
-              onClick={() => onEditDelivery(delivery.id)}
-              style={{ display: 'none' }}
-              className="p-1 rounded-lg hover:bg-[#f0fdf4] dark:hover:bg-[#052e16] text-[#16a34a] dark:text-[#9fe870] transition-opacity"
-              title="ערוך משלוח"
-            >
-              <Edit className={heightClasses.iconSize} />
-            </button>
-          )}
-          <div className="relative" ref={menuRef}>
           <EntityRowActionTrigger
             onClick={(e) => {
               const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
-              setContextMenuPos({ x: rect.left, y: rect.bottom + 4 });
-              setMenuOpen(true);
+              setContextMenuPos({ x: Math.max(8, rect.left - 180), y: rect.bottom + 8 });
             }}
             title={`פעולות למשלוח ${delivery.orderNumber}`}
           />
-          {menuOpen && contextMenuPos && (
-            <div
-              className="fixed z-50 w-[220px] bg-white dark:bg-[#1a1a1a] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl shadow-2xl overflow-hidden py-1"
-              style={{ top: contextMenuPos.y, left: contextMenuPos.x }}
-            >
-              {/* כותרת — מספר הזמנה + סטטוס */}
-              <div className="px-3 py-2 border-b border-[#f5f5f5] dark:border-[#262626] mb-1">
-                <p className="text-xs font-semibold text-[#0d0d12] dark:text-[#fafafa] truncate">#{delivery.orderNumber}</p>
-                <p className={`text-[11px] font-medium mt-0.5 ${config.tableColor}`}>{config.label}</p>
-              </div>
-              <button
-                onClick={() => { onOpenDrawer(delivery.id); closeMenus(); }}
-                className="w-full text-right px-3 py-2.5 text-xs font-medium text-[#16a34a] dark:text-[#9fe870] hover:bg-[#f0fdf4] dark:hover:bg-[#052e16] transition-colors flex items-center gap-2.5"
+          <EntityActionMenuOverlay
+            open={Boolean(contextMenuPos)}
+            position={contextMenuPos}
+            onClose={closeMenus}
+          >
+            {contextMenuPos ? (
+              <EntityActionMenu
+                style={{ top: contextMenuPos.y, left: contextMenuPos.x }}
+                onClick={(event) => event.stopPropagation()}
+                onPointerDown={(event) => event.stopPropagation()}
               >
-                <Info className="w-3.5 h-3.5" />
-                <span>פרטים מלאים</span>
-              </button>
-              <button
-                onClick={() => { onNavigate(); closeMenus(); }}
-                className="w-full text-right px-3 py-2.5 text-xs hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors flex items-center gap-2.5"
-              >
-                <FileText className="w-3.5 h-3.5 text-[#737373]" />
-                <span className="font-medium text-[#0d0d12] dark:text-[#fafafa]">צפה בעמוד מלא</span>
-              </button>
-              <button
-                onClick={handleCopyOrderNumber}
-                className="w-full text-right px-3 py-2.5 text-xs hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors flex items-center gap-2.5"
-              >
-                <Copy className="w-3.5 h-3.5 text-[#737373]" />
-                <span className="font-medium text-[#0d0d12] dark:text-[#fafafa]">העתק מספר הזמנה</span>
-              </button>
+                <EntityActionMenuHeader
+                  title={`#${delivery.orderNumber}`}
+                  subtitle={<span className={`text-[11px] font-medium ${config.tableColor}`}>{config.label}</span>}
+                />
+
+                <EntityActionMenuItem
+                  onClick={() => { onNavigate(); closeMenus(); }}
+                  icon={<FileText className="w-3.5 h-3.5 text-[#737373] dark:text-[#a3a3a3]" />}
+                >
+                  פרטים מלאים
+                </EntityActionMenuItem>
+                <EntityActionMenuItem
+                  onClick={() => { onOpenDrawer(delivery.id); closeMenus(); }}
+                  icon={<Info className="w-3.5 h-3.5 text-[#16a34a] dark:text-[#9fe870]" />}
+                >
+                  פתח פאנל צד
+                </EntityActionMenuItem>
+                <EntityActionMenuItem
+                  onClick={handleCopyOrderNumber}
+                  icon={<Copy className="w-3.5 h-3.5 text-[#737373] dark:text-[#a3a3a3]" />}
+                >
+                  העתק מספר הזמנה
+                </EntityActionMenuItem>
 
               {onEditDelivery && (
                 <>
-                  <div className="h-px bg-[#e5e5e5] dark:bg-[#262626]" />
-                  <button
+                  <EntityActionMenuDivider />
+                  <EntityActionMenuItem
                     onClick={() => { onEditDelivery(delivery.id); closeMenus(); }}
-                    className="w-full text-right px-3 py-2.5 text-xs hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors flex items-center gap-2.5"
+                    icon={<Edit className="w-3.5 h-3.5 text-[#16a34a] dark:text-[#9fe870]" />}
                   >
-                    <Edit className="w-3.5 h-3.5 text-[#9fe870]" />
-                    <span className="font-medium text-[#0d0d12] dark:text-[#fafafa]">ערוך משלוח</span>
-                  </button>
+                    ערוך משלוח
+                  </EntityActionMenuItem>
                 </>
               )}
 
               {delivery.status === 'pending' && (
                 <>
-                  <div className="h-px bg-[#e5e5e5] dark:bg-[#262626]" />
-                  <button
+                  <EntityActionMenuDivider />
+                  <EntityActionMenuItem
                     onClick={() => { onOpenDrawer(delivery.id); closeMenus(); }}
-                    className="w-full text-right px-3 py-2.5 text-xs font-medium text-[#0fcdd3] hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-colors flex items-center gap-2.5"
+                    icon={<UserPlus className="w-3.5 h-3.5 text-[#0fcdd3]" />}
                   >
-                    <UserPlus className="w-3.5 h-3.5" />
-                    <span>שיבוץ שליח</span>
-                  </button>
-                  <button
+                    שיבוץ שליח
+                  </EntityActionMenuItem>
+                  <EntityActionMenuItem
                     onClick={() => { onCancelDelivery(delivery.id); closeMenus(); }}
-                    className="w-full text-right px-3 py-2.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2.5"
+                    icon={<XCircle className="w-3.5 h-3.5" />}
+                    danger
                   >
-                    <XCircle className="w-3.5 h-3.5" />
-                    <span>ביטול משלוח</span>
-                  </button>
+                    ביטול משלוח
+                  </EntityActionMenuItem>
                 </>
               )}
 
               {delivery.status === 'assigned' && (
                 <>
-                  <div className="h-px bg-[#e5e5e5] dark:bg-[#262626]" />
-                  <button
+                  <EntityActionMenuDivider />
+                  <EntityActionMenuItem
                     onClick={() => { onOpenDrawer(delivery.id); closeMenus(); }}
-                    className="w-full text-right px-3 py-2.5 text-xs font-medium text-[#0fcdd3] hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-colors flex items-center gap-2.5"
+                    icon={<Edit className="w-3.5 h-3.5 text-[#0fcdd3]" />}
                   >
-                    <Edit className="w-3.5 h-3.5" />
-                    <span>שינוי שליח</span>
-                  </button>
+                    שינוי שליח
+                  </EntityActionMenuItem>
                   {onUnassignCourier && (
-                    <button
+                    <EntityActionMenuItem
                       onClick={() => { onUnassignCourier(delivery.id); closeMenus(); }}
-                      className="w-full text-right px-3 py-2.5 text-xs font-medium text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors flex items-center gap-2.5"
+                      icon={<RotateCcw className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />}
                     >
-                      <RotateCcw className="w-3.5 h-3.5" />
-                      <span>ביטול שיבוץ</span>
-                    </button>
+                      ביטול שיבוץ
+                    </EntityActionMenuItem>
                   )}
-                  <button
+                  <EntityActionMenuItem
                     onClick={() => { onCancelDelivery(delivery.id); closeMenus(); }}
-                    className="w-full text-right px-3 py-2.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2.5"
+                    icon={<XCircle className="w-3.5 h-3.5" />}
+                    danger
                   >
-                    <XCircle className="w-3.5 h-3.5" />
-                    <span>ביטול משלוח</span>
-                  </button>
+                    ביטול משלוח
+                  </EntityActionMenuItem>
                 </>
               )}
 
               {(delivery.status === 'delivering') && (
                 <>
-                  <div className="h-px bg-[#e5e5e5] dark:bg-[#262626]" />
-                  <button
+                  <EntityActionMenuDivider />
+                  <EntityActionMenuItem
                     onClick={() => { onOpenDrawer(delivery.id); closeMenus(); }}
-                    className="w-full text-right px-3 py-2.5 text-xs font-medium text-[#0fcdd3] hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-colors flex items-center gap-2.5"
+                    icon={<Edit className="w-3.5 h-3.5 text-[#0fcdd3]" />}
                   >
-                    <Edit className="w-3.5 h-3.5" />
-                    <span>שינוי שליח</span>
-                  </button>
-                  <button
+                    שינוי שליח
+                  </EntityActionMenuItem>
+                  <EntityActionMenuItem
                     onClick={() => { onCompleteDelivery(delivery.id); closeMenus(); }}
-                    className="w-full text-right px-3 py-2.5 text-xs font-medium text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors flex items-center gap-2.5"
+                    icon={<CheckCircle2 className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />}
                   >
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>סימון כנמסר</span>
-                  </button>
-                  <button
+                    סימון כנמסר
+                  </EntityActionMenuItem>
+                  <EntityActionMenuItem
                     onClick={() => { onCancelDelivery(delivery.id); closeMenus(); }}
-                    className="w-full text-right px-3 py-2.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2.5"
+                    icon={<XCircle className="w-3.5 h-3.5" />}
+                    danger
                   >
-                    <XCircle className="w-3.5 h-3.5" />
-                    <span>ביטול משלוח</span>
-                  </button>
+                    ביטול משלוח
+                  </EntityActionMenuItem>
                 </>
               )}
-            </div>
-          )}
-          </div>
+              </EntityActionMenu>
+            ) : null}
+          </EntityActionMenuOverlay>
         </div>
       </EntityTableActionsCell>
     </tr>
