@@ -1,7 +1,5 @@
 import React from 'react';
 import {
-  AlertTriangle,
-  BarChart3,
   Bike,
   Building2,
   Check,
@@ -135,7 +133,7 @@ const reportTemplates: Array<{
     id: 'companySummary',
     title: 'סיכום חברה',
     shortTitle: 'חברה',
-    description: 'קרדיטים, פעילות, פגי תוקף ופערי התחשבנות.',
+    description: 'קרדיטים, פעילות ופערי התחשבנות.',
     icon: <Building2 className="h-4 w-4" />,
   },
 ];
@@ -385,7 +383,6 @@ export const ReportsPage: React.FC = () => {
               .length,
             cancelledCount: deliveries.filter((delivery) => delivery.status === 'cancelled')
               .length,
-            expiredCount: deliveries.filter((delivery) => delivery.status === 'expired').length,
             revenue: sumDeliveryMoney(credited, getDeliveryCustomerCharge),
             commission: sumDeliveryMoney(credited, getDeliveryCommission),
             avgDeliveryMinutes: average(deliveredDurations),
@@ -400,7 +397,6 @@ export const ReportsPage: React.FC = () => {
   const companyStats = React.useMemo(() => {
     const delivered = deliveriesInRange.filter((delivery) => delivery.status === 'delivered');
     const cancelled = deliveriesInRange.filter((delivery) => delivery.status === 'cancelled');
-    const expired = deliveriesInRange.filter((delivery) => delivery.status === 'expired');
     const active = deliveriesInRange.filter((delivery) =>
       ['pending', 'assigned', 'delivering'].includes(delivery.status),
     );
@@ -423,7 +419,6 @@ export const ReportsPage: React.FC = () => {
       activeCount: active.length,
       deliveredCount: delivered.length,
       cancelledCount: cancelled.length,
-      expiredCount: expired.length,
       creditsUsed: creditedDeliveries.length,
       deliveryCharges,
       courierPay,
@@ -495,11 +490,10 @@ export const ReportsPage: React.FC = () => {
             tone: 'info' as const,
           },
           {
-            icon: <AlertTriangle className="h-4 w-4" />,
-            label: 'פגו ללא חיוב',
-            value: formatNumber(companyStats.expiredCount),
-            helper: 'נשמר לאינסייטים, לא לחשבונית',
-            tone: companyStats.expiredCount > 0 ? ('warning' as const) : ('default' as const),
+            icon: <Clock3 className="h-4 w-4" />,
+            label: 'זמן ממוצע',
+            value: formatMinutes(companyStats.avgDeliveryMinutes),
+            helper: 'מציוות ועד מסירה ללקוח',
           },
         ]
       : activeReportId === 'courierPayout'
@@ -546,11 +540,11 @@ export const ReportsPage: React.FC = () => {
               helper: 'יורד רק אחרי ציוות לשליח',
             },
             {
-              icon: <AlertTriangle className="h-4 w-4" />,
-              label: 'הצעות שפגו',
-              value: formatNumber(companyStats.expiredCount),
-              helper: 'לא נספרות כמשלוחים אמיתיים',
-              tone: companyStats.expiredCount > 0 ? ('warning' as const) : ('default' as const),
+              icon: <Wallet className="h-4 w-4" />,
+              label: 'חיובי משלוחים',
+              value: formatCurrency(companyStats.deliveryCharges),
+              helper: 'חיוב משלוחים בלבד',
+              tone: 'info' as const,
             },
             {
               icon: <Clock3 className="h-4 w-4" />,
@@ -571,11 +565,6 @@ export const ReportsPage: React.FC = () => {
       label: 'קרדיטים נוצלו',
       value: formatNumber(companyStats.creditsUsed),
       detail: 'נספר רק אחרי ציוות לשליח',
-    },
-    {
-      label: 'הצעות שפגו',
-      value: formatNumber(companyStats.expiredCount),
-      detail: 'לא נספרות כמשלוחים אמיתיים',
     },
     {
       label: 'חיובי משלוחים',
@@ -732,66 +721,19 @@ export const ReportsPage: React.FC = () => {
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6">
           <div className="mx-auto flex w-full max-w-7xl flex-col gap-4">
-            <header className="border-b border-app-border pb-5">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface text-app-brand-text">
-                    <BarChart3 className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h1 className="text-xl font-semibold tracking-normal text-app-text">
-                      דוחות
-                    </h1>
-                    <div className="mt-0.5 text-sm text-app-text-secondary">
-                      {activeTemplate.title}
-                    </div>
-                  </div>
-                </div>
-                <p className="mt-3 max-w-3xl text-sm leading-6 text-app-text-secondary">
-                  הדוח מתחיל מהשאלה העסקית. קודם בוחרים דוח, אחר כך רואים סיכום, ואז מפיקים קובץ.
-                </p>
-              </div>
-
-              <div className="mt-4 flex max-w-full flex-col items-start gap-2">
-                <div className="text-xs font-semibold text-app-text-muted">
-                  סוג דוח
-                </div>
-                <div className="flex max-w-full flex-wrap items-center gap-1 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface-inset p-1">
-                  {reportTemplates.map((template) => (
-                    <ReportSwitchButton
-                      key={template.id}
-                      active={activeReportId === template.id}
-                      title={template.shortTitle}
-                      icon={template.icon}
-                      onClick={() => setActiveReportId(template.id)}
-                    />
-                  ))}
-                </div>
+            <header className="flex max-w-full justify-end border-b border-app-border pb-4">
+              <div className="flex max-w-full flex-wrap items-center gap-1 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface-inset p-1">
+                {reportTemplates.map((template) => (
+                  <ReportSwitchButton
+                    key={template.id}
+                    active={activeReportId === template.id}
+                    title={template.shortTitle}
+                    icon={template.icon}
+                    onClick={() => setActiveReportId(template.id)}
+                  />
+                ))}
               </div>
             </header>
-
-            <section className="rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface p-4">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div className="min-w-0">
-                  <div className="text-xs font-semibold text-app-text-muted">
-                    דוח פעיל
-                  </div>
-                  <div className="mt-1 flex items-center gap-2">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--app-radius-xs)] border border-app-border bg-app-surface-inset text-app-brand-text">
-                      {activeTemplate.icon}
-                    </div>
-                    <div className="min-w-0">
-                      <h2 className="truncate text-lg font-semibold text-app-text">
-                        {activeTemplate.title}
-                      </h2>
-                      <p className="mt-0.5 text-sm text-app-text-secondary">
-                        {activeTemplate.description}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
 
             <section>
               <div className="mb-2 text-xs font-semibold text-app-text-muted">
@@ -822,7 +764,7 @@ export const ReportsPage: React.FC = () => {
                   </h2>
                   <p className="mt-0.5 text-xs text-app-text-secondary">
                     {activeReportId === 'restaurantBilling'
-                      ? 'פירוט למסעדות לפי קרדיטים שנוצלו, פגי תוקף וסכומי חיוב.'
+                      ? 'פירוט למסעדות לפי קרדיטים שנוצלו וסכומי חיוב.'
                       : activeReportId === 'courierPayout'
                         ? 'פירוט לשליחים לפי משמרות, משלוחים ותשלום בסיס.'
                         : 'סיכום קרדיטים, פעילות ופערי התחשבנות לחברת המשלוחים.'}
@@ -872,9 +814,9 @@ export const ReportsPage: React.FC = () => {
                           <th className="px-4 py-3 text-right font-medium">לחיוב</th>
                           <th className="px-4 py-3 text-right font-medium">נמסרו</th>
                           <th className="px-4 py-3 text-right font-medium">בוטלו</th>
-                          <th className="px-4 py-3 text-right font-medium">
-                            {activeReportId === 'courierPayout' ? 'שעות' : 'פגו'}
-                          </th>
+                          {activeReportId === 'courierPayout' ? (
+                            <th className="px-4 py-3 text-right font-medium">שעות</th>
+                          ) : null}
                           <th className="px-4 py-3 text-right font-medium">
                             {activeReportId === 'courierPayout' ? 'תשלום שליח' : 'חיוב משלוחים'}
                           </th>
@@ -916,7 +858,7 @@ export const ReportsPage: React.FC = () => {
                               </tr>
                             ))
                           ) : (
-                            <TableEmptyState colSpan={8}>
+                            <TableEmptyState colSpan={activeReportId === 'courierPayout' ? 8 : 7}>
                               אין פעילות שליחים בתקופה הזו
                             </TableEmptyState>
                           )
@@ -946,9 +888,6 @@ export const ReportsPage: React.FC = () => {
                               <td className="px-4 py-3 tabular-nums text-app-error-text">
                                 {formatNumber(report.cancelledCount)}
                               </td>
-                              <td className="px-4 py-3 tabular-nums text-app-warning-text">
-                                {formatNumber(report.expiredCount)}
-                              </td>
                               <td className="px-4 py-3 tabular-nums">
                                 {formatCurrency(report.revenue)}
                               </td>
@@ -958,7 +897,7 @@ export const ReportsPage: React.FC = () => {
                             </tr>
                           ))
                         ) : (
-                          <TableEmptyState colSpan={8}>
+                          <TableEmptyState colSpan={activeReportId === 'courierPayout' ? 8 : 7}>
                             אין פעילות מסעדות בתקופה הזו
                           </TableEmptyState>
                         )}

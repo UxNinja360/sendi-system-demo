@@ -78,7 +78,6 @@ export interface RestaurantReport {
   deliveries: Delivery[];
   deliveredCount: number;
   cancelledCount: number;
-  expiredCount: number;
   creditCount: number;
   revenue: number;
   commission: number;
@@ -202,7 +201,6 @@ const buildRestaurantWorkbook = (report: RestaurantReport) => {
       { פרט: 'נמסרו', ערך: report.deliveredCount },
       { פרט: 'בוטלו', ערך: report.cancelledCount },
       { פרט: 'קרדיטים לחיוב', ערך: report.creditCount },
-      { פרט: 'פגו ללא חיוב', ערך: report.expiredCount },
       { פרט: 'חיובי משלוחים', ערך: MONEY(report.revenue) },
       { פרט: 'עמלות', ערך: MONEY(report.commission) },
     ],
@@ -290,7 +288,6 @@ export const useReportsExport = ({
         נמסרו: report.deliveredCount,
         בוטלו: report.cancelledCount,
         'קרדיטים לחיוב': report.creditCount,
-        'פגו ללא חיוב': report.expiredCount,
         'חיובי משלוחים': report.revenue,
         עמלות: report.commission,
       })),
