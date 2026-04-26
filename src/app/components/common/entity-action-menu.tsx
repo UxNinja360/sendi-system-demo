@@ -85,7 +85,7 @@ export const EntityActionMenuHeader: React.FC<EntityActionMenuHeaderProps> = ({
 }) => {
   return (
     <div className="px-3 py-2 border-b border-[#f5f5f5] dark:border-app-border mb-1">
-      <p className="text-xs font-semibold text-[#0d0d12] dark:text-[#fafafa] truncate">
+      <p className="text-xs font-semibold text-[#0d0d12] dark:text-app-text truncate">
         {title}
       </p>
       {subtitle ? <div className="mt-0.5">{subtitle}</div> : null}
@@ -104,7 +104,7 @@ export const EntityActionMenuItem: React.FC<EntityActionMenuItemProps> = ({
     'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors';
   const toneClassName = danger
     ? 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10'
-    : 'text-[#0d0d12] dark:text-[#fafafa] hover:bg-[#f5f5f5] dark:hover:bg-[#262626]';
+    : 'text-[#0d0d12] dark:text-app-text hover:bg-[#f5f5f5] dark:hover:bg-[#262626]';
 
   return (
     <button

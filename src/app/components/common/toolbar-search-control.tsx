@@ -9,6 +9,7 @@ interface ToolbarSearchControlProps {
   onSearchQueryChange: (query: string) => void;
   placeholder: string;
   widthClass?: string;
+  alwaysOpen?: boolean;
 }
 
 const TEXT = {
@@ -23,20 +24,22 @@ export const ToolbarSearchControl: React.FC<ToolbarSearchControlProps> = ({
   onSearchQueryChange,
   placeholder,
   widthClass = 'w-48',
+  alwaysOpen = false,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const isSearchVisible = alwaysOpen || searchOpen;
 
   useEffect(() => {
-    if (searchOpen) {
+    if (isSearchVisible) {
       inputRef.current?.focus();
     }
-  }, [searchOpen]);
+  }, [isSearchVisible]);
 
   return (
-    <div className="relative flex items-center">
-      {searchOpen ? (
-        <div className="flex items-center gap-1">
-          <div className="relative">
+    <div className={alwaysOpen ? 'relative flex min-w-0 flex-1 items-center' : 'relative flex items-center'}>
+      {isSearchVisible ? (
+        <div className={alwaysOpen ? 'flex min-w-0 flex-1 items-center gap-1' : 'flex items-center gap-1'}>
+          <div className={alwaysOpen ? 'relative min-w-0 flex-1' : 'relative'}>
             <Search className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#a3a3a3]" />
             <input
               ref={inputRef}
@@ -44,7 +47,7 @@ export const ToolbarSearchControl: React.FC<ToolbarSearchControlProps> = ({
               placeholder={placeholder}
               value={searchQuery}
               onChange={(event) => onSearchQueryChange(event.target.value)}
-              className={`${widthClass} h-9 rounded-[4px] border border-transparent bg-[#f5f5f5] pr-8 pl-6 text-sm text-[#0d0d12] outline-none transition-all placeholder:text-[#a3a3a3] focus:border-[#9fe870]/50 dark:bg-[#262626] dark:text-[#fafafa]`}
+              className={`${widthClass} h-9 rounded-[4px] border border-[#e5e5e5] bg-[#f5f5f5] pr-8 pl-6 text-sm text-[#0d0d12] outline-none transition-all placeholder:text-[#a3a3a3] focus:border-[#9fe870]/50 dark:border-app-nav-border dark:bg-[#000000] dark:text-app-text dark:placeholder:text-app-text-secondary`}
             />
             {searchQuery && (
               <button
@@ -56,18 +59,20 @@ export const ToolbarSearchControl: React.FC<ToolbarSearchControlProps> = ({
               </button>
             )}
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              onSearchOpenChange(false);
-              onSearchQueryChange('');
-            }}
-            title={TEXT.close}
-            aria-label={TEXT.close}
-            className="rounded p-1 transition-colors hover:bg-[#f5f5f5] dark:hover:bg-[#262626]"
-          >
-            <X className="h-3.5 w-3.5 text-[#a3a3a3]" />
-          </button>
+          {alwaysOpen ? null : (
+            <button
+              type="button"
+              onClick={() => {
+                onSearchOpenChange(false);
+                onSearchQueryChange('');
+              }}
+              title={TEXT.close}
+              aria-label={TEXT.close}
+              className="rounded p-1 transition-colors hover:bg-[#f5f5f5] dark:hover:bg-[#262626]"
+            >
+              <X className="h-3.5 w-3.5 text-[#a3a3a3]" />
+            </button>
+          )}
         </div>
       ) : (
         <ToolbarIconButton

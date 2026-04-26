@@ -95,11 +95,11 @@ const SettingRow: React.FC<{
         {icon}
       </div>
       <div className="min-w-0">
-        <div className={`text-sm font-semibold ${danger ? 'text-red-700 dark:text-red-300' : 'text-[#0d0d12] dark:text-[#fafafa]'}`}>
+        <div className={`text-sm font-semibold ${danger ? 'text-red-700 dark:text-red-300' : 'text-[#0d0d12] dark:text-app-text'}`}>
           {title}
         </div>
         {hint ? (
-          <div className={`mt-0.5 text-xs ${danger ? 'text-red-600/80 dark:text-red-300/75' : 'text-[#666d80] dark:text-[#a3a3a3]'}`}>
+          <div className={`mt-0.5 text-xs ${danger ? 'text-red-600/80 dark:text-red-300/75' : 'text-[#666d80] dark:text-app-text-secondary'}`}>
             {hint}
           </div>
         ) : null}
@@ -143,11 +143,11 @@ const SectionCard: React.FC<{
     >
       <div className="flex items-center gap-2">
         {icon}
-        <span className={`text-sm font-semibold ${danger ? 'text-red-700 dark:text-red-300' : 'text-[#0d0d12] dark:text-[#fafafa]'}`}>
+        <span className={`text-sm font-semibold ${danger ? 'text-red-700 dark:text-red-300' : 'text-[#0d0d12] dark:text-app-text'}`}>
           {title}
         </span>
       </div>
-      <div className={`mt-1 text-xs ${danger ? 'text-red-600/80 dark:text-red-300/75' : 'text-[#666d80] dark:text-[#a3a3a3]'}`}>
+      <div className={`mt-1 text-xs ${danger ? 'text-red-600/80 dark:text-red-300/75' : 'text-[#666d80] dark:text-app-text-secondary'}`}>
         {description}
       </div>
     </div>
@@ -159,7 +159,7 @@ const OpenButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
   <button
     type="button"
     onClick={onClick}
-    className="inline-flex items-center gap-1 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-[#fafafa] dark:hover:bg-app-surface-raised"
+    className="inline-flex items-center gap-1 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
   >
     <span>{TEXT.open}</span>
     <ChevronLeft className="h-4 w-4" />
@@ -217,7 +217,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-[#fafafa] dark:hover:bg-app-surface-raised"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
                 >
                   <LogOut className="h-4 w-4" />
                   <span>{TEXT.logoutShort}</span>
@@ -265,10 +265,10 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
                 <AlertTriangle className="h-5 w-5" />
               </div>
               <div className="min-w-0">
-                <h2 id="reset-system-title" className="text-base font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                <h2 id="reset-system-title" className="text-base font-bold text-[#0d0d12] dark:text-app-text">
                   {TEXT.resetConfirm}
                 </h2>
-                <p className="mt-2 text-sm leading-6 text-[#666d80] dark:text-[#a3a3a3]">
+                <p className="mt-2 text-sm leading-6 text-[#666d80] dark:text-app-text-secondary">
                   {TEXT.resetConfirmBody}
                 </p>
               </div>
@@ -277,7 +277,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
               <button
                 type="button"
                 onClick={() => setIsResetDialogOpen(false)}
-                className="rounded-xl bg-[#f5f5f5] px-4 py-2 text-sm font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-[#262626] dark:text-[#fafafa] dark:hover:bg-[#333]"
+                className="rounded-xl bg-[#f5f5f5] px-4 py-2 text-sm font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-[#262626] dark:text-app-text dark:hover:bg-[#333]"
               >
                 {TEXT.resetCancel}
               </button>

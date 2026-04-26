@@ -61,10 +61,10 @@ export function CustomerDetailsScreen() {
     return (
       <div className="flex h-full flex-col items-center justify-center p-8 text-center">
         <User className="mb-4 h-16 w-16 text-[#e5e5e5] dark:text-[#404040]" />
-        <h2 className="mb-2 text-xl font-bold text-[#0d0d12] dark:text-[#fafafa]">
+        <h2 className="mb-2 text-xl font-bold text-[#0d0d12] dark:text-app-text">
           לקוח לא נמצא
         </h2>
-        <p className="mb-4 text-sm text-[#666d80] dark:text-[#a3a3a3]">
+        <p className="mb-4 text-sm text-[#666d80] dark:text-app-text-secondary">
           הלקוח שחיפשת אינו קיים במערכת
         </p>
         <button
@@ -86,23 +86,23 @@ export function CustomerDetailsScreen() {
             onClick={() => navigate('/customers')}
             className="rounded-lg p-2 transition-colors hover:bg-[#f5f5f5] dark:hover:bg-[#262626]"
           >
-            <ArrowRight size={20} className="text-[#666d80] dark:text-[#d4d4d4]" />
+            <ArrowRight size={20} className="text-[#666d80] dark:text-app-text-secondary" />
           </button>
 
           <div className="flex-1">
             <div className="flex items-center gap-3">
               <User size={24} className="text-[#0fcdd3]" />
               <div>
-                <h1 className="text-xl font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                <h1 className="text-xl font-bold text-[#0d0d12] dark:text-app-text">
                   {customer.name}
                 </h1>
-                <p className="text-sm text-[#666d80] dark:text-[#a3a3a3]">{customer.phone}</p>
+                <p className="text-sm text-[#666d80] dark:text-app-text-secondary">{customer.phone}</p>
               </div>
             </div>
           </div>
 
           <div className="text-left">
-            <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">משלוחים פעילים</div>
+            <div className="text-xs text-[#666d80] dark:text-app-text-secondary">משלוחים פעילים</div>
             <div className="text-2xl font-bold text-[#0fcdd3]">{activeDeliveries.length}</div>
           </div>
         </div>
@@ -117,8 +117,8 @@ export function CustomerDetailsScreen() {
                   <Package size={20} className="text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">סה"כ הזמנות</div>
-                  <div className="text-2xl font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">סה"כ הזמנות</div>
+                  <div className="text-2xl font-bold text-[#0d0d12] dark:text-app-text">
                     {customerDeliveries.length}
                   </div>
                 </div>
@@ -131,8 +131,8 @@ export function CustomerDetailsScreen() {
                   <CheckCircle2 size={20} className="text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">הושלמו</div>
-                  <div className="text-2xl font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">הושלמו</div>
+                  <div className="text-2xl font-bold text-[#0d0d12] dark:text-app-text">
                     {completedDeliveries.length}
                   </div>
                 </div>
@@ -145,7 +145,7 @@ export function CustomerDetailsScreen() {
                   <DollarSign size={20} className="text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">סה"כ הוצאות</div>
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">סה"כ הוצאות</div>
                   <div className="text-2xl font-bold text-[#16a34a] dark:text-[#22c55e]">
                     {formatCurrency(totalSpent)}
                   </div>
@@ -159,8 +159,8 @@ export function CustomerDetailsScreen() {
                   <TrendingUp size={20} className="text-orange-600 dark:text-orange-400" />
                 </div>
                 <div>
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">ממוצע הזמנה</div>
-                  <div className="text-2xl font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">ממוצע הזמנה</div>
+                  <div className="text-2xl font-bold text-[#0d0d12] dark:text-app-text">
                     {formatCurrency(Math.round(averageOrderValue))}
                   </div>
                 </div>
@@ -169,25 +169,25 @@ export function CustomerDetailsScreen() {
           </div>
 
           <div className="rounded-xl border border-[#e5e5e5] bg-white p-6 dark:border-app-border dark:bg-app-surface">
-            <h2 className="mb-4 text-lg font-bold text-[#0d0d12] dark:text-[#fafafa]">
+            <h2 className="mb-4 text-lg font-bold text-[#0d0d12] dark:text-app-text">
               פרטי לקוח
             </h2>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="flex items-center gap-3">
-                <Phone size={20} className="text-[#666d80] dark:text-[#a3a3a3]" />
+                <Phone size={20} className="text-[#666d80] dark:text-app-text-secondary" />
                 <div>
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">טלפון</div>
-                  <div className="text-sm font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">טלפון</div>
+                  <div className="text-sm font-bold text-[#0d0d12] dark:text-app-text">
                     {customer.phone}
                   </div>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <MapPin size={20} className="text-[#666d80] dark:text-[#a3a3a3]" />
+                <MapPin size={20} className="text-[#666d80] dark:text-app-text-secondary" />
                 <div>
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">כתובת</div>
-                  <div className="text-sm font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">כתובת</div>
+                  <div className="text-sm font-bold text-[#0d0d12] dark:text-app-text">
                     {customer.address}, {customer.area}
                   </div>
                 </div>
@@ -197,7 +197,7 @@ export function CustomerDetailsScreen() {
 
           {favoriteRestaurants.length > 0 && (
             <div className="rounded-xl border border-[#e5e5e5] bg-white p-6 dark:border-app-border dark:bg-app-surface">
-              <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-[#0d0d12] dark:text-[#fafafa]">
+              <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-[#0d0d12] dark:text-app-text">
                 <ShoppingBag size={18} />
                 מסעדות מועדפות
               </h2>
@@ -207,10 +207,10 @@ export function CustomerDetailsScreen() {
                     key={name}
                     className="flex items-center justify-between rounded-lg bg-[#f5f5f5] p-3 dark:bg-[#262626]"
                   >
-                    <span className="text-sm font-medium text-[#0d0d12] dark:text-[#fafafa]">
+                    <span className="text-sm font-medium text-[#0d0d12] dark:text-app-text">
                       {name}
                     </span>
-                    <span className="text-xs text-[#666d80] dark:text-[#a3a3a3]">
+                    <span className="text-xs text-[#666d80] dark:text-app-text-secondary">
                       {count} הזמנות
                     </span>
                   </div>
@@ -220,7 +220,7 @@ export function CustomerDetailsScreen() {
           )}
 
           <div className="rounded-xl border border-[#e5e5e5] bg-white p-6 dark:border-app-border dark:bg-app-surface">
-            <h2 className="mb-4 text-lg font-bold text-[#0d0d12] dark:text-[#fafafa]">
+            <h2 className="mb-4 text-lg font-bold text-[#0d0d12] dark:text-app-text">
               היסטוריית הזמנות
             </h2>
             <div className="space-y-2">
@@ -232,12 +232,12 @@ export function CustomerDetailsScreen() {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <Package size={16} className="text-[#666d80] dark:text-[#a3a3a3]" />
+                      <Package size={16} className="text-[#666d80] dark:text-app-text-secondary" />
                       <div>
-                        <div className="text-sm font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                        <div className="text-sm font-bold text-[#0d0d12] dark:text-app-text">
                           {delivery.orderNumber}
                         </div>
-                        <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">
+                        <div className="text-xs text-[#666d80] dark:text-app-text-secondary">
                           {delivery.restaurantName}
                         </div>
                       </div>
@@ -268,7 +268,7 @@ export function CustomerDetailsScreen() {
                         {formatCurrency(getDeliveryCustomerCharge(delivery))}
                       </div>
 
-                      <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">
+                      <div className="text-xs text-[#666d80] dark:text-app-text-secondary">
                         {formatDistanceToNow(delivery.createdAt, {
                           addSuffix: true,
                           locale: he,

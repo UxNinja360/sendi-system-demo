@@ -55,15 +55,15 @@ const getCheckboxClass = (isActive: boolean) =>
 const getOptionButtonClass = (isActive: boolean) =>
   `w-full flex items-center gap-2.5 px-3 py-2 text-right text-sm transition-colors ${
     isActive
-      ? 'bg-[#f5f5f5] text-[#0d0d12] dark:bg-[#262626] dark:text-[#fafafa]'
-      : 'text-[#525252] hover:bg-[#f5f5f5] dark:text-[#a3a3a3] dark:hover:bg-[#262626]'
+      ? 'bg-[#f5f5f5] text-[#0d0d12] dark:bg-[#262626] dark:text-app-text'
+      : 'text-[#525252] hover:bg-[#f5f5f5] dark:text-app-text-secondary dark:hover:bg-[#262626]'
   }`;
 
 export const getListFilterButtonClass = (isActive: boolean) =>
   `flex h-9 items-center gap-1.5 rounded-[4px] border px-3 text-sm font-medium transition-colors ${
     isActive
       ? 'border-[#9fe870]/40 bg-[#9fe870]/15 text-[#6bc84a]'
-      : 'border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-app-border dark:bg-app-surface dark:text-[#a3a3a3] dark:hover:bg-[#202020]'
+      : 'border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-app-border dark:bg-app-surface dark:text-app-text-secondary dark:hover:bg-[#202020]'
   }`;
 
 export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
@@ -134,7 +134,7 @@ export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
                 value={searchValue}
                 onChange={(event) => setSearchValue(event.target.value)}
                 placeholder={placeholder}
-                className="w-full rounded-lg bg-[#f5f5f5] px-2.5 py-1.5 text-sm text-[#0d0d12] outline-none placeholder-[#a3a3a3] dark:bg-app-surface dark:text-[#fafafa]"
+                className="w-full rounded-lg bg-[#f5f5f5] px-2.5 py-1.5 text-sm text-[#0d0d12] outline-none placeholder-[#a3a3a3] dark:bg-app-surface dark:text-app-text"
                 style={{ direction: 'rtl' }}
               />
             </div>
@@ -163,7 +163,7 @@ export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
                     {option.label}
                   </span>
                   {typeof option.count === 'number' ? (
-                    <span className="rounded-full bg-[#f5f5f5] px-1.5 py-0.5 text-[10px] font-bold text-[#737373] dark:bg-[#262626] dark:text-[#a3a3a3]">
+                    <span className="rounded-full bg-[#f5f5f5] px-1.5 py-0.5 text-[10px] font-bold text-[#737373] dark:bg-[#262626] dark:text-app-text-secondary">
                       {option.count}
                     </span>
                   ) : null}
@@ -248,7 +248,7 @@ export const ListSingleSelectFilter: React.FC<ListSingleSelectFilterProps> = ({
                 ) : null}
                 <span className={`flex-1 text-right ${isSelected ? 'font-medium' : ''}`}>{option.label}</span>
                 {typeof option.count === 'number' ? (
-                  <span className="rounded-full bg-[#f5f5f5] px-1.5 py-0.5 text-[10px] font-bold text-[#737373] dark:bg-[#262626] dark:text-[#a3a3a3]">
+                  <span className="rounded-full bg-[#f5f5f5] px-1.5 py-0.5 text-[10px] font-bold text-[#737373] dark:bg-[#262626] dark:text-app-text-secondary">
                     {option.count}
                   </span>
                 ) : null}

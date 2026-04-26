@@ -47,7 +47,7 @@ export const LiveManagerMobilePanel: React.FC<LiveManagerMobilePanelProps> = ({
         <LiveManagerMobileControls {...controlsProps} />
       )}
 
-      <div className="flex-1 overflow-y-auto relative">
+      <div className="relative flex-1 overflow-y-auto bg-white dark:bg-app-surface">
         {controlsProps.activeTab === 'deliveries' ? (
           <LiveDeliveriesTab {...deliveriesTabProps} />
         ) : (

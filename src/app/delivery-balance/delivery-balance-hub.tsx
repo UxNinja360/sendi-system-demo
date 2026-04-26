@@ -66,34 +66,34 @@ export const DeliveryBalanceHub: React.FC = () => {
         <section className="overflow-hidden rounded-2xl border border-[#e5e5e5] bg-white dark:border-app-border dark:bg-app-surface">
           <div className="grid grid-cols-1 divide-y divide-[#f1f1f1] dark:divide-[#1f1f1f] md:grid-cols-3 md:divide-x md:divide-y-0 md:[direction:ltr]">
             <div className="p-5 md:[direction:rtl]">
-              <div className="mb-2 flex items-center gap-2 text-xs font-medium text-[#666d80] dark:text-[#a3a3a3]">
+              <div className="mb-2 flex items-center gap-2 text-xs font-medium text-[#666d80] dark:text-app-text-secondary">
                 <Package className="h-4 w-4" />
                 יתרה נוכחית
               </div>
-              <div className="text-3xl font-bold tabular-nums text-[#0d0d12] dark:text-[#fafafa]">
+              <div className="text-3xl font-bold tabular-nums text-[#0d0d12] dark:text-app-text">
                 {formatNumber(currentBalance)}
               </div>
-              <div className="mt-1 text-xs text-[#666d80] dark:text-[#a3a3a3]">משלוחים זמינים במערכת</div>
+              <div className="mt-1 text-xs text-[#666d80] dark:text-app-text-secondary">משלוחים זמינים במערכת</div>
             </div>
 
             <div className="p-5 md:[direction:rtl]">
-              <div className="mb-2 flex items-center gap-2 text-xs font-medium text-[#666d80] dark:text-[#a3a3a3]">
+              <div className="mb-2 flex items-center gap-2 text-xs font-medium text-[#666d80] dark:text-app-text-secondary">
                 <TrendingUp className="h-4 w-4" />
                 צריכה חודשית
               </div>
-              <div className="text-3xl font-bold tabular-nums text-[#0d0d12] dark:text-[#fafafa]">2,450</div>
-              <div className="mt-1 text-xs text-[#666d80] dark:text-[#a3a3a3]">לפי 30 הימים האחרונים</div>
+              <div className="text-3xl font-bold tabular-nums text-[#0d0d12] dark:text-app-text">2,450</div>
+              <div className="mt-1 text-xs text-[#666d80] dark:text-app-text-secondary">לפי 30 הימים האחרונים</div>
             </div>
 
             <div className="p-5 md:[direction:rtl]">
-              <div className="mb-2 flex items-center gap-2 text-xs font-medium text-[#666d80] dark:text-[#a3a3a3]">
+              <div className="mb-2 flex items-center gap-2 text-xs font-medium text-[#666d80] dark:text-app-text-secondary">
                 <CircleDollarSign className="h-4 w-4" />
                 מחיר נוכחי
               </div>
-              <div className="text-3xl font-bold tabular-nums text-[#0d0d12] dark:text-[#fafafa]">
+              <div className="text-3xl font-bold tabular-nums text-[#0d0d12] dark:text-app-text">
                 {formatCurrency(pricePerUnit)}
               </div>
-              <div className="mt-1 text-xs text-[#666d80] dark:text-[#a3a3a3]">למשלוח בכמות שנבחרה</div>
+              <div className="mt-1 text-xs text-[#666d80] dark:text-app-text-secondary">למשלוח בכמות שנבחרה</div>
             </div>
           </div>
         </section>
@@ -102,7 +102,7 @@ export const DeliveryBalanceHub: React.FC = () => {
           <div className="border-b border-[#e5e5e5] px-4 py-3 dark:border-app-border">
             <div className="flex items-center gap-2">
               <ShoppingCart className="h-4 w-4 text-[#16a34a] dark:text-[#9fe870]" />
-              <span className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">רכישת חבילת משלוחים</span>
+              <span className="text-sm font-semibold text-[#0d0d12] dark:text-app-text">רכישת חבילת משלוחים</span>
             </div>
           </div>
 
@@ -110,8 +110,8 @@ export const DeliveryBalanceHub: React.FC = () => {
             <div className="rounded-xl border border-[#ececec] bg-[#fafafa] p-4 dark:border-app-border dark:bg-app-surface">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="text-xs font-medium text-[#666d80] dark:text-[#a3a3a3]">כמות להזמנה</div>
-                  <div className="mt-1 text-4xl font-bold tracking-tight tabular-nums text-[#0d0d12] dark:text-[#fafafa]">
+                  <div className="text-xs font-medium text-[#666d80] dark:text-app-text-secondary">כמות להזמנה</div>
+                  <div className="mt-1 text-4xl font-bold tracking-tight tabular-nums text-[#0d0d12] dark:text-app-text">
                     {formatNumber(purchaseAmount)}
                   </div>
                 </div>
@@ -119,13 +119,13 @@ export const DeliveryBalanceHub: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => adjustAmount(-100)}
-                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#e5e5e5] bg-white text-[#666d80] transition-colors hover:border-[#d6d6d6] hover:bg-[#f5f5f5] dark:border-app-border dark:bg-app-surface dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
+                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#e5e5e5] bg-white text-[#666d80] transition-colors hover:border-[#d6d6d6] hover:bg-[#f5f5f5] dark:border-app-border dark:bg-app-surface dark:text-app-text-secondary dark:hover:bg-[#202020]"
                   >
                     <Minus className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => adjustAmount(100)}
-                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#e5e5e5] bg-white text-[#666d80] transition-colors hover:border-[#d6d6d6] hover:bg-[#f5f5f5] dark:border-app-border dark:bg-app-surface dark:text-[#a3a3a3] dark:hover:bg-[#202020]"
+                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#e5e5e5] bg-white text-[#666d80] transition-colors hover:border-[#d6d6d6] hover:bg-[#f5f5f5] dark:border-app-border dark:bg-app-surface dark:text-app-text-secondary dark:hover:bg-[#202020]"
                   >
                     <Plus className="h-4 w-4" />
                   </button>
@@ -139,7 +139,7 @@ export const DeliveryBalanceHub: React.FC = () => {
                   const value = Math.min(Math.max(Number(e.target.value), minAmount), maxAmount);
                   setPurchaseAmount(value);
                 }}
-                className="mb-4 w-full rounded-xl border border-[#e5e5e5] bg-white px-4 py-3 text-right text-base font-medium text-[#0d0d12] outline-none transition-colors placeholder:text-[#a3a3a3] focus:border-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-[#fafafa]"
+                className="mb-4 w-full rounded-xl border border-[#e5e5e5] bg-white px-4 py-3 text-right text-base font-medium text-[#0d0d12] outline-none transition-colors placeholder:text-[#a3a3a3] focus:border-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-app-text"
               />
 
               <input
@@ -152,7 +152,7 @@ export const DeliveryBalanceHub: React.FC = () => {
                 className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-[#dddddd] accent-[#9fe870] dark:bg-[#2a2a2a]"
               />
 
-              <div className="mt-2 flex justify-between text-[11px] font-medium text-[#737373] dark:text-[#a3a3a3]">
+              <div className="mt-2 flex justify-between text-[11px] font-medium text-[#737373] dark:text-app-text-secondary">
                 <span>100</span>
                 <span>300K</span>
               </div>
@@ -166,7 +166,7 @@ export const DeliveryBalanceHub: React.FC = () => {
                   className={`rounded-xl border px-3 py-3 text-sm font-medium transition-colors ${
                     purchaseAmount === amount
                       ? 'border-[#0d0d12] bg-[#0d0d12] text-white dark:border-[#fafafa] dark:bg-[#fafafa] dark:text-[#0d0d12]'
-                      : 'border-[#e5e5e5] bg-white text-[#36394a] hover:bg-[#f5f5f5] dark:border-app-border dark:bg-app-surface dark:text-[#d4d4d4] dark:hover:bg-[#202020]'
+                      : 'border-[#e5e5e5] bg-white text-[#36394a] hover:bg-[#f5f5f5] dark:border-app-border dark:bg-app-surface dark:text-app-text-secondary dark:hover:bg-[#202020]'
                   }`}
                 >
                   +{formatNumber(amount)}
@@ -174,7 +174,7 @@ export const DeliveryBalanceHub: React.FC = () => {
               ))}
             </div>
 
-            <div className="rounded-xl border border-dashed border-[#d7d7d7] px-4 py-3 text-xs text-[#666d80] dark:border-app-border dark:text-[#a3a3a3]">
+            <div className="rounded-xl border border-dashed border-[#d7d7d7] px-4 py-3 text-xs text-[#666d80] dark:border-app-border dark:text-app-text-secondary">
               מדרגות מחיר:
               {' '}
               עד 999 ב־₪0.50,
@@ -191,22 +191,22 @@ export const DeliveryBalanceHub: React.FC = () => {
 
       <aside className="h-fit overflow-hidden rounded-2xl border border-[#e5e5e5] bg-white dark:border-app-border dark:bg-app-surface xl:sticky xl:top-6">
         <div className="border-b border-[#e5e5e5] px-4 py-3 dark:border-app-border">
-          <div className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">סיכום רכישה</div>
+          <div className="text-sm font-semibold text-[#0d0d12] dark:text-app-text">סיכום רכישה</div>
         </div>
 
         <div className="space-y-4 p-4">
           <div className="space-y-3 rounded-xl border border-[#ececec] bg-[#fafafa] p-4 dark:border-app-border dark:bg-app-surface">
             <div className="flex items-center justify-between gap-3 text-sm">
-              <span className="text-[#666d80] dark:text-[#a3a3a3]">כמות</span>
-              <span className="font-semibold tabular-nums text-[#0d0d12] dark:text-[#fafafa]">{formatNumber(purchaseAmount)}</span>
+              <span className="text-[#666d80] dark:text-app-text-secondary">כמות</span>
+              <span className="font-semibold tabular-nums text-[#0d0d12] dark:text-app-text">{formatNumber(purchaseAmount)}</span>
             </div>
             <div className="flex items-center justify-between gap-3 text-sm">
-              <span className="text-[#666d80] dark:text-[#a3a3a3]">מחיר ליחידה</span>
-              <span className="font-semibold tabular-nums text-[#0d0d12] dark:text-[#fafafa]">{formatCurrency(pricePerUnit)}</span>
+              <span className="text-[#666d80] dark:text-app-text-secondary">מחיר ליחידה</span>
+              <span className="font-semibold tabular-nums text-[#0d0d12] dark:text-app-text">{formatCurrency(pricePerUnit)}</span>
             </div>
             <div className="flex items-center justify-between gap-3 border-t border-[#e5e5e5] pt-3 text-sm dark:border-app-border">
-              <span className="font-medium text-[#0d0d12] dark:text-[#fafafa]">סה"כ לתשלום</span>
-              <span className="text-2xl font-bold tabular-nums text-[#0d0d12] dark:text-[#fafafa]">{formatCurrency(totalPrice)}</span>
+              <span className="font-medium text-[#0d0d12] dark:text-app-text">סה"כ לתשלום</span>
+              <span className="text-2xl font-bold tabular-nums text-[#0d0d12] dark:text-app-text">{formatCurrency(totalPrice)}</span>
             </div>
           </div>
 
@@ -221,7 +221,7 @@ export const DeliveryBalanceHub: React.FC = () => {
             <ChevronLeft className={`h-4 w-4 transition-transform ${isHovering ? '-translate-x-1' : ''}`} />
           </button>
 
-          <div className="text-center text-xs text-[#666d80] dark:text-[#a3a3a3]">
+          <div className="text-center text-xs text-[#666d80] dark:text-app-text-secondary">
             המחיר כולל מע"מ
           </div>
         </div>

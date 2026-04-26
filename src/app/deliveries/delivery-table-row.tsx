@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Delivery, Courier, DeliveryStatus } from '../types/delivery.types';
 import {
   Copy,
@@ -88,7 +88,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
 
   const handleCopyOrderNumber = () => {
     navigator.clipboard.writeText(delivery.orderNumber);
-    toast.success(`מספר הזמנה ${delivery.orderNumber} הועתק`);
+    toast.success(`???? ????? ${delivery.orderNumber} ?????`);
     setContextMenuPos(null);
   };
 
@@ -103,7 +103,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
         return (
           <td key={colId} className={dataCellClassName}>
             <span
-              className="text-xs text-[#0d0d12] dark:text-[#fafafa] font-medium whitespace-nowrap"
+              className="text-xs text-[#0d0d12] dark:text-app-text font-medium whitespace-nowrap"
             >
               {delivery.orderNumber}
             </span>
@@ -123,9 +123,9 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
         return (
           <td key={colId} className={dataCellClassName}>
             {courier ? (
-              <span className="text-[#0d0d12] dark:text-[#fafafa] font-medium whitespace-nowrap">{courier.name}</span>
+              <span className="text-[#0d0d12] dark:text-app-text font-medium whitespace-nowrap">{courier.name}</span>
             ) : (
-              <span className="text-[#737373] dark:text-[#a3a3a3]">-</span>
+              <span className="text-[#737373] dark:text-app-text-secondary">-</span>
             )}
           </td>
         );
@@ -136,7 +136,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
             {timeRemaining !== null ? (
               <span className="text-[#3b82f6] dark:text-[#60a5fa] font-medium">{formatTime(timeRemaining)}</span>
             ) : (
-              <span className="text-[#737373] dark:text-[#a3a3a3]">-</span>
+              <span className="text-[#737373] dark:text-app-text-secondary">-</span>
             )}
           </td>
         );
@@ -156,11 +156,11 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
   // Style for text-based columns based on type
   const getTextStyle = (colId: string, type: string): string => {
     const col = COLUMN_MAP.get(colId);
-    if (!col) return 'text-[#666d80] dark:text-[#a3a3a3]';
+    if (!col) return 'text-[#666d80] dark:text-app-text-secondary';
 
     // Bold primary fields
     if (['rest_name', 'client_name'].includes(colId)) {
-      return 'text-[#0d0d12] dark:text-[#fafafa] font-medium';
+      return 'text-[#0d0d12] dark:text-app-text font-medium';
     }
     // Money = green
     if (type === 'money') {
@@ -168,9 +168,9 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
     }
     // Mono for IDs
     if (colId.includes('_id') || colId === 'id' || colId.includes('Id') || colId === 'zipcode' || colId === 'sms_code') {
-      return 'text-[#666d80] dark:text-[#a3a3a3] font-mono';
+      return 'text-[#666d80] dark:text-app-text-secondary font-mono';
     }
-    return 'text-[#666d80] dark:text-[#a3a3a3]';
+    return 'text-[#666d80] dark:text-app-text-secondary';
   };
 
   return (
@@ -232,7 +232,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
               const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
               setContextMenuPos({ x: Math.max(8, rect.left - 180), y: rect.bottom + 8 });
             }}
-            title={`פעולות למשלוח ${delivery.orderNumber}`}
+            title={`?????? ?????? ${delivery.orderNumber}`}
           />
           <EntityActionMenuOverlay
             open={Boolean(contextMenuPos)}
@@ -252,21 +252,21 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
 
                 <EntityActionMenuItem
                   onClick={() => { onNavigate(); closeMenus(); }}
-                  icon={<FileText className="w-3.5 h-3.5 text-[#737373] dark:text-[#a3a3a3]" />}
+                  icon={<FileText className="w-3.5 h-3.5 text-[#737373] dark:text-app-text-secondary" />}
                 >
-                  פרטים מלאים
+                  ????? ?????
                 </EntityActionMenuItem>
                 <EntityActionMenuItem
                   onClick={() => { onOpenDrawer(delivery.id); closeMenus(); }}
                   icon={<Info className="w-3.5 h-3.5 text-[#16a34a] dark:text-[#9fe870]" />}
                 >
-                  פתח פאנל צד
+                  ??? ???? ??
                 </EntityActionMenuItem>
                 <EntityActionMenuItem
                   onClick={handleCopyOrderNumber}
-                  icon={<Copy className="w-3.5 h-3.5 text-[#737373] dark:text-[#a3a3a3]" />}
+                  icon={<Copy className="w-3.5 h-3.5 text-[#737373] dark:text-app-text-secondary" />}
                 >
-                  העתק מספר הזמנה
+                  ???? ???? ?????
                 </EntityActionMenuItem>
 
               {onEditDelivery && (
@@ -276,7 +276,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
                     onClick={() => { onEditDelivery(delivery.id); closeMenus(); }}
                     icon={<Edit className="w-3.5 h-3.5 text-[#16a34a] dark:text-[#9fe870]" />}
                   >
-                    ערוך משלוח
+                    ???? ?????
                   </EntityActionMenuItem>
                 </>
               )}
@@ -288,14 +288,14 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
                     onClick={() => { onOpenDrawer(delivery.id); closeMenus(); }}
                     icon={<UserPlus className="w-3.5 h-3.5 text-[#0fcdd3]" />}
                   >
-                    שיבוץ שליח
+                    ????? ????
                   </EntityActionMenuItem>
                   <EntityActionMenuItem
                     onClick={() => { onCancelDelivery(delivery.id); closeMenus(); }}
                     icon={<XCircle className="w-3.5 h-3.5" />}
                     danger
                   >
-                    ביטול משלוח
+                    ????? ?????
                   </EntityActionMenuItem>
                 </>
               )}
@@ -307,14 +307,14 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
                     onClick={() => { onOpenDrawer(delivery.id); closeMenus(); }}
                     icon={<Edit className="w-3.5 h-3.5 text-[#0fcdd3]" />}
                   >
-                    שינוי שליח
+                    ????? ????
                   </EntityActionMenuItem>
                   {onUnassignCourier && (
                     <EntityActionMenuItem
                       onClick={() => { onUnassignCourier(delivery.id); closeMenus(); }}
                       icon={<RotateCcw className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />}
                     >
-                      ביטול שיבוץ
+                      ????? ?????
                     </EntityActionMenuItem>
                   )}
                   <EntityActionMenuItem
@@ -322,7 +322,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
                     icon={<XCircle className="w-3.5 h-3.5" />}
                     danger
                   >
-                    ביטול משלוח
+                    ????? ?????
                   </EntityActionMenuItem>
                 </>
               )}
@@ -334,20 +334,20 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
                     onClick={() => { onOpenDrawer(delivery.id); closeMenus(); }}
                     icon={<Edit className="w-3.5 h-3.5 text-[#0fcdd3]" />}
                   >
-                    שינוי שליח
+                    ????? ????
                   </EntityActionMenuItem>
                   <EntityActionMenuItem
                     onClick={() => { onCompleteDelivery(delivery.id); closeMenus(); }}
                     icon={<CheckCircle2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />}
                   >
-                    סימון כנמסר
+                    ????? ?????
                   </EntityActionMenuItem>
                   <EntityActionMenuItem
                     onClick={() => { onCancelDelivery(delivery.id); closeMenus(); }}
                     icon={<XCircle className="w-3.5 h-3.5" />}
                     danger
                   >
-                    ביטול משלוח
+                    ????? ?????
                   </EntityActionMenuItem>
                 </>
               )}

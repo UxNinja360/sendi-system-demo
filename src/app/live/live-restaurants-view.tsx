@@ -52,11 +52,11 @@ export const LiveRestaurantsView: React.FC = () => {
               placeholder="חפש מסעדה..."
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              className="w-full rounded-lg border border-[#e5e5e5] bg-[#f5f5f5] py-2.5 pr-10 pl-4 text-sm text-[#0d0d12] transition-all placeholder:text-[#737373] focus:border-[#0fcdd3] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0fcdd3] dark:border-app-border dark:bg-app-surface dark:text-[#fafafa] dark:focus:bg-app-surface-raised"
+              className="w-full rounded-lg border border-[#e5e5e5] bg-[#f5f5f5] py-2.5 pr-10 pl-4 text-sm text-[#0d0d12] transition-all placeholder:text-[#737373] focus:border-[#0fcdd3] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0fcdd3] dark:border-app-border dark:bg-app-surface dark:text-app-text dark:focus:bg-app-surface-raised"
             />
           </div>
 
-          <div className="whitespace-nowrap rounded-lg border border-[#e5e5e5] bg-[#f5f5f5] px-3 py-2.5 text-xs font-bold text-[#666d80] dark:border-[#404040] dark:bg-[#262626] dark:text-[#d4d4d4]">
+          <div className="whitespace-nowrap rounded-lg border border-[#e5e5e5] bg-[#f5f5f5] px-3 py-2.5 text-xs font-bold text-[#666d80] dark:border-[#404040] dark:bg-[#262626] dark:text-app-text-secondary">
             {filteredRestaurants.length} מסעדות
           </div>
         </div>
@@ -64,7 +64,7 @@ export const LiveRestaurantsView: React.FC = () => {
 
       <div className="flex-1 overflow-y-auto">
         {filteredRestaurants.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center p-8 text-[#737373] dark:text-[#a3a3a3]">
+          <div className="flex h-full flex-col items-center justify-center p-8 text-[#737373] dark:text-app-text-secondary">
             <Store className="mb-3 h-12 w-12 opacity-30" />
             <p className="mb-2 text-sm font-medium">{emptyMessage}</p>
           </div>
@@ -79,12 +79,12 @@ export const LiveRestaurantsView: React.FC = () => {
                   <div className="flex-1">
                     <div className="mb-1 flex items-center gap-2">
                       <Store className="h-4 w-4 text-[#9333ea]" />
-                      <h3 className="text-sm font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                      <h3 className="text-sm font-bold text-[#0d0d12] dark:text-app-text">
                         {restaurant.name}
                       </h3>
                     </div>
 
-                    <p className="text-xs text-[#666d80] dark:text-[#a3a3a3]">
+                    <p className="text-xs text-[#666d80] dark:text-app-text-secondary">
                       {restaurant.address}
                     </p>
 
@@ -110,7 +110,7 @@ export const LiveRestaurantsView: React.FC = () => {
                         className="rounded-lg bg-[#f5f5f5] p-2.5 text-xs dark:bg-app-surface"
                       >
                         <div className="mb-1 flex items-center justify-between">
-                          <span className="font-mono font-medium text-[#737373] dark:text-[#a3a3a3]">
+                          <span className="font-mono font-medium text-[#737373] dark:text-app-text-secondary">
                             #{order.orderNumber}
                           </span>
                           <span
@@ -142,18 +142,18 @@ export const LiveRestaurantsView: React.FC = () => {
                           </span>
                         </div>
 
-                        <div className="mb-1 font-medium text-[#0d0d12] dark:text-[#fafafa]">
+                        <div className="mb-1 font-medium text-[#0d0d12] dark:text-app-text">
                           {order.customerName}
                         </div>
 
-                        <div className="text-[#666d80] dark:text-[#a3a3a3]">
+                        <div className="text-[#666d80] dark:text-app-text-secondary">
                           {order.address}
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="mt-3 text-xs text-[#666d80] dark:text-[#a3a3a3]">
+                  <div className="mt-3 text-xs text-[#666d80] dark:text-app-text-secondary">
                     אין הזמנות פעילות
                   </div>
                 )}

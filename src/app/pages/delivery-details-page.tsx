@@ -70,9 +70,9 @@ export function DeliveryDetailsPage() {
       {/* ── Header ── */}
       <div className="bg-white dark:bg-app-surface border-b border-[#e5e5e5] dark:border-app-border px-6 h-16 flex items-center gap-3 shrink-0">
         <button onClick={() => navigate(-1)} className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors shrink-0">
-          <ArrowRight size={17} className="text-[#666d80] dark:text-[#a3a3a3]" />
+          <ArrowRight size={17} className="text-[#666d80] dark:text-app-text-secondary" />
         </button>
-        <span className="text-[15px] font-semibold text-[#0d0d12] dark:text-[#fafafa] flex-1">פרטי משלוח</span>
+        <span className="text-[15px] font-semibold text-[#0d0d12] dark:text-app-text flex-1">פרטי משלוח</span>
         <span className="text-sm text-[#a3a3a3]">#{delivery.orderNumber}</span>
       </div>
 
@@ -83,7 +83,7 @@ export function DeliveryDetailsPage() {
 
           {/* card header */}
           <div className="px-6 py-4 border-b border-[#f0f0f0] dark:border-app-border flex items-center justify-between">
-            <span className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">מידע כללי</span>
+            <span className="text-sm font-semibold text-[#0d0d12] dark:text-app-text">מידע כללי</span>
             <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full ${cfg.bg} ${cfg.color}`}>
               <StatusIcon size={12} />
               {cfg.label}
@@ -98,7 +98,7 @@ export function DeliveryDetailsPage() {
                 {row.statusBadge ? (
                   <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${cfg.bg} ${cfg.color}`}>{row.value}</span>
                 ) : (
-                  <span className={`text-sm font-medium ${(row as any).highlight ? 'text-green-600 dark:text-green-400' : 'text-[#0d0d12] dark:text-[#fafafa]'}`}>{row.value}</span>
+                  <span className={`text-sm font-medium ${(row as any).highlight ? 'text-green-600 dark:text-green-400' : 'text-[#0d0d12] dark:text-app-text'}`}>{row.value}</span>
                 )}
               </div>
             ))}
@@ -116,15 +116,15 @@ export function DeliveryDetailsPage() {
                 {initials(restaurant.name)}
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa] truncate">{restaurant.name}</p>
+                <p className="text-sm font-semibold text-[#0d0d12] dark:text-app-text truncate">{restaurant.name}</p>
                 <p className="text-xs text-[#a3a3a3]">{restaurant.type}</p>
               </div>
             </div>
             <div className="space-y-2">
-              <div className="flex items-center gap-2 text-xs text-[#666d80] dark:text-[#a3a3a3]">
+              <div className="flex items-center gap-2 text-xs text-[#666d80] dark:text-app-text-secondary">
                 <Phone size={11} className="shrink-0 text-[#bbb]" />{restaurant.phone}
               </div>
-              <div className="flex items-center gap-2 text-xs text-[#666d80] dark:text-[#a3a3a3]">
+              <div className="flex items-center gap-2 text-xs text-[#666d80] dark:text-app-text-secondary">
                 <MapPin size={11} className="shrink-0 text-[#bbb]" />{restaurant.address}
               </div>
             </div>
@@ -141,15 +141,15 @@ export function DeliveryDetailsPage() {
                 {initials(delivery.customerName)}
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa] truncate">{delivery.customerName}</p>
+                <p className="text-sm font-semibold text-[#0d0d12] dark:text-app-text truncate">{delivery.customerName}</p>
                 <p className="text-xs text-[#a3a3a3]">לקוח</p>
               </div>
             </div>
             <div className="space-y-2">
-              <div className="flex items-center gap-2 text-xs text-[#666d80] dark:text-[#a3a3a3]">
+              <div className="flex items-center gap-2 text-xs text-[#666d80] dark:text-app-text-secondary">
                 <Phone size={11} className="shrink-0 text-[#bbb]" />{delivery.customerPhone}
               </div>
-              <div className="flex items-center gap-2 text-xs text-[#666d80] dark:text-[#a3a3a3]">
+              <div className="flex items-center gap-2 text-xs text-[#666d80] dark:text-app-text-secondary">
                 <MapPin size={11} className="shrink-0 text-[#bbb]" />{delivery.address}, {delivery.area}
               </div>
             </div>
@@ -167,17 +167,17 @@ export function DeliveryDetailsPage() {
                   {initials(courier.name)}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa] truncate">{courier.name}</p>
+                  <p className="text-sm font-semibold text-[#0d0d12] dark:text-app-text truncate">{courier.name}</p>
                   <span className={`text-xs font-medium ${courier.status === 'available' ? 'text-green-500' : courier.status === 'busy' ? 'text-orange-400' : 'text-[#a3a3a3]'}`}>
                     {courier.status === 'available' ? 'זמין' : courier.status === 'busy' ? 'עסוק' : 'לא מחובר'}
                   </span>
                 </div>
               </div>
               <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs text-[#666d80] dark:text-[#a3a3a3]">
+                <div className="flex items-center gap-2 text-xs text-[#666d80] dark:text-app-text-secondary">
                   <Phone size={11} className="shrink-0 text-[#bbb]" />{courier.phone}
                 </div>
-                <div className="flex items-center gap-2 text-xs text-[#666d80] dark:text-[#a3a3a3]">
+                <div className="flex items-center gap-2 text-xs text-[#666d80] dark:text-app-text-secondary">
                   <span className="text-[#bbb] text-[10px]">★</span> דירוג {courier.rating}
                 </div>
               </div>
@@ -191,7 +191,7 @@ export function DeliveryDetailsPage() {
         {/* ── Tracking ── */}
         <div className="bg-white dark:bg-app-surface rounded-2xl border border-[#e5e5e5] dark:border-app-border overflow-hidden">
           <div className="px-6 py-4 border-b border-[#f0f0f0] dark:border-app-border flex items-center justify-between">
-            <span className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">מעקב משלוח</span>
+            <span className="text-sm font-semibold text-[#0d0d12] dark:text-app-text">מעקב משלוח</span>
             <span className="text-xs text-[#a3a3a3]">{doneCount} / {timelineSteps.length} שלבים הושלמו</span>
           </div>
           {/* progress */}
@@ -215,7 +215,7 @@ export function DeliveryDetailsPage() {
                     : <Clock size={11} className="text-[#bbb]" />
                   }
                 </div>
-                <span className={`text-sm flex-1 ${step.done ? 'text-[#0d0d12] dark:text-[#fafafa] font-medium' : 'text-[#aaa] dark:text-[#555]'}`}>{step.label}</span>
+                <span className={`text-sm flex-1 ${step.done ? 'text-[#0d0d12] dark:text-app-text font-medium' : 'text-[#aaa] dark:text-[#555]'}`}>{step.label}</span>
                 <span className="text-xs text-[#aaa] dark:text-[#555]">{step.done ? 'הושלם' : 'ממתין'}</span>
               </div>
               );

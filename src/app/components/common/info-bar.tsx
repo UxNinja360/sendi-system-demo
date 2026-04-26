@@ -23,12 +23,12 @@ type InfoBarProps = {
 };
 
 const toneClassName: Record<InfoBarTone, string> = {
-  default: 'text-[#0d0d12] dark:text-[#fafafa]',
+  default: 'text-[#0d0d12] dark:text-app-text',
   success: 'text-[#16a34a] dark:text-[#9fe870]',
   warning: 'text-[#ca8a04] dark:text-[#facc15]',
   orange: 'text-[#f97316] dark:text-[#ffa94d]',
   info: 'text-[#2563eb] dark:text-[#60a5fa]',
-  muted: 'text-[#737373] dark:text-[#a3a3a3]',
+  muted: 'text-[#737373] dark:text-app-text-secondary',
   danger: 'text-[#ef4444] dark:text-[#ff6b6b]',
 };
 
@@ -43,7 +43,7 @@ export const InfoBar: React.FC<InfoBarProps> = ({
 }) => (
   <div
     className={joinClassNames(
-      'shrink-0 border-b border-[#e5e5e5] bg-[#fafafa] px-3 py-2 dark:border-app-border dark:bg-app-surface',
+      'shrink-0 border-b border-[#e5e5e5] bg-[#fafafa] px-3 py-2 dark:border-app-nav-border dark:bg-[#000000]',
       className,
     )}
     dir="rtl"
@@ -52,9 +52,9 @@ export const InfoBar: React.FC<InfoBarProps> = ({
       {leadValue !== undefined ? (
         <div className="flex min-w-0 items-baseline gap-2">
           {leadLabel ? (
-            <span className="shrink-0 text-[#737373] dark:text-[#a3a3a3]">{leadLabel}</span>
+            <span className="shrink-0 text-[#737373] dark:text-app-text-secondary">{leadLabel}</span>
           ) : null}
-          <span className="truncate text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">
+          <span className="truncate text-sm font-semibold text-[#0d0d12] dark:text-app-text">
             {leadValue}
           </span>
         </div>
@@ -70,7 +70,7 @@ export const InfoBar: React.FC<InfoBarProps> = ({
           >
             {item.value}
           </span>
-          <span className="truncate text-[#737373] dark:text-[#a3a3a3]">{item.label}</span>
+          <span className="truncate text-[#737373] dark:text-app-text-secondary">{item.label}</span>
         </div>
       ))}
     </div>

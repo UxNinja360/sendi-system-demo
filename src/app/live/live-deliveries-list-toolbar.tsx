@@ -40,9 +40,9 @@ export const LiveDeliveriesListToolbar: React.FC<LiveDeliveriesListToolbarProps>
   if (ordersCount <= 0) return null;
 
   return (
-    <div className="sticky top-0 z-10 border-b border-[#e5e5e5] bg-[#fafafa] p-3 dark:border-app-border dark:bg-app-surface">
+    <div className="sticky top-0 z-10 border-b border-[#e5e5e5] bg-[#fafafa] p-3 dark:border-app-border dark:bg-[#000000]">
       <div className="flex items-center justify-between gap-2">
-        <div className="flex-1 text-right text-xs text-[#737373] dark:text-[#a3a3a3]">
+        <div className="flex-1 text-right text-xs text-[#737373] dark:text-app-text-secondary">
           מציג {ordersCount} משלוחים
         </div>
 
@@ -54,7 +54,7 @@ export const LiveDeliveriesListToolbar: React.FC<LiveDeliveriesListToolbarProps>
               className="flex-shrink-0 rounded-lg px-2 py-1 text-xs transition-colors hover:bg-white dark:hover:bg-[#171717]"
               title="בחר קטגוריית מיון"
             >
-              <span className="text-[#737373] dark:text-[#a3a3a3]">
+              <span className="text-[#737373] dark:text-app-text-secondary">
                 לפי: <span className="font-bold text-[#22c55e]">{sortLabel}</span>
               </span>
             </button>

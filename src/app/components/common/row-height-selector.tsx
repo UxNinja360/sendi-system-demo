@@ -81,7 +81,7 @@ export const RowHeightSelector: React.FC<RowHeightSelectorProps> = ({
                 <AlignVerticalSpaceAround className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-[15px] font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                <h3 className="text-[15px] font-bold text-[#0d0d12] dark:text-app-text">
                   גובה שורות
                 </h3>
                 <p className="text-[11px] text-[#a3a3a3] dark:text-[#737373]">
@@ -136,7 +136,7 @@ export const RowHeightSelector: React.FC<RowHeightSelectorProps> = ({
                 <div className={`text-sm font-bold ${
                   selectedHeight === option.id
                     ? 'text-[#6d28d9] dark:text-[#c4b5fd]'
-                    : 'text-[#0d0d12] dark:text-[#fafafa]'
+                    : 'text-[#0d0d12] dark:text-app-text'
                 }`}>
                   {option.label}
                 </div>

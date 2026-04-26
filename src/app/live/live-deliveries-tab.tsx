@@ -72,7 +72,7 @@ export const LiveDeliveriesTab: React.FC<LiveDeliveriesTabProps> = ({
       />
 
       {orders.length === 0 ? (
-        <div className="flex h-full flex-col items-center justify-center px-4 py-12">
+        <div className="flex h-full flex-col items-center justify-center bg-white px-4 py-12 dark:bg-app-surface">
           <MapPin className="mb-2 h-10 w-10 text-[#404040]" />
           <p className="text-xs text-[#737373]">אין משלוחים להצגה</p>
         </div>

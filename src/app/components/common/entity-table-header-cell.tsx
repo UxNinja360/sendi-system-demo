@@ -66,14 +66,14 @@ export const EntityTableHeaderCell: React.FC<EntityTableHeaderCellProps> = ({
               event.stopPropagation();
               onSort();
             }}
-            className="flex items-center gap-1 whitespace-nowrap text-xs font-medium text-[#666d80] transition-colors hover:text-[#16a34a] dark:text-[#a3a3a3] dark:hover:text-[#22c55e]"
+            className="flex items-center gap-1 whitespace-nowrap text-xs font-medium text-[#666d80] transition-colors hover:text-[#16a34a] dark:text-app-text-secondary dark:hover:text-[#22c55e]"
           >
             <span>{label}</span>
             {sortDirection === 'asc' ? <ChevronUp className="h-3 w-3" /> : null}
             {sortDirection === 'desc' ? <ChevronDown className="h-3 w-3" /> : null}
           </button>
         ) : (
-          <span className="text-xs font-medium text-[#666d80] dark:text-[#a3a3a3]">{label}</span>
+          <span className="text-xs font-medium text-[#666d80] dark:text-app-text-secondary">{label}</span>
         )}
         {showGrip ? (
           <GripVertical className="h-3 w-3 shrink-0 cursor-grab text-[#d4d4d4] opacity-0 transition-opacity group-hover/col:opacity-100 active:cursor-grabbing dark:text-[#404040]" />

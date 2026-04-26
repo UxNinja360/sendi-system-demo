@@ -98,14 +98,14 @@ export const SharedDeliverySidePanelShell: React.FC<SharedDeliverySidePanelShell
           <Package className="w-7 h-7 text-[#d4d4d4] dark:text-[#404040]" />
         </div>
         <div>
-          <p className="text-sm font-medium text-[#737373] dark:text-[#a3a3a3]">בחר משלוח מהרשימה</p>
+          <p className="text-sm font-medium text-[#737373] dark:text-app-text-secondary">בחר משלוח מהרשימה</p>
           <p className="text-xs text-[#a3a3a3] dark:text-[#525252] mt-1">לצפייה בפרטים ולניהול מלא</p>
         </div>
 
         {stats && (
           <div className="w-full mt-2 grid grid-cols-2 gap-2">
             {[
-              { label: 'סה"כ', value: stats.total, color: 'text-[#0d0d12] dark:text-[#fafafa]' },
+              { label: 'סה"כ', value: stats.total, color: 'text-[#0d0d12] dark:text-app-text' },
               { label: 'נמסרו', value: stats.delivered, color: 'text-blue-600 dark:text-blue-400' },
               { label: 'ממתינים', value: stats.pending, color: 'text-orange-600 dark:text-orange-400' },
               { label: 'פגו', value: stats.expired ?? 0, color: 'text-zinc-600 dark:text-zinc-300' },
@@ -137,7 +137,7 @@ export const SharedDeliverySidePanelShell: React.FC<SharedDeliverySidePanelShell
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="text-[15px] font-bold text-[#0d0d12] dark:text-[#fafafa] truncate">{delivery.orderNumber}</span>
+                <span className="text-[15px] font-bold text-[#0d0d12] dark:text-app-text truncate">{delivery.orderNumber}</span>
                 <button onClick={handleCopy} className="shrink-0 text-[#a3a3a3] hover:text-[#525252] transition-colors">
                   <Copy className="w-3.5 h-3.5" />
                 </button>
@@ -229,7 +229,7 @@ export const SharedDeliverySidePanelShell: React.FC<SharedDeliverySidePanelShell
       <div className="shrink-0 px-4 py-3 border-t border-[#f0f0f0] dark:border-app-border grid grid-cols-2 gap-2">
         <button
           onClick={() => navigate(`/delivery/${delivery.id}`)}
-          className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold bg-[#f5f5f5] dark:bg-app-surface text-[#525252] dark:text-[#a3a3a3] hover:bg-[#e5e5e5] dark:hover:bg-[#262626] hover:text-[#0d0d12] dark:hover:text-[#fafafa] transition-colors"
+          className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold bg-[#f5f5f5] dark:bg-app-surface text-[#525252] dark:text-app-text-secondary hover:bg-[#e5e5e5] dark:hover:bg-[#262626] hover:text-[#0d0d12] dark:hover:text-[#fafafa] transition-colors"
         >
           <FileText className="w-3.5 h-3.5" />
           עמוד מלא

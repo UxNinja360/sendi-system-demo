@@ -115,11 +115,11 @@ export const LiveCourierListItem: React.FC<LiveCourierListItemProps> = ({
                           : 'fill-[#22c55e] text-[#22c55e]'
                   }`}
                 />
-                <span className="truncate text-sm font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                <span className="truncate text-sm font-bold text-[#0d0d12] dark:text-app-text">
                   {courier.name}
                 </span>
                 {isConnected && !courier.isOnShift && (
-                  <span className="inline-flex flex-shrink-0 rounded-full bg-[#f5f5f5] px-1.5 py-0.5 text-[10px] font-medium text-[#737373] dark:bg-app-surface dark:text-[#a3a3a3]">
+                  <span className="inline-flex flex-shrink-0 rounded-full bg-[#f5f5f5] px-1.5 py-0.5 text-[10px] font-medium text-[#737373] dark:bg-app-surface dark:text-app-text-secondary">
                     לא במשמרת
                   </span>
                 )}
@@ -133,7 +133,7 @@ export const LiveCourierListItem: React.FC<LiveCourierListItemProps> = ({
               </div>
             </div>
 
-            <div className="flex min-w-0 items-center gap-3 overflow-hidden text-xs text-[#737373] dark:text-[#a3a3a3]">
+            <div className="flex min-w-0 items-center gap-3 overflow-hidden text-xs text-[#737373] dark:text-app-text-secondary">
               <div className="flex flex-shrink-0 items-center gap-1">
                 <span>{shiftLabel}</span>
               </div>
@@ -189,7 +189,7 @@ export const LiveCourierListItem: React.FC<LiveCourierListItemProps> = ({
                   {courier.status !== 'offline' && (
                     <button
                       onClick={onToggleCourierShift}
-                      className="flex w-full items-center gap-2 px-4 py-2.5 text-right text-sm text-[#0d0d12] transition-colors hover:bg-[#fafafa] dark:text-[#fafafa] dark:hover:bg-[#262626]"
+                      className="flex w-full items-center gap-2 px-4 py-2.5 text-right text-sm text-[#0d0d12] transition-colors hover:bg-[#fafafa] dark:text-app-text dark:hover:bg-[#262626]"
                     >
                       <CheckCircle className={`h-4 w-4 ${courier.isOnShift ? 'text-[#f59e0b]' : 'text-[#22c55e]'}`} />
                       <span>{courier.isOnShift ? 'סיים משמרת' : 'התחל משמרת'}</span>
@@ -197,7 +197,7 @@ export const LiveCourierListItem: React.FC<LiveCourierListItemProps> = ({
                   )}
                   <button
                     onClick={onToggleCourierStatus}
-                    className="flex w-full items-center gap-2 px-4 py-2.5 text-right text-sm text-[#0d0d12] transition-colors hover:bg-[#fafafa] dark:text-[#fafafa] dark:hover:bg-[#262626]"
+                    className="flex w-full items-center gap-2 px-4 py-2.5 text-right text-sm text-[#0d0d12] transition-colors hover:bg-[#fafafa] dark:text-app-text dark:hover:bg-[#262626]"
                   >
                     {courier.status === 'offline' ? (
                       <>
@@ -224,7 +224,7 @@ export const LiveCourierListItem: React.FC<LiveCourierListItemProps> = ({
           {courier.routeStops.length > 0 ? (
             <>
               <div className="flex items-center justify-between px-3 py-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#737373] dark:text-[#a3a3a3]">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#737373] dark:text-app-text-secondary">
                   מסלול ({realStops.length} עצירות{hasPreviewStops ? ` +${previewCount} בתצוגה מקדימה` : ''})
                 </span>
                 {!isHovered && (
@@ -270,7 +270,7 @@ export const LiveCourierListItem: React.FC<LiveCourierListItemProps> = ({
           ) : (
             <div className="px-3 py-6 text-center">
               <Package className="mx-auto mb-2 h-6 w-6 text-[#a3a3a3] opacity-50" />
-              <p className="text-xs text-[#737373] dark:text-[#a3a3a3]">אין משלוחים כרגע</p>
+              <p className="text-xs text-[#737373] dark:text-app-text-secondary">אין משלוחים כרגע</p>
             </div>
           )}
         </div>

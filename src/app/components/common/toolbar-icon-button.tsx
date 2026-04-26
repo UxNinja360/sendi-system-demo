@@ -20,7 +20,7 @@ export const getToolbarIconButtonClassName = (
     'flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--app-radius-xs)] border transition-colors focus:outline-none focus:ring-2 focus:ring-app-brand/40 disabled:cursor-not-allowed disabled:opacity-40',
     active
       ? 'border-app-brand/40 bg-app-brand-subtle text-app-brand-text'
-      : 'border-app-border bg-app-surface text-app-text-secondary hover:bg-app-surface-raised',
+      : 'border-app-border bg-app-surface text-app-text-secondary hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#000000] dark:hover:bg-[#1A1A1A]',
     className,
   );
 

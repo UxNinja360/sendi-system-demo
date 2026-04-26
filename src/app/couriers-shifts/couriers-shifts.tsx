@@ -54,7 +54,7 @@ const TimeSegment: React.FC<{
           if (e.key === 'ArrowUp') { e.preventDefault(); onStep(1); }
           if (e.key === 'ArrowDown') { e.preventDefault(); onStep(-1); }
         }}
-        className="w-11 text-center text-[1.8rem] font-light leading-none bg-transparent outline-none cursor-pointer focus:cursor-text text-[#0d0d12] dark:text-[#fafafa] tabular-nums rounded-lg focus:bg-[#f0f0f0] dark:focus:bg-[#1e1e1e] transition-colors py-1 sm:w-14 sm:text-[2.25rem]"
+        className="w-11 text-center text-[1.8rem] font-light leading-none bg-transparent outline-none cursor-pointer focus:cursor-text text-[#0d0d12] dark:text-app-text tabular-nums rounded-lg focus:bg-[#f0f0f0] dark:focus:bg-[#1e1e1e] transition-colors py-1 sm:w-14 sm:text-[2.25rem]"
       />
       <button type="button" onClick={() => onStep(-step)} className={btnCls}>
         <ArrowDown size={14} />
@@ -700,7 +700,7 @@ export const CouriersShifts: React.FC = () => {
                       onClick={() => setSelectedDate(date)}
                       className={`relative border-l border-[#e5e5e5] px-3 py-3 text-center transition-colors dark:border-app-border ${
                         isSelected
-                          ? 'bg-[#0d0d12] text-white dark:bg-app-surface dark:text-[#fafafa]'
+                          ? 'bg-[#0d0d12] text-white dark:bg-app-surface dark:text-app-text'
                           : 'bg-[#fafafa] text-[#737373] dark:bg-app-surface dark:text-[#737373] hover:bg-[#f0f0f0] dark:hover:bg-[#161616]'
                       }`}
                     >
@@ -708,8 +708,8 @@ export const CouriersShifts: React.FC = () => {
                         <span className="absolute bottom-0 left-0 right-0 h-[1px] bg-[#9fe870]" />
                       )}
                       <div className="text-[11px] font-medium">{DAY_LABELS[date.getDay() as DayOfWeek]}</div>
-                      <div className={`mt-1 text-sm font-semibold ${isSelected ? 'text-white dark:text-[#fafafa]' : ''}`}>{date.getDate()}</div>
-                      {isToday ? <div className={`mt-1 text-[10px] font-medium ${isSelected ? 'text-white/70 dark:text-[#a3a3a3]' : 'text-[#9fe870]'}`}>{'\u05d4\u05d9\u05d5\u05dd'}</div> : null}
+                      <div className={`mt-1 text-sm font-semibold ${isSelected ? 'text-white dark:text-app-text' : ''}`}>{date.getDate()}</div>
+                      {isToday ? <div className={`mt-1 text-[10px] font-medium ${isSelected ? 'text-white/70 dark:text-app-text-secondary' : 'text-[#9fe870]'}`}>{'\u05d4\u05d9\u05d5\u05dd'}</div> : null}
                     </button>
                   );
                 })}
@@ -718,8 +718,8 @@ export const CouriersShifts: React.FC = () => {
               <div className="divide-y divide-[#e5e5e5] dark:divide-[#262626]">
                 {visibleShiftTemplates.length === 0 ? (
                   <div className="flex min-h-[360px] flex-col items-center justify-center gap-4 px-6 py-16 text-center">
-                    <div className="text-base font-semibold text-[#0d0d12] dark:text-[#fafafa]">{'\u05d0\u05d9\u05df \u05e2\u05d3\u05d9\u05d9\u05df \u05de\u05e9\u05de\u05e8\u05d5\u05ea'}</div>
-                    <div className="max-w-sm text-sm text-[#737373] dark:text-[#a3a3a3]">
+                    <div className="text-base font-semibold text-[#0d0d12] dark:text-app-text">{'\u05d0\u05d9\u05df \u05e2\u05d3\u05d9\u05d9\u05df \u05de\u05e9\u05de\u05e8\u05d5\u05ea'}</div>
+                    <div className="max-w-sm text-sm text-[#737373] dark:text-app-text-secondary">
                       {'\u05e6\u05d5\u05e8 \u05de\u05e9\u05de\u05e8\u05ea \u05e8\u05d0\u05e9\u05d5\u05e0\u05d4, \u05d4\u05d5\u05e1\u05e3 \u05dc\u05d4 \u05ea\u05d0\u05d9\u05dd, \u05d5\u05d0\u05d6 \u05ea\u05d5\u05db\u05dc \u05dc\u05d4\u05ea\u05d7\u05d9\u05dc \u05dc\u05d0\u05d9\u05d9\u05e9 \u05d0\u05d5\u05ea\u05d4 \u05dc\u05d0\u05d5\u05e8\u05da \u05db\u05dc \u05d4\u05e9\u05d1\u05d5\u05e2.'}
                     </div>
                     <button
@@ -834,7 +834,7 @@ export const CouriersShifts: React.FC = () => {
                                   {/* Courier name row */}
                                   <div className="w-full h-1/2 bg-[#f0f0f0] dark:bg-app-surface flex items-center justify-center px-2 shrink-0">
                                     {courier ? (
-                                      <div className="truncate text-[12px] font-semibold text-[#0d0d12] dark:text-[#e5e5e5] leading-none w-full text-center">
+                                      <div className="truncate text-[12px] font-semibold text-[#0d0d12] dark:text-app-text-secondary leading-none w-full text-center">
                                         {courier.name}
                                       </div>
                                     ) : null}
@@ -896,8 +896,8 @@ export const CouriersShifts: React.FC = () => {
           <div className="p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="text-lg font-semibold text-[#0d0d12] dark:text-[#fafafa]">{'\u05e9\u05d9\u05d5\u05da \u05dc\u05ea\u05d0'}</h3>
-                <div className="mt-1 text-sm text-[#737373] dark:text-[#a3a3a3]">
+                <h3 className="text-lg font-semibold text-[#0d0d12] dark:text-app-text">{'\u05e9\u05d9\u05d5\u05da \u05dc\u05ea\u05d0'}</h3>
+                <div className="mt-1 text-sm text-[#737373] dark:text-app-text-secondary">
                   {selectedTemplate?.name}
                 </div>
                 <div className="mt-1 text-[11px] text-[#8a8a8a] dark:text-[#777777]">
@@ -905,14 +905,14 @@ export const CouriersShifts: React.FC = () => {
                 </div>
               </div>
 
-              <button onClick={closeSelectedCell} className="rounded-[4px] p-2 text-[#737373] dark:text-[#a3a3a3]">
+              <button onClick={closeSelectedCell} className="rounded-[4px] p-2 text-[#737373] dark:text-app-text-secondary">
                 <X className="h-4 w-4" />
               </button>
             </div>
 
             <div className="mt-4 rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] p-3 dark:border-app-border dark:bg-app-surface">
-              <div className="text-xs text-[#737373] dark:text-[#a3a3a3]">{'\u05de\u05e6\u05d1 \u05d4\u05ea\u05d0'}</div>
-              <div className="mt-1 text-sm font-medium text-[#0d0d12] dark:text-[#fafafa]">
+              <div className="text-xs text-[#737373] dark:text-app-text-secondary">{'\u05de\u05e6\u05d1 \u05d4\u05ea\u05d0'}</div>
+              <div className="mt-1 text-sm font-medium text-[#0d0d12] dark:text-app-text">
                 {selectedCourier ? selectedCourier.name : '\u05e4\u05e0\u05d5\u05d9'}
               </div>
               <div className="mt-1 text-[11px] text-[#8a8a8a] dark:text-[#777777]">
@@ -944,7 +944,7 @@ export const CouriersShifts: React.FC = () => {
             </div>
 
             {selectedAssignmentCompleted ? (
-              <div className="mt-4 rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] px-3 py-3 text-xs leading-5 text-[#737373] dark:border-app-border dark:bg-app-surface dark:text-[#a3a3a3]">
+              <div className="mt-4 rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] px-3 py-3 text-xs leading-5 text-[#737373] dark:border-app-border dark:bg-app-surface dark:text-app-text-secondary">
                 {'\u05de\u05e9\u05de\u05e8\u05ea \u05e9\u05d4\u05e1\u05ea\u05d9\u05d9\u05de\u05d4 \u05e0\u05e2\u05d5\u05dc\u05d4 \u05dc\u05e2\u05e8\u05d9\u05db\u05d4. \u05e8\u05d9\u05e9\u05d5\u05dd \u05d4\u05e9\u05e2\u05d5\u05ea \u05e0\u05e9\u05de\u05e8, \u05d5\u05dc\u05d0 \u05e0\u05d9\u05ea\u05df \u05dc\u05e9\u05e0\u05d5\u05ea \u05db\u05d0\u05df \u05d0\u05ea \u05d4\u05d0\u05d9\u05d5\u05e9.'}
               </div>
             ) : (
@@ -970,7 +970,7 @@ export const CouriersShifts: React.FC = () => {
                       <div className="min-w-0 flex-1 flex items-center gap-2.5">
                         <span className={`w-2 h-2 rounded-full shrink-0 ${courier.status === 'offline' ? 'bg-[#d4d4d4] dark:bg-[#525252]' : 'bg-[#22c55e]'}`} />
                         <div className="min-w-0">
-                          <div className="text-sm font-medium text-[#0d0d12] dark:text-[#fafafa]">{courier.name}</div>
+                          <div className="text-sm font-medium text-[#0d0d12] dark:text-app-text">{courier.name}</div>
                           <div className="mt-0.5 text-[11px] text-[#8a8a8a] dark:text-[#777777]">
                             {isBusy ? '\u05de\u05e9\u05d5\u05d1\u05e5 \u05d1\u05de\u05e9\u05de\u05e8\u05ea \u05d0\u05d7\u05e8\u05ea' : courier.status === 'offline' ? '\u05dc\u05d0 \u05de\u05d7\u05d5\u05d1\u05e8' : '\u05de\u05d7\u05d5\u05d1\u05e8'}
                           </div>
@@ -978,11 +978,11 @@ export const CouriersShifts: React.FC = () => {
                       </div>
 
                       {isAssigned ? (
-                        <div className="rounded-[4px] bg-[#f5f5f5] px-3 py-1.5 text-xs font-medium text-[#737373] dark:bg-app-surface dark:text-[#a3a3a3]">
+                        <div className="rounded-[4px] bg-[#f5f5f5] px-3 py-1.5 text-xs font-medium text-[#737373] dark:bg-app-surface dark:text-app-text-secondary">
                           {'\u05de\u05e9\u05d5\u05d9\u05da'}
                         </div>
                       ) : isBusy ? (
-                        <div className="rounded-[4px] bg-[#f5f5f5] px-3 py-1.5 text-xs font-medium text-[#737373] dark:bg-app-surface dark:text-[#a3a3a3]">
+                        <div className="rounded-[4px] bg-[#f5f5f5] px-3 py-1.5 text-xs font-medium text-[#737373] dark:bg-app-surface dark:text-app-text-secondary">
                           {'\u05ea\u05e4\u05d5\u05e1'}
                         </div>
                       ) : (
@@ -1014,13 +1014,13 @@ export const CouriersShifts: React.FC = () => {
           >
             <div className="mb-5 flex items-center justify-between">
               <div>
-                <div className="text-lg font-semibold text-[#0d0d12] dark:text-[#fafafa]">{'\u05d4\u05d5\u05e1\u05e3 \u05e9\u05dc\u05d9\u05d7 \u05d7\u05d3\u05e9'}</div>
-                <div className="mt-1 text-sm text-[#737373] dark:text-[#a3a3a3]">{'\u05de\u05de\u05dc\u05d0\u05d9\u05dd \u05e4\u05e8\u05d8\u05d9\u05dd \u05d1\u05e1\u05d9\u05e1\u05d9\u05d9\u05dd \u05db\u05d3\u05d9 \u05dc\u05d4\u05d5\u05e1\u05d9\u05e3 \u05d0\u05d5\u05ea\u05d5 \u05dc\u05de\u05e2\u05e8\u05db\u05ea.'}</div>
+                <div className="text-lg font-semibold text-[#0d0d12] dark:text-app-text">{'\u05d4\u05d5\u05e1\u05e3 \u05e9\u05dc\u05d9\u05d7 \u05d7\u05d3\u05e9'}</div>
+                <div className="mt-1 text-sm text-[#737373] dark:text-app-text-secondary">{'\u05de\u05de\u05dc\u05d0\u05d9\u05dd \u05e4\u05e8\u05d8\u05d9\u05dd \u05d1\u05e1\u05d9\u05e1\u05d9\u05d9\u05dd \u05db\u05d3\u05d9 \u05dc\u05d4\u05d5\u05e1\u05d9\u05e3 \u05d0\u05d5\u05ea\u05d5 \u05dc\u05de\u05e2\u05e8\u05db\u05ea.'}</div>
               </div>
               <button
                 type="button"
                 onClick={closeCourierModal}
-                className="rounded-[4px] p-2 text-[#737373] transition-colors hover:bg-[#f5f5f5] dark:text-[#a3a3a3] dark:hover:bg-[#111111]"
+                className="rounded-[4px] p-2 text-[#737373] transition-colors hover:bg-[#f5f5f5] dark:text-app-text-secondary dark:hover:bg-[#111111]"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -1028,22 +1028,22 @@ export const CouriersShifts: React.FC = () => {
 
             <div className="space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-medium text-[#0d0d12] dark:text-[#fafafa]">{'\u05e9\u05dd \u05de\u05dc\u05d0'}</label>
+                <label className="mb-2 block text-sm font-medium text-[#0d0d12] dark:text-app-text">{'\u05e9\u05dd \u05de\u05dc\u05d0'}</label>
                 <input
                   value={newCourier.name}
                   onChange={(event) => setNewCourier((prev) => ({ ...prev, name: event.target.value }))}
                   placeholder={'\u05db\u05ea\u05d5\u05d1 \u05e9\u05dd \u05de\u05dc\u05d0'}
-                  className="w-full rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] px-3 py-2.5 text-sm text-[#0d0d12] outline-none transition-colors focus:border-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-[#fafafa]"
+                  className="w-full rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] px-3 py-2.5 text-sm text-[#0d0d12] outline-none transition-colors focus:border-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-app-text"
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-[#0d0d12] dark:text-[#fafafa]">{'\u05d8\u05dc\u05e4\u05d5\u05df'}</label>
+                <label className="mb-2 block text-sm font-medium text-[#0d0d12] dark:text-app-text">{'\u05d8\u05dc\u05e4\u05d5\u05df'}</label>
                 <input
                   value={newCourier.phone}
                   onChange={(event) => setNewCourier((prev) => ({ ...prev, phone: event.target.value }))}
                   placeholder={'\u05db\u05ea\u05d5\u05d1 \u05de\u05e1\u05e4\u05e8 \u05d8\u05dc\u05e4\u05d5\u05df'}
-                  className="w-full rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] px-3 py-2.5 text-sm text-[#0d0d12] outline-none transition-colors focus:border-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-[#fafafa]"
+                  className="w-full rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] px-3 py-2.5 text-sm text-[#0d0d12] outline-none transition-colors focus:border-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-app-text"
                 />
               </div>
             </div>
@@ -1052,7 +1052,7 @@ export const CouriersShifts: React.FC = () => {
               <button
                 type="button"
                 onClick={closeCourierModal}
-                className="rounded-[4px] border border-[#e5e5e5] px-4 py-2.5 text-sm font-medium text-[#525252] transition-colors hover:bg-[#f5f5f5] dark:border-app-border dark:text-[#d4d4d4] dark:hover:bg-[#111111]"
+                className="rounded-[4px] border border-[#e5e5e5] px-4 py-2.5 text-sm font-medium text-[#525252] transition-colors hover:bg-[#f5f5f5] dark:border-app-border dark:text-app-text-secondary dark:hover:bg-[#111111]"
               >
                 {'\u05d1\u05d9\u05d8\u05d5\u05dc'}
               </button>
@@ -1134,7 +1134,7 @@ export const CouriersShifts: React.FC = () => {
             {/* Header */}
             <div className="flex items-start justify-between gap-3 border-b border-[#f0f0f0] dark:border-[#1a1a1a] px-6 py-5">
               <div>
-                <h3 className="text-[17px] font-semibold text-[#0d0d12] dark:text-[#fafafa]">
+                <h3 className="text-[17px] font-semibold text-[#0d0d12] dark:text-app-text">
                   {editingTemplate ? '\u05e2\u05e8\u05d9\u05db\u05ea \u05de\u05e9\u05de\u05e8\u05ea' : '\u05e6\u05d5\u05e8 \u05de\u05e9\u05de\u05e8\u05ea'}
                 </h3>
                 <p className="mt-0.5 text-[13px] text-[#737373] dark:text-[#666]">
@@ -1156,18 +1156,18 @@ export const CouriersShifts: React.FC = () => {
 
               {/* Name */}
               <div className="space-y-2">
-                <label className="text-[13px] font-medium text-[#525252] dark:text-[#a3a3a3]">{'\u05e9\u05dd \u05d4\u05de\u05e9\u05de\u05e8\u05ea'}</label>
+                <label className="text-[13px] font-medium text-[#525252] dark:text-app-text-secondary">{'\u05e9\u05dd \u05d4\u05de\u05e9\u05de\u05e8\u05ea'}</label>
                 <input
                   value={templateDraft.name}
                   onChange={(e) => setTemplateDraft((prev) => ({ ...prev, name: e.target.value }))}
-                  className="w-full rounded-xl border border-[#e5e5e5] bg-[#fafafa] px-4 py-3 text-sm text-[#0d0d12] outline-none transition-colors focus:border-[#9fe870] focus:ring-2 focus:ring-[#9fe870]/20 dark:border-app-border dark:bg-app-surface dark:text-[#fafafa] placeholder:text-[#b0b0b0] dark:placeholder:text-[#444]"
+                  className="w-full rounded-xl border border-[#e5e5e5] bg-[#fafafa] px-4 py-3 text-sm text-[#0d0d12] outline-none transition-colors focus:border-[#9fe870] focus:ring-2 focus:ring-[#9fe870]/20 dark:border-app-border dark:bg-app-surface dark:text-app-text placeholder:text-[#b0b0b0] dark:placeholder:text-[#444]"
                   placeholder={'\u05dc\u05de\u05e9\u05dc: \u05de\u05e9\u05de\u05e8\u05ea \u05d1\u05d5\u05e7\u05e8'}
                 />
               </div>
 
               {/* Times */}
               <div className="space-y-3">
-                <label className="text-[13px] font-medium text-[#525252] dark:text-[#a3a3a3]">{'\u05e9\u05e2\u05d5\u05ea \u05d4\u05de\u05e9\u05de\u05e8\u05ea'}</label>
+                <label className="text-[13px] font-medium text-[#525252] dark:text-app-text-secondary">{'\u05e9\u05e2\u05d5\u05ea \u05d4\u05de\u05e9\u05de\u05e8\u05ea'}</label>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <div className="text-[12px] text-[#a3a3a3] dark:text-[#555] text-center">{'\u05e9\u05e2\u05ea \u05d4\u05ea\u05d7\u05dc\u05d4'}</div>
@@ -1190,13 +1190,13 @@ export const CouriersShifts: React.FC = () => {
               <div className="space-y-3">
                 <div className="flex items-center justify-between gap-2">
                   <div>
-                    <label className="text-[13px] font-medium text-[#525252] dark:text-[#a3a3a3]">{'\u05db\u05de\u05d5\u05ea \u05e9\u05dc\u05d9\u05d7\u05d9\u05dd \u05d1\u05de\u05e9\u05de\u05e8\u05ea'}</label>
+                    <label className="text-[13px] font-medium text-[#525252] dark:text-app-text-secondary">{'\u05db\u05de\u05d5\u05ea \u05e9\u05dc\u05d9\u05d7\u05d9\u05dd \u05d1\u05de\u05e9\u05de\u05e8\u05ea'}</label>
                     <p className="mt-0.5 text-[11px] text-[#a3a3a3] dark:text-[#555]">{'\u05db\u05dc \u05de\u05e1\u05e4\u05e8 \u05de\u05d9\u05d9\u05e6\u05d2 \u05de\u05e7\u05d5\u05dd \u05e9\u05d9\u05d1\u05d5\u05e5 \u05d0\u05d7\u05d3 \u05d1\u05de\u05e9\u05de\u05e8\u05ea'}</p>
                   </div>
                   <button
                     type="button"
                     onClick={addDraftSlot}
-                    className="flex items-center gap-1.5 rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-3 py-2 text-[12px] font-medium text-[#525252] transition-colors hover:bg-[#f0f0f0] dark:border-app-border dark:bg-app-surface dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a]"
+                    className="flex items-center gap-1.5 rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-3 py-2 text-[12px] font-medium text-[#525252] transition-colors hover:bg-[#f0f0f0] dark:border-app-border dark:bg-app-surface dark:text-app-text-secondary dark:hover:bg-[#1a1a1a]"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     {'\u05d4\u05d5\u05e1\u05e3 \u05ea\u05d0'}
@@ -1206,7 +1206,7 @@ export const CouriersShifts: React.FC = () => {
                 <div className="flex flex-wrap gap-2">
                   {templateDraft.slots.map((slot, index) => (
                     <div key={slot.id} className="flex items-center gap-2 rounded-xl border border-[#e5e5e5] bg-[#fafafa] px-2.5 py-2 dark:border-app-border dark:bg-app-surface">
-                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-[11px] font-semibold text-[#737373] dark:bg-app-surface dark:text-[#a3a3a3]">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-[11px] font-semibold text-[#737373] dark:bg-app-surface dark:text-app-text-secondary">
                         {index + 1}
                       </div>
                       {templateDraft.slots.length > 1 && (
@@ -1249,7 +1249,7 @@ export const CouriersShifts: React.FC = () => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={closeTemplateModal}
-                  className="rounded-xl border border-[#e5e5e5] px-4 py-2.5 text-sm font-medium text-[#525252] transition-colors hover:bg-[#f5f5f5] dark:border-app-border dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a]"
+                  className="rounded-xl border border-[#e5e5e5] px-4 py-2.5 text-sm font-medium text-[#525252] transition-colors hover:bg-[#f5f5f5] dark:border-app-border dark:text-app-text-secondary dark:hover:bg-[#1a1a1a]"
                 >
                   {'\u05d1\u05d9\u05d8\u05d5\u05dc'}
                 </button>

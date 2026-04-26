@@ -96,7 +96,7 @@ export const WalletPage: React.FC = () => {
           <button
             type="button"
             onClick={() => navigate('/deliveries')}
-            className="hidden items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-[#fafafa] dark:hover:bg-app-surface-raised md:inline-flex"
+            className="hidden items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised md:inline-flex"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>{TEXT.toDeliveries}</span>
@@ -109,37 +109,37 @@ export const WalletPage: React.FC = () => {
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-2xl border border-[#e5e5e5] bg-white p-5 dark:border-app-border dark:bg-app-surface">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-[#666d80] dark:text-[#a3a3a3]">
+                <span className="text-sm text-[#666d80] dark:text-app-text-secondary">
                   {TEXT.totalRevenue}
                 </span>
                 <Wallet className="h-5 w-5 text-[#16a34a] dark:text-[#9fe870]" />
               </div>
-              <div className="mt-3 text-3xl font-semibold text-[#0d0d12] dark:text-[#fafafa]">
+              <div className="mt-3 text-3xl font-semibold text-[#0d0d12] dark:text-app-text">
                 {formatCurrency(walletStats.totalRevenue)}
               </div>
-              <div className="mt-2 text-xs text-[#737373] dark:text-[#a3a3a3]">
+              <div className="mt-2 text-xs text-[#737373] dark:text-app-text-secondary">
                 {completedDeliveries.length.toLocaleString('he-IL')} {TEXT.completedDeliveries}
               </div>
             </div>
 
             <div className="rounded-2xl border border-[#e5e5e5] bg-white p-5 dark:border-app-border dark:bg-app-surface">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-[#666d80] dark:text-[#a3a3a3]">
+                <span className="text-sm text-[#666d80] dark:text-app-text-secondary">
                   {TEXT.courierPayments}
                 </span>
                 <Bike className="h-5 w-5 text-[#0fcdd3]" />
               </div>
-              <div className="mt-3 text-3xl font-semibold text-[#0d0d12] dark:text-[#fafafa]">
+              <div className="mt-3 text-3xl font-semibold text-[#0d0d12] dark:text-app-text">
                 {formatCurrency(walletStats.totalCourierPay)}
               </div>
-              <div className="mt-2 text-xs text-[#737373] dark:text-[#a3a3a3]">
+              <div className="mt-2 text-xs text-[#737373] dark:text-app-text-secondary">
                 {TEXT.courierPaymentsHint}
               </div>
             </div>
 
             <div className="rounded-2xl border border-[#e5e5e5] bg-white p-5 dark:border-app-border dark:bg-app-surface">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-[#666d80] dark:text-[#a3a3a3]">
+                <span className="text-sm text-[#666d80] dark:text-app-text-secondary">
                   {TEXT.grossProfit}
                 </span>
                 <TrendingUp className="h-5 w-5 text-[#16a34a] dark:text-[#9fe870]" />
@@ -147,22 +147,22 @@ export const WalletPage: React.FC = () => {
               <div className="mt-3 text-3xl font-semibold text-[#166534] dark:text-[#4ade80]">
                 {formatCurrency(walletStats.grossProfit)}
               </div>
-              <div className="mt-2 text-xs text-[#737373] dark:text-[#a3a3a3]">
+              <div className="mt-2 text-xs text-[#737373] dark:text-app-text-secondary">
                 {TEXT.grossProfitHint}
               </div>
             </div>
 
             <div className="rounded-2xl border border-[#e5e5e5] bg-white p-5 dark:border-app-border dark:bg-app-surface">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-[#666d80] dark:text-[#a3a3a3]">
+                <span className="text-sm text-[#666d80] dark:text-app-text-secondary">
                   {TEXT.averageOrderValue}
                 </span>
                 <Receipt className="h-5 w-5 text-[#f59e0b]" />
               </div>
-              <div className="mt-3 text-3xl font-semibold text-[#0d0d12] dark:text-[#fafafa]">
+              <div className="mt-3 text-3xl font-semibold text-[#0d0d12] dark:text-app-text">
                 {formatCurrency(walletStats.avgOrderValue)}
               </div>
-              <div className="mt-2 text-xs text-[#737373] dark:text-[#a3a3a3]">
+              <div className="mt-2 text-xs text-[#737373] dark:text-app-text-secondary">
                 {TEXT.tips}: {formatCurrency(walletStats.totalTips)}
               </div>
             </div>
@@ -171,10 +171,10 @@ export const WalletPage: React.FC = () => {
           <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
             <div className="overflow-hidden rounded-2xl border border-[#e5e5e5] bg-white dark:border-app-border dark:bg-app-surface">
               <div className="border-b border-[#e5e5e5] bg-[#fafafa] px-4 py-3 dark:border-app-border dark:bg-app-surface">
-                <div className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">
+                <div className="text-sm font-semibold text-[#0d0d12] dark:text-app-text">
                   {TEXT.latestDeliveries}
                 </div>
-                <div className="mt-1 text-xs text-[#666d80] dark:text-[#a3a3a3]">
+                <div className="mt-1 text-xs text-[#666d80] dark:text-app-text-secondary">
                   {TEXT.latestDeliveriesHint}
                 </div>
               </div>
@@ -185,11 +185,11 @@ export const WalletPage: React.FC = () => {
                     className="flex items-center justify-between gap-4 px-4 py-3"
                   >
                     <div className="min-w-0">
-                      <div className="truncate text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">
+                      <div className="truncate text-sm font-semibold text-[#0d0d12] dark:text-app-text">
                         {delivery.client_name || TEXT.customer} •{' '}
                         {delivery.rest_name || TEXT.restaurant}
                       </div>
-                      <div className="mt-1 text-xs text-[#666d80] dark:text-[#a3a3a3]">
+                      <div className="mt-1 text-xs text-[#666d80] dark:text-app-text-secondary">
                         #{delivery.api_short_order_id || delivery.id} •{' '}
                         {new Date(
                           delivery.deliveredAt ?? delivery.createdAt ?? new Date(),
@@ -200,14 +200,14 @@ export const WalletPage: React.FC = () => {
                       <div className="text-sm font-semibold text-[#166534] dark:text-[#4ade80]">
                         {formatCurrency(getDeliveryCustomerCharge(delivery))}
                       </div>
-                      <div className="mt-1 text-xs text-[#737373] dark:text-[#a3a3a3]">
+                      <div className="mt-1 text-xs text-[#737373] dark:text-app-text-secondary">
                         {TEXT.courier}: {formatCurrency(getDeliveryCourierBasePay(delivery))}
                       </div>
                     </div>
                   </div>
                 ))}
                 {recentCompleted.length === 0 ? (
-                  <div className="px-4 py-8 text-center text-sm text-[#737373] dark:text-[#a3a3a3]">
+                  <div className="px-4 py-8 text-center text-sm text-[#737373] dark:text-app-text-secondary">
                     {TEXT.emptyRecent}
                   </div>
                 ) : null}
@@ -216,39 +216,39 @@ export const WalletPage: React.FC = () => {
 
             <div className="space-y-4">
               <div className="rounded-2xl border border-[#e5e5e5] bg-white p-5 dark:border-app-border dark:bg-app-surface">
-                <div className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">
+                <div className="text-sm font-semibold text-[#0d0d12] dark:text-app-text">
                   {TEXT.financialBreakdown}
                 </div>
                 <div className="mt-4 space-y-3 text-sm">
                   <div className="flex items-center justify-between">
-                    <span className="text-[#666d80] dark:text-[#a3a3a3]">
+                    <span className="text-[#666d80] dark:text-app-text-secondary">
                       {TEXT.revenue}
                     </span>
-                    <span className="font-semibold text-[#0d0d12] dark:text-[#fafafa]">
+                    <span className="font-semibold text-[#0d0d12] dark:text-app-text">
                       {formatCurrency(walletStats.totalRevenue)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[#666d80] dark:text-[#a3a3a3]">
+                    <span className="text-[#666d80] dark:text-app-text-secondary">
                       {TEXT.courierPayments}
                     </span>
-                    <span className="font-semibold text-[#0d0d12] dark:text-[#fafafa]">
+                    <span className="font-semibold text-[#0d0d12] dark:text-app-text">
                       {formatCurrency(walletStats.totalCourierPay)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[#666d80] dark:text-[#a3a3a3]">
+                    <span className="text-[#666d80] dark:text-app-text-secondary">
                       {TEXT.commissions}
                     </span>
-                    <span className="font-semibold text-[#0d0d12] dark:text-[#fafafa]">
+                    <span className="font-semibold text-[#0d0d12] dark:text-app-text">
                       {formatCurrency(walletStats.totalCommission)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[#666d80] dark:text-[#a3a3a3]">
+                    <span className="text-[#666d80] dark:text-app-text-secondary">
                       {TEXT.tips}
                     </span>
-                    <span className="font-semibold text-[#0d0d12] dark:text-[#fafafa]">
+                    <span className="font-semibold text-[#0d0d12] dark:text-app-text">
                       {formatCurrency(walletStats.totalTips)}
                     </span>
                   </div>
@@ -256,7 +256,7 @@ export const WalletPage: React.FC = () => {
               </div>
 
               <div className="rounded-2xl border border-[#dbeafe] bg-[#eff6ff] p-5 dark:border-[#1d4ed8]/30 dark:bg-[#0f172a]">
-                <div className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">
+                <div className="text-sm font-semibold text-[#0d0d12] dark:text-app-text">
                   {TEXT.whatIsShown}
                 </div>
                 <div className="mt-2 text-sm leading-6 text-[#475569] dark:text-[#94a3b8]">

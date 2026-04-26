@@ -95,7 +95,7 @@ export const LiveSortMenu: React.FC<LiveSortMenuProps> = ({
             className={`w-full px-4 py-2.5 text-right text-sm transition-colors ${
               selectedId === option.id
                 ? 'bg-[#f0fdf4] font-bold text-[#22c55e] dark:bg-[#0a2f1a]'
-                : 'text-[#0d0d12] hover:bg-[#fafafa] dark:text-[#fafafa] dark:hover:bg-[#262626]'
+                : 'text-[#0d0d12] hover:bg-[#fafafa] dark:text-app-text dark:hover:bg-[#262626]'
             }`}
           >
             {option.label}

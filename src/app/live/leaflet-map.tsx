@@ -559,7 +559,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
           <div className="py-1">
             {contextMenu.item.type === 'order' ? (
               <button
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[#171717] dark:text-[#e5e5e5] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors text-right"
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[#171717] dark:text-app-text-secondary hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors text-right"
                 dir="rtl"
                 onClick={() => {
                   onOrderShowDetails?.(contextMenu.item.order.deliveryId);
@@ -572,7 +572,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
             ) : (
               <>
                 <button
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[#171717] dark:text-[#e5e5e5] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors text-right"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[#171717] dark:text-app-text-secondary hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors text-right"
                   dir="rtl"
                   onClick={() => {
                     if (contextMenu.item.restaurant.id) {
@@ -585,7 +585,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                   <span>פרטי מסעדה</span>
                 </button>
                 <button
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[#171717] dark:text-[#e5e5e5] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors text-right"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[#171717] dark:text-app-text-secondary hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors text-right"
                   dir="rtl"
                   onClick={() => {
                     if (contextMenu.item.restaurant.id) {

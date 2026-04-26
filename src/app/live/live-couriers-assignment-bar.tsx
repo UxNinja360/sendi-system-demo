@@ -26,8 +26,8 @@ export const LiveCouriersAssignmentBar: React.FC<LiveCouriersAssignmentBarProps>
     <div className="sticky inset-x-0 bottom-0 z-20 mt-auto border-t border-[#e5e5e5] bg-white shadow-[0_-4px_16px_rgba(0,0,0,0.08)] dark:border-app-border dark:bg-app-surface">
       {!selectedCourierId ? (
         <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2 text-sm text-[#737373] dark:text-[#a3a3a3]">
-            <span className="font-bold text-[#0d0d12] dark:text-white">{selectedDeliveryCount}</span>
+          <div className="flex items-center gap-2 text-sm text-[#737373] dark:text-app-text-secondary">
+            <span className="font-bold text-[#0d0d12] dark:text-app-text">{selectedDeliveryCount}</span>
             <span>{selectedDeliveryCount === 1 ? 'משלוח' : 'משלוחים'} — בחר שליח מהרשימה</span>
           </div>
           <button

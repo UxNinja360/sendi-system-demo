@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Bike, Package, PanelRightOpen } from 'lucide-react';
 
 interface LiveManagerMinimizedWidgetProps {
@@ -14,7 +14,7 @@ interface LiveManagerMinimizedWidgetProps {
 const StatusDot: React.FC<{ color: string; count: number }> = ({ color, count }) => (
   <div className="flex items-center gap-1">
     <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
-    <span className="text-xs font-bold text-[#737373] dark:text-[#a3a3a3]">{count}</span>
+    <span className="text-xs font-bold text-[#737373] dark:text-app-text-secondary">{count}</span>
   </div>
 );
 
@@ -30,7 +30,7 @@ export const LiveManagerMinimizedWidget: React.FC<LiveManagerMinimizedWidgetProp
   <div className="flex items-center gap-3 px-4 py-3">
     <div className="flex items-center gap-1.5">
       <Package className="h-4 w-4 text-[#22c55e]" />
-      <span className="text-sm font-bold text-[#0d0d12] dark:text-white">{totalDeliveries}</span>
+      <span className="text-sm font-bold text-[#0d0d12] dark:text-app-text">{totalDeliveries}</span>
     </div>
 
     <div className="h-5 w-px bg-[#e5e5e5] dark:bg-[#404040]" />
@@ -46,7 +46,7 @@ export const LiveManagerMinimizedWidget: React.FC<LiveManagerMinimizedWidgetProp
 
     <div className="flex items-center gap-1.5">
       <Bike className="h-4 w-4 text-[#22c55e]" />
-      <span className="text-xs font-bold text-[#737373] dark:text-[#a3a3a3]">
+      <span className="text-xs font-bold text-[#737373] dark:text-app-text-secondary">
         {availableCouriersCount}
       </span>
     </div>
@@ -56,11 +56,11 @@ export const LiveManagerMinimizedWidget: React.FC<LiveManagerMinimizedWidgetProp
     <button
       onClick={onExpand}
       className="group flex items-center gap-1 rounded-lg px-2 py-1 transition-colors hover:bg-[#f5f5f5] dark:hover:bg-[#262626]"
-      title="פתח פאנל"
+      title="??? ????"
     >
       <PanelRightOpen className="h-3.5 w-3.5 text-[#737373] transition-colors group-hover:text-[#22c55e]" />
       <span className="text-xs font-medium text-[#737373] transition-colors group-hover:text-[#22c55e]">
-        פתח
+        ???
       </span>
     </button>
   </div>

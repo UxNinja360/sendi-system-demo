@@ -77,13 +77,13 @@ export const LoginOtp: React.FC<LoginOtpProps> = ({ phone, onSubmit, onBack }) =
           <div className="inline-flex items-center justify-center h-16 w-16 sm:h-20 sm:w-20 bg-[#02B74F] rounded-2xl mb-4 shadow-lg">
             <AppLogo size={40} className="text-white sm:h-12 sm:w-12" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0d0d12] dark:text-[#fafafa] mb-2">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0d0d12] dark:text-app-text mb-2">
             הזן קוד אימות
           </h1>
-          <p className="text-sm sm:text-base text-[#666d80] dark:text-[#a3a3a3]">
+          <p className="text-sm sm:text-base text-[#666d80] dark:text-app-text-secondary">
             שלחנו קוד אימות למספר
           </p>
-          <p className="text-[#0d0d12] dark:text-[#fafafa] font-medium mt-1" dir="ltr">
+          <p className="text-[#0d0d12] dark:text-app-text font-medium mt-1" dir="ltr">
             {formatPhone(phone)}
           </p>
         </div>
@@ -105,7 +105,7 @@ export const LoginOtp: React.FC<LoginOtpProps> = ({ phone, onSubmit, onBack }) =
                   onChange={(e) => handleChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
                   onPaste={index === 0 ? handlePaste : undefined}
-                  className={`h-12 w-10 sm:h-14 sm:w-12 text-center text-xl sm:text-2xl font-bold bg-[#fafafa] dark:bg-app-surface border-2 rounded-xl text-[#0d0d12] dark:text-[#fafafa] focus:outline-none focus:border-[#02B74F] transition-all ${
+                  className={`h-12 w-10 sm:h-14 sm:w-12 text-center text-xl sm:text-2xl font-bold bg-[#fafafa] dark:bg-app-surface border-2 rounded-xl text-[#0d0d12] dark:text-app-text focus:outline-none focus:border-[#02B74F] transition-all ${
                     error
                       ? 'border-[#ea0b0b] animate-shake'
                       : 'border-[#e5e5e5] dark:border-app-border'
@@ -121,7 +121,7 @@ export const LoginOtp: React.FC<LoginOtpProps> = ({ phone, onSubmit, onBack }) =
             )}
 
             <div className="text-center">
-              <p className="text-xs text-[#666d80] dark:text-[#a3a3a3]">
+              <p className="text-xs text-[#666d80] dark:text-app-text-secondary">
                 טיפ: קוד הבדיקה הוא 123456
               </p>
             </div>
@@ -137,7 +137,7 @@ export const LoginOtp: React.FC<LoginOtpProps> = ({ phone, onSubmit, onBack }) =
 
             <button
               onClick={onBack}
-              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[#f5f5f5] dark:bg-[#262626] hover:bg-[#e5e5e5] dark:hover:bg-[#404040] text-[#0d0d12] dark:text-[#fafafa] font-medium rounded-xl transition-all duration-200"
+              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[#f5f5f5] dark:bg-[#262626] hover:bg-[#e5e5e5] dark:hover:bg-[#404040] text-[#0d0d12] dark:text-app-text font-medium rounded-xl transition-all duration-200"
             >
               <ArrowRight className="w-5 h-5" />
               <span>חזור</span>

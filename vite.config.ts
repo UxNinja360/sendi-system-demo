@@ -12,15 +12,15 @@ export default defineConfig({
       disable: false,
       registerType: 'autoUpdate',
       devOptions: {
-        enabled: true,
+        enabled: false,
       },
       includeAssets: ['icon.svg'],
       manifest: {
         name: 'Sendi',
         short_name: 'Sendi',
         description: 'Sendi delivery operations cockpit',
-        theme_color: '#0a0a0a',
-        background_color: '#0a0a0a',
+        theme_color: '#000000',
+        background_color: '#000000',
         display: 'standalone',
         display_override: ['standalone', 'minimal-ui'],
         orientation: 'any',

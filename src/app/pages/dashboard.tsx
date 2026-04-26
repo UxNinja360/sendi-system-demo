@@ -172,17 +172,17 @@ export const Dashboard: React.FC = () => {
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-app-background">
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <div className="mx-auto w-full max-w-[90rem] space-y-4 px-4 py-6 pb-8 md:px-6">
+        <div className="mx-auto w-full max-w-[85rem] space-y-4 px-4 py-6 pb-8 md:px-6">
           <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
             {(() => {
               const filledBar = Math.min(20, Math.round((activeDeliveries / Math.max(activeDeliveries + 4, 10)) * 20));
               return (
                 <div className="flex cursor-pointer flex-col rounded-2xl border border-[#e5e5e5] bg-white p-5 transition-all hover:border-[#c0c0c0] dark:border-app-border dark:bg-app-surface dark:hover:border-[#3a3a3a]" onClick={() => navigate('/live')}>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-medium text-[#888] dark:text-[#a3a3a3] uppercase tracking-wide">משלוחים פעילים</span>
+                    <span className="text-xs font-medium text-[#888] dark:text-app-text-secondary uppercase tracking-wide">משלוחים פעילים</span>
                     <ClipboardList size={15} className="text-[#a3a3a3] dark:text-[#525252]" />
                   </div>
-                  <div className="mt-2 text-[2.5rem] font-light leading-none text-[#0d0d12] dark:text-[#fafafa] tracking-tight">{activeDeliveries}</div>
+                  <div className="mt-2 text-[2.5rem] font-light leading-none text-[#0d0d12] dark:text-app-text tracking-tight">{activeDeliveries}</div>
                   <div className="mt-3 flex items-center gap-[3px]">
                     {Array.from({ length: 20 }, (_, i) => <div key={i} className={`flex-1 h-[3px] rounded-full transition-colors ${i < filledBar ? 'bg-blue-500' : 'bg-[#e5e5e5] dark:bg-[#2a2a2a]'}`} />)}
                   </div>
@@ -193,8 +193,8 @@ export const Dashboard: React.FC = () => {
                       { dot: 'bg-green-400', label: 'בדרך ללקוח', value: delivering },
                     ].map((row) => (
                       <div key={row.label} className="flex items-center justify-between">
-                        <span className="flex items-center gap-2 text-xs text-[#666d80] dark:text-[#a3a3a3]"><span className={`w-1.5 h-1.5 rounded-full shrink-0 ${row.dot}`} />{row.label}</span>
-                        <span className="text-xs font-semibold text-[#0d0d12] dark:text-[#fafafa]">{row.value}</span>
+                        <span className="flex items-center gap-2 text-xs text-[#666d80] dark:text-app-text-secondary"><span className={`w-1.5 h-1.5 rounded-full shrink-0 ${row.dot}`} />{row.label}</span>
+                        <span className="text-xs font-semibold text-[#0d0d12] dark:text-app-text">{row.value}</span>
                       </div>
                     ))}
                   </div>
@@ -209,10 +209,10 @@ export const Dashboard: React.FC = () => {
                 return (
                   <div className="flex cursor-pointer flex-col rounded-2xl border border-[#e5e5e5] bg-white p-5 transition-all hover:border-[#c0c0c0] dark:border-app-border dark:bg-app-surface dark:hover:border-[#3a3a3a]" onClick={() => navigate('/couriers')}>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-medium text-[#888] dark:text-[#a3a3a3] uppercase tracking-wide">משלוחים לשליח</span>
+                      <span className="text-xs font-medium text-[#888] dark:text-app-text-secondary uppercase tracking-wide">משלוחים לשליח</span>
                       <Users size={15} className="text-[#a3a3a3] dark:text-[#525252]" />
                     </div>
-                    <div className="mt-2 text-[2.5rem] font-light leading-none text-[#0d0d12] dark:text-[#fafafa] tracking-tight">{deliveriesPerOnShiftCourier}</div>
+                    <div className="mt-2 text-[2.5rem] font-light leading-none text-[#0d0d12] dark:text-app-text tracking-tight">{deliveriesPerOnShiftCourier}</div>
                     <div className="mt-3 flex items-center gap-[3px]">
                       {Array.from({ length: 20 }, (_, i) => <div key={i} className={`flex-1 h-[3px] rounded-full transition-colors ${i < filledBar ? 'bg-green-500' : 'bg-[#e5e5e5] dark:bg-[#2a2a2a]'}`} />)}
                     </div>
@@ -234,8 +234,8 @@ export const Dashboard: React.FC = () => {
                       },
                     ].map((row) => (
                       <div key={row.label} className="flex items-center justify-between">
-                        <span className="flex items-center gap-2 text-xs text-[#666d80] dark:text-[#a3a3a3]"><span className={`w-1.5 h-1.5 rounded-full shrink-0 ${row.dot}`} />{row.label}</span>
-                        <span className="text-xs font-semibold text-[#0d0d12] dark:text-[#fafafa]">{row.value}</span>
+                        <span className="flex items-center gap-2 text-xs text-[#666d80] dark:text-app-text-secondary"><span className={`w-1.5 h-1.5 rounded-full shrink-0 ${row.dot}`} />{row.label}</span>
+                        <span className="text-xs font-semibold text-[#0d0d12] dark:text-app-text">{row.value}</span>
                       </div>
                     ))}
                   </div>
@@ -249,10 +249,10 @@ export const Dashboard: React.FC = () => {
                 return (
                 <div className="flex cursor-pointer flex-col rounded-2xl border border-[#e5e5e5] bg-white p-5 transition-all hover:border-[#c0c0c0] dark:border-app-border dark:bg-app-surface dark:hover:border-[#3a3a3a]" onClick={() => navigate('/restaurants')}>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-medium text-[#888] dark:text-[#a3a3a3] uppercase tracking-wide">מסעדות פעילות</span>
+                    <span className="text-xs font-medium text-[#888] dark:text-app-text-secondary uppercase tracking-wide">מסעדות פעילות</span>
                     <Store size={15} className="text-[#a3a3a3] dark:text-[#525252]" />
                   </div>
-                  <div className="mt-2 text-[2.5rem] font-light leading-none text-[#0d0d12] dark:text-[#fafafa] tracking-tight">{activeRestaurantsNow}</div>
+                  <div className="mt-2 text-[2.5rem] font-light leading-none text-[#0d0d12] dark:text-app-text tracking-tight">{activeRestaurantsNow}</div>
                   <div className="mt-3 flex items-center gap-[3px]">
                     {Array.from({ length: 20 }, (_, i) => <div key={i} className={`flex-1 h-[3px] rounded-full transition-colors ${i < filledBar ? 'bg-orange-400' : 'bg-[#e5e5e5] dark:bg-[#2a2a2a]'}`} />)}
                   </div>
@@ -262,8 +262,8 @@ export const Dashboard: React.FC = () => {
                         { dot: 'bg-red-400', label: 'עמוסות (6+ משלוחים)', value: busyRestaurantsNow.length },
                       ].map((row) => (
                       <div key={row.label} className="flex items-center justify-between">
-                        <span className="flex items-center gap-2 text-xs text-[#666d80] dark:text-[#a3a3a3]"><span className={`w-1.5 h-1.5 rounded-full shrink-0 ${row.dot}`} />{row.label}</span>
-                        <span className="text-xs font-semibold text-[#0d0d12] dark:text-[#fafafa]">{row.value}</span>
+                        <span className="flex items-center gap-2 text-xs text-[#666d80] dark:text-app-text-secondary"><span className={`w-1.5 h-1.5 rounded-full shrink-0 ${row.dot}`} />{row.label}</span>
+                        <span className="text-xs font-semibold text-[#0d0d12] dark:text-app-text">{row.value}</span>
                       </div>
                     ))}
                   </div>
@@ -278,10 +278,10 @@ export const Dashboard: React.FC = () => {
               return (
                 <div className="flex cursor-pointer flex-col rounded-2xl border border-[#e5e5e5] bg-white p-5 transition-all hover:border-[#c0c0c0] dark:border-app-border dark:bg-app-surface dark:hover:border-[#3a3a3a]" onClick={() => navigate('/reports')}>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-medium text-[#888] dark:text-[#a3a3a3] uppercase tracking-wide">ביצועי היום</span>
+                    <span className="text-xs font-medium text-[#888] dark:text-app-text-secondary uppercase tracking-wide">ביצועי היום</span>
                     <TrendingUp size={15} className="text-[#a3a3a3] dark:text-[#525252]" />
                   </div>
-                  <div className="mt-2 text-[2.5rem] font-light leading-none text-[#0d0d12] dark:text-[#fafafa] tracking-tight">
+                  <div className="mt-2 text-[2.5rem] font-light leading-none text-[#0d0d12] dark:text-app-text tracking-tight">
                     {totalToday > 0 ? `${completionRate}%` : '—'}
                   </div>
                   <div className="mt-3 flex items-center gap-[3px]">
@@ -297,8 +297,8 @@ export const Dashboard: React.FC = () => {
                       { dot: 'bg-yellow-400', label: 'זמן ממוצע', value: averageDeliveryTime > 0 ? `${averageDeliveryTime} דק׳` : '—' },
                     ].map((row) => (
                       <div key={row.label} className="flex items-center justify-between">
-                        <span className="flex items-center gap-2 text-xs text-[#666d80] dark:text-[#a3a3a3]"><span className={`w-1.5 h-1.5 rounded-full shrink-0 ${row.dot}`} />{row.label}</span>
-                        <span className="text-xs font-semibold text-[#0d0d12] dark:text-[#fafafa]">{row.value}</span>
+                        <span className="flex items-center gap-2 text-xs text-[#666d80] dark:text-app-text-secondary"><span className={`w-1.5 h-1.5 rounded-full shrink-0 ${row.dot}`} />{row.label}</span>
+                        <span className="text-xs font-semibold text-[#0d0d12] dark:text-app-text">{row.value}</span>
                       </div>
                     ))}
                   </div>
@@ -312,7 +312,7 @@ export const Dashboard: React.FC = () => {
             <div className="rounded-2xl border border-[#e5e5e5] bg-white p-4 dark:border-app-border dark:bg-app-surface md:p-5">
               <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div className="shrink-0">
-                  <h2 className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">פעילות היום</h2>
+                  <h2 className="text-sm font-semibold text-[#0d0d12] dark:text-app-text">פעילות היום</h2>
                 </div>
                 <div className="inline-flex w-fit rounded-full border border-[#2a2a2a] bg-[#111111] p-1">
                   {(['hour', 'today', 'week'] as const).map((period) => (
@@ -343,8 +343,8 @@ export const Dashboard: React.FC = () => {
                   </LineChart>
                 </ResponsiveContainer>
                 <div className="flex items-center justify-center gap-6 mt-4 pt-3 border-t border-[#e5e5e5] dark:border-[#404040]">
-                  <div className="flex items-center gap-2"><div className="w-8 h-0.5 bg-[#2563eb] rounded-full" /><span className="text-xs md:text-sm text-[#666d80] dark:text-[#a3a3a3]">משלוחים שנמסרו</span></div>
-                  <div className="flex items-center gap-2"><div className="w-8 h-0.5 bg-[#ea0b0b] rounded-full" /><span className="text-xs md:text-sm text-[#666d80] dark:text-[#a3a3a3]">משלוחים שבוטלו</span></div>
+                  <div className="flex items-center gap-2"><div className="w-8 h-0.5 bg-[#2563eb] rounded-full" /><span className="text-xs md:text-sm text-[#666d80] dark:text-app-text-secondary">משלוחים שנמסרו</span></div>
+                  <div className="flex items-center gap-2"><div className="w-8 h-0.5 bg-[#ea0b0b] rounded-full" /><span className="text-xs md:text-sm text-[#666d80] dark:text-app-text-secondary">משלוחים שבוטלו</span></div>
                 </div>
               </div>
             </div>

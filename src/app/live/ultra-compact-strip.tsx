@@ -173,11 +173,11 @@ export const UltraCompactStrip: React.FC<UltraCompactStripProps> = ({
             {/* Header: order number, creation time and status */}
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-mono font-bold text-[#0d0d12] dark:text-[#fafafa] text-[10px]">
+                <span className="font-mono font-bold text-[#0d0d12] dark:text-app-text text-[10px]">
                   {order.fullDelivery?.orderNumber ?? `#${order.id}`}
                 </span>
                 <span className="text-[#737373] dark:text-[#525252]">•</span>
-                <span className="text-[#737373] dark:text-[#a3a3a3] text-[10px]">
+                <span className="text-[#737373] dark:text-app-text-secondary text-[10px]">
                   {order.createdAt}
                 </span>
                 {prepDurationLabel && (
@@ -197,17 +197,17 @@ export const UltraCompactStrip: React.FC<UltraCompactStripProps> = ({
 
             {/* Route: restaurant to customer address */}
             <div className="flex items-center gap-2 text-[11px] min-w-0">
-              <Package className="w-3 h-3 text-[#22c55e] flex-shrink-0" />
-              <span className="font-bold text-[#22c55e] text-[14px] truncate whitespace-nowrap shrink min-w-0">{order.restaurantName}</span>
+              <Package className="w-3 h-3 text-[#737373] dark:text-app-text-secondary flex-shrink-0" />
+              <span className="font-bold text-[#0d0d12] dark:text-app-text text-[14px] truncate whitespace-nowrap shrink min-w-0">{order.restaurantName}</span>
               <span className="text-[#737373] dark:text-[#525252] text-[12px]">←</span>
               <MapPin className="w-3 h-3 text-[#ef4444] flex-shrink-0" />
-              <span className="font-bold text-[#0d0d12] dark:text-[#fafafa] truncate text-[14px] min-w-0">{order.address}</span>
+              <span className="font-bold text-[#0d0d12] dark:text-app-text truncate text-[14px] min-w-0">{order.address}</span>
             </div>
 
             {/* Customer, courier and ETA row */}
             <div className="flex items-center gap-2 text-[10px] flex-wrap">
-              <User className="w-3 h-3 text-[#737373] dark:text-[#a3a3a3]" />
-              <span className="font-medium text-[#0d0d12] dark:text-[#fafafa]">{order.customerName}</span>
+              <User className="w-3 h-3 text-[#737373] dark:text-app-text-secondary" />
+              <span className="font-medium text-[#0d0d12] dark:text-app-text">{order.customerName}</span>
               {order.courierName && (
                 <>
                   <span className="text-[#737373] dark:text-[#525252]">•</span>
@@ -259,7 +259,7 @@ export const UltraCompactStrip: React.FC<UltraCompactStripProps> = ({
               }}
               className="p-1.5 hover:bg-[#f5f5f5] dark:hover:bg-[#262626] rounded-lg transition-colors"
             >
-              <MoreVertical className="w-4 h-4 text-[#737373] dark:text-[#a3a3a3]" />
+              <MoreVertical className="w-4 h-4 text-[#737373] dark:text-app-text-secondary" />
             </button>
             
             {showMenu && (contextMenuPos || menuPos) && createPortal(

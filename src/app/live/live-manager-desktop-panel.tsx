@@ -45,7 +45,7 @@ export const LiveManagerDesktopPanel: React.FC<LiveManagerDesktopPanelProps> = (
   couriersViewProps,
 }) => (
   <div
-    className={`hidden md:flex absolute top-4 right-4 z-20 bg-white/95 dark:bg-app-surface/95 backdrop-blur-lg border border-[#e5e5e5] dark:border-app-border rounded-2xl shadow-2xl flex-col overflow-hidden transition-all duration-300 ${
+    className={`hidden md:flex absolute top-4 right-4 z-20 bg-white/95 dark:bg-[#000000]/95 backdrop-blur-lg border border-app-nav-border rounded-2xl shadow-2xl flex-col overflow-hidden transition-all duration-300 ${
       panelSize === 'minimized'
         ? 'cursor-pointer hover:shadow-3xl'
         : 'max-h-[calc(100vh-32px)]'
@@ -88,7 +88,7 @@ export const LiveManagerDesktopPanel: React.FC<LiveManagerDesktopPanelProps> = (
 
         <LiveManagerDesktopControls {...controlsProps} />
 
-        <div className="flex-1 overflow-y-auto relative">
+        <div className="relative flex-1 overflow-y-auto bg-white dark:bg-app-surface">
           {controlsProps.activeTab === 'deliveries' ? (
             <LiveDeliveriesTab {...deliveriesTabProps} />
           ) : (

@@ -205,7 +205,7 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
             <div className="flex items-center justify-between border-b border-[#f0f0f0] px-4 py-3 dark:border-app-border">
               <div className="flex items-center gap-2">
                 <Filter className="h-4 w-4 text-[#737373]" />
-                <span className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">
+                <span className="text-sm font-semibold text-[#0d0d12] dark:text-app-text">
                   {TEXT.filters}
                 </span>
               </div>
@@ -230,7 +230,7 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
                   return (
                     <section key={filter.key} className="space-y-2">
                       <div className="flex items-center justify-between gap-3">
-                        <span className="text-sm font-medium text-[#0d0d12] dark:text-[#fafafa]">
+                        <span className="text-sm font-medium text-[#0d0d12] dark:text-app-text">
                           {filter.defaultLabel}
                         </span>
                         {isActive ? (
@@ -259,7 +259,7 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
                             value={filter.searchValue ?? ''}
                             onChange={(event) => filter.setSearchValue?.(event.target.value)}
                             placeholder={filter.placeholder ?? `${TEXT.search} ${filter.defaultLabel}...`}
-                            className="w-full rounded-xl border border-[#e5e5e5] bg-[#fafafa] py-2 pr-9 pl-3 text-sm text-[#0d0d12] outline-none transition-colors focus:border-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-[#fafafa]"
+                            className="w-full rounded-xl border border-[#e5e5e5] bg-[#fafafa] py-2 pr-9 pl-3 text-sm text-[#0d0d12] outline-none transition-colors focus:border-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-app-text"
                           />
                         </div>
                       ) : null}
@@ -286,8 +286,8 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
                                   }}
                                   className={`flex w-full items-center gap-2.5 px-3 py-3 text-right text-sm transition-colors ${
                                       isSelected
-                                        ? 'bg-[#f5f5f5] text-[#0d0d12] dark:bg-[#262626] dark:text-[#fafafa]'
-                                        : 'text-[#525252] hover:bg-[#f5f5f5] dark:text-[#a3a3a3] dark:hover:bg-[#202020]'
+                                        ? 'bg-[#f5f5f5] text-[#0d0d12] dark:bg-[#262626] dark:text-app-text'
+                                        : 'text-[#525252] hover:bg-[#f5f5f5] dark:text-app-text-secondary dark:hover:bg-[#202020]'
                                     }`}
                                   >
                                     <span className="flex h-4 w-4 shrink-0 items-center justify-center">
@@ -304,7 +304,7 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
                                       {option.label}
                                     </span>
                                     {typeof option.count === 'number' ? (
-                                      <span className="rounded-full bg-[#f5f5f5] px-1.5 py-0.5 text-[10px] font-bold text-[#737373] dark:bg-[#202020] dark:text-[#a3a3a3]">
+                                      <span className="rounded-full bg-[#f5f5f5] px-1.5 py-0.5 text-[10px] font-bold text-[#737373] dark:bg-[#202020] dark:text-app-text-secondary">
                                         {option.count}
                                       </span>
                                     ) : null}
@@ -324,8 +324,8 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
                                   }}
                                   className={`flex w-full items-center gap-2.5 px-3 py-3 text-right text-sm transition-colors ${
                                     isSelected
-                                      ? 'bg-[#f5f5f5] text-[#0d0d12] dark:bg-[#262626] dark:text-[#fafafa]'
-                                      : 'text-[#525252] hover:bg-[#f5f5f5] dark:text-[#a3a3a3] dark:hover:bg-[#202020]'
+                                      ? 'bg-[#f5f5f5] text-[#0d0d12] dark:bg-[#262626] dark:text-app-text'
+                                      : 'text-[#525252] hover:bg-[#f5f5f5] dark:text-app-text-secondary dark:hover:bg-[#202020]'
                                   }`}
                                 >
                                   <span className="flex h-4 w-4 shrink-0 items-center justify-center">
@@ -342,7 +342,7 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
                                     {option.label}
                                   </span>
                                   {typeof option.count === 'number' ? (
-                                    <span className="rounded-full bg-[#f5f5f5] px-1.5 py-0.5 text-[10px] font-bold text-[#737373] dark:bg-[#202020] dark:text-[#a3a3a3]">
+                                    <span className="rounded-full bg-[#f5f5f5] px-1.5 py-0.5 text-[10px] font-bold text-[#737373] dark:bg-[#202020] dark:text-app-text-secondary">
                                       {option.count}
                                     </span>
                                   ) : null}

@@ -32,7 +32,7 @@ const ACTION_VARIANT_CLASSES: Record<
   neutral:
     'bg-[#404040] text-white shadow-black/10 hover:bg-[#262626]',
   outline:
-    'border border-[#d4d4d4] bg-white text-[#0d0d12] hover:bg-[#f5f5f5] dark:border-[#404040] dark:bg-app-surface dark:text-[#fafafa] dark:hover:bg-[#262626]',
+    'border border-[#d4d4d4] bg-white text-[#0d0d12] hover:bg-[#f5f5f5] dark:border-[#404040] dark:bg-app-surface dark:text-app-text dark:hover:bg-[#262626]',
   accent:
     'bg-[#7c3aed] text-white shadow-[#7c3aed]/20 hover:bg-[#6d28d9]',
   warning:
@@ -89,7 +89,7 @@ export const SelectionActionBar: React.FC<SelectionActionBarProps> = ({
           <button
             type="button"
             onClick={onClear}
-            className="min-h-9 rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm font-semibold text-[#737373] transition-colors hover:bg-[#f5f5f5] dark:border-app-border dark:text-[#a3a3a3] dark:hover:bg-[#262626]"
+            className="min-h-9 rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm font-semibold text-[#737373] transition-colors hover:bg-[#f5f5f5] dark:border-app-border dark:text-app-text-secondary dark:hover:bg-[#262626]"
           >
             {clearLabel}
           </button>

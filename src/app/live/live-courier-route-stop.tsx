@@ -137,7 +137,7 @@ export const DraggableRouteStop: React.FC<DraggableRouteStopProps> = React.memo(
       case 'assigned':
         return {
           label: 'ממתין לאיסוף',
-          colorClass: 'bg-[#f5f5f5] dark:bg-[#262626] text-[#737373] dark:text-[#a3a3a3]',
+          colorClass: 'bg-[#f5f5f5] dark:bg-[#262626] text-[#737373] dark:text-app-text-secondary',
         };
         case 'delivering':
           return {
@@ -219,11 +219,11 @@ export const DraggableRouteStop: React.FC<DraggableRouteStopProps> = React.memo(
                 </span>
 
                 {isPickup && groupedCount > 1 ? (
-                  <span className="text-[11px] font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  <span className="text-[11px] font-bold text-[#0d0d12] dark:text-app-text">
                     {groupedCount} משלוחים
                   </span>
                 ) : (
-                  <span className="font-mono text-[11px] font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  <span className="font-mono text-[11px] font-bold text-[#0d0d12] dark:text-app-text">
                     #{order.orderNumber}
                   </span>
                 )}
@@ -241,18 +241,18 @@ export const DraggableRouteStop: React.FC<DraggableRouteStopProps> = React.memo(
 
               {isPickup ? (
                 <div className="flex items-center gap-1.5 text-[11px]">
-                  <Store className="h-3 w-3 flex-shrink-0 text-[#22c55e]" />
-                  <span className="truncate font-bold text-[#22c55e]">{order.restaurantName}</span>
+                  <Store className="h-3 w-3 flex-shrink-0 text-[#737373] dark:text-app-text-secondary" />
+                  <span className="truncate font-bold text-[#0d0d12] dark:text-app-text">{order.restaurantName}</span>
                   {groupedCount > 1 && (
                     <>
                       <span className="text-[#d4d4d4] dark:text-[#404040]">·</span>
-                      <span className="truncate text-[#737373] dark:text-[#a3a3a3]">{groupedCount} משלוחים</span>
+                      <span className="truncate text-[#737373] dark:text-app-text-secondary">{groupedCount} משלוחים</span>
                     </>
                   )}
                   {order.restaurantAddress && (
                     <>
                       <span className="text-[#d4d4d4] dark:text-[#404040]">·</span>
-                      <span className="truncate text-[#737373] dark:text-[#a3a3a3]">{order.rest_city || order.area}</span>
+                      <span className="truncate text-[#737373] dark:text-app-text-secondary">{order.rest_city || order.area}</span>
                     </>
                   )}
                 </div>
@@ -260,11 +260,11 @@ export const DraggableRouteStop: React.FC<DraggableRouteStopProps> = React.memo(
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-1.5 text-[11px]">
                     <User className="h-3 w-3 flex-shrink-0 text-[#ef4444]" />
-                    <span className="truncate font-bold text-[#0d0d12] dark:text-[#fafafa]">{order.customerName}</span>
+                    <span className="truncate font-bold text-[#0d0d12] dark:text-app-text">{order.customerName}</span>
                   </div>
                   <div className="mr-[18px] flex items-center gap-1.5 text-[11px]">
-                    <MapPin className="h-3 w-3 flex-shrink-0 text-[#737373] dark:text-[#a3a3a3]" />
-                    <span className="truncate text-[#737373] dark:text-[#a3a3a3]">
+                    <MapPin className="h-3 w-3 flex-shrink-0 text-[#737373] dark:text-app-text-secondary" />
+                    <span className="truncate text-[#737373] dark:text-app-text-secondary">
                       {formatAddressWithArea(order.address, order.area)}
                     </span>
                   </div>

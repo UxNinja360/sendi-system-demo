@@ -199,7 +199,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
         }}
         className={`relative mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-[var(--app-radius-sm)] text-right transition-colors duration-150 ${
           isActive
-            ? 'bg-app-nav-active-bg text-app-nav-active-text shadow-[inset_0_0_0_1px_var(--app-nav-border)]'
+            ? 'bg-[#f5f5f5] text-app-nav-active-text dark:bg-[#1F1F1F]'
             : 'text-app-text-secondary hover:bg-app-nav-hover-bg hover:text-app-text'
         }`}
         aria-label={item.label}
@@ -212,7 +212,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
               <span
                 className={`shrink-0 rounded-[4px] px-1.5 text-[11px] font-medium tabular-nums ${
                   isActive
-                    ? 'bg-app-nav-badge-bg text-app-nav-badge-text shadow-[inset_0_0_0_1px_var(--app-nav-border)]'
+                    ? 'text-app-text-secondary'
                     : 'text-app-text-muted'
                 }`}
               >
@@ -235,7 +235,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
   const footerItemClass = (isActive: boolean) =>
     `w-full cursor-pointer border-b border-app-nav-border px-4 py-3 text-right transition-colors ${
       isActive
-        ? 'bg-app-nav-active-bg text-app-nav-active-text'
+        ? 'bg-[#f5f5f5] text-app-nav-active-text dark:bg-[#1F1F1F]'
         : 'text-app-text-secondary hover:bg-app-nav-hover-bg hover:text-app-text'
     }`;
 
@@ -306,7 +306,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
           isCollapsed ? 'translate-x-0' : 'translate-x-full md:translate-x-0'
         }`}
         style={{
-          width: isDesktop ? (isCollapsed ? '60px' : '200px') : '240px',
+          width: isDesktop ? (isCollapsed ? '60px' : '240px') : '260px',
           transition: isDesktop
             ? 'width 300ms cubic-bezier(0.4, 0, 0.2, 1)'
             : 'transform 300ms cubic-bezier(0.4, 0, 0.2, 1)',
@@ -318,13 +318,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
         >
           <div className="flex items-center gap-2 md:hidden">
             <AppLogo size={20} className="text-[#02B74F]" />
-            <span className="text-base font-bold tracking-tight text-[#0d0d12] dark:text-[#fafafa]">Sendi</span>
+            <span className="text-base font-bold tracking-tight text-[#0d0d12] dark:text-app-text">Sendi</span>
           </div>
 
           {!isCollapsed && (
             <div className="hidden items-center gap-2 md:flex">
               <AppLogo size={20} className="text-[#02B74F]" />
-              <span className="text-base font-bold tracking-tight text-[#0d0d12] dark:text-[#fafafa]">Sendi</span>
+              <span className="text-base font-bold tracking-tight text-[#0d0d12] dark:text-app-text">Sendi</span>
             </div>
           )}
 
@@ -369,11 +369,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
             <React.Fragment key={section.id}>
               {sectionIndex > 0 && (
                 <div className="mx-4 my-2 border-t border-app-nav-border" />
-              )}
-              {isExpanded && (
-                <div className="px-4 pb-1 pt-2 text-[11px] font-semibold tracking-normal text-app-text-muted">
-                  {section.label}
-                </div>
               )}
               {section.items.map(renderNavItem)}
             </React.Fragment>
@@ -543,7 +538,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
             onClick={() => handleNav(settingsItem?.path ?? '/settings')}
             className={`w-full cursor-pointer px-4 py-3 text-right transition-colors ${
               location.pathname.startsWith(settingsItem?.path ?? '/settings')
-                ? 'bg-app-nav-active-bg text-app-nav-active-text shadow-[inset_0_0_0_1px_var(--app-nav-border)]'
+                ? 'bg-[#f5f5f5] text-app-nav-active-text dark:bg-[#1F1F1F]'
                 : 'text-app-text-secondary hover:bg-app-nav-hover-bg hover:text-app-text'
             }`}
           >

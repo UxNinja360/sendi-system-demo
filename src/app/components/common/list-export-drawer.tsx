@@ -44,10 +44,10 @@ export const ListExportDrawer: React.FC<ListExportDrawerProps> = ({
                 {action.icon}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">
+                <div className="text-sm font-semibold text-[#0d0d12] dark:text-app-text">
                   {action.title}
                 </div>
-                <div className="mt-1 text-xs text-[#737373] dark:text-[#a3a3a3]">
+                <div className="mt-1 text-xs text-[#737373] dark:text-app-text-secondary">
                   {action.description}
                 </div>
                 {action.meta ? (

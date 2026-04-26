@@ -10,10 +10,10 @@ export const NotFoundPage: React.FC = () => {
       <div className="text-center max-w-md">
         <div className="mb-8">
           <h1 className="text-9xl font-bold text-[#9fe870] mb-2">404</h1>
-          <h2 className="text-2xl font-bold text-[#0d0d12] dark:text-[#fafafa] mb-3">
+          <h2 className="text-2xl font-bold text-[#0d0d12] dark:text-app-text mb-3">
             העמוד לא נמצא
           </h2>
-          <p className="text-[#666d80] dark:text-[#a3a3a3]">
+          <p className="text-[#666d80] dark:text-app-text-secondary">
             מצטערים, העמוד שחיפשת לא קיים במערכת
           </p>
         </div>
@@ -28,7 +28,7 @@ export const NotFoundPage: React.FC = () => {
           </button>
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-white dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border hover:bg-[#f5f5f5] dark:hover:bg-[#262626] text-[#0d0d12] dark:text-[#fafafa] font-medium rounded-xl transition-colors"
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-white dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border hover:bg-[#f5f5f5] dark:hover:bg-[#262626] text-[#0d0d12] dark:text-app-text font-medium rounded-xl transition-colors"
           >
             <ArrowRight size={20} />
             חזור אחורה

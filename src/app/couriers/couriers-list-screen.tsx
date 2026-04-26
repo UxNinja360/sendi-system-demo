@@ -201,7 +201,7 @@ const getStatusLabel = (status: Courier['status']) => {
 const getStatusColor = (status: Courier['status']) => {
   if (status === 'available') return 'text-[#16a34a] dark:text-[#9fe870]';
   if (status === 'busy') return 'text-[#f97316] dark:text-[#ffa94d]';
-  return 'text-[#737373] dark:text-[#a3a3a3]';
+  return 'text-[#737373] dark:text-app-text-secondary';
 };
 
 const CourierOverviewStrip: React.FC<{ stats: CourierStats; hasFilters: boolean }> = ({ stats, hasFilters }) => {
@@ -218,16 +218,16 @@ const CourierOverviewStrip: React.FC<{ stats: CourierStats; hasFilters: boolean 
 const CourierNoResultsState: React.FC<{ searchQuery: string; onClear: () => void }> = ({ searchQuery, onClear }) => (
   <div className="flex flex-col items-center justify-center px-4 py-20">
     <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-xl bg-[#f5f5f5] dark:bg-[#262626]">
-      <Search className="h-10 w-10 text-[#737373] dark:text-[#a3a3a3]" />
+      <Search className="h-10 w-10 text-[#737373] dark:text-app-text-secondary" />
     </div>
-    <h3 className="mb-2 text-xl font-bold text-[#0d0d12] dark:text-[#fafafa]">לא נמצאו שליחים</h3>
-    <p className="mb-5 max-w-md text-center text-sm text-[#737373] dark:text-[#a3a3a3]">
+    <h3 className="mb-2 text-xl font-bold text-[#0d0d12] dark:text-app-text">לא נמצאו שליחים</h3>
+    <p className="mb-5 max-w-md text-center text-sm text-[#737373] dark:text-app-text-secondary">
       {searchQuery ? `אין התאמה לחיפוש "${searchQuery}"` : 'אין שליחים שתואמים לסינון הנוכחי'}
     </p>
     <button
       type="button"
       onClick={onClear}
-      className="rounded-lg border border-[#d4d4d4] bg-white px-4 py-2 text-sm font-semibold text-[#0d0d12] transition-colors hover:bg-[#f5f5f5] dark:border-[#404040] dark:bg-app-surface dark:text-[#fafafa] dark:hover:bg-[#262626]"
+      className="rounded-lg border border-[#d4d4d4] bg-white px-4 py-2 text-sm font-semibold text-[#0d0d12] transition-colors hover:bg-[#f5f5f5] dark:border-[#404040] dark:bg-app-surface dark:text-app-text dark:hover:bg-[#262626]"
     >
       נקה סינון
     </button>
@@ -691,7 +691,7 @@ export const CouriersListScreen: React.FC = () => {
       case 'name':
         return (
           <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
-            <span className="block truncate whitespace-nowrap text-xs font-medium text-[#0d0d12] dark:text-[#fafafa]">
+            <span className="block truncate whitespace-nowrap text-xs font-medium text-[#0d0d12] dark:text-app-text">
               {courier.name}
             </span>
           </td>
@@ -699,7 +699,7 @@ export const CouriersListScreen: React.FC = () => {
       case 'connection':
         return (
           <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
-            <span className={`whitespace-nowrap text-xs font-medium ${courier.status === 'offline' ? 'text-[#737373] dark:text-[#a3a3a3]' : 'text-[#16a34a] dark:text-[#9fe870]'}`}>
+            <span className={`whitespace-nowrap text-xs font-medium ${courier.status === 'offline' ? 'text-[#737373] dark:text-app-text-secondary' : 'text-[#16a34a] dark:text-[#9fe870]'}`}>
               {courier.status === 'offline' ? TEXT.notConnected : TEXT.connected}
             </span>
           </td>
@@ -719,7 +719,7 @@ export const CouriersListScreen: React.FC = () => {
               courier.status === 'busy'
                 ? 'text-[#f97316] dark:text-[#ffa94d]'
                 : courier.status === 'offline' || !courier.isOnShift
-                  ? 'text-[#737373] dark:text-[#a3a3a3]'
+                  ? 'text-[#737373] dark:text-app-text-secondary'
                   : 'text-[#16a34a] dark:text-[#9fe870]'
             }`}>
               {courier.status === 'busy' ? TEXT.inDelivery : courier.status === 'offline' || !courier.isOnShift ? '-' : TEXT.free}
@@ -729,19 +729,19 @@ export const CouriersListScreen: React.FC = () => {
       case 'vehicleType':
         return (
           <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
-            <span className="whitespace-nowrap text-xs text-[#666d80] dark:text-[#a3a3a3]">{courier.vehicleType}</span>
+            <span className="whitespace-nowrap text-xs text-[#666d80] dark:text-app-text-secondary">{courier.vehicleType}</span>
           </td>
         );
       case 'employmentType':
         return (
           <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
-            <span className="whitespace-nowrap text-xs text-[#666d80] dark:text-[#a3a3a3]">{courier.employmentType}</span>
+            <span className="whitespace-nowrap text-xs text-[#666d80] dark:text-app-text-secondary">{courier.employmentType}</span>
           </td>
         );
       case 'phone':
         return (
           <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
-            <span className="block truncate direction-ltr whitespace-nowrap text-xs text-[#666d80] dark:text-[#a3a3a3]">{courier.phone}</span>
+            <span className="block truncate direction-ltr whitespace-nowrap text-xs text-[#666d80] dark:text-app-text-secondary">{courier.phone}</span>
           </td>
         );
       case 'rating':
@@ -749,14 +749,14 @@ export const CouriersListScreen: React.FC = () => {
           <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
             <div className="flex items-center gap-1">
               <Star className="h-3.5 w-3.5 shrink-0 fill-amber-400 text-amber-400" />
-              <span className="whitespace-nowrap text-xs font-medium text-[#0d0d12] dark:text-[#fafafa]">{courier.rating.toFixed(1)}</span>
+              <span className="whitespace-nowrap text-xs font-medium text-[#0d0d12] dark:text-app-text">{courier.rating.toFixed(1)}</span>
             </div>
           </td>
         );
       case 'totalDeliveries':
         return (
           <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
-            <span className="whitespace-nowrap text-xs font-medium text-[#0d0d12] dark:text-[#fafafa]">
+            <span className="whitespace-nowrap text-xs font-medium text-[#0d0d12] dark:text-app-text">
               {deliveriesCountByCourierInPeriod.get(courier.id) ?? 0}
             </span>
           </td>
@@ -1005,43 +1005,43 @@ export const CouriersListScreen: React.FC = () => {
             dir="rtl"
           >
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-[#0d0d12] dark:text-[#fafafa]">{TEXT.addNewCourier}</h2>
+              <h2 className="text-xl font-bold text-[#0d0d12] dark:text-app-text">{TEXT.addNewCourier}</h2>
               <button
                 type="button"
                 onClick={handleModalClose}
                 className="rounded-lg p-2 transition-colors hover:bg-[#f5f5f5] dark:hover:bg-[#262626]"
               >
-                <X className="h-5 w-5 text-[#737373] dark:text-[#a3a3a3]" />
+                <X className="h-5 w-5 text-[#737373] dark:text-app-text-secondary" />
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-[#a3a3a3]">{TEXT.fullName}</label>
+                <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-app-text-secondary">{TEXT.fullName}</label>
                 <input
                   type="text"
                   value={newCourier.name}
                   onChange={(event) => setNewCourier({ ...newCourier, name: event.target.value })}
-                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-[#fafafa]"
+                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-app-text"
                   placeholder={TEXT.enterFullName}
                   autoFocus
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-[#a3a3a3]">{TEXT.phone}</label>
+                <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-app-text-secondary">{TEXT.phone}</label>
                 <input
                   type="tel"
                   value={newCourier.phone}
                   onChange={(event) => setNewCourier({ ...newCourier, phone: event.target.value })}
-                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-[#fafafa]"
+                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-app-text"
                   placeholder={TEXT.enterPhone}
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-[#a3a3a3]">{TEXT.vehicleType}</label>
+                <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-app-text-secondary">{TEXT.vehicleType}</label>
                 <select
                   value={newCourier.vehicleType}
                   onChange={(event) => setNewCourier({ ...newCourier, vehicleType: event.target.value as Courier['vehicleType'] })}
-                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-[#fafafa]"
+                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-app-text"
                 >
                   {VEHICLE_TYPES.map((vehicleType) => (
                     <option key={vehicleType} value={vehicleType}>
@@ -1063,7 +1063,7 @@ export const CouriersListScreen: React.FC = () => {
               <button
                 type="button"
                 onClick={handleModalClose}
-                className="rounded-lg bg-[#f5f5f5] px-4 py-2.5 font-medium text-[#0d0d12] transition-colors hover:bg-[#e5e5e5] dark:bg-[#262626] dark:text-[#fafafa] dark:hover:bg-[#404040]"
+                className="rounded-lg bg-[#f5f5f5] px-4 py-2.5 font-medium text-[#0d0d12] transition-colors hover:bg-[#e5e5e5] dark:bg-[#262626] dark:text-app-text dark:hover:bg-[#404040]"
               >
                 {TEXT.cancel}
               </button>
@@ -1103,7 +1103,7 @@ export const CouriersListScreen: React.FC = () => {
                 closeCourierActionsMenu();
                 navigate(`/courier/${contextMenu.courier.id}`);
               }}
-              icon={<FileText className="w-3.5 h-3.5 text-[#737373] dark:text-[#a3a3a3]" />}
+              icon={<FileText className="w-3.5 h-3.5 text-[#737373] dark:text-app-text-secondary" />}
             >
               {TEXT.details}
             </EntityActionMenuItem>

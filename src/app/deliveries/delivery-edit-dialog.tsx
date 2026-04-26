@@ -112,8 +112,8 @@ export const DeliveryEditDialog: React.FC<DeliveryEditDialogProps> = ({
                 <Package className="w-5 h-5 text-[#9fe870]" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-[#0d0d12] dark:text-[#fafafa]">עריכת משלוח</h2>
-                <p className="text-xs text-[#737373] dark:text-[#a3a3a3]">הזמנה #{delivery.orderNumber}</p>
+                <h2 className="text-lg font-bold text-[#0d0d12] dark:text-app-text">עריכת משלוח</h2>
+                <p className="text-xs text-[#737373] dark:text-app-text-secondary">הזמנה #{delivery.orderNumber}</p>
               </div>
             </div>
             <button
@@ -180,7 +180,7 @@ export const DeliveryEditDialog: React.FC<DeliveryEditDialogProps> = ({
               </button>
               <button
                 onClick={onClose}
-                className="px-4 py-2 text-sm font-medium text-[#0d0d12] dark:text-[#fafafa] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] rounded-lg transition-colors"
+                className="px-4 py-2 text-sm font-medium text-[#0d0d12] dark:text-app-text hover:bg-[#f5f5f5] dark:hover:bg-[#262626] rounded-lg transition-colors"
               >
                 ביטול
               </button>
@@ -219,7 +219,7 @@ const FormField: React.FC<{
 }> = ({ label, value, onChange, type = 'text', options, placeholder, disabled }) => {
   return (
     <div className="space-y-1.5">
-      <label className="block text-xs font-medium text-[#737373] dark:text-[#a3a3a3]">{label}</label>
+      <label className="block text-xs font-medium text-[#737373] dark:text-app-text-secondary">{label}</label>
       {type === 'select' && options ? (
         <select
           value={value || ''}
@@ -241,7 +241,7 @@ const FormField: React.FC<{
             disabled={disabled}
             className="w-4 h-4 rounded border-[#e5e5e5] dark:border-app-border text-[#9fe870] focus:ring-2 focus:ring-[#9fe870] disabled:opacity-50"
           />
-          <span className="text-xs text-[#0d0d12] dark:text-[#fafafa]">{value ? 'כן' : 'לא'}</span>
+          <span className="text-xs text-[#0d0d12] dark:text-app-text">{value ? 'כן' : 'לא'}</span>
         </div>
       ) : type === 'textarea' ? (
         <textarea

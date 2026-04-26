@@ -258,7 +258,7 @@ export const DeliveryZonesPage: React.FC = () => {
       {/* header */}
       <div className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-[#e5e5e5] bg-white px-5 dark:border-app-border dark:bg-app-surface">
         <div className="flex items-center gap-2.5">
-          <span className="text-[15px] font-semibold text-[#0d0d12] dark:text-[#fafafa]">אזורי משלוח</span>
+          <span className="text-[15px] font-semibold text-[#0d0d12] dark:text-app-text">אזורי משלוח</span>
         </div>
         <button
           onClick={isDrawing ? cancelDrawing : startDrawingMode}
@@ -278,7 +278,7 @@ export const DeliveryZonesPage: React.FC = () => {
         <div className="flex w-72 shrink-0 flex-col border-l border-[#e5e5e5] bg-white dark:border-app-border dark:bg-app-surface">
           <div className="flex-1 overflow-y-auto p-3 space-y-2">
             {zones.length === 0 && (
-              <div className="py-10 text-center text-sm text-[#737373] dark:text-[#a3a3a3]">
+              <div className="py-10 text-center text-sm text-[#737373] dark:text-app-text-secondary">
                 צייר אזור על המפה כדי להתחיל
               </div>
             )}
@@ -292,7 +292,7 @@ export const DeliveryZonesPage: React.FC = () => {
                     <input
                       value={editName}
                       onChange={e => setEditName(e.target.value)}
-                      className="w-full rounded-lg border border-[#e5e5e5] bg-white px-3 py-1.5 text-sm dark:border-app-border dark:bg-app-surface dark:text-white"
+                      className="w-full rounded-lg border border-[#e5e5e5] bg-white px-3 py-1.5 text-sm dark:border-app-border dark:bg-app-surface dark:text-app-text"
                       placeholder="שם האזור"
                     />
                     <div className="flex gap-2">
@@ -309,7 +309,7 @@ export const DeliveryZonesPage: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <div className="h-3 w-3 shrink-0 rounded-full" style={{ background: zone.color }} />
                       <div>
-                        <div className="text-sm font-medium text-[#0d0d12] dark:text-[#fafafa]">{zone.name}</div>
+                        <div className="text-sm font-medium text-[#0d0d12] dark:text-app-text">{zone.name}</div>
                       </div>
                     </div>
                     <div className="flex gap-1">
@@ -350,7 +350,7 @@ export const DeliveryZonesPage: React.FC = () => {
       {pendingLatlngs && (
         <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="w-80 rounded-2xl bg-white p-6 shadow-xl dark:bg-app-surface" dir="rtl">
-            <h3 className="mb-4 text-base font-bold text-[#0d0d12] dark:text-white">הגדרת אזור חדש</h3>
+            <h3 className="mb-4 text-base font-bold text-[#0d0d12] dark:text-app-text">הגדרת אזור חדש</h3>
             <div className="space-y-3">
               <div>
                 <label className="mb-1 block text-xs font-medium text-[#737373]">שם האזור</label>
@@ -358,7 +358,7 @@ export const DeliveryZonesPage: React.FC = () => {
                   autoFocus
                   value={newName}
                   onChange={e => setNewName(e.target.value)}
-                  className="w-full rounded-xl border border-[#e5e5e5] bg-[#fafafa] px-3 py-2 text-sm dark:border-app-border dark:bg-app-surface dark:text-white"
+                  className="w-full rounded-xl border border-[#e5e5e5] bg-[#fafafa] px-3 py-2 text-sm dark:border-app-border dark:bg-app-surface dark:text-app-text"
                   placeholder="לדוגמה: תל אביב מרכז"
                 />
               </div>

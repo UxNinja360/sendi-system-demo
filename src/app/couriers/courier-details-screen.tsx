@@ -210,10 +210,10 @@ export function CourierDetailsScreen() {
     return (
       <div className="flex flex-col items-center justify-center h-full p-8 text-center">
         <Bike className="w-16 h-16 text-[#e5e5e5] dark:text-[#404040] mb-4" />
-        <h2 className="text-xl font-bold text-[#0d0d12] dark:text-[#fafafa] mb-2">
+        <h2 className="text-xl font-bold text-[#0d0d12] dark:text-app-text mb-2">
           שליח לא נמצא
         </h2>
-        <p className="text-sm text-[#666d80] dark:text-[#a3a3a3] mb-4">
+        <p className="text-sm text-[#666d80] dark:text-app-text-secondary mb-4">
           השליח שחיפשת אינו קיים במערכת
         </p>
         <button
@@ -414,7 +414,7 @@ export function CourierDetailsScreen() {
               onClick={() => navigate('/couriers')}
               className="p-2 hover:bg-[#f5f5f5] dark:hover:bg-[#262626] rounded-lg transition-colors"
             >
-              <ArrowRight size={20} className="text-[#666d80] dark:text-[#d4d4d4]" />
+              <ArrowRight size={20} className="text-[#666d80] dark:text-app-text-secondary" />
             </button>
             
             {/* תמונת פרופיל */}
@@ -431,7 +431,7 @@ export function CourierDetailsScreen() {
 
             <div className="flex-1">
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                <h1 className="text-2xl font-bold text-[#0d0d12] dark:text-app-text">
                   {courier.name}
                 </h1>
                 {earnedAchievements.length > 0 && (
@@ -457,11 +457,11 @@ export function CourierDetailsScreen() {
                 </span>
                 <div className="flex items-center gap-1">
                   <Star size={14} className="text-yellow-500 fill-yellow-500" />
-                  <span className="text-sm font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  <span className="text-sm font-bold text-[#0d0d12] dark:text-app-text">
                     {courier.rating}
                   </span>
                 </div>
-                <div className="flex items-center gap-1 text-[#666d80] dark:text-[#a3a3a3]">
+                <div className="flex items-center gap-1 text-[#666d80] dark:text-app-text-secondary">
                   <Trophy size={14} />
                   <span className="text-sm">דירוג #{courierRanking.rank} מתוך {courierRanking.total}</span>
                 </div>
@@ -469,14 +469,14 @@ export function CourierDetailsScreen() {
             </div>
 
             <div className="text-center px-4 border-r border-[#e5e5e5] dark:border-app-border">
-              <div className="text-xs text-[#666d80] dark:text-[#a3a3a3] mb-1">משלוחים פעילים</div>
+              <div className="text-xs text-[#666d80] dark:text-app-text-secondary mb-1">משלוחים פעילים</div>
               <div className="text-3xl font-bold text-[#0fcdd3]">
                 {activeDeliveries.length}
               </div>
             </div>
 
             <div className="text-center px-4">
-              <div className="text-xs text-[#666d80] dark:text-[#a3a3a3] mb-1">היום</div>
+              <div className="text-xs text-[#666d80] dark:text-app-text-secondary mb-1">היום</div>
               <div className="text-3xl font-bold text-[#16a34a] dark:text-[#22c55e]">
                 {todayDeliveries.length}
               </div>
@@ -508,8 +508,8 @@ export function CourierDetailsScreen() {
         {earnedAchievements.length > 0 && (
           <div className="px-4 pb-4">
             <div className="flex items-center gap-2 flex-wrap">
-              <Award size={16} className="text-[#666d80] dark:text-[#a3a3a3]" />
-              <span className="text-sm font-bold text-[#666d80] dark:text-[#a3a3a3]">הישגים:</span>
+              <Award size={16} className="text-[#666d80] dark:text-app-text-secondary" />
+              <span className="text-sm font-bold text-[#666d80] dark:text-app-text-secondary">הישגים:</span>
               {earnedAchievements.map(achievement => {
                 const Icon = achievement.icon;
                 return (
@@ -541,8 +541,8 @@ export function CourierDetailsScreen() {
                   <Package size={20} className="text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">סה"כ משלוחים</div>
-                  <div className="text-2xl font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">סה"כ משלוחים</div>
+                  <div className="text-2xl font-bold text-[#0d0d12] dark:text-app-text">
                     <CountUp end={courierDeliveries.length} duration={1.5} />
                   </div>
                 </div>
@@ -555,8 +555,8 @@ export function CourierDetailsScreen() {
                   <CheckCircle2 size={20} className="text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">הושלמו</div>
-                  <div className="text-2xl font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">הושלמו</div>
+                  <div className="text-2xl font-bold text-[#0d0d12] dark:text-app-text">
                     <CountUp end={completedDeliveries.length} duration={1.5} />
                     <span className="text-sm text-green-600 dark:text-green-400 mr-2">
                       ({completionRate}%)
@@ -572,7 +572,7 @@ export function CourierDetailsScreen() {
                   <DollarSign size={20} className="text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">הכנסות</div>
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">הכנסות</div>
                   <div className="text-2xl font-bold text-[#16a34a] dark:text-[#22c55e]">
                     ₪<CountUp end={totalEarnings} duration={1.5} separator="," />
                   </div>
@@ -586,8 +586,8 @@ export function CourierDetailsScreen() {
                   <Timer size={20} className="text-orange-600 dark:text-orange-400" />
                 </div>
                 <div>
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">זמן ממוצע</div>
-                  <div className="text-2xl font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">זמן ממוצע</div>
+                  <div className="text-2xl font-bold text-[#0d0d12] dark:text-app-text">
                     <CountUp end={averageDeliveryTime} duration={1.5} />
                     <span className="text-sm"> דק'</span>
                   </div>
@@ -601,11 +601,11 @@ export function CourierDetailsScreen() {
                   <Clock size={20} className="text-cyan-600 dark:text-cyan-400" />
                 </div>
                 <div>
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">שעות עבודה</div>
-                  <div className="text-lg font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">שעות עבודה</div>
+                  <div className="text-lg font-bold text-[#0d0d12] dark:text-app-text">
                     {formatWorkedDuration(todayWorkedMinutes)}
                   </div>
-                  <div className="text-[11px] text-[#666d80] dark:text-[#a3a3a3]">
+                  <div className="text-[11px] text-[#666d80] dark:text-app-text-secondary">
                     השבוע: {formatWorkedDuration(weekWorkedMinutes)}
                   </div>
                 </div>
@@ -616,13 +616,13 @@ export function CourierDetailsScreen() {
           {/* דירוג יחסי */}
           <div className="bg-white dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-[#0d0d12] dark:text-[#fafafa] flex items-center gap-2">
+              <h2 className="text-lg font-bold text-[#0d0d12] dark:text-app-text flex items-center gap-2">
                 <Users size={20} />
                 דירוג יחסי
               </h2>
               <div className="flex items-center gap-2">
                 <Trophy className="text-yellow-500" size={20} />
-                <span className="text-2xl font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                <span className="text-2xl font-bold text-[#0d0d12] dark:text-app-text">
                   #{courierRanking.rank}
                 </span>
               </div>
@@ -631,8 +631,8 @@ export function CourierDetailsScreen() {
             <div className="space-y-3">
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-[#666d80] dark:text-[#a3a3a3]">מיקום בקבוצה</span>
-                  <span className="text-sm font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  <span className="text-sm text-[#666d80] dark:text-app-text-secondary">מיקום בקבוצה</span>
+                  <span className="text-sm font-bold text-[#0d0d12] dark:text-app-text">
                     Top {courierRanking.percentage}%
                   </span>
                 </div>
@@ -646,20 +646,20 @@ export function CourierDetailsScreen() {
 
               <div className="grid grid-cols-3 gap-4 pt-2">
                 <div className="text-center">
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3] mb-1">משלוחים</div>
-                  <div className="text-sm font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary mb-1">משלוחים</div>
+                  <div className="text-sm font-bold text-[#0d0d12] dark:text-app-text">
                     #{allCouriersStats.sort((a, b) => b.totalDeliveries - a.totalDeliveries).findIndex(c => c.id === courierId) + 1}
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3] mb-1">מהירות</div>
-                  <div className="text-sm font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary mb-1">מהירות</div>
+                  <div className="text-sm font-bold text-[#0d0d12] dark:text-app-text">
                     #{allCouriersStats.filter(c => c.avgTime > 0).sort((a, b) => a.avgTime - b.avgTime).findIndex(c => c.id === courierId) + 1}
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3] mb-1">דירוג</div>
-                  <div className="text-sm font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary mb-1">דירוג</div>
+                  <div className="text-sm font-bold text-[#0d0d12] dark:text-app-text">
                     #{allCouriersStats.sort((a, b) => b.rating - a.rating).findIndex(c => c.id === courierId) + 1}
                   </div>
                 </div>
@@ -670,7 +670,7 @@ export function CourierDetailsScreen() {
           {/* גרף ביצועים לאורך זמן */}
           <div className="bg-white dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-xl p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-bold text-[#0d0d12] dark:text-[#fafafa] flex items-center gap-2">
+              <h2 className="text-lg font-bold text-[#0d0d12] dark:text-app-text flex items-center gap-2">
                 <TrendingUp size={20} />
                 ביצועים לאורך זמן
               </h2>
@@ -680,7 +680,7 @@ export function CourierDetailsScreen() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
                     timeRange === 'week'
                       ? 'bg-[#0fcdd3] text-white'
-                      : 'bg-[#f5f5f5] dark:bg-[#262626] text-[#666d80] dark:text-[#a3a3a3] hover:bg-[#e5e5e5] dark:hover:bg-[#404040]'
+                      : 'bg-[#f5f5f5] dark:bg-[#262626] text-[#666d80] dark:text-app-text-secondary hover:bg-[#e5e5e5] dark:hover:bg-[#404040]'
                   }`}
                 >
                   שבוע
@@ -690,7 +690,7 @@ export function CourierDetailsScreen() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
                     timeRange === 'month'
                       ? 'bg-[#0fcdd3] text-white'
-                      : 'bg-[#f5f5f5] dark:bg-[#262626] text-[#666d80] dark:text-[#a3a3a3] hover:bg-[#e5e5e5] dark:hover:bg-[#404040]'
+                      : 'bg-[#f5f5f5] dark:bg-[#262626] text-[#666d80] dark:text-app-text-secondary hover:bg-[#e5e5e5] dark:hover:bg-[#404040]'
                   }`}
                 >
                   חודש
@@ -700,7 +700,7 @@ export function CourierDetailsScreen() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
                     timeRange === 'all'
                       ? 'bg-[#0fcdd3] text-white'
-                      : 'bg-[#f5f5f5] dark:bg-[#262626] text-[#666d80] dark:text-[#a3a3a3] hover:bg-[#e5e5e5] dark:hover:bg-[#404040]'
+                      : 'bg-[#f5f5f5] dark:bg-[#262626] text-[#666d80] dark:text-app-text-secondary hover:bg-[#e5e5e5] dark:hover:bg-[#404040]'
                   }`}
                 >
                   הכל
@@ -711,17 +711,17 @@ export function CourierDetailsScreen() {
             <div className="mb-6 rounded-[4px] border border-[#ececec] bg-[#fafafa] p-4 dark:border-app-border dark:bg-app-surface">
               <div className="flex items-start justify-between gap-4 mb-4">
                 <div>
-                  <h3 className="text-base font-bold text-[#0d0d12] dark:text-[#fafafa] flex items-center gap-2">
+                  <h3 className="text-base font-bold text-[#0d0d12] dark:text-app-text flex items-center gap-2">
                     <Calendar size={18} />
                     <span>{'\u0043\u006f\u006e\u0074\u0072\u0069\u0062\u0075\u0074\u0069\u006f\u006e \u0048\u0065\u0061\u0074\u006d\u0061\u0070 \u05e9\u05dc \u05e0\u05d5\u05db\u05d7\u05d5\u05ea \u05d7\u05d5\u05d3\u05e9\u05d9\u05ea'}</span>
                   </h3>
-                  <div className="mt-1 text-xs text-[#666d80] dark:text-[#a3a3a3]">
+                  <div className="mt-1 text-xs text-[#666d80] dark:text-app-text-secondary">
                     {monthlyAttendanceHeatmap.monthLabel}
                   </div>
                 </div>
                 <div className="text-left">
                   <div className="text-[11px] uppercase tracking-[0.14em] text-[#8b93a6] dark:text-[#737373]">{'\u05d9\u05de\u05d9\u05dd \u05e4\u05e2\u05d9\u05dc\u05d9\u05dd'}</div>
-                  <div className="mt-1 text-lg font-semibold text-[#0d0d12] dark:text-[#fafafa]">
+                  <div className="mt-1 text-lg font-semibold text-[#0d0d12] dark:text-app-text">
                     {monthlyAttendanceHeatmap.activeDays.toLocaleString('he-IL')}
                   </div>
                 </div>
@@ -730,19 +730,19 @@ export function CourierDetailsScreen() {
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
                 <div>
                   <div className="text-[11px] text-[#8b93a6] dark:text-[#737373]">{'\u05e1\u05d4\u05f4\u05db \u05e9\u05e2\u05d5\u05ea \u05d4\u05d7\u05d5\u05d3\u05e9'}</div>
-                  <div className="mt-1 text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">
+                  <div className="mt-1 text-sm font-semibold text-[#0d0d12] dark:text-app-text">
                     {formatWorkedDuration(monthlyAttendanceHeatmap.totalWorkedMinutes)}
                   </div>
                 </div>
                 <div>
                   <div className="text-[11px] text-[#8b93a6] dark:text-[#737373]">{'\u05e9\u05d9\u05d0 \u05d9\u05d5\u05de\u05d9'}</div>
-                  <div className="mt-1 text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">
+                  <div className="mt-1 text-sm font-semibold text-[#0d0d12] dark:text-app-text">
                     {formatWorkedDuration(monthlyAttendanceHeatmap.maxWorkedMinutes)}
                   </div>
                 </div>
                 <div className="col-span-2 md:col-span-1">
                   <div className="text-[11px] text-[#8b93a6] dark:text-[#737373]">{'\u05d9\u05d5\u05dd \u05e9\u05d9\u05d0'}</div>
-                  <div className="mt-1 text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">
+                  <div className="mt-1 text-sm font-semibold text-[#0d0d12] dark:text-app-text">
                     {monthlyAttendanceHeatmap.peakDay
                       ? attendanceDateFormatter.format(monthlyAttendanceHeatmap.peakDay.date)
                       : '\u05d0\u05d9\u05df \u05e2\u05d3\u05d9\u05d9\u05df \u05e0\u05ea\u05d5\u05e0\u05d9\u05dd'}
@@ -767,10 +767,10 @@ export function CourierDetailsScreen() {
                           className={`h-12 rounded-[4px] border transition-colors ${getAttendanceCellTone(day.intensity, isCurrentMonth)} ${isToday ? 'ring-1 ring-[#0d0d12]/20 dark:ring-[#fafafa]/25' : ''}`}
                         >
                           <div className="flex h-full flex-col justify-between px-2 py-1.5">
-                            <span className={`text-[11px] font-medium ${isCurrentMonth ? 'text-[#0d0d12] dark:text-[#fafafa]' : 'text-[#a3a3a3] dark:text-[#404040]'}`}>
+                            <span className={`text-[11px] font-medium ${isCurrentMonth ? 'text-[#0d0d12] dark:text-app-text' : 'text-[#a3a3a3] dark:text-[#404040]'}`}>
                               {day.date.getDate()}
                             </span>
-                            <span className={`text-[10px] ${isCurrentMonth ? 'text-[#4b5563] dark:text-[#d4d4d4]' : 'text-transparent'}`}>
+                            <span className={`text-[10px] ${isCurrentMonth ? 'text-[#4b5563] dark:text-app-text-secondary' : 'text-transparent'}`}>
                               {isCurrentMonth && day.workedMinutes > 0 ? formatWorkedDuration(day.workedMinutes) : '—'}
                             </span>
                           </div>
@@ -824,7 +824,7 @@ export function CourierDetailsScreen() {
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="h-64 flex items-center justify-center text-[#666d80] dark:text-[#a3a3a3]">
+              <div className="h-64 flex items-center justify-center text-[#666d80] dark:text-app-text-secondary">
                 אין נתונים להצגה
               </div>
             )}
@@ -832,42 +832,42 @@ export function CourierDetailsScreen() {
 
           {/* Courier Info */}
           <div className="bg-white dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-xl p-6">
-            <h2 className="text-lg font-bold text-[#0d0d12] dark:text-[#fafafa] mb-4">
+            <h2 className="text-lg font-bold text-[#0d0d12] dark:text-app-text mb-4">
               פרטי שליח
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-center gap-3">
-                <Phone size={20} className="text-[#666d80] dark:text-[#a3a3a3]" />
+                <Phone size={20} className="text-[#666d80] dark:text-app-text-secondary" />
                 <div>
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">טלפון</div>
-                  <div className="text-sm font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">טלפון</div>
+                  <div className="text-sm font-bold text-[#0d0d12] dark:text-app-text">
                     {courier.phone}
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <Star size={20} className="text-[#666d80] dark:text-[#a3a3a3]" />
+                <Star size={20} className="text-[#666d80] dark:text-app-text-secondary" />
                 <div>
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">דירוג</div>
-                  <div className="text-sm font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">דירוג</div>
+                  <div className="text-sm font-bold text-[#0d0d12] dark:text-app-text">
                     {courier.rating} ⭐
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <Activity size={20} className="text-[#666d80] dark:text-[#a3a3a3]" />
+                <Activity size={20} className="text-[#666d80] dark:text-app-text-secondary" />
                 <div>
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">סטטוס</div>
-                  <div className="text-sm font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">סטטוס</div>
+                  <div className="text-sm font-bold text-[#0d0d12] dark:text-app-text">
                     {config.label}
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <Calendar size={20} className="text-[#666d80] dark:text-[#a3a3a3]" />
+                <Calendar size={20} className="text-[#666d80] dark:text-app-text-secondary" />
                 <div>
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">משלוחים מבוטלים</div>
-                  <div className="text-sm font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">משלוחים מבוטלים</div>
+                  <div className="text-sm font-bold text-[#0d0d12] dark:text-app-text">
                     {cancelledDeliveries.length} ({courierDeliveries.length > 0 ? Math.round((cancelledDeliveries.length / courierDeliveries.length) * 100) : 0}%)
                   </div>
                 </div>
@@ -878,10 +878,10 @@ export function CourierDetailsScreen() {
           {/* היסטוריית משלוחים מלאה */}
           <div className="bg-white dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-[#0d0d12] dark:text-[#fafafa] flex items-center gap-2">
+              <h2 className="text-lg font-bold text-[#0d0d12] dark:text-app-text flex items-center gap-2">
                 <Package size={20} />
                 היסטוריית משלוחים
-                <span className="text-sm text-[#666d80] dark:text-[#a3a3a3]">
+                <span className="text-sm text-[#666d80] dark:text-app-text-secondary">
                   ({filteredDeliveries.length})
                 </span>
               </h2>
@@ -890,24 +890,24 @@ export function CourierDetailsScreen() {
             {/* סינונים וחיפוש */}
             <div className="flex flex-col md:flex-row gap-3 mb-4">
               <div className="flex-1 relative">
-                <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#666d80] dark:text-[#a3a3a3]" />
+                <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#666d80] dark:text-app-text-secondary" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="חיפוש לפי מספר הזמנה, לקוח או מסעדה..."
-                  className="w-full pr-10 pl-4 py-2 bg-[#f5f5f5] dark:bg-[#262626] border border-[#e5e5e5] dark:border-[#404040] rounded-lg text-sm text-[#0d0d12] dark:text-[#fafafa] placeholder:text-[#a3a3a3]"
+                  className="w-full pr-10 pl-4 py-2 bg-[#f5f5f5] dark:bg-[#262626] border border-[#e5e5e5] dark:border-[#404040] rounded-lg text-sm text-[#0d0d12] dark:text-app-text placeholder:text-[#a3a3a3]"
                 />
               </div>
 
               <div className="flex items-center gap-2">
-                <Filter size={16} className="text-[#666d80] dark:text-[#a3a3a3]" />
+                <Filter size={16} className="text-[#666d80] dark:text-app-text-secondary" />
                 <button
                   onClick={() => setFilterStatus('all')}
                   className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors ${
                     filterStatus === 'all'
                       ? 'bg-[#0fcdd3] text-white'
-                      : 'bg-[#f5f5f5] dark:bg-[#262626] text-[#666d80] dark:text-[#a3a3a3]'
+                      : 'bg-[#f5f5f5] dark:bg-[#262626] text-[#666d80] dark:text-app-text-secondary'
                   }`}
                 >
                   הכל
@@ -917,7 +917,7 @@ export function CourierDetailsScreen() {
                   className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors ${
                     filterStatus === 'delivered'
                       ? 'bg-blue-500 text-white'
-                      : 'bg-[#f5f5f5] dark:bg-[#262626] text-[#666d80] dark:text-[#a3a3a3]'
+                      : 'bg-[#f5f5f5] dark:bg-[#262626] text-[#666d80] dark:text-app-text-secondary'
                   }`}
                 >
                   נמסרו
@@ -927,7 +927,7 @@ export function CourierDetailsScreen() {
                   className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors ${
                     filterStatus === 'cancelled'
                       ? 'bg-red-500 text-white'
-                      : 'bg-[#f5f5f5] dark:bg-[#262626] text-[#666d80] dark:text-[#a3a3a3]'
+                      : 'bg-[#f5f5f5] dark:bg-[#262626] text-[#666d80] dark:text-app-text-secondary'
                   }`}
                 >
                   בוטלו
@@ -961,7 +961,7 @@ export function CourierDetailsScreen() {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                          <span className="text-sm font-bold text-[#0d0d12] dark:text-app-text">
                             {delivery.orderNumber}
                           </span>
                           <span className={`text-xs px-2 py-0.5 rounded-full ${
@@ -975,10 +975,10 @@ export function CourierDetailsScreen() {
                              delivery.status === 'expired' ? 'פג תוקף' : 'פעיל'}
                           </span>
                         </div>
-                        <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">
+                        <div className="text-xs text-[#666d80] dark:text-app-text-secondary">
                           {restaurant?.name} → {delivery.customerName}
                         </div>
-                        <div className="text-xs text-[#666d80] dark:text-[#a3a3a3] mt-1">
+                        <div className="text-xs text-[#666d80] dark:text-app-text-secondary mt-1">
                           {delivery.address}
                         </div>
                       </div>
@@ -988,20 +988,20 @@ export function CourierDetailsScreen() {
                         <div className="text-sm font-bold text-[#16a34a] dark:text-[#22c55e]">
                           {formatCurrency(getDeliveryCourierBasePay(delivery))}
                         </div>
-                        <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">
+                        <div className="text-xs text-[#666d80] dark:text-app-text-secondary">
                           {delivery.estimatedTime} דק'
                         </div>
                       </div>
-                      <div className="text-xs text-[#666d80] dark:text-[#a3a3a3] text-left">
+                      <div className="text-xs text-[#666d80] dark:text-app-text-secondary text-left">
                         {formatDistanceToNow(delivery.createdAt, { addSuffix: true, locale: he })}
                       </div>
-                      <ArrowRight size={16} className="text-[#666d80] dark:text-[#a3a3a3] rotate-180" />
+                      <ArrowRight size={16} className="text-[#666d80] dark:text-app-text-secondary rotate-180" />
                     </div>
                   </button>
                 );
               })}
               {filteredDeliveries.length === 0 && (
-                <div className="text-center py-12 text-[#666d80] dark:text-[#a3a3a3]">
+                <div className="text-center py-12 text-[#666d80] dark:text-app-text-secondary">
                   {searchQuery ? 'לא נמצאו תוצאות לחיפוש' : 'אין משלוחים עדיין'}
                 </div>
               )}

@@ -163,7 +163,7 @@ export const LiveManagerDesktopControls: React.FC<LiveManagerControlsProps> = ({
             placeholder="חיפוש..."
             value={searchQuery}
             onChange={(event) => onSearchQueryChange(event.target.value)}
-            className="w-full rounded-lg border border-[#e5e5e5] bg-[#f5f5f5] py-2 pr-10 pl-3 text-sm text-[#0d0d12] placeholder:text-[#737373] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#16a34a] dark:border-app-border dark:bg-app-surface dark:text-white"
+            className="w-full rounded-lg border border-[#e5e5e5] bg-[#f5f5f5] py-2 pr-10 pl-3 text-sm text-[#0d0d12] placeholder:text-[#737373] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#16a34a] dark:border-app-border dark:bg-app-surface dark:text-app-text"
           />
         </div>
       </div>

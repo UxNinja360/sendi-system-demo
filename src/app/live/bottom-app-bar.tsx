@@ -47,7 +47,7 @@ export default function BottomAppBar({
                 className={`flex h-12 items-center justify-center gap-2 rounded-xl px-3 transition-all ${
                   isActive
                     ? 'bg-white text-[#16a34a] shadow-sm dark:bg-[#262626] dark:text-[#7bf1a8]'
-                    : 'text-[#737373] dark:text-[#a3a3a3]'
+                    : 'text-[#737373] dark:text-app-text-secondary'
                 }`}
               >
                 <Icon className={`h-4 w-4 transition-transform ${isActive ? 'scale-110' : 'scale-100'}`} />
@@ -55,7 +55,7 @@ export default function BottomAppBar({
                 <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-black tabular-nums ${
                   isActive
                     ? 'bg-[#16a34a]/10 text-[#16a34a] dark:text-[#7bf1a8]'
-                    : 'bg-[#e5e5e5] text-[#737373] dark:bg-[#262626] dark:text-[#a3a3a3]'
+                    : 'bg-[#e5e5e5] text-[#737373] dark:bg-[#262626] dark:text-app-text-secondary'
                 }`}>
                   {count.toLocaleString('he-IL')}
                 </span>

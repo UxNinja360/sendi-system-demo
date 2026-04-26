@@ -15,7 +15,7 @@ const AREAS = ['תל אביב', 'רמת גן', 'גבעתיים', 'בני ברק'
 
 const Field: React.FC<{ label: string; required?: boolean; children: React.ReactNode }> = ({ label, required, children }) => (
   <div className="space-y-1.5">
-    <label className="text-xs font-semibold text-[#737373] dark:text-[#a3a3a3] flex items-center gap-1">
+    <label className="text-xs font-semibold text-[#737373] dark:text-app-text-secondary flex items-center gap-1">
       {label}
       {required && <span className="text-[#ef4444]">*</span>}
     </label>
@@ -23,7 +23,7 @@ const Field: React.FC<{ label: string; required?: boolean; children: React.React
   </div>
 );
 
-const inputCls = "w-full px-3 py-2.5 rounded-xl text-sm bg-[#f5f5f5] dark:bg-app-surface text-[#0d0d12] dark:text-[#fafafa] border border-transparent focus:border-[#9fe870]/50 outline-none transition-all placeholder-[#a3a3a3]";
+const inputCls = "w-full px-3 py-2.5 rounded-xl text-sm bg-[#f5f5f5] dark:bg-app-surface text-[#0d0d12] dark:text-app-text border border-transparent focus:border-[#9fe870]/50 outline-none transition-all placeholder-[#a3a3a3]";
 const selectCls = `${inputCls} appearance-none cursor-pointer`;
 
 export const NewDeliveryDialog: React.FC<NewDeliveryDialogProps> = ({
@@ -188,7 +188,7 @@ export const NewDeliveryDialog: React.FC<NewDeliveryDialogProps> = ({
               <Package className="w-4 h-4 text-[#6bc84a]" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">משלוח חדש</h2>
+              <h2 className="text-sm font-semibold text-[#0d0d12] dark:text-app-text">משלוח חדש</h2>
               <p className="text-[11px] text-[#a3a3a3]">מלא את פרטי המשלוח</p>
             </div>
           </div>
@@ -208,7 +208,7 @@ export const NewDeliveryDialog: React.FC<NewDeliveryDialogProps> = ({
                 {restaurantOptions.map(r => <option key={r.id} value={r.id}>{r.label}</option>)}
               </select>
               {selectedRestaurant && (
-                <p className="text-[11px] text-[#737373] dark:text-[#a3a3a3] pt-1">
+                <p className="text-[11px] text-[#737373] dark:text-app-text-secondary pt-1">
                   זמן הכנה ברירת מחדל למסעדה: {selectedRestaurant.defaultPreparationTime} דקות
                 </p>
               )}
@@ -265,7 +265,7 @@ export const NewDeliveryDialog: React.FC<NewDeliveryDialogProps> = ({
 
         {/* Footer */}
         <div className="flex items-center gap-3 px-5 py-4 border-t border-[#f0f0f0] dark:border-app-border">
-          <button type="button" onClick={handleClose} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-[#737373] dark:text-[#a3a3a3] bg-[#f5f5f5] dark:bg-app-surface hover:bg-[#e5e5e5] dark:hover:bg-[#1f1f1f] transition-colors">
+          <button type="button" onClick={handleClose} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-[#737373] dark:text-app-text-secondary bg-[#f5f5f5] dark:bg-app-surface hover:bg-[#e5e5e5] dark:hover:bg-[#1f1f1f] transition-colors">
             ביטול
           </button>
           <button

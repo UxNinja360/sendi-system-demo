@@ -241,7 +241,7 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
             }`}
           >
             <FileSpreadsheet className={`w-5 h-5 ${mode === 'simple' ? 'text-[#5a9a30] dark:text-[#9fe870]' : 'text-[#a3a3a3]'}`} />
-            <span className={`text-sm font-semibold ${mode === 'simple' ? 'text-[#0d0d12] dark:text-[#fafafa]' : 'text-[#525252] dark:text-[#a3a3a3]'}`}>טבלה פשוטה</span>
+            <span className={`text-sm font-semibold ${mode === 'simple' ? 'text-[#0d0d12] dark:text-app-text' : 'text-[#525252] dark:text-app-text-secondary'}`}>טבלה פשוטה</span>
             <span className="text-[11px] text-[#a3a3a3]">קובץ Excel אחד</span>
           </button>
           <button
@@ -253,7 +253,7 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
             }`}
           >
             <Layers className={`w-5 h-5 ${mode === 'grouped' ? 'text-[#5a9a30] dark:text-[#9fe870]' : 'text-[#a3a3a3]'}`} />
-            <span className={`text-sm font-semibold ${mode === 'grouped' ? 'text-[#0d0d12] dark:text-[#fafafa]' : 'text-[#525252] dark:text-[#a3a3a3]'}`}>דוח מקובץ</span>
+            <span className={`text-sm font-semibold ${mode === 'grouped' ? 'text-[#0d0d12] dark:text-app-text' : 'text-[#525252] dark:text-app-text-secondary'}`}>דוח מקובץ</span>
             <span className="text-[11px] text-[#a3a3a3]">ZIP לכל שליח/מסעדה</span>
           </button>
         </div>
@@ -323,7 +323,7 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
             }`}
           >
             <FileSpreadsheet className={`w-4 h-4 ${format === 'excel' ? 'text-[#5a9a30] dark:text-[#9fe870]' : 'text-[#a3a3a3]'}`} />
-            <span className={`text-xs font-medium ${format === 'excel' ? 'text-[#0d0d12] dark:text-[#fafafa]' : 'text-[#525252] dark:text-[#a3a3a3]'}`}>
+            <span className={`text-xs font-medium ${format === 'excel' ? 'text-[#0d0d12] dark:text-app-text' : 'text-[#525252] dark:text-app-text-secondary'}`}>
               {mode === 'grouped' ? 'Excel ZIP' : 'Excel'}
             </span>
             <span className="text-[10px] text-[#a3a3a3]">עריכה</span>
@@ -337,7 +337,7 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
             }`}
           >
             <FileDown className={`w-4 h-4 ${format === 'pdf' ? 'text-[#5a9a30] dark:text-[#9fe870]' : 'text-[#a3a3a3]'}`} />
-            <span className={`text-xs font-medium ${format === 'pdf' ? 'text-[#0d0d12] dark:text-[#fafafa]' : 'text-[#525252] dark:text-[#a3a3a3]'}`}>PDF</span>
+            <span className={`text-xs font-medium ${format === 'pdf' ? 'text-[#0d0d12] dark:text-app-text' : 'text-[#525252] dark:text-app-text-secondary'}`}>PDF</span>
             <span className="text-[10px] text-[#a3a3a3]">הדפסה</span>
           </button>
         </div>
@@ -398,8 +398,8 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
         <div className="shrink-0 border-b border-[#e5e5e5] dark:border-app-border bg-[#fafafa] dark:bg-app-surface px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <FileDown className="w-4 h-4 text-[#0d0d12] dark:text-[#fafafa]" />
-              <h3 className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">
+              <FileDown className="w-4 h-4 text-[#0d0d12] dark:text-app-text" />
+              <h3 className="text-sm font-semibold text-[#0d0d12] dark:text-app-text">
                 ייצוא
               </h3>
             </div>
@@ -407,7 +407,7 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
               onClick={() => handleClose()}
               className="p-1.5 hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] rounded-lg transition-colors"
             >
-              <X className="w-4 h-4 text-[#737373] dark:text-[#a3a3a3]" />
+              <X className="w-4 h-4 text-[#737373] dark:text-app-text-secondary" />
             </button>
           </div>
 
@@ -438,7 +438,7 @@ function ToggleRow({ label, enabled, onToggle }: { label: string; enabled: boole
       ) : (
         <ToggleLeft className="w-4 h-4 text-[#a3a3a3] shrink-0" />
       )}
-      <span className={`flex-1 ${enabled ? 'text-[#0d0d12] dark:text-[#fafafa] font-medium' : 'text-[#a3a3a3]'}`}>{label}</span>
+      <span className={`flex-1 ${enabled ? 'text-[#0d0d12] dark:text-app-text font-medium' : 'text-[#a3a3a3]'}`}>{label}</span>
     </button>
   );
 }
@@ -450,7 +450,7 @@ function FieldChip({ label, selected, onClick }: { label: string; selected: bool
       className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all border ${
         selected
           ? 'bg-[#9fe870] border-[#9fe870] text-[#0d0d12] shadow-sm'
-          : 'bg-white dark:bg-app-surface border-[#e5e5e5] dark:border-app-border text-[#525252] dark:text-[#a3a3a3] hover:border-[#9fe870]/60 hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
+          : 'bg-white dark:bg-app-surface border-[#e5e5e5] dark:border-app-border text-[#525252] dark:text-app-text-secondary hover:border-[#9fe870]/60 hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
       }`}
     >
       {selected && <Check className="w-2.5 h-2.5" />}
@@ -475,7 +475,7 @@ function OptionBtn({ active, onClick, children }: { active: boolean; onClick: ()
       className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
         active
           ? 'bg-[#9fe870] border-[#9fe870] text-[#0d0d12] shadow-sm'
-          : 'bg-white dark:bg-app-surface border-[#e5e5e5] dark:border-app-border text-[#525252] dark:text-[#a3a3a3] hover:border-[#9fe870]/60 hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
+          : 'bg-white dark:bg-app-surface border-[#e5e5e5] dark:border-app-border text-[#525252] dark:text-app-text-secondary hover:border-[#9fe870]/60 hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
       }`}
     >
       {children}

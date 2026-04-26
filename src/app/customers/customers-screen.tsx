@@ -49,8 +49,8 @@ export const CustomersScreen: React.FC = () => {
                 onClick={() => setViewMode('cards')}
                 className={`rounded p-2 transition-colors ${
                   viewMode === 'cards'
-                    ? 'bg-white text-[#0d0d12] shadow-sm dark:bg-[#404040] dark:text-[#fafafa]'
-                    : 'text-[#737373] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:text-[#fafafa]'
+                    ? 'bg-white text-[#0d0d12] shadow-sm dark:bg-[#404040] dark:text-app-text'
+                    : 'text-[#737373] hover:text-[#0d0d12] dark:text-app-text-secondary dark:hover:text-[#fafafa]'
                 }`}
                 title="תצוגת כרטיסיות"
               >
@@ -60,8 +60,8 @@ export const CustomersScreen: React.FC = () => {
                 onClick={() => setViewMode('list')}
                 className={`rounded p-2 transition-colors ${
                   viewMode === 'list'
-                    ? 'bg-white text-[#0d0d12] shadow-sm dark:bg-[#404040] dark:text-[#fafafa]'
-                    : 'text-[#737373] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:text-[#fafafa]'
+                    ? 'bg-white text-[#0d0d12] shadow-sm dark:bg-[#404040] dark:text-app-text'
+                    : 'text-[#737373] hover:text-[#0d0d12] dark:text-app-text-secondary dark:hover:text-[#fafafa]'
                 }`}
                 title="תצוגת רשימה"
               >
@@ -84,10 +84,10 @@ export const CustomersScreen: React.FC = () => {
                   >
                     <div className="mb-3 flex items-start justify-between">
                       <div className="flex-1">
-                        <h3 className="mb-1 text-base font-semibold text-[#0d0d12] dark:text-[#fafafa]">
+                        <h3 className="mb-1 text-base font-semibold text-[#0d0d12] dark:text-app-text">
                           {customer.name}
                         </h3>
-                        <p className="direction-ltr text-right text-sm text-[#666d80] dark:text-[#a3a3a3]">
+                        <p className="direction-ltr text-right text-sm text-[#666d80] dark:text-app-text-secondary">
                           {customer.phone}
                         </p>
                       </div>
@@ -95,7 +95,7 @@ export const CustomersScreen: React.FC = () => {
                         className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
                           customer.status === 'active'
                             ? 'bg-[#ecfae2] text-[#0d0d12] dark:bg-[#163300] dark:text-[#9fe870]'
-                            : 'bg-[#f5f5f5] text-[#737373] dark:bg-[#262626] dark:text-[#a3a3a3]'
+                            : 'bg-[#f5f5f5] text-[#737373] dark:bg-[#262626] dark:text-app-text-secondary'
                         }`}
                       >
                         {customer.status === 'active' ? 'פעיל' : 'לא פעיל'}
@@ -103,33 +103,33 @@ export const CustomersScreen: React.FC = () => {
                     </div>
 
                     <div className="mb-3 border-b border-[#e5e5e5] pb-3 dark:border-app-border">
-                      <p className="text-sm text-[#666d80] dark:text-[#a3a3a3]">
+                      <p className="text-sm text-[#666d80] dark:text-app-text-secondary">
                         {customer.address}
                       </p>
                     </div>
 
                     <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <p className="mb-1 text-xs text-[#666d80] dark:text-[#a3a3a3]">
+                        <p className="mb-1 text-xs text-[#666d80] dark:text-app-text-secondary">
                           סך הזמנות
                         </p>
-                        <p className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">
+                        <p className="text-sm font-semibold text-[#0d0d12] dark:text-app-text">
                           {customer.totalOrders.toLocaleString()}
                         </p>
                       </div>
                       <div>
-                        <p className="mb-1 text-xs text-[#666d80] dark:text-[#a3a3a3]">
+                        <p className="mb-1 text-xs text-[#666d80] dark:text-app-text-secondary">
                           ממוצע
                         </p>
-                        <p className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">
+                        <p className="text-sm font-semibold text-[#0d0d12] dark:text-app-text">
                           ₪{customer.averageOrderValue}
                         </p>
                       </div>
                       <div>
-                        <p className="mb-1 text-xs text-[#666d80] dark:text-[#a3a3a3]">
+                        <p className="mb-1 text-xs text-[#666d80] dark:text-app-text-secondary">
                           אחרונה
                         </p>
-                        <p className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">
+                        <p className="text-sm font-semibold text-[#0d0d12] dark:text-app-text">
                           {formatDate(customer.lastOrderDate)}
                         </p>
                       </div>
@@ -138,7 +138,7 @@ export const CustomersScreen: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <div className="rounded-2xl border border-[#e5e5e5] bg-white p-8 text-center text-[#737373] dark:border-app-border dark:bg-app-surface dark:text-[#a3a3a3]">
+              <div className="rounded-2xl border border-[#e5e5e5] bg-white p-8 text-center text-[#737373] dark:border-app-border dark:bg-app-surface dark:text-app-text-secondary">
                 לא נמצאו תוצאות לחיפוש "{searchQuery}"
               </div>
             )
@@ -148,13 +148,13 @@ export const CustomersScreen: React.FC = () => {
                 <table className="w-full">
                   <thead className="border-b border-[#e5e5e5] bg-[#fafafa] dark:border-app-border dark:bg-app-surface">
                     <tr>
-                      <th className="px-4 py-3 text-right text-sm font-normal text-[#666d80] dark:text-[#a3a3a3]">שם לקוח</th>
-                      <th className="px-4 py-3 text-right text-sm font-normal text-[#666d80] dark:text-[#a3a3a3]">סטטוס</th>
-                      <th className="px-4 py-3 text-right text-sm font-normal text-[#666d80] dark:text-[#a3a3a3]">טלפון</th>
-                      <th className="px-4 py-3 text-right text-sm font-normal text-[#666d80] dark:text-[#a3a3a3]">כתובת</th>
-                      <th className="px-4 py-3 text-right text-sm font-normal text-[#666d80] dark:text-[#a3a3a3]">סך הזמנות</th>
-                      <th className="px-4 py-3 text-right text-sm font-normal text-[#666d80] dark:text-[#a3a3a3]">ממוצע הזמנה</th>
-                      <th className="px-4 py-3 text-right text-sm font-normal text-[#666d80] dark:text-[#a3a3a3]">הזמנה אחרונה</th>
+                      <th className="px-4 py-3 text-right text-sm font-normal text-[#666d80] dark:text-app-text-secondary">שם לקוח</th>
+                      <th className="px-4 py-3 text-right text-sm font-normal text-[#666d80] dark:text-app-text-secondary">סטטוס</th>
+                      <th className="px-4 py-3 text-right text-sm font-normal text-[#666d80] dark:text-app-text-secondary">טלפון</th>
+                      <th className="px-4 py-3 text-right text-sm font-normal text-[#666d80] dark:text-app-text-secondary">כתובת</th>
+                      <th className="px-4 py-3 text-right text-sm font-normal text-[#666d80] dark:text-app-text-secondary">סך הזמנות</th>
+                      <th className="px-4 py-3 text-right text-sm font-normal text-[#666d80] dark:text-app-text-secondary">ממוצע הזמנה</th>
+                      <th className="px-4 py-3 text-right text-sm font-normal text-[#666d80] dark:text-app-text-secondary">הזמנה אחרונה</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -163,7 +163,7 @@ export const CustomersScreen: React.FC = () => {
                         key={customer.id}
                         className="cursor-pointer border-b border-[#e5e5e5] transition-colors last:border-b-0 hover:bg-[#fafafa] dark:border-app-border dark:hover:bg-app-surface-raised"
                       >
-                        <td className="px-4 py-3 text-sm font-medium text-[#0d0d12] dark:text-[#fafafa]">
+                        <td className="px-4 py-3 text-sm font-medium text-[#0d0d12] dark:text-app-text">
                           {customer.name}
                         </td>
                         <td className="px-4 py-3 text-sm">
@@ -171,25 +171,25 @@ export const CustomersScreen: React.FC = () => {
                             className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
                               customer.status === 'active'
                                 ? 'bg-[#ecfae2] text-[#0d0d12] dark:bg-[#163300] dark:text-[#9fe870]'
-                                : 'bg-[#f5f5f5] text-[#737373] dark:bg-[#262626] dark:text-[#a3a3a3]'
+                                : 'bg-[#f5f5f5] text-[#737373] dark:bg-[#262626] dark:text-app-text-secondary'
                             }`}
                           >
                             {customer.status === 'active' ? 'פעיל' : 'לא פעיל'}
                           </span>
                         </td>
-                        <td className="direction-ltr px-4 py-3 text-right text-sm text-[#0d0d12] dark:text-[#fafafa]">
+                        <td className="direction-ltr px-4 py-3 text-right text-sm text-[#0d0d12] dark:text-app-text">
                           {customer.phone}
                         </td>
-                        <td className="px-4 py-3 text-sm text-[#0d0d12] dark:text-[#fafafa]">
+                        <td className="px-4 py-3 text-sm text-[#0d0d12] dark:text-app-text">
                           {customer.address}
                         </td>
-                        <td className="px-4 py-3 text-sm text-[#0d0d12] dark:text-[#fafafa]">
+                        <td className="px-4 py-3 text-sm text-[#0d0d12] dark:text-app-text">
                           {customer.totalOrders.toLocaleString()}
                         </td>
-                        <td className="px-4 py-3 text-sm text-[#0d0d12] dark:text-[#fafafa]">
+                        <td className="px-4 py-3 text-sm text-[#0d0d12] dark:text-app-text">
                           ₪{customer.averageOrderValue}
                         </td>
-                        <td className="px-4 py-3 text-sm text-[#666d80] dark:text-[#a3a3a3]">
+                        <td className="px-4 py-3 text-sm text-[#666d80] dark:text-app-text-secondary">
                           {formatDate(customer.lastOrderDate)}
                         </td>
                       </tr>
@@ -199,7 +199,7 @@ export const CustomersScreen: React.FC = () => {
               </div>
 
               {filteredCustomers.length === 0 ? (
-                <div className="p-8 text-center text-[#737373] dark:text-[#a3a3a3]">
+                <div className="p-8 text-center text-[#737373] dark:text-app-text-secondary">
                   לא נמצאו תוצאות לחיפוש "{searchQuery}"
                 </div>
               ) : null}

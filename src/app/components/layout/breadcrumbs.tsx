@@ -12,7 +12,7 @@ export const Breadcrumbs: React.FC = () => {
   }
 
   return (
-    <div className="flex h-10 w-full shrink-0 items-center gap-2 border-b border-[#e5e5e5] bg-[#fafafa] px-4 text-xs text-[#737373] transition-colors duration-300 dark:border-app-border dark:bg-app-surface dark:text-[#a3a3a3]">
+    <div className="flex h-10 w-full shrink-0 items-center gap-2 border-b border-[#e5e5e5] bg-[#fafafa] px-4 text-xs text-[#737373] transition-colors duration-300 dark:border-app-border dark:bg-app-surface dark:text-app-text-secondary">
       <button
         type="button"
         onClick={() => navigate('/dashboard')}
@@ -25,7 +25,7 @@ export const Breadcrumbs: React.FC = () => {
       <button
         type="button"
         onClick={() => navigate(currentItem.path)}
-        className="min-w-0 truncate rounded-md px-2 py-1 font-medium text-[#0d0d12] transition-colors hover:bg-[#f0f0f0] dark:text-[#fafafa] dark:hover:bg-[#171717]"
+        className="min-w-0 truncate rounded-md px-2 py-1 font-medium text-[#0d0d12] transition-colors hover:bg-[#f0f0f0] dark:text-app-text dark:hover:bg-[#171717]"
       >
         {currentItem.label}
       </button>

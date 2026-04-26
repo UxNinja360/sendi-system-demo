@@ -56,8 +56,8 @@ export function RestaurantDetailsScreen() {
     return (
       <div className="flex h-full flex-col items-center justify-center p-8 text-center">
         <Store className="mb-4 h-16 w-16 text-[#e5e5e5] dark:text-[#404040]" />
-        <h2 className="mb-2 text-xl font-bold text-[#0d0d12] dark:text-[#fafafa]">מסעדה לא נמצאה</h2>
-        <p className="mb-4 text-sm text-[#666d80] dark:text-[#a3a3a3]">
+        <h2 className="mb-2 text-xl font-bold text-[#0d0d12] dark:text-app-text">מסעדה לא נמצאה</h2>
+        <p className="mb-4 text-sm text-[#666d80] dark:text-app-text-secondary">
           המסעדה שחיפשת אינה קיימת במערכת
         </p>
         <button
@@ -109,19 +109,19 @@ export function RestaurantDetailsScreen() {
             onClick={() => navigate('/restaurants')}
             className="rounded-lg p-2 transition-colors hover:bg-[#f5f5f5] dark:hover:bg-[#262626]"
           >
-            <ArrowRight size={20} className="text-[#666d80] dark:text-[#d4d4d4]" />
+            <ArrowRight size={20} className="text-[#666d80] dark:text-app-text-secondary" />
           </button>
           <div className="flex-1">
             <div className="flex items-center gap-3">
               <Store size={24} className="text-[#0fcdd3]" />
               <div>
-                <h1 className="text-xl font-bold text-[#0d0d12] dark:text-[#fafafa]">{restaurant.name}</h1>
-                <p className="text-sm text-[#666d80] dark:text-[#a3a3a3]">{restaurant.type}</p>
+                <h1 className="text-xl font-bold text-[#0d0d12] dark:text-app-text">{restaurant.name}</h1>
+                <p className="text-sm text-[#666d80] dark:text-app-text-secondary">{restaurant.type}</p>
               </div>
             </div>
           </div>
           <div className="text-left">
-            <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">משלוחים פעילים</div>
+            <div className="text-xs text-[#666d80] dark:text-app-text-secondary">משלוחים פעילים</div>
             <div className="text-2xl font-bold text-[#0fcdd3]">{activeDeliveries.length}</div>
           </div>
         </div>
@@ -136,8 +136,8 @@ export function RestaurantDetailsScreen() {
                   <Package size={20} className="text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">סה"כ משלוחים</div>
-                  <div className="text-2xl font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">סה"כ משלוחים</div>
+                  <div className="text-2xl font-bold text-[#0d0d12] dark:text-app-text">
                     {restaurantDeliveries.length}
                   </div>
                 </div>
@@ -150,8 +150,8 @@ export function RestaurantDetailsScreen() {
                   <CheckCircle2 size={20} className="text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">הושלמו</div>
-                  <div className="text-2xl font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">הושלמו</div>
+                  <div className="text-2xl font-bold text-[#0d0d12] dark:text-app-text">
                     {completedDeliveries.length}
                   </div>
                 </div>
@@ -164,7 +164,7 @@ export function RestaurantDetailsScreen() {
                   <DollarSign size={20} className="text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">הכנסות</div>
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">הכנסות</div>
                   <div className="text-2xl font-bold text-[#16a34a] dark:text-[#22c55e]">{formatCurrency(totalRevenue)}</div>
                 </div>
               </div>
@@ -176,8 +176,8 @@ export function RestaurantDetailsScreen() {
                   <TrendingUp size={20} className="text-orange-600 dark:text-orange-400" />
                 </div>
                 <div>
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">ממוצע הזמנה</div>
-                  <div className="text-2xl font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">ממוצע הזמנה</div>
+                  <div className="text-2xl font-bold text-[#0d0d12] dark:text-app-text">
                     {formatCurrency(Math.round(averagePrice))}
                   </div>
                 </div>
@@ -186,57 +186,57 @@ export function RestaurantDetailsScreen() {
           </div>
 
           <div className="rounded-xl border border-[#e5e5e5] bg-white p-6 dark:border-app-border dark:bg-app-surface">
-            <h2 className="mb-4 text-lg font-bold text-[#0d0d12] dark:text-[#fafafa]">פרטי מסעדה</h2>
+            <h2 className="mb-4 text-lg font-bold text-[#0d0d12] dark:text-app-text">פרטי מסעדה</h2>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="flex items-center gap-3">
-                <MapPin size={20} className="text-[#666d80] dark:text-[#a3a3a3]" />
+                <MapPin size={20} className="text-[#666d80] dark:text-app-text-secondary" />
                 <div>
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">כתובת</div>
-                  <div className="text-sm font-bold text-[#0d0d12] dark:text-[#fafafa]">{restaurant.address}</div>
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">כתובת</div>
+                  <div className="text-sm font-bold text-[#0d0d12] dark:text-app-text">{restaurant.address}</div>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <Phone size={20} className="text-[#666d80] dark:text-[#a3a3a3]" />
+                <Phone size={20} className="text-[#666d80] dark:text-app-text-secondary" />
                 <div>
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">טלפון</div>
-                  <div className="text-sm font-bold text-[#0d0d12] dark:text-[#fafafa]">{restaurant.phone}</div>
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">טלפון</div>
+                  <div className="text-sm font-bold text-[#0d0d12] dark:text-app-text">{restaurant.phone}</div>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <Store size={20} className="text-[#666d80] dark:text-[#a3a3a3]" />
+                <Store size={20} className="text-[#666d80] dark:text-app-text-secondary" />
                 <div>
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">סוג מסעדה</div>
-                  <div className="text-sm font-bold text-[#0d0d12] dark:text-[#fafafa]">{restaurant.type}</div>
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">סוג מסעדה</div>
+                  <div className="text-sm font-bold text-[#0d0d12] dark:text-app-text">{restaurant.type}</div>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <Store size={20} className="text-[#666d80] dark:text-[#a3a3a3]" />
+                <Store size={20} className="text-[#666d80] dark:text-app-text-secondary" />
                 <div>
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">מזהה רשת</div>
-                  <div className="text-sm font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">מזהה רשת</div>
+                  <div className="text-sm font-bold text-[#0d0d12] dark:text-app-text">
                     {restaurant.chainId || getRestaurantChainId(restaurant.name)}
                   </div>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <Clock size={20} className="text-[#666d80] dark:text-[#a3a3a3]" />
+                <Clock size={20} className="text-[#666d80] dark:text-app-text-secondary" />
                 <div>
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">זמן הכנה ברירת מחדל</div>
-                  <div className="text-sm font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">זמן הכנה ברירת מחדל</div>
+                  <div className="text-sm font-bold text-[#0d0d12] dark:text-app-text">
                     {restaurant.defaultPreparationTime} דקות
                   </div>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <Clock size={20} className="text-[#666d80] dark:text-[#a3a3a3]" />
+                <Clock size={20} className="text-[#666d80] dark:text-app-text-secondary" />
                 <div>
-                  <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">זמן מקסימלי למשלוח</div>
-                  <div className="text-sm font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">זמן מקסימלי למשלוח</div>
+                  <div className="text-sm font-bold text-[#0d0d12] dark:text-app-text">
                     {restaurant.maxDeliveryTime} דקות
                   </div>
                 </div>
@@ -247,8 +247,8 @@ export function RestaurantDetailsScreen() {
           <div className="rounded-xl border border-[#e5e5e5] bg-white p-6 dark:border-app-border dark:bg-app-surface">
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-lg font-bold text-[#0d0d12] dark:text-[#fafafa]">הגדרות תפעול</h2>
-                <p className="mt-1 text-sm text-[#666d80] dark:text-[#a3a3a3]">
+                <h2 className="text-lg font-bold text-[#0d0d12] dark:text-app-text">הגדרות תפעול</h2>
+                <p className="mt-1 text-sm text-[#666d80] dark:text-app-text-secondary">
                   זמן ההכנה וזמן היעד למשלוח ייכנסו אוטומטית לכל משלוח חדש של המסעדה.
                 </p>
               </div>
@@ -256,29 +256,29 @@ export function RestaurantDetailsScreen() {
 
             <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-[220px_220px_1fr]">
               <div className="space-y-1.5">
-                <label className="text-xs text-[#666d80] dark:text-[#a3a3a3]">זמן הכנה (דקות)</label>
+                <label className="text-xs text-[#666d80] dark:text-app-text-secondary">זמן הכנה (דקות)</label>
                 <input
                   type="number"
                   min="1"
                   value={defaultPreparationTime}
                   onChange={(event) => setDefaultPreparationTime(event.target.value)}
-                  className="w-full rounded-xl border border-[#e5e5e5] bg-[#fafafa] px-3 py-2.5 text-[#0d0d12] outline-none focus:border-[#0fcdd3]/50 dark:border-app-border dark:bg-app-surface dark:text-[#fafafa]"
+                  className="w-full rounded-xl border border-[#e5e5e5] bg-[#fafafa] px-3 py-2.5 text-[#0d0d12] outline-none focus:border-[#0fcdd3]/50 dark:border-app-border dark:bg-app-surface dark:text-app-text"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs text-[#666d80] dark:text-[#a3a3a3]">זמן מקסימלי למשלוח (דקות)</label>
+                <label className="text-xs text-[#666d80] dark:text-app-text-secondary">זמן מקסימלי למשלוח (דקות)</label>
                 <input
                   type="number"
                   min="1"
                   value={maxDeliveryTime}
                   onChange={(event) => setMaxDeliveryTime(event.target.value)}
-                  className="w-full rounded-xl border border-[#e5e5e5] bg-[#fafafa] px-3 py-2.5 text-[#0d0d12] outline-none focus:border-[#0fcdd3]/50 dark:border-app-border dark:bg-app-surface dark:text-[#fafafa]"
+                  className="w-full rounded-xl border border-[#e5e5e5] bg-[#fafafa] px-3 py-2.5 text-[#0d0d12] outline-none focus:border-[#0fcdd3]/50 dark:border-app-border dark:bg-app-surface dark:text-app-text"
                 />
               </div>
 
               <div className="flex items-center justify-between gap-3">
-                <p className="text-sm text-[#666d80] dark:text-[#a3a3a3]">
+                <p className="text-sm text-[#666d80] dark:text-app-text-secondary">
                   אפשר לשנות אותם ידנית בכל משלוח, אבל ברירת המחדל של המסעדה תגיע מכאן.
                 </p>
                 <button
@@ -294,7 +294,7 @@ export function RestaurantDetailsScreen() {
           </div>
 
           <div className="rounded-xl border border-[#e5e5e5] bg-white p-6 dark:border-app-border dark:bg-app-surface">
-            <h2 className="mb-4 text-lg font-bold text-[#0d0d12] dark:text-[#fafafa]">משלוחים אחרונים</h2>
+            <h2 className="mb-4 text-lg font-bold text-[#0d0d12] dark:text-app-text">משלוחים אחרונים</h2>
             <div className="space-y-2">
               {restaurantDeliveries.slice(0, 10).map((delivery) => (
                 <button
@@ -304,12 +304,12 @@ export function RestaurantDetailsScreen() {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <Package size={16} className="text-[#666d80] dark:text-[#a3a3a3]" />
+                      <Package size={16} className="text-[#666d80] dark:text-app-text-secondary" />
                       <div>
-                        <div className="text-sm font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                        <div className="text-sm font-bold text-[#0d0d12] dark:text-app-text">
                           {delivery.orderNumber}
                         </div>
-                        <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">
+                        <div className="text-xs text-[#666d80] dark:text-app-text-secondary">
                           {delivery.customerName}
                         </div>
                       </div>
@@ -335,7 +335,7 @@ export function RestaurantDetailsScreen() {
                               : 'פעיל'}
                       </span>
                       <div className="text-sm font-bold text-[#16a34a] dark:text-[#22c55e]">{formatCurrency(getDeliveryCustomerCharge(delivery))}</div>
-                      <div className="text-xs text-[#666d80] dark:text-[#a3a3a3]">
+                      <div className="text-xs text-[#666d80] dark:text-app-text-secondary">
                         {formatDistanceToNow(delivery.createdAt, { addSuffix: true, locale: he })}
                       </div>
                     </div>
@@ -344,7 +344,7 @@ export function RestaurantDetailsScreen() {
               ))}
 
               {restaurantDeliveries.length === 0 && (
-                <div className="py-8 text-center text-[#666d80] dark:text-[#a3a3a3]">אין משלוחים עדיין</div>
+                <div className="py-8 text-center text-[#666d80] dark:text-app-text-secondary">אין משלוחים עדיין</div>
               )}
             </div>
           </div>

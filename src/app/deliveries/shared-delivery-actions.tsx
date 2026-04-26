@@ -110,7 +110,7 @@ export const SharedDeliveryActions: React.FC<SharedDeliveryActionsProps> = ({
           </button>
 
           {assignmentBlockCopy && (
-            <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#737373] dark:text-[#a3a3a3]">
+            <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#737373] dark:text-app-text-secondary">
               <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-orange-500" />
               <span>{assignmentBlockCopy}</span>
             </div>
@@ -124,7 +124,7 @@ export const SharedDeliveryActions: React.FC<SharedDeliveryActionsProps> = ({
                   value={courierFilter}
                   onChange={(event) => setCourierFilter(event.target.value)}
                   placeholder="חפש שליח..."
-                  className="w-full px-2 py-1.5 text-xs bg-[#f5f5f5] dark:bg-[#262626] rounded-lg outline-none text-[#0d0d12] dark:text-[#fafafa] placeholder-[#a3a3a3]"
+                  className="w-full px-2 py-1.5 text-xs bg-[#f5f5f5] dark:bg-[#262626] rounded-lg outline-none text-[#0d0d12] dark:text-app-text placeholder-[#a3a3a3]"
                 />
               </div>
               <div className="max-h-40 overflow-y-auto">
@@ -140,7 +140,7 @@ export const SharedDeliveryActions: React.FC<SharedDeliveryActionsProps> = ({
                       }}
                       className="w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors text-right"
                     >
-                      <span className="font-medium text-[#0d0d12] dark:text-[#fafafa]">{item.name}</span>
+                      <span className="font-medium text-[#0d0d12] dark:text-app-text">{item.name}</span>
                       <div className="flex items-center gap-1 text-[#a3a3a3]">
                         <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                         <span>{item.rating}</span>

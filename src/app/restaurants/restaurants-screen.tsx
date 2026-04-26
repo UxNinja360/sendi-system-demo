@@ -195,16 +195,16 @@ const RestaurantNoResultsState: React.FC<{ query: string; onClear: () => void }>
 }) => (
   <div className="flex flex-col items-center justify-center px-4 py-20">
     <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-xl bg-[#f5f5f5] dark:bg-[#262626]">
-      <Search className="h-10 w-10 text-[#737373] dark:text-[#a3a3a3]" />
+      <Search className="h-10 w-10 text-[#737373] dark:text-app-text-secondary" />
     </div>
-    <h3 className="mb-2 text-xl font-bold text-[#0d0d12] dark:text-[#fafafa]">לא נמצאו מסעדות</h3>
-    <p className="mb-5 max-w-md text-center text-sm text-[#737373] dark:text-[#a3a3a3]">
+    <h3 className="mb-2 text-xl font-bold text-[#0d0d12] dark:text-app-text">לא נמצאו מסעדות</h3>
+    <p className="mb-5 max-w-md text-center text-sm text-[#737373] dark:text-app-text-secondary">
       {query ? `אין התאמה לחיפוש "${query}"` : 'אין מסעדות שתואמות לחיפוש הנוכחי'}
     </p>
     <button
       type="button"
       onClick={onClear}
-      className="rounded-lg border border-[#d4d4d4] bg-white px-4 py-2 text-sm font-semibold text-[#0d0d12] transition-colors hover:bg-[#f5f5f5] dark:border-[#404040] dark:bg-app-surface dark:text-[#fafafa] dark:hover:bg-[#262626]"
+      className="rounded-lg border border-[#d4d4d4] bg-white px-4 py-2 text-sm font-semibold text-[#0d0d12] transition-colors hover:bg-[#f5f5f5] dark:border-[#404040] dark:bg-app-surface dark:text-app-text dark:hover:bg-[#262626]"
     >
       נקה חיפוש
     </button>
@@ -885,17 +885,17 @@ export const RestaurantsScreen: React.FC = () => {
                   {visibleOrderedCols.map((col) => (
                     <td key={col.id} className={ENTITY_TABLE_DATA_CELL_CLASS}>
                       {col.id === 'name' && (
-                        <span className="block truncate font-medium text-xs text-[#0d0d12] dark:text-[#fafafa] whitespace-nowrap">
+                        <span className="block truncate font-medium text-xs text-[#0d0d12] dark:text-app-text whitespace-nowrap">
                           {restaurant.name}
                         </span>
                       )}
                       {col.id === 'type' && (
-                        <span className="block truncate text-xs text-[#737373] dark:text-[#a3a3a3] whitespace-nowrap">
+                        <span className="block truncate text-xs text-[#737373] dark:text-app-text-secondary whitespace-nowrap">
                           {restaurant.type}
                         </span>
                       )}
                       {col.id === 'chainId' && (
-                        <span className="block truncate text-xs text-[#666d80] dark:text-[#a3a3a3] whitespace-nowrap">
+                        <span className="block truncate text-xs text-[#666d80] dark:text-app-text-secondary whitespace-nowrap">
                           {restaurant.chainId}
                         </span>
                       )}
@@ -904,29 +904,29 @@ export const RestaurantsScreen: React.FC = () => {
                           className={`text-xs font-medium whitespace-nowrap ${
                             restaurant.isActive
                               ? 'text-[#16a34a] dark:text-[#9fe870]'
-                              : 'text-[#737373] dark:text-[#a3a3a3]'
+                              : 'text-[#737373] dark:text-app-text-secondary'
                           }`}
                         >
                           {restaurant.status}
                         </span>
                       )}
                       {col.id === 'address' && (
-                        <span className="block truncate text-xs text-[#666d80] dark:text-[#a3a3a3] whitespace-nowrap">
+                        <span className="block truncate text-xs text-[#666d80] dark:text-app-text-secondary whitespace-nowrap">
                           {restaurant.street}, {restaurant.city}
                         </span>
                       )}
                       {col.id === 'phone' && (
-                        <span className="block truncate text-xs text-[#666d80] dark:text-[#a3a3a3] whitespace-nowrap">
+                        <span className="block truncate text-xs text-[#666d80] dark:text-app-text-secondary whitespace-nowrap">
                           {restaurant.phone}
                         </span>
                       )}
                       {col.id === 'contact' && (
-                        <span className="block truncate text-xs text-[#666d80] dark:text-[#a3a3a3] whitespace-nowrap">
+                        <span className="block truncate text-xs text-[#666d80] dark:text-app-text-secondary whitespace-nowrap">
                           {restaurant.contactPerson}
                         </span>
                       )}
                       {col.id === 'deliveries' && (
-                        <span className="text-xs font-medium text-[#0d0d12] dark:text-[#fafafa] whitespace-nowrap">
+                        <span className="text-xs font-medium text-[#0d0d12] dark:text-app-text whitespace-nowrap">
                           {restaurant.totalDeliveries}
                         </span>
                       )}
@@ -973,7 +973,7 @@ export const RestaurantsScreen: React.FC = () => {
                     className={`text-[11px] font-medium ${
                       restaurant.isActive
                         ? 'text-[#16a34a] dark:text-[#9fe870]'
-                        : 'text-[#737373] dark:text-[#a3a3a3]'
+                        : 'text-[#737373] dark:text-app-text-secondary'
                     }`}
                   >
                     {restaurant.isActive ? 'פעיל' : 'לא פעיל'}
@@ -987,7 +987,7 @@ export const RestaurantsScreen: React.FC = () => {
                   setOpenActionsRestaurantId(null);
                   navigate(`/restaurant/${restaurant.id}`);
                 }}
-                icon={<FileText className="w-3.5 h-3.5 text-[#737373] dark:text-[#a3a3a3]" />}
+                icon={<FileText className="w-3.5 h-3.5 text-[#737373] dark:text-app-text-secondary" />}
               >
                 פרטים מלאים
               </EntityActionMenuItem>
@@ -1009,7 +1009,7 @@ export const RestaurantsScreen: React.FC = () => {
                   setContextMenuPos(null);
                   setOpenActionsRestaurantId(null);
                 }}
-                icon={<Download className="w-3.5 h-3.5 text-[#737373] dark:text-[#a3a3a3]" />}
+                icon={<Download className="w-3.5 h-3.5 text-[#737373] dark:text-app-text-secondary" />}
               >
                 ייצא דוח מסעדה
               </EntityActionMenuItem>
@@ -1042,50 +1042,50 @@ export const RestaurantsScreen: React.FC = () => {
             onClick={e => e.stopPropagation()}
           >
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-[#0d0d12] dark:text-[#fafafa]">הוסף מסעדה חדשה</h2>
+              <h2 className="text-xl font-bold text-[#0d0d12] dark:text-app-text">הוסף מסעדה חדשה</h2>
               <button onClick={() => setIsAddModalOpen(false)} className="rounded-lg p-2 hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors">
-                <X className="h-5 w-5 text-[#737373] dark:text-[#a3a3a3]" />
+                <X className="h-5 w-5 text-[#737373] dark:text-app-text-secondary" />
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-[#a3a3a3]">שם מסעדה *</label>
+                <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-app-text-secondary">שם מסעדה *</label>
                 <input
                   type="text"
                   value={newRestaurant.name}
                   onChange={e => setNewRestaurant(p => ({ ...p, name: e.target.value }))}
-                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-[#fafafa]"
+                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-app-text"
                   placeholder="שם המסעדה"
                   autoFocus
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-[#a3a3a3]">טלפון</label>
+                <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-app-text-secondary">טלפון</label>
                 <input
                   type="tel"
                   value={newRestaurant.phone}
                   onChange={e => setNewRestaurant(p => ({ ...p, phone: e.target.value }))}
-                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-[#fafafa]"
+                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-app-text"
                   placeholder="050-0000000"
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-[#a3a3a3]">כתובת</label>
+                <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-app-text-secondary">כתובת</label>
                 <input
                   type="text"
                   value={newRestaurant.address}
                   onChange={e => setNewRestaurant(p => ({ ...p, address: e.target.value }))}
-                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-[#fafafa]"
+                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-app-text"
                   placeholder="רחוב, עיר"
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-[#a3a3a3]">סוג מטבח</label>
+                <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-app-text-secondary">סוג מטבח</label>
                 <input
                   type="text"
                   value={newRestaurant.type}
                   onChange={e => setNewRestaurant(p => ({ ...p, type: e.target.value }))}
-                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-[#fafafa]"
+                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-app-text"
                   placeholder="פיצה, סושי, המבורגר..."
                 />
               </div>
@@ -1100,7 +1100,7 @@ export const RestaurantsScreen: React.FC = () => {
               </button>
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="rounded-lg bg-[#f5f5f5] px-4 py-2.5 font-medium text-[#0d0d12] transition-colors hover:bg-[#e5e5e5] dark:bg-[#262626] dark:text-[#fafafa] dark:hover:bg-[#404040]"
+                className="rounded-lg bg-[#f5f5f5] px-4 py-2.5 font-medium text-[#0d0d12] transition-colors hover:bg-[#e5e5e5] dark:bg-[#262626] dark:text-app-text dark:hover:bg-[#404040]"
               >
                 ביטול
               </button>

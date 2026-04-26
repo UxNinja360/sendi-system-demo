@@ -40,9 +40,15 @@ export const ListToolbarActions: React.FC<ListToolbarActionsProps> = ({
   const canRenderSearch = showSearch && onSearchQueryChange && searchPlaceholder;
   const canRenderColumnsToggle = showColumnsToggle && onToggleColumns;
   const canRenderExportButton = showExportButton && onExport;
+  const searchAsPrimaryControl =
+    canRenderSearch && !canRenderColumnsToggle && !canRenderExportButton;
 
   return (
-    <div className="relative flex flex-nowrap items-center gap-1.5">
+    <div
+      className={`relative flex min-w-0 flex-nowrap items-center gap-1.5 ${
+        searchAsPrimaryControl ? 'flex-1' : ''
+      }`.trim()}
+    >
       {canRenderSearch ? (
         <ToolbarSearchControl
           searchOpen={searchOpen}
@@ -50,7 +56,8 @@ export const ListToolbarActions: React.FC<ListToolbarActionsProps> = ({
           searchQuery={searchQuery ?? ''}
           onSearchQueryChange={onSearchQueryChange}
           placeholder={searchPlaceholder}
-          widthClass={searchWidthClass}
+          widthClass={searchAsPrimaryControl ? 'w-full' : searchWidthClass}
+          alwaysOpen={searchAsPrimaryControl}
         />
       ) : null}
 
