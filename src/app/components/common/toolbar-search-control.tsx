@@ -30,10 +30,10 @@ export const ToolbarSearchControl: React.FC<ToolbarSearchControlProps> = ({
   const isSearchVisible = alwaysOpen || searchOpen;
 
   useEffect(() => {
-    if (isSearchVisible) {
+    if (searchOpen && !alwaysOpen) {
       inputRef.current?.focus();
     }
-  }, [isSearchVisible]);
+  }, [alwaysOpen, searchOpen]);
 
   return (
     <div className={alwaysOpen ? 'relative flex min-w-0 flex-1 items-center' : 'relative flex items-center'}>
@@ -47,7 +47,7 @@ export const ToolbarSearchControl: React.FC<ToolbarSearchControlProps> = ({
               placeholder={placeholder}
               value={searchQuery}
               onChange={(event) => onSearchQueryChange(event.target.value)}
-              className={`${widthClass} h-9 rounded-[4px] border border-[#e5e5e5] bg-[#f5f5f5] pr-8 pl-6 text-sm text-[#0d0d12] outline-none transition-all placeholder:text-[#a3a3a3] focus:border-[#9fe870]/50 dark:border-app-nav-border dark:bg-[#000000] dark:text-app-text dark:placeholder:text-app-text-secondary`}
+              className={`${widthClass} h-9 rounded-[4px] border border-[#e5e5e5] bg-[#f5f5f5] pr-8 pl-6 text-sm text-[#0d0d12] outline-none transition-all placeholder:text-[#a3a3a3] focus:border-[#9fe870]/50 dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-app-text dark:placeholder:text-app-text-secondary`}
             />
             {searchQuery && (
               <button

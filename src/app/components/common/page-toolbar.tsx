@@ -113,18 +113,18 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
                   {renderedPeriodControl}
                 </div>
               ) : null}
-              {controls ? (
-                <div
-                  className={`flex max-w-full shrink-0 flex-nowrap items-center gap-1 ${controlsClassName}`.trim()}
-                >
-                  {controls}
-                </div>
-              ) : null}
               {actions ? (
                 <div
                   className={`flex min-w-0 flex-1 flex-nowrap items-center gap-1 ${actionsClassName}`.trim()}
                 >
                   {actions}
+                </div>
+              ) : null}
+              {controls ? (
+                <div
+                  className={`flex max-w-full shrink-0 flex-nowrap items-center gap-1 ${controlsClassName}`.trim()}
+                >
+                  {controls}
                 </div>
               ) : null}
               {headerControls || renderedPrimaryAction ? (

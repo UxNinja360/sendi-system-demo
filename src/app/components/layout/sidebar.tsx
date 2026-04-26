@@ -6,6 +6,7 @@ import {
   Bike,
   Calendar,
   ChevronLeft,
+  ChevronRight,
   Clock,
   FileText,
   LayoutDashboard,
@@ -14,7 +15,6 @@ import {
   Power,
   Ruler,
   Settings,
-  Sidebar as SidebarIcon,
   Store,
   TrendingUp,
   TriangleAlert,
@@ -299,10 +299,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
       <div
         dir="rtl"
-        onClick={(event) => {
-          if (event.target === event.currentTarget) setIsCollapsed(!isCollapsed);
-        }}
-        className={`app-shell-height fixed inset-y-0 right-0 z-[110] flex flex-col border-l border-app-nav-border bg-app-nav-bg shadow-xl md:static md:z-50 md:shadow-none ${
+        className={`app-shell-height group/sidebar fixed inset-y-0 right-0 z-[110] flex flex-col border-l border-app-nav-border bg-app-nav-bg shadow-xl md:static md:z-50 md:shadow-none ${
           isCollapsed ? 'translate-x-0' : 'translate-x-full md:translate-x-0'
         }`}
         style={{
@@ -312,9 +309,30 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
             : 'transform 300ms cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
+        {isDesktop && (
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              setIsCollapsed((value) => !value);
+            }}
+            className="group/sidebar-resize absolute bottom-0 left-0 top-0 z-20 hidden w-4 -translate-x-1/2 cursor-ew-resize items-center justify-center focus:outline-none md:flex"
+            aria-label={isCollapsed ? 'Open sidebar' : 'Collapse sidebar'}
+            title={isCollapsed ? 'Open sidebar' : 'Collapse sidebar'}
+          >
+            <span className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-transparent transition-colors group-hover/sidebar-resize:bg-app-nav-border" />
+            <span className="pointer-events-none absolute top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border border-app-nav-border bg-app-nav-bg text-app-text-secondary opacity-0 shadow-[0_0_0_1px_rgba(255,255,255,0.04)] transition-[opacity,background-color,color,border-color] group-hover/sidebar-resize:opacity-100 group-hover/sidebar-resize:border-[#2E2E2E] group-hover/sidebar-resize:bg-[#1A1A1A] group-hover/sidebar-resize:text-app-text group-focus-visible/sidebar-resize:opacity-100 group-focus-visible/sidebar-resize:ring-2 group-focus-visible/sidebar-resize:ring-[#ededed]/20">
+              {isCollapsed ? (
+                <ChevronLeft className="h-3.5 w-3.5" />
+              ) : (
+                <ChevronRight className="h-3.5 w-3.5" />
+              )}
+            </span>
+          </button>
+        )}
+
         <div
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="app-safe-header flex shrink-0 cursor-pointer items-center justify-between border-b border-app-nav-border bg-app-nav-bg px-4 py-0 transition-colors hover:bg-app-nav-hover-bg"
+          className="app-safe-header flex shrink-0 items-center justify-between border-b border-app-nav-border bg-app-nav-bg px-4 py-0"
         >
           <div className="flex items-center gap-2 md:hidden">
             <AppLogo size={20} className="text-[#02B74F]" />
@@ -346,11 +364,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
             <X size={18} />
           </button>
 
-          {!isCollapsed && (
-            <div className="hidden text-app-text-secondary md:block">
-              <SidebarIcon size={16} />
-            </div>
-          )}
+          {!isCollapsed && <div className="hidden w-4 md:block" />}
         </div>
 
         <div
@@ -358,12 +372,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
             if (event.target === event.currentTarget) {
               if (!isDesktop) {
                 setIsCollapsed(false);
-              } else {
-                setIsCollapsed(!isCollapsed);
               }
             }
           }}
-          className="flex-1 cursor-pointer overflow-y-auto bg-app-nav-bg py-2 scrollbar-thin scrollbar-thumb-[#d4d4d4] dark:scrollbar-thumb-[#404040]"
+          className="flex-1 overflow-y-auto bg-app-nav-bg py-2 scrollbar-thin scrollbar-thumb-[#d4d4d4] dark:scrollbar-thumb-[#404040]"
         >
           {SIDEBAR_NAV_SECTIONS.map((section, sectionIndex) => (
             <React.Fragment key={section.id}>

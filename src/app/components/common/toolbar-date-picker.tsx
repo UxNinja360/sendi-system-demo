@@ -260,7 +260,7 @@ export const ToolbarPeriodControl: React.FC<ToolbarPeriodControlProps> = ({
           : inMonth
             ? 'text-app-text hover:bg-app-surface-raised'
             : 'text-app-text-muted',
-        isToday && !isSelected ? 'ring-1 ring-app-brand' : '',
+        isToday && !isSelected ? 'ring-1 ring-[#ededed]/35' : '',
       ].join(' ');
     }
 
@@ -278,11 +278,11 @@ export const ToolbarPeriodControl: React.FC<ToolbarPeriodControlProps> = ({
       isStart || isEnd
         ? 'bg-[#0d0d12] text-white dark:bg-[#fafafa] dark:text-[#0d0d12]'
         : inRange
-          ? 'bg-app-brand-subtle text-app-brand-text'
+          ? 'bg-app-surface-raised text-app-text'
           : inMonth
             ? 'text-app-text hover:bg-app-surface-raised'
             : 'text-app-text-muted',
-      isToday && !isStart && !isEnd ? 'ring-1 ring-app-brand' : '',
+      isToday && !isStart && !isEnd ? 'ring-1 ring-[#ededed]/35' : '',
     ].join(' ');
   };
 
@@ -299,8 +299,8 @@ export const ToolbarPeriodControl: React.FC<ToolbarPeriodControlProps> = ({
         onClick={() => setCalendarOpen((value) => !value)}
         className={`flex h-9 min-w-[136px] items-center justify-center gap-2 rounded-[4px] border px-3 text-sm font-semibold transition-colors sm:min-w-[190px] ${
           periodMode === 'custom_range'
-            ? 'border-app-brand/40 bg-app-brand-subtle text-app-brand-text'
-            : 'border-app-border bg-app-surface text-app-text hover:bg-app-surface-raised'
+            ? 'border-app-nav-border bg-[#0A0A0A] text-app-text'
+            : 'border-app-border bg-app-surface text-app-text hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#0A0A0A] dark:hover:bg-[#1A1A1A]'
         }`}
       >
         <CalendarDays className="h-4 w-4 shrink-0 text-app-text-secondary" />
@@ -396,11 +396,11 @@ export const ToolbarWeekPicker: React.FC<ToolbarWeekPickerProps> = ({
       isSelected
         ? 'bg-[#0d0d12] text-white dark:bg-[#fafafa] dark:text-[#0d0d12]'
         : isInSelectedWeek
-          ? 'bg-app-brand-subtle text-app-brand-text'
+          ? 'bg-app-surface-raised text-app-text'
           : inMonth
             ? 'text-app-text hover:bg-app-surface-raised'
             : 'text-app-text-muted',
-      isToday && !isSelected ? 'ring-1 ring-app-brand' : '',
+      isToday && !isSelected ? 'ring-1 ring-[#ededed]/35' : '',
     ].join(' ');
   };
 
@@ -412,7 +412,7 @@ export const ToolbarWeekPicker: React.FC<ToolbarWeekPickerProps> = ({
       <button
         type="button"
         onClick={() => setCalendarOpen((value) => !value)}
-        className="flex h-9 min-w-[150px] items-center justify-center gap-2 rounded-[4px] border border-app-border bg-app-surface px-3 text-sm font-semibold text-app-text transition-colors hover:bg-app-surface-raised sm:min-w-[190px]"
+        className="flex h-9 min-w-[150px] items-center justify-center gap-2 rounded-[4px] border border-app-border bg-app-surface px-3 text-sm font-semibold text-app-text transition-colors hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#0A0A0A] dark:hover:bg-[#1A1A1A] sm:min-w-[190px]"
       >
         <CalendarDays className="h-4 w-4 shrink-0 text-app-text-secondary" />
         <span className="truncate">{weekLabel}</span>
@@ -426,7 +426,7 @@ export const ToolbarWeekPicker: React.FC<ToolbarWeekPickerProps> = ({
           onDateChange(new Date());
           setCalendarOpen(false);
         }}
-        className="hidden h-9 items-center rounded-[4px] border border-app-border bg-app-surface px-3 text-sm font-medium text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text sm:flex"
+        className="hidden h-9 items-center rounded-[4px] border border-app-border bg-app-surface px-3 text-sm font-medium text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text dark:border-app-nav-border dark:bg-[#0A0A0A] dark:hover:bg-[#1A1A1A] sm:flex"
       >
         היום
       </button>
