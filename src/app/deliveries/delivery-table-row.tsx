@@ -84,7 +84,6 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
     } else {
       onStatusChange(delivery.id, newStatus);
     }
-    toast.success(`סטטוס עודכן ל${STATUS_CONFIG[newStatus].label}`);
   };
 
   const handleCopyOrderNumber = () => {

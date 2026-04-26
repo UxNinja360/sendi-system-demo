@@ -5,7 +5,6 @@ import { Delivery, DeliveryStatus } from '../types/delivery.types';
 import { DeliveriesSidePanel } from '../deliveries/deliveries-side-panel';
 import { DeliveriesTableSection } from '../deliveries/deliveries-table-section';
 import { DeliveriesOverlays } from '../deliveries/deliveries-overlays';
-import { STATUS_LABELS } from '../deliveries/status-config';
 import { ALL_COLUMNS, COLUMN_MAP } from '../deliveries/column-defs';
 import type { ColumnDef } from '../deliveries/column-defs';
 import { toast } from 'sonner';
@@ -131,7 +130,6 @@ type DeliveriesOverviewStats = {
   delivered: number;
   cancelled: number;
   expired: number;
-  revenue: number;
 };
 
 const DeliveriesOverviewStrip: React.FC<{
@@ -144,7 +142,6 @@ const DeliveriesOverviewStrip: React.FC<{
     { label: 'משובצים', value: stats.assigned.toLocaleString('he-IL') },
     { label: 'בדרך', value: stats.delivering.toLocaleString('he-IL') },
     { label: 'נמסרו', value: stats.delivered.toLocaleString('he-IL'), tone: 'success' },
-    { label: 'חיובים', value: `₪${Math.round(stats.revenue).toLocaleString('he-IL')}` },
     ...(hasFilters ? [{ label: 'תוצאות', value: stats.filtered.toLocaleString('he-IL') }] : []),
   ];
 
@@ -416,7 +413,6 @@ export const DeliveriesPage: React.FC = () => {
 
   const handleStatusChange = useCallback((deliveryId: string, status: DeliveryStatus) => {
     dispatch({ type: 'UPDATE_STATUS', payload: { deliveryId, status } });
-    toast.success(`סטטוס עודכן: ${STATUS_LABELS[status]}`);
   }, [dispatch]);
 
   const handleAssignCourier = useCallback((deliveryId: string, courierId: string) => {
@@ -434,23 +430,18 @@ export const DeliveriesPage: React.FC = () => {
       return;
     }
 
-    const name = state.couriers.find(c => c.id === courierId)?.name ?? '';
-    toast.success(`שליח שובץ${name ? ': ' + name : ''}`);
   }, [assignCourier, state.couriers, state.deliveries, state.deliveryBalance]);
 
   const handleCancelDelivery = useCallback((deliveryId: string) => {
     dispatch({ type: 'CANCEL_DELIVERY', payload: deliveryId });
-    toast.success('המשלוח בוטל');
   }, [dispatch]);
 
   const handleCompleteDelivery = useCallback((deliveryId: string) => {
     dispatch({ type: 'COMPLETE_DELIVERY', payload: deliveryId });
-    toast.success('המשלוח סומן כנמסר');
   }, [dispatch]);
 
   const handleUnassignCourier = useCallback((deliveryId: string) => {
     unassignCourier(deliveryId);
-    toast.success('השיבוץ בוטל');
   }, [unassignCourier]);
 
   const handleOpenEdit = useCallback((id: string) => { setEditDeliveryId(id); }, []);
@@ -485,10 +476,6 @@ export const DeliveriesPage: React.FC = () => {
       delivered,
       cancelled,
       expired,
-      revenue: sumDeliveryMoney(
-        filteredDeliveries.filter(d => d.status === 'delivered'),
-        getDeliveryCustomerCharge,
-      ),
     };
   }, [filteredDeliveries, state.deliveries.length]);
 

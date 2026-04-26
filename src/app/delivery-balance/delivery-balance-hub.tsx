@@ -10,7 +10,6 @@ import {
   CircleDollarSign,
 } from 'lucide-react';
 import { useDelivery } from '../context/delivery-context-value';
-import { toast } from 'sonner';
 
 export const DeliveryBalanceHub: React.FC = () => {
   const { state, dispatch } = useDelivery();
@@ -56,11 +55,6 @@ export const DeliveryBalanceHub: React.FC = () => {
     dispatch({
       type: 'ADD_DELIVERY_BALANCE',
       payload: purchaseAmount,
-    });
-
-    toast.success(`נוספו ${formatNumber(purchaseAmount)} משלוחים ליתרה`, {
-      description: `סה"כ לתשלום: ${formatCurrency(totalPrice)}`,
-      icon: '✅',
     });
 
     setPurchaseAmount(5000);

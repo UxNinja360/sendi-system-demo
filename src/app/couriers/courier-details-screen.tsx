@@ -401,7 +401,6 @@ export function CourierDetailsScreen() {
     }
 
     dispatch({ type: 'REMOVE_COURIER', payload: courier.id });
-    toast.success(`\u05d4\u05e9\u05dc\u05d9\u05d7 ${courier.name} \u05e0\u05de\u05d7\u05e7.`);
     navigate('/couriers');
   };
 

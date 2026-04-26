@@ -1,6 +1,7 @@
 ﻿import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ArrowDown, ArrowUp, CalendarDays, CheckCircle, ChevronLeft, ChevronRight, Clock, Ellipsis, Info, Menu, Minus, Plus, Search, Trash2, X } from 'lucide-react';
+import { toast } from 'sonner';
 import { useDelivery } from '../context/delivery-context-value';
 import { Courier, DayOfWeek, ShiftSlotTemplate, ShiftTemplate, ShiftType } from '../types/delivery.types';
 import { useNavigate } from 'react-router';
@@ -654,7 +655,7 @@ export const CouriersShifts: React.FC = () => {
 
     setIsOptionsOpen(false);
     if (assigned === 0) {
-      alert('\u05dc\u05d0 \u05e0\u05de\u05e6\u05d0\u05d5 \u05e9\u05dc\u05d9\u05d7\u05d9\u05dd \u05d6\u05de\u05d9\u05e0\u05d9\u05dd \u05dc\u05e1\u05d9\u05d3\u05d5\u05e8 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9.');
+      toast.error('\u05dc\u05d0 \u05e0\u05de\u05e6\u05d0\u05d5 \u05e9\u05dc\u05d9\u05d7\u05d9\u05dd \u05d6\u05de\u05d9\u05e0\u05d9\u05dd \u05dc\u05e1\u05d9\u05d3\u05d5\u05e8 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9.');
     }
   };
 

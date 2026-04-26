@@ -473,6 +473,7 @@ export type DeliveryAction =
   | { type: 'ADD_RESTAURANT'; payload: Restaurant } // הוספת מסעדה חדשה
   | { type: 'TOGGLE_RESTAURANT'; payload: string } // restaurantId - הפעלה/כיבוי מסעדה
   | { type: 'UPDATE_RESTAURANT'; payload: { restaurantId: string; updates: Partial<Omit<Restaurant, 'id'>> } }
+  | { type: 'REMOVE_RESTAURANT'; payload: string }
   | { type: 'SET_RESTAURANTS'; payload: Restaurant[] } // עדכון מלא של רשימת המסעדות
   | { type: 'COMPLETE_DELIVERY'; payload: string }
   | { type: 'ADD_DELIVERY_BALANCE'; payload: number } // הוספת יתרת משלוחים
@@ -481,5 +482,4 @@ export type DeliveryAction =
   | { type: 'SET_COURIER_ROUTE_PLAN'; payload: { courierId: string; stopIds: string[] } }
   | { type: 'CLEAR_COURIER_ROUTE_PLAN'; payload: string }
   | { type: 'ADD_ACTIVITY_LOG'; payload: ActivityLogEntry }
-  | { type: 'CLEAR_ACTIVITY_LOGS' }
   | { type: 'RESET_SYSTEM'; payload: DeliveryState };

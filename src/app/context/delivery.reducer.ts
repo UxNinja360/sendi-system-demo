@@ -2359,12 +2359,6 @@ const reduceDeliveryState = (state: DeliveryState, action: DeliveryAction): Deli
         activityLogs: appendActivityLogEntry(state.activityLogs, action.payload),
       };
 
-    case 'CLEAR_ACTIVITY_LOGS':
-      return {
-        ...state,
-        activityLogs: [],
-      };
-
     case 'RESET_SYSTEM':
           return action.payload;
 

@@ -99,8 +99,6 @@ export function RestaurantDetailsScreen() {
         },
       },
     });
-
-    toast.success('הגדרות הזמנים של המסעדה עודכנו');
   };
 
   return (

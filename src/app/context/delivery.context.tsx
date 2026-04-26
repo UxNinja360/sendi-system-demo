@@ -1,4 +1,5 @@
 ﻿import React, { useReducer, useEffect, useCallback, useRef } from 'react';
+import { toast } from 'sonner';
 import {
   ActivityLogEntry,
   DeliveryState,
@@ -97,11 +98,29 @@ const createActivityLogEntry = (action: DeliveryAction, state: DeliveryState): A
         actionType: action.type,
         category: 'delivery',
       };
+    case 'UPDATE_STATUS':
+      return {
+        id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: now,
+        title: 'סטטוס משלוח עודכן',
+        description: `${getDeliveryLabel(action.payload.deliveryId)} → ${getDeliveryStatusLabel(action.payload.status)}`,
+        actionType: action.type,
+        category: 'delivery',
+      };
     case 'CANCEL_DELIVERY':
       return {
         id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
         timestamp: now,
         title: 'משלוח בוטל',
+        description: getDeliveryLabel(action.payload),
+        actionType: action.type,
+        category: 'delivery',
+      };
+    case 'COMPLETE_DELIVERY':
+      return {
+        id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: now,
+        title: 'משלוח נמסר',
         description: getDeliveryLabel(action.payload),
         actionType: action.type,
         category: 'delivery',
@@ -205,6 +224,15 @@ const createActivityLogEntry = (action: DeliveryAction, state: DeliveryState): A
         actionType: action.type,
         category: 'restaurant',
       };
+    case 'REMOVE_RESTAURANT':
+      return {
+        id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: now,
+        title: 'מסעדה נמחקה',
+        description: getRestaurantLabel(action.payload),
+        actionType: action.type,
+        category: 'restaurant',
+      };
     case 'ADD_DELIVERY_BALANCE':
       return {
         id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -235,6 +263,359 @@ const createActivityLogEntry = (action: DeliveryAction, state: DeliveryState): A
       };
     default:
       return null;
+  }
+};
+
+type ActionToastPayload = {
+  actionType: DeliveryAction['type'];
+  title: string;
+  description?: string;
+};
+
+type PendingActionToast = {
+  count: number;
+  toast: ActionToastPayload;
+  timeoutId: ReturnType<typeof setTimeout>;
+};
+
+const ACTION_TOAST_DELAY_MS = 120;
+const ACTION_TOAST_DURATION_MS = 2600;
+
+const getActionDeliveryLabel = (state: DeliveryState, deliveryId: string) =>
+  state.deliveries.find((delivery) => delivery.id === deliveryId)?.orderNumber ?? deliveryId;
+
+const getActionCourierLabel = (state: DeliveryState, courierId: string) =>
+  state.couriers.find((courier) => courier.id === courierId)?.name ?? courierId;
+
+const getActionRestaurantLabel = (state: DeliveryState, restaurantId: string) =>
+  state.restaurants.find((restaurant) => restaurant.id === restaurantId)?.name ?? restaurantId;
+
+const getActionShiftLabel = (state: DeliveryState, shiftId: string) => {
+  const shift = state.shifts.find((item) => item.id === shiftId);
+  return shift ? `${shift.name} · ${shift.date}` : shiftId;
+};
+
+const getActionTemplateLabel = (state: DeliveryState, templateId: string) =>
+  state.shiftTemplates.find((template) => template.id === templateId)?.name ?? templateId;
+
+const getActionAssignmentCourierLabel = (
+  state: DeliveryState,
+  shiftId: string,
+  assignmentId: string
+) => {
+  const assignment = state.shifts
+    .find((shift) => shift.id === shiftId)
+    ?.courierAssignments.find((item) => item.id === assignmentId);
+
+  return assignment ? getActionCourierLabel(state, assignment.courierId) : assignmentId;
+};
+
+const getDeliveryStatusLabel = (status: Delivery['status']) => {
+  const labels: Record<Delivery['status'], string> = {
+    pending: 'ממתין',
+    assigned: 'משובץ',
+    delivering: 'בדרך',
+    delivered: 'נמסר',
+    cancelled: 'בוטל',
+    expired: 'פג תוקף',
+  };
+
+  return labels[status] ?? status;
+};
+
+const getCourierStatusToastTitle = (status: Courier['status']) => {
+  if (status === 'available') return 'שליח הופעל';
+  if (status === 'offline') return 'שליח כובה';
+  return 'סטטוס שליח עודכן';
+};
+
+const createActionToast = (action: DeliveryAction, state: DeliveryState): ActionToastPayload | null => {
+  switch (action.type) {
+    case 'TOGGLE_SYSTEM':
+      return {
+        actionType: action.type,
+        title: state.isSystemOpen ? 'קבלת משלוחים כובתה' : 'קבלת משלוחים הופעלה',
+      };
+    case 'TOGGLE_AUTO_ASSIGN':
+      return {
+        actionType: action.type,
+        title: state.autoAssignEnabled ? 'שיבוץ אוטומטי כובה' : 'שיבוץ אוטומטי הופעל',
+      };
+    case 'SET_TIME_MULTIPLIER':
+      return {
+        actionType: action.type,
+        title: `מהירות הדמו עודכנה ל-${action.payload}x`,
+      };
+    case 'ADD_DELIVERY':
+      return {
+        actionType: action.type,
+        title: 'משלוח חדש נוצר',
+        description: `${action.payload.orderNumber} · ${action.payload.restaurantName}`,
+      };
+    case 'ASSIGN_COURIER': {
+      const delivery = state.deliveries.find((item) => item.id === action.payload.deliveryId);
+      const courier = state.couriers.find((item) => item.id === action.payload.courierId);
+      if (!delivery || !courier) return null;
+
+      return {
+        actionType: action.type,
+        title: 'שליח שובץ למשלוח',
+        description: `${getActionDeliveryLabel(state, action.payload.deliveryId)} · ${courier.name}`,
+      };
+    }
+    case 'UPDATE_STATUS': {
+      const delivery = state.deliveries.find((item) => item.id === action.payload.deliveryId);
+      if (!delivery || delivery.status === action.payload.status) return null;
+
+      return {
+        actionType: action.type,
+        title: `סטטוס משלוח עודכן ל${getDeliveryStatusLabel(action.payload.status)}`,
+        description: getActionDeliveryLabel(state, action.payload.deliveryId),
+      };
+    }
+    case 'UPDATE_DELIVERY':
+      if (!state.deliveries.some((item) => item.id === action.payload.deliveryId)) return null;
+      return {
+        actionType: action.type,
+        title: 'פרטי משלוח עודכנו',
+        description: getActionDeliveryLabel(state, action.payload.deliveryId),
+      };
+    case 'CANCEL_DELIVERY': {
+      const delivery = state.deliveries.find((item) => item.id === action.payload);
+      if (!delivery || delivery.status === 'cancelled') return null;
+
+      return {
+        actionType: action.type,
+        title: 'המשלוח בוטל',
+        description: getActionDeliveryLabel(state, action.payload),
+      };
+    }
+    case 'COMPLETE_DELIVERY': {
+      const delivery = state.deliveries.find((item) => item.id === action.payload);
+      if (!delivery || delivery.status === 'delivered') return null;
+
+      return {
+        actionType: action.type,
+        title: 'המשלוח סומן כנמסר',
+        description: getActionDeliveryLabel(state, action.payload),
+      };
+    }
+    case 'UNASSIGN_COURIER': {
+      const delivery = state.deliveries.find((item) => item.id === action.payload);
+      if (!delivery || !delivery.courierId) return null;
+
+      return {
+        actionType: action.type,
+        title: 'השיבוץ בוטל',
+        description: getActionDeliveryLabel(state, action.payload),
+      };
+    }
+    case 'DELETE_DELIVERY':
+      if (!state.deliveries.some((item) => item.id === action.payload)) return null;
+      return {
+        actionType: action.type,
+        title: 'משלוח נמחק',
+        description: getActionDeliveryLabel(state, action.payload),
+      };
+    case 'UPDATE_COURIER_STATUS': {
+      const courier = state.couriers.find((item) => item.id === action.payload.courierId);
+      if (!courier || courier.status === action.payload.status) return null;
+
+      return {
+        actionType: action.type,
+        title: getCourierStatusToastTitle(action.payload.status),
+        description: courier.name,
+      };
+    }
+    case 'START_COURIER_SHIFT': {
+      const courier = state.couriers.find((item) => item.id === action.payload.courierId);
+      if (!courier || courier.status === 'offline' || courier.isOnShift) return null;
+
+      return {
+        actionType: action.type,
+        title: 'משמרת התחילה',
+        description: courier.name,
+      };
+    }
+    case 'END_COURIER_SHIFT': {
+      const courier = state.couriers.find((item) => item.id === action.payload.courierId);
+      if (!courier || !courier.isOnShift) return null;
+
+      return {
+        actionType: action.type,
+        title: 'משמרת הסתיימה',
+        description: courier.name,
+      };
+    }
+    case 'ADD_COURIER':
+      return {
+        actionType: action.type,
+        title: `השליח ${action.payload.name} נוסף`,
+      };
+    case 'REMOVE_COURIER':
+      if (!state.couriers.some((item) => item.id === action.payload)) return null;
+      return {
+        actionType: action.type,
+        title: `השליח ${getActionCourierLabel(state, action.payload)} נמחק`,
+      };
+    case 'ADD_RESTAURANT':
+      return {
+        actionType: action.type,
+        title: `המסעדה ${action.payload.name} נוספה`,
+      };
+    case 'TOGGLE_RESTAURANT': {
+      const restaurant = state.restaurants.find((item) => item.id === action.payload);
+      if (!restaurant) return null;
+
+      return {
+        actionType: action.type,
+        title: restaurant.isActive ? 'מסעדה כובתה' : 'מסעדה הופעלה',
+        description: restaurant.name,
+      };
+    }
+    case 'UPDATE_RESTAURANT':
+      if (!state.restaurants.some((item) => item.id === action.payload.restaurantId)) return null;
+      return {
+        actionType: action.type,
+        title: 'פרטי מסעדה עודכנו',
+        description: getActionRestaurantLabel(state, action.payload.restaurantId),
+      };
+    case 'REMOVE_RESTAURANT':
+      if (!state.restaurants.some((item) => item.id === action.payload)) return null;
+      return {
+        actionType: action.type,
+        title: `המסעדה ${getActionRestaurantLabel(state, action.payload)} נמחקה`,
+      };
+    case 'ADD_DELIVERY_BALANCE':
+      return {
+        actionType: action.type,
+        title: `נוספו ${action.payload.toLocaleString('he-IL')} משלוחים ליתרה`,
+      };
+    case 'CREATE_SHIFT_TEMPLATE':
+      return {
+        actionType: action.type,
+        title: 'תבנית משמרת נוספה',
+        description: action.payload.name,
+      };
+    case 'UPDATE_SHIFT_TEMPLATE':
+      return {
+        actionType: action.type,
+        title: 'תבנית משמרת עודכנה',
+        description: getActionTemplateLabel(state, action.payload.templateId),
+      };
+    case 'DELETE_SHIFT_TEMPLATE':
+      return {
+        actionType: action.type,
+        title: 'תבנית משמרת נמחקה',
+        description: getActionTemplateLabel(state, action.payload.templateId),
+      };
+    case 'MOVE_SHIFT_TEMPLATE':
+      return {
+        actionType: action.type,
+        title: 'סדר תבניות המשמרת עודכן',
+        description: getActionTemplateLabel(state, action.payload.templateId),
+      };
+    case 'CREATE_SHIFT':
+      return {
+        actionType: action.type,
+        title: 'משמרת נוספה',
+        description: `${action.payload.name} · ${action.payload.date}`,
+      };
+    case 'UPDATE_SHIFT':
+      return {
+        actionType: action.type,
+        title: 'משמרת עודכנה',
+        description: getActionShiftLabel(state, action.payload.shiftId),
+      };
+    case 'DELETE_SHIFT':
+      return {
+        actionType: action.type,
+        title: 'משמרת נמחקה',
+        description: getActionShiftLabel(state, action.payload.shiftId),
+      };
+    case 'ASSIGN_COURIER_TO_SHIFT':
+      return {
+        actionType: action.type,
+        title: 'שליח שובץ למשמרת',
+        description: getActionCourierLabel(state, action.payload.courierId),
+      };
+    case 'AUTO_ASSIGN_SHIFT':
+      return {
+        actionType: action.type,
+        title: 'סידור משמרת אוטומטי בוצע',
+        description: getActionShiftLabel(state, action.payload.shiftId),
+      };
+    case 'REMOVE_COURIER_FROM_SHIFT':
+      return {
+        actionType: action.type,
+        title: 'שיבוץ משמרת הוסר',
+        description: getActionAssignmentCourierLabel(state, action.payload.shiftId, action.payload.assignmentId),
+      };
+    case 'START_SHIFT_ASSIGNMENT':
+      return {
+        actionType: action.type,
+        title: 'משמרת התחילה',
+        description: getActionAssignmentCourierLabel(state, action.payload.shiftId, action.payload.assignmentId),
+      };
+    case 'END_SHIFT_ASSIGNMENT':
+      return {
+        actionType: action.type,
+        title: 'משמרת הסתיימה',
+        description: getActionAssignmentCourierLabel(state, action.payload.shiftId, action.payload.assignmentId),
+      };
+    case 'REORDER_DELIVERY':
+      return {
+        actionType: action.type,
+        title: 'סדר המשלוח עודכן',
+        description: getActionDeliveryLabel(state, action.payload.deliveryId),
+      };
+    case 'SET_COURIER_ROUTE_PLAN':
+      return {
+        actionType: action.type,
+        title: 'מסלול שליח עודכן',
+        description: getActionCourierLabel(state, action.payload.courierId),
+      };
+    case 'CLEAR_COURIER_ROUTE_PLAN':
+      return {
+        actionType: action.type,
+        title: 'מסלול שליח נוקה',
+        description: getActionCourierLabel(state, action.payload),
+      };
+    default:
+      return null;
+  }
+};
+
+const getAggregateActionToastTitle = (actionType: DeliveryAction['type'], count: number) => {
+  switch (actionType) {
+    case 'UPDATE_COURIER_STATUS':
+      return `${count} סטטוסי שליחים עודכנו`;
+    case 'START_COURIER_SHIFT':
+      return `התחילה משמרת ל-${count} שליחים`;
+    case 'END_COURIER_SHIFT':
+      return `הסתיימה משמרת ל-${count} שליחים`;
+    case 'TOGGLE_RESTAURANT':
+      return `${count} מסעדות עודכנו`;
+    case 'ASSIGN_COURIER':
+      return `${count} משלוחים צוותו`;
+    case 'CANCEL_DELIVERY':
+      return `${count} משלוחים בוטלו`;
+    case 'COMPLETE_DELIVERY':
+      return `${count} משלוחים סומנו כנמסרו`;
+    case 'UNASSIGN_COURIER':
+      return `${count} שיבוצים בוטלו`;
+    case 'DELETE_DELIVERY':
+      return `${count} משלוחים נמחקו`;
+    case 'ASSIGN_COURIER_TO_SHIFT':
+      return `${count} שליחים שובצו למשמרות`;
+    case 'REMOVE_COURIER_FROM_SHIFT':
+      return `${count} שיבוצי משמרת הוסרו`;
+    case 'START_SHIFT_ASSIGNMENT':
+      return `${count} משמרות התחילו`;
+    case 'END_SHIFT_ASSIGNMENT':
+      return `${count} משמרות הסתיימו`;
+    default:
+      return `${count} פעולות בוצעו`;
   }
 };
 
@@ -428,6 +809,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const storageEpochRef = useRef<string | null>(
     typeof window === 'undefined' ? null : ensureStorageEpoch(window.localStorage)
   );
+  const pendingActionToastsRef = useRef<Map<string, PendingActionToast>>(new Map());
 
   useEffect(() => {
     stateRef.current = state;
@@ -448,18 +830,64 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  const dispatch = useCallback((action: DeliveryAction) => {
-    rawDispatch(action);
+  const flushActionToast = useCallback((key: string) => {
+    const pending = pendingActionToastsRef.current.get(key);
+    if (!pending) return;
 
-    if (action.type === 'ADD_ACTIVITY_LOG' || action.type === 'CLEAR_ACTIVITY_LOGS' || action.type === 'RESET_SYSTEM') {
+    pendingActionToastsRef.current.delete(key);
+    toast.success(
+      pending.count > 1
+        ? getAggregateActionToastTitle(pending.toast.actionType, pending.count)
+        : pending.toast.title,
+      {
+        description: pending.count > 1 ? undefined : pending.toast.description,
+        duration: ACTION_TOAST_DURATION_MS,
+        id: `action-toast-${key}`,
+      }
+    );
+  }, []);
+
+  const enqueueActionToast = useCallback((actionToast: ActionToastPayload) => {
+    const key = actionToast.actionType;
+    const existing = pendingActionToastsRef.current.get(key);
+    if (existing) {
+      clearTimeout(existing.timeoutId);
+      existing.count += 1;
+      existing.toast = actionToast;
+      existing.timeoutId = setTimeout(() => flushActionToast(key), ACTION_TOAST_DELAY_MS);
       return;
     }
 
-    const logEntry = createActivityLogEntry(action, stateRef.current);
+    pendingActionToastsRef.current.set(key, {
+      count: 1,
+      toast: actionToast,
+      timeoutId: setTimeout(() => flushActionToast(key), ACTION_TOAST_DELAY_MS),
+    });
+  }, [flushActionToast]);
+
+  useEffect(() => () => {
+    pendingActionToastsRef.current.forEach((pending) => clearTimeout(pending.timeoutId));
+    pendingActionToastsRef.current.clear();
+  }, []);
+
+  const dispatch = useCallback((action: DeliveryAction) => {
+    const previousState = stateRef.current;
+    rawDispatch(action);
+
+    if (action.type === 'ADD_ACTIVITY_LOG' || action.type === 'RESET_SYSTEM') {
+      return;
+    }
+
+    const logEntry = createActivityLogEntry(action, previousState);
     if (logEntry) {
       rawDispatch({ type: 'ADD_ACTIVITY_LOG', payload: logEntry });
     }
-  }, []);
+
+    const actionToast = createActionToast(action, previousState);
+    if (actionToast) {
+      enqueueActionToast(actionToast);
+    }
+  }, [enqueueActionToast]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;

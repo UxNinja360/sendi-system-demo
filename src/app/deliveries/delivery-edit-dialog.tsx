@@ -85,7 +85,6 @@ export const DeliveryEditDialog: React.FC<DeliveryEditDialogProps> = ({
       return;
     }
     onSave(delivery.id, formData);
-    toast.success('המשלוח עודכן בהצלחה');
     onClose();
   };
 

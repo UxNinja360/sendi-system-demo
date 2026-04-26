@@ -459,7 +459,6 @@ export const RestaurantsScreen: React.FC = () => {
 
     if (restaurantsToUpdate.length > 0) {
       setSelectedRestaurantIds(new Set());
-      toast.success(summary);
       return;
     }
 
@@ -527,7 +526,6 @@ export const RestaurantsScreen: React.FC = () => {
     dispatch({ type: 'ADD_RESTAURANT', payload: restaurant });
     setIsAddModalOpen(false);
     setNewRestaurant({ name: '', phone: '', address: '', type: 'מסעדה' });
-    toast.success(`המסעדה ${restaurant.name} נוספה`);
   };
 
   // ── Handlers ──
@@ -536,7 +534,7 @@ export const RestaurantsScreen: React.FC = () => {
     dispatch({ type: 'TOGGLE_RESTAURANT', payload: restaurantId });
   };
 
-  const handleRemoveRestaurant = (restaurantId: string, name: string, event: React.MouseEvent) => {
+  const handleRemoveRestaurant = (restaurantId: string, event: React.MouseEvent) => {
     event.stopPropagation();
     setOpenActionsRestaurantId(null);
 
@@ -552,8 +550,7 @@ export const RestaurantsScreen: React.FC = () => {
       return;
     }
 
-    dispatch({ type: 'REMOVE_RESTAURANT', payload: restaurantId } as any);
-    toast.success(`המסעדה ${name} נמחקה.`);
+    dispatch({ type: 'REMOVE_RESTAURANT', payload: restaurantId });
   };
 
   // ═══════════════════════════════════════
@@ -1021,7 +1018,7 @@ export const RestaurantsScreen: React.FC = () => {
 
               <EntityActionMenuItem
                 onClick={(e) => {
-                  handleRemoveRestaurant(restaurant.id, restaurant.name, e);
+                  handleRemoveRestaurant(restaurant.id, e);
                   setContextMenuPos(null);
                 }}
                 icon={<Trash2 className="w-3.5 h-3.5" />}

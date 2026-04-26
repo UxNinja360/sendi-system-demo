@@ -163,7 +163,6 @@ export const NewDeliveryDialog: React.FC<NewDeliveryDialogProps> = ({
     } as unknown as Delivery;
 
     dispatch({ type: 'ADD_DELIVERY', payload: newDelivery });
-    toast.success(`משלוח ${orderNumber} נוצר בהצלחה`);
     handleClose();
   };
 

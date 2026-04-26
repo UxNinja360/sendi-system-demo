@@ -312,8 +312,6 @@ export const useLiveAssignmentFlow = ({
       return;
     }
 
-    const courier = couriers.find((item) => item.id === selectedCourierId);
-    const courierName = courier?.name || 'שליח';
     const selectedPickupBatchIdsByRestaurant = new Map<string, string>();
     const selectedPickupBatchIdsByDeliveryId = new Map<string, string>();
 
@@ -419,13 +417,6 @@ export const useLiveAssignmentFlow = ({
       }));
     }
 
-    toast.success(
-      assignedCount === 1
-        ? `משלוח שובץ ל${courierName} ✓`
-        : `${assignedCount} משלוחים שובצו ל${courierName} ✓`,
-      { duration: 2500 }
-    );
-
     setAssignmentMode(false);
     setSelectedDeliveryIds(new Set());
     clearCourierSelection();
@@ -433,7 +424,6 @@ export const useLiveAssignmentFlow = ({
     assignCourier,
     canCourierTakeSelectedDeliveries,
     clearCourierSelection,
-    couriers,
     deliveryBalance,
     deliveries,
     selectedCourierId,

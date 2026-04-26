@@ -97,7 +97,6 @@ type CourierStats = {
   busy: number;
   offline: number;
   onShift: number;
-  withActiveDelivery: number;
 };
 
 const VEHICLE_TYPES: Courier['vehicleType'][] = ['אופנוע', 'רכב', 'קורקינט'];
@@ -209,7 +208,6 @@ const CourierOverviewStrip: React.FC<{ stats: CourierStats; hasFilters: boolean 
     { label: 'במשלוח', value: stats.busy.toLocaleString('he-IL'), tone: 'warning' },
     { label: 'במשמרת', value: stats.onShift.toLocaleString('he-IL') },
     { label: 'לא מחוברים', value: stats.offline.toLocaleString('he-IL') },
-    { label: 'עם משלוח פעיל', value: stats.withActiveDelivery.toLocaleString('he-IL') },
     ...(hasFilters ? [{ label: 'תוצאות', value: stats.filtered.toLocaleString('he-IL'), tone: 'focus' }] : []),
   ];
 
@@ -376,8 +374,7 @@ export const CouriersListScreen: React.FC = () => {
     busy: state.couriers.filter((courier) => courier.status === 'busy').length,
     offline: state.couriers.filter((courier) => courier.status === 'offline').length,
     onShift: state.couriers.filter((courier) => courier.isOnShift).length,
-    withActiveDelivery: activeDeliveriesByCourier.size,
-  }), [activeDeliveriesByCourier.size, filteredCouriers.length, state.couriers]);
+  }), [filteredCouriers.length, state.couriers]);
 
   const statusCounts = useMemo(
     () => ({
@@ -528,9 +525,6 @@ export const CouriersListScreen: React.FC = () => {
 
     if (eligibleCouriers.length > 0) {
       setSelectedCourierIds(new Set());
-      toast.success(targetStatus === 'available'
-        ? `הופעלו ${eligibleCouriers.length} שליחים`
-        : `הושבתו ${eligibleCouriers.length} שליחים`);
       return;
     }
 
@@ -549,7 +543,6 @@ export const CouriersListScreen: React.FC = () => {
 
     if (eligibleCouriers.length > 0) {
       setSelectedCourierIds(new Set());
-      toast.success(`התחילה משמרת ל-${eligibleCouriers.length} שליחים`);
       return;
     }
 
@@ -568,7 +561,6 @@ export const CouriersListScreen: React.FC = () => {
 
     if (eligibleCouriers.length > 0) {
       setSelectedCourierIds(new Set());
-      toast.success(`הסתיימה משמרת ל-${eligibleCouriers.length} שליחים`);
       return;
     }
 
@@ -597,7 +589,6 @@ export const CouriersListScreen: React.FC = () => {
     dispatch({ type: 'ADD_COURIER', payload: courier });
     setIsModalOpen(false);
     setNewCourier({ name: '', phone: '', vehicleType: 'אופנוע' });
-    toast.success(`השליח ${courier.name} נוסף`);
   };
 
   const handleModalClose = () => {
@@ -628,12 +619,10 @@ export const CouriersListScreen: React.FC = () => {
 
     if (courier.isOnShift) {
       dispatch({ type: 'END_COURIER_SHIFT', payload: { courierId: courier.id } });
-      toast.success(`משמרת ${courier.name} הסתיימה`);
       return;
     }
 
     dispatch({ type: 'START_COURIER_SHIFT', payload: { courierId: courier.id } });
-    toast.success(`משמרת ${courier.name} התחילה`);
   };
 
   const handleRemoveCourier = (courier: Courier, event: React.MouseEvent) => {
@@ -646,7 +635,6 @@ export const CouriersListScreen: React.FC = () => {
     }
 
     dispatch({ type: 'REMOVE_COURIER', payload: courier.id });
-    toast.success(`השליח ${courier.name} נמחק`);
   };
 
   const openCourierActionsMenu = (courier: Courier, event: React.MouseEvent<HTMLButtonElement>) => {
