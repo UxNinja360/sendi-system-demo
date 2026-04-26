@@ -1,12 +1,15 @@
 ﻿import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowDown, ArrowUp, CalendarDays, CheckCircle, ChevronLeft, ChevronRight, Clock, Ellipsis, Info, Menu, Minus, Plus, Search, Trash2, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, CalendarDays, CheckCircle, Clock, Menu, Minus, Plus, Search, Trash2, UserPlus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useDelivery } from '../context/delivery-context-value';
 import { Courier, DayOfWeek, ShiftSlotTemplate, ShiftTemplate, ShiftType } from '../types/delivery.types';
-import { useNavigate } from 'react-router';
 import { formatWorkedDuration, getAssignmentWorkedMinutes } from '../utils/shift-work';
 import { DELIVERY_STORAGE_KEYS } from '../context/delivery-storage';
+import { PageToolbar } from '../components/common/page-toolbar';
+import { ToolbarIconButton } from '../components/common/toolbar-icon-button';
+import { ToolbarWeekPicker } from '../components/common/toolbar-date-picker';
+import { InfoBar, type InfoBarItem } from '../components/common/info-bar';
 
 const COLLAPSED_TEMPLATES_STORAGE_KEY = DELIVERY_STORAGE_KEYS.shiftsCollapsedTemplates;
 
@@ -22,7 +25,7 @@ const TimeSegment: React.FC<{
   const [raw, setRaw] = React.useState('');
   const ref = React.useRef<HTMLInputElement>(null);
   const btnCls =
-    'w-8 h-8 flex items-center justify-center rounded-lg text-[#b0b0b0] dark:text-[#555] hover:bg-[#ebebeb] dark:hover:bg-[#252525] hover:text-[#0d0d12] dark:hover:text-[#fafafa] active:scale-90 transition-all select-none';
+    'w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg text-[#b0b0b0] dark:text-[#555] hover:bg-[#ebebeb] dark:hover:bg-[#252525] hover:text-[#0d0d12] dark:hover:text-[#fafafa] active:scale-90 transition-all select-none';
 
   return (
     <div className="flex flex-col items-center gap-0.5">
@@ -51,7 +54,7 @@ const TimeSegment: React.FC<{
           if (e.key === 'ArrowUp') { e.preventDefault(); onStep(1); }
           if (e.key === 'ArrowDown') { e.preventDefault(); onStep(-1); }
         }}
-        className="w-14 text-center text-[2.25rem] font-light leading-none bg-transparent outline-none cursor-pointer focus:cursor-text text-[#0d0d12] dark:text-[#fafafa] tabular-nums rounded-lg focus:bg-[#f0f0f0] dark:focus:bg-[#1e1e1e] transition-colors py-1"
+        className="w-11 text-center text-[1.8rem] font-light leading-none bg-transparent outline-none cursor-pointer focus:cursor-text text-[#0d0d12] dark:text-[#fafafa] tabular-nums rounded-lg focus:bg-[#f0f0f0] dark:focus:bg-[#1e1e1e] transition-colors py-1 sm:w-14 sm:text-[2.25rem]"
       />
       <button type="button" onClick={() => onStep(-step)} className={btnCls}>
         <ArrowDown size={14} />
@@ -73,9 +76,9 @@ const TimePicker: React.FC<{ value: string; onChange: (v: string) => void }> = (
   };
 
   return (
-    <div dir="ltr" className="flex items-center justify-center gap-2 rounded-xl border border-[#e5e5e5] dark:border-[#262626] bg-[#fafafa] dark:bg-[#111111] px-5 py-3.5 w-full">
+    <div dir="ltr" className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-[#e5e5e5] bg-[#fafafa] px-3 py-3 dark:border-[#262626] dark:bg-[#111111] sm:gap-2 sm:px-5 sm:py-3.5">
       <TimeSegment val={h} max={23} step={1} onStep={(d) => update(h + d, m)} onSet={(v) => update(v, m)} />
-      <span className="text-[2.25rem] font-light text-[#d4d4d4] dark:text-[#3a3a3a] select-none mb-1">:</span>
+      <span className="mb-1 select-none text-[1.8rem] font-light text-[#d4d4d4] dark:text-[#3a3a3a] sm:text-[2.25rem]">:</span>
       <TimeSegment val={m} max={59} step={15} onStep={(d) => update(h, m + d)} onSet={(v) => update(h, v)} />
     </div>
   );
@@ -166,7 +169,7 @@ type TemplateDraftState = {
 
 const createSlot = (index: number): ShiftSlotTemplate => ({
   id: `slot-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 6)}`,
-  label: `\u05e2\u05de\u05d3\u05d4 ${index + 1}`,
+  label: `\u05ea\u05d0 ${index + 1}`,
 });
 
 const getAssignmentStateLabel = (assignment: { startedAt: Date | null; endedAt: Date | null } | null) => {
@@ -217,12 +220,38 @@ const getLatestSlotAssignment = <
   return null;
 };
 
+const getFloatingPanelStyle = (anchor: { cx: number; cy: number }): React.CSSProperties => {
+  if (typeof window === 'undefined') {
+    return { top: anchor.cy + 8, left: anchor.cx - 160 };
+  }
+
+  const width = Math.min(320, window.innerWidth - 16);
+  const maxHeight = Math.min(520, window.innerHeight - 16);
+
+  return {
+    width,
+    maxHeight,
+    top: Math.max(8, Math.min(anchor.cy + 8, window.innerHeight - maxHeight - 8)),
+    left: Math.max(8, Math.min(anchor.cx - width / 2, window.innerWidth - width - 8)),
+  };
+};
+
+const getContextMenuStyle = (point: { x: number; y: number }): React.CSSProperties => {
+  if (typeof window === 'undefined') {
+    return { top: point.y, left: point.x };
+  }
+
+  return {
+    top: Math.max(8, Math.min(point.y, window.innerHeight - 160)),
+    left: Math.max(8, Math.min(point.x, window.innerWidth - 188)),
+  };
+};
+
 export const CouriersShifts: React.FC = () => {
   const { state, dispatch } = useDelivery();
-  const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedCell, setSelectedCell] = useState<SelectedCell | null>(null);
-  const [search, setSearch] = useState('');
+  const [popoverAnchor, setPopoverAnchor] = useState<{ cx: number; cy: number } | null>(null);
   const [popupSearch, setPopupSearch] = useState('');
   const [collapsedTemplates, setCollapsedTemplates] = useState<Record<string, boolean>>(() => {
     try {
@@ -232,9 +261,6 @@ export const CouriersShifts: React.FC = () => {
       return {};
     }
   });
-  const [isOptionsOpen, setIsOptionsOpen] = useState(false);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const [calendarMonth, setCalendarMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
   const [courierModalOpen, setCourierModalOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<ShiftTemplate | null>(null);
@@ -375,34 +401,6 @@ export const CouriersShifts: React.FC = () => {
       });
   }, [popupSearch, state.couriers, busyCourierIds]);
 
-  const monthDays = useMemo(() => {
-    const start = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1);
-    const end = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 0);
-    const lead = start.getDay();
-    const total = Math.ceil((lead + end.getDate()) / 7) * 7;
-
-    return Array.from({ length: total }, (_, index) => {
-      const dayOffset = index - lead;
-      const date = new Date(start);
-      date.setDate(start.getDate() + dayOffset);
-      return {
-        date,
-        key: toDateKey(date),
-        inMonth: date.getMonth() === calendarMonth.getMonth(),
-      };
-    });
-  }, [calendarMonth]);
-
-  const filteredCouriers = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    return state.couriers
-      .filter((courier) => {
-        if (!query) return true;
-        return courier.name.toLowerCase().includes(query) || courier.phone.toLowerCase().includes(query);
-      })
-      .sort((a, b) => a.name.localeCompare(b.name, 'he'));
-  }, [search, state.couriers]);
-
   const selectedDaySummary = useMemo(() => {
     const shiftsForDay = state.shifts.filter((shift) => shift.date === selectedDateKey);
     const assignments = shiftsForDay.flatMap((shift) =>
@@ -422,21 +420,13 @@ export const CouriersShifts: React.FC = () => {
     };
   }, [selectedDateKey, state.shifts, visibleShiftTemplates]);
 
-  const moveWeek = (direction: -1 | 1) => {
-    const next = new Date(selectedDate);
-    next.setDate(next.getDate() + direction * 7);
-    setSelectedDate(next);
-    setCalendarMonth(new Date(next.getFullYear(), next.getMonth(), 1));
-    setSelectedCell(null);
-  };
+  const selectedCellPopoverStyle = popoverAnchor ? getFloatingPanelStyle(popoverAnchor) : null;
 
   const handleOpenCreateTemplate = () => {
-    setIsOptionsOpen(false);
     openCreateTemplate();
   };
 
   const handleGoToCouriers = () => {
-    setIsOptionsOpen(false);
     setCourierModalOpen(true);
   };
 
@@ -477,7 +467,7 @@ export const CouriersShifts: React.FC = () => {
   const saveTemplate = () => {
     const normalizedSlots = templateDraft.slots.map((slot, index) => ({
       ...slot,
-      label: slot.label.trim() || `\u05e2\u05de\u05d3\u05d4 ${index + 1}`,
+      label: `\u05ea\u05d0 ${index + 1}`,
     }));
     const inferredType: ShiftType =
       editingTemplate?.type ||
@@ -586,8 +576,6 @@ export const CouriersShifts: React.FC = () => {
     setPopupSearch('');
   };
 
-  const [popoverAnchor, setPopoverAnchor] = useState<{ cx: number; cy: number } | null>(null);
-
   const closeSelectedCell = () => {
     setSelectedCell(null);
     setPopoverAnchor(null);
@@ -598,13 +586,6 @@ export const CouriersShifts: React.FC = () => {
     setTemplateDraft((prev) => ({
       ...prev,
       slots: [...prev.slots, createSlot(prev.slots.length)],
-    }));
-  };
-
-  const updateDraftSlot = (slotId: string, label: string) => {
-    setTemplateDraft((prev) => ({
-      ...prev,
-      slots: prev.slots.map((slot) => (slot.id === slotId ? { ...slot, label } : slot)),
     }));
   };
 
@@ -653,20 +634,62 @@ export const CouriersShifts: React.FC = () => {
       }
     }
 
-    setIsOptionsOpen(false);
     if (assigned === 0) {
       toast.error('\u05dc\u05d0 \u05e0\u05de\u05e6\u05d0\u05d5 \u05e9\u05dc\u05d9\u05d7\u05d9\u05dd \u05d6\u05de\u05d9\u05e0\u05d9\u05dd \u05dc\u05e1\u05d9\u05d3\u05d5\u05e8 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9.');
     }
   };
 
+  const selectedDayLabel = selectedDate.toLocaleDateString('he-IL', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+  const selectedDaySummaryItems: InfoBarItem[] = [
+    { label: '\u05ea\u05d0\u05d9\u05dd', value: selectedDaySummary.totalSlots },
+    { label: '\u05de\u05d0\u05d5\u05d9\u05e9', value: selectedDaySummary.staffedSlots, tone: 'success' },
+    { label: '\u05e4\u05e0\u05d5\u05d9\u05d9\u05dd', value: selectedDaySummary.emptySlots, tone: 'muted' },
+    { label: '\u05e4\u05e2\u05d9\u05dc\u05d9\u05dd', value: selectedDaySummary.activeAssignments, tone: 'info' },
+    { label: '\u05de\u05ea\u05d5\u05db\u05e0\u05e0\u05d9\u05dd', value: selectedDaySummary.plannedAssignments, tone: 'warning' },
+  ];
+
   return (
     <>
-      <div className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_280px]" dir="ltr">
-        <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-none border-y border-r border-[#e5e5e5] bg-white dark:border-[#262626] dark:bg-[#171717]">
-          <div className="flex-1 overflow-x-auto overflow-y-auto bg-white dark:bg-[#171717]" dir="rtl">
-            <div className="w-full min-w-[1120px]" dir="rtl">
-              <div className="sticky top-0 z-10 grid grid-cols-[140px_repeat(7,minmax(0,1fr))] border-b border-[#d4d4d4] bg-white dark:border-[#262626] dark:bg-[#171717]">
-                <div className="border-l border-[#e5e5e5] bg-[#fafafa] px-4 py-3 dark:border-[#262626] dark:bg-[#111111]" />
+      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-white dark:bg-[#171717]" dir="rtl">
+        <PageToolbar
+          periodControl={
+            <ToolbarWeekPicker
+              selectedDate={selectedDate}
+              onDateChange={(date) => {
+                setSelectedDate(date);
+                setSelectedCell(null);
+              }}
+            />
+          }
+          actions={
+            <>
+              <ToolbarIconButton onClick={handleAutoArrange} label={'\u05e1\u05d9\u05d3\u05d5\u05e8 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9 \u05dc\u05e9\u05d1\u05d5\u05e2'}>
+                <CalendarDays className="h-4 w-4 text-app-brand" />
+              </ToolbarIconButton>
+              <ToolbarIconButton onClick={handleOpenCreateTemplate} label={'\u05de\u05e9\u05de\u05e8\u05ea \u05d7\u05d3\u05e9\u05d4'}>
+                <Plus className="h-4 w-4" />
+              </ToolbarIconButton>
+              <ToolbarIconButton onClick={handleGoToCouriers} label={'\u05e9\u05dc\u05d9\u05d7 \u05d7\u05d3\u05e9'}>
+                <UserPlus className="h-4 w-4" />
+              </ToolbarIconButton>
+            </>
+          }
+        />
+
+        <InfoBar
+          leadLabel={'\u05d9\u05d5\u05dd \u05e0\u05d1\u05d7\u05e8'}
+          leadValue={selectedDayLabel}
+          items={selectedDaySummaryItems}
+        />
+
+        <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-none border-b border-[#e5e5e5] bg-white dark:border-[#262626] dark:bg-[#171717]">
+          <div className="flex-1 overflow-x-auto overflow-y-auto bg-white overscroll-contain dark:bg-[#171717]" dir="rtl">
+            <div className="w-full min-w-[700px] lg:min-w-[960px] xl:min-w-[1040px]" dir="rtl">
+              <div className="sticky top-0 z-10 grid grid-cols-7 border-b border-[#d4d4d4] bg-white dark:border-[#262626] dark:bg-[#171717]">
                 {weekDays.map(({ date, dayKey }) => {
                   const isSelected = dayKey === selectedDateKey;
                   const isToday = dayKey === todayKey;
@@ -709,9 +732,9 @@ export const CouriersShifts: React.FC = () => {
                   </div>
                 ) : visibleShiftTemplates.map((template, templateIndex) => (
                   <section key={template.id}>
-                    <div className="relative grid grid-cols-[140px_repeat(7,minmax(0,1fr))] border-b border-[#e5e5e5] dark:border-[#262626]">
+                    <div className="relative grid grid-cols-7 border-b border-[#e5e5e5] dark:border-[#262626]">
                         <div
-                        className={`col-span-8 flex items-center justify-center px-12 py-2.5 cursor-pointer select-none transition-[filter] hover:brightness-[0.99] dark:hover:brightness-110 ${(template.name === 'בלת"ם' ? EMERGENCY_SHIFT_ROW_STYLE : SHIFT_TYPE_ROW_STYLES[template.type]).shell}`}
+                        className={`col-span-7 flex items-center justify-center px-12 py-2.5 cursor-pointer select-none transition-[filter] hover:brightness-[0.99] dark:hover:brightness-110 ${(template.name === 'בלת"ם' ? EMERGENCY_SHIFT_ROW_STYLE : SHIFT_TYPE_ROW_STYLES[template.type]).shell}`}
                           onClick={() => toggleTemplateCollapsed(template.id)}
                         >
                         <div className={`truncate text-center text-[14px] font-semibold tracking-wide ${(template.name === 'בלת"ם' ? EMERGENCY_SHIFT_ROW_STYLE : SHIFT_TYPE_ROW_STYLES[template.type]).name}`}>
@@ -758,10 +781,7 @@ export const CouriersShifts: React.FC = () => {
 
                     {!collapsedTemplates[template.id] &&
                       template.slots.map((slot) => (
-                        <div key={slot.id} className="grid grid-cols-[140px_repeat(7,minmax(0,1fr))] border-b border-[#f1f1f1] last:border-b-0 dark:border-[#202020]">
-                          <div className="border-l border-[#e5e5e5] bg-white px-3 py-2.5 dark:border-[#262626] dark:bg-[#171717]" dir="rtl">
-                            <div className="text-[13px] font-medium text-[#0d0d12] dark:text-[#fafafa]">{slot.label}</div>
-                          </div>
+                        <div key={slot.id} className="grid grid-cols-7 border-b border-[#f1f1f1] last:border-b-0 dark:border-[#202020]">
                           {weekDays.map(({ date, dayKey }) => {
                             const shift = shiftsByTemplateAndDay.get(`${template.id}:${dayKey}`) ?? null;
                             const assignment = shift ? getLatestSlotAssignment(shift.courierAssignments, slot.id) : null;
@@ -804,7 +824,7 @@ export const CouriersShifts: React.FC = () => {
                                   dayKey,
                                 });
                               }}
-                                className={`h-[82px] border-l border-[#ececec] p-0 text-center transition-colors dark:border-[#262626] flex flex-col overflow-hidden ${
+                                className={`h-[72px] border-l border-[#ececec] p-0 text-center transition-colors dark:border-[#262626] flex flex-col overflow-hidden lg:h-[82px] ${
                                   isSelected
                                     ? 'bg-[#f5f5f5] ring-inset ring-1 ring-[#d4d4d4] dark:bg-[#1e1e1e] dark:ring-[#333333]'
                                     : 'bg-white hover:bg-[#fafafa] dark:bg-[#171717] dark:hover:bg-[#1a1a1a]'
@@ -862,207 +882,14 @@ export const CouriersShifts: React.FC = () => {
           </div>
         </section>
 
-        <aside className="flex h-full min-h-0 flex-col border-y border-l border-[#e5e5e5] bg-white dark:border-[#262626] dark:bg-[#171717]" dir="rtl">
-          <div className="border-b border-[#e5e5e5] px-4 py-4 dark:border-[#262626]">
-            <div className="text-xs text-[#737373] dark:text-[#a3a3a3]">{'\u05de\u05e8\u05db\u05d6 \u05e9\u05dc\u05d9\u05d8\u05d4'}</div>
-            <div className="mt-1 text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">
-              {selectedDate.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' })}
-            </div>
-
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => moveWeek(-1)}
-                className="flex h-11 items-center justify-center rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] text-[#525252] transition-colors hover:bg-[#f1f1f1] dark:border-[#262626] dark:bg-[#111111] dark:text-[#d4d4d4] dark:hover:bg-[#161616]"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsCalendarOpen((value) => !value)}
-                className="flex h-11 items-center justify-center rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] text-[#525252] transition-colors hover:bg-[#f1f1f1] dark:border-[#262626] dark:bg-[#111111] dark:text-[#d4d4d4] dark:hover:bg-[#161616]"
-              >
-                <CalendarDays className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => moveWeek(1)}
-                className="flex h-11 items-center justify-center rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] text-[#525252] transition-colors hover:bg-[#f1f1f1] dark:border-[#262626] dark:bg-[#111111] dark:text-[#d4d4d4] dark:hover:bg-[#161616]"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-            </div>
-
-            {isCalendarOpen && (
-              <div className="mt-3 rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] p-3 dark:border-[#262626] dark:bg-[#111111]">
-                <div className="mb-3 flex items-center justify-between gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setCalendarMonth((current) => new Date(current.getFullYear(), current.getMonth() - 1, 1))}
-                    className="rounded-[4px] p-1.5 text-[#737373] hover:bg-white dark:text-[#a3a3a3] dark:hover:bg-[#171717]"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                  <div className="text-sm font-medium text-[#0d0d12] dark:text-[#fafafa]">
-                    {calendarMonth.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' })}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setCalendarMonth((current) => new Date(current.getFullYear(), current.getMonth() + 1, 1))}
-                    className="rounded-[4px] p-1.5 text-[#737373] hover:bg-white dark:text-[#a3a3a3] dark:hover:bg-[#171717]"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                </div>
-
-                <div className="mb-2 grid grid-cols-7 gap-1 text-center text-[11px] text-[#737373] dark:text-[#a3a3a3]">
-                  {Object.values(DAY_LABELS).map((label) => (
-                    <div key={label} className="py-1">
-                      {label}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-7 gap-1">
-                  {monthDays.map(({ date, key, inMonth }) => {
-                    const isSelected = key === selectedDateKey;
-                    const isToday = key === todayKey;
-
-                    return (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() => {
-                          setSelectedDate(date);
-                          setSelectedCell(null);
-                          setCalendarMonth(new Date(date.getFullYear(), date.getMonth(), 1));
-                          setIsCalendarOpen(false);
-                        }}
-                        className={`aspect-square rounded-[4px] text-xs transition-colors ${
-                          isSelected
-                            ? 'bg-[#0d0d12] text-white dark:bg-[#fafafa] dark:text-[#0d0d12]'
-                            : inMonth
-                              ? 'text-[#525252] hover:bg-white dark:text-[#d4d4d4] dark:hover:bg-[#171717]'
-                              : 'text-[#c5c5c5] dark:text-[#525252]'
-                        } ${isToday && !isSelected ? 'ring-1 ring-[#9fe870]' : ''}`}
-                      >
-                        {date.getDate()}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            <div className="mt-4">
-              <button
-                type="button"
-                onClick={handleAutoArrange}
-                className="mb-2 flex w-full items-center justify-between rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] px-3 py-2.5 text-sm font-medium text-[#0d0d12] transition-colors hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#111111] dark:text-[#fafafa] dark:hover:bg-[#161616]"
-              >
-                <span>{'\u05e1\u05d9\u05d3\u05d5\u05e8 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9 \u05dc\u05e9\u05d1\u05d5\u05e2'}</span>
-                <CalendarDays className="h-4 w-4 text-[#9fe870]" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsOptionsOpen((value) => !value)}
-                className="flex w-full items-center justify-between rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] px-3 py-2.5 text-sm font-medium text-[#0d0d12] transition-colors hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#111111] dark:text-[#fafafa] dark:hover:bg-[#161616]"
-              >
-                <span>{'\u05d0\u05e4\u05e9\u05e8\u05d5\u05d9\u05d5\u05ea'}</span>
-                <Ellipsis className="h-4 w-4" />
-              </button>
-
-              {isOptionsOpen && (
-                <div className="mt-2 space-y-2 rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] p-2 dark:border-[#262626] dark:bg-[#111111]">
-                  <button
-                    type="button"
-                    onClick={handleAutoArrange}
-                    className="hidden"
-                  >
-                    <span>{'\u05e1\u05d9\u05d3\u05d5\u05e8 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9 \u05dc\u05e9\u05d1\u05d5\u05e2'}</span>
-                    <CalendarDays className="h-4 w-4 text-[#9fe870]" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleOpenCreateTemplate}
-                    className="flex w-full items-center justify-between rounded-[4px] px-3 py-2.5 text-sm font-medium text-[#0d0d12] transition-colors hover:bg-white dark:text-[#fafafa] dark:hover:bg-[#171717]"
-                  >
-                    <span>{'\u05d4\u05d5\u05e1\u05e3 \u05de\u05e9\u05de\u05e8\u05ea \u05d7\u05d3\u05e9\u05d4'}</span>
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="border-b border-[#e5e5e5] px-4 py-4 dark:border-[#262626]">
-            <div className="text-xs text-[#737373] dark:text-[#a3a3a3]">{'\u05e8\u05e9\u05d9\u05de\u05ea \u05e9\u05dc\u05d9\u05d7\u05d9\u05dd'}</div>
-            <div className="mt-3 relative">
-              <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#a3a3a3]" />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={'\u05d7\u05e4\u05e9 \u05e9\u05dc\u05d9\u05d7'}
-                className="w-full rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] py-2.5 pr-9 pl-3 text-sm dark:border-[#262626] dark:bg-[#111111]"
-              />
-            </div>
-          </div>
-
-          <div className="no-scrollbar flex-1 overflow-auto" dir="ltr">
-            <div className="divide-y divide-[#e5e5e5] dark:divide-[#262626]" dir="rtl">
-              {filteredCouriers.length === 0 ? (
-                <div className="flex min-h-[220px] flex-col items-center justify-center gap-4 px-6 py-10 text-center">
-                  <div className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">{'\u05d0\u05d9\u05df \u05e2\u05d3\u05d9\u05d9\u05df \u05e9\u05dc\u05d9\u05d7\u05d9\u05dd'}</div>
-                  <div className="max-w-[220px] text-xs leading-5 text-[#737373] dark:text-[#a3a3a3]">
-                    {'\u05db\u05d3\u05d9 \u05dc\u05d4\u05ea\u05d7\u05d9\u05dc \u05dc\u05d1\u05e0\u05d5\u05ea \u05de\u05e9\u05de\u05e8\u05d5\u05ea, \u05e6\u05e8\u05d9\u05da \u05e7\u05d5\u05d3\u05dd \u05dc\u05d4\u05d5\u05e1\u05d9\u05e3 \u05e9\u05dc\u05d9\u05d7 \u05e8\u05d0\u05e9\u05d5\u05df \u05dc\u05de\u05e2\u05e8\u05db\u05ea.'}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setCourierModalOpen(true)}
-                    className="hidden"
-                  >
-                    <span>הוסף שליח</span>
-                  </button>
-                </div>
-              ) : filteredCouriers.map((courier) => (
-                <div key={courier.id} className="group flex items-center justify-between gap-2 px-4 py-2 transition-colors hover:bg-[#fafafa] dark:hover:bg-[#111111]">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <span
-                      className={`h-1.5 w-1.5 shrink-0 rounded-full ${
-                        courier.status === 'offline'
-                          ? 'bg-[#a3a3a3] dark:bg-[#525252]'
-                          : 'bg-[#22c55e]'
-                      }`}
-                      title={courier.status === 'offline' ? '\u05dc\u05d0 \u05de\u05d7\u05d5\u05d1\u05e8' : '\u05de\u05d7\u05d5\u05d1\u05e8'}
-                    />
-                    <div className="truncate text-[13px] font-medium leading-5 text-[#0d0d12] dark:text-[#fafafa]">{courier.name}</div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/courier/${courier.id}`)}
-                    className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-[4px] bg-[#f1f5f9] text-[#0d0d12] opacity-0 transition-opacity group-hover:opacity-100 dark:bg-[#1b1f24] dark:text-[#fafafa]"
-                    aria-label={`\u05e4\u05ea\u05d7 \u05d0\u05ea ${courier.name}`}
-                    title={`\u05e4\u05ea\u05d7 \u05d0\u05ea ${courier.name}`}
-                  >
-                    <Info className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        </aside>
-
       </div>
 
-      {selectedCell && selectedShift && selectedSlot && popoverAnchor && createPortal(
+      {selectedCell && selectedShift && selectedSlot && selectedCellPopoverStyle && createPortal(
         <>
           <div className="fixed inset-0 z-40" onClick={closeSelectedCell} />
           <div
-            className="fixed z-50 w-[320px] rounded-xl border border-[#e5e5e5] bg-white shadow-2xl dark:border-[#262626] dark:bg-[#171717] overflow-hidden"
-            style={{
-              top: Math.min(popoverAnchor.cy + 8, window.innerHeight - 520),
-              left: Math.max(8, Math.min(popoverAnchor.cx - 160, window.innerWidth - 328)),
-            }}
+            className="fixed z-50 overflow-hidden rounded-xl border border-[#e5e5e5] bg-white shadow-2xl dark:border-[#262626] dark:bg-[#171717]"
+            style={selectedCellPopoverStyle}
             onClick={(e) => e.stopPropagation()}
             dir="rtl"
           >
@@ -1071,7 +898,7 @@ export const CouriersShifts: React.FC = () => {
               <div>
                 <h3 className="text-lg font-semibold text-[#0d0d12] dark:text-[#fafafa]">{'\u05e9\u05d9\u05d5\u05da \u05dc\u05ea\u05d0'}</h3>
                 <div className="mt-1 text-sm text-[#737373] dark:text-[#a3a3a3]">
-                  {selectedTemplate?.name} | {selectedSlot.label}
+                  {selectedTemplate?.name}
                 </div>
                 <div className="mt-1 text-[11px] text-[#8a8a8a] dark:text-[#777777]">
                   {selectedShift.startTime} - {selectedShift.endTime} | {new Date(selectedShift.date).toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' })}
@@ -1251,7 +1078,7 @@ export const CouriersShifts: React.FC = () => {
         >
           <div
             className="absolute min-w-[170px] bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-xl shadow-2xl overflow-hidden"
-            style={{ top: cellContextMenu.y, left: cellContextMenu.x }}
+            style={getContextMenuStyle(cellContextMenu)}
             onClick={(e) => e.stopPropagation()}
           >
             {cellContextMenu.started ? (
@@ -1341,7 +1168,7 @@ export const CouriersShifts: React.FC = () => {
               {/* Times */}
               <div className="space-y-3">
                 <label className="text-[13px] font-medium text-[#525252] dark:text-[#a3a3a3]">{'\u05e9\u05e2\u05d5\u05ea \u05d4\u05de\u05e9\u05de\u05e8\u05ea'}</label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <div className="text-[12px] text-[#a3a3a3] dark:text-[#555] text-center">{'\u05e9\u05e2\u05ea \u05d4\u05ea\u05d7\u05dc\u05d4'}</div>
                     <TimePicker
@@ -1363,8 +1190,8 @@ export const CouriersShifts: React.FC = () => {
               <div className="space-y-3">
                 <div className="flex items-center justify-between gap-2">
                   <div>
-                    <label className="text-[13px] font-medium text-[#525252] dark:text-[#a3a3a3]">{'\u05ea\u05d0\u05d9\u05dd \u05d1\u05ea\u05d5\u05da \u05d4\u05de\u05e9\u05de\u05e8\u05ea'}</label>
-                    <p className="mt-0.5 text-[11px] text-[#a3a3a3] dark:text-[#555]">{'\u05db\u05dc \u05ea\u05d0 \u05de\u05d9\u05d9\u05e6\u05d2 \u05de\u05e7\u05d5\u05dd \u05e9\u05d9\u05d1\u05d5\u05e5 \u05d0\u05d7\u05d3 \u05d1\u05de\u05e9\u05de\u05e8\u05ea'}</p>
+                    <label className="text-[13px] font-medium text-[#525252] dark:text-[#a3a3a3]">{'\u05db\u05de\u05d5\u05ea \u05e9\u05dc\u05d9\u05d7\u05d9\u05dd \u05d1\u05de\u05e9\u05de\u05e8\u05ea'}</label>
+                    <p className="mt-0.5 text-[11px] text-[#a3a3a3] dark:text-[#555]">{'\u05db\u05dc \u05de\u05e1\u05e4\u05e8 \u05de\u05d9\u05d9\u05e6\u05d2 \u05de\u05e7\u05d5\u05dd \u05e9\u05d9\u05d1\u05d5\u05e5 \u05d0\u05d7\u05d3 \u05d1\u05de\u05e9\u05de\u05e8\u05ea'}</p>
                   </div>
                   <button
                     type="button"
@@ -1376,23 +1203,17 @@ export const CouriersShifts: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="space-y-2">
+                <div className="flex flex-wrap gap-2">
                   {templateDraft.slots.map((slot, index) => (
-                    <div key={slot.id} className="flex items-center gap-2.5">
-                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#f5f5f5] text-[11px] font-semibold text-[#a3a3a3] dark:bg-[#1a1a1a] dark:text-[#555]">
+                    <div key={slot.id} className="flex items-center gap-2 rounded-xl border border-[#e5e5e5] bg-[#fafafa] px-2.5 py-2 dark:border-[#262626] dark:bg-[#111111]">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-[11px] font-semibold text-[#737373] dark:bg-[#171717] dark:text-[#a3a3a3]">
                         {index + 1}
                       </div>
-                      <input
-                        value={slot.label}
-                        onChange={(e) => updateDraftSlot(slot.id, e.target.value)}
-                        className="flex-1 rounded-xl border border-[#e5e5e5] bg-[#fafafa] px-3.5 py-2.5 text-sm text-[#0d0d12] outline-none transition-colors focus:border-[#9fe870] focus:ring-2 focus:ring-[#9fe870]/20 dark:border-[#262626] dark:bg-[#111111] dark:text-[#fafafa] placeholder:text-[#b0b0b0] dark:placeholder:text-[#444]"
-                        placeholder={`\u05ea\u05d0 ${index + 1}`}
-                      />
                       {templateDraft.slots.length > 1 && (
                         <button
                           type="button"
                           onClick={() => removeDraftSlot(slot.id)}
-                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-red-200/70 bg-red-50/50 text-red-400 transition-colors hover:bg-red-100 hover:text-red-500 dark:border-red-500/10 dark:bg-red-500/5 dark:text-red-400 dark:hover:bg-red-500/10"
+                          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-red-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10"
                         >
                           <X className="h-3.5 w-3.5" />
                         </button>

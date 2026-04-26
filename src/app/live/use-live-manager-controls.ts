@@ -103,22 +103,22 @@ export const useLiveManagerControls = () => {
 
   const sortLabel = useCallback(() => {
     if (sortBy === 'time') {
-      return sortDirection === 'desc' ? 'זמן (חדש -> ישן)' : 'זמן (ישן -> חדש)';
+      return 'זמן';
     }
     if (sortBy === 'status') {
-      return sortDirection === 'asc' ? 'סטטוס (↑)' : 'סטטוס (↓)';
+      return 'סטטוס';
     }
     if (sortBy === 'restaurant') {
-      return sortDirection === 'asc' ? 'מסעדה (א→ת)' : 'מסעדה (ת→א)';
+      return 'מסעדה';
     }
     if (sortBy === 'address') {
-      return sortDirection === 'asc' ? 'כתובת (א→ת)' : 'כתובת (ת→א)';
+      return 'כתובת';
     }
     if (sortBy === 'ready') {
-      return sortDirection === 'asc' ? 'מוכן (↑)' : 'מוכן (↓)';
+      return 'מוכן';
     }
     return 'סטטוס';
-  }, [sortBy, sortDirection]);
+  }, [sortBy]);
 
   const handleToggleSortMenu = useCallback(() => {
     setShowSortMenu((current) => !current);

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { format } from 'date-fns';
 import {
@@ -30,6 +30,8 @@ import { ListInlineFilters } from '../components/common/list-inline-filters';
 import { ListTableSection } from '../components/common/list-table-section';
 import { ListToolbarActions } from '../components/common/list-toolbar-actions';
 import { PageToolbar } from '../components/common/page-toolbar';
+import { ToolbarPeriodControl, type PeriodMode } from '../components/common/toolbar-date-picker';
+import { InfoBar, type InfoBarItem } from '../components/common/info-bar';
 import {
   SelectionActionBar,
   SelectionActionButton,
@@ -37,6 +39,7 @@ import {
 import { useDelivery } from '../context/delivery-context-value';
 import { DELIVERY_STORAGE_KEYS } from '../context/delivery-storage';
 import { Courier } from '../types/delivery.types';
+import { getPeriodDateRange, isDeliveryInPeriod, toDateInputValue } from '../utils/date-period';
 import { exportRowsToExcel } from '../utils/export-utils';
 
 const TEXT = {
@@ -96,18 +99,17 @@ type CourierStats = {
   available: number;
   busy: number;
   offline: number;
-  onShift: number;
 };
 
 const VEHICLE_TYPES: Courier['vehicleType'][] = ['אופנוע', 'רכב', 'קורקינט'];
-const COURIER_VISIBLE_COLUMNS_KEY = `${DELIVERY_STORAGE_KEYS.couriersVisibleColumns}:product-v2`;
+const COURIER_COLUMN_ORDER_KEY = `${DELIVERY_STORAGE_KEYS.couriersColumnOrder}:product-v1`;
+const COURIER_VISIBLE_COLUMNS_KEY = `${DELIVERY_STORAGE_KEYS.couriersVisibleColumns}:product-v3`;
 const DEFAULT_COURIER_VISIBLE_COLUMNS: CourierColumnId[] = [
   'name',
   'connection',
   'shift',
   'availability',
   'phone',
-  'currentDelivery',
   'totalDeliveries',
 ];
 
@@ -139,6 +141,7 @@ const COURIER_COLUMNS: { id: CourierColumnId; label: string }[] = [
 ];
 
 const COURIER_ACTION_COLUMN = COURIER_COLUMNS.find((column) => column.id === 'actions')!;
+const COURIER_DATA_COLUMNS = COURIER_COLUMNS.filter((column) => column.id !== 'actions');
 
 const COURIER_COLUMN_CATEGORIES = [
   {
@@ -202,37 +205,14 @@ const getStatusColor = (status: Courier['status']) => {
 };
 
 const CourierOverviewStrip: React.FC<{ stats: CourierStats; hasFilters: boolean }> = ({ stats, hasFilters }) => {
-  const items = [
+  const items: InfoBarItem[] = [
     { label: 'סה״כ שליחים', value: stats.total.toLocaleString('he-IL') },
     { label: 'זמינים', value: stats.available.toLocaleString('he-IL'), tone: 'success' },
-    { label: 'במשלוח', value: stats.busy.toLocaleString('he-IL'), tone: 'warning' },
-    { label: 'במשמרת', value: stats.onShift.toLocaleString('he-IL') },
-    { label: 'לא מחוברים', value: stats.offline.toLocaleString('he-IL') },
-    ...(hasFilters ? [{ label: 'תוצאות', value: stats.filtered.toLocaleString('he-IL'), tone: 'focus' }] : []),
+    { label: 'במשלוח', value: stats.busy.toLocaleString('he-IL'), tone: 'orange' },
+    ...(hasFilters ? [{ label: 'תוצאות', value: stats.filtered.toLocaleString('he-IL') }] : []),
   ];
 
-  return (
-    <div className="shrink-0 border-b border-[#e5e5e5] bg-white px-5 py-2.5 dark:border-[#262626] dark:bg-[#171717]">
-      <div className="flex max-w-full flex-wrap items-center gap-x-5 gap-y-2">
-        {items.map((item) => (
-          <div key={item.label} className="flex min-w-0 items-baseline gap-2">
-            <span
-              className={`text-sm font-semibold tabular-nums ${
-                item.tone === 'success'
-                  ? 'text-[#16a34a] dark:text-[#9fe870]'
-                  : item.tone === 'warning'
-                    ? 'text-[#f97316] dark:text-[#ffa94d]'
-                    : 'text-[#0d0d12] dark:text-[#fafafa]'
-              }`}
-            >
-              {item.value}
-            </span>
-            <span className="truncate text-xs text-[#737373] dark:text-[#a3a3a3]">{item.label}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  return <InfoBar items={items} />;
 };
 
 const CourierNoResultsState: React.FC<{ searchQuery: string; onClear: () => void }> = ({ searchQuery, onClear }) => (
@@ -272,6 +252,29 @@ export const CouriersListScreen: React.FC = () => {
     phone: '',
     vehicleType: 'אופנוע',
   });
+  const [periodMode, setPeriodMode] = useState<PeriodMode>('current_month');
+  const [monthAnchor, setMonthAnchor] = useState(() => new Date());
+  const [customStartDate, setCustomStartDate] = useState(() => {
+    const now = new Date();
+    return toDateInputValue(new Date(now.getFullYear(), now.getMonth(), 1));
+  });
+  const [customEndDate, setCustomEndDate] = useState(() => toDateInputValue(new Date()));
+  const [columnOrder, setColumnOrder] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(COURIER_COLUMN_ORDER_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as string[];
+        const valid = new Set(COURIER_DATA_COLUMNS.map((column) => column.id));
+        const filtered = parsed.filter((id) => valid.has(id as CourierColumnId));
+        const missing = COURIER_DATA_COLUMNS.map((column) => column.id).filter((id) => !filtered.includes(id));
+        return [...filtered, ...missing];
+      }
+    } catch {}
+
+    return COURIER_DATA_COLUMNS.map((column) => column.id);
+  });
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(() => {
     try {
       const saved = localStorage.getItem(COURIER_VISIBLE_COLUMNS_KEY);
@@ -295,16 +298,52 @@ export const CouriersListScreen: React.FC = () => {
     return map;
   }, [state.deliveries]);
 
+  const periodRange = useMemo(
+    () => getPeriodDateRange(periodMode, monthAnchor, customStartDate, customEndDate),
+    [customEndDate, customStartDate, monthAnchor, periodMode],
+  );
+
+  const deliveriesCountByCourierInPeriod = useMemo(() => {
+    const counts = new Map<string, number>();
+    state.deliveries.forEach((delivery) => {
+      const courierId = delivery.courierId ?? delivery.runner_id;
+      if (!courierId || !isDeliveryInPeriod(delivery, periodRange)) return;
+      counts.set(courierId, (counts.get(courierId) ?? 0) + 1);
+    });
+    return counts;
+  }, [periodRange, state.deliveries]);
+
   useEffect(() => {
     try {
       localStorage.setItem(COURIER_VISIBLE_COLUMNS_KEY, JSON.stringify(Array.from(visibleColumns)));
     } catch {}
   }, [visibleColumns]);
 
+  const orderedCourierColumns = useMemo(() => {
+    const map = new Map(COURIER_DATA_COLUMNS.map((column) => [column.id, column]));
+    return columnOrder.map((id) => map.get(id as CourierColumnId)!).filter(Boolean);
+  }, [columnOrder]);
+
   const visibleCourierColumns = useMemo(() => {
-    const dataColumns = COURIER_COLUMNS.filter((column) => column.id !== 'actions' && visibleColumns.has(column.id));
+    const dataColumns = orderedCourierColumns.filter((column) => visibleColumns.has(column.id));
     return [...dataColumns, COURIER_ACTION_COLUMN];
-  }, [visibleColumns]);
+  }, [orderedCourierColumns, visibleColumns]);
+
+  const handleColumnReorder = useCallback((fromId: string, toId: string) => {
+    if (!fromId || fromId === toId) return;
+
+    setColumnOrder((current) => {
+      const next = [...current];
+      const fromIndex = next.indexOf(fromId);
+      const toIndex = next.indexOf(toId);
+      if (fromIndex === -1 || toIndex === -1) return current;
+
+      next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, fromId);
+      localStorage.setItem(COURIER_COLUMN_ORDER_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
 
   const filteredCouriers = useMemo(() => {
     const normalizedSearch = searchQuery.trim().toLowerCase();
@@ -355,7 +394,10 @@ export const CouriersListScreen: React.FC = () => {
         case 'rating':
           return (a.rating - b.rating) * direction;
         case 'totalDeliveries':
-          return (a.totalDeliveries - b.totalDeliveries) * direction;
+          return (
+            (deliveriesCountByCourierInPeriod.get(a.id) ?? 0) -
+            (deliveriesCountByCourierInPeriod.get(b.id) ?? 0)
+          ) * direction;
         case 'currentDelivery': {
           const aDelivery = activeDeliveriesByCourier.get(a.id)?.orderNumber ?? '';
           const bDelivery = activeDeliveriesByCourier.get(b.id)?.orderNumber ?? '';
@@ -365,7 +407,7 @@ export const CouriersListScreen: React.FC = () => {
           return 0;
       }
     });
-  }, [activeDeliveriesByCourier, deliveryFilter, searchQuery, sortColumn, sortDirection, state.couriers, statusFilter]);
+  }, [activeDeliveriesByCourier, deliveriesCountByCourierInPeriod, deliveryFilter, searchQuery, sortColumn, sortDirection, state.couriers, statusFilter]);
 
   const stats = useMemo<CourierStats>(() => ({
     total: state.couriers.length,
@@ -373,7 +415,6 @@ export const CouriersListScreen: React.FC = () => {
     available: state.couriers.filter((courier) => courier.status === 'available').length,
     busy: state.couriers.filter((courier) => courier.status === 'busy').length,
     offline: state.couriers.filter((courier) => courier.status === 'offline').length,
-    onShift: state.couriers.filter((courier) => courier.isOnShift).length,
   }), [filteredCouriers.length, state.couriers]);
 
   const statusCounts = useMemo(
@@ -471,7 +512,7 @@ export const CouriersListScreen: React.FC = () => {
       case 'rating':
         return courier.rating.toFixed(1);
       case 'totalDeliveries':
-        return courier.totalDeliveries;
+        return deliveriesCountByCourierInPeriod.get(courier.id) ?? 0;
       case 'currentDelivery':
         return currentDelivery ? currentDelivery.api_short_order_id || currentDelivery.id.slice(0, 6) : '-';
       case 'actions':
@@ -715,7 +756,9 @@ export const CouriersListScreen: React.FC = () => {
       case 'totalDeliveries':
         return (
           <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
-            <span className="whitespace-nowrap text-xs font-medium text-[#0d0d12] dark:text-[#fafafa]">{courier.totalDeliveries}</span>
+            <span className="whitespace-nowrap text-xs font-medium text-[#0d0d12] dark:text-[#fafafa]">
+              {deliveriesCountByCourierInPeriod.get(courier.id) ?? 0}
+            </span>
           </td>
         );
       case 'currentDelivery':
@@ -785,7 +828,18 @@ export const CouriersListScreen: React.FC = () => {
             primaryActionLabel={TEXT.addCourier}
             onPrimaryAction={() => setIsModalOpen(true)}
             primaryActionDataOnboarding="add-courier-btn"
-            showPeriodControl={false}
+            periodControl={
+              <ToolbarPeriodControl
+                periodMode={periodMode}
+                setPeriodMode={setPeriodMode}
+                monthAnchor={monthAnchor}
+                setMonthAnchor={setMonthAnchor}
+                customStartDate={customStartDate}
+                setCustomStartDate={setCustomStartDate}
+                customEndDate={customEndDate}
+                setCustomEndDate={setCustomEndDate}
+              />
+            }
             headerControls={
               <ListToolbarActions
                 showSearch={false}
@@ -891,6 +945,29 @@ export const CouriersListScreen: React.FC = () => {
                         label={column.label}
                         onSort={() => handleCourierSort(column.id as SortableCourierColumnId)}
                         sortDirection={sortColumn === column.id ? sortDirection : null}
+                        draggable
+                        onDragStart={(event) => {
+                          event.dataTransfer.setData('text/plain', column.id);
+                          setDraggingId(column.id);
+                        }}
+                        onDragOver={(event) => {
+                          event.preventDefault();
+                          setDragOverId(column.id);
+                        }}
+                        onDragLeave={() => setDragOverId(null)}
+                        onDrop={(event) => {
+                          event.preventDefault();
+                          const from = event.dataTransfer.getData('text/plain');
+                          handleColumnReorder(from, column.id);
+                          setDragOverId(null);
+                          setDraggingId(null);
+                        }}
+                        onDragEnd={() => {
+                          setDraggingId(null);
+                          setDragOverId(null);
+                        }}
+                        isDragging={draggingId === column.id}
+                        isDragOver={dragOverId === column.id && draggingId !== column.id}
                       />
                     )
                   ))}

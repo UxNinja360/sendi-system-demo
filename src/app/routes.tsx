@@ -6,6 +6,8 @@ import { Dashboard } from './pages/dashboard';
 import { WalletPage } from './pages/wallet-page';
 import { LiveManager } from './pages/live-manager';
 import { DeliveriesPage } from './pages/deliveries-page';
+import { DispatchLabPage } from './pages/dispatch-lab-page';
+import { ExceptionsLabPage } from './pages/exceptions-lab-page';
 import { ReportsPage } from './pages/reports-page';
 import { PerformancePage } from './pages/performance-page';
 import { LogPage } from './pages/log-page';
@@ -24,7 +26,6 @@ import { DeliveryZonesPage } from './pages/delivery-zones-page';
 import { DistancePricingPage } from './pages/distance-pricing-page';
 import { DeliveryProvider } from './context/delivery.context';
 import { ThemeProvider } from './context/theme.context';
-import { LanguageProvider } from './context/language.context';
 import { getNavItemById } from './app-navigation';
 
 const routePath = (id: string) => getNavItemById(id)?.routePath ?? id;
@@ -33,23 +34,19 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: (
-      <LanguageProvider>
-        <ThemeProvider>
-          <LoginPage />
-        </ThemeProvider>
-      </LanguageProvider>
+      <ThemeProvider>
+        <LoginPage />
+      </ThemeProvider>
     ),
   },
   {
     path: '/',
     element: (
-      <LanguageProvider>
-        <ThemeProvider>
-          <DeliveryProvider>
-            <AppLayout />
-          </DeliveryProvider>
-        </ThemeProvider>
-      </LanguageProvider>
+      <ThemeProvider>
+        <DeliveryProvider>
+          <AppLayout />
+        </DeliveryProvider>
+      </ThemeProvider>
     ),
     children: [
       {
@@ -69,6 +66,14 @@ export const router = createBrowserRouter([
       {
         path: routePath('deliveries'),
         element: <DeliveriesPage />,
+      },
+      {
+        path: routePath('dispatch'),
+        element: <DispatchLabPage />,
+      },
+      {
+        path: routePath('exceptions'),
+        element: <ExceptionsLabPage />,
       },
       {
         path: routePath('reports'),

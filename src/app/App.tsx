@@ -4,6 +4,9 @@ import { useEffect } from "react";
 
 export default function App() {
   useEffect(() => {
+    document.documentElement.setAttribute("lang", "he");
+    document.documentElement.setAttribute("dir", "rtl");
+    localStorage.removeItem("language");
     // PWA will only be active after build (not in dev mode)
   }, []);
 

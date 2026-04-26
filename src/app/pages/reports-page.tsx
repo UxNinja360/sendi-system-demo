@@ -9,8 +9,10 @@ import {
   Files,
   FileText,
   PackageCheck,
+  Search,
   Store,
   Wallet,
+  X,
 } from 'lucide-react';
 import { format as formatDate } from 'date-fns';
 import { useDelivery } from '../context/delivery-context-value';
@@ -32,6 +34,7 @@ import {
 
 type ReportTemplateId = 'restaurantBilling' | 'courierPayout' | 'companySummary';
 type ReportEntityType = 'couriers' | 'restaurants';
+type ReportListFilter = 'all' | 'billable' | 'delivered' | 'cancelled';
 
 const buildShiftBounds = (dateKey: string, startTime: string, endTime: string) => {
   const [year, month, day] = dateKey.split('-').map(Number);
@@ -138,6 +141,13 @@ const reportTemplates: Array<{
   },
 ];
 
+const reportListFilters: Array<{ id: ReportListFilter; label: string }> = [
+  { id: 'all', label: 'הכל' },
+  { id: 'billable', label: 'לחיוב' },
+  { id: 'delivered', label: 'נמסרו' },
+  { id: 'cancelled', label: 'בוטלו' },
+];
+
 const MetricCard: React.FC<{
   icon: React.ReactNode;
   label: string;
@@ -222,6 +232,8 @@ export const ReportsPage: React.FC = () => {
   );
   const [activeReportId, setActiveReportId] =
     React.useState<ReportTemplateId>('restaurantBilling');
+  const [reportSearchQuery, setReportSearchQuery] = React.useState('');
+  const [reportListFilter, setReportListFilter] = React.useState<ReportListFilter>('all');
   const [exportSelectedIds, setExportSelectedIds] = React.useState<string[]>([]);
   const [exportDropdownOpen, setExportDropdownOpen] = React.useState(false);
   const exportDropdownRef = React.useRef<HTMLDivElement>(null);
@@ -234,6 +246,10 @@ export const ReportsPage: React.FC = () => {
     setExportSelectedIds([]);
     setExportDropdownOpen(false);
   }, [activeReportId]);
+
+  React.useEffect(() => {
+    setExportSelectedIds([]);
+  }, [periodMode, monthAnchor, customStartDate, customEndDate, reportSearchQuery, reportListFilter]);
 
   React.useEffect(() => {
     const handleClick = (event: MouseEvent) => {
@@ -438,22 +454,69 @@ export const ReportsPage: React.FC = () => {
     [restaurantReports],
   );
 
+  const normalizedReportSearch = reportSearchQuery.trim().toLowerCase();
+
+  const matchesReportFilter = React.useCallback(
+    (report: { creditCount: number; deliveredCount: number; cancelledCount: number }) => {
+      if (reportListFilter === 'billable') return report.creditCount > 0;
+      if (reportListFilter === 'delivered') return report.deliveredCount > 0;
+      if (reportListFilter === 'cancelled') return report.cancelledCount > 0;
+      return true;
+    },
+    [reportListFilter],
+  );
+
+  const filteredCourierReports = React.useMemo(
+    () =>
+      courierReports.filter((report) => {
+        if (!matchesReportFilter(report)) return false;
+        if (!normalizedReportSearch) return true;
+
+        return [report.courier.name, report.courier.phone, report.courier.vehicleType]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+          .includes(normalizedReportSearch);
+      }),
+    [courierReports, matchesReportFilter, normalizedReportSearch],
+  );
+
+  const filteredRestaurantReports = React.useMemo(
+    () =>
+      restaurantReports.filter((report) => {
+        if (!matchesReportFilter(report)) return false;
+        if (!normalizedReportSearch) return true;
+
+        return [
+          report.restaurant.name,
+          report.restaurant.city,
+          report.restaurant.address,
+          isChainRestaurant(report.restaurant.chainId) ? 'רשת' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+          .includes(normalizedReportSearch);
+      }),
+    [matchesReportFilter, normalizedReportSearch, restaurantReports],
+  );
+
   const { handleExportCombined, handleExportSeparate } = useReportsExport({
     dateRange,
     exportEntityType: activeEntityType ?? 'restaurants',
     exportSelectedIds,
-    courierReports,
-    restaurantReports,
+    courierReports: filteredCourierReports,
+    restaurantReports: filteredRestaurantReports,
   });
 
   const exportOptions =
     activeEntityType === 'couriers'
-      ? courierReports.map((report) => ({
+      ? filteredCourierReports.map((report) => ({
           id: report.courier.id,
           name: report.courier.name,
         }))
       : activeEntityType === 'restaurants'
-        ? restaurantReports.map((report) => ({
+        ? filteredRestaurantReports.map((report) => ({
             id: report.restaurant.id,
             name: report.restaurant.name,
           }))
@@ -465,6 +528,19 @@ export const ReportsPage: React.FC = () => {
       : exportSelectedIds.length === exportOptions.length
         ? `כל ה${entityLabel} (${exportSelectedIds.length})`
         : `${exportSelectedIds.length} נבחרו`;
+
+  const activeReportTotal =
+    activeEntityType === 'couriers'
+      ? courierReports.length
+      : activeEntityType === 'restaurants'
+        ? restaurantReports.length
+        : 0;
+  const activeFilteredTotal =
+    activeEntityType === 'couriers'
+      ? filteredCourierReports.length
+      : activeEntityType === 'restaurants'
+        ? filteredRestaurantReports.length
+        : 0;
 
   const reportMetrics =
     activeReportId === 'restaurantBilling'
@@ -717,23 +793,47 @@ export const ReportsPage: React.FC = () => {
               setCustomEndDate={setCustomEndDate}
             />
           }
+          actions={
+            activeEntityType ? (
+              <>
+                <div className="relative">
+                  <Search className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-app-text-muted" />
+                  <input
+                    type="text"
+                    value={reportSearchQuery}
+                    onChange={(event) => setReportSearchQuery(event.target.value)}
+                    placeholder={activeEntityType === 'couriers' ? 'חיפוש שליח' : 'חיפוש מסעדה'}
+                    className="h-9 w-44 rounded-[var(--app-radius-xs)] border border-app-border bg-app-surface pr-8 pl-7 text-sm text-app-text outline-none transition-colors placeholder:text-app-text-muted focus:border-app-brand/50"
+                  />
+                  {reportSearchQuery ? (
+                    <button
+                      type="button"
+                      onClick={() => setReportSearchQuery('')}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-app-text-muted transition-colors hover:bg-app-surface-raised hover:text-app-text"
+                      aria-label="נקה חיפוש"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  ) : null}
+                </div>
+              </>
+            ) : null
+          }
         />
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6">
           <div className="mx-auto flex w-full max-w-7xl flex-col gap-4">
-            <header className="flex max-w-full justify-end border-b border-app-border pb-4">
-              <div className="flex max-w-full flex-wrap items-center gap-1 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface-inset p-1">
-                {reportTemplates.map((template) => (
-                  <ReportSwitchButton
-                    key={template.id}
-                    active={activeReportId === template.id}
-                    title={template.shortTitle}
-                    icon={template.icon}
-                    onClick={() => setActiveReportId(template.id)}
-                  />
-                ))}
-              </div>
-            </header>
+            <section className="flex max-w-full flex-wrap items-center gap-1 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface-inset p-1">
+              {reportTemplates.map((template) => (
+                <ReportSwitchButton
+                  key={template.id}
+                  active={activeReportId === template.id}
+                  title={template.shortTitle}
+                  icon={template.icon}
+                  onClick={() => setActiveReportId(template.id)}
+                />
+              ))}
+            </section>
 
             <section>
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -766,6 +866,32 @@ export const ReportsPage: React.FC = () => {
                         ? 'פירוט לשליחים לפי משמרות, משלוחים ותשלום בסיס.'
                         : 'סיכום קרדיטים, פעילות ופערי התחשבנות לחברת המשלוחים.'}
                   </p>
+                  {activeEntityType ? (
+                    <div className="mt-2 text-xs text-app-text-muted">
+                      {activeFilteredTotal.toLocaleString('he-IL')} מתוך {activeReportTotal.toLocaleString('he-IL')} מוצגים · הייצוא משתמש ברשימה המסוננת
+                    </div>
+                  ) : null}
+                  {activeEntityType ? (
+                    <div className="mt-3 flex max-w-full flex-wrap items-center gap-1.5">
+                      <span className="ml-1 text-xs font-medium text-app-text-muted">
+                        סינון
+                      </span>
+                      {reportListFilters.map((filter) => (
+                        <button
+                          key={filter.id}
+                          type="button"
+                          onClick={() => setReportListFilter(filter.id)}
+                          className={`inline-flex h-7 items-center rounded-[var(--app-radius-xs)] border px-2.5 text-xs font-semibold transition-colors ${
+                            reportListFilter === filter.id
+                              ? 'border-app-brand/40 bg-app-brand-subtle text-app-brand-text'
+                              : 'border-transparent text-app-text-secondary hover:border-app-border hover:bg-app-surface-inset hover:text-app-text'
+                          }`}
+                        >
+                          {filter.label}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
                 <div className="flex max-w-full flex-wrap items-center gap-2">
                   {exportActions}
@@ -822,8 +948,8 @@ export const ReportsPage: React.FC = () => {
                       </thead>
                       <tbody className="divide-y divide-app-border">
                         {activeReportId === 'courierPayout' ? (
-                          courierReports.length > 0 ? (
-                            courierReports.map((report) => (
+                          filteredCourierReports.length > 0 ? (
+                            filteredCourierReports.map((report) => (
                               <tr
                                 key={report.courier.id}
                                 className="text-app-text"
@@ -859,8 +985,8 @@ export const ReportsPage: React.FC = () => {
                               אין פעילות שליחים בתקופה הזו
                             </TableEmptyState>
                           )
-                        ) : restaurantReports.length > 0 ? (
-                          restaurantReports.map((report) => (
+                        ) : filteredRestaurantReports.length > 0 ? (
+                          filteredRestaurantReports.map((report) => (
                             <tr
                               key={report.restaurant.id}
                               className="text-app-text"

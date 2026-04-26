@@ -17,6 +17,7 @@ import {
   Sidebar as SidebarIcon,
   Store,
   TrendingUp,
+  TriangleAlert,
   Users,
   Wallet,
   X,
@@ -75,6 +76,7 @@ const ONBOARDING_BY_ID: Record<string, string> = {
 
 const NAV_ICON_MAP: Record<AppNavIconKey, React.FC<React.SVGProps<SVGSVGElement>>> = {
   activity: Activity,
+  alertTriangle: TriangleAlert,
   barChart: BarChart,
   bike: Bike,
   calendar: Calendar,

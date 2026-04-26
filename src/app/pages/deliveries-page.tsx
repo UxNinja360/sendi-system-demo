@@ -20,6 +20,7 @@ import {
   SelectionActionButton,
 } from '../components/common/selection-action-bar';
 import { EntityListShell } from '../components/common/entity-list-shell';
+import { InfoBar } from '../components/common/info-bar';
 import { ENTITY_TABLE_WIDTHS } from '../components/common/entity-table-shared';
 import { getDeliveryCustomerCharge, sumDeliveryMoney } from '../utils/delivery-finance';
 import { DELIVERY_STORAGE_KEYS } from '../context/delivery-storage';
@@ -51,15 +52,16 @@ const formatTime = (seconds: number): string => {
 
 const PRODUCT_DEFAULT_VISIBLE_COLUMNS = new Set([
   'orderNumber',
+  'creation_time',
   'status',
   'rest_name',
   'client_name',
   'client_full_address',
   'courier',
-  'timeRemaining',
 ]);
+const REQUIRED_PRODUCT_VISIBLE_COLUMNS = ['creation_time'];
 const COLUMN_ORDER_STORAGE_KEY = `${DELIVERY_STORAGE_KEYS.deliveriesColumnOrder}:product-v2`;
-const VISIBLE_COLUMNS_STORAGE_KEY = `${DELIVERY_STORAGE_KEYS.deliveriesVisibleColumns}:product-v4`;
+const VISIBLE_COLUMNS_STORAGE_KEY = `${DELIVERY_STORAGE_KEYS.deliveriesVisibleColumns}:product-v7`;
 const DELIVERY_COLUMN_CATEGORIES = [
   {
     id: 'core',
@@ -121,51 +123,18 @@ const STATUS_CHIP_CONFIG = [
 ];
 
 type DeliveriesOverviewStats = {
-  total: number;
   filtered: number;
-  active: number;
-  pending: number;
-  assigned: number;
-  delivering: number;
-  delivered: number;
-  cancelled: number;
-  expired: number;
 };
 
 const DeliveriesOverviewStrip: React.FC<{
   stats: DeliveriesOverviewStats;
-  hasFilters: boolean;
-}> = ({ stats, hasFilters }) => {
-  const items = [
-    { label: 'פעילים', value: stats.active.toLocaleString('he-IL'), tone: 'focus' },
-    { label: 'ממתינים', value: stats.pending.toLocaleString('he-IL'), tone: 'warning' },
-    { label: 'משובצים', value: stats.assigned.toLocaleString('he-IL') },
-    { label: 'בדרך', value: stats.delivering.toLocaleString('he-IL') },
-    { label: 'נמסרו', value: stats.delivered.toLocaleString('he-IL'), tone: 'success' },
-    ...(hasFilters ? [{ label: 'תוצאות', value: stats.filtered.toLocaleString('he-IL') }] : []),
-  ];
-
+}> = ({ stats }) => {
   return (
-    <div className="shrink-0 border-b border-[#e5e5e5] bg-white px-5 py-2.5 dark:border-[#262626] dark:bg-[#171717]">
-      <div className="flex max-w-full flex-wrap items-center gap-x-5 gap-y-2">
-        {items.map((item) => (
-          <div key={item.label} className="flex min-w-0 items-baseline gap-2">
-            <span
-              className={`text-sm font-semibold tabular-nums ${
-                item.tone === 'success'
-                  ? 'text-[#16a34a] dark:text-[#9fe870]'
-                  : item.tone === 'warning'
-                    ? 'text-[#f97316] dark:text-[#ffa94d]'
-                    : 'text-[#0d0d12] dark:text-[#fafafa]'
-              }`}
-            >
-              {item.value}
-            </span>
-            <span className="truncate text-xs text-[#737373] dark:text-[#a3a3a3]">{item.label}</span>
-          </div>
-        ))}
-      </div>
-    </div>
+    <InfoBar
+      items={[
+        { label: 'משלוחים מוצגים', value: stats.filtered.toLocaleString('he-IL') },
+      ]}
+    />
   );
 };
 
@@ -274,7 +243,7 @@ export const DeliveriesPage: React.FC = () => {
         const allIds = new Set(ALL_COLUMNS.map((column) => column.id));
         const validColumns = parsed.filter((columnId) => allIds.has(columnId));
         if (validColumns.length > 0) {
-          return new Set(validColumns);
+          return new Set([...validColumns, ...REQUIRED_PRODUCT_VISIBLE_COLUMNS]);
         }
       }
     } catch (e) {
@@ -309,6 +278,16 @@ export const DeliveriesPage: React.FC = () => {
     }
   }, [visibleColumns]);
 
+  useEffect(() => {
+    setVisibleColumns((current) => {
+      if (REQUIRED_PRODUCT_VISIBLE_COLUMNS.every((columnId) => current.has(columnId))) {
+        return current;
+      }
+
+      return new Set([...current, ...REQUIRED_PRODUCT_VISIBLE_COLUMNS]);
+    });
+  }, []);
+
   const [columnOrder, setColumnOrder] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem(COLUMN_ORDER_STORAGE_KEY);
@@ -320,7 +299,7 @@ export const DeliveriesPage: React.FC = () => {
         return [...validSaved, ...missing];
       }
     } catch { /* ignore */ }
-    const preferred = ['orderNumber', 'status', 'rest_name', 'client_name', 'client_full_address', 'courier', 'timeRemaining'];
+    const preferred = ['orderNumber', 'status', 'rest_name', 'client_name', 'client_full_address', 'courier'];
     const allIds = ALL_COLUMNS.map(c => c.id);
     const rest = allIds.filter(id => !preferred.includes(id));
     return [...preferred.filter(id => allIds.includes(id)), ...rest];
@@ -458,26 +437,9 @@ export const DeliveriesPage: React.FC = () => {
     total: state.deliveries.length,
   }), [state.deliveries]);
 
-  const filteredStats = useMemo<DeliveriesOverviewStats>(() => {
-    const pending = filteredDeliveries.filter(d => d.status === 'pending').length;
-    const assigned = filteredDeliveries.filter(d => d.status === 'assigned').length;
-    const delivering = filteredDeliveries.filter(d => d.status === 'delivering').length;
-    const delivered = filteredDeliveries.filter(d => d.status === 'delivered').length;
-    const cancelled = filteredDeliveries.filter(d => d.status === 'cancelled').length;
-    const expired = filteredDeliveries.filter(d => d.status === 'expired').length;
-
-    return {
-      total: state.deliveries.length,
-      filtered: filteredDeliveries.length,
-      active: pending + assigned + delivering,
-      pending,
-      assigned,
-      delivering,
-      delivered,
-      cancelled,
-      expired,
-    };
-  }, [filteredDeliveries, state.deliveries.length]);
+  const filteredStats = useMemo<DeliveriesOverviewStats>(() => ({
+    filtered: filteredDeliveries.length,
+  }), [filteredDeliveries.length]);
 
   const emptyStateMode = useMemo<'no-data' | 'no-results' | 'filtered-empty'>(() => {
     if (stats.total === 0) return 'no-data';
@@ -577,13 +539,6 @@ export const DeliveriesPage: React.FC = () => {
       toggleStatusFilter,
     ],
   );
-  const hasOperationalFilters = Boolean(
-    searchQuery.trim() ||
-    statusFilters.size > 0 ||
-    selectedRestaurants.size > 0 ||
-    selectedCouriers.size > 0
-  );
-
   return (
     <>
       <EntityListShell
@@ -655,7 +610,7 @@ export const DeliveriesPage: React.FC = () => {
           />
         }
         overview={
-          <DeliveriesOverviewStrip stats={filteredStats} hasFilters={hasOperationalFilters} />
+          <DeliveriesOverviewStrip stats={filteredStats} />
         }
       >
             <DeliveriesTableSection

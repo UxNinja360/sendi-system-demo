@@ -11,6 +11,8 @@ import { EntityListSidePanel } from '../components/common/entity-list-side-panel
 import { EntityListShell } from '../components/common/entity-list-shell';
 import { ListExportDrawer } from '../components/common/list-export-drawer';
 import { PageToolbar } from '../components/common/page-toolbar';
+import { ToolbarPeriodControl, type PeriodMode } from '../components/common/toolbar-date-picker';
+import { InfoBar, type InfoBarItem } from '../components/common/info-bar';
 import {
   SelectionActionBar,
   SelectionActionButton,
@@ -34,6 +36,7 @@ import {
   sanitizeExportFileName,
   workbookToExcelBuffer,
 } from '../utils/export-utils';
+import { getPeriodDateRange, isDeliveryInPeriod, toDateInputValue } from '../utils/date-period';
 import {
   EntityActionMenu,
   EntityActionMenuDivider,
@@ -71,9 +74,6 @@ type RestaurantRow = {
 type RestaurantStats = {
   total: number;
   filtered: number;
-  active: number;
-  inactive: number;
-  withDeliveries: number;
 };
 
 // ═══════════════════════════════════════
@@ -179,40 +179,14 @@ const RestaurantOverviewStrip: React.FC<{ stats: RestaurantStats; hasSearch: boo
   stats,
   hasSearch,
 }) => {
-  const items = [
+  const items: InfoBarItem[] = [
     { label: 'סה״כ מסעדות', value: stats.total.toLocaleString('he-IL') },
-    { label: 'פעילות', value: stats.active.toLocaleString('he-IL'), tone: 'success' },
-    { label: 'כבויות', value: stats.inactive.toLocaleString('he-IL') },
-    { label: 'עם משלוחים', value: stats.withDeliveries.toLocaleString('he-IL') },
     ...(hasSearch
-      ? [{ label: 'תוצאות חיפוש', value: stats.filtered.toLocaleString('he-IL'), tone: 'focus' }]
+      ? [{ label: 'תוצאות חיפוש', value: stats.filtered.toLocaleString('he-IL') }]
       : []),
   ];
 
-  return (
-    <div className="shrink-0 border-b border-[#e5e5e5] bg-white px-5 py-2.5 dark:border-[#262626] dark:bg-[#171717]">
-      <div className="flex max-w-full flex-wrap items-center gap-x-5 gap-y-2">
-        {items.map((item) => (
-          <div key={item.label} className="flex min-w-0 items-baseline gap-2">
-            <span
-              className={`text-sm font-semibold tabular-nums ${
-                item.tone === 'success'
-                  ? 'text-[#16a34a] dark:text-[#9fe870]'
-                  : item.tone === 'focus'
-                    ? 'text-[#0d0d12] dark:text-[#fafafa]'
-                    : 'text-[#0d0d12] dark:text-[#fafafa]'
-              }`}
-            >
-              {item.value}
-            </span>
-            <span className="truncate text-xs text-[#737373] dark:text-[#a3a3a3]">
-              {item.label}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  return <InfoBar items={items} />;
 };
 
 const RestaurantNoResultsState: React.FC<{ query: string; onClear: () => void }> = ({
@@ -255,6 +229,13 @@ export const RestaurantsScreen: React.FC = () => {
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [selectedRestaurantIds, setSelectedRestaurantIds] = useState<Set<string>>(new Set());
   const [columnsOpen, setColumnsOpen] = useState(false);
+  const [periodMode, setPeriodMode] = useState<PeriodMode>('current_month');
+  const [monthAnchor, setMonthAnchor] = useState(() => new Date());
+  const [customStartDate, setCustomStartDate] = useState(() => {
+    const now = new Date();
+    return toDateInputValue(new Date(now.getFullYear(), now.getMonth(), 1));
+  });
+  const [customEndDate, setCustomEndDate] = useState(() => toDateInputValue(new Date()));
 
   // ── Column drag-and-drop ──
   const [columnOrder, setColumnOrder] = useState<string[]>(() => {
@@ -313,14 +294,25 @@ export const RestaurantsScreen: React.FC = () => {
     });
   }, []);
 
+  const periodRange = useMemo(
+    () => getPeriodDateRange(periodMode, monthAnchor, customStartDate, customEndDate),
+    [customEndDate, customStartDate, monthAnchor, periodMode],
+  );
+
+  const periodDeliveries = useMemo(
+    () => state.deliveries.filter((delivery) => isDeliveryInPeriod(delivery, periodRange)),
+    [periodRange, state.deliveries],
+  );
+
   const deliveriesCountByRestaurant = useMemo(() => {
     const counts = new Map<string, number>();
-    state.deliveries.forEach((delivery) => {
-      if (!delivery.restaurantId) return;
-      counts.set(delivery.restaurantId, (counts.get(delivery.restaurantId) ?? 0) + 1);
+    periodDeliveries.forEach((delivery) => {
+      const restaurantId = delivery.restaurantId ?? delivery.rest_id;
+      if (!restaurantId) return;
+      counts.set(restaurantId, (counts.get(restaurantId) ?? 0) + 1);
     });
     return counts;
-  }, [state.deliveries]);
+  }, [periodDeliveries]);
 
   // ── Data ──
   const restaurants: RestaurantRow[] = useMemo(() => state.restaurants.map((r, idx) => ({
@@ -390,10 +382,7 @@ export const RestaurantsScreen: React.FC = () => {
   const stats = useMemo(() => ({
     total: restaurants.length,
     filtered: filteredRestaurants.length,
-    active: restaurants.filter(r => r.isActive).length,
-    inactive: restaurants.filter(r => !r.isActive).length,
-    withDeliveries: restaurants.filter(r => r.totalDeliveries > 0).length,
-  }), [restaurants, filteredRestaurants]);
+  }), [restaurants.length, filteredRestaurants.length]);
 
   // Selection state
   const allVisibleRestaurantsSelected = filteredRestaurants.length > 0 && filteredRestaurants.every(restaurant => selectedRestaurantIds.has(restaurant.restaurantId));
@@ -590,7 +579,7 @@ export const RestaurantsScreen: React.FC = () => {
   const handleExportZipPerRestaurant = async () => {
     setIsExportOpen(false);
     const dateStr = format(new Date(), 'dd-MM-yyyy');
-    const allDeliveries = state.deliveries;
+    const allDeliveries = periodDeliveries;
 
     const groups = new Map<string, { name: string; deliveries: Delivery[] }>();
 
@@ -629,7 +618,7 @@ export const RestaurantsScreen: React.FC = () => {
   // Export: Single restaurant Excel
   // ═══════════════════════════════════════
   const handleExportSingleRestaurant = (restaurantId: string, restaurantName: string) => {
-    const deliveries = state.deliveries.filter(d =>
+    const deliveries = periodDeliveries.filter(d =>
       d.restaurantId === restaurantId || d.rest_id === restaurantId || d.rest_name === restaurantName
     );
     if (deliveries.length === 0) { toast.error(`אין משלוחים למסעדה ${restaurantName}`); return; }
@@ -720,7 +709,7 @@ export const RestaurantsScreen: React.FC = () => {
                     title: '\u05d9\u05d9\u05e6\u05d5\u05d0 ZIP \u05dc\u05e4\u05d9 \u05de\u05e1\u05e2\u05d3\u05d4',
                     description:
                       '\u05e7\u05d5\u05d1\u05e5 Excel \u05e0\u05e4\u05e8\u05d3 \u05dc\u05db\u05dc \u05de\u05e1\u05e2\u05d3\u05d4 \u05e2\u05dd \u05d4\u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd \u05e9\u05dc\u05d4',
-                    meta: `${stats.total} \u05de\u05e1\u05e2\u05d3\u05d5\u05ea \u00b7 ${state.deliveries.length} \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd`,
+                    meta: `${stats.total} \u05de\u05e1\u05e2\u05d3\u05d5\u05ea \u00b7 ${periodDeliveries.length} \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd`,
                     icon: <Download className="h-5 w-5" />,
                     onClick: handleExportZipPerRestaurant,
                   },
@@ -744,7 +733,18 @@ export const RestaurantsScreen: React.FC = () => {
           <PageToolbar
             primaryActionLabel="הוסף מסעדה"
             onPrimaryAction={() => setIsAddModalOpen(true)}
-            showPeriodControl={false}
+            periodControl={
+              <ToolbarPeriodControl
+                periodMode={periodMode}
+                setPeriodMode={setPeriodMode}
+                monthAnchor={monthAnchor}
+                setMonthAnchor={setMonthAnchor}
+                customStartDate={customStartDate}
+                setCustomStartDate={setCustomStartDate}
+                customEndDate={customEndDate}
+                setCustomEndDate={setCustomEndDate}
+              />
+            }
             headerControls={
               <ListToolbarActions
                 showSearch={false}

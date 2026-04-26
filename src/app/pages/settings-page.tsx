@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   AlertTriangle,
   ChevronLeft,
-  Globe,
   LogOut,
   Moon,
   Palette,
@@ -14,7 +13,6 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useTheme } from '../context/theme.context';
-import { useLanguage } from '../context/language.context';
 import { useDelivery } from '../context/delivery-context-value';
 
 const TEXT = {
@@ -52,14 +50,11 @@ const TEXT = {
   restaurants: '\u05de\u05e1\u05e2\u05d3\u05d5\u05ea',
   restaurantsHint: '\u05de\u05e1\u05da \u05e0\u05e4\u05e8\u05d3 \u05dc\u05e8\u05e9\u05d9\u05de\u05ea \u05db\u05dc \u05d4\u05de\u05e1\u05e2\u05d3\u05d5\u05ea, \u05d7\u05d9\u05e4\u05d5\u05e9, \u05e1\u05d9\u05e0\u05d5\u05df \u05d5\u05e4\u05e2\u05d5\u05dc\u05d5\u05ea \u05e0\u05d9\u05d4\u05d5\u05dc.',
   personal: '\u05d4\u05e2\u05d3\u05e4\u05d5\u05ea \u05d0\u05d9\u05e9\u05d9\u05d5\u05ea',
-  personalDescription: '\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea \u05ea\u05e6\u05d5\u05d2\u05d4 \u05d5\u05e9\u05e4\u05d4 \u05e9\u05de\u05e9\u05e4\u05d9\u05e2\u05d5\u05ea \u05e2\u05dc \u05e1\u05d1\u05d9\u05d1\u05ea \u05d4\u05e2\u05d1\u05d5\u05d3\u05d4 \u05d4\u05d0\u05d9\u05e9\u05d9\u05ea \u05e9\u05dc\u05da.',
+  personalDescription: '\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea \u05ea\u05e6\u05d5\u05d2\u05d4 \u05e9\u05de\u05e9\u05e4\u05d9\u05e2\u05d5\u05ea \u05e2\u05dc \u05e1\u05d1\u05d9\u05d1\u05ea \u05d4\u05e2\u05d1\u05d5\u05d3\u05d4 \u05d4\u05d0\u05d9\u05e9\u05d9\u05ea \u05e9\u05dc\u05da.',
   darkMode: '\u05de\u05e6\u05d1 \u05db\u05d4\u05d4',
   darkModeHint: '\u05de\u05e2\u05d1\u05e8 \u05d9\u05d3\u05e0\u05d9 \u05d1\u05d9\u05df \u05d1\u05d4\u05d9\u05e8 \u05dc\u05db\u05d4\u05d4.',
   autoTheme: '\u05ea\u05d1\u05e0\u05d9\u05ea \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9\u05ea',
   autoThemeHint: '\u05d4\u05ea\u05d0\u05de\u05d4 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9\u05ea \u05e9\u05dc \u05d4\u05de\u05de\u05e9\u05e7.',
-  language: '\u05e9\u05e4\u05d4',
-  languageHint: '\u05d1\u05d7\u05d9\u05e8\u05ea \u05e9\u05e4\u05ea \u05d4\u05de\u05de\u05e9\u05e7.',
-  hebrew: '\u05e2\u05d1\u05e8\u05d9\u05ea',
   advanced: '\u05de\u05ea\u05e7\u05d3\u05dd',
   advancedDescription: '\u05e4\u05e2\u05d5\u05dc\u05d5\u05ea \u05de\u05e2\u05e8\u05db\u05ea \u05e8\u05d2\u05d9\u05e9\u05d5\u05ea. \u05de\u05d5\u05de\u05dc\u05e5 \u05dc\u05d2\u05e2\u05ea \u05d1\u05d4\u05df \u05e8\u05e7 \u05db\u05e9\u05d1\u05d0\u05de\u05ea \u05e6\u05e8\u05d9\u05da.',
   logout: '\u05d4\u05ea\u05e0\u05ea\u05e7\u05d5\u05ea',
@@ -69,7 +64,7 @@ const TEXT = {
   resetHint: '\u05de\u05d7\u05d6\u05d9\u05e8 \u05d0\u05ea \u05d4\u05de\u05e2\u05e8\u05db\u05ea \u05dc\u05de\u05e6\u05d1 \u05d4\u05d4\u05ea\u05d7\u05dc\u05ea\u05d9.',
   resetShort: '\u05d0\u05e4\u05e1',
   resetConfirm: '\u05dc\u05d0\u05e4\u05e1 \u05d0\u05ea \u05d4\u05de\u05e2\u05e8\u05db\u05ea \u05db\u05d5\u05dc\u05d4?',
-  resetConfirmBody: '\u05d4\u05e4\u05e2\u05d5\u05dc\u05d4 \u05ea\u05de\u05d7\u05e7 \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd, \u05e9\u05d9\u05d1\u05d5\u05e6\u05d9\u05dd, \u05de\u05d9\u05e7\u05d5\u05de\u05d9 \u05dc\u05d9\u05d9\u05d1 \u05d5\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea \u05ea\u05e6\u05d5\u05d2\u05ea \u05d3\u05de\u05d5. \u05d4\u05ea\u05d7\u05d1\u05e8\u05d5\u05ea, \u05e9\u05e4\u05d4 \u05d5\u05e2\u05e8\u05db\u05ea \u05e6\u05d1\u05e2\u05d9\u05dd \u05d9\u05d9\u05e9\u05d0\u05e8\u05d5.',
+  resetConfirmBody: '\u05d4\u05e4\u05e2\u05d5\u05dc\u05d4 \u05ea\u05de\u05d7\u05e7 \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd, \u05e9\u05d9\u05d1\u05d5\u05e6\u05d9\u05dd, \u05de\u05d9\u05e7\u05d5\u05de\u05d9 \u05dc\u05d9\u05d9\u05d1 \u05d5\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea \u05ea\u05e6\u05d5\u05d2\u05ea \u05d3\u05de\u05d5. \u05d4\u05ea\u05d7\u05d1\u05e8\u05d5\u05ea \u05d5\u05e2\u05e8\u05db\u05ea \u05e6\u05d1\u05e2\u05d9\u05dd \u05d9\u05d9\u05e9\u05d0\u05e8\u05d5.',
   resetCancel: '\u05d1\u05d9\u05d8\u05d5\u05dc',
   resetConfirmAction: '\u05d0\u05e4\u05e1 \u05e2\u05db\u05e9\u05d9\u05d5',
   timeHintPrefix: '\u05e8\u05e5 \u05db\u05e8\u05d2\u05e2 \u05e2\u05dc x',
@@ -174,7 +169,6 @@ const OpenButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
 export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
   const navigate = useNavigate();
   const { isDark, toggleDark } = useTheme();
-  const { language, setLanguage } = useLanguage();
   const { resetSystem } = useDelivery();
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
 
@@ -207,32 +201,6 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
               title={TEXT.darkMode}
               hint={TEXT.darkModeHint}
               control={<Toggle checked={isDark} onChange={() => toggleDark()} />}
-            />
-            <SettingRow
-              icon={<Globe className="h-4 w-4" />}
-              title={TEXT.language}
-              hint={TEXT.languageHint}
-              control={
-                <div className="flex items-center gap-1 rounded-xl bg-[#f5f5f5] p-1 dark:bg-[#0a0a0a]">
-                  {[
-                    { value: 'he', label: TEXT.hebrew },
-                    { value: 'en', label: 'English' },
-                  ].map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => setLanguage(option.value as typeof language)}
-                      className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                        language === option.value
-                          ? 'bg-[#0d0d12] text-white dark:bg-[#fafafa] dark:text-[#0d0d12]'
-                          : 'text-[#666d80] hover:bg-white dark:text-[#a3a3a3] dark:hover:bg-[#151515]'
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              }
             />
           </SectionCard>
 

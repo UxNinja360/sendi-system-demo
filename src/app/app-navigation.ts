@@ -1,7 +1,8 @@
-export type AppNavSectionId = 'core' | 'operations' | 'data' | 'business' | 'settings';
+export type AppNavSectionId = 'core' | 'operations' | 'experiments' | 'data' | 'business' | 'settings';
 
 export type AppNavIconKey =
   | 'activity'
+  | 'alertTriangle'
   | 'barChart'
   | 'bike'
   | 'calendar'
@@ -72,6 +73,28 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
     managedScroll: true,
     exact: true,
     activePathPrefixes: ['/delivery/'],
+  },
+  {
+    id: 'dispatch',
+    path: '/dispatch',
+    routePath: 'dispatch',
+    label: '\u05d7\u05d3\u05e8 \u05e6\u05d9\u05d5\u05d5\u05ea',
+    section: 'experiments',
+    icon: 'activity',
+    showInSidebar: true,
+    managedScroll: true,
+    exact: true,
+  },
+  {
+    id: 'exceptions',
+    path: '/exceptions',
+    routePath: 'exceptions',
+    label: '\u05ea\u05d9\u05d1\u05ea \u05d7\u05e8\u05d9\u05d2\u05d9\u05dd',
+    section: 'experiments',
+    icon: 'alertTriangle',
+    showInSidebar: true,
+    managedScroll: true,
+    exact: true,
   },
   {
     id: 'restaurants',
@@ -235,6 +258,11 @@ export const SIDEBAR_NAV_SECTIONS: AppNavSection[] = [
     id: 'data',
     label: '\u05e0\u05ea\u05d5\u05e0\u05d9\u05dd',
     items: visibleSidebarItems.filter((item) => item.section === 'data'),
+  },
+  {
+    id: 'experiments',
+    label: '\u05e0\u05e1\u05d9\u05d5\u05e0\u05d5\u05ea',
+    items: visibleSidebarItems.filter((item) => item.section === 'experiments'),
   },
 ];
 
