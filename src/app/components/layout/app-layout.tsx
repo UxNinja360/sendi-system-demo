@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate, useNavigation } from 'react-router';
 import { Sidebar } from './sidebar';
 import { MobileNavigation } from './mobile-navigation';
 import { MobileMenuNudge } from './mobile-menu-nudge';
+import { AppTopBar } from './app-top-bar';
 import { PageLoader } from '../ui/page-loader';
 import { LoadingBar } from '../ui/loading-bar';
 import { Toaster } from '../common/toaster';
@@ -65,6 +66,7 @@ export const AppLayout: React.FC = () => {
 
       <div className="flex h-full w-full flex-1 flex-col overflow-hidden">
         <LoadingBar isLoading={isLoading || isPageLoading} />
+        {!isLivePage && <AppTopBar />}
 
         <div
           className={`relative flex-1 w-full bg-app-background ${
