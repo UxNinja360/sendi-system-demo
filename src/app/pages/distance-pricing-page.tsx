@@ -13,7 +13,7 @@ export const DistancePricingPage: React.FC = () => {
   const averageCharge = chargedDeliveries.length > 0 ? Math.round(totalCharge / chargedDeliveries.length) : 0;
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]" dir="rtl">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-app-background" dir="rtl">
       <ModuleScaffold
         icon={<Ruler className="h-5 w-5" />}
         title="תמחור לפי מרחק"

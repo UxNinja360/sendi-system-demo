@@ -1,4 +1,4 @@
-﻿import React, { useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { formatDistanceToNow } from 'date-fns';
 import { he } from 'date-fns/locale';
@@ -94,7 +94,7 @@ export const SharedDeliverySidePanelShell: React.FC<SharedDeliverySidePanelShell
   if (!delivery) {
     return (
       <div className="h-full flex flex-col items-center justify-center p-6 text-center gap-4" dir="rtl">
-        <div className="w-14 h-14 rounded-2xl bg-[#f5f5f5] dark:bg-[#1a1a1a] flex items-center justify-center">
+        <div className="w-14 h-14 rounded-2xl bg-[#f5f5f5] dark:bg-app-surface flex items-center justify-center">
           <Package className="w-7 h-7 text-[#d4d4d4] dark:text-[#404040]" />
         </div>
         <div>
@@ -106,11 +106,11 @@ export const SharedDeliverySidePanelShell: React.FC<SharedDeliverySidePanelShell
           <div className="w-full mt-2 grid grid-cols-2 gap-2">
             {[
               { label: 'סה"כ', value: stats.total, color: 'text-[#0d0d12] dark:text-[#fafafa]' },
-              { label: 'נמסרו', value: stats.delivered, color: 'text-green-600 dark:text-green-400' },
+              { label: 'נמסרו', value: stats.delivered, color: 'text-blue-600 dark:text-blue-400' },
               { label: 'ממתינים', value: stats.pending, color: 'text-orange-600 dark:text-orange-400' },
               { label: 'פגו', value: stats.expired ?? 0, color: 'text-zinc-600 dark:text-zinc-300' },
             ].map(({ label, value, color }) => (
-              <div key={label} className="bg-[#f5f5f5] dark:bg-[#1a1a1a] rounded-xl p-3 text-center">
+              <div key={label} className="bg-[#f5f5f5] dark:bg-app-surface rounded-xl p-3 text-center">
                 <div className={`text-lg font-bold tabular-nums ${color}`}>{value}</div>
                 <div className="text-[10px] text-[#a3a3a3]">{label}</div>
               </div>
@@ -128,8 +128,8 @@ export const SharedDeliverySidePanelShell: React.FC<SharedDeliverySidePanelShell
   const isFinal = delivery.status === 'delivered' || delivery.status === 'cancelled' || delivery.status === 'expired';
 
   return (
-    <div className="h-full flex flex-col bg-white dark:bg-[#0f0f0f]" dir="rtl">
-      <div className="shrink-0 px-4 pt-4 pb-3 border-b border-[#f0f0f0] dark:border-[#1f1f1f]">
+    <div className="h-full flex flex-col bg-white dark:bg-app-surface" dir="rtl">
+      <div className="shrink-0 px-4 pt-4 pb-3 border-b border-[#f0f0f0] dark:border-app-border">
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${cfg.sidePanelBg} ${cfg.sidePanelBorder} border`}>
@@ -185,7 +185,7 @@ export const SharedDeliverySidePanelShell: React.FC<SharedDeliverySidePanelShell
             <div className="h-1.5 bg-white/60 dark:bg-black/20 rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-500"
-                style={{ width: `${progress}%`, backgroundColor: delivery.status === 'cancelled' || delivery.status === 'expired' ? '#71717a' : '#16a34a' }}
+                style={{ width: `${progress}%`, backgroundColor: delivery.status === 'cancelled' || delivery.status === 'expired' ? '#71717a' : delivery.status === 'delivered' ? '#2563eb' : delivery.status === 'delivering' ? '#16a34a' : '#16a34a' }}
               />
             </div>
           ) : (
@@ -193,7 +193,7 @@ export const SharedDeliverySidePanelShell: React.FC<SharedDeliverySidePanelShell
               {STATUS_ORDER.map((status, index) => (
                 <div
                   key={status}
-                  className={`h-1.5 flex-1 rounded-full ${index <= STATUS_ORDER.indexOf('delivered') ? (delivery.status === 'delivered' ? 'bg-green-500' : 'bg-red-400') : 'bg-white/30'}`}
+                  className={`h-1.5 flex-1 rounded-full ${index <= STATUS_ORDER.indexOf('delivered') ? (delivery.status === 'delivered' ? 'bg-blue-500' : 'bg-red-400') : 'bg-white/30'}`}
                 />
               ))}
             </div>
@@ -226,10 +226,10 @@ export const SharedDeliverySidePanelShell: React.FC<SharedDeliverySidePanelShell
         <div className="h-2" />
       </div>
 
-      <div className="shrink-0 px-4 py-3 border-t border-[#f0f0f0] dark:border-[#1f1f1f] grid grid-cols-2 gap-2">
+      <div className="shrink-0 px-4 py-3 border-t border-[#f0f0f0] dark:border-app-border grid grid-cols-2 gap-2">
         <button
           onClick={() => navigate(`/delivery/${delivery.id}`)}
-          className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold bg-[#f5f5f5] dark:bg-[#1a1a1a] text-[#525252] dark:text-[#a3a3a3] hover:bg-[#e5e5e5] dark:hover:bg-[#262626] hover:text-[#0d0d12] dark:hover:text-[#fafafa] transition-colors"
+          className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold bg-[#f5f5f5] dark:bg-app-surface text-[#525252] dark:text-[#a3a3a3] hover:bg-[#e5e5e5] dark:hover:bg-[#262626] hover:text-[#0d0d12] dark:hover:text-[#fafafa] transition-colors"
         >
           <FileText className="w-3.5 h-3.5" />
           עמוד מלא

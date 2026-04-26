@@ -197,10 +197,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
           event.stopPropagation();
           handleNav(item.path);
         }}
-        className={`mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-lg text-right transition-all duration-200 ${
+        className={`relative mx-2 mb-1 block w-[calc(100%-1rem)] cursor-pointer rounded-[var(--app-radius-sm)] text-right transition-colors duration-150 ${
           isActive
-            ? 'bg-[#f5f5f5] text-[#16a34a] dark:bg-[#262626] dark:text-[#22c55e]'
-            : 'text-[#737373] hover:bg-[#fafafa] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a] dark:hover:text-[#fafafa]'
+            ? 'bg-app-nav-active-bg text-app-nav-active-text shadow-[inset_0_0_0_1px_var(--app-nav-border)]'
+            : 'text-app-text-secondary hover:bg-app-nav-hover-bg hover:text-app-text'
         }`}
         aria-label={item.label}
       >
@@ -209,7 +209,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
             <Icon size={19} className="shrink-0 stroke-[1.8px]" />
             <span className="min-w-0 flex-1 truncate text-sm font-medium">{item.label}</span>
             {badge && (
-              <span className="shrink-0 text-[11px] font-medium tabular-nums text-[#a3a3a3] dark:text-[#737373]">
+              <span
+                className={`shrink-0 rounded-[4px] px-1.5 text-[11px] font-medium tabular-nums ${
+                  isActive
+                    ? 'bg-app-nav-badge-bg text-app-nav-badge-text shadow-[inset_0_0_0_1px_var(--app-nav-border)]'
+                    : 'text-app-text-muted'
+                }`}
+              >
                 {badge}
               </span>
             )}
@@ -227,10 +233,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
   };
 
   const footerItemClass = (isActive: boolean) =>
-    `w-full cursor-pointer border-b border-[#e5e5e5] px-4 py-3 text-right transition-colors dark:border-[#262626] ${
+    `w-full cursor-pointer border-b border-app-nav-border px-4 py-3 text-right transition-colors ${
       isActive
-        ? 'bg-[#f5f5f5] dark:bg-[#1a1a1a]'
-        : 'hover:bg-[#fafafa] dark:hover:bg-[#1a1a1a]'
+        ? 'bg-app-nav-active-bg text-app-nav-active-text'
+        : 'text-app-text-secondary hover:bg-app-nav-hover-bg hover:text-app-text'
     }`;
 
   return (
@@ -249,16 +255,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
             onClick={() => setIsBusinessPopupOpen(false)}
           />
           <div className="fixed inset-0 z-[201] flex items-center justify-center p-4" dir="rtl">
-            <div className="flex max-h-[80vh] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-[#e5e5e5] bg-white shadow-2xl dark:border-[#262626] dark:bg-[#171717]">
-              <div className="border-b border-[#e5e5e5] px-6 py-4 dark:border-[#262626]">
+            <div className="flex max-h-[80vh] w-full max-w-md flex-col overflow-hidden rounded-[var(--app-radius-md)] border border-app-border bg-app-surface shadow-2xl">
+              <div className="border-b border-app-border px-6 py-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-[#0d0d12] dark:text-[#fafafa]">
+                  <h3 className="text-lg font-semibold text-app-text">
                     {LABELS.selectBusiness}
                   </h3>
                   <button
                     type="button"
                     onClick={() => setIsBusinessPopupOpen(false)}
-                    className="text-[#737373] transition-colors hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:text-[#fafafa]"
+                    className="text-app-text-secondary transition-colors hover:text-app-text"
                     aria-label="Close"
                   >
                     <X size={20} />
@@ -277,8 +283,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                     }}
                     className={`mb-1 flex w-full items-center gap-3 rounded-lg px-4 py-3 text-right text-sm transition-colors ${
                       selectedBusiness === business
-                        ? 'bg-[#9fe870] font-medium text-[#0d0d12]'
-                        : 'text-[#36394a] hover:bg-[#f5f5f5] dark:text-[#d4d4d4] dark:hover:bg-[#262626]'
+                        ? 'bg-app-nav-active-bg font-medium text-app-nav-active-text shadow-[inset_0_0_0_1px_var(--app-border)]'
+                        : 'text-app-text-secondary hover:bg-app-nav-hover-bg hover:text-app-text'
                     }`}
                   >
                     <Store size={18} className="shrink-0" />
@@ -296,7 +302,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
         onClick={(event) => {
           if (event.target === event.currentTarget) setIsCollapsed(!isCollapsed);
         }}
-        className={`app-shell-height fixed inset-y-0 right-0 z-[110] flex flex-col border-l border-[#e5e5e5] bg-[#fafafa] shadow-xl dark:border-[#262626] dark:bg-[#0a0a0a] md:static md:z-50 md:shadow-none ${
+        className={`app-shell-height fixed inset-y-0 right-0 z-[110] flex flex-col border-l border-app-nav-border bg-app-nav-bg shadow-xl md:static md:z-50 md:shadow-none ${
           isCollapsed ? 'translate-x-0' : 'translate-x-full md:translate-x-0'
         }`}
         style={{
@@ -308,7 +314,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       >
         <div
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="app-safe-header flex shrink-0 cursor-pointer items-center justify-between border-b border-[#e5e5e5] bg-[#fafafa] px-4 py-0 transition-colors hover:bg-[#f0f0f0] dark:border-[#262626] dark:bg-[#0a0a0a] dark:hover:bg-[#111111]"
+          className="app-safe-header flex shrink-0 cursor-pointer items-center justify-between border-b border-app-nav-border bg-app-nav-bg px-4 py-0 transition-colors hover:bg-app-nav-hover-bg"
         >
           <div className="flex items-center gap-2 md:hidden">
             <AppLogo size={20} className="text-[#02B74F]" />
@@ -334,14 +340,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
               event.stopPropagation();
               closeMobileMenu();
             }}
-            className="text-[#737373] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:text-[#fafafa] md:hidden"
+            className="text-app-text-secondary hover:text-app-text md:hidden"
             aria-label="Close menu"
           >
             <X size={18} />
           </button>
 
           {!isCollapsed && (
-            <div className="hidden text-[#737373] dark:text-[#a3a3a3] md:block">
+            <div className="hidden text-app-text-secondary md:block">
               <SidebarIcon size={16} />
             </div>
           )}
@@ -357,15 +363,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
               }
             }
           }}
-          className="flex-1 cursor-pointer overflow-y-auto bg-[#fafafa] py-2 scrollbar-thin scrollbar-thumb-[#d4d4d4] dark:bg-[#0a0a0a] dark:scrollbar-thumb-[#404040]"
+          className="flex-1 cursor-pointer overflow-y-auto bg-app-nav-bg py-2 scrollbar-thin scrollbar-thumb-[#d4d4d4] dark:scrollbar-thumb-[#404040]"
         >
           {SIDEBAR_NAV_SECTIONS.map((section, sectionIndex) => (
             <React.Fragment key={section.id}>
               {sectionIndex > 0 && (
-                <div className="mx-4 my-2 border-t border-[#e5e5e5] dark:border-[#262626]" />
+                <div className="mx-4 my-2 border-t border-app-nav-border" />
               )}
               {isExpanded && (
-                <div className="px-4 pb-1 pt-2 text-[10px] font-bold uppercase tracking-wider text-[#a3a3a3] dark:text-[#555]">
+                <div className="px-4 pb-1 pt-2 text-[11px] font-semibold tracking-normal text-app-text-muted">
                   {section.label}
                 </div>
               )}
@@ -374,7 +380,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
           ))}
         </div>
 
-        <div className="mt-auto shrink-0 border-t border-[#e5e5e5] dark:border-[#262626]">
+        <div className="mt-auto shrink-0 border-t border-app-nav-border">
           <button
             type="button"
             onClick={() => setIsBusinessPopupOpen(!isBusinessPopupOpen)}
@@ -382,14 +388,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
             aria-label={selectedBusiness}
           >
             {isExpanded ? (
-              <span className="flex items-center gap-2 text-xs text-[#666d80] transition-colors hover:text-[#9fe870] dark:text-[#a3a3a3] dark:hover:text-[#9fe870]">
+              <span className="flex items-center gap-2 text-xs text-current transition-colors">
                 <Store size={14} className="shrink-0" />
                 <span className="truncate">{selectedBusiness}</span>
                 <ChevronLeft size={12} className="shrink-0" />
               </span>
             ) : (
               <SidebarIconTooltip label={selectedBusiness} className="hidden justify-center md:flex">
-                <Store size={15} className="text-[#666d80] transition-colors hover:text-[#9fe870] dark:text-[#a3a3a3] dark:hover:text-[#9fe870]" />
+                <Store size={15} className="text-current transition-colors" />
               </SidebarIconTooltip>
             )}
           </button>
@@ -402,12 +408,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
             {isExpanded ? (
               <span className="flex items-center justify-between gap-2">
                 <span className="flex items-center gap-2">
-                  <Wallet size={16} className="shrink-0 text-[#16a34a] dark:text-[#9fe870]" />
-                  <span className="text-xs text-[#666d80] dark:text-[#a3a3a3]">
+                  <Wallet size={16} className="shrink-0 text-current" />
+                  <span className="text-xs text-current">
                     {walletItem?.label ?? LABELS.wallet}
                   </span>
                 </span>
-                <span className="text-xs font-bold text-[#16a34a] dark:text-[#9fe870]">
+                <span className="text-xs font-semibold text-app-text tabular-nums">
                   ₪{Math.round(walletRevenue).toLocaleString('he-IL')}
                 </span>
               </span>
@@ -416,8 +422,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                 label={walletItem?.label ?? LABELS.wallet}
                 className="hidden flex-col items-center gap-1 md:flex"
               >
-                <Wallet size={16} className="text-[#16a34a] dark:text-[#9fe870]" />
-                <span className="text-[10px] font-bold text-[#16a34a] dark:text-[#9fe870]">
+                <Wallet size={16} className="text-current" />
+                <span className="text-[10px] font-semibold text-app-text tabular-nums">
                   {walletRevenue > 999 ? `${Math.floor(walletRevenue / 1000)}K` : Math.round(walletRevenue)}
                 </span>
               </SidebarIconTooltip>
@@ -432,8 +438,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
             {isExpanded ? (
               <span className="flex items-center justify-between gap-2">
                 <span className="flex items-center gap-2">
-                  <Package size={16} className="shrink-0 text-[#0fcdd3]" />
-                  <span className="text-xs text-[#666d80] dark:text-[#a3a3a3]">
+                  <Package size={16} className="shrink-0 text-current" />
+                  <span className="text-xs text-current">
                     {balanceItem?.label ?? LABELS.deliveryBalance}
                   </span>
                 </span>
@@ -452,7 +458,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                 label={balanceItem?.label ?? LABELS.deliveryBalance}
                 className="hidden flex-col items-center gap-1 md:flex"
               >
-                <Package size={16} className="text-[#0fcdd3]" />
+                <Package size={16} className="text-current" />
                 <span
                   className={`text-[10px] font-bold ${
                     state.deliveryBalance <= 100
@@ -466,11 +472,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
             )}
           </button>
 
-          <div className="border-b border-[#e5e5e5] px-4 py-3 dark:border-[#262626]">
+          <div className="border-b border-app-nav-border px-4 py-3">
             {isExpanded ? (
               <div className="space-y-3">
                 <div data-onboarding="system-toggle" className="flex items-center justify-between gap-3">
-                  <span className="text-xs text-[#666d80] dark:text-[#a3a3a3]">
+                  <span className="text-xs text-app-text-secondary">
                     {LABELS.acceptDeliveries}
                   </span>
                   <button
@@ -494,7 +500,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                 </div>
 
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs text-[#666d80] dark:text-[#a3a3a3]">
+                  <span className="text-xs text-app-text-secondary">
                     {LABELS.autoAssign}
                   </span>
                   <button
@@ -537,8 +543,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
             onClick={() => handleNav(settingsItem?.path ?? '/settings')}
             className={`w-full cursor-pointer px-4 py-3 text-right transition-colors ${
               location.pathname.startsWith(settingsItem?.path ?? '/settings')
-                ? 'bg-[#f5f5f5] text-[#16a34a] dark:bg-[#262626] dark:text-[#22c55e]'
-                : 'text-[#36394a] hover:bg-[#f5f5f5] dark:text-[#d4d4d4] dark:hover:bg-[#404040]'
+                ? 'bg-app-nav-active-bg text-app-nav-active-text shadow-[inset_0_0_0_1px_var(--app-nav-border)]'
+                : 'text-app-text-secondary hover:bg-app-nav-hover-bg hover:text-app-text'
             }`}
           >
             {isExpanded ? (

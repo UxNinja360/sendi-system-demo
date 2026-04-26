@@ -85,7 +85,7 @@ export const LiveSortMenu: React.FC<LiveSortMenuProps> = ({
       <div className="fixed inset-0 z-[1990]" onClick={onClose} />
       <div
         dir="rtl"
-        className="fixed z-[2000] overflow-hidden rounded-xl border border-[#e5e5e5] bg-white shadow-2xl dark:border-[#262626] dark:bg-[#171717]"
+        className="fixed z-[2000] overflow-hidden rounded-xl border border-[#e5e5e5] bg-white shadow-2xl dark:border-app-border dark:bg-app-surface"
         style={position}
       >
         {options.map((option) => (

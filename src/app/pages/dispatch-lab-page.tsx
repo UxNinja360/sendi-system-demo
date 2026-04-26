@@ -35,11 +35,11 @@ const STATUS_META: Record<DeliveryStatus, { label: string; className: string }> 
   },
   delivering: {
     label: 'נאסף',
-    className: 'border-[#a78bfa]/40 bg-[#a78bfa]/10 text-[#c4b5fd]',
+    className: 'border-[#22c55e]/40 bg-[#22c55e]/10 text-[#7bf1a8]',
   },
   delivered: {
     label: 'נמסר',
-    className: 'border-[#22c55e]/40 bg-[#22c55e]/10 text-[#9fe870]',
+    className: 'border-[#2563eb]/40 bg-[#2563eb]/10 text-[#93c5fd]',
   },
   cancelled: {
     label: 'בוטל',
@@ -455,7 +455,7 @@ export const DispatchLabPage: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => handleStatus(delivery, 'delivering')}
-                                className="inline-flex h-8 items-center gap-2 rounded-md border border-[#60a5fa]/30 px-3 text-xs font-semibold text-[#93c5fd] transition-colors hover:bg-[#60a5fa]/10"
+                                className="inline-flex h-8 items-center gap-2 rounded-md border border-[#22c55e]/30 px-3 text-xs font-semibold text-[#7bf1a8] transition-colors hover:bg-[#22c55e]/10"
                               >
                                 <Play className="h-3.5 w-3.5" />
                                 נאסף
@@ -465,7 +465,7 @@ export const DispatchLabPage: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => handleComplete(delivery)}
-                                className="inline-flex h-8 items-center gap-2 rounded-md border border-[#22c55e]/30 px-3 text-xs font-semibold text-[#9fe870] transition-colors hover:bg-[#22c55e]/10"
+                                className="inline-flex h-8 items-center gap-2 rounded-md border border-[#2563eb]/30 px-3 text-xs font-semibold text-[#93c5fd] transition-colors hover:bg-[#2563eb]/10"
                               >
                                 <Check className="h-3.5 w-3.5" />
                                 נמסר

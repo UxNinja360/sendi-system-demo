@@ -58,7 +58,7 @@ export const AppLayout: React.FC = () => {
   const isLoading = navigation.state === 'loading';
 
   return (
-    <div className="app-shell-height flex w-full overflow-hidden bg-[#fafafa] text-[#0d0d12] transition-colors duration-300 dark:bg-[#0a0a0a] dark:text-[#fafafa]">
+    <div className="app-shell-height flex w-full overflow-hidden bg-app-background text-[#0d0d12] transition-colors duration-300 dark:text-[#fafafa]">
       <Toaster />
 
       <Sidebar onLogout={handleLogout} onMobileMenuToggleReady={registerMobileMenuToggle} />
@@ -67,14 +67,14 @@ export const AppLayout: React.FC = () => {
         <LoadingBar isLoading={isLoading || isPageLoading} />
 
         <div
-          className={`relative flex-1 w-full bg-[#fafafa] dark:bg-[#0a0a0a] ${
+          className={`relative flex-1 w-full bg-app-background ${
             isManagedScrollPage
               ? 'overflow-hidden flex flex-col'
               : 'overflow-y-auto scroll-smooth'
           }`}
         >
           {isLoading && (
-            <div className="absolute inset-0 z-50 bg-[#fafafa] dark:bg-[#0a0a0a]">
+            <div className="absolute inset-0 z-50 bg-app-background">
               <PageLoader page={getCurrentPage()} />
             </div>
           )}

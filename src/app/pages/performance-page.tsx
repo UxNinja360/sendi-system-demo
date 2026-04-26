@@ -86,7 +86,7 @@ export const PerformancePage: React.FC = () => {
     : 0;
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#f5f5f5] dark:bg-[#0a0a0a]">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-app-background">
       <div dir="rtl">
         <PageToolbar
           periodControl={

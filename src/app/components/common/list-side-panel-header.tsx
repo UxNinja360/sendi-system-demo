@@ -13,7 +13,7 @@ export const ListSidePanelHeader: React.FC<ListSidePanelHeaderProps> = ({
   onClose,
 }) => {
   return (
-    <div className="shrink-0 flex items-center justify-between border-b border-[#e5e5e5] bg-[#fafafa] px-4 py-3 dark:border-[#262626] dark:bg-[#141414]">
+    <div className="shrink-0 flex items-center justify-between border-b border-[#e5e5e5] bg-[#fafafa] px-4 py-3 dark:border-app-border dark:bg-app-surface">
       <div className="flex items-center gap-2">
         <div className="text-[#0d0d12] dark:text-[#fafafa]">{icon}</div>
         <span className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">{title}</span>

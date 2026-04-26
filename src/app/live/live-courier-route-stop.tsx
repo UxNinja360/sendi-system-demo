@@ -1,4 +1,4 @@
-﻿import React, { useRef } from 'react';
+import React, { useRef } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { ArrowDown, ArrowUp, GripVertical, MapPin, Store, User } from 'lucide-react';
 import { formatAddressWithArea } from '../utils/delivery-presenters';
@@ -93,7 +93,7 @@ export const DraggableRouteStop: React.FC<DraggableRouteStopProps> = React.memo(
       if (allGroupedOrdersPickedUp) {
         return {
           label: 'נאסף',
-          colorClass: 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400',
+          colorClass: 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400',
         };
       }
 
@@ -118,7 +118,7 @@ export const DraggableRouteStop: React.FC<DraggableRouteStopProps> = React.memo(
         case 'delivering':
           return {
             label: 'נאסף',
-            colorClass: 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400',
+            colorClass: 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400',
           };
         default:
           return {
@@ -139,15 +139,15 @@ export const DraggableRouteStop: React.FC<DraggableRouteStopProps> = React.memo(
           label: 'ממתין לאיסוף',
           colorClass: 'bg-[#f5f5f5] dark:bg-[#262626] text-[#737373] dark:text-[#a3a3a3]',
         };
-      case 'delivering':
-        return {
-          label: 'בדרך ללקוח',
-          colorClass: 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400',
-        };
+        case 'delivering':
+          return {
+            label: 'בדרך ללקוח',
+            colorClass: 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400',
+          };
       default:
         return {
           label: 'נמסר',
-          colorClass: 'bg-[#dcfce7] dark:bg-[#22c55e]/20 text-[#16a34a] dark:text-[#7bf1a8]',
+          colorClass: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400',
         };
     }
   };
@@ -176,7 +176,7 @@ export const DraggableRouteStop: React.FC<DraggableRouteStopProps> = React.memo(
         className={`mx-2 my-1 rounded-lg border transition-all ${
           isPreview
             ? 'border-dashed border-[#22c55e] dark:border-[#22c55e]/60 bg-[#f0fdf4] dark:bg-[#0a2f1a]/50'
-            : 'border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717]'
+            : 'border-[#e5e5e5] dark:border-app-border bg-white dark:bg-app-surface'
         }`}
       >
         <div className="px-3 py-2">

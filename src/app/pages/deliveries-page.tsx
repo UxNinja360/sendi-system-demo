@@ -116,8 +116,8 @@ const DELIVERY_COLUMN_CATEGORIES = [
 const STATUS_CHIP_CONFIG = [
   { status: 'pending'    as DeliveryStatus, label: 'ממתין', dot: 'bg-orange-500', active: 'bg-orange-500/10 text-orange-600 dark:text-orange-400' },
   { status: 'assigned'   as DeliveryStatus, label: 'שובץ',  dot: 'bg-yellow-500', active: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400' },
-  { status: 'delivering' as DeliveryStatus, label: 'נאסף',  dot: 'bg-indigo-500', active: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400' },
-  { status: 'delivered'  as DeliveryStatus, label: 'נמסר',  dot: 'bg-green-500',  active: 'bg-green-500/10 text-green-600 dark:text-green-400' },
+  { status: 'delivering' as DeliveryStatus, label: 'נאסף',  dot: 'bg-green-500', active: 'bg-green-500/10 text-green-600 dark:text-green-400' },
+  { status: 'delivered'  as DeliveryStatus, label: 'נמסר',  dot: 'bg-blue-500',  active: 'bg-blue-500/10 text-blue-600 dark:text-blue-400' },
   { status: 'cancelled'  as DeliveryStatus, label: 'בוטל',  dot: 'bg-red-500',    active: 'bg-red-500/10 text-red-600 dark:text-red-400' },
   { status: 'expired'    as DeliveryStatus, label: 'פג תוקף', dot: 'bg-zinc-500', active: 'bg-zinc-500/10 text-zinc-600 dark:text-zinc-300' },
 ];

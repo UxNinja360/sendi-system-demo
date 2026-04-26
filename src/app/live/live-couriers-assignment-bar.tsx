@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { X } from 'lucide-react';
 
 type LiveCouriersAssignmentBarProps = {
@@ -23,7 +23,7 @@ export const LiveCouriersAssignmentBar: React.FC<LiveCouriersAssignmentBarProps>
   if (!assignmentMode) return null;
 
   return (
-    <div className="sticky inset-x-0 bottom-0 z-20 mt-auto border-t border-[#e5e5e5] bg-white shadow-[0_-4px_16px_rgba(0,0,0,0.08)] dark:border-[#262626] dark:bg-[#171717]">
+    <div className="sticky inset-x-0 bottom-0 z-20 mt-auto border-t border-[#e5e5e5] bg-white shadow-[0_-4px_16px_rgba(0,0,0,0.08)] dark:border-app-border dark:bg-app-surface">
       {!selectedCourierId ? (
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2 text-sm text-[#737373] dark:text-[#a3a3a3]">
@@ -41,7 +41,7 @@ export const LiveCouriersAssignmentBar: React.FC<LiveCouriersAssignmentBarProps>
         <div className="flex items-center gap-3 px-4 py-3">
           <button
             onClick={onClearCourierSelection}
-            className="flex-shrink-0 rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm font-semibold text-[#737373] transition-colors hover:bg-[#f5f5f5] dark:border-[#262626] dark:hover:bg-[#262626]"
+            className="flex-shrink-0 rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm font-semibold text-[#737373] transition-colors hover:bg-[#f5f5f5] dark:border-app-border dark:hover:bg-[#262626]"
           >
             חזור
           </button>

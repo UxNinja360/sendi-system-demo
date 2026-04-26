@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Bike, ChevronLeft, ChevronRight, ChevronsUp, Package } from 'lucide-react';
 
 type LiveManagerDesktopHeaderProps = {
@@ -22,7 +22,7 @@ export const LiveManagerDesktopHeader: React.FC<LiveManagerDesktopHeaderProps> =
   onCyclePanelSize,
   onMinimize,
 }) => (
-  <div className="border-b border-[#e5e5e5] px-4 pt-3 pb-0 dark:border-[#262626]">
+  <div className="border-b border-[#e5e5e5] px-4 pt-3 pb-0 dark:border-app-border">
     <div className="flex items-center gap-3">
       <div className="flex flex-1 gap-0">
         <button

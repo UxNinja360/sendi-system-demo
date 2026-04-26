@@ -37,7 +37,7 @@ export const ListExportDrawer: React.FC<ListExportDrawerProps> = ({
             key={action.id}
             type="button"
             onClick={action.onClick}
-            className="w-full rounded-2xl border border-[#e5e5e5] bg-white p-4 text-right transition-all hover:border-[#9fe870]/50 hover:bg-[#f8fff2] dark:border-[#262626] dark:bg-[#0f0f0f] dark:hover:bg-[#11180c]"
+            className="w-full rounded-2xl border border-[#e5e5e5] bg-white p-4 text-right transition-all hover:border-[#9fe870]/50 hover:bg-[#f8fff2] dark:border-app-border dark:bg-app-surface dark:hover:bg-[#11180c]"
           >
             <div className="flex items-start gap-3">
               <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-xl bg-[#9fe870]/15 text-[#6bc84a]">

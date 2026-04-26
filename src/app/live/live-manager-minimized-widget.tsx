@@ -38,7 +38,7 @@ export const LiveManagerMinimizedWidget: React.FC<LiveManagerMinimizedWidgetProp
     <div className="flex items-center gap-2">
       {pendingCount > 0 && <StatusDot color="rgb(255,105,0)" count={pendingCount} />}
       {inProgressCount > 0 && <StatusDot color="rgb(240,177,0)" count={inProgressCount} />}
-      {deliveredCount > 0 && <StatusDot color="rgb(0,166,62)" count={deliveredCount} />}
+      {deliveredCount > 0 && <StatusDot color="rgb(37,99,235)" count={deliveredCount} />}
       {cancelledCount > 0 && <StatusDot color="rgb(231,0,11)" count={cancelledCount} />}
     </div>
 

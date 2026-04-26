@@ -2,7 +2,7 @@ import React from 'react';
 
 export const DashboardSkeleton: React.FC = () => {
   return (
-    <div className="min-h-screen p-6 bg-[#fafafa] dark:bg-[#0a0a0a]">
+    <div className="min-h-screen p-6 bg-[#fafafa] dark:bg-app-surface">
       <div className="max-w-7xl mx-auto">
         {/* Header Skeleton */}
         <div className="flex items-center gap-2 mb-3">
@@ -15,7 +15,7 @@ export const DashboardSkeleton: React.FC = () => {
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="bg-white dark:bg-[#171717] h-[103px] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] p-4"
+              className="bg-white dark:bg-app-surface h-[103px] rounded-2xl border border-[#e5e5e5] dark:border-app-border p-4"
             >
               <div className="flex items-center justify-between h-full">
                 <div className="flex flex-col gap-2 w-full">
@@ -34,7 +34,7 @@ export const DashboardSkeleton: React.FC = () => {
           {[1, 2].map((i) => (
             <div
               key={i}
-              className="bg-white dark:bg-[#171717] h-[103px] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] p-4"
+              className="bg-white dark:bg-app-surface h-[103px] rounded-2xl border border-[#e5e5e5] dark:border-app-border p-4"
             >
               <div className="flex items-center justify-between h-full">
                 <div className="flex flex-col gap-2 w-full">
@@ -49,7 +49,7 @@ export const DashboardSkeleton: React.FC = () => {
         </div>
 
         {/* Daily Stats Card Skeleton */}
-        <div className="bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] p-4 md:p-6 mb-6">
+        <div className="bg-white dark:bg-app-surface rounded-2xl border border-[#e5e5e5] dark:border-app-border p-4 md:p-6 mb-6">
           <div className="space-y-4">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
               <div className="space-y-2">
@@ -62,7 +62,7 @@ export const DashboardSkeleton: React.FC = () => {
               </div>
             </div>
             <div className="h-12 w-full skeleton"></div>
-            <div className="flex flex-wrap gap-4 pt-2 border-t border-[#e5e5e5] dark:border-[#262626]">
+            <div className="flex flex-wrap gap-4 pt-2 border-t border-[#e5e5e5] dark:border-app-border">
               <div className="h-3 w-32 skeleton"></div>
               <div className="h-3 w-28 skeleton"></div>
               <div className="h-3 w-24 skeleton"></div>
@@ -72,7 +72,7 @@ export const DashboardSkeleton: React.FC = () => {
 
         {/* Chart Section */}
         <div className="h-5 w-32 skeleton mb-3"></div>
-        <div className="bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] p-4 md:p-6">
+        <div className="bg-white dark:bg-app-surface rounded-2xl border border-[#e5e5e5] dark:border-app-border p-4 md:p-6">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="space-y-2">
@@ -101,7 +101,7 @@ export const DashboardSkeleton: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="mt-2 bg-[#fafafa] dark:bg-[#0a0a0a] rounded-xl p-4">
+            <div className="mt-2 bg-[#fafafa] dark:bg-app-surface rounded-xl p-4">
               <div className="h-[300px] md:h-[400px] w-full skeleton"></div>
             </div>
           </div>

@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router';
 import { useDelivery } from '../context/delivery-context-value';
 import { SharedDeliverySidePanelShell } from '../deliveries/shared-delivery-side-panel-shell';
@@ -31,7 +31,7 @@ export const OrderDetailsPanel: React.FC<OrderDetailsPanelProps> = ({ order, onC
   return (
     <>
       <div className="fixed md:left-4 md:top-4 md:bottom-4 md:w-[500px] bottom-0 left-0 right-0 md:right-auto max-h-[85vh] md:max-h-none z-[201] delivery-panel-enter">
-        <div className="h-full bg-white dark:bg-[#171717] md:rounded-2xl rounded-t-3xl shadow-2xl border-t md:border border-[#e5e5e5] dark:border-[#262626] overflow-hidden flex flex-col">
+        <div className="h-full bg-white dark:bg-app-surface md:rounded-2xl rounded-t-3xl shadow-2xl border-t md:border border-[#e5e5e5] dark:border-app-border overflow-hidden flex flex-col">
           <div className="md:hidden flex-shrink-0 py-2 flex justify-center">
             <div className="w-10 h-1 bg-[#d4d4d4] dark:bg-[#404040] rounded-full" />
           </div>

@@ -29,9 +29,9 @@ export function DeliveryDetailsPage() {
   const statusConfig: Record<string, { label: string; color: string; bg: string; icon: React.ElementType }> = {
     pending:    { label: 'ממתין לשיבוץ', color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-50 dark:bg-orange-500/10', icon: AlertCircle },
     assigned:   { label: 'בדרך למסעדה',  color: 'text-yellow-600 dark:text-yellow-400', bg: 'bg-yellow-50 dark:bg-yellow-500/10', icon: Navigation },
-    picking_up: { label: 'נאסף ממסעדה',  color: 'text-blue-600 dark:text-blue-400',    bg: 'bg-blue-50 dark:bg-blue-500/10',    icon: Package },
-    delivering: { label: 'בדרך ללקוח',   color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-500/10', icon: Bike },
-    delivered:  { label: 'נמסר ללקוח',   color: 'text-green-600 dark:text-green-400',  bg: 'bg-green-50 dark:bg-green-500/10',  icon: CheckCircle2 },
+    picking_up: { label: 'נאסף ממסעדה',  color: 'text-green-600 dark:text-green-400',  bg: 'bg-green-50 dark:bg-green-500/10',  icon: Package },
+    delivering: { label: 'בדרך ללקוח',   color: 'text-green-600 dark:text-green-400',  bg: 'bg-green-50 dark:bg-green-500/10',  icon: Bike },
+    delivered:  { label: 'נמסר ללקוח',   color: 'text-blue-600 dark:text-blue-400',    bg: 'bg-blue-50 dark:bg-blue-500/10',    icon: CheckCircle2 },
     cancelled:  { label: 'בוטל',          color: 'text-red-600 dark:text-red-400',     bg: 'bg-red-50 dark:bg-red-500/10',     icon: XCircle },
     expired:    { label: 'פג תוקף',       color: 'text-zinc-600 dark:text-zinc-300',   bg: 'bg-zinc-50 dark:bg-zinc-500/10',   icon: ClockAlert },
   };
@@ -65,10 +65,10 @@ export function DeliveryDetailsPage() {
   ];
 
   return (
-    <div className="min-h-full bg-[#f5f5f5] dark:bg-[#0a0a0a]">
+    <div className="min-h-full bg-app-background">
 
       {/* ── Header ── */}
-      <div className="bg-white dark:bg-[#171717] border-b border-[#e5e5e5] dark:border-[#262626] px-6 h-16 flex items-center gap-3 shrink-0">
+      <div className="bg-white dark:bg-app-surface border-b border-[#e5e5e5] dark:border-app-border px-6 h-16 flex items-center gap-3 shrink-0">
         <button onClick={() => navigate(-1)} className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors shrink-0">
           <ArrowRight size={17} className="text-[#666d80] dark:text-[#a3a3a3]" />
         </button>
@@ -79,10 +79,10 @@ export function DeliveryDetailsPage() {
       <div className="p-6 max-w-4xl mx-auto space-y-4">
 
         {/* ── Main card ── */}
-        <div className="bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] overflow-hidden">
+        <div className="bg-white dark:bg-app-surface rounded-2xl border border-[#e5e5e5] dark:border-app-border overflow-hidden">
 
           {/* card header */}
-          <div className="px-6 py-4 border-b border-[#f0f0f0] dark:border-[#262626] flex items-center justify-between">
+          <div className="px-6 py-4 border-b border-[#f0f0f0] dark:border-app-border flex items-center justify-between">
             <span className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">מידע כללי</span>
             <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full ${cfg.bg} ${cfg.color}`}>
               <StatusIcon size={12} />
@@ -109,7 +109,7 @@ export function DeliveryDetailsPage() {
         <div className={`grid gap-4 ${courier ? 'grid-cols-3' : 'grid-cols-2'}`}>
 
           {/* מסעדה */}
-          <div className="bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] p-5">
+          <div className="bg-white dark:bg-app-surface rounded-2xl border border-[#e5e5e5] dark:border-app-border p-5">
             <p className="text-xs font-semibold text-[#a3a3a3] uppercase tracking-wide mb-4">פרטי מסעדה</p>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center text-sm font-bold text-orange-600 dark:text-orange-400 shrink-0">
@@ -134,7 +134,7 @@ export function DeliveryDetailsPage() {
           </div>
 
           {/* לקוח */}
-          <div className="bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] p-5">
+          <div className="bg-white dark:bg-app-surface rounded-2xl border border-[#e5e5e5] dark:border-app-border p-5">
             <p className="text-xs font-semibold text-[#a3a3a3] uppercase tracking-wide mb-4">פרטי לקוח</p>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-sm font-bold text-blue-600 dark:text-blue-400 shrink-0">
@@ -160,7 +160,7 @@ export function DeliveryDetailsPage() {
 
           {/* שליח */}
           {courier && (
-            <div className="bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] p-5">
+            <div className="bg-white dark:bg-app-surface rounded-2xl border border-[#e5e5e5] dark:border-app-border p-5">
               <p className="text-xs font-semibold text-[#a3a3a3] uppercase tracking-wide mb-4">פרטי שליח</p>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center text-sm font-bold text-green-600 dark:text-green-400 shrink-0">
@@ -189,8 +189,8 @@ export function DeliveryDetailsPage() {
         </div>
 
         {/* ── Tracking ── */}
-        <div className="bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] overflow-hidden">
-          <div className="px-6 py-4 border-b border-[#f0f0f0] dark:border-[#262626] flex items-center justify-between">
+        <div className="bg-white dark:bg-app-surface rounded-2xl border border-[#e5e5e5] dark:border-app-border overflow-hidden">
+          <div className="px-6 py-4 border-b border-[#f0f0f0] dark:border-app-border flex items-center justify-between">
             <span className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">מעקב משלוח</span>
             <span className="text-xs text-[#a3a3a3]">{doneCount} / {timelineSteps.length} שלבים הושלמו</span>
           </div>
@@ -202,18 +202,24 @@ export function DeliveryDetailsPage() {
           </div>
           {/* steps */}
           <div className="divide-y divide-[#f5f5f5] dark:divide-[#1f1f1f]">
-            {timelineSteps.map((step, i) => (
+            {timelineSteps.map((step, i) => {
+              const isDeliveredStep = step.label === 'נמסר ללקוח';
+              const doneClassName = isDeliveredStep ? 'bg-blue-500' : 'bg-[#9fe870]';
+              const doneIconClassName = isDeliveredStep ? 'text-white' : 'text-[#0d0d12]';
+
+              return (
               <div key={i} className="flex items-center gap-4 px-6 py-3.5">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${step.done ? 'bg-[#9fe870]' : 'bg-[#f0f0f0] dark:bg-[#262626]'}`}>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${step.done ? doneClassName : 'bg-[#f0f0f0] dark:bg-[#262626]'}`}>
                   {step.done
-                    ? <CheckCircle2 size={13} className="text-[#0d0d12]" />
+                    ? <CheckCircle2 size={13} className={doneIconClassName} />
                     : <Clock size={11} className="text-[#bbb]" />
                   }
                 </div>
                 <span className={`text-sm flex-1 ${step.done ? 'text-[#0d0d12] dark:text-[#fafafa] font-medium' : 'text-[#aaa] dark:text-[#555]'}`}>{step.label}</span>
                 <span className="text-xs text-[#aaa] dark:text-[#555]">{step.done ? 'הושלם' : 'ממתין'}</span>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

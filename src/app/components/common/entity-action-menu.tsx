@@ -33,7 +33,7 @@ export const EntityActionMenu = React.forwardRef<HTMLDivElement, EntityActionMen
     return (
       <div
         ref={ref}
-        className="absolute min-w-[180px] bg-white dark:bg-[#1a1a1a] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl shadow-2xl overflow-hidden py-1"
+        className="absolute min-w-[180px] bg-white dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-xl shadow-2xl overflow-hidden py-1"
         style={style}
         onClick={onClick}
         onPointerDown={onPointerDown}
@@ -84,7 +84,7 @@ export const EntityActionMenuHeader: React.FC<EntityActionMenuHeaderProps> = ({
   subtitle,
 }) => {
   return (
-    <div className="px-3 py-2 border-b border-[#f5f5f5] dark:border-[#262626] mb-1">
+    <div className="px-3 py-2 border-b border-[#f5f5f5] dark:border-app-border mb-1">
       <p className="text-xs font-semibold text-[#0d0d12] dark:text-[#fafafa] truncate">
         {title}
       </p>
@@ -122,5 +122,5 @@ export const EntityActionMenuItem: React.FC<EntityActionMenuItemProps> = ({
 };
 
 export const EntityActionMenuDivider: React.FC = () => {
-  return <div className="border-t border-[#f5f5f5] dark:border-[#262626] my-1" />;
+  return <div className="border-t border-[#f5f5f5] dark:border-app-border my-1" />;
 };

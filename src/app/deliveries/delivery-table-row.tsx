@@ -338,7 +338,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
                   </EntityActionMenuItem>
                   <EntityActionMenuItem
                     onClick={() => { onCompleteDelivery(delivery.id); closeMenus(); }}
-                    icon={<CheckCircle2 className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />}
+                    icon={<CheckCircle2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />}
                   >
                     סימון כנמסר
                   </EntityActionMenuItem>

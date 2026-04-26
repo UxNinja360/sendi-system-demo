@@ -43,7 +43,7 @@ export const InfoBar: React.FC<InfoBarProps> = ({
 }) => (
   <div
     className={joinClassNames(
-      'shrink-0 border-b border-[#e5e5e5] bg-[#fafafa] px-3 py-2 dark:border-[#262626] dark:bg-[#111111]',
+      'shrink-0 border-b border-[#e5e5e5] bg-[#fafafa] px-3 py-2 dark:border-app-border dark:bg-app-surface',
       className,
     )}
     dir="rtl"

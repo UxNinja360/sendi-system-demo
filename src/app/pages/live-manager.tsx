@@ -429,7 +429,7 @@ export const LiveManager: React.FC = () => {
   return (
     <>
       {/* Main layout */}
-      <div className="flex flex-col h-screen w-full overflow-hidden relative bg-[#f5f5f5] dark:bg-[#0a0a0a] touch-none">
+      <div className="flex h-screen w-full touch-none flex-col overflow-hidden relative bg-app-background">
         {/* Full-screen map */}
         <div className="absolute inset-0 z-0">
           <LeafletMap
@@ -504,6 +504,8 @@ export const LiveManager: React.FC = () => {
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-[40]">
           <BottomAppBar
             activeTab={activeTab}
+            deliveriesCount={orders.length}
+            couriersCount={availableCouriers.length}
             onTabChange={setActiveTab}
           />
         </div>

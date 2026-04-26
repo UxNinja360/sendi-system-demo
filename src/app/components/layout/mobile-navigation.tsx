@@ -50,10 +50,10 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ onOpenMenu }
     <nav
       dir="rtl"
       aria-label="ניווט ראשי"
-      className="shrink-0 border-t border-[#e5e5e5] bg-white/95 px-1.5 pt-1.5 backdrop-blur dark:border-[#262626] dark:bg-[#0a0a0a]/95 md:hidden"
-      style={{ paddingBottom: 'calc(0.375rem + var(--app-safe-bottom))' }}
+      className="shrink-0 border-t border-app-nav-border bg-app-nav-bg/95 px-3 pt-2 backdrop-blur md:hidden"
+      style={{ paddingBottom: 'calc(0.5rem + var(--app-safe-bottom))' }}
     >
-      <div className="grid grid-cols-5 items-stretch gap-1">
+      <div className="grid grid-cols-5 items-stretch gap-1 rounded-[var(--app-radius-md)] border border-app-nav-border bg-app-nav-bg p-1">
         {items.map((item) => {
           const Icon = MOBILE_NAV_ICONS[item.id as (typeof MOBILE_NAV_IDS)[number]];
           const isActive = isNavItemActive(item, location.pathname);
@@ -65,16 +65,23 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ onOpenMenu }
               type="button"
               onClick={() => navigate(item.path)}
               aria-label={item.label}
-              className={`relative flex min-w-0 flex-col items-center justify-center gap-1 rounded-md px-1 py-1.5 text-[10px] font-medium transition-colors ${
+              className={`relative flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-[var(--app-radius-sm)] px-1 py-1.5 text-[10px] font-medium transition-colors ${
                 isActive
-                  ? 'bg-[#f0fdf4] text-[#16a34a] dark:bg-[#102015] dark:text-[#9fe870]'
-                  : 'text-[#737373] hover:bg-[#f5f5f5] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#171717] dark:hover:text-[#fafafa]'
+                  ? 'bg-app-nav-active-bg text-app-text shadow-sm ring-1 ring-app-nav-border'
+                  : 'text-app-text-secondary hover:bg-app-surface hover:text-app-text'
               }`}
             >
+              {isActive ? <span className="absolute top-1 h-0.5 w-5 rounded-full bg-app-nav-indicator" /> : null}
               <span className="relative flex h-5 items-center justify-center">
                 <Icon className="h-[18px] w-[18px] stroke-[1.8px]" />
                 {badge ? (
-                  <span className="absolute -left-3 -top-1 min-w-4 rounded-full bg-[#16a34a] px-1 text-[9px] font-bold leading-4 text-white dark:bg-[#9fe870] dark:text-[#0d0d12]">
+                  <span
+                    className={`absolute -left-3 -top-1 min-w-4 rounded-full px-1 text-[9px] font-semibold leading-4 shadow-sm ${
+                      isActive
+                        ? 'bg-app-text text-app-background'
+                        : 'bg-app-nav-badge-bg text-app-nav-badge-text ring-1 ring-app-nav-border'
+                    }`}
+                  >
                     {badge}
                   </span>
                 ) : null}
@@ -90,12 +97,13 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ onOpenMenu }
           type="button"
           onClick={onOpenMenu}
           aria-label="פתח תפריט"
-          className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-md px-1 py-1.5 text-[10px] font-medium transition-colors ${
+          className={`relative flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-[var(--app-radius-sm)] px-1 py-1.5 text-[10px] font-medium transition-colors ${
             !isPrimaryRouteActive
-              ? 'bg-[#f0fdf4] text-[#16a34a] dark:bg-[#102015] dark:text-[#9fe870]'
-              : 'text-[#737373] hover:bg-[#f5f5f5] hover:text-[#0d0d12] dark:text-[#a3a3a3] dark:hover:bg-[#171717] dark:hover:text-[#fafafa]'
+              ? 'bg-app-nav-active-bg text-app-text shadow-sm ring-1 ring-app-nav-border'
+              : 'text-app-text-secondary hover:bg-app-surface hover:text-app-text'
           }`}
         >
+          {!isPrimaryRouteActive ? <span className="absolute top-1 h-0.5 w-5 rounded-full bg-app-nav-indicator" /> : null}
           <MoreHorizontal className="h-[18px] w-[18px] stroke-[1.8px]" />
           <span className="max-w-full truncate leading-none">עוד</span>
         </button>

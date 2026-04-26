@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Clock, MapPin, User, X, UserPlus, MoreVertical, Phone, Timer, CheckCircle, RotateCcw, Edit, ArrowLeft, MessageSquare, Package, Banknote, CreditCard, Info, Bike } from 'lucide-react';
 import { Delivery } from '../types/delivery.types';
@@ -80,8 +80,8 @@ export const UltraCompactStrip: React.FC<UltraCompactStripProps> = ({
     pending: 'bg-orange-100 dark:bg-orange-500/20 border-orange-300 dark:border-orange-500/40',
     assigned: 'bg-yellow-100 dark:bg-yellow-500/20 border-yellow-300 dark:border-yellow-500/40',
     picking_up: 'bg-cyan-100 dark:bg-cyan-500/20 border-cyan-300 dark:border-cyan-500/40',
-    delivering: 'bg-indigo-100 dark:bg-indigo-500/20 border-indigo-300 dark:border-indigo-500/40',
-    delivered: 'bg-green-100 dark:bg-green-500/20 border-green-300 dark:border-green-500/40',
+    delivering: 'bg-green-100 dark:bg-green-500/20 border-green-300 dark:border-green-500/40',
+    delivered: 'bg-blue-100 dark:bg-blue-500/20 border-blue-300 dark:border-blue-500/40',
     cancelled: 'bg-red-100 dark:bg-red-500/20 border-red-300 dark:border-red-500/40',
   };
 
@@ -144,13 +144,13 @@ export const UltraCompactStrip: React.FC<UltraCompactStripProps> = ({
     <>
       <div
         data-order-id={order.deliveryId}
-        className={`border-b border-[#e5e5e5] dark:border-[#262626] transition-all cursor-pointer ${
+        className={`border-b border-[#e5e5e5] dark:border-app-border transition-all cursor-pointer ${
           isSelected
             ? 'bg-[#e6fafa] dark:bg-[#0a2a2a]'
             : isChecked
             ? 'bg-[#e0f7f1] dark:bg-[#0a2f2f]'
             : isHovered
-            ? 'bg-[#f5f5f5] dark:bg-[#1e1e1e]'
+            ? 'bg-[#f5f5f5] dark:bg-app-surface'
             : 'hover:bg-[#f5f5f5] dark:hover:bg-[#1e1e1e]'
         } relative`}
         onClick={() => { onClick(); onToggleCheck(order.deliveryId); }}
@@ -190,7 +190,7 @@ export const UltraCompactStrip: React.FC<UltraCompactStripProps> = ({
                 )}
               </div>
               {/* Compact status pill */}
-              <span className={`px-1.5 py-0.5 font-bold rounded ${ displayStatusKey === 'pending' ? 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400' : displayStatusKey === 'assigned' ? 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-400' : displayStatusKey === 'delivering' ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400' : displayStatusKey === 'delivered' ? 'bg-green-100 dark:bg-green-600/20 text-green-700 dark:text-green-400' : 'bg-red-100 dark:bg-red-600/20 text-red-700 dark:text-red-400' } text-[12px]`}>
+              <span className={`px-1.5 py-0.5 font-bold rounded ${ displayStatusKey === 'pending' ? 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400' : displayStatusKey === 'assigned' ? 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-400' : displayStatusKey === 'delivering' ? 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400' : displayStatusKey === 'delivered' ? 'bg-blue-100 dark:bg-blue-600/20 text-blue-700 dark:text-blue-400' : 'bg-red-100 dark:bg-red-600/20 text-red-700 dark:text-red-400' } text-[12px]`}>
                 {displayStatusLabel}
               </span>
             </div>
@@ -218,7 +218,7 @@ export const UltraCompactStrip: React.FC<UltraCompactStripProps> = ({
               {etaInlineLabel && (
                 <>
                   <span className="text-[#737373] dark:text-[#525252]">•</span>
-                  <span className={`font-medium ${order.status === 'delivered' ? 'text-[#16a34a] dark:text-[#9fe870]' : 'text-[#0284c7] dark:text-[#7dd3fc]'} text-[10px]`}>
+                  <span className={`font-medium ${order.status === 'delivered' ? 'text-[#2563eb] dark:text-[#60a5fa]' : 'text-[#16a34a] dark:text-[#22c55e]'} text-[10px]`}>
                     {etaInlineLabel}
                   </span>
                 </>
@@ -276,7 +276,7 @@ export const UltraCompactStrip: React.FC<UltraCompactStripProps> = ({
                 {/* Menu */}
                 <div
                   style={{ position: 'fixed', top: (contextMenuPos || menuPos)!.top, left: (contextMenuPos || menuPos)!.left, zIndex: 9991 }}
-                  className="bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-lg shadow-xl overflow-hidden min-w-[150px]"
+                  className="bg-white dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-lg shadow-xl overflow-hidden min-w-[150px]"
                 >
                   {/* Full details action */}
                   <button
@@ -285,7 +285,7 @@ export const UltraCompactStrip: React.FC<UltraCompactStripProps> = ({
                       setShowMenu(false);
                       onShowDetails?.(order);
                     }}
-                    className="w-full text-right px-3 py-2 text-xs font-medium text-[#16a34a] dark:text-[#9fe870] hover:bg-[#f0fdf4] dark:hover:bg-[#052e16] transition-colors flex items-center gap-2 border-b border-[#e5e5e5] dark:border-[#262626]"
+                    className="w-full text-right px-3 py-2 text-xs font-medium text-[#16a34a] dark:text-[#9fe870] hover:bg-[#f0fdf4] dark:hover:bg-[#052e16] transition-colors flex items-center gap-2 border-b border-[#e5e5e5] dark:border-app-border"
                   >
                     <Info className="w-3.5 h-3.5" />
                     <span>פרטים מלאים</span>
@@ -383,7 +383,7 @@ export const UltraCompactStrip: React.FC<UltraCompactStripProps> = ({
                             alert('סימון כנמסר - בפיתוח');
                           }
                         }}
-                        className="w-full text-right px-3 py-2 text-xs font-medium text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors flex items-center gap-2"
+                        className="w-full text-right px-3 py-2 text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors flex items-center gap-2"
                       >
                         <CheckCircle className="w-3 h-3" />
                         <span>סימון כנמסר</span>

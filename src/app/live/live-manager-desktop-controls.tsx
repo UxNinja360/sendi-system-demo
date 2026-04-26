@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Search } from 'lucide-react';
 
 export type ActiveTab = 'deliveries' | 'couriers';
@@ -135,14 +135,14 @@ export const LiveManagerDesktopControls: React.FC<LiveManagerControlsProps> = ({
       label: `נאסף ${todayDeliveries.delivering}`,
       active: statusFilters.includes('delivering'),
       activeClassName:
-        'bg-[rgba(99,102,241,0.3)] text-[#6366f1] dark:text-[#a5b4fc] border border-[rgba(99,102,241,0.5)]',
+        'bg-[rgba(22,163,74,0.22)] text-[#16a34a] dark:text-[#7bf1a8] border border-[rgba(22,163,74,0.45)]',
     },
     {
       key: 'delivered',
       label: `נמסר ${todayDeliveries.delivered}`,
       active: statusFilters.includes('delivered'),
       activeClassName:
-        'bg-[rgba(0,166,62,0.3)] text-[#00a63e] dark:text-[#7bf1a8] border border-[rgba(0,166,62,0.5)]',
+        'bg-[rgba(37,99,235,0.22)] text-[#2563eb] dark:text-[#93c5fd] border border-[rgba(37,99,235,0.45)]',
     },
     {
       key: 'cancelled',
@@ -154,7 +154,7 @@ export const LiveManagerDesktopControls: React.FC<LiveManagerControlsProps> = ({
   ];
 
   return (
-    <div className="border-b border-[#e5e5e5] p-4 dark:border-[#262626]">
+    <div className="border-b border-[#e5e5e5] p-4 dark:border-app-border">
       <div className="flex items-center justify-between gap-4">
         <div className="relative flex-1">
           <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#737373]" />
@@ -163,7 +163,7 @@ export const LiveManagerDesktopControls: React.FC<LiveManagerControlsProps> = ({
             placeholder="חיפוש..."
             value={searchQuery}
             onChange={(event) => onSearchQueryChange(event.target.value)}
-            className="w-full rounded-lg border border-[#e5e5e5] bg-[#f5f5f5] py-2 pr-10 pl-3 text-sm text-[#0d0d12] placeholder:text-[#737373] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#16a34a] dark:border-[#262626] dark:bg-[#0a0a0a] dark:text-white"
+            className="w-full rounded-lg border border-[#e5e5e5] bg-[#f5f5f5] py-2 pr-10 pl-3 text-sm text-[#0d0d12] placeholder:text-[#737373] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#16a34a] dark:border-app-border dark:bg-app-surface dark:text-white"
           />
         </div>
       </div>

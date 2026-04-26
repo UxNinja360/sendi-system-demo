@@ -235,18 +235,23 @@ export const SharedDeliveryDetailsContent: React.FC<Props> = ({ delivery, courie
           />
         </div>
         <div className="space-y-0">
-          {timelineSteps.map((step) => (
+          {timelineSteps.map((step) => {
+            const isDeliveredStep = step.label === 'נמסר';
+            const doneClassName = isDeliveredStep ? 'bg-blue-500' : 'bg-[#9fe870]';
+            const doneIconClassName = isDeliveredStep ? 'text-white' : 'text-[#0d0d12]';
+
+            return (
             <div
               key={step.label}
               className="flex items-center gap-3 border-b border-[#f5f5f5] py-2.5 last:border-0 dark:border-[#1a1a1a]"
             >
               <div
                 className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                  step.done ? 'bg-[#9fe870]' : 'bg-[#f0f0f0] dark:bg-[#262626]'
+                  step.done ? doneClassName : 'bg-[#f0f0f0] dark:bg-[#262626]'
                 }`}
               >
                 {step.done ? (
-                  <CheckCircle2 size={13} className="text-[#0d0d12]" />
+                  <CheckCircle2 size={13} className={doneIconClassName} />
                 ) : (
                   <Clock size={11} className="text-[#bbb]" />
                 )}
@@ -264,7 +269,8 @@ export const SharedDeliveryDetailsContent: React.FC<Props> = ({ delivery, courie
                 {step.time ? format(step.time, 'HH:mm', { locale: he }) : '—'}
               </span>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

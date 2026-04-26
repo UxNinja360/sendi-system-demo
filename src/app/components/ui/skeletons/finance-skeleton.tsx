@@ -2,10 +2,10 @@ import React from 'react';
 
 export const FinanceSkeleton: React.FC = () => {
   return (
-    <div className="h-full flex flex-col bg-[#fafafa] dark:bg-[#0a0a0a]">
+    <div className="h-full flex flex-col bg-[#fafafa] dark:bg-app-surface">
       {/* Tabs Skeleton */}
       <div className="px-8 pt-8">
-        <div className="flex gap-2 border-b border-[#e5e5e5] dark:border-[#262626]">
+        <div className="flex gap-2 border-b border-[#e5e5e5] dark:border-app-border">
           <div className="h-10 w-24 skeleton mb-[-2px]"></div>
           <div className="h-10 w-24 skeleton mb-[-2px]"></div>
           <div className="h-10 w-24 skeleton mb-[-2px]"></div>
@@ -19,7 +19,7 @@ export const FinanceSkeleton: React.FC = () => {
           {/* Top Cards Section */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Balance Card - 2 columns */}
-            <div className="md:col-span-2 bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] overflow-hidden">
+            <div className="md:col-span-2 bg-white dark:bg-app-surface rounded-2xl border border-[#e5e5e5] dark:border-app-border overflow-hidden">
               <div className="p-4">
                 <div className="flex justify-between items-center">
                   <div className="space-y-3">
@@ -29,11 +29,11 @@ export const FinanceSkeleton: React.FC = () => {
                   <div className="size-11 rounded-full skeleton"></div>
                 </div>
               </div>
-              <div className="h-10 w-full bg-[#fafafa] dark:bg-[#0a0a0a] border-t border-[#e5e5e5] dark:border-[#262626]"></div>
+              <div className="h-10 w-full bg-[#fafafa] dark:bg-app-surface border-t border-[#e5e5e5] dark:border-app-border"></div>
             </div>
 
             {/* Monthly Usage Card - 1 column */}
-            <div className="bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] p-5">
+            <div className="bg-white dark:bg-app-surface rounded-2xl border border-[#e5e5e5] dark:border-app-border p-5">
               <div className="flex flex-col items-center space-y-3">
                 <div className="size-9 rounded-full skeleton"></div>
                 <div className="h-3 w-24 skeleton"></div>
@@ -43,7 +43,7 @@ export const FinanceSkeleton: React.FC = () => {
           </div>
 
           {/* Purchase Section */}
-          <div className="bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] p-6">
+          <div className="bg-white dark:bg-app-surface rounded-2xl border border-[#e5e5e5] dark:border-app-border p-6">
             <div className="space-y-6">
               {/* Header */}
               <div className="flex items-center justify-between">
@@ -74,7 +74,7 @@ export const FinanceSkeleton: React.FC = () => {
               </div>
 
               {/* Price Display */}
-              <div className="bg-[#fafafa] dark:bg-[#0a0a0a] rounded-xl p-4 space-y-3">
+              <div className="bg-[#fafafa] dark:bg-app-surface rounded-xl p-4 space-y-3">
                 <div className="flex justify-between">
                   <div className="h-4 w-24 skeleton"></div>
                   <div className="h-4 w-20 skeleton"></div>
@@ -102,7 +102,7 @@ export const FinanceSkeleton: React.FC = () => {
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] p-6"
+                  className="bg-white dark:bg-app-surface rounded-2xl border border-[#e5e5e5] dark:border-app-border p-6"
                 >
                   <div className="space-y-4">
                     <div className="h-5 w-24 skeleton"></div>

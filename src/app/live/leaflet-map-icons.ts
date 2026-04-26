@@ -154,8 +154,8 @@ const makeOrderPin = (color: string, shadowColor: string) => L.divIcon({
 
 const pendingOrderIcon = makeOrderPin('#f97316', 'rgba(249,115,22,0.42)');
 const assignedOrderIcon = makeOrderPin('#eab308', 'rgba(234,179,8,0.42)');
-const deliveringOrderIcon = makeOrderPin('#6366f1', 'rgba(99,102,241,0.42)');
-const deliveredOrderIcon = makeOrderPin('#16a34a', 'rgba(22,163,74,0.42)');
+const deliveringOrderIcon = makeOrderPin('#16a34a', 'rgba(22,163,74,0.42)');
+const deliveredOrderIcon = makeOrderPin('#2563eb', 'rgba(37,99,235,0.42)');
 const cancelledOrderIcon = makeOrderPin('#ef4444', 'rgba(239,68,68,0.42)');
 
 export const getOrderIcon = (status: string) => {
@@ -170,8 +170,8 @@ export const getOrderIcon = (status: string) => {
 export const getSelectedOrderIcon = (status: string) => {
   if (status === 'pending') return makeSelectedOrderPin('#f97316', 'rgba(249,115,22,0.42)');
   if (status === 'assigned') return makeSelectedOrderPin('#eab308', 'rgba(234,179,8,0.42)');
-  if (status === 'delivering') return makeSelectedOrderPin('#eab308', 'rgba(234,179,8,0.42)');
-  if (status === 'delivered') return makeSelectedOrderPin('#16a34a', 'rgba(22,163,74,0.42)');
+  if (status === 'delivering') return makeSelectedOrderPin('#16a34a', 'rgba(22,163,74,0.42)');
+  if (status === 'delivered') return makeSelectedOrderPin('#2563eb', 'rgba(37,99,235,0.42)');
   if (status === 'cancelled') return makeSelectedOrderPin('#ef4444', 'rgba(239,68,68,0.42)');
   if (status === 'expired') return makeSelectedOrderPin('#71717a', 'rgba(113,113,122,0.42)');
   return makeSelectedOrderPin('#6366f1', 'rgba(99,102,241,0.42)');

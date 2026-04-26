@@ -12,7 +12,7 @@ export const Breadcrumbs: React.FC = () => {
   }
 
   return (
-    <div className="flex h-10 w-full shrink-0 items-center gap-2 border-b border-[#e5e5e5] bg-[#fafafa] px-4 text-xs text-[#737373] transition-colors duration-300 dark:border-[#262626] dark:bg-[#0a0a0a] dark:text-[#a3a3a3]">
+    <div className="flex h-10 w-full shrink-0 items-center gap-2 border-b border-[#e5e5e5] bg-[#fafafa] px-4 text-xs text-[#737373] transition-colors duration-300 dark:border-app-border dark:bg-app-surface dark:text-[#a3a3a3]">
       <button
         type="button"
         onClick={() => navigate('/dashboard')}

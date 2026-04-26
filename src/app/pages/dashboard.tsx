@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router';
 import { ClipboardList, Store, TrendingUp, Users } from 'lucide-react';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
@@ -144,7 +144,7 @@ export const Dashboard: React.FC = () => {
           dir="rtl"
           className={`min-w-[180px] rounded-2xl border px-4 py-3 shadow-2xl ${
             isDark
-              ? 'border-[#343434] bg-[#171717]/95 text-[#fafafa]'
+              ? 'border-app-border bg-app-surface/95 text-[#fafafa]'
               : 'border-[#e5e5e5] bg-white/95 text-[#0d0d12]'
           }`}
         >
@@ -170,14 +170,14 @@ export const Dashboard: React.FC = () => {
   );
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#f5f5f5] dark:bg-[#0a0a0a]">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-app-background">
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto w-full max-w-[90rem] space-y-4 px-4 py-6 pb-8 md:px-6">
           <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
             {(() => {
               const filledBar = Math.min(20, Math.round((activeDeliveries / Math.max(activeDeliveries + 4, 10)) * 20));
               return (
-                <div className="bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] p-5 flex flex-col cursor-pointer hover:border-[#c0c0c0] dark:hover:border-[#3a3a3a] transition-all" onClick={() => navigate('/live')}>
+                <div className="flex cursor-pointer flex-col rounded-2xl border border-[#e5e5e5] bg-white p-5 transition-all hover:border-[#c0c0c0] dark:border-app-border dark:bg-app-surface dark:hover:border-[#3a3a3a]" onClick={() => navigate('/live')}>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-medium text-[#888] dark:text-[#a3a3a3] uppercase tracking-wide">משלוחים פעילים</span>
                     <ClipboardList size={15} className="text-[#a3a3a3] dark:text-[#525252]" />
@@ -190,7 +190,7 @@ export const Dashboard: React.FC = () => {
                     {[
                       { dot: 'bg-orange-400', label: 'ממתינים לשיוך', value: pending },
                       { dot: 'bg-yellow-400', label: 'בדרך למסעדה', value: assigned + pickingUp },
-                      { dot: 'bg-blue-400', label: 'בדרך ללקוח', value: delivering },
+                      { dot: 'bg-green-400', label: 'בדרך ללקוח', value: delivering },
                     ].map((row) => (
                       <div key={row.label} className="flex items-center justify-between">
                         <span className="flex items-center gap-2 text-xs text-[#666d80] dark:text-[#a3a3a3]"><span className={`w-1.5 h-1.5 rounded-full shrink-0 ${row.dot}`} />{row.label}</span>
@@ -198,7 +198,7 @@ export const Dashboard: React.FC = () => {
                       </div>
                     ))}
                   </div>
-                  <button onClick={(e) => { e.stopPropagation(); navigate('/live'); }} className="mt-4 pt-3 border-t border-[#f0f0f0] dark:border-[#262626] text-xs text-[#9fe870] hover:text-[#8dd960] font-medium text-right transition-colors">צפה בכל המשלוחים ←</button>
+                  <button onClick={(e) => { e.stopPropagation(); navigate('/live'); }} className="mt-4 border-t border-[#f0f0f0] pt-3 text-right text-xs font-medium text-[#9fe870] transition-colors hover:text-[#8dd960] dark:border-app-border">צפה בכל המשלוחים ←</button>
                 </div>
               );
             })()}
@@ -207,7 +207,7 @@ export const Dashboard: React.FC = () => {
                 const deliveriesPerCourierValue = Number(deliveriesPerOnShiftCourier);
                 const filledBar = Math.min(20, Math.round(deliveriesPerCourierValue * 4));
                 return (
-                  <div className="bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] p-5 flex flex-col cursor-pointer hover:border-[#c0c0c0] dark:hover:border-[#3a3a3a] transition-all" onClick={() => navigate('/couriers')}>
+                  <div className="flex cursor-pointer flex-col rounded-2xl border border-[#e5e5e5] bg-white p-5 transition-all hover:border-[#c0c0c0] dark:border-app-border dark:bg-app-surface dark:hover:border-[#3a3a3a]" onClick={() => navigate('/couriers')}>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-medium text-[#888] dark:text-[#a3a3a3] uppercase tracking-wide">משלוחים לשליח</span>
                       <Users size={15} className="text-[#a3a3a3] dark:text-[#525252]" />
@@ -239,7 +239,7 @@ export const Dashboard: React.FC = () => {
                       </div>
                     ))}
                   </div>
-                  <button onClick={(e) => { e.stopPropagation(); navigate('/couriers'); }} className="mt-4 pt-3 border-t border-[#f0f0f0] dark:border-[#262626] text-xs text-[#9fe870] hover:text-[#8dd960] font-medium text-right transition-colors">צפה בכל השליחים ←</button>
+                  <button onClick={(e) => { e.stopPropagation(); navigate('/couriers'); }} className="mt-4 border-t border-[#f0f0f0] pt-3 text-right text-xs font-medium text-[#9fe870] transition-colors hover:text-[#8dd960] dark:border-app-border">צפה בכל השליחים ←</button>
                 </div>
               );
             })()}
@@ -247,7 +247,7 @@ export const Dashboard: React.FC = () => {
               {(() => {
                 const filledBar = totalRestaurants > 0 ? Math.round((activeRestaurantsNow / totalRestaurants) * 20) : 0;
                 return (
-                <div className="bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] p-5 flex flex-col cursor-pointer hover:border-[#c0c0c0] dark:hover:border-[#3a3a3a] transition-all" onClick={() => navigate('/restaurants')}>
+                <div className="flex cursor-pointer flex-col rounded-2xl border border-[#e5e5e5] bg-white p-5 transition-all hover:border-[#c0c0c0] dark:border-app-border dark:bg-app-surface dark:hover:border-[#3a3a3a]" onClick={() => navigate('/restaurants')}>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-medium text-[#888] dark:text-[#a3a3a3] uppercase tracking-wide">מסעדות פעילות</span>
                     <Store size={15} className="text-[#a3a3a3] dark:text-[#525252]" />
@@ -267,7 +267,7 @@ export const Dashboard: React.FC = () => {
                       </div>
                     ))}
                   </div>
-                  <button onClick={(e) => { e.stopPropagation(); navigate('/restaurants'); }} className="mt-4 pt-3 border-t border-[#f0f0f0] dark:border-[#262626] text-xs text-[#9fe870] hover:text-[#8dd960] font-medium text-right transition-colors">צפה בכל המסעדות ←</button>
+                  <button onClick={(e) => { e.stopPropagation(); navigate('/restaurants'); }} className="mt-4 border-t border-[#f0f0f0] pt-3 text-right text-xs font-medium text-[#9fe870] transition-colors hover:text-[#8dd960] dark:border-app-border">צפה בכל המסעדות ←</button>
                 </div>
               );
             })()}
@@ -276,7 +276,7 @@ export const Dashboard: React.FC = () => {
               const filledBar = Math.round((completionRate / 100) * 20);
               const isGood = completionRate >= 85;
               return (
-                <div className="bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] p-5 flex flex-col cursor-pointer hover:border-[#c0c0c0] dark:hover:border-[#3a3a3a] transition-all" onClick={() => navigate('/reports')}>
+                <div className="flex cursor-pointer flex-col rounded-2xl border border-[#e5e5e5] bg-white p-5 transition-all hover:border-[#c0c0c0] dark:border-app-border dark:bg-app-surface dark:hover:border-[#3a3a3a]" onClick={() => navigate('/reports')}>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-medium text-[#888] dark:text-[#a3a3a3] uppercase tracking-wide">ביצועי היום</span>
                     <TrendingUp size={15} className="text-[#a3a3a3] dark:text-[#525252]" />
@@ -291,7 +291,7 @@ export const Dashboard: React.FC = () => {
                   </div>
                   <div className="mt-4 space-y-2.5 flex-1">
                     {[
-                      { dot: 'bg-emerald-400', label: 'הושלמו', value: completedToday },
+                      { dot: 'bg-blue-400', label: 'הושלמו', value: completedToday },
                       { dot: 'bg-red-400', label: 'בוטלו', value: cancelledToday },
                       { dot: 'bg-cyan-400', label: 'זמן איסוף ממוצע', value: averagePickupTimeToday > 0 ? `${averagePickupTimeToday} דק׳` : '—' },
                       { dot: 'bg-yellow-400', label: 'זמן ממוצע', value: averageDeliveryTime > 0 ? `${averageDeliveryTime} דק׳` : '—' },
@@ -302,14 +302,14 @@ export const Dashboard: React.FC = () => {
                       </div>
                     ))}
                   </div>
-                  <button onClick={(e) => { e.stopPropagation(); navigate('/reports'); }} className="mt-4 pt-3 border-t border-[#f0f0f0] dark:border-[#262626] text-xs text-[#9fe870] hover:text-[#8dd960] font-medium text-right transition-colors">צפה בדוחות ←</button>
+                  <button onClick={(e) => { e.stopPropagation(); navigate('/reports'); }} className="mt-4 border-t border-[#f0f0f0] pt-3 text-right text-xs font-medium text-[#9fe870] transition-colors hover:text-[#8dd960] dark:border-app-border">צפה בדוחות ←</button>
                 </div>
               );
             })()}
           </div>
 
           <div>
-            <div className="bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] p-4 md:p-5">
+            <div className="rounded-2xl border border-[#e5e5e5] bg-white p-4 dark:border-app-border dark:bg-app-surface md:p-5">
               <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div className="shrink-0">
                   <h2 className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">פעילות היום</h2>
@@ -331,19 +331,19 @@ export const Dashboard: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-[#fafafa] dark:bg-[#0a0a0a] rounded-xl p-4">
+              <div className="bg-[#fafafa] dark:bg-app-surface rounded-xl p-4">
                 <ResponsiveContainer width="100%" height={240}>
                   <LineChart data={getChartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#2a2a2a' : '#e5e5e5'} vertical={false} opacity={0.45} />
                     <XAxis dataKey="name" stroke="transparent" tick={{ fill: '#666d80', fontSize: 12 }} axisLine={false} tickLine={false} dy={8} />
                     <YAxis stroke="transparent" tick={{ fill: '#666d80', fontSize: 12 }} axisLine={false} tickLine={false} width={40} dx={-5} />
                     <Tooltip content={chartTooltipContent} cursor={{ stroke: isDark ? '#525252' : '#cfcfcf', strokeWidth: 1 }} />
-                    <Line type="natural" dataKey="completed" stroke="#9fe870" strokeWidth={3} dot={false} activeDot={{ r: 7, fill: '#9fe870', stroke: '#fff', strokeWidth: 3 }} />
+                    <Line type="natural" dataKey="completed" stroke="#2563eb" strokeWidth={3} dot={false} activeDot={{ r: 7, fill: '#2563eb', stroke: '#fff', strokeWidth: 3 }} />
                     <Line type="natural" dataKey="cancelled" stroke="#ea0b0b" strokeWidth={3} dot={false} activeDot={{ r: 7, fill: '#ea0b0b', stroke: '#fff', strokeWidth: 3 }} />
                   </LineChart>
                 </ResponsiveContainer>
                 <div className="flex items-center justify-center gap-6 mt-4 pt-3 border-t border-[#e5e5e5] dark:border-[#404040]">
-                  <div className="flex items-center gap-2"><div className="w-8 h-0.5 bg-[#9fe870] rounded-full" /><span className="text-xs md:text-sm text-[#666d80] dark:text-[#a3a3a3]">משלוחים שנמסרו</span></div>
+                  <div className="flex items-center gap-2"><div className="w-8 h-0.5 bg-[#2563eb] rounded-full" /><span className="text-xs md:text-sm text-[#666d80] dark:text-[#a3a3a3]">משלוחים שנמסרו</span></div>
                   <div className="flex items-center gap-2"><div className="w-8 h-0.5 bg-[#ea0b0b] rounded-full" /><span className="text-xs md:text-sm text-[#666d80] dark:text-[#a3a3a3]">משלוחים שבוטלו</span></div>
                 </div>
               </div>

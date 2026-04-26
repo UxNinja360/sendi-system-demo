@@ -81,7 +81,7 @@ const SettingRow: React.FC<{
     className={`flex items-center justify-between gap-4 border-b px-4 py-3 last:border-b-0 ${
       danger
         ? 'border-red-100 bg-red-50/70 dark:border-red-500/10 dark:bg-red-500/5'
-        : 'border-[#f1f1f1] dark:border-[#1f1f1f]'
+        : 'border-[#f1f1f1] dark:border-app-border'
     }`}
   >
     <div className="min-w-0 flex items-center gap-3">
@@ -89,7 +89,7 @@ const SettingRow: React.FC<{
         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
           danger
             ? 'bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400'
-            : 'bg-[#f5f5f5] text-[#16a34a] dark:bg-[#0a0a0a] dark:text-[#9fe870]'
+            : 'bg-[#f5f5f5] text-[#16a34a] dark:bg-app-surface dark:text-[#9fe870]'
         }`}
       >
         {icon}
@@ -131,14 +131,14 @@ const SectionCard: React.FC<{
     className={`overflow-hidden rounded-2xl border ${
       danger
         ? 'border-red-200 bg-red-50/50 dark:border-red-500/20 dark:bg-red-500/5'
-        : 'border-[#e5e5e5] bg-white dark:border-[#1f1f1f] dark:bg-[#171717]'
+        : 'border-[#e5e5e5] bg-white dark:border-app-border dark:bg-app-surface'
     }`}
   >
     <div
       className={`border-b px-4 py-3 ${
         danger
           ? 'border-red-200 bg-red-50 dark:border-red-500/20 dark:bg-red-500/10'
-          : 'border-[#e5e5e5] bg-[#fafafa] dark:border-[#1f1f1f] dark:bg-[#111111]'
+          : 'border-[#e5e5e5] bg-[#fafafa] dark:border-app-border dark:bg-app-surface'
       }`}
     >
       <div className="flex items-center gap-2">
@@ -159,7 +159,7 @@ const OpenButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
   <button
     type="button"
     onClick={onClick}
-    className="inline-flex items-center gap-1 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-[#0a0a0a] dark:text-[#fafafa] dark:hover:bg-[#151515]"
+    className="inline-flex items-center gap-1 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-[#fafafa] dark:hover:bg-app-surface-raised"
   >
     <span>{TEXT.open}</span>
     <ChevronLeft className="h-4 w-4" />
@@ -188,7 +188,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
   };
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]" dir="rtl">
+    <div className="flex h-full flex-col overflow-hidden bg-app-background" dir="rtl">
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-3 py-3 md:px-5 md:py-5">
           <SectionCard
@@ -217,7 +217,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-[#0a0a0a] dark:text-[#fafafa] dark:hover:bg-[#151515]"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-[#fafafa] dark:hover:bg-app-surface-raised"
                 >
                   <LogOut className="h-4 w-4" />
                   <span>{TEXT.logoutShort}</span>
@@ -258,7 +258,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
             role="dialog"
             aria-modal="true"
             aria-labelledby="reset-system-title"
-            className="w-full max-w-md rounded-2xl border border-red-200 bg-white p-5 shadow-xl dark:border-red-500/30 dark:bg-[#151515]"
+            className="w-full max-w-md rounded-2xl border border-red-200 bg-white p-5 shadow-xl dark:border-red-500/30 dark:bg-app-surface"
           >
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-300">

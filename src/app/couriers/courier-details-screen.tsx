@@ -373,7 +373,7 @@ export function CourierDetailsScreen() {
 
   const getAttendanceCellTone = (intensity: 0 | 1 | 2 | 3 | 4, isCurrentMonth: boolean) => {
     if (!isCurrentMonth) return 'bg-transparent border-transparent';
-    if (intensity === 0) return 'bg-[#f5f5f5] border-[#ececec] dark:bg-[#111111] dark:border-[#1f1f1f]';
+    if (intensity === 0) return 'bg-[#f5f5f5] border-[#ececec] dark:bg-app-surface dark:border-app-border';
     if (intensity === 1) return 'bg-[#e9f9de] border-[#d8f1c8] dark:bg-[#17301a] dark:border-[#234626]';
     if (intensity === 2) return 'bg-[#cdefb2] border-[#bfe6a2] dark:bg-[#204823] dark:border-[#2c6230]';
     if (intensity === 3) return 'bg-[#9fe870] border-[#94da67] dark:bg-[#2f6a2a] dark:border-[#3c8435]';
@@ -405,9 +405,9 @@ export function CourierDetailsScreen() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#fafafa] dark:bg-[#0a0a0a]">
+    <div className="flex h-full flex-col bg-app-background">
       {/* Header */}
-      <div className="bg-white dark:bg-[#171717] border-b border-[#e5e5e5] dark:border-[#262626]">
+      <div className="bg-white dark:bg-app-surface border-b border-[#e5e5e5] dark:border-app-border">
         <div className="p-4">
           <div className="flex items-center gap-4">
             <button
@@ -468,7 +468,7 @@ export function CourierDetailsScreen() {
               </div>
             </div>
 
-            <div className="text-center px-4 border-r border-[#e5e5e5] dark:border-[#262626]">
+            <div className="text-center px-4 border-r border-[#e5e5e5] dark:border-app-border">
               <div className="text-xs text-[#666d80] dark:text-[#a3a3a3] mb-1">משלוחים פעילים</div>
               <div className="text-3xl font-bold text-[#0fcdd3]">
                 {activeDeliveries.length}
@@ -535,7 +535,7 @@ export function CourierDetailsScreen() {
           
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div className="bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-xl p-4">
+            <div className="bg-white dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-xl p-4">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-blue-100 dark:bg-blue-500/20 rounded-lg">
                   <Package size={20} className="text-blue-600 dark:text-blue-400" />
@@ -549,7 +549,7 @@ export function CourierDetailsScreen() {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-xl p-4">
+            <div className="bg-white dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-xl p-4">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-green-100 dark:bg-green-500/20 rounded-lg">
                   <CheckCircle2 size={20} className="text-green-600 dark:text-green-400" />
@@ -566,7 +566,7 @@ export function CourierDetailsScreen() {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-xl p-4">
+            <div className="bg-white dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-xl p-4">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-purple-100 dark:bg-purple-500/20 rounded-lg">
                   <DollarSign size={20} className="text-purple-600 dark:text-purple-400" />
@@ -580,7 +580,7 @@ export function CourierDetailsScreen() {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-xl p-4">
+            <div className="bg-white dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-xl p-4">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-orange-100 dark:bg-orange-500/20 rounded-lg">
                   <Timer size={20} className="text-orange-600 dark:text-orange-400" />
@@ -595,7 +595,7 @@ export function CourierDetailsScreen() {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-xl p-4">
+            <div className="bg-white dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-xl p-4">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-cyan-100 dark:bg-cyan-500/20 rounded-lg">
                   <Clock size={20} className="text-cyan-600 dark:text-cyan-400" />
@@ -614,7 +614,7 @@ export function CourierDetailsScreen() {
           </div>
 
           {/* דירוג יחסי */}
-          <div className="bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-xl p-6">
+          <div className="bg-white dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-[#0d0d12] dark:text-[#fafafa] flex items-center gap-2">
                 <Users size={20} />
@@ -668,7 +668,7 @@ export function CourierDetailsScreen() {
           </div>
 
           {/* גרף ביצועים לאורך זמן */}
-          <div className="bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-xl p-6">
+          <div className="bg-white dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-xl p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold text-[#0d0d12] dark:text-[#fafafa] flex items-center gap-2">
                 <TrendingUp size={20} />
@@ -708,7 +708,7 @@ export function CourierDetailsScreen() {
               </div>
             </div>
 
-            <div className="mb-6 rounded-[4px] border border-[#ececec] bg-[#fafafa] p-4 dark:border-[#262626] dark:bg-[#111111]">
+            <div className="mb-6 rounded-[4px] border border-[#ececec] bg-[#fafafa] p-4 dark:border-app-border dark:bg-app-surface">
               <div className="flex items-start justify-between gap-4 mb-4">
                 <div>
                   <h3 className="text-base font-bold text-[#0d0d12] dark:text-[#fafafa] flex items-center gap-2">
@@ -831,7 +831,7 @@ export function CourierDetailsScreen() {
           </div>
 
           {/* Courier Info */}
-          <div className="bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-xl p-6">
+          <div className="bg-white dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-xl p-6">
             <h2 className="text-lg font-bold text-[#0d0d12] dark:text-[#fafafa] mb-4">
               פרטי שליח
             </h2>
@@ -876,7 +876,7 @@ export function CourierDetailsScreen() {
           </div>
 
           {/* היסטוריית משלוחים מלאה */}
-          <div className="bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-xl p-6">
+          <div className="bg-white dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-[#0d0d12] dark:text-[#fafafa] flex items-center gap-2">
                 <Package size={20} />
@@ -916,7 +916,7 @@ export function CourierDetailsScreen() {
                   onClick={() => setFilterStatus('delivered')}
                   className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors ${
                     filterStatus === 'delivered'
-                      ? 'bg-green-500 text-white'
+                      ? 'bg-blue-500 text-white'
                       : 'bg-[#f5f5f5] dark:bg-[#262626] text-[#666d80] dark:text-[#a3a3a3]'
                   }`}
                 >
@@ -947,13 +947,13 @@ export function CourierDetailsScreen() {
                   >
                     <div className="flex items-center gap-3 flex-1">
                       <div className={`p-2 rounded-lg ${
-                        delivery.status === 'delivered' ? 'bg-green-100 dark:bg-green-500/20' :
+                        delivery.status === 'delivered' ? 'bg-blue-100 dark:bg-blue-500/20' :
                         delivery.status === 'cancelled' ? 'bg-red-100 dark:bg-red-500/20' :
                         delivery.status === 'expired' ? 'bg-zinc-100 dark:bg-zinc-500/20' :
                         'bg-blue-100 dark:bg-blue-500/20'
                       }`}>
                         <Package size={16} className={
-                          delivery.status === 'delivered' ? 'text-green-600 dark:text-green-400' :
+                          delivery.status === 'delivered' ? 'text-blue-600 dark:text-blue-400' :
                           delivery.status === 'cancelled' ? 'text-red-600 dark:text-red-400' :
                           delivery.status === 'expired' ? 'text-zinc-600 dark:text-zinc-300' :
                           'text-blue-600 dark:text-blue-400'
@@ -965,7 +965,7 @@ export function CourierDetailsScreen() {
                             {delivery.orderNumber}
                           </span>
                           <span className={`text-xs px-2 py-0.5 rounded-full ${
-                            delivery.status === 'delivered' ? 'bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400' :
+                            delivery.status === 'delivered' ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400' :
                             delivery.status === 'cancelled' ? 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400' :
                             delivery.status === 'expired' ? 'bg-zinc-100 dark:bg-zinc-500/20 text-zinc-600 dark:text-zinc-300' :
                             'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400'

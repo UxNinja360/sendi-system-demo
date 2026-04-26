@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Delivery, DeliveryStatus } from '../types/delivery.types';
 import { 
   X, 
@@ -104,9 +104,9 @@ export const DeliveryEditDialog: React.FC<DeliveryEditDialogProps> = ({
 
       {/* Dialog */}
       <div className="fixed inset-0 z-[61] flex items-center justify-center p-4 pointer-events-none">
-        <div className="bg-white dark:bg-[#0f0f0f] rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col pointer-events-auto animate-in zoom-in-95 duration-200">
+        <div className="bg-white dark:bg-app-surface rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col pointer-events-auto animate-in zoom-in-95 duration-200">
           {/* Header */}
-          <div className="shrink-0 px-6 py-4 border-b border-[#e5e5e5] dark:border-[#262626] flex items-center justify-between">
+          <div className="shrink-0 px-6 py-4 border-b border-[#e5e5e5] dark:border-app-border flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-[#9fe870]/10 rounded-xl">
                 <Package className="w-5 h-5 text-[#9fe870]" />
@@ -126,7 +126,7 @@ export const DeliveryEditDialog: React.FC<DeliveryEditDialogProps> = ({
           </div>
 
           {/* Tabs */}
-          <div className="shrink-0 px-6 border-b border-[#e5e5e5] dark:border-[#262626] flex gap-1 overflow-x-auto scrollbar-hide">
+          <div className="shrink-0 px-6 border-b border-[#e5e5e5] dark:border-app-border flex gap-1 overflow-x-auto scrollbar-hide">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -160,7 +160,7 @@ export const DeliveryEditDialog: React.FC<DeliveryEditDialogProps> = ({
           </div>
 
           {/* Footer */}
-          <div className="shrink-0 px-6 py-4 border-t border-[#e5e5e5] dark:border-[#262626] flex items-center justify-between gap-3">
+          <div className="shrink-0 px-6 py-4 border-t border-[#e5e5e5] dark:border-app-border flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-xs text-[#737373]">
               {hasChanges && (
                 <>
@@ -225,7 +225,7 @@ const FormField: React.FC<{
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
-          className="w-full px-3 py-2 text-sm bg-[#fafafa] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870] disabled:opacity-50"
+          className="w-full px-3 py-2 text-sm bg-[#fafafa] dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870] disabled:opacity-50"
         >
           <option value="">בחר...</option>
           {options.map(opt => (
@@ -239,7 +239,7 @@ const FormField: React.FC<{
             checked={value || false}
             onChange={(e) => onChange(e.target.checked)}
             disabled={disabled}
-            className="w-4 h-4 rounded border-[#e5e5e5] dark:border-[#262626] text-[#9fe870] focus:ring-2 focus:ring-[#9fe870] disabled:opacity-50"
+            className="w-4 h-4 rounded border-[#e5e5e5] dark:border-app-border text-[#9fe870] focus:ring-2 focus:ring-[#9fe870] disabled:opacity-50"
           />
           <span className="text-xs text-[#0d0d12] dark:text-[#fafafa]">{value ? 'כן' : 'לא'}</span>
         </div>
@@ -250,7 +250,7 @@ const FormField: React.FC<{
           placeholder={placeholder}
           disabled={disabled}
           rows={3}
-          className="w-full px-3 py-2 text-sm bg-[#fafafa] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870] disabled:opacity-50 resize-none"
+          className="w-full px-3 py-2 text-sm bg-[#fafafa] dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870] disabled:opacity-50 resize-none"
         />
       ) : type === 'datetime-local' ? (
         <input
@@ -258,7 +258,7 @@ const FormField: React.FC<{
           value={value ? new Date(value).toISOString().slice(0, 16) : ''}
           onChange={(e) => onChange(e.target.value ? new Date(e.target.value) : null)}
           disabled={disabled}
-          className="w-full px-3 py-2 text-sm bg-[#fafafa] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870] disabled:opacity-50"
+          className="w-full px-3 py-2 text-sm bg-[#fafafa] dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870] disabled:opacity-50"
         />
       ) : (
         <input
@@ -267,7 +267,7 @@ const FormField: React.FC<{
           onChange={(e) => onChange(type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value)}
           placeholder={placeholder}
           disabled={disabled}
-          className="w-full px-3 py-2 text-sm bg-[#fafafa] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870] disabled:opacity-50"
+          className="w-full px-3 py-2 text-sm bg-[#fafafa] dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870] disabled:opacity-50"
         />
       )}
     </div>

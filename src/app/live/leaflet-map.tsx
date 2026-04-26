@@ -540,7 +540,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       {/* Right-click context menu */}
       {contextMenu && (
         <div
-          className="absolute z-[9999] min-w-[170px] bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl shadow-xl overflow-hidden"
+          className="absolute z-[9999] min-w-[170px] bg-white dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-xl shadow-xl overflow-hidden"
           style={{
             left: Math.min(contextMenu.x, (mapContainerRef.current?.clientWidth ?? 9999) - 180),
             top: Math.min(contextMenu.y, (mapContainerRef.current?.clientHeight ?? 9999) - 100),
@@ -548,7 +548,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
           onPointerDown={e => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="px-3 pt-2.5 pb-1.5 border-b border-[#f0f0f0] dark:border-[#2a2a2a]">
+          <div className="px-3 pt-2.5 pb-1.5 border-b border-[#f0f0f0] dark:border-app-border">
             <p className="text-[11px] font-semibold text-[#737373] dark:text-[#737373] leading-none truncate" dir="rtl">
               {contextMenu.item.type === 'order'
                 ? (contextMenu.item.order.customerName || contextMenu.item.order.address || `#${contextMenu.item.order.deliveryId}`)

@@ -31,7 +31,7 @@ export const LoginPhone: React.FC<LoginPhoneProps> = ({ onSubmit }) => {
           </p>
         </div>
 
-        <div className="bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] p-5 sm:p-8 shadow-xl">
+        <div className="bg-white dark:bg-app-surface rounded-2xl border border-[#e5e5e5] dark:border-app-border p-5 sm:p-8 shadow-xl">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-[#0d0d12] dark:text-[#fafafa] mb-2">
@@ -46,7 +46,7 @@ export const LoginPhone: React.FC<LoginPhoneProps> = ({ onSubmit }) => {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                   placeholder="050-1234567"
-                  className="w-full pr-12 pl-4 py-3 bg-[#fafafa] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] rounded-xl text-base text-[#0d0d12] dark:text-[#fafafa] placeholder:text-[#a3a3a3] focus:outline-none focus:ring-2 focus:ring-[#02B74F] focus:border-transparent transition-all"
+                  className="w-full pr-12 pl-4 py-3 bg-[#fafafa] dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-xl text-base text-[#0d0d12] dark:text-[#fafafa] placeholder:text-[#a3a3a3] focus:outline-none focus:ring-2 focus:ring-[#02B74F] focus:border-transparent transition-all"
                   maxLength={10}
                   dir="ltr"
                 />

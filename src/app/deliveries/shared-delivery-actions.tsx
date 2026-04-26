@@ -72,7 +72,7 @@ export const SharedDeliveryActions: React.FC<SharedDeliveryActionsProps> = ({
   if (isFinal) return null;
 
   return (
-    <div className="shrink-0 px-4 py-3 border-b border-[#f0f0f0] dark:border-[#1f1f1f] flex flex-wrap gap-2">
+    <div className="shrink-0 px-4 py-3 border-b border-[#f0f0f0] dark:border-app-border flex flex-wrap gap-2">
       {delivery.status === 'pending' && (
         <div className="relative flex flex-col gap-1.5">
           {offerExpiresAt && (
@@ -117,8 +117,8 @@ export const SharedDeliveryActions: React.FC<SharedDeliveryActionsProps> = ({
           )}
 
           {assignOpen && (
-            <div className="absolute top-full mt-1 right-0 z-50 w-52 bg-white dark:bg-[#1a1a1a] border border-[#e5e5e5] dark:border-[#262626] rounded-xl shadow-xl overflow-hidden">
-              <div className="p-2 border-b border-[#f0f0f0] dark:border-[#262626]">
+            <div className="absolute top-full mt-1 right-0 z-50 w-52 bg-white dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-xl shadow-xl overflow-hidden">
+              <div className="p-2 border-b border-[#f0f0f0] dark:border-app-border">
                 <input
                   autoFocus
                   value={courierFilter}
@@ -157,7 +157,7 @@ export const SharedDeliveryActions: React.FC<SharedDeliveryActionsProps> = ({
       {delivery.status === 'assigned' && (
         <button
           onClick={() => onStatusChange(delivery.id, 'delivering')}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-green-100 dark:bg-green-950/50 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900 transition-colors"
         >
           <Package className="w-3.5 h-3.5" />
           סמן כנאסף
@@ -167,7 +167,7 @@ export const SharedDeliveryActions: React.FC<SharedDeliveryActionsProps> = ({
       {delivery.status === 'delivering' && (
         <button
           onClick={() => onCompleteDelivery(delivery.id)}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-green-100 dark:bg-green-950/50 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900 transition-colors"
         >
           <CheckCircle2 className="w-3.5 h-3.5" />
           סמן כנמסר

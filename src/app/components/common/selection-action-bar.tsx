@@ -32,7 +32,7 @@ const ACTION_VARIANT_CLASSES: Record<
   neutral:
     'bg-[#404040] text-white shadow-black/10 hover:bg-[#262626]',
   outline:
-    'border border-[#d4d4d4] bg-white text-[#0d0d12] hover:bg-[#f5f5f5] dark:border-[#404040] dark:bg-[#171717] dark:text-[#fafafa] dark:hover:bg-[#262626]',
+    'border border-[#d4d4d4] bg-white text-[#0d0d12] hover:bg-[#f5f5f5] dark:border-[#404040] dark:bg-app-surface dark:text-[#fafafa] dark:hover:bg-[#262626]',
   accent:
     'bg-[#7c3aed] text-white shadow-[#7c3aed]/20 hover:bg-[#6d28d9]',
   warning:
@@ -79,7 +79,7 @@ export const SelectionActionBar: React.FC<SelectionActionBarProps> = ({
     }`.trim();
 
   return (
-    <div className="sticky inset-x-0 bottom-0 z-20 border-t border-[#e5e5e5] bg-white shadow-[0_-4px_16px_rgba(0,0,0,0.08)] dark:border-[#262626] dark:bg-[#171717]">
+    <div className="sticky inset-x-0 bottom-0 z-20 border-t border-[#e5e5e5] bg-white shadow-[0_-4px_16px_rgba(0,0,0,0.08)] dark:border-app-border dark:bg-app-surface">
       <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center">
         <div className="inline-flex w-fit items-center rounded-full border border-[#d7efc8] bg-[#ecfae2] px-3 py-1.5 text-sm font-semibold text-[#166534] dark:border-[#365314] dark:bg-[#163300] dark:text-[#b5f27d]">
           {resolvedSelectionLabel}
@@ -89,7 +89,7 @@ export const SelectionActionBar: React.FC<SelectionActionBarProps> = ({
           <button
             type="button"
             onClick={onClear}
-            className="min-h-9 rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm font-semibold text-[#737373] transition-colors hover:bg-[#f5f5f5] dark:border-[#262626] dark:text-[#a3a3a3] dark:hover:bg-[#262626]"
+            className="min-h-9 rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm font-semibold text-[#737373] transition-colors hover:bg-[#f5f5f5] dark:border-app-border dark:text-[#a3a3a3] dark:hover:bg-[#262626]"
           >
             {clearLabel}
           </button>

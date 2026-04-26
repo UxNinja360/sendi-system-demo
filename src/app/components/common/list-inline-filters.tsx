@@ -198,11 +198,11 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
           onClick={() => setMobileSheetOpen(false)}
         >
           <div
-            className="absolute inset-x-0 bottom-0 max-h-[80vh] overflow-hidden rounded-t-3xl border-t border-[#262626] bg-white dark:bg-[#171717]"
+            className="absolute inset-x-0 bottom-0 max-h-[80vh] overflow-hidden rounded-t-3xl border-t border-[#262626] bg-white dark:bg-app-surface"
             dir="rtl"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-[#f0f0f0] px-4 py-3 dark:border-[#262626]">
+            <div className="flex items-center justify-between border-b border-[#f0f0f0] px-4 py-3 dark:border-app-border">
               <div className="flex items-center gap-2">
                 <Filter className="h-4 w-4 text-[#737373]" />
                 <span className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">
@@ -259,12 +259,12 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
                             value={filter.searchValue ?? ''}
                             onChange={(event) => filter.setSearchValue?.(event.target.value)}
                             placeholder={filter.placeholder ?? `${TEXT.search} ${filter.defaultLabel}...`}
-                            className="w-full rounded-xl border border-[#e5e5e5] bg-[#fafafa] py-2 pr-9 pl-3 text-sm text-[#0d0d12] outline-none transition-colors focus:border-[#9fe870] dark:border-[#262626] dark:bg-[#141414] dark:text-[#fafafa]"
+                            className="w-full rounded-xl border border-[#e5e5e5] bg-[#fafafa] py-2 pr-9 pl-3 text-sm text-[#0d0d12] outline-none transition-colors focus:border-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-[#fafafa]"
                           />
                         </div>
                       ) : null}
 
-                      <div className="overflow-hidden rounded-xl border border-[#e5e5e5] dark:border-[#262626]">
+                      <div className="overflow-hidden rounded-xl border border-[#e5e5e5] dark:border-app-border">
                         {isMultiSelectFilter(filter)
                           ? filter.options
                               .filter(

@@ -227,7 +227,7 @@ const CourierNoResultsState: React.FC<{ searchQuery: string; onClear: () => void
     <button
       type="button"
       onClick={onClear}
-      className="rounded-lg border border-[#d4d4d4] bg-white px-4 py-2 text-sm font-semibold text-[#0d0d12] transition-colors hover:bg-[#f5f5f5] dark:border-[#404040] dark:bg-[#171717] dark:text-[#fafafa] dark:hover:bg-[#262626]"
+      className="rounded-lg border border-[#d4d4d4] bg-white px-4 py-2 text-sm font-semibold text-[#0d0d12] transition-colors hover:bg-[#f5f5f5] dark:border-[#404040] dark:bg-app-surface dark:text-[#fafafa] dark:hover:bg-[#262626]"
     >
       נקה סינון
     </button>
@@ -1000,7 +1000,7 @@ export const CouriersListScreen: React.FC = () => {
           onClick={handleModalClose}
         >
           <div
-            className="w-full max-w-md rounded-2xl border border-[#e5e5e5] bg-white p-6 dark:border-[#262626] dark:bg-[#171717]"
+            className="w-full max-w-md rounded-2xl border border-[#e5e5e5] bg-white p-6 dark:border-app-border dark:bg-app-surface"
             onClick={(event) => event.stopPropagation()}
             dir="rtl"
           >
@@ -1021,7 +1021,7 @@ export const CouriersListScreen: React.FC = () => {
                   type="text"
                   value={newCourier.name}
                   onChange={(event) => setNewCourier({ ...newCourier, name: event.target.value })}
-                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-[#262626] dark:bg-[#0a0a0a] dark:text-[#fafafa]"
+                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-[#fafafa]"
                   placeholder={TEXT.enterFullName}
                   autoFocus
                 />
@@ -1032,7 +1032,7 @@ export const CouriersListScreen: React.FC = () => {
                   type="tel"
                   value={newCourier.phone}
                   onChange={(event) => setNewCourier({ ...newCourier, phone: event.target.value })}
-                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-[#262626] dark:bg-[#0a0a0a] dark:text-[#fafafa]"
+                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-[#fafafa]"
                   placeholder={TEXT.enterPhone}
                 />
               </div>
@@ -1041,7 +1041,7 @@ export const CouriersListScreen: React.FC = () => {
                 <select
                   value={newCourier.vehicleType}
                   onChange={(event) => setNewCourier({ ...newCourier, vehicleType: event.target.value as Courier['vehicleType'] })}
-                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-[#262626] dark:bg-[#0a0a0a] dark:text-[#fafafa]"
+                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-[#fafafa]"
                 >
                   {VEHICLE_TYPES.map((vehicleType) => (
                     <option key={vehicleType} value={vehicleType}>

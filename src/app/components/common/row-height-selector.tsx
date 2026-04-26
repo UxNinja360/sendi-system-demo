@@ -70,11 +70,11 @@ export const RowHeightSelector: React.FC<RowHeightSelectorProps> = ({
       {/* Panel */}
       <div
         ref={panelRef}
-        className="app-safe-side-panel fixed left-0 w-full sm:w-[380px] bg-white dark:bg-[#0f0f0f] z-50 shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-left duration-300"
+        className="app-safe-side-panel fixed left-0 w-full sm:w-[380px] bg-white dark:bg-app-surface z-50 shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-left duration-300"
         style={{ direction: 'rtl' }}
       >
         {/* Header */}
-        <div className="shrink-0 border-b border-[#e5e5e5] dark:border-[#262626]">
+        <div className="shrink-0 border-b border-[#e5e5e5] dark:border-app-border">
           <div className="flex items-center justify-between p-4 pb-3">
             <div className="flex items-center gap-2.5">
               <div className="p-2 bg-gradient-to-br from-[#8b5cf6] to-[#a78bfa] rounded-xl text-white">
@@ -110,7 +110,7 @@ export const RowHeightSelector: React.FC<RowHeightSelectorProps> = ({
               className={`w-full group relative flex items-center gap-3 p-4 rounded-xl border transition-all ${
                 selectedHeight === option.id
                   ? 'bg-[#f5f0ff] dark:bg-[#2e1065] border-[#8b5cf6] dark:border-[#a78bfa] shadow-sm'
-                  : 'bg-[#fafafa] dark:bg-[#171717] border-[#e5e5e5] dark:border-[#262626] hover:border-[#8b5cf6]/40 dark:hover:border-[#a78bfa]/40 hover:bg-[#faf5ff] dark:hover:bg-[#2e1065]/20'
+                  : 'bg-[#fafafa] dark:bg-app-surface border-[#e5e5e5] dark:border-app-border hover:border-[#8b5cf6]/40 dark:hover:border-[#a78bfa]/40 hover:bg-[#faf5ff] dark:hover:bg-[#2e1065]/20'
               }`}
             >
               {/* Visual representation */}
@@ -159,7 +159,7 @@ export const RowHeightSelector: React.FC<RowHeightSelectorProps> = ({
         </div>
 
         {/* Info footer */}
-        <div className="border-t border-[#e5e5e5] dark:border-[#262626] p-4">
+        <div className="border-t border-[#e5e5e5] dark:border-app-border p-4">
           <div className="flex items-start gap-2 p-3 bg-[#f0f9ff] dark:bg-[#082f49] rounded-xl">
             <span className="text-lg shrink-0">💡</span>
             <p className="text-xs text-[#0369a1] dark:text-[#7dd3fc]">

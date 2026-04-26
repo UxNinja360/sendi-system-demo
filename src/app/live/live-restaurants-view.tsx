@@ -1,4 +1,4 @@
-﻿import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Search, Store } from 'lucide-react';
 import { useDelivery } from '../context/delivery-context-value';
 
@@ -42,8 +42,8 @@ export const LiveRestaurantsView: React.FC = () => {
       : 'לא נמצאו מסעדות תואמות';
 
   return (
-    <div className="flex h-full flex-col bg-white dark:bg-[#171717]">
-      <div className="border-b border-[#e5e5e5] p-4 dark:border-[#262626]">
+    <div className="flex h-full flex-col bg-white dark:bg-app-surface">
+      <div className="border-b border-[#e5e5e5] p-4 dark:border-app-border">
         <div className="flex items-center gap-2">
           <div className="group relative flex-1">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-[#737373] transition-colors group-focus-within:text-[#0fcdd3]" size={16} />
@@ -52,7 +52,7 @@ export const LiveRestaurantsView: React.FC = () => {
               placeholder="חפש מסעדה..."
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              className="w-full rounded-lg border border-[#e5e5e5] bg-[#f5f5f5] py-2.5 pr-10 pl-4 text-sm text-[#0d0d12] transition-all placeholder:text-[#737373] focus:border-[#0fcdd3] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0fcdd3] dark:border-[#262626] dark:bg-[#0a0a0a] dark:text-[#fafafa] dark:focus:bg-[#171717]"
+              className="w-full rounded-lg border border-[#e5e5e5] bg-[#f5f5f5] py-2.5 pr-10 pl-4 text-sm text-[#0d0d12] transition-all placeholder:text-[#737373] focus:border-[#0fcdd3] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0fcdd3] dark:border-app-border dark:bg-app-surface dark:text-[#fafafa] dark:focus:bg-app-surface-raised"
             />
           </div>
 
@@ -72,7 +72,7 @@ export const LiveRestaurantsView: React.FC = () => {
           filteredRestaurants.map((restaurant) => (
             <div
               key={restaurant.id}
-              className="border-b border-[#e5e5e5] transition-colors hover:bg-[#fafafa] dark:border-[#262626] dark:hover:bg-[#262626]"
+              className="border-b border-[#e5e5e5] transition-colors hover:bg-[#fafafa] dark:border-app-border dark:hover:bg-[#262626]"
             >
               <div className="p-4">
                 <div className="mb-2 flex items-start justify-between">
@@ -107,7 +107,7 @@ export const LiveRestaurantsView: React.FC = () => {
                     {restaurant.orders.map((order) => (
                       <div
                         key={order.id}
-                        className="rounded-lg bg-[#f5f5f5] p-2.5 text-xs dark:bg-[#0a0a0a]"
+                        className="rounded-lg bg-[#f5f5f5] p-2.5 text-xs dark:bg-app-surface"
                       >
                         <div className="mb-1 flex items-center justify-between">
                           <span className="font-mono font-medium text-[#737373] dark:text-[#a3a3a3]">
@@ -119,10 +119,10 @@ export const LiveRestaurantsView: React.FC = () => {
                                 ? 'bg-orange-500'
                                 : order.status === 'assigned'
                                   ? 'bg-yellow-500'
-                                  : order.status === 'delivering'
-                                    ? 'bg-indigo-500'
-                                    : order.status === 'delivered'
-                                      ? 'bg-green-500'
+                                : order.status === 'delivering'
+                                  ? 'bg-green-500'
+                                  : order.status === 'delivered'
+                                    ? 'bg-blue-500'
                                       : order.status === 'expired'
                                         ? 'bg-zinc-500'
                                         : 'bg-red-500'

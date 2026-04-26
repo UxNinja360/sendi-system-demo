@@ -43,7 +43,7 @@ export const EntityEmptyState: React.FC<EntityEmptyStateProps> = ({
       <p className="mb-6 max-w-md text-center text-sm text-[#737373] dark:text-[#a3a3a3]">
         {description}
       </p>
-      <div className="flex items-center gap-2 rounded-lg border border-[#e5e5e5] bg-[#f5f5f5] px-4 py-2 dark:border-[#262626] dark:bg-[#0a0a0a]">
+      <div className="flex items-center gap-2 rounded-lg border border-[#e5e5e5] bg-[#f5f5f5] px-4 py-2 dark:border-app-border dark:bg-app-surface">
         <div className="h-2 w-2 animate-pulse rounded-full bg-[#9fe870]" />
         <span className="text-xs text-[#737373] dark:text-[#a3a3a3]">
           {footerText}

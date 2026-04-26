@@ -63,7 +63,7 @@ export const getListFilterButtonClass = (isActive: boolean) =>
   `flex h-9 items-center gap-1.5 rounded-[4px] border px-3 text-sm font-medium transition-colors ${
     isActive
       ? 'border-[#9fe870]/40 bg-[#9fe870]/15 text-[#6bc84a]'
-      : 'border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3] dark:hover:bg-[#202020]'
+      : 'border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-app-border dark:bg-app-surface dark:text-[#a3a3a3] dark:hover:bg-[#202020]'
   }`;
 
 export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
@@ -126,15 +126,15 @@ export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
       </button>
 
       {isOpen ? (
-        <div className="absolute top-full right-0 z-50 mt-1.5 flex max-h-[260px] min-w-[200px] flex-col rounded-xl border border-[#e5e5e5] bg-white shadow-xl dark:border-[#262626] dark:bg-[#171717]">
+        <div className="absolute top-full right-0 z-50 mt-1.5 flex max-h-[260px] min-w-[200px] flex-col rounded-xl border border-[#e5e5e5] bg-white shadow-xl dark:border-app-border dark:bg-app-surface">
           {showSearch ? (
-            <div className="border-b border-[#f0f0f0] p-2 dark:border-[#262626]">
+            <div className="border-b border-[#f0f0f0] p-2 dark:border-app-border">
               <input
                 autoFocus
                 value={searchValue}
                 onChange={(event) => setSearchValue(event.target.value)}
                 placeholder={placeholder}
-                className="w-full rounded-lg bg-[#f5f5f5] px-2.5 py-1.5 text-sm text-[#0d0d12] outline-none placeholder-[#a3a3a3] dark:bg-[#141414] dark:text-[#fafafa]"
+                className="w-full rounded-lg bg-[#f5f5f5] px-2.5 py-1.5 text-sm text-[#0d0d12] outline-none placeholder-[#a3a3a3] dark:bg-app-surface dark:text-[#fafafa]"
                 style={{ direction: 'rtl' }}
               />
             </div>
@@ -227,7 +227,7 @@ export const ListSingleSelectFilter: React.FC<ListSingleSelectFilterProps> = ({
       </button>
 
       {isOpen ? (
-        <div className="absolute top-full right-0 z-50 mt-1.5 min-w-[180px] rounded-[4px] border border-[#e5e5e5] bg-white py-1 shadow-xl dark:border-[#262626] dark:bg-[#171717]">
+        <div className="absolute top-full right-0 z-50 mt-1.5 min-w-[180px] rounded-[4px] border border-[#e5e5e5] bg-white py-1 shadow-xl dark:border-app-border dark:bg-app-surface">
           {options.map((option) => {
             const isSelected = option.id === value;
             return (

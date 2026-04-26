@@ -88,7 +88,7 @@ export const LoginOtp: React.FC<LoginOtpProps> = ({ phone, onSubmit, onBack }) =
           </p>
         </div>
 
-        <div className="bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] p-5 sm:p-8 shadow-xl">
+        <div className="bg-white dark:bg-app-surface rounded-2xl border border-[#e5e5e5] dark:border-app-border p-5 sm:p-8 shadow-xl">
           <div className="space-y-6">
             <div className="flex justify-center gap-2 sm:gap-3" dir="ltr">
               {otp.map((digit, index) => (
@@ -105,10 +105,10 @@ export const LoginOtp: React.FC<LoginOtpProps> = ({ phone, onSubmit, onBack }) =
                   onChange={(e) => handleChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
                   onPaste={index === 0 ? handlePaste : undefined}
-                  className={`h-12 w-10 sm:h-14 sm:w-12 text-center text-xl sm:text-2xl font-bold bg-[#fafafa] dark:bg-[#0a0a0a] border-2 rounded-xl text-[#0d0d12] dark:text-[#fafafa] focus:outline-none focus:border-[#02B74F] transition-all ${
+                  className={`h-12 w-10 sm:h-14 sm:w-12 text-center text-xl sm:text-2xl font-bold bg-[#fafafa] dark:bg-app-surface border-2 rounded-xl text-[#0d0d12] dark:text-[#fafafa] focus:outline-none focus:border-[#02B74F] transition-all ${
                     error
                       ? 'border-[#ea0b0b] animate-shake'
-                      : 'border-[#e5e5e5] dark:border-[#262626]'
+                      : 'border-[#e5e5e5] dark:border-app-border'
                   }`}
                 />
               ))}

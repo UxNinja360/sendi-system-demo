@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { X, Package } from 'lucide-react';
 import { toast } from 'sonner';
 import { useDelivery } from '../context/delivery-context-value';
@@ -23,7 +23,7 @@ const Field: React.FC<{ label: string; required?: boolean; children: React.React
   </div>
 );
 
-const inputCls = "w-full px-3 py-2.5 rounded-xl text-sm bg-[#f5f5f5] dark:bg-[#141414] text-[#0d0d12] dark:text-[#fafafa] border border-transparent focus:border-[#9fe870]/50 outline-none transition-all placeholder-[#a3a3a3]";
+const inputCls = "w-full px-3 py-2.5 rounded-xl text-sm bg-[#f5f5f5] dark:bg-app-surface text-[#0d0d12] dark:text-[#fafafa] border border-transparent focus:border-[#9fe870]/50 outline-none transition-all placeholder-[#a3a3a3]";
 const selectCls = `${inputCls} appearance-none cursor-pointer`;
 
 export const NewDeliveryDialog: React.FC<NewDeliveryDialogProps> = ({
@@ -179,10 +179,10 @@ export const NewDeliveryDialog: React.FC<NewDeliveryDialogProps> = ({
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={handleClose} />
 
       {/* Dialog */}
-      <div className="relative w-full max-w-lg bg-white dark:bg-[#0f0f0f] rounded-2xl shadow-2xl border border-[#e5e5e5] dark:border-[#1f1f1f] flex flex-col max-h-[90vh]">
+      <div className="relative w-full max-w-lg bg-white dark:bg-app-surface rounded-2xl shadow-2xl border border-[#e5e5e5] dark:border-app-border flex flex-col max-h-[90vh]">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#f0f0f0] dark:border-[#1f1f1f]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#f0f0f0] dark:border-app-border">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-[#9fe870]/15 flex items-center justify-center">
               <Package className="w-4 h-4 text-[#6bc84a]" />
@@ -264,8 +264,8 @@ export const NewDeliveryDialog: React.FC<NewDeliveryDialogProps> = ({
         </form>
 
         {/* Footer */}
-        <div className="flex items-center gap-3 px-5 py-4 border-t border-[#f0f0f0] dark:border-[#1f1f1f]">
-          <button type="button" onClick={handleClose} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-[#737373] dark:text-[#a3a3a3] bg-[#f5f5f5] dark:bg-[#141414] hover:bg-[#e5e5e5] dark:hover:bg-[#1f1f1f] transition-colors">
+        <div className="flex items-center gap-3 px-5 py-4 border-t border-[#f0f0f0] dark:border-app-border">
+          <button type="button" onClick={handleClose} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-[#737373] dark:text-[#a3a3a3] bg-[#f5f5f5] dark:bg-app-surface hover:bg-[#e5e5e5] dark:hover:bg-[#1f1f1f] transition-colors">
             ביטול
           </button>
           <button

@@ -32,7 +32,7 @@ export const CustomersScreen: React.FC = () => {
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]" dir="rtl">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-app-background" dir="rtl">
       <PageToolbar
         actions={
           <>
@@ -80,7 +80,7 @@ export const CustomersScreen: React.FC = () => {
                 {filteredCustomers.map(customer => (
                   <div
                     key={customer.id}
-                    className="cursor-pointer rounded-2xl border border-[#e5e5e5] bg-white p-4 transition-all hover:shadow-lg dark:border-[#262626] dark:bg-[#171717]"
+                    className="cursor-pointer rounded-2xl border border-[#e5e5e5] bg-white p-4 transition-all hover:shadow-lg dark:border-app-border dark:bg-app-surface"
                   >
                     <div className="mb-3 flex items-start justify-between">
                       <div className="flex-1">
@@ -102,7 +102,7 @@ export const CustomersScreen: React.FC = () => {
                       </span>
                     </div>
 
-                    <div className="mb-3 border-b border-[#e5e5e5] pb-3 dark:border-[#262626]">
+                    <div className="mb-3 border-b border-[#e5e5e5] pb-3 dark:border-app-border">
                       <p className="text-sm text-[#666d80] dark:text-[#a3a3a3]">
                         {customer.address}
                       </p>
@@ -138,15 +138,15 @@ export const CustomersScreen: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <div className="rounded-2xl border border-[#e5e5e5] bg-white p-8 text-center text-[#737373] dark:border-[#262626] dark:bg-[#171717] dark:text-[#a3a3a3]">
+              <div className="rounded-2xl border border-[#e5e5e5] bg-white p-8 text-center text-[#737373] dark:border-app-border dark:bg-app-surface dark:text-[#a3a3a3]">
                 לא נמצאו תוצאות לחיפוש "{searchQuery}"
               </div>
             )
           ) : (
-            <div className="rounded-2xl border border-[#e5e5e5] bg-white overflow-hidden dark:border-[#262626] dark:bg-[#171717]">
+            <div className="rounded-2xl border border-[#e5e5e5] bg-white overflow-hidden dark:border-app-border dark:bg-app-surface">
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="border-b border-[#e5e5e5] bg-[#fafafa] dark:border-[#262626] dark:bg-[#0a0a0a]">
+                  <thead className="border-b border-[#e5e5e5] bg-[#fafafa] dark:border-app-border dark:bg-app-surface">
                     <tr>
                       <th className="px-4 py-3 text-right text-sm font-normal text-[#666d80] dark:text-[#a3a3a3]">שם לקוח</th>
                       <th className="px-4 py-3 text-right text-sm font-normal text-[#666d80] dark:text-[#a3a3a3]">סטטוס</th>
@@ -161,7 +161,7 @@ export const CustomersScreen: React.FC = () => {
                     {filteredCustomers.map(customer => (
                       <tr
                         key={customer.id}
-                        className="cursor-pointer border-b border-[#e5e5e5] transition-colors last:border-b-0 hover:bg-[#fafafa] dark:border-[#262626] dark:hover:bg-[#0a0a0a]"
+                        className="cursor-pointer border-b border-[#e5e5e5] transition-colors last:border-b-0 hover:bg-[#fafafa] dark:border-app-border dark:hover:bg-app-surface-raised"
                       >
                         <td className="px-4 py-3 text-sm font-medium text-[#0d0d12] dark:text-[#fafafa]">
                           {customer.name}

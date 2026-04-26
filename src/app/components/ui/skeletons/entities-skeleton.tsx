@@ -2,7 +2,7 @@ import React from 'react';
 
 export const EntitiesSkeleton: React.FC = () => {
   return (
-    <div className="min-h-screen p-6 bg-[#fafafa] dark:bg-[#0a0a0a]">
+    <div className="min-h-screen p-6 bg-[#fafafa] dark:bg-app-surface">
       <div className="max-w-7xl mx-auto">
         {/* Header with Search and Button */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
@@ -11,9 +11,9 @@ export const EntitiesSkeleton: React.FC = () => {
         </div>
 
         {/* Table Skeleton */}
-        <div className="bg-white dark:bg-[#171717] rounded-2xl border border-[#e5e5e5] dark:border-[#262626] overflow-hidden">
+        <div className="bg-white dark:bg-app-surface rounded-2xl border border-[#e5e5e5] dark:border-app-border overflow-hidden">
           {/* Table Header */}
-          <div className="grid grid-cols-4 gap-4 p-4 border-b border-[#e5e5e5] dark:border-[#262626] bg-[#fafafa] dark:bg-[#0a0a0a]">
+          <div className="grid grid-cols-4 gap-4 p-4 border-b border-[#e5e5e5] dark:border-app-border bg-[#fafafa] dark:bg-app-surface">
             <div className="h-4 w-20 skeleton"></div>
             <div className="h-4 w-24 skeleton"></div>
             <div className="h-4 w-16 skeleton"></div>
@@ -24,7 +24,7 @@ export const EntitiesSkeleton: React.FC = () => {
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <div
               key={i}
-              className="grid grid-cols-4 gap-4 p-4 border-b border-[#e5e5e5] dark:border-[#262626] last:border-b-0"
+              className="grid grid-cols-4 gap-4 p-4 border-b border-[#e5e5e5] dark:border-app-border last:border-b-0"
             >
               <div className="h-4 w-32 skeleton"></div>
               <div className="h-4 w-28 skeleton"></div>

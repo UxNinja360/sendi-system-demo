@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
 import {
   CheckCircle,
@@ -86,11 +86,11 @@ export const LiveCourierListItem: React.FC<LiveCourierListItemProps> = ({
   return (
     <div
       data-courier-id={courier.id}
-      className={`border-b border-[#e5e5e5] transition-all dark:border-[#262626] ${
+      className={`border-b border-[#e5e5e5] transition-all dark:border-app-border ${
         isSelected
           ? 'bg-[#f0fdf4] dark:bg-[#0a2f1a]'
           : isConnected && !courier.isOnShift
-            ? 'bg-[#fafafa] dark:bg-[#111111]'
+            ? 'bg-[#fafafa] dark:bg-app-surface'
             : isHovered
               ? 'bg-[#f0f0f0] dark:bg-[#222222]'
               : ''
@@ -119,7 +119,7 @@ export const LiveCourierListItem: React.FC<LiveCourierListItemProps> = ({
                   {courier.name}
                 </span>
                 {isConnected && !courier.isOnShift && (
-                  <span className="inline-flex flex-shrink-0 rounded-full bg-[#f5f5f5] px-1.5 py-0.5 text-[10px] font-medium text-[#737373] dark:bg-[#171717] dark:text-[#a3a3a3]">
+                  <span className="inline-flex flex-shrink-0 rounded-full bg-[#f5f5f5] px-1.5 py-0.5 text-[10px] font-medium text-[#737373] dark:bg-app-surface dark:text-[#a3a3a3]">
                     לא במשמרת
                   </span>
                 )}
@@ -183,7 +183,7 @@ export const LiveCourierListItem: React.FC<LiveCourierListItemProps> = ({
               <>
                 <div className="fixed inset-0 z-[9990]" onClick={onCloseMenu} />
                 <div
-                  className="fixed z-[9991] w-44 overflow-hidden rounded-xl border border-[#e5e5e5] bg-white shadow-2xl dark:border-[#262626] dark:bg-[#171717]"
+                  className="fixed z-[9991] w-44 overflow-hidden rounded-xl border border-[#e5e5e5] bg-white shadow-2xl dark:border-app-border dark:bg-app-surface"
                   style={menuPosition}
                 >
                   {courier.status !== 'offline' && (
@@ -220,7 +220,7 @@ export const LiveCourierListItem: React.FC<LiveCourierListItemProps> = ({
       </div>
 
       {showRoute && (
-        <div className="border-t border-[#e5e5e5] bg-[#f5f5f5] py-1 dark:border-[#262626] dark:bg-[#0a0a0a]">
+        <div className="border-t border-[#e5e5e5] bg-[#f5f5f5] py-1 dark:border-app-border dark:bg-app-surface">
           {courier.routeStops.length > 0 ? (
             <>
               <div className="flex items-center justify-between px-3 py-1.5">

@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { LiveCouriersView } from './live-couriers-view';
 import { LiveDeliveriesTab } from './live-deliveries-tab';
 import { LiveManagerControlsProps } from './live-manager-desktop-controls';
@@ -32,7 +32,7 @@ export const LiveManagerMobilePanel: React.FC<LiveManagerMobilePanelProps> = ({
         : 'h-[calc(100vh-96px)]'
     }`}
   >
-    <div className="h-full bg-white/95 dark:bg-[#171717]/95 backdrop-blur-lg border-t border-[#e5e5e5] dark:border-t-[#262626] shadow-2xl flex flex-col overflow-hidden rounded-t-[24px]">
+    <div className="h-full bg-white/95 dark:bg-app-surface/95 backdrop-blur-lg border-t border-[#e5e5e5] dark:border-t-[#262626] shadow-2xl flex flex-col overflow-hidden rounded-t-[24px]">
       <div
         className="flex-shrink-0 py-2 flex justify-center cursor-pointer active:cursor-grabbing"
         onTouchStart={(event) => onTouchStart(event.touches[0].clientY)}

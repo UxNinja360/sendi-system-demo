@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Power, Download, Search, Store as StoreIcon, Trash2, X, FileText, FileSpreadsheet } from 'lucide-react';
 import { useDelivery } from '../context/delivery-context-value';
 import { useNavigate } from 'react-router';
@@ -204,7 +204,7 @@ const RestaurantNoResultsState: React.FC<{ query: string; onClear: () => void }>
     <button
       type="button"
       onClick={onClear}
-      className="rounded-lg border border-[#d4d4d4] bg-white px-4 py-2 text-sm font-semibold text-[#0d0d12] transition-colors hover:bg-[#f5f5f5] dark:border-[#404040] dark:bg-[#171717] dark:text-[#fafafa] dark:hover:bg-[#262626]"
+      className="rounded-lg border border-[#d4d4d4] bg-white px-4 py-2 text-sm font-semibold text-[#0d0d12] transition-colors hover:bg-[#f5f5f5] dark:border-[#404040] dark:bg-app-surface dark:text-[#fafafa] dark:hover:bg-[#262626]"
     >
       נקה חיפוש
     </button>
@@ -1038,7 +1038,7 @@ export const RestaurantsScreen: React.FC = () => {
           onClick={() => setIsAddModalOpen(false)}
         >
           <div
-            className="w-full max-w-md rounded-2xl border border-[#e5e5e5] bg-white p-6 dark:border-[#262626] dark:bg-[#171717]"
+            className="w-full max-w-md rounded-2xl border border-[#e5e5e5] bg-white p-6 dark:border-app-border dark:bg-app-surface"
             onClick={e => e.stopPropagation()}
           >
             <div className="mb-6 flex items-center justify-between">
@@ -1054,7 +1054,7 @@ export const RestaurantsScreen: React.FC = () => {
                   type="text"
                   value={newRestaurant.name}
                   onChange={e => setNewRestaurant(p => ({ ...p, name: e.target.value }))}
-                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-[#262626] dark:bg-[#0a0a0a] dark:text-[#fafafa]"
+                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-[#fafafa]"
                   placeholder="שם המסעדה"
                   autoFocus
                 />
@@ -1065,7 +1065,7 @@ export const RestaurantsScreen: React.FC = () => {
                   type="tel"
                   value={newRestaurant.phone}
                   onChange={e => setNewRestaurant(p => ({ ...p, phone: e.target.value }))}
-                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-[#262626] dark:bg-[#0a0a0a] dark:text-[#fafafa]"
+                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-[#fafafa]"
                   placeholder="050-0000000"
                 />
               </div>
@@ -1075,7 +1075,7 @@ export const RestaurantsScreen: React.FC = () => {
                   type="text"
                   value={newRestaurant.address}
                   onChange={e => setNewRestaurant(p => ({ ...p, address: e.target.value }))}
-                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-[#262626] dark:bg-[#0a0a0a] dark:text-[#fafafa]"
+                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-[#fafafa]"
                   placeholder="רחוב, עיר"
                 />
               </div>
@@ -1085,7 +1085,7 @@ export const RestaurantsScreen: React.FC = () => {
                   type="text"
                   value={newRestaurant.type}
                   onChange={e => setNewRestaurant(p => ({ ...p, type: e.target.value }))}
-                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-[#262626] dark:bg-[#0a0a0a] dark:text-[#fafafa]"
+                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-[#fafafa]"
                   placeholder="פיצה, סושי, המבורגר..."
                 />
               </div>

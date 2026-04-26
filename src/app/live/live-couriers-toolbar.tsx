@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import { LiveSortMenu } from './live-sort-menu';
 
@@ -53,7 +53,7 @@ export const LiveCouriersToolbar: React.FC<LiveCouriersToolbarProps> = ({
   const sortButtonRef = React.useRef<HTMLButtonElement | null>(null);
 
   return (
-    <div className="sticky top-0 z-10 border-b border-[#e5e5e5] bg-[#fafafa] p-3 dark:border-[#262626] dark:bg-[#0a0a0a]">
+    <div className="sticky top-0 z-10 border-b border-[#e5e5e5] bg-[#fafafa] p-3 dark:border-app-border dark:bg-app-surface">
       <div className="flex items-center justify-between gap-2">
         <div className="flex-1 text-right text-xs text-[#737373] dark:text-[#a3a3a3]">
           <span>מציג {displayedCouriersCount} / {sortedCouriersCount} שליחים</span>

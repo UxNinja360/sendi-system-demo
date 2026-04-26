@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ArrowDown, ArrowUp, CalendarDays, CheckCircle, Clock, Menu, Minus, Plus, Search, Trash2, UserPlus, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -76,7 +76,7 @@ const TimePicker: React.FC<{ value: string; onChange: (v: string) => void }> = (
   };
 
   return (
-    <div dir="ltr" className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-[#e5e5e5] bg-[#fafafa] px-3 py-3 dark:border-[#262626] dark:bg-[#111111] sm:gap-2 sm:px-5 sm:py-3.5">
+    <div dir="ltr" className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-[#e5e5e5] bg-[#fafafa] px-3 py-3 dark:border-app-border dark:bg-app-surface sm:gap-2 sm:px-5 sm:py-3.5">
       <TimeSegment val={h} max={23} step={1} onStep={(d) => update(h + d, m)} onSet={(v) => update(v, m)} />
       <span className="mb-1 select-none text-[1.8rem] font-light text-[#d4d4d4] dark:text-[#3a3a3a] sm:text-[2.25rem]">:</span>
       <TimeSegment val={m} max={59} step={15} onStep={(d) => update(h, m + d)} onSet={(v) => update(h, v)} />
@@ -654,7 +654,7 @@ export const CouriersShifts: React.FC = () => {
 
   return (
     <>
-      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-white dark:bg-[#171717]" dir="rtl">
+      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-white dark:bg-app-surface" dir="rtl">
         <PageToolbar
           periodControl={
             <ToolbarWeekPicker
@@ -686,10 +686,10 @@ export const CouriersShifts: React.FC = () => {
           items={selectedDaySummaryItems}
         />
 
-        <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-none border-b border-[#e5e5e5] bg-white dark:border-[#262626] dark:bg-[#171717]">
-          <div className="flex-1 overflow-x-auto overflow-y-auto bg-white overscroll-contain dark:bg-[#171717]" dir="rtl">
+        <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-none border-b border-[#e5e5e5] bg-white dark:border-app-border dark:bg-app-surface">
+          <div className="flex-1 overflow-x-auto overflow-y-auto bg-white overscroll-contain dark:bg-app-surface" dir="rtl">
             <div className="w-full min-w-[700px] lg:min-w-[960px] xl:min-w-[1040px]" dir="rtl">
-              <div className="sticky top-0 z-10 grid grid-cols-7 border-b border-[#d4d4d4] bg-white dark:border-[#262626] dark:bg-[#171717]">
+              <div className="sticky top-0 z-10 grid grid-cols-7 border-b border-[#d4d4d4] bg-white dark:border-app-border dark:bg-app-surface">
                 {weekDays.map(({ date, dayKey }) => {
                   const isSelected = dayKey === selectedDateKey;
                   const isToday = dayKey === todayKey;
@@ -698,10 +698,10 @@ export const CouriersShifts: React.FC = () => {
                     <button
                       key={dayKey}
                       onClick={() => setSelectedDate(date)}
-                      className={`relative border-l border-[#e5e5e5] px-3 py-3 text-center transition-colors dark:border-[#262626] ${
+                      className={`relative border-l border-[#e5e5e5] px-3 py-3 text-center transition-colors dark:border-app-border ${
                         isSelected
-                          ? 'bg-[#0d0d12] text-white dark:bg-[#1e1e1e] dark:text-[#fafafa]'
-                          : 'bg-[#fafafa] text-[#737373] dark:bg-[#111111] dark:text-[#737373] hover:bg-[#f0f0f0] dark:hover:bg-[#161616]'
+                          ? 'bg-[#0d0d12] text-white dark:bg-app-surface dark:text-[#fafafa]'
+                          : 'bg-[#fafafa] text-[#737373] dark:bg-app-surface dark:text-[#737373] hover:bg-[#f0f0f0] dark:hover:bg-[#161616]'
                       }`}
                     >
                       {isSelected && (
@@ -732,7 +732,7 @@ export const CouriersShifts: React.FC = () => {
                   </div>
                 ) : visibleShiftTemplates.map((template, templateIndex) => (
                   <section key={template.id}>
-                    <div className="relative grid grid-cols-7 border-b border-[#e5e5e5] dark:border-[#262626]">
+                    <div className="relative grid grid-cols-7 border-b border-[#e5e5e5] dark:border-app-border">
                         <div
                         className={`col-span-7 flex items-center justify-center px-12 py-2.5 cursor-pointer select-none transition-[filter] hover:brightness-[0.99] dark:hover:brightness-110 ${(template.name === 'בלת"ם' ? EMERGENCY_SHIFT_ROW_STYLE : SHIFT_TYPE_ROW_STYLES[template.type]).shell}`}
                           onClick={() => toggleTemplateCollapsed(template.id)}
@@ -781,7 +781,7 @@ export const CouriersShifts: React.FC = () => {
 
                     {!collapsedTemplates[template.id] &&
                       template.slots.map((slot) => (
-                        <div key={slot.id} className="grid grid-cols-7 border-b border-[#f1f1f1] last:border-b-0 dark:border-[#202020]">
+                        <div key={slot.id} className="grid grid-cols-7 border-b border-[#f1f1f1] last:border-b-0 dark:border-app-border">
                           {weekDays.map(({ date, dayKey }) => {
                             const shift = shiftsByTemplateAndDay.get(`${template.id}:${dayKey}`) ?? null;
                             const assignment = shift ? getLatestSlotAssignment(shift.courierAssignments, slot.id) : null;
@@ -824,15 +824,15 @@ export const CouriersShifts: React.FC = () => {
                                   dayKey,
                                 });
                               }}
-                                className={`h-[72px] border-l border-[#ececec] p-0 text-center transition-colors dark:border-[#262626] flex flex-col overflow-hidden lg:h-[82px] ${
+                                className={`h-[72px] border-l border-[#ececec] p-0 text-center transition-colors dark:border-app-border flex flex-col overflow-hidden lg:h-[82px] ${
                                   isSelected
-                                    ? 'bg-[#f5f5f5] ring-inset ring-1 ring-[#d4d4d4] dark:bg-[#1e1e1e] dark:ring-[#333333]'
-                                    : 'bg-white hover:bg-[#fafafa] dark:bg-[#171717] dark:hover:bg-[#1a1a1a]'
+                                    ? 'bg-[#f5f5f5] ring-inset ring-1 ring-[#d4d4d4] dark:bg-app-surface dark:ring-[#333333]'
+                                    : 'bg-white hover:bg-[#fafafa] dark:bg-app-surface dark:hover:bg-[#1a1a1a]'
                                 }`}
                               >
                                 <>
                                   {/* Courier name row */}
-                                  <div className="w-full h-1/2 bg-[#f0f0f0] dark:bg-[#111111] flex items-center justify-center px-2 shrink-0">
+                                  <div className="w-full h-1/2 bg-[#f0f0f0] dark:bg-app-surface flex items-center justify-center px-2 shrink-0">
                                     {courier ? (
                                       <div className="truncate text-[12px] font-semibold text-[#0d0d12] dark:text-[#e5e5e5] leading-none w-full text-center">
                                         {courier.name}
@@ -888,7 +888,7 @@ export const CouriersShifts: React.FC = () => {
         <>
           <div className="fixed inset-0 z-40" onClick={closeSelectedCell} />
           <div
-            className="fixed z-50 overflow-hidden rounded-xl border border-[#e5e5e5] bg-white shadow-2xl dark:border-[#262626] dark:bg-[#171717]"
+            className="fixed z-50 overflow-hidden rounded-xl border border-[#e5e5e5] bg-white shadow-2xl dark:border-app-border dark:bg-app-surface"
             style={selectedCellPopoverStyle}
             onClick={(e) => e.stopPropagation()}
             dir="rtl"
@@ -910,7 +910,7 @@ export const CouriersShifts: React.FC = () => {
               </button>
             </div>
 
-            <div className="mt-4 rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] p-3 dark:border-[#262626] dark:bg-[#111111]">
+            <div className="mt-4 rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] p-3 dark:border-app-border dark:bg-app-surface">
               <div className="text-xs text-[#737373] dark:text-[#a3a3a3]">{'\u05de\u05e6\u05d1 \u05d4\u05ea\u05d0'}</div>
               <div className="mt-1 text-sm font-medium text-[#0d0d12] dark:text-[#fafafa]">
                 {selectedCourier ? selectedCourier.name : '\u05e4\u05e0\u05d5\u05d9'}
@@ -944,7 +944,7 @@ export const CouriersShifts: React.FC = () => {
             </div>
 
             {selectedAssignmentCompleted ? (
-              <div className="mt-4 rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] px-3 py-3 text-xs leading-5 text-[#737373] dark:border-[#262626] dark:bg-[#111111] dark:text-[#a3a3a3]">
+              <div className="mt-4 rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] px-3 py-3 text-xs leading-5 text-[#737373] dark:border-app-border dark:bg-app-surface dark:text-[#a3a3a3]">
                 {'\u05de\u05e9\u05de\u05e8\u05ea \u05e9\u05d4\u05e1\u05ea\u05d9\u05d9\u05de\u05d4 \u05e0\u05e2\u05d5\u05dc\u05d4 \u05dc\u05e2\u05e8\u05d9\u05db\u05d4. \u05e8\u05d9\u05e9\u05d5\u05dd \u05d4\u05e9\u05e2\u05d5\u05ea \u05e0\u05e9\u05de\u05e8, \u05d5\u05dc\u05d0 \u05e0\u05d9\u05ea\u05df \u05dc\u05e9\u05e0\u05d5\u05ea \u05db\u05d0\u05df \u05d0\u05ea \u05d4\u05d0\u05d9\u05d5\u05e9.'}
               </div>
             ) : (
@@ -955,11 +955,11 @@ export const CouriersShifts: React.FC = () => {
                 value={popupSearch}
                 onChange={(e) => setPopupSearch(e.target.value)}
                 placeholder={'\u05d7\u05e4\u05e9 \u05e9\u05dc\u05d9\u05d7'}
-                className="w-full rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] py-2.5 pr-9 pl-3 text-sm dark:border-[#262626] dark:bg-[#111111]"
+                className="w-full rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] py-2.5 pr-9 pl-3 text-sm dark:border-app-border dark:bg-app-surface"
               />
             </div>
 
-            <div className="mt-3 max-h-[200px] overflow-auto rounded-[4px] border border-[#e5e5e5] dark:border-[#262626]">
+            <div className="mt-3 max-h-[200px] overflow-auto rounded-[4px] border border-[#e5e5e5] dark:border-app-border">
               <div className="divide-y divide-[#e5e5e5] dark:divide-[#262626]">
                 {popupCouriers.map((courier) => {
                   const isAssigned = selectedOpenAssignment?.courierId === courier.id;
@@ -978,11 +978,11 @@ export const CouriersShifts: React.FC = () => {
                       </div>
 
                       {isAssigned ? (
-                        <div className="rounded-[4px] bg-[#f5f5f5] px-3 py-1.5 text-xs font-medium text-[#737373] dark:bg-[#111111] dark:text-[#a3a3a3]">
+                        <div className="rounded-[4px] bg-[#f5f5f5] px-3 py-1.5 text-xs font-medium text-[#737373] dark:bg-app-surface dark:text-[#a3a3a3]">
                           {'\u05de\u05e9\u05d5\u05d9\u05da'}
                         </div>
                       ) : isBusy ? (
-                        <div className="rounded-[4px] bg-[#f5f5f5] px-3 py-1.5 text-xs font-medium text-[#737373] dark:bg-[#111111] dark:text-[#a3a3a3]">
+                        <div className="rounded-[4px] bg-[#f5f5f5] px-3 py-1.5 text-xs font-medium text-[#737373] dark:bg-app-surface dark:text-[#a3a3a3]">
                           {'\u05ea\u05e4\u05d5\u05e1'}
                         </div>
                       ) : (
@@ -1008,7 +1008,7 @@ export const CouriersShifts: React.FC = () => {
       {courierModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm" onClick={closeCourierModal}>
           <div
-            className="w-full max-w-md rounded-[4px] border border-[#e5e5e5] bg-white p-5 dark:border-[#262626] dark:bg-[#171717]"
+            className="w-full max-w-md rounded-[4px] border border-[#e5e5e5] bg-white p-5 dark:border-app-border dark:bg-app-surface"
             onClick={(event) => event.stopPropagation()}
             dir="rtl"
           >
@@ -1033,7 +1033,7 @@ export const CouriersShifts: React.FC = () => {
                   value={newCourier.name}
                   onChange={(event) => setNewCourier((prev) => ({ ...prev, name: event.target.value }))}
                   placeholder={'\u05db\u05ea\u05d5\u05d1 \u05e9\u05dd \u05de\u05dc\u05d0'}
-                  className="w-full rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] px-3 py-2.5 text-sm text-[#0d0d12] outline-none transition-colors focus:border-[#9fe870] dark:border-[#262626] dark:bg-[#111111] dark:text-[#fafafa]"
+                  className="w-full rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] px-3 py-2.5 text-sm text-[#0d0d12] outline-none transition-colors focus:border-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-[#fafafa]"
                 />
               </div>
 
@@ -1043,7 +1043,7 @@ export const CouriersShifts: React.FC = () => {
                   value={newCourier.phone}
                   onChange={(event) => setNewCourier((prev) => ({ ...prev, phone: event.target.value }))}
                   placeholder={'\u05db\u05ea\u05d5\u05d1 \u05de\u05e1\u05e4\u05e8 \u05d8\u05dc\u05e4\u05d5\u05df'}
-                  className="w-full rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] px-3 py-2.5 text-sm text-[#0d0d12] outline-none transition-colors focus:border-[#9fe870] dark:border-[#262626] dark:bg-[#111111] dark:text-[#fafafa]"
+                  className="w-full rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] px-3 py-2.5 text-sm text-[#0d0d12] outline-none transition-colors focus:border-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-[#fafafa]"
                 />
               </div>
             </div>
@@ -1052,7 +1052,7 @@ export const CouriersShifts: React.FC = () => {
               <button
                 type="button"
                 onClick={closeCourierModal}
-                className="rounded-[4px] border border-[#e5e5e5] px-4 py-2.5 text-sm font-medium text-[#525252] transition-colors hover:bg-[#f5f5f5] dark:border-[#262626] dark:text-[#d4d4d4] dark:hover:bg-[#111111]"
+                className="rounded-[4px] border border-[#e5e5e5] px-4 py-2.5 text-sm font-medium text-[#525252] transition-colors hover:bg-[#f5f5f5] dark:border-app-border dark:text-[#d4d4d4] dark:hover:bg-[#111111]"
               >
                 {'\u05d1\u05d9\u05d8\u05d5\u05dc'}
               </button>
@@ -1077,7 +1077,7 @@ export const CouriersShifts: React.FC = () => {
           onContextMenu={(e) => { e.preventDefault(); setCellContextMenu(null); }}
         >
           <div
-            className="absolute min-w-[170px] bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-xl shadow-2xl overflow-hidden"
+            className="absolute min-w-[170px] bg-white dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-xl shadow-2xl overflow-hidden"
             style={getContextMenuStyle(cellContextMenu)}
             onClick={(e) => e.stopPropagation()}
           >
@@ -1104,7 +1104,7 @@ export const CouriersShifts: React.FC = () => {
                     <CheckCircle className="w-4 h-4 shrink-0" />
                     <span>{'\u05d4\u05ea\u05d7\u05dc \u05de\u05e9\u05de\u05e8\u05ea'}</span>
                   </button>
-                <div className="border-t border-[#f0f0f0] dark:border-[#262626]" />
+                <div className="border-t border-[#f0f0f0] dark:border-app-border" />
               </>
             ) : null}
           {!cellContextMenu.started && !cellContextMenu.ended && (
@@ -1127,7 +1127,7 @@ export const CouriersShifts: React.FC = () => {
       {templateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" onClick={closeTemplateModal}>
           <div
-            className="flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-[#e5e5e5] bg-white shadow-2xl dark:border-[#1f1f1f] dark:bg-[#0f0f0f]"
+            className="flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-[#e5e5e5] bg-white shadow-2xl dark:border-app-border dark:bg-app-surface"
             onClick={(event) => event.stopPropagation()}
             dir="rtl"
           >
@@ -1160,7 +1160,7 @@ export const CouriersShifts: React.FC = () => {
                 <input
                   value={templateDraft.name}
                   onChange={(e) => setTemplateDraft((prev) => ({ ...prev, name: e.target.value }))}
-                  className="w-full rounded-xl border border-[#e5e5e5] bg-[#fafafa] px-4 py-3 text-sm text-[#0d0d12] outline-none transition-colors focus:border-[#9fe870] focus:ring-2 focus:ring-[#9fe870]/20 dark:border-[#262626] dark:bg-[#111111] dark:text-[#fafafa] placeholder:text-[#b0b0b0] dark:placeholder:text-[#444]"
+                  className="w-full rounded-xl border border-[#e5e5e5] bg-[#fafafa] px-4 py-3 text-sm text-[#0d0d12] outline-none transition-colors focus:border-[#9fe870] focus:ring-2 focus:ring-[#9fe870]/20 dark:border-app-border dark:bg-app-surface dark:text-[#fafafa] placeholder:text-[#b0b0b0] dark:placeholder:text-[#444]"
                   placeholder={'\u05dc\u05de\u05e9\u05dc: \u05de\u05e9\u05de\u05e8\u05ea \u05d1\u05d5\u05e7\u05e8'}
                 />
               </div>
@@ -1196,7 +1196,7 @@ export const CouriersShifts: React.FC = () => {
                   <button
                     type="button"
                     onClick={addDraftSlot}
-                    className="flex items-center gap-1.5 rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-3 py-2 text-[12px] font-medium text-[#525252] transition-colors hover:bg-[#f0f0f0] dark:border-[#262626] dark:bg-[#111111] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a]"
+                    className="flex items-center gap-1.5 rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-3 py-2 text-[12px] font-medium text-[#525252] transition-colors hover:bg-[#f0f0f0] dark:border-app-border dark:bg-app-surface dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a]"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     {'\u05d4\u05d5\u05e1\u05e3 \u05ea\u05d0'}
@@ -1205,8 +1205,8 @@ export const CouriersShifts: React.FC = () => {
 
                 <div className="flex flex-wrap gap-2">
                   {templateDraft.slots.map((slot, index) => (
-                    <div key={slot.id} className="flex items-center gap-2 rounded-xl border border-[#e5e5e5] bg-[#fafafa] px-2.5 py-2 dark:border-[#262626] dark:bg-[#111111]">
-                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-[11px] font-semibold text-[#737373] dark:bg-[#171717] dark:text-[#a3a3a3]">
+                    <div key={slot.id} className="flex items-center gap-2 rounded-xl border border-[#e5e5e5] bg-[#fafafa] px-2.5 py-2 dark:border-app-border dark:bg-app-surface">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-[11px] font-semibold text-[#737373] dark:bg-app-surface dark:text-[#a3a3a3]">
                         {index + 1}
                       </div>
                       {templateDraft.slots.length > 1 && (
@@ -1225,7 +1225,7 @@ export const CouriersShifts: React.FC = () => {
                 <button
                   type="button"
                   onClick={addDraftSlot}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[#d4d4d4] bg-[#fafafa] px-3 py-3 text-sm text-[#a3a3a3] transition-colors hover:bg-[#f5f5f5] hover:text-[#737373] dark:border-[#2a2a2a] dark:bg-[#0d0d0d] dark:text-[#555] dark:hover:bg-[#111111] dark:hover:text-[#737373]"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[#d4d4d4] bg-[#fafafa] px-3 py-3 text-sm text-[#a3a3a3] transition-colors hover:bg-[#f5f5f5] hover:text-[#737373] dark:border-app-border dark:bg-[#0d0d0d] dark:text-[#555] dark:hover:bg-[#111111] dark:hover:text-[#737373]"
                 >
                   <Plus className="h-4 w-4" />
                   {'\u05d4\u05d5\u05e1\u05e3 \u05ea\u05d0 \u05e0\u05d5\u05e1\u05e3'}
@@ -1249,7 +1249,7 @@ export const CouriersShifts: React.FC = () => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={closeTemplateModal}
-                  className="rounded-xl border border-[#e5e5e5] px-4 py-2.5 text-sm font-medium text-[#525252] transition-colors hover:bg-[#f5f5f5] dark:border-[#262626] dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a]"
+                  className="rounded-xl border border-[#e5e5e5] px-4 py-2.5 text-sm font-medium text-[#525252] transition-colors hover:bg-[#f5f5f5] dark:border-app-border dark:text-[#a3a3a3] dark:hover:bg-[#1a1a1a]"
                 >
                   {'\u05d1\u05d9\u05d8\u05d5\u05dc'}
                 </button>

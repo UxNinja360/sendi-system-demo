@@ -79,8 +79,8 @@ export function CustomerDetailsScreen() {
   }
 
   return (
-    <div className="flex h-full flex-col bg-[#fafafa] dark:bg-[#0a0a0a]">
-      <div className="border-b border-[#e5e5e5] bg-white p-4 dark:border-[#262626] dark:bg-[#171717]">
+    <div className="flex h-full flex-col bg-app-background">
+      <div className="border-b border-[#e5e5e5] bg-white p-4 dark:border-app-border dark:bg-app-surface">
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate('/customers')}
@@ -111,7 +111,7 @@ export function CustomerDetailsScreen() {
       <div className="flex-1 overflow-auto p-4">
         <div className="mx-auto max-w-7xl space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-            <div className="rounded-xl border border-[#e5e5e5] bg-white p-4 dark:border-[#262626] dark:bg-[#171717]">
+            <div className="rounded-xl border border-[#e5e5e5] bg-white p-4 dark:border-app-border dark:bg-app-surface">
               <div className="mb-2 flex items-center gap-3">
                 <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-500/20">
                   <Package size={20} className="text-blue-600 dark:text-blue-400" />
@@ -125,7 +125,7 @@ export function CustomerDetailsScreen() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-[#e5e5e5] bg-white p-4 dark:border-[#262626] dark:bg-[#171717]">
+            <div className="rounded-xl border border-[#e5e5e5] bg-white p-4 dark:border-app-border dark:bg-app-surface">
               <div className="mb-2 flex items-center gap-3">
                 <div className="rounded-lg bg-green-100 p-2 dark:bg-green-500/20">
                   <CheckCircle2 size={20} className="text-green-600 dark:text-green-400" />
@@ -139,7 +139,7 @@ export function CustomerDetailsScreen() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-[#e5e5e5] bg-white p-4 dark:border-[#262626] dark:bg-[#171717]">
+            <div className="rounded-xl border border-[#e5e5e5] bg-white p-4 dark:border-app-border dark:bg-app-surface">
               <div className="mb-2 flex items-center gap-3">
                 <div className="rounded-lg bg-purple-100 p-2 dark:bg-purple-500/20">
                   <DollarSign size={20} className="text-purple-600 dark:text-purple-400" />
@@ -153,7 +153,7 @@ export function CustomerDetailsScreen() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-[#e5e5e5] bg-white p-4 dark:border-[#262626] dark:bg-[#171717]">
+            <div className="rounded-xl border border-[#e5e5e5] bg-white p-4 dark:border-app-border dark:bg-app-surface">
               <div className="mb-2 flex items-center gap-3">
                 <div className="rounded-lg bg-orange-100 p-2 dark:bg-orange-500/20">
                   <TrendingUp size={20} className="text-orange-600 dark:text-orange-400" />
@@ -168,7 +168,7 @@ export function CustomerDetailsScreen() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-[#e5e5e5] bg-white p-6 dark:border-[#262626] dark:bg-[#171717]">
+          <div className="rounded-xl border border-[#e5e5e5] bg-white p-6 dark:border-app-border dark:bg-app-surface">
             <h2 className="mb-4 text-lg font-bold text-[#0d0d12] dark:text-[#fafafa]">
               פרטי לקוח
             </h2>
@@ -196,7 +196,7 @@ export function CustomerDetailsScreen() {
           </div>
 
           {favoriteRestaurants.length > 0 && (
-            <div className="rounded-xl border border-[#e5e5e5] bg-white p-6 dark:border-[#262626] dark:bg-[#171717]">
+            <div className="rounded-xl border border-[#e5e5e5] bg-white p-6 dark:border-app-border dark:bg-app-surface">
               <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-[#0d0d12] dark:text-[#fafafa]">
                 <ShoppingBag size={18} />
                 מסעדות מועדפות
@@ -219,7 +219,7 @@ export function CustomerDetailsScreen() {
             </div>
           )}
 
-          <div className="rounded-xl border border-[#e5e5e5] bg-white p-6 dark:border-[#262626] dark:bg-[#171717]">
+          <div className="rounded-xl border border-[#e5e5e5] bg-white p-6 dark:border-app-border dark:bg-app-surface">
             <h2 className="mb-4 text-lg font-bold text-[#0d0d12] dark:text-[#fafafa]">
               היסטוריית הזמנות
             </h2>
@@ -247,7 +247,7 @@ export function CustomerDetailsScreen() {
                       <span
                         className={`rounded-full px-2 py-1 text-xs ${
                           delivery.status === 'delivered'
-                            ? 'bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-400'
+                            ? 'bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400'
                             : delivery.status === 'cancelled'
                               ? 'bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400'
                               : delivery.status === 'expired'

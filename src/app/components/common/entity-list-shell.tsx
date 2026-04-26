@@ -24,7 +24,7 @@ export const EntityListShell: React.FC<EntityListShellProps> = ({
 }) => (
   <div
     className={joinClassNames(
-      'flex h-full flex-row overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]',
+      'flex h-full flex-row overflow-hidden bg-app-background',
       className,
     )}
     dir="ltr"

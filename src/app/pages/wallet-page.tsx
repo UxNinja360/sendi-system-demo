@@ -88,7 +88,7 @@ export const WalletPage: React.FC = () => {
 
   return (
     <div
-      className="flex h-full flex-col overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a]"
+      className="flex h-full flex-col overflow-hidden bg-app-background"
       dir="rtl"
     >
       <PageToolbar
@@ -96,7 +96,7 @@ export const WalletPage: React.FC = () => {
           <button
             type="button"
             onClick={() => navigate('/deliveries')}
-            className="hidden items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-[#0a0a0a] dark:text-[#fafafa] dark:hover:bg-[#151515] md:inline-flex"
+            className="hidden items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-[#fafafa] dark:hover:bg-app-surface-raised md:inline-flex"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>{TEXT.toDeliveries}</span>
@@ -107,7 +107,7 @@ export const WalletPage: React.FC = () => {
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-3 py-3 md:px-5 md:py-5">
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-2xl border border-[#e5e5e5] bg-white p-5 dark:border-[#1f1f1f] dark:bg-[#171717]">
+            <div className="rounded-2xl border border-[#e5e5e5] bg-white p-5 dark:border-app-border dark:bg-app-surface">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-[#666d80] dark:text-[#a3a3a3]">
                   {TEXT.totalRevenue}
@@ -122,7 +122,7 @@ export const WalletPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-[#e5e5e5] bg-white p-5 dark:border-[#1f1f1f] dark:bg-[#171717]">
+            <div className="rounded-2xl border border-[#e5e5e5] bg-white p-5 dark:border-app-border dark:bg-app-surface">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-[#666d80] dark:text-[#a3a3a3]">
                   {TEXT.courierPayments}
@@ -137,7 +137,7 @@ export const WalletPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-[#e5e5e5] bg-white p-5 dark:border-[#1f1f1f] dark:bg-[#171717]">
+            <div className="rounded-2xl border border-[#e5e5e5] bg-white p-5 dark:border-app-border dark:bg-app-surface">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-[#666d80] dark:text-[#a3a3a3]">
                   {TEXT.grossProfit}
@@ -152,7 +152,7 @@ export const WalletPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-[#e5e5e5] bg-white p-5 dark:border-[#1f1f1f] dark:bg-[#171717]">
+            <div className="rounded-2xl border border-[#e5e5e5] bg-white p-5 dark:border-app-border dark:bg-app-surface">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-[#666d80] dark:text-[#a3a3a3]">
                   {TEXT.averageOrderValue}
@@ -169,8 +169,8 @@ export const WalletPage: React.FC = () => {
           </div>
 
           <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-            <div className="overflow-hidden rounded-2xl border border-[#e5e5e5] bg-white dark:border-[#1f1f1f] dark:bg-[#171717]">
-              <div className="border-b border-[#e5e5e5] bg-[#fafafa] px-4 py-3 dark:border-[#1f1f1f] dark:bg-[#111111]">
+            <div className="overflow-hidden rounded-2xl border border-[#e5e5e5] bg-white dark:border-app-border dark:bg-app-surface">
+              <div className="border-b border-[#e5e5e5] bg-[#fafafa] px-4 py-3 dark:border-app-border dark:bg-app-surface">
                 <div className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">
                   {TEXT.latestDeliveries}
                 </div>
@@ -215,7 +215,7 @@ export const WalletPage: React.FC = () => {
             </div>
 
             <div className="space-y-4">
-              <div className="rounded-2xl border border-[#e5e5e5] bg-white p-5 dark:border-[#1f1f1f] dark:bg-[#171717]">
+              <div className="rounded-2xl border border-[#e5e5e5] bg-white p-5 dark:border-app-border dark:bg-app-surface">
                 <div className="text-sm font-semibold text-[#0d0d12] dark:text-[#fafafa]">
                   {TEXT.financialBreakdown}
                 </div>

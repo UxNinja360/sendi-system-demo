@@ -16,7 +16,7 @@ export const ENTITY_TABLE_WIDTHS = {
 } as const;
 
 export const ENTITY_TABLE_HEAD_CLASS =
-  'sticky top-0 z-10 border-b border-[#e5e5e5] bg-[#fafafa] dark:border-[#262626] dark:bg-[#0a0a0a]';
+  'sticky top-0 z-10 border-b border-[#e5e5e5] bg-[#fafafa] dark:border-app-border dark:bg-app-surface';
 
 export const ENTITY_TABLE_CHECKBOX_HEAD_CLASS = 'pr-5 pl-0';
 export const ENTITY_TABLE_CHECKBOX_BODY_CLASS = 'pr-5 pl-0';
@@ -32,4 +32,4 @@ export const ENTITY_TABLE_ACTIONS_HEAD_CLASS = 'px-1 py-2.5 w-10 text-center';
 export const ENTITY_TABLE_ACTIONS_BODY_CLASS = 'px-1 w-10 text-center';
 
 export const ENTITY_TABLE_ROW_CLASS =
-  'cursor-pointer border-b border-[#e5e5e5] bg-white transition-colors hover:bg-[#fafafa] dark:border-[#262626] dark:bg-[#171717] dark:hover:bg-[#0a0a0a]';
+  'cursor-pointer border-b border-[#e5e5e5] bg-white transition-colors hover:bg-[#fafafa] dark:border-app-border dark:bg-app-surface dark:hover:bg-app-surface-raised';

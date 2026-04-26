@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   X,
   Download,
@@ -237,7 +237,7 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
             className={`flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl transition-all border ${
               mode === 'simple'
                 ? 'bg-[#9fe870]/10 border-[#9fe870]'
-                : 'bg-white dark:bg-[#0f0f0f] border-[#e5e5e5] dark:border-[#262626] hover:border-[#9fe870]/60'
+                : 'bg-white dark:bg-app-surface border-[#e5e5e5] dark:border-app-border hover:border-[#9fe870]/60'
             }`}
           >
             <FileSpreadsheet className={`w-5 h-5 ${mode === 'simple' ? 'text-[#5a9a30] dark:text-[#9fe870]' : 'text-[#a3a3a3]'}`} />
@@ -249,7 +249,7 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
             className={`flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl transition-all border ${
               mode === 'grouped'
                 ? 'bg-[#9fe870]/10 border-[#9fe870]'
-                : 'bg-white dark:bg-[#0f0f0f] border-[#e5e5e5] dark:border-[#262626] hover:border-[#9fe870]/60'
+                : 'bg-white dark:bg-app-surface border-[#e5e5e5] dark:border-app-border hover:border-[#9fe870]/60'
             }`}
           >
             <Layers className={`w-5 h-5 ${mode === 'grouped' ? 'text-[#5a9a30] dark:text-[#9fe870]' : 'text-[#a3a3a3]'}`} />
@@ -261,7 +261,7 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
 
       {/* ③ הגדרות קיבוץ — מופיע רק במצב מקובץ, עם אנימציה */}
       {mode === 'grouped' && (
-        <div className="space-y-3 animate-in slide-in-from-top-2 duration-200 p-3.5 bg-[#fafafa] dark:bg-[#141414] rounded-xl border border-[#e5e5e5] dark:border-[#262626]">
+        <div className="space-y-3 animate-in slide-in-from-top-2 duration-200 p-3.5 bg-[#fafafa] dark:bg-app-surface rounded-xl border border-[#e5e5e5] dark:border-app-border">
           <OptionRow label="קיבוץ לפי">
             <OptionBtn active={groupBy === 'courier'} onClick={() => setGroupBy('courier')}>
               שליח <span className="opacity-60 mr-0.5">({groupCounts.couriers})</span>
@@ -283,7 +283,7 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
           </div>
           {/* שדות סיכום — accordion מתקפל */}
           {(includeEntitySummary || includeMasterSummary) && (
-            <div className="border-t border-[#e5e5e5] dark:border-[#262626] pt-2.5">
+            <div className="border-t border-[#e5e5e5] dark:border-app-border pt-2.5">
               <button
                 onClick={() => setExpandedSection(expandedSection === 'summary' ? null : 'summary')}
                 className="w-full flex items-center justify-between text-[11px] text-[#a3a3a3] hover:text-[#525252] dark:hover:text-[#d4d4d4] transition-colors"
@@ -319,7 +319,7 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
             className={`flex flex-col items-center gap-1 py-2.5 px-2 rounded-xl border transition-all ${
               format === 'excel'
                 ? 'bg-[#9fe870]/10 border-[#9fe870]'
-                : 'bg-white dark:bg-[#0f0f0f] border-[#e5e5e5] dark:border-[#262626] hover:border-[#9fe870]/60'
+                : 'bg-white dark:bg-app-surface border-[#e5e5e5] dark:border-app-border hover:border-[#9fe870]/60'
             }`}
           >
             <FileSpreadsheet className={`w-4 h-4 ${format === 'excel' ? 'text-[#5a9a30] dark:text-[#9fe870]' : 'text-[#a3a3a3]'}`} />
@@ -333,7 +333,7 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
             className={`flex flex-col items-center gap-1 py-2.5 px-2 rounded-xl border transition-all ${
               format === 'pdf'
                 ? 'bg-[#9fe870]/10 border-[#9fe870]'
-                : 'bg-white dark:bg-[#0f0f0f] border-[#e5e5e5] dark:border-[#262626] hover:border-[#9fe870]/60'
+                : 'bg-white dark:bg-app-surface border-[#e5e5e5] dark:border-app-border hover:border-[#9fe870]/60'
             }`}
           >
             <FileDown className={`w-4 h-4 ${format === 'pdf' ? 'text-[#5a9a30] dark:text-[#9fe870]' : 'text-[#a3a3a3]'}`} />
@@ -347,7 +347,7 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
   );
 
   const exportFooter = (
-    <div className="shrink-0 border-t border-[#e5e5e5] dark:border-[#262626] px-4 py-3 bg-[#fafafa] dark:bg-[#141414]">
+    <div className="shrink-0 border-t border-[#e5e5e5] dark:border-app-border px-4 py-3 bg-[#fafafa] dark:bg-app-surface">
       <button
         onClick={handleExport}
         disabled={!canExport}
@@ -389,13 +389,13 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
       {/* Slide-out Panel */}
       <div
         ref={panelRef}
-        className={`app-safe-side-panel fixed left-0 w-full sm:w-[420px] bg-white dark:bg-[#0a0a0a] shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-out ${
+        className={`app-safe-side-panel fixed left-0 w-full sm:w-[420px] bg-white dark:bg-app-surface shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-out ${
           isAnimating ? 'translate-x-0' : '-translate-x-full'
         }`}
         style={{ direction: 'rtl' }}
       >
         {/* ====== Header ====== */}
-        <div className="shrink-0 border-b border-[#e5e5e5] dark:border-[#262626] bg-[#fafafa] dark:bg-[#141414] px-4 py-3">
+        <div className="shrink-0 border-b border-[#e5e5e5] dark:border-app-border bg-[#fafafa] dark:bg-app-surface px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <FileDown className="w-4 h-4 text-[#0d0d12] dark:text-[#fafafa]" />
@@ -430,7 +430,7 @@ function ToggleRow({ label, enabled, onToggle }: { label: string; enabled: boole
       className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] transition-all text-right border ${
         enabled
           ? 'bg-[#9fe870]/10 dark:bg-[#9fe870]/10 border-[#9fe870]/40'
-          : 'bg-white dark:bg-[#0f0f0f] border-[#e5e5e5] dark:border-[#262626] opacity-60'
+          : 'bg-white dark:bg-app-surface border-[#e5e5e5] dark:border-app-border opacity-60'
       }`}
     >
       {enabled ? (
@@ -450,7 +450,7 @@ function FieldChip({ label, selected, onClick }: { label: string; selected: bool
       className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all border ${
         selected
           ? 'bg-[#9fe870] border-[#9fe870] text-[#0d0d12] shadow-sm'
-          : 'bg-white dark:bg-[#0f0f0f] border-[#e5e5e5] dark:border-[#262626] text-[#525252] dark:text-[#a3a3a3] hover:border-[#9fe870]/60 hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
+          : 'bg-white dark:bg-app-surface border-[#e5e5e5] dark:border-app-border text-[#525252] dark:text-[#a3a3a3] hover:border-[#9fe870]/60 hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
       }`}
     >
       {selected && <Check className="w-2.5 h-2.5" />}
@@ -475,7 +475,7 @@ function OptionBtn({ active, onClick, children }: { active: boolean; onClick: ()
       className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
         active
           ? 'bg-[#9fe870] border-[#9fe870] text-[#0d0d12] shadow-sm'
-          : 'bg-white dark:bg-[#0f0f0f] border-[#e5e5e5] dark:border-[#262626] text-[#525252] dark:text-[#a3a3a3] hover:border-[#9fe870]/60 hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
+          : 'bg-white dark:bg-app-surface border-[#e5e5e5] dark:border-app-border text-[#525252] dark:text-[#a3a3a3] hover:border-[#9fe870]/60 hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
       }`}
     >
       {children}
