@@ -9,7 +9,7 @@ import { DELIVERY_STORAGE_KEYS } from '../context/delivery-storage';
 import { PageToolbar } from '../components/common/page-toolbar';
 import { ToolbarIconButton } from '../components/common/toolbar-icon-button';
 import { ToolbarWeekPicker } from '../components/common/toolbar-date-picker';
-import { InfoBar, type InfoBarItem } from '../components/common/info-bar';
+import { VercelEmptyState } from '../components/common/vercel-empty-state';
 
 const COLLAPSED_TEMPLATES_STORAGE_KEY = DELIVERY_STORAGE_KEYS.shiftsCollapsedTemplates;
 
@@ -401,25 +401,6 @@ export const CouriersShifts: React.FC = () => {
       });
   }, [popupSearch, state.couriers, busyCourierIds]);
 
-  const selectedDaySummary = useMemo(() => {
-    const shiftsForDay = state.shifts.filter((shift) => shift.date === selectedDateKey);
-    const assignments = shiftsForDay.flatMap((shift) =>
-      shift.courierAssignments.filter((assignment) => !assignment.endedAt)
-    );
-    const totalSlots = visibleShiftTemplates.reduce((sum, template) => sum + template.slots.length, 0);
-    const staffedSlots = assignments.length;
-    const activeAssignments = assignments.filter((assignment) => assignment.startedAt && !assignment.endedAt).length;
-    const plannedAssignments = assignments.filter((assignment) => assignment.courierId && !assignment.startedAt && !assignment.endedAt).length;
-
-    return {
-      totalSlots,
-      staffedSlots,
-      emptySlots: Math.max(totalSlots - staffedSlots, 0),
-      activeAssignments,
-      plannedAssignments,
-    };
-  }, [selectedDateKey, state.shifts, visibleShiftTemplates]);
-
   const selectedCellPopoverStyle = popoverAnchor ? getFloatingPanelStyle(popoverAnchor) : null;
 
   const handleOpenCreateTemplate = () => {
@@ -639,23 +620,11 @@ export const CouriersShifts: React.FC = () => {
     }
   };
 
-  const selectedDayLabel = selectedDate.toLocaleDateString('he-IL', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
-  const selectedDaySummaryItems: InfoBarItem[] = [
-    { label: '\u05ea\u05d0\u05d9\u05dd', value: selectedDaySummary.totalSlots },
-    { label: '\u05de\u05d0\u05d5\u05d9\u05e9', value: selectedDaySummary.staffedSlots, tone: 'success' },
-    { label: '\u05e4\u05e0\u05d5\u05d9\u05d9\u05dd', value: selectedDaySummary.emptySlots, tone: 'muted' },
-    { label: '\u05e4\u05e2\u05d9\u05dc\u05d9\u05dd', value: selectedDaySummary.activeAssignments, tone: 'info' },
-    { label: '\u05de\u05ea\u05d5\u05db\u05e0\u05e0\u05d9\u05dd', value: selectedDaySummary.plannedAssignments, tone: 'warning' },
-  ];
-
   return (
     <>
-      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-white dark:bg-app-surface" dir="rtl">
+      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-app-background" dir="rtl">
         <PageToolbar
+          showBottomBorder={false}
           periodControl={
             <ToolbarWeekPicker
               selectedDate={selectedDate}
@@ -668,7 +637,7 @@ export const CouriersShifts: React.FC = () => {
           actions={
             <>
               <ToolbarIconButton onClick={handleAutoArrange} label={'\u05e1\u05d9\u05d3\u05d5\u05e8 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9 \u05dc\u05e9\u05d1\u05d5\u05e2'}>
-                <CalendarDays className="h-4 w-4 text-app-brand" />
+                <CalendarDays className="h-4 w-4 text-app-text-secondary" />
               </ToolbarIconButton>
               <ToolbarIconButton onClick={handleOpenCreateTemplate} label={'\u05de\u05e9\u05de\u05e8\u05ea \u05d7\u05d3\u05e9\u05d4'}>
                 <Plus className="h-4 w-4" />
@@ -680,16 +649,21 @@ export const CouriersShifts: React.FC = () => {
           }
         />
 
-        <InfoBar
-          leadLabel={'\u05d9\u05d5\u05dd \u05e0\u05d1\u05d7\u05e8'}
-          leadValue={selectedDayLabel}
-          items={selectedDaySummaryItems}
-        />
-
-        <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-none border-b border-[#e5e5e5] bg-white dark:border-app-border dark:bg-app-surface">
-          <div className="flex-1 overflow-x-auto overflow-y-auto bg-white overscroll-contain dark:bg-app-surface" dir="rtl">
+        {visibleShiftTemplates.length === 0 ? (
+          <div className="flex min-h-0 flex-1 flex-col bg-app-background">
+            <VercelEmptyState
+              title={'\u05d0\u05d9\u05df \u05de\u05e9\u05de\u05e8\u05d5\u05ea'}
+              description={'\u05d0\u05d9\u05df \u05de\u05e9\u05de\u05e8\u05d5\u05ea \u05dc\u05e9\u05d1\u05d5\u05e2 \u05d4\u05e0\u05d1\u05d7\u05e8.'}
+              actionLabel={'\u05de\u05e9\u05de\u05e8\u05ea \u05d7\u05d3\u05e9\u05d4'}
+              onAction={openCreateTemplate}
+            />
+          </div>
+        ) : (
+          <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-app-background px-3">
+            <div className="flex min-h-0 flex-1 overflow-hidden border border-app-nav-border bg-app-surface">
+          <div className="flex-1 overflow-x-auto overflow-y-auto bg-app-surface overscroll-contain" dir="rtl">
             <div className="w-full min-w-[700px] lg:min-w-[960px] xl:min-w-[1040px]" dir="rtl">
-              <div className="sticky top-0 z-10 grid grid-cols-7 border-b border-[#d4d4d4] bg-white dark:border-app-border dark:bg-app-surface">
+              <div className="sticky top-0 z-10 grid grid-cols-7 border-b border-app-nav-border bg-app-surface">
                 {weekDays.map(({ date, dayKey }) => {
                   const isSelected = dayKey === selectedDateKey;
                   const isToday = dayKey === todayKey;
@@ -698,39 +672,25 @@ export const CouriersShifts: React.FC = () => {
                     <button
                       key={dayKey}
                       onClick={() => setSelectedDate(date)}
-                      className={`relative border-l border-[#e5e5e5] px-3 py-3 text-center transition-colors dark:border-app-border ${
+                      className={`relative border-l border-app-nav-border px-3 py-3 text-center transition-colors ${
                         isSelected
-                          ? 'bg-[#0d0d12] text-white dark:bg-app-surface dark:text-app-text'
-                          : 'bg-[#fafafa] text-[#737373] dark:bg-app-surface dark:text-[#737373] hover:bg-[#f0f0f0] dark:hover:bg-[#161616]'
+                          ? 'bg-app-surface-raised text-app-text'
+                          : 'bg-app-surface text-app-text-secondary hover:bg-app-surface-raised'
                       }`}
                     >
                       {isSelected && (
-                        <span className="absolute bottom-0 left-0 right-0 h-[1px] bg-[#9fe870]" />
+                        <span className="absolute bottom-0 left-0 right-0 h-[1px] bg-[#ededed]" />
                       )}
                       <div className="text-[11px] font-medium">{DAY_LABELS[date.getDay() as DayOfWeek]}</div>
-                      <div className={`mt-1 text-sm font-semibold ${isSelected ? 'text-white dark:text-app-text' : ''}`}>{date.getDate()}</div>
-                      {isToday ? <div className={`mt-1 text-[10px] font-medium ${isSelected ? 'text-white/70 dark:text-app-text-secondary' : 'text-[#9fe870]'}`}>{'\u05d4\u05d9\u05d5\u05dd'}</div> : null}
+                      <div className={`mt-1 text-sm font-semibold ${isSelected ? 'text-app-text' : ''}`}>{date.getDate()}</div>
+                      {isToday ? <div className={`mt-1 text-[10px] font-medium ${isSelected ? 'text-app-text-secondary' : 'text-app-text'}`}>{'\u05d4\u05d9\u05d5\u05dd'}</div> : null}
                     </button>
                   );
                 })}
               </div>
 
               <div className="divide-y divide-[#e5e5e5] dark:divide-[#262626]">
-                {visibleShiftTemplates.length === 0 ? (
-                  <div className="flex min-h-[360px] flex-col items-center justify-center gap-4 px-6 py-16 text-center">
-                    <div className="text-base font-semibold text-[#0d0d12] dark:text-app-text">{'\u05d0\u05d9\u05df \u05e2\u05d3\u05d9\u05d9\u05df \u05de\u05e9\u05de\u05e8\u05d5\u05ea'}</div>
-                    <div className="max-w-sm text-sm text-[#737373] dark:text-app-text-secondary">
-                      {'\u05e6\u05d5\u05e8 \u05de\u05e9\u05de\u05e8\u05ea \u05e8\u05d0\u05e9\u05d5\u05e0\u05d4, \u05d4\u05d5\u05e1\u05e3 \u05dc\u05d4 \u05ea\u05d0\u05d9\u05dd, \u05d5\u05d0\u05d6 \u05ea\u05d5\u05db\u05dc \u05dc\u05d4\u05ea\u05d7\u05d9\u05dc \u05dc\u05d0\u05d9\u05d9\u05e9 \u05d0\u05d5\u05ea\u05d4 \u05dc\u05d0\u05d5\u05e8\u05da \u05db\u05dc \u05d4\u05e9\u05d1\u05d5\u05e2.'}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={openCreateTemplate}
-                      className="text-sm font-medium text-[#16a34a] transition-colors hover:text-[#15803d] dark:text-[#9fe870] dark:hover:text-[#b6f58f]"
-                    >
-                      <span>{'\u05de\u05e9\u05de\u05e8\u05ea \u05d7\u05d3\u05e9\u05d4'}</span>
-                    </button>
-                  </div>
-                ) : visibleShiftTemplates.map((template, templateIndex) => (
+                {visibleShiftTemplates.map((template, templateIndex) => (
                   <section key={template.id}>
                     <div className="relative grid grid-cols-7 border-b border-[#e5e5e5] dark:border-app-border">
                         <div
@@ -880,7 +840,9 @@ export const CouriersShifts: React.FC = () => {
               </div>
             </div>
           </div>
-        </section>
+            </div>
+          </section>
+        )}
 
       </div>
 

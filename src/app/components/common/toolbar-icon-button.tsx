@@ -17,7 +17,7 @@ export const getToolbarIconButtonClassName = (
   className?: string,
 ) =>
   joinClassNames(
-    'flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--app-radius-xs)] border transition-colors focus:outline-none focus:ring-2 focus:ring-[#ededed]/25 disabled:cursor-not-allowed disabled:opacity-40',
+    'flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--app-radius-xs)] border transition-colors focus:outline-none focus:ring-2 focus:ring-[#ededed]/25 disabled:cursor-not-allowed disabled:opacity-40',
     active
       ? 'border-app-nav-border bg-[#0A0A0A] text-app-text'
       : 'border-app-border bg-app-surface text-app-text-secondary hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#0A0A0A] dark:hover:bg-[#1A1A1A]',

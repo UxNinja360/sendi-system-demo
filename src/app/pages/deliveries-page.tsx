@@ -3,7 +3,7 @@ import { format as formatDate } from 'date-fns';
 import { useDelivery } from '../context/delivery-context-value';
 import { Delivery, DeliveryStatus } from '../types/delivery.types';
 import { DeliveriesSidePanel } from '../deliveries/deliveries-side-panel';
-import { DeliveriesTableSection } from '../deliveries/deliveries-table-section';
+import { DeliveriesVercelList } from '../deliveries/deliveries-vercel-list';
 import { DeliveriesOverlays } from '../deliveries/deliveries-overlays';
 import { ALL_COLUMNS, COLUMN_MAP } from '../deliveries/column-defs';
 import type { ColumnDef } from '../deliveries/column-defs';
@@ -20,8 +20,8 @@ import {
   SelectionActionButton,
 } from '../components/common/selection-action-bar';
 import { EntityListShell } from '../components/common/entity-list-shell';
-import { InfoBar } from '../components/common/info-bar';
 import { ENTITY_TABLE_WIDTHS } from '../components/common/entity-table-shared';
+import { addAppTopBarActionListener } from '../components/layout/app-top-bar-actions';
 import { getDeliveryCustomerCharge, sumDeliveryMoney } from '../utils/delivery-finance';
 import { DELIVERY_STORAGE_KEYS } from '../context/delivery-storage';
 import {
@@ -124,18 +124,6 @@ const STATUS_CHIP_CONFIG = [
 
 type DeliveriesOverviewStats = {
   filtered: number;
-};
-
-const DeliveriesOverviewStrip: React.FC<{
-  stats: DeliveriesOverviewStats;
-}> = ({ stats }) => {
-  return (
-    <InfoBar
-      items={[
-        { label: 'משלוחים מוצגים', value: stats.filtered.toLocaleString('he-IL') },
-      ]}
-    />
-  );
 };
 
 const getDeliveryColumnWidth = (columnId: string) => {
@@ -258,6 +246,10 @@ export const DeliveriesPage: React.FC = () => {
   const [restaurantSearch, setRestaurantSearch] = useState('');
   const [periodMode, setPeriodMode] = useState<PeriodMode>('current_month');
   const [monthAnchor, setMonthAnchor] = useState(new Date());
+
+  useEffect(() => (
+    addAppTopBarActionListener('create-delivery', () => setNewDeliveryOpen(true))
+  ), []);
 
   useEffect(() => {
     if (periodMode !== 'current_month') return;
@@ -564,11 +556,10 @@ export const DeliveriesPage: React.FC = () => {
         toolbar={
           <PageToolbar
             showBottomBorder={false}
-            primaryActionLabel="משלוח חדש"
-            onPrimaryAction={() => setNewDeliveryOpen(true)}
             headerControls={
               <ListToolbarActions
                 showSearch={false}
+                showColumnsToggle={false}
                 columnsOpen={columnsOpen}
                 onToggleColumns={() => {
                   setColumnsOpen((current) => !current);
@@ -610,24 +601,13 @@ export const DeliveriesPage: React.FC = () => {
             }
           />
         }
-        overview={
-          <DeliveriesOverviewStrip stats={filteredStats} />
-        }
       >
-            <DeliveriesTableSection
+            <DeliveriesVercelList
               filteredDeliveries={filteredDeliveries}
               emptyStateMode={emptyStateMode}
               onClearFilters={handleClearAllFilters}
               totalCount={stats.total}
-              orderedColumns={orderedColumns}
-              visibleColumns={visibleColumns}
-              getDeliveryColumnWidth={getDeliveryColumnWidth}
-              sortColumn={sortColumn}
-              sortDirection={sortDirection}
-              onSort={handleSort}
               selectedIds={selectedIds}
-              onToggleSelectAll={handleToggleSelectAll}
-              onColumnReorder={handleColumnReorder}
               couriers={state.couriers}
               calculateTimeRemaining={calculateTimeRemaining}
               formatTime={formatTime}

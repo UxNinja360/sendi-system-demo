@@ -40,14 +40,14 @@ export const ToolbarSearchControl: React.FC<ToolbarSearchControlProps> = ({
       {isSearchVisible ? (
         <div className={alwaysOpen ? 'flex min-w-0 flex-1 items-center gap-1' : 'flex items-center gap-1'}>
           <div className={alwaysOpen ? 'relative min-w-0 flex-1' : 'relative'}>
-            <Search className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#a3a3a3]" />
+            <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#a3a3a3]" />
             <input
               ref={inputRef}
               type="text"
               placeholder={placeholder}
               value={searchQuery}
               onChange={(event) => onSearchQueryChange(event.target.value)}
-              className={`${widthClass} h-9 rounded-[4px] border border-[#e5e5e5] bg-[#f5f5f5] pr-8 pl-6 text-sm text-[#0d0d12] outline-none transition-all placeholder:text-[#a3a3a3] focus:border-[#9fe870]/50 dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-app-text dark:placeholder:text-app-text-secondary`}
+              className={`${widthClass} h-10 rounded-[4px] border border-[#e5e5e5] bg-[#f5f5f5] pr-9 pl-6 text-sm text-[#0d0d12] outline-none transition-all placeholder:text-[#a3a3a3] focus:border-[#9fe870]/50 dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-app-text dark:placeholder:text-app-text-secondary`}
             />
             {searchQuery && (
               <button

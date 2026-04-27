@@ -60,7 +60,7 @@ const getOptionButtonClass = (isActive: boolean) =>
   }`;
 
 export const getListFilterButtonClass = (isActive: boolean) =>
-  `flex h-9 items-center gap-1.5 rounded-[4px] border px-3 text-sm font-medium transition-colors ${
+  `flex h-10 items-center gap-1.5 rounded-[4px] border px-3 text-sm font-medium transition-colors ${
     isActive
       ? 'border-[#9fe870]/40 bg-[#9fe870]/15 text-[#6bc84a] dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#9fe870]'
       : 'border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-app-text-secondary dark:hover:bg-[#1A1A1A]'

@@ -1,15 +1,90 @@
-import { useState } from 'react';
-import { ChevronDown, MessageSquare, MoreHorizontal } from 'lucide-react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import {
+  ChevronDown,
+  MessageSquare,
+  MoreHorizontal,
+  PackagePlus,
+  Store,
+  UserPlus,
+} from 'lucide-react';
 import { useLocation } from 'react-router';
 import { getNavItemForPath } from '../../app-navigation';
+import { AppTopBarAction, emitAppTopBarAction } from './app-top-bar-actions';
 
 const DEFAULT_WORKSPACE = 'Tel Aviv - Runners';
+
+type PageMenuAction = {
+  action: AppTopBarAction;
+  label: string;
+  icon: ReactNode;
+};
+
+const getPageMenuAction = (pathname: string): PageMenuAction | null => {
+  if (pathname === '/deliveries') {
+    return {
+      action: 'create-delivery',
+      label: 'יצירת משלוח',
+      icon: <PackagePlus className="h-4 w-4 text-app-text-secondary" />,
+    };
+  }
+
+  if (pathname === '/couriers') {
+    return {
+      action: 'create-courier',
+      label: 'הוספת שליח',
+      icon: <UserPlus className="h-4 w-4 text-app-text-secondary" />,
+    };
+  }
+
+  if (pathname === '/restaurants') {
+    return {
+      action: 'create-restaurant',
+      label: 'הוספת מסעדה',
+      icon: <Store className="h-4 w-4 text-app-text-secondary" />,
+    };
+  }
+
+  return null;
+};
 
 export const AppTopBar: React.FC = () => {
   const location = useLocation();
   const currentItem = getNavItemForPath(location.pathname);
   const pageTitle = currentItem?.label ?? 'Sendi';
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const pageMenuAction = getPageMenuAction(location.pathname);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isMenuOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (menuRef.current?.contains(target)) return;
+      setIsMenuOpen(false);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isMenuOpen]);
+
+  const handlePageMenuAction = () => {
+    if (!pageMenuAction) return;
+    emitAppTopBarAction(pageMenuAction.action);
+    setIsMenuOpen(false);
+  };
 
   return (
     <header
@@ -31,22 +106,35 @@ export const AppTopBar: React.FC = () => {
         </div>
       </div>
 
-      <div className="relative mr-auto">
+      <div ref={menuRef} className="relative mr-auto">
         <button
           type="button"
-          onClick={() => setIsFeedbackOpen((value) => !value)}
+          onClick={() => setIsMenuOpen((value) => !value)}
           className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--app-radius-sm)] text-app-text-secondary transition-colors hover:bg-app-nav-hover-bg hover:text-app-text"
           aria-label="אפשרויות"
-          aria-expanded={isFeedbackOpen}
+          aria-expanded={isMenuOpen}
         >
           <MoreHorizontal className="h-4 w-4" />
         </button>
 
-        {isFeedbackOpen ? (
+        {isMenuOpen ? (
           <div className="absolute left-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-[var(--app-radius-md)] border border-app-border bg-app-surface text-right shadow-[var(--app-shadow-panel)]">
+            {pageMenuAction ? (
+              <>
+                <button
+                  type="button"
+                  onClick={handlePageMenuAction}
+                  className="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-app-text transition-colors hover:bg-app-surface-raised"
+                >
+                  {pageMenuAction.icon}
+                  <span>{pageMenuAction.label}</span>
+                </button>
+                <div className="mx-2 border-t border-app-border" />
+              </>
+            ) : null}
             <button
               type="button"
-              onClick={() => setIsFeedbackOpen(false)}
+              onClick={() => setIsMenuOpen(false)}
               className="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-app-text transition-colors hover:bg-app-surface-raised"
             >
               <MessageSquare className="h-4 w-4 text-app-text-secondary" />

@@ -24,13 +24,15 @@ import { EntityRowActionTrigger } from '../components/common/entity-row-action-t
 import { EntityTableActionsCell, EntityTableActionsHeader, EntityTableHeaderCheckbox, EntityTableRowCheckbox } from '../components/common/entity-table-shell';
 import { EntityTableHeaderCell } from '../components/common/entity-table-header-cell';
 import { ENTITY_TABLE_DATA_CELL_CLASS, ENTITY_TABLE_ROW_CLASS, ENTITY_TABLE_WIDTHS } from '../components/common/entity-table-shared';
+import { addAppTopBarActionListener } from '../components/layout/app-top-bar-actions';
 import { ListExportDrawer } from '../components/common/list-export-drawer';
 import { type SingleSelectFilterOption } from '../components/common/list-filter-controls';
 import { ListInlineFilters } from '../components/common/list-inline-filters';
 import { ListTableSection } from '../components/common/list-table-section';
 import { ListToolbarActions } from '../components/common/list-toolbar-actions';
 import { PageToolbar } from '../components/common/page-toolbar';
-import { ToolbarPeriodControl, type PeriodMode } from '../components/common/toolbar-date-picker';
+import type { PeriodMode } from '../components/common/toolbar-date-picker';
+import { VercelEmptyState } from '../components/common/vercel-empty-state';
 import { InfoBar, type InfoBarItem } from '../components/common/info-bar';
 import {
   SelectionActionBar,
@@ -41,6 +43,7 @@ import { DELIVERY_STORAGE_KEYS } from '../context/delivery-storage';
 import { Courier } from '../types/delivery.types';
 import { getPeriodDateRange, isDeliveryInPeriod, toDateInputValue } from '../utils/date-period';
 import { exportRowsToExcel } from '../utils/export-utils';
+import { CouriersVercelList } from './couriers-vercel-list';
 
 const TEXT = {
   searchPlaceholder: '\u05d7\u05e4\u05e9\u0020\u05e9\u05dc\u05d9\u05d7\u0020\u05d0\u05d5\u0020\u05de\u05e1\u05e4\u05e8\u0020\u05d8\u05dc\u05e4\u05d5\u05df...',
@@ -252,13 +255,13 @@ export const CouriersListScreen: React.FC = () => {
     phone: '',
     vehicleType: 'אופנוע',
   });
-  const [periodMode, setPeriodMode] = useState<PeriodMode>('current_month');
-  const [monthAnchor, setMonthAnchor] = useState(() => new Date());
-  const [customStartDate, setCustomStartDate] = useState(() => {
+  const [periodMode] = useState<PeriodMode>('current_month');
+  const [monthAnchor] = useState(() => new Date());
+  const [customStartDate] = useState(() => {
     const now = new Date();
     return toDateInputValue(new Date(now.getFullYear(), now.getMonth(), 1));
   });
-  const [customEndDate, setCustomEndDate] = useState(() => toDateInputValue(new Date()));
+  const [customEndDate] = useState(() => toDateInputValue(new Date()));
   const [columnOrder, setColumnOrder] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem(COURIER_COLUMN_ORDER_KEY);
@@ -287,6 +290,10 @@ export const CouriersListScreen: React.FC = () => {
     } catch {}
     return new Set(DEFAULT_COURIER_VISIBLE_COLUMNS);
   });
+
+  useEffect(() => (
+    addAppTopBarActionListener('create-courier', () => setIsModalOpen(true))
+  ), []);
 
   const activeDeliveriesByCourier = useMemo(() => {
     const map = new Map<string, typeof state.deliveries[number]>();
@@ -825,24 +832,12 @@ export const CouriersListScreen: React.FC = () => {
         }
         toolbar={
           <PageToolbar
-            primaryActionLabel={TEXT.addCourier}
-            onPrimaryAction={() => setIsModalOpen(true)}
-            primaryActionDataOnboarding="add-courier-btn"
-            periodControl={
-              <ToolbarPeriodControl
-                periodMode={periodMode}
-                setPeriodMode={setPeriodMode}
-                monthAnchor={monthAnchor}
-                setMonthAnchor={setMonthAnchor}
-                customStartDate={customStartDate}
-                setCustomStartDate={setCustomStartDate}
-                customEndDate={customEndDate}
-                setCustomEndDate={setCustomEndDate}
-              />
-            }
+            showBottomBorder={false}
+            showPeriodControl={false}
             headerControls={
               <ListToolbarActions
                 showSearch={false}
+                showColumnsToggle={false}
                 columnsOpen={columnsOpen}
                 onToggleColumns={() => { setColumnsOpen((value) => !value); setIsExportOpen(false); }}
                 onExport={() => { setIsExportOpen((value) => !value); setColumnsOpen(false); }}
@@ -861,10 +856,69 @@ export const CouriersListScreen: React.FC = () => {
             }
           />
         }
-        overview={
-          <CourierOverviewStrip stats={stats} hasFilters={hasActiveFilters} />
-        }
       >
+            <CouriersVercelList
+              couriers={filteredCouriers}
+              selectedIds={selectedCourierIds}
+              activeDeliveriesByCourier={activeDeliveriesByCourier}
+              deliveriesCountByCourierInPeriod={deliveriesCountByCourierInPeriod}
+              onToggleSelect={handleToggleSelectCourier}
+              onOpenActionsMenu={openCourierActionsMenu}
+              onOpenContextMenu={(courier, event) => {
+                event.preventDefault();
+                setContextMenu({ x: event.clientX, y: event.clientY, courier });
+              }}
+              emptyState={
+                state.couriers.length === 0 ? (
+                  <VercelEmptyState
+                    title="אין שליחים"
+                    description="עדיין לא נוספו שליחים למערכת."
+                  />
+                ) : (
+                  <VercelEmptyState
+                    title="אין תוצאות"
+                    description={
+                      searchQuery
+                        ? `אין שליחים שתואמים לחיפוש "${searchQuery}".`
+                        : 'אין שליחים שתואמים לסינון הנוכחי.'
+                    }
+                    actionLabel="נקה סינון"
+                    onAction={handleClearAll}
+                  />
+                )
+              }
+              selectionBar={
+                <SelectionActionBar
+                  selectedCount={selectedCourierIds.size}
+                  entitySingular={'\u05e9\u05dc\u05d9\u05d7'}
+                  entityPlural={'\u05e9\u05dc\u05d9\u05d7\u05d9\u05dd'}
+                  onClear={() => setSelectedCourierIds(new Set())}
+                  actions={
+                    <>
+                      <SelectionActionButton onClick={() => handleBulkSetCourierStatus('available')}>
+                        {'\u05d4\u05e4\u05e2\u05dc'}
+                      </SelectionActionButton>
+                      <SelectionActionButton
+                        onClick={() => handleBulkSetCourierStatus('offline')}
+                        variant="neutral"
+                      >
+                        {'\u05d4\u05e9\u05d1\u05ea'}
+                      </SelectionActionButton>
+                      <SelectionActionButton onClick={handleBulkStartShift} variant="accent">
+                        {'\u05d4\u05ea\u05d7\u05dc \u05de\u05e9\u05de\u05e8\u05ea'}
+                      </SelectionActionButton>
+                      <SelectionActionButton onClick={handleBulkEndShift} variant="warning">
+                        {'\u05e1\u05d9\u05d9\u05dd \u05de\u05e9\u05de\u05e8\u05ea'}
+                      </SelectionActionButton>
+                      <SelectionActionButton onClick={handleExportVisibleCouriers} variant="outline">
+                        {TEXT.exportSelected}
+                      </SelectionActionButton>
+                    </>
+                  }
+                />
+              }
+            />
+            {false && (
             <ListTableSection
               isEmpty={filteredCouriers.length === 0}
               emptyState={
@@ -992,6 +1046,7 @@ export const CouriersListScreen: React.FC = () => {
                 </tr>
               ))}
             </ListTableSection>
+            )}
       </EntityListShell>
 
       {isModalOpen && (

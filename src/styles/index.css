@@ -101,6 +101,22 @@ body {
   background: inherit;
 }
 
+.deliveries-vercel-scroll {
+  scrollbar-width: none;
+}
+
+.deliveries-vercel-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.resource-list-scroll {
+  scrollbar-width: none;
+}
+
+.resource-list-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 /* Leaflet custom marker styles */
 .custom-marker {
   background: transparent !important;

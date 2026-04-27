@@ -297,7 +297,7 @@ export const ToolbarPeriodControl: React.FC<ToolbarPeriodControlProps> = ({
       <button
         type="button"
         onClick={() => setCalendarOpen((value) => !value)}
-        className={`flex h-9 min-w-[136px] items-center justify-center gap-2 rounded-[4px] border px-3 text-sm font-semibold transition-colors sm:min-w-[190px] ${
+        className={`flex h-10 min-w-[136px] items-center justify-center gap-2 rounded-[4px] border px-3 text-sm font-semibold transition-colors sm:min-w-[190px] ${
           periodMode === 'custom_range'
             ? 'border-app-nav-border bg-[#0A0A0A] text-app-text'
             : 'border-app-border bg-app-surface text-app-text hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#0A0A0A] dark:hover:bg-[#1A1A1A]'
@@ -412,7 +412,7 @@ export const ToolbarWeekPicker: React.FC<ToolbarWeekPickerProps> = ({
       <button
         type="button"
         onClick={() => setCalendarOpen((value) => !value)}
-        className="flex h-9 min-w-[150px] items-center justify-center gap-2 rounded-[4px] border border-app-border bg-app-surface px-3 text-sm font-semibold text-app-text transition-colors hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#0A0A0A] dark:hover:bg-[#1A1A1A] sm:min-w-[190px]"
+        className="flex h-10 min-w-[150px] items-center justify-center gap-2 rounded-[4px] border border-app-border bg-app-surface px-3 text-sm font-semibold text-app-text transition-colors hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#0A0A0A] dark:hover:bg-[#1A1A1A] sm:min-w-[190px]"
       >
         <CalendarDays className="h-4 w-4 shrink-0 text-app-text-secondary" />
         <span className="truncate">{weekLabel}</span>
@@ -426,7 +426,7 @@ export const ToolbarWeekPicker: React.FC<ToolbarWeekPickerProps> = ({
           onDateChange(new Date());
           setCalendarOpen(false);
         }}
-        className="hidden h-9 items-center rounded-[4px] border border-app-border bg-app-surface px-3 text-sm font-medium text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text dark:border-app-nav-border dark:bg-[#0A0A0A] dark:hover:bg-[#1A1A1A] sm:flex"
+        className="hidden h-10 items-center rounded-[4px] border border-app-border bg-app-surface px-3 text-sm font-medium text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text dark:border-app-nav-border dark:bg-[#0A0A0A] dark:hover:bg-[#1A1A1A] sm:flex"
       >
         היום
       </button>

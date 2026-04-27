@@ -9,9 +9,11 @@ import { saveAs } from 'file-saver';
 import { toast } from 'sonner';
 import { EntityListSidePanel } from '../components/common/entity-list-side-panel';
 import { EntityListShell } from '../components/common/entity-list-shell';
+import { addAppTopBarActionListener } from '../components/layout/app-top-bar-actions';
 import { ListExportDrawer } from '../components/common/list-export-drawer';
 import { PageToolbar } from '../components/common/page-toolbar';
-import { ToolbarPeriodControl, type PeriodMode } from '../components/common/toolbar-date-picker';
+import type { PeriodMode } from '../components/common/toolbar-date-picker';
+import { VercelEmptyState } from '../components/common/vercel-empty-state';
 import { InfoBar, type InfoBarItem } from '../components/common/info-bar';
 import {
   SelectionActionBar,
@@ -61,6 +63,7 @@ import {
   ENTITY_TABLE_WIDTHS,
 } from '../components/common/entity-table-shared';
 import { DELIVERY_STORAGE_KEYS } from '../context/delivery-storage';
+import { RestaurantsVercelList } from './restaurants-vercel-list';
 
 // ═══════════════════════════════════════
 // Types
@@ -229,13 +232,13 @@ export const RestaurantsScreen: React.FC = () => {
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [selectedRestaurantIds, setSelectedRestaurantIds] = useState<Set<string>>(new Set());
   const [columnsOpen, setColumnsOpen] = useState(false);
-  const [periodMode, setPeriodMode] = useState<PeriodMode>('current_month');
-  const [monthAnchor, setMonthAnchor] = useState(() => new Date());
-  const [customStartDate, setCustomStartDate] = useState(() => {
+  const [periodMode] = useState<PeriodMode>('current_month');
+  const [monthAnchor] = useState(() => new Date());
+  const [customStartDate] = useState(() => {
     const now = new Date();
     return toDateInputValue(new Date(now.getFullYear(), now.getMonth(), 1));
   });
-  const [customEndDate, setCustomEndDate] = useState(() => toDateInputValue(new Date()));
+  const [customEndDate] = useState(() => toDateInputValue(new Date()));
 
   // ── Column drag-and-drop ──
   const [columnOrder, setColumnOrder] = useState<string[]>(() => {
@@ -274,6 +277,10 @@ export const RestaurantsScreen: React.FC = () => {
     () => orderedCols.filter((col) => visibleColumns.has(col.id)),
     [orderedCols, visibleColumns],
   );
+
+  useEffect(() => (
+    addAppTopBarActionListener('create-restaurant', () => setIsAddModalOpen(true))
+  ), []);
 
   useEffect(() => {
     try {
@@ -731,23 +738,12 @@ export const RestaurantsScreen: React.FC = () => {
         }
         toolbar={
           <PageToolbar
-            primaryActionLabel="הוסף מסעדה"
-            onPrimaryAction={() => setIsAddModalOpen(true)}
-            periodControl={
-              <ToolbarPeriodControl
-                periodMode={periodMode}
-                setPeriodMode={setPeriodMode}
-                monthAnchor={monthAnchor}
-                setMonthAnchor={setMonthAnchor}
-                customStartDate={customStartDate}
-                setCustomStartDate={setCustomStartDate}
-                customEndDate={customEndDate}
-                setCustomEndDate={setCustomEndDate}
-              />
-            }
+            showBottomBorder={false}
+            showPeriodControl={false}
             headerControls={
               <ListToolbarActions
                 showSearch={false}
+                showColumnsToggle={false}
                 columnsOpen={columnsOpen}
                 onExport={() => { setIsExportOpen((v) => !v); setColumnsOpen(false); }}
                 onToggleColumns={() => { setColumnsOpen((value) => !value); setIsExportOpen(false); }}
@@ -765,13 +761,73 @@ export const RestaurantsScreen: React.FC = () => {
             }
           />
         }
-        overview={
-          <RestaurantOverviewStrip stats={stats} hasSearch={Boolean(searchQuery.trim())} />
-        }
       >
 
         {/* Content */}
             {/* Table / Empty state */}
+            <RestaurantsVercelList
+              restaurants={filteredRestaurants}
+              selectedIds={selectedRestaurantIds}
+              onToggleSelect={handleToggleSelectRestaurant}
+              onOpenActionsMenu={(restaurant, event) => {
+                event.stopPropagation();
+                const rect = event.currentTarget.getBoundingClientRect();
+                setContextMenuPos({ x: Math.max(8, rect.left - 132), y: rect.bottom + 8 });
+                setOpenActionsRestaurantId(restaurant.restaurantId);
+              }}
+              onOpenContextMenu={(restaurant, event) => {
+                event.preventDefault();
+                setContextMenuPos({ x: event.clientX, y: event.clientY });
+                setOpenActionsRestaurantId(restaurant.restaurantId);
+              }}
+              emptyState={
+                restaurants.length === 0 ? (
+                  <VercelEmptyState
+                    title="אין מסעדות"
+                    description="עדיין לא נוספו מסעדות למערכת."
+                  />
+                ) : (
+                  <VercelEmptyState
+                    title="אין תוצאות"
+                    description={
+                      searchQuery
+                        ? `אין מסעדות שתואמות לחיפוש "${searchQuery}".`
+                        : 'אין מסעדות שתואמות לסינון הנוכחי.'
+                    }
+                    actionLabel="נקה סינון"
+                    onAction={handleClearAll}
+                  />
+                )
+              }
+              selectionBar={
+                <SelectionActionBar
+                  selectedCount={selectedRestaurantIds.size}
+                  entitySingular={'\u05de\u05e1\u05e2\u05d3\u05d4'}
+                  entityPlural={'\u05de\u05e1\u05e2\u05d3\u05d5\u05ea'}
+                  onClear={() => setSelectedRestaurantIds(new Set())}
+                  actions={
+                    <>
+                      <SelectionActionButton onClick={() => handleBulkSetRestaurantsActive(true)}>
+                        {'\u05d4\u05e4\u05e2\u05dc'}
+                      </SelectionActionButton>
+                      <SelectionActionButton
+                        onClick={() => handleBulkSetRestaurantsActive(false)}
+                        variant="neutral"
+                      >
+                        {'\u05d4\u05e9\u05d1\u05ea'}
+                      </SelectionActionButton>
+                      <SelectionActionButton
+                        onClick={handleExportVisibleRestaurants}
+                        variant="outline"
+                      >
+                        {'\u05d9\u05d9\u05e6\u05d5\u05d0 \u05e0\u05d1\u05d7\u05e8\u05d5\u05ea'}
+                      </SelectionActionButton>
+                    </>
+                  }
+                />
+              }
+            />
+            {false && (
             <ListTableSection
               isEmpty={filteredRestaurants.length === 0}
               emptyState={
@@ -946,6 +1002,7 @@ export const RestaurantsScreen: React.FC = () => {
                 </tr>
               ))}
             </ListTableSection>
+            )}
       </EntityListShell>
 
       <EntityActionMenuOverlay
