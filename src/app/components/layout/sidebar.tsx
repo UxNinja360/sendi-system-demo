@@ -118,6 +118,30 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       return false;
     }
   });
+  const [isLegacySectionOpen, setIsLegacySectionOpen] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sidebar-legacy-open');
+      return saved ? JSON.parse(saved) : true;
+    } catch {
+      return true;
+    }
+  });
+  const [isExperimentsSectionOpen, setIsExperimentsSectionOpen] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sidebar-experiments-open');
+      return saved ? JSON.parse(saved) : true;
+    } catch {
+      return true;
+    }
+  });
+  const [isOperationsToolsSectionOpen, setIsOperationsToolsSectionOpen] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sidebar-operations-tools-open');
+      return saved ? JSON.parse(saved) : true;
+    } catch {
+      return true;
+    }
+  });
 
   const isExpanded = !isCollapsed || !isDesktop;
   const activeCouriersCount = state.couriers.filter((courier) => courier.status !== 'offline').length;
@@ -148,6 +172,73 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       // Storage can fail in restricted contexts; the in-memory state is enough.
     }
   }, [isCollapsed]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('sidebar-legacy-open', JSON.stringify(isLegacySectionOpen));
+    } catch {
+      // Storage can fail in restricted contexts; the in-memory state is enough.
+    }
+  }, [isLegacySectionOpen]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('sidebar-experiments-open', JSON.stringify(isExperimentsSectionOpen));
+    } catch {
+      // Storage can fail in restricted contexts; the in-memory state is enough.
+    }
+  }, [isExperimentsSectionOpen]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('sidebar-operations-tools-open', JSON.stringify(isOperationsToolsSectionOpen));
+    } catch {
+      // Storage can fail in restricted contexts; the in-memory state is enough.
+    }
+  }, [isOperationsToolsSectionOpen]);
+
+  const renderCollapsibleSection = (
+    section: (typeof SIDEBAR_NAV_SECTIONS)[number],
+    isOpen: boolean,
+    setIsOpen: React.Dispatch<React.SetStateAction<boolean>>,
+  ) => (
+    <>
+      {isExpanded ? (
+        <button
+          type="button"
+          onClick={() => setIsOpen((value) => !value)}
+          className="mx-2 mb-1 flex h-9 w-[calc(100%-1rem)] items-center gap-3 rounded-[var(--app-radius-sm)] px-4 text-right text-sm font-medium text-app-text-secondary transition-colors hover:bg-app-nav-hover-bg hover:text-app-text"
+          aria-expanded={isOpen}
+        >
+          <ChevronLeft
+            className={`h-3.5 w-3.5 shrink-0 transition-transform ${
+              isOpen ? '-rotate-90' : ''
+            }`}
+          />
+          <span className="min-w-0 flex-1 truncate">{section.label}</span>
+        </button>
+      ) : (
+        <SidebarIconTooltip
+          label={section.label}
+          className="mx-2 mb-1 flex h-9 items-center justify-center rounded-[var(--app-radius-sm)] text-app-text-secondary hover:bg-app-nav-hover-bg hover:text-app-text"
+        >
+          <button
+            type="button"
+            onClick={() => setIsOpen((value) => !value)}
+            aria-label={section.label}
+            aria-expanded={isOpen}
+          >
+            <ChevronLeft
+              className={`h-4 w-4 transition-transform ${
+                isOpen ? '-rotate-90' : ''
+              }`}
+            />
+          </button>
+        </SidebarIconTooltip>
+      )}
+      {isOpen && section.items.map(renderNavItem)}
+    </>
+  );
 
   const toggleMobileMenu = useCallback(() => {
     setIsCollapsed((prev) => !prev);
@@ -205,7 +296,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
         aria-label={item.label}
       >
         {isExpanded ? (
-          <span className="flex items-center gap-3 px-4 py-2.5">
+          <span className="flex h-9 items-center gap-3 px-4">
             <Icon size={19} className="shrink-0 stroke-[1.8px]" />
             <span className="min-w-0 flex-1 truncate text-sm font-medium">{item.label}</span>
             {badge && (
@@ -223,7 +314,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
         ) : (
           <SidebarIconTooltip
             label={badge ? `${item.label} • ${badge}` : item.label}
-            className="flex items-center justify-center py-2.5"
+            className="flex h-9 items-center justify-center"
           >
             <Icon size={19} className="stroke-[1.8px]" />
           </SidebarIconTooltip>
@@ -303,7 +394,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
           isCollapsed ? 'translate-x-0' : 'translate-x-full md:translate-x-0'
         }`}
         style={{
-          width: isDesktop ? (isCollapsed ? '60px' : '240px') : '260px',
+          width: isDesktop ? (isCollapsed ? '60px' : '256px') : '260px',
           transition: isDesktop
             ? 'width 300ms cubic-bezier(0.4, 0, 0.2, 1)'
             : 'transform 300ms cubic-bezier(0.4, 0, 0.2, 1)',
@@ -379,10 +470,31 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
         >
           {SIDEBAR_NAV_SECTIONS.map((section, sectionIndex) => (
             <React.Fragment key={section.id}>
-              {sectionIndex > 0 && (
+              {sectionIndex > 0 &&
+                section.id !== 'legacy' &&
+                !(
+                  SIDEBAR_NAV_SECTIONS[sectionIndex - 1]?.id === 'operationsTools' &&
+                  section.id === 'experiments'
+                ) && (
                 <div className="mx-4 my-2 border-t border-app-nav-border" />
               )}
-              {section.items.map(renderNavItem)}
+              {section.id === 'experiments' ? (
+                renderCollapsibleSection(
+                  section,
+                  isExperimentsSectionOpen,
+                  setIsExperimentsSectionOpen,
+                )
+              ) : section.id === 'operationsTools' ? (
+                renderCollapsibleSection(
+                  section,
+                  isOperationsToolsSectionOpen,
+                  setIsOperationsToolsSectionOpen,
+                )
+              ) : section.id === 'legacy' ? (
+                renderCollapsibleSection(section, isLegacySectionOpen, setIsLegacySectionOpen)
+              ) : (
+                section.items.map(renderNavItem)
+              )}
             </React.Fragment>
           ))}
         </div>

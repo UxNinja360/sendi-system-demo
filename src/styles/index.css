@@ -30,7 +30,7 @@ body {
 }
 
 body {
-  background: #0a0a0a;
+  background: var(--app-background);
 }
 
 .app-shell-height {

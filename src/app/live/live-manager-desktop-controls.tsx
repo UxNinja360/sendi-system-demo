@@ -169,7 +169,7 @@ export const LiveManagerDesktopControls: React.FC<LiveManagerControlsProps> = ({
       </div>
 
       <div
-        className="mt-2 flex items-center justify-start gap-2 overflow-x-auto pb-1"
+        className="mt-4 flex items-center justify-start gap-2 overflow-x-auto pb-1"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         <style>{`

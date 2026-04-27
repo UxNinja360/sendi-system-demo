@@ -3,9 +3,11 @@ import { AppLayout } from './components/layout/app-layout';
 import { LoginPage } from './pages/login-page';
 import { NotFoundPage } from './pages/not-found-page';
 import { Dashboard } from './pages/dashboard';
+import { DashboardLegacy } from './pages/dashboard-legacy';
 import { WalletPage } from './pages/wallet-page';
 import { LiveManager } from './pages/live-manager';
 import { DeliveriesPage } from './pages/deliveries-page';
+import { DeliveriesPageLegacy } from './pages/deliveries-page-legacy';
 import { DispatchLabPage } from './pages/dispatch-lab-page';
 import { ExceptionsLabPage } from './pages/exceptions-lab-page';
 import { ReportsPage } from './pages/reports-page';
@@ -14,7 +16,9 @@ import { LogPage } from './pages/log-page';
 import { DeliveryBalancePage } from './pages/delivery-balance-page';
 import { CouriersPage } from './pages/couriers-page';
 import { CouriersListPage } from './pages/couriers-list-page';
+import { CouriersListPageLegacy } from './pages/couriers-list-page-legacy';
 import { RestaurantsPage } from './pages/restaurants-page';
+import { RestaurantsPageLegacy } from './pages/restaurants-page-legacy';
 import { CustomersPage } from './pages/customers-page';
 import { DeliveryDetailsPage } from './pages/delivery-details-page';
 import { RestaurantDetailsPage } from './pages/restaurant-details-page';
@@ -57,6 +61,22 @@ export const router = createBrowserRouter([
       {
         path: routePath('dashboard'),
         element: <Dashboard />,
+      },
+      {
+        path: routePath('legacy-dashboard'),
+        element: <DashboardLegacy />,
+      },
+      {
+        path: routePath('legacy-deliveries'),
+        element: <DeliveriesPageLegacy />,
+      },
+      {
+        path: routePath('legacy-couriers'),
+        element: <CouriersListPageLegacy />,
+      },
+      {
+        path: routePath('legacy-restaurants'),
+        element: <RestaurantsPageLegacy />,
       },
       {
         path: routePath('live'),

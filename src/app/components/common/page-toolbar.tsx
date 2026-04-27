@@ -12,6 +12,7 @@ type PageToolbarProps = {
   primaryActionLabel?: string;
   onPrimaryAction?: () => void;
   primaryActionDataOnboarding?: string;
+  showBottomBorder?: boolean;
   showPeriodControl?: boolean;
   periodControl?: React.ReactNode;
   controls?: React.ReactNode;
@@ -29,6 +30,7 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
   primaryActionLabel,
   onPrimaryAction,
   primaryActionDataOnboarding,
+  showBottomBorder = true,
   showPeriodControl = true,
   periodControl,
   controls,
@@ -105,7 +107,11 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
   return (
     <>
       {hasToolbarRow ? (
-        <div className="app-toolbar-shell sticky top-0 z-20 shrink-0 border-b border-[#e5e5e5] bg-white dark:border-app-nav-border dark:bg-[#000000]">
+        <div
+          className={`app-toolbar-shell sticky top-0 z-20 shrink-0 bg-white dark:bg-[#000000] ${
+            showBottomBorder ? 'border-b border-[#e5e5e5] dark:border-app-nav-border' : ''
+          }`.trim()}
+        >
           <div className="app-toolbar-row overflow-visible px-3 py-2.5">
             <div className="flex w-full min-w-0 flex-nowrap items-center gap-1.5">
               {renderedPeriodControl ? (

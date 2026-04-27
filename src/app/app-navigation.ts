@@ -1,4 +1,12 @@
-export type AppNavSectionId = 'core' | 'operations' | 'experiments' | 'data' | 'business' | 'settings';
+export type AppNavSectionId =
+  | 'core'
+  | 'operations'
+  | 'operationsTools'
+  | 'experiments'
+  | 'data'
+  | 'legacy'
+  | 'business'
+  | 'settings';
 
 export type AppNavIconKey =
   | 'activity'
@@ -58,6 +66,50 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
     label: '\u05d3\u05e9\u05d1\u05d5\u05e8\u05d3',
     section: 'core',
     icon: 'layoutDashboard',
+    showInSidebar: true,
+    managedScroll: true,
+    exact: true,
+  },
+  {
+    id: 'legacy-dashboard',
+    path: '/legacy/dashboard',
+    routePath: 'legacy/dashboard',
+    label: '\u05d3\u05e9\u05d1\u05d5\u05e8\u05d3 \u05d9\u05e9\u05df',
+    section: 'legacy',
+    icon: 'layoutDashboard',
+    showInSidebar: true,
+    managedScroll: true,
+    exact: true,
+  },
+  {
+    id: 'legacy-deliveries',
+    path: '/legacy/deliveries',
+    routePath: 'legacy/deliveries',
+    label: '\u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd \u05d9\u05e9\u05df',
+    section: 'legacy',
+    icon: 'package',
+    showInSidebar: true,
+    managedScroll: true,
+    exact: true,
+  },
+  {
+    id: 'legacy-couriers',
+    path: '/legacy/couriers',
+    routePath: 'legacy/couriers',
+    label: '\u05e9\u05dc\u05d9\u05d7\u05d9\u05dd \u05d9\u05e9\u05df',
+    section: 'legacy',
+    icon: 'bike',
+    showInSidebar: true,
+    managedScroll: true,
+    exact: true,
+  },
+  {
+    id: 'legacy-restaurants',
+    path: '/legacy/restaurants',
+    routePath: 'legacy/restaurants',
+    label: '\u05de\u05e1\u05e2\u05d3\u05d5\u05ea \u05d9\u05e9\u05df',
+    section: 'legacy',
+    icon: 'store',
     showInSidebar: true,
     managedScroll: true,
     exact: true,
@@ -125,7 +177,7 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
     path: '/couriers/shifts',
     routePath: 'couriers/shifts',
     label: '\u05de\u05e9\u05de\u05e8\u05d5\u05ea',
-    section: 'operations',
+    section: 'data',
     icon: 'calendar',
     showInSidebar: true,
     managedScroll: true,
@@ -147,7 +199,7 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
     path: '/zones',
     routePath: 'zones',
     label: '\u05d0\u05d6\u05d5\u05e8\u05d9 \u05de\u05e9\u05dc\u05d5\u05d7',
-    section: 'operations',
+    section: 'operationsTools',
     icon: 'map',
     showInSidebar: true,
     managedScroll: true,
@@ -158,7 +210,7 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
     path: '/distance-pricing',
     routePath: 'distance-pricing',
     label: '\u05ea\u05de\u05d7\u05d5\u05e8 \u05dc\u05e4\u05d9 \u05de\u05e8\u05d7\u05e7',
-    section: 'operations',
+    section: 'operationsTools',
     icon: 'ruler',
     showInSidebar: true,
     managedScroll: true,
@@ -169,7 +221,7 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
     path: '/hours',
     routePath: 'hours',
     label: '\u05e9\u05e2\u05d5\u05ea \u05e4\u05e2\u05d9\u05dc\u05d5\u05ea',
-    section: 'operations',
+    section: 'operationsTools',
     icon: 'clock',
     showInSidebar: true,
     managedScroll: true,
@@ -191,7 +243,7 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
     path: '/performance',
     routePath: 'performance',
     label: '\u05d1\u05d9\u05e6\u05d5\u05e2\u05d9\u05dd',
-    section: 'data',
+    section: 'legacy',
     icon: 'trendingUp',
     showInSidebar: true,
     managedScroll: true,
@@ -202,7 +254,7 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
     path: '/log',
     routePath: 'log',
     label: '\u05d9\u05d5\u05de\u05df \u05e4\u05e2\u05d5\u05dc\u05d5\u05ea',
-    section: 'data',
+    section: 'experiments',
     icon: 'fileText',
     showInSidebar: true,
     managedScroll: true,
@@ -260,9 +312,19 @@ export const SIDEBAR_NAV_SECTIONS: AppNavSection[] = [
     items: visibleSidebarItems.filter((item) => item.section === 'data'),
   },
   {
+    id: 'operationsTools',
+    label: '\u05ea\u05e4\u05e2\u05d5\u05dc',
+    items: visibleSidebarItems.filter((item) => item.section === 'operationsTools'),
+  },
+  {
     id: 'experiments',
-    label: '\u05e0\u05e1\u05d9\u05d5\u05e0\u05d5\u05ea',
+    label: '\u05e2\u05de\u05d5\u05d3\u05d9 \u05e0\u05d9\u05e1\u05d9\u05d5\u05df',
     items: visibleSidebarItems.filter((item) => item.section === 'experiments'),
+  },
+  {
+    id: 'legacy',
+    label: '\u05e2\u05de\u05d5\u05d3\u05d9\u05dd \u05d9\u05e9\u05e0\u05d9\u05dd',
+    items: visibleSidebarItems.filter((item) => item.section === 'legacy'),
   },
 ];
 

@@ -34,7 +34,6 @@ import {
 
 type ReportTemplateId = 'restaurantBilling' | 'courierPayout' | 'companySummary';
 type ReportEntityType = 'couriers' | 'restaurants';
-type ReportListFilter = 'all' | 'billable' | 'delivered' | 'cancelled';
 
 const buildShiftBounds = (dateKey: string, startTime: string, endTime: string) => {
   const [year, month, day] = dateKey.split('-').map(Number);
@@ -141,13 +140,6 @@ const reportTemplates: Array<{
   },
 ];
 
-const reportListFilters: Array<{ id: ReportListFilter; label: string }> = [
-  { id: 'all', label: 'הכל' },
-  { id: 'billable', label: 'לחיוב' },
-  { id: 'delivered', label: 'נמסרו' },
-  { id: 'cancelled', label: 'בוטלו' },
-];
-
 const MetricCard: React.FC<{
   icon: React.ReactNode;
   label: string;
@@ -233,7 +225,6 @@ export const ReportsPage: React.FC = () => {
   const [activeReportId, setActiveReportId] =
     React.useState<ReportTemplateId>('restaurantBilling');
   const [reportSearchQuery, setReportSearchQuery] = React.useState('');
-  const [reportListFilter, setReportListFilter] = React.useState<ReportListFilter>('all');
   const [exportSelectedIds, setExportSelectedIds] = React.useState<string[]>([]);
   const [exportDropdownOpen, setExportDropdownOpen] = React.useState(false);
   const exportDropdownRef = React.useRef<HTMLDivElement>(null);
@@ -249,7 +240,7 @@ export const ReportsPage: React.FC = () => {
 
   React.useEffect(() => {
     setExportSelectedIds([]);
-  }, [periodMode, monthAnchor, customStartDate, customEndDate, reportSearchQuery, reportListFilter]);
+  }, [periodMode, monthAnchor, customStartDate, customEndDate, reportSearchQuery]);
 
   React.useEffect(() => {
     const handleClick = (event: MouseEvent) => {
@@ -456,20 +447,9 @@ export const ReportsPage: React.FC = () => {
 
   const normalizedReportSearch = reportSearchQuery.trim().toLowerCase();
 
-  const matchesReportFilter = React.useCallback(
-    (report: { creditCount: number; deliveredCount: number; cancelledCount: number }) => {
-      if (reportListFilter === 'billable') return report.creditCount > 0;
-      if (reportListFilter === 'delivered') return report.deliveredCount > 0;
-      if (reportListFilter === 'cancelled') return report.cancelledCount > 0;
-      return true;
-    },
-    [reportListFilter],
-  );
-
   const filteredCourierReports = React.useMemo(
     () =>
       courierReports.filter((report) => {
-        if (!matchesReportFilter(report)) return false;
         if (!normalizedReportSearch) return true;
 
         return [report.courier.name, report.courier.phone, report.courier.vehicleType]
@@ -478,13 +458,12 @@ export const ReportsPage: React.FC = () => {
           .toLowerCase()
           .includes(normalizedReportSearch);
       }),
-    [courierReports, matchesReportFilter, normalizedReportSearch],
+    [courierReports, normalizedReportSearch],
   );
 
   const filteredRestaurantReports = React.useMemo(
     () =>
       restaurantReports.filter((report) => {
-        if (!matchesReportFilter(report)) return false;
         if (!normalizedReportSearch) return true;
 
         return [
@@ -498,7 +477,7 @@ export const ReportsPage: React.FC = () => {
           .toLowerCase()
           .includes(normalizedReportSearch);
       }),
-    [matchesReportFilter, normalizedReportSearch, restaurantReports],
+    [normalizedReportSearch, restaurantReports],
   );
 
   const { handleExportCombined, handleExportSeparate } = useReportsExport({
@@ -528,19 +507,6 @@ export const ReportsPage: React.FC = () => {
       : exportSelectedIds.length === exportOptions.length
         ? `כל ה${entityLabel} (${exportSelectedIds.length})`
         : `${exportSelectedIds.length} נבחרו`;
-
-  const activeReportTotal =
-    activeEntityType === 'couriers'
-      ? courierReports.length
-      : activeEntityType === 'restaurants'
-        ? restaurantReports.length
-        : 0;
-  const activeFilteredTotal =
-    activeEntityType === 'couriers'
-      ? filteredCourierReports.length
-      : activeEntityType === 'restaurants'
-        ? filteredRestaurantReports.length
-        : 0;
 
   const reportMetrics =
     activeReportId === 'restaurantBilling'
@@ -851,59 +817,16 @@ export const ReportsPage: React.FC = () => {
             </section>
 
             <section className="min-w-0 overflow-hidden rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface">
-              <div className="flex flex-col gap-3 border-b border-app-border px-4 py-3 xl:flex-row xl:items-center xl:justify-between">
-                <div className="min-w-0">
-                  <div className="text-xs font-semibold text-app-text-muted">
-                    פירוט והפקה
-                  </div>
-                  <h2 className="mt-1 text-sm font-semibold text-app-text">
-                    {activeTemplate.title}
-                  </h2>
-                  <p className="mt-0.5 text-xs text-app-text-secondary">
-                    {activeReportId === 'restaurantBilling'
-                      ? 'פירוט למסעדות לפי קרדיטים שנוצלו וסכומי חיוב.'
-                      : activeReportId === 'courierPayout'
-                        ? 'פירוט לשליחים לפי משמרות, משלוחים ותשלום בסיס.'
-                        : 'סיכום קרדיטים, פעילות ופערי התחשבנות לחברת המשלוחים.'}
-                  </p>
-                  {activeEntityType ? (
-                    <div className="mt-2 text-xs text-app-text-muted">
-                      {activeFilteredTotal.toLocaleString('he-IL')} מתוך {activeReportTotal.toLocaleString('he-IL')} מוצגים · הייצוא משתמש ברשימה המסוננת
-                    </div>
-                  ) : null}
-                  {activeEntityType ? (
-                    <div className="mt-3 flex max-w-full flex-wrap items-center gap-1.5">
-                      <span className="ml-1 text-xs font-medium text-app-text-muted">
-                        סינון
-                      </span>
-                      {reportListFilters.map((filter) => (
-                        <button
-                          key={filter.id}
-                          type="button"
-                          onClick={() => setReportListFilter(filter.id)}
-                          className={`inline-flex h-7 items-center rounded-[var(--app-radius-xs)] border px-2.5 text-xs font-semibold transition-colors ${
-                            reportListFilter === filter.id
-                              ? 'border-app-brand/40 bg-app-brand-subtle text-app-brand-text'
-                              : 'border-transparent text-app-text-secondary hover:border-app-border hover:bg-app-surface-inset hover:text-app-text'
-                          }`}
-                        >
-                          {filter.label}
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-                <div className="flex max-w-full flex-wrap items-center gap-2">
-                  {exportActions}
-                  <button
-                    type="button"
-                    onClick={handlePrintPdf}
-                    className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-[var(--app-radius-xs)] border border-app-border bg-app-surface px-3 text-sm font-medium text-app-text-secondary transition-colors hover:bg-app-surface-raised"
-                  >
-                    <FileText className="h-3.5 w-3.5 text-app-warning-text" />
-                    PDF
-                  </button>
-                </div>
+              <div className="flex flex-wrap items-center justify-end gap-2 border-b border-app-border px-4 py-3">
+                {exportActions}
+                <button
+                  type="button"
+                  onClick={handlePrintPdf}
+                  className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-[var(--app-radius-xs)] border border-app-border bg-app-surface px-3 text-sm font-medium text-app-text-secondary transition-colors hover:bg-app-surface-raised"
+                >
+                  <FileText className="h-3.5 w-3.5 text-app-warning-text" />
+                  PDF
+                </button>
               </div>
 
                 {activeReportId === 'companySummary' ? (

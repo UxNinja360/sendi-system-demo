@@ -196,7 +196,7 @@ const getDeliveryColumnWidth = (columnId: string) => {
   }
 };
 
-export const DeliveriesPage: React.FC = () => {
+export const DeliveriesPageLegacy: React.FC = () => {
   const { state, updateDelivery, dispatch, unassignCourier, assignCourier } = useDelivery();
   const {
     searchQuery,
@@ -563,7 +563,6 @@ export const DeliveriesPage: React.FC = () => {
         }
         toolbar={
           <PageToolbar
-            showBottomBorder={false}
             primaryActionLabel="משלוח חדש"
             onPrimaryAction={() => setNewDeliveryOpen(true)}
             headerControls={
