@@ -189,7 +189,7 @@ const ReportSwitchButton: React.FC<{
     onClick={onClick}
     className={`inline-flex h-10 min-w-0 items-center justify-center gap-2 rounded-[var(--app-radius-xs)] px-3 text-sm font-semibold transition-colors ${
       active
-        ? 'bg-app-brand text-app-text'
+        ? 'bg-app-surface-raised text-app-text'
         : 'text-app-text-secondary hover:bg-app-surface-raised hover:text-app-text'
     }`}
   >
