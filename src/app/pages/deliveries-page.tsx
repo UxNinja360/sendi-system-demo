@@ -5,6 +5,7 @@ import { Delivery, DeliveryStatus } from '../types/delivery.types';
 import { DeliveriesSidePanel } from '../deliveries/deliveries-side-panel';
 import { DeliveriesVercelList } from '../deliveries/deliveries-vercel-list';
 import { DeliveriesOverlays } from '../deliveries/deliveries-overlays';
+import { DeliveriesCommandSearch } from '../deliveries/deliveries-command-search';
 import { ALL_COLUMNS, COLUMN_MAP } from '../deliveries/column-defs';
 import type { ColumnDef } from '../deliveries/column-defs';
 import { toast } from 'sonner';
@@ -242,8 +243,6 @@ export const DeliveriesPage: React.FC = () => {
   const [exportOpen, setExportOpen] = useState(false);
   const [newDeliveryOpen, setNewDeliveryOpen] = useState(false);
   const [columnsOpen, setColumnsOpen] = useState(false);
-  const [courierSearch, setCourierSearch] = useState('');
-  const [restaurantSearch, setRestaurantSearch] = useState('');
   const [periodMode, setPeriodMode] = useState<PeriodMode>('current_month');
   const [monthAnchor, setMonthAnchor] = useState(new Date());
 
@@ -484,50 +483,12 @@ export const DeliveriesPage: React.FC = () => {
         showSearch: false,
         setCurrentPage,
       },
-      {
-        key: 'restaurants',
-        kind: 'multi-select' as const,
-        selectedValues: selectedRestaurants,
-        setSelectedValues: setSelectedRestaurants,
-        toggleValue: toggleRestaurant,
-        options: restaurantOptions,
-        searchValue: restaurantSearch,
-        setSearchValue: setRestaurantSearch,
-        defaultLabel: 'מסעדה',
-        pluralLabel: 'מסעדות',
-        placeholder: 'חפש מסעדה...',
-        setCurrentPage,
-      },
-      {
-        key: 'couriers',
-        kind: 'multi-select' as const,
-        selectedValues: selectedCouriers,
-        setSelectedValues: setSelectedCouriers,
-        toggleValue: toggleCourier,
-        options: courierOptions,
-        searchValue: courierSearch,
-        setSearchValue: setCourierSearch,
-        defaultLabel: 'שליח',
-        pluralLabel: 'שליחים',
-        placeholder: 'חפש שליח...',
-        setCurrentPage,
-      },
     ],
     [
-      courierOptions,
-      courierSearch,
       deliveryStatusOptions,
-      restaurantOptions,
-      restaurantSearch,
-      selectedCouriers,
-      selectedRestaurants,
       setCurrentPage,
-      setSelectedCouriers,
-      setSelectedRestaurants,
       setStatusFilters,
       statusFilters,
-      toggleCourier,
-      toggleRestaurant,
       toggleStatusFilter,
     ],
   );
@@ -590,13 +551,18 @@ export const DeliveriesPage: React.FC = () => {
               <ListInlineFilters filters={deliveryInlineFilters} />
             }
             actions={
-              <ListToolbarActions
+              <DeliveriesCommandSearch
                 searchQuery={searchQuery}
                 onSearchQueryChange={setSearchQuery}
-                searchPlaceholder="חפש משלוח..."
-                searchWidthClass="w-48"
-                showColumnsToggle={false}
-                showExportButton={false}
+                restaurantOptions={restaurantOptions}
+                selectedRestaurants={selectedRestaurants}
+                setSelectedRestaurants={setSelectedRestaurants}
+                toggleRestaurant={toggleRestaurant}
+                courierOptions={courierOptions}
+                selectedCouriers={selectedCouriers}
+                setSelectedCouriers={setSelectedCouriers}
+                toggleCourier={toggleCourier}
+                setCurrentPage={setCurrentPage}
               />
             }
           />

@@ -130,7 +130,7 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
         ) : null}
       </button>
 
-      <div className="hidden md:contents">
+      <div className="hidden min-w-0 shrink-0 flex-nowrap items-center gap-1 md:flex">
         {filters.map((filter) =>
           isMultiSelectFilter(filter) ? (
             <ListMultiSelectFilter
@@ -145,11 +145,7 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
 
                 setOpenFilterKey(resolvedOpen ? filter.key : null);
               }}
-              closeOtherMenus={() => {
-                setOpenFilterKey((current) =>
-                  current === filter.key ? current : null,
-                );
-              }}
+              closeOtherMenus={() => setOpenFilterKey(null)}
               selectedValues={filter.selectedValues}
               setSelectedValues={filter.setSelectedValues}
               toggleValue={filter.toggleValue}
@@ -176,11 +172,7 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
 
                 setOpenFilterKey(resolvedOpen ? filter.key : null);
               }}
-              closeOtherMenus={() => {
-                setOpenFilterKey((current) =>
-                  current === filter.key ? current : null,
-                );
-              }}
+              closeOtherMenus={() => setOpenFilterKey(null)}
               value={filter.value}
               onChange={filter.onChange}
               options={filter.options}

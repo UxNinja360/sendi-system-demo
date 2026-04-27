@@ -121,14 +121,14 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
               ) : null}
               {actions ? (
                 <div
-                  className={`flex min-w-0 flex-1 flex-nowrap items-center gap-1 ${actionsClassName}`.trim()}
+                  className={`flex min-w-0 flex-1 basis-0 flex-nowrap items-center gap-1 ${actionsClassName}`.trim()}
                 >
                   {actions}
                 </div>
               ) : null}
               {controls ? (
                 <div
-                  className={`flex max-w-full shrink-0 flex-nowrap items-center gap-1 ${controlsClassName}`.trim()}
+                  className={`flex max-w-full shrink-0 basis-auto flex-nowrap items-center gap-1 ${controlsClassName}`.trim()}
                 >
                   {controls}
                 </div>
