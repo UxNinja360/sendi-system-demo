@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import {
   Bike,
   Clock,
+  Clock3,
   FileSpreadsheet,
   FileText,
   LogOut,
@@ -26,11 +27,10 @@ import { EntityTableHeaderCell } from '../components/common/entity-table-header-
 import { ENTITY_TABLE_DATA_CELL_CLASS, ENTITY_TABLE_ROW_CLASS, ENTITY_TABLE_WIDTHS } from '../components/common/entity-table-shared';
 import { addAppTopBarActionListener } from '../components/layout/app-top-bar-actions';
 import { ListExportDrawer } from '../components/common/list-export-drawer';
-import { type SingleSelectFilterOption } from '../components/common/list-filter-controls';
-import { ListInlineFilters } from '../components/common/list-inline-filters';
 import { ListTableSection } from '../components/common/list-table-section';
 import { ListToolbarActions } from '../components/common/list-toolbar-actions';
 import { PageToolbar } from '../components/common/page-toolbar';
+import { ToolbarIconButton } from '../components/common/toolbar-icon-button';
 import type { PeriodMode } from '../components/common/toolbar-date-picker';
 import { VercelEmptyState } from '../components/common/vercel-empty-state';
 import { InfoBar, type InfoBarItem } from '../components/common/info-bar';
@@ -114,19 +114,6 @@ const DEFAULT_COURIER_VISIBLE_COLUMNS: CourierColumnId[] = [
   'availability',
   'phone',
   'totalDeliveries',
-];
-
-const COURIER_STATUS_FILTER_OPTIONS: SingleSelectFilterOption[] = [
-  { id: 'all', label: 'סטטוס' },
-  { id: 'available', label: 'זמין' },
-  { id: 'busy', label: 'תפוס' },
-  { id: 'offline', label: 'לא מחובר' },
-];
-
-const COURIER_DELIVERY_FILTER_OPTIONS: SingleSelectFilterOption[] = [
-  { id: 'all', label: 'משלוחים' },
-  { id: 'with_delivery', label: 'עם משלוח פעיל' },
-  { id: 'without_delivery', label: 'ללא משלוח' },
 ];
 
 const COURIER_COLUMNS: { id: CourierColumnId; label: string }[] = [
@@ -237,12 +224,49 @@ const CourierNoResultsState: React.FC<{ searchQuery: string; onClear: () => void
   </div>
 );
 
+const CourierToolbarToggle: React.FC<{
+  active: boolean;
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}> = ({ active, icon, label, onClick }) => (
+  <div className="relative flex h-10 shrink-0 items-center justify-center">
+    <ToolbarIconButton
+      active={active}
+      aria-pressed={active}
+      label={label}
+      title={label}
+      onClick={onClick}
+      className={
+        active
+          ? 'border-[#ededed] bg-[#101010] text-[#ededed] shadow-[inset_0_0_0_1px_rgba(237,237,237,0.35)]'
+          : 'border-app-nav-border text-[#8f8f8f]'
+      }
+    >
+      <span
+        className={`
+          flex items-center justify-center transition-transform
+          ${active ? '-translate-y-1' : 'translate-y-0'}
+        `}
+      >
+        {icon}
+      </span>
+    </ToolbarIconButton>
+    <span
+      className={`
+        pointer-events-none absolute bottom-1.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#ededed] transition-opacity
+        ${active ? 'opacity-100' : 'opacity-0'}
+      `}
+    />
+  </div>
+);
+
 export const CouriersListScreen: React.FC = () => {
   const { state, dispatch } = useDelivery();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | Courier['status']>('all');
-  const [deliveryFilter, setDeliveryFilter] = useState<'all' | 'with_delivery' | 'without_delivery'>('all');
+  const [showConnectedOnly, setShowConnectedOnly] = useState(false);
+  const [showOnShiftOnly, setShowOnShiftOnly] = useState(false);
   const [sortColumn, setSortColumn] = useState<SortableCourierColumnId>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -356,22 +380,19 @@ export const CouriersListScreen: React.FC = () => {
     const normalizedSearch = searchQuery.trim().toLowerCase();
     let couriers = state.couriers;
 
+    if (showConnectedOnly) {
+      couriers = couriers.filter((courier) => courier.status !== 'offline');
+    }
+
+    if (showOnShiftOnly) {
+      couriers = couriers.filter((courier) => courier.isOnShift);
+    }
+
     if (normalizedSearch) {
       couriers = couriers.filter((courier) =>
         courier.name.toLowerCase().includes(normalizedSearch) ||
         courier.phone.toLowerCase().includes(normalizedSearch),
       );
-    }
-
-    if (statusFilter !== 'all') {
-      couriers = couriers.filter((courier) => courier.status === statusFilter);
-    }
-
-    if (deliveryFilter !== 'all') {
-      couriers = couriers.filter((courier) => {
-        const hasActiveDelivery = activeDeliveriesByCourier.has(courier.id);
-        return deliveryFilter === 'with_delivery' ? hasActiveDelivery : !hasActiveDelivery;
-      });
     }
 
     const direction = sortDirection === 'asc' ? 1 : -1;
@@ -414,7 +435,16 @@ export const CouriersListScreen: React.FC = () => {
           return 0;
       }
     });
-  }, [activeDeliveriesByCourier, deliveriesCountByCourierInPeriod, deliveryFilter, searchQuery, sortColumn, sortDirection, state.couriers, statusFilter]);
+  }, [
+    activeDeliveriesByCourier,
+    deliveriesCountByCourierInPeriod,
+    searchQuery,
+    showConnectedOnly,
+    showOnShiftOnly,
+    sortColumn,
+    sortDirection,
+    state.couriers,
+  ]);
 
   const stats = useMemo<CourierStats>(() => ({
     total: state.couriers.length,
@@ -424,47 +454,15 @@ export const CouriersListScreen: React.FC = () => {
     offline: state.couriers.filter((courier) => courier.status === 'offline').length,
   }), [filteredCouriers.length, state.couriers]);
 
-  const statusCounts = useMemo(
-    () => ({
-      available: stats.available,
-      busy: stats.busy,
-      offline: stats.offline,
-    }),
-    [stats.available, stats.busy, stats.offline],
-  );
-
-  const courierInlineFilters = useMemo(
-    () => [
-      {
-        key: 'status',
-        value: statusFilter,
-        onChange: (value: string) => setStatusFilter(value as typeof statusFilter),
-        options: COURIER_STATUS_FILTER_OPTIONS.map((option) => ({
-          ...option,
-          count: option.id === 'all' ? undefined : statusCounts[option.id as keyof typeof statusCounts],
-        })),
-        defaultLabel: 'סטטוס',
-      },
-      {
-        key: 'deliveries',
-        value: deliveryFilter,
-        onChange: (value: string) => setDeliveryFilter(value as typeof deliveryFilter),
-        options: COURIER_DELIVERY_FILTER_OPTIONS,
-        defaultLabel: 'משלוחים',
-      },
-    ],
-    [deliveryFilter, statusCounts, statusFilter],
-  );
-
-  const hasActiveFilters = Boolean(searchQuery.trim() || statusFilter !== 'all' || deliveryFilter !== 'all');
+  const hasActiveFilters = Boolean(searchQuery.trim()) || showConnectedOnly || showOnShiftOnly;
   const allVisibleCouriersSelected =
     filteredCouriers.length > 0 && filteredCouriers.every((courier) => selectedCourierIds.has(courier.id));
   const someVisibleCouriersSelected = filteredCouriers.some((courier) => selectedCourierIds.has(courier.id));
 
   const handleClearAll = () => {
     setSearchQuery('');
-    setStatusFilter('all');
-    setDeliveryFilter('all');
+    setShowConnectedOnly(false);
+    setShowOnShiftOnly(false);
   };
 
   const handleCourierSort = (columnId: SortableCourierColumnId) => {
@@ -843,16 +841,31 @@ export const CouriersListScreen: React.FC = () => {
                 onExport={() => { setIsExportOpen((value) => !value); setColumnsOpen(false); }}
               />
             }
-            controls={<ListInlineFilters filters={courierInlineFilters} />}
             actions={
-              <ListToolbarActions
-                searchQuery={searchQuery}
-                onSearchQueryChange={setSearchQuery}
-                searchPlaceholder={TEXT.searchPlaceholder}
-                searchWidthClass="w-48"
-                showColumnsToggle={false}
-                showExportButton={false}
-              />
+              <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                <div className="flex shrink-0 items-center gap-1">
+                  <CourierToolbarToggle
+                    active={showConnectedOnly}
+                    label="הצג רק שליחים מחוברים"
+                    onClick={() => setShowConnectedOnly((value) => !value)}
+                    icon={<Bike className="h-3.5 w-3.5" />}
+                  />
+                  <CourierToolbarToggle
+                    active={showOnShiftOnly}
+                    label="הצג שליחים במשמרת"
+                    onClick={() => setShowOnShiftOnly((value) => !value)}
+                    icon={<Clock3 className="h-3.5 w-3.5" />}
+                  />
+                </div>
+                <ListToolbarActions
+                  searchQuery={searchQuery}
+                  onSearchQueryChange={setSearchQuery}
+                  searchPlaceholder={TEXT.searchPlaceholder}
+                  searchWidthClass="w-48"
+                  showColumnsToggle={false}
+                  showExportButton={false}
+                />
+              </div>
             }
           />
         }

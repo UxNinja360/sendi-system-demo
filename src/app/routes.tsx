@@ -28,6 +28,8 @@ import { SettingsPage } from './pages/settings-page';
 import { OperatingHoursPage } from './pages/operating-hours-page';
 import { DeliveryZonesPage } from './pages/delivery-zones-page';
 import { DistancePricingPage } from './pages/distance-pricing-page';
+import { DesignSystemPage } from './pages/design-system-page';
+import { DesignSystemPlaygroundPage } from './pages/design-system-playground-page';
 import { DeliveryProvider } from './context/delivery.context';
 import { ThemeProvider } from './context/theme.context';
 import { getNavItemById } from './app-navigation';
@@ -94,6 +96,14 @@ export const router = createBrowserRouter([
       {
         path: routePath('exceptions'),
         element: <ExceptionsLabPage />,
+      },
+      {
+        path: routePath('design-system'),
+        element: <DesignSystemPage />,
+      },
+      {
+        path: routePath('design-system-playground'),
+        element: <DesignSystemPlaygroundPage />,
       },
       {
         path: routePath('reports'),

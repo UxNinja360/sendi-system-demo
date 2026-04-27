@@ -16,6 +16,7 @@ import { useDelivery } from '../context/delivery-context-value';
 import type { Courier, Delivery, DeliveryStatus, Restaurant } from '../types/delivery.types';
 import { canCourierAcceptDelivery } from '../utils/courier-assignment';
 import { isOperationalDelivery } from '../utils/delivery-status';
+import { formatOrderNumber } from '../utils/order-number';
 
 type ExceptionSeverity = 'critical' | 'warning' | 'info';
 type ExceptionFilter = 'all' | ExceptionSeverity;
@@ -189,7 +190,7 @@ export const ExceptionsLabPage: React.FC = () => {
         id: `pending-${delivery.id}`,
         severity: waitMinutes >= 20 ? 'critical' : 'warning',
         kind: 'משלוח ממתין',
-        title: `#${delivery.orderNumber} ממתין לציוות`,
+        title: `${formatOrderNumber(delivery.orderNumber)} ממתין לציוות`,
         primary: getRestaurantName(delivery),
         secondary: `${getCustomerName(delivery)} · ${getCustomerAddress(delivery)}`,
         meta: `${formatDuration(waitMinutes)} בלי שליח`,
@@ -211,7 +212,7 @@ export const ExceptionsLabPage: React.FC = () => {
           id: `assigned-${delivery.id}`,
           severity: assignedMinutes >= 25 ? 'critical' : 'warning',
           kind: 'איסוף מתעכב',
-          title: `#${delivery.orderNumber} שובץ ולא נאסף`,
+          title: `${formatOrderNumber(delivery.orderNumber)} שובץ ולא נאסף`,
           primary: getRestaurantName(delivery),
           secondary: courier ? `שליח: ${courier.name}` : 'אין שליח מזוהה',
           meta: `${formatDuration(assignedMinutes)} מאז הציוות`,
@@ -235,7 +236,7 @@ export const ExceptionsLabPage: React.FC = () => {
           id: `delivering-${delivery.id}`,
           severity: deliveryMinutes >= expectedMinutes + 15 ? 'critical' : 'warning',
           kind: 'מסירה מתעכבת',
-          title: `#${delivery.orderNumber} בדרך יותר מדי זמן`,
+          title: `${formatOrderNumber(delivery.orderNumber)} בדרך יותר מדי זמן`,
           primary: getCustomerName(delivery),
           secondary: courier ? `שליח: ${courier.name}` : getRestaurantName(delivery),
           meta: `${formatDuration(deliveryMinutes)} בסטטוס ${STATUS_LABELS[delivery.status]}`,

@@ -15,6 +15,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatOrderNumber } from '../utils/order-number';
 
 interface DeliveryEditDialogProps {
   delivery: Delivery | null;
@@ -113,7 +114,7 @@ export const DeliveryEditDialog: React.FC<DeliveryEditDialogProps> = ({
               </div>
               <div>
                 <h2 className="text-lg font-bold text-[#0d0d12] dark:text-app-text">עריכת משלוח</h2>
-                <p className="text-xs text-[#737373] dark:text-app-text-secondary">הזמנה #{delivery.orderNumber}</p>
+                <p className="text-xs text-[#737373] dark:text-app-text-secondary">הזמנה {formatOrderNumber(delivery.orderNumber)}</p>
               </div>
             </div>
             <button

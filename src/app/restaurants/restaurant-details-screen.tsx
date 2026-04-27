@@ -35,9 +35,6 @@ export function RestaurantDetailsScreen() {
       delivery.restaurantName === restaurant?.name ||
       delivery.rest_name === restaurant?.name
   );
-  const activeDeliveries = restaurantDeliveries.filter(
-    (delivery) => delivery.status !== 'delivered' && delivery.status !== 'cancelled' && delivery.status !== 'expired'
-  );
   const completedDeliveries = restaurantDeliveries.filter(
     (delivery) => delivery.status === 'delivered'
   );
@@ -103,30 +100,6 @@ export function RestaurantDetailsScreen() {
 
   return (
     <div className="flex h-full flex-col bg-app-background">
-      <div className="border-b border-[#e5e5e5] bg-white p-4 dark:border-app-border dark:bg-app-surface">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate('/restaurants')}
-            className="rounded-lg p-2 transition-colors hover:bg-[#f5f5f5] dark:hover:bg-[#262626]"
-          >
-            <ArrowRight size={20} className="text-[#666d80] dark:text-app-text-secondary" />
-          </button>
-          <div className="flex-1">
-            <div className="flex items-center gap-3">
-              <Store size={24} className="text-[#0fcdd3]" />
-              <div>
-                <h1 className="text-xl font-bold text-[#0d0d12] dark:text-app-text">{restaurant.name}</h1>
-                <p className="text-sm text-[#666d80] dark:text-app-text-secondary">{restaurant.type}</p>
-              </div>
-            </div>
-          </div>
-          <div className="text-left">
-            <div className="text-xs text-[#666d80] dark:text-app-text-secondary">משלוחים פעילים</div>
-            <div className="text-2xl font-bold text-[#0fcdd3]">{activeDeliveries.length}</div>
-          </div>
-        </div>
-      </div>
-
       <div className="flex-1 overflow-auto p-4">
         <div className="mx-auto max-w-7xl space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">

@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { ArrowDown, ArrowUp, GripVertical, MapPin, Store, User } from 'lucide-react';
 import { formatAddressWithArea } from '../utils/delivery-presenters';
+import { formatOrderNumber } from '../utils/order-number';
 import { RouteStop, getPickupReadyAt } from './live-couriers-view-utils';
 
 type DraggableRouteStopProps = {
@@ -224,7 +225,7 @@ export const DraggableRouteStop: React.FC<DraggableRouteStopProps> = React.memo(
                   </span>
                 ) : (
                   <span className="font-mono text-[11px] font-bold text-[#0d0d12] dark:text-app-text">
-                    #{order.orderNumber}
+                    {formatOrderNumber(order.orderNumber)}
                   </span>
                 )}
 

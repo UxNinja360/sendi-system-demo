@@ -33,7 +33,7 @@ type DeliveriesCommandSearchProps = {
 };
 
 const TEXT = {
-  placeholder: 'חפש משלוח או הוסף פילטר...',
+  placeholder: 'חיפוש משלוחים',
   filters: 'פילטרים',
   suggestions: 'הצעות',
   activeFilters: 'סינון פעיל',
@@ -49,21 +49,18 @@ const COMMANDS: Array<{
   kind: CommandKind;
   label: string;
   prefix: string;
-  description: string;
   icon: React.ComponentType<{ className?: string }>;
 }> = [
   {
     kind: 'restaurants',
     label: TEXT.restaurants,
     prefix: `${TEXT.restaurants}:`,
-    description: 'סינון לפי מסעדה',
     icon: Store,
   },
   {
     kind: 'couriers',
     label: TEXT.couriers,
     prefix: `${TEXT.couriers}:`,
-    description: 'סינון לפי שליח',
     icon: Bike,
   },
 ];
@@ -306,7 +303,7 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
   return (
     <div ref={rootRef} className="relative z-30 flex min-w-0 flex-1" dir="rtl">
       <div className="relative min-w-0 flex-1">
-        <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#a3a3a3]" />
+        <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8F8F8F]" />
         <div
           className="flex h-10 w-full items-center gap-1.5 overflow-hidden rounded-[4px] border border-[#e5e5e5] bg-[#f5f5f5] pr-9 pl-8 text-sm text-[#0d0d12] transition-colors focus-within:border-[#9fe870]/50 dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-app-text"
           onClick={() => {
@@ -327,7 +324,7 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
               title={`${token.label}: ${token.value}`}
             >
               <span className="min-w-0 truncate">{`${token.label}: ${token.value}`}</span>
-              <X className="h-3 w-3 shrink-0 text-[#737373]" />
+              <X className="h-3 w-3 shrink-0 text-[#737373] dark:text-[#EDEDED]" />
             </button>
           ))}
           <input
@@ -338,7 +335,7 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
             onFocus={() => setIsOpen(true)}
             onChange={(event) => handleDraftChange(event.target.value)}
             onKeyDown={handleKeyDown}
-            className="min-w-[120px] flex-1 bg-transparent text-sm text-[#0d0d12] outline-none placeholder:text-[#a3a3a3] dark:text-app-text dark:placeholder:text-app-text-secondary"
+            className="min-w-[120px] flex-1 bg-transparent text-sm text-[#8F8F8F] outline-none placeholder:text-[#8F8F8F]"
           />
         </div>
         {showClearButton ? (
@@ -349,7 +346,7 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
             aria-label={draft ? TEXT.clear : TEXT.clearAll}
             title={draft ? TEXT.clear : TEXT.clearAll}
           >
-            <X className="h-3.5 w-3.5 text-[#a3a3a3]" />
+            <X className="h-3.5 w-3.5 text-[#a3a3a3] dark:text-[#EDEDED]" />
           </button>
         ) : null}
       </div>
@@ -383,7 +380,7 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
                     title={`${token.label}: ${token.value}`}
                   >
                     <span className="min-w-0 truncate">{`${token.label}: ${token.value}`}</span>
-                    <X className="h-3 w-3 shrink-0 text-[#737373]" />
+                    <X className="h-3 w-3 shrink-0 text-[#737373] dark:text-[#EDEDED]" />
                   </button>
                 ))}
               </div>
@@ -411,7 +408,7 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
                         className={`flex w-full items-center gap-2.5 px-3 py-2 text-right text-sm transition-colors ${
                           isSelected
                             ? 'bg-[#f5f5f5] text-[#0d0d12] dark:bg-[#262626] dark:text-app-text'
-                            : 'text-[#525252] hover:bg-[#f5f5f5] dark:text-app-text-secondary dark:hover:bg-[#262626]'
+                            : 'text-[#525252] hover:bg-[#f5f5f5] dark:text-[#EDEDED] dark:hover:bg-[#262626]'
                         }`}
                       >
                         <span className="flex h-4 w-4 shrink-0 items-center justify-center">
@@ -449,13 +446,12 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
                       key={command.kind}
                       type="button"
                       onClick={() => handleCommandClick(command.kind)}
-                      className="flex w-full items-center gap-2.5 px-3 py-2 text-right text-sm text-[#525252] transition-colors hover:bg-[#f5f5f5] dark:text-app-text-secondary dark:hover:bg-[#262626]"
+                      className="flex w-full items-center gap-2.5 px-3 py-2 text-right text-sm text-[#525252] transition-colors hover:bg-[#f5f5f5] dark:text-[#EDEDED] dark:hover:bg-[#262626]"
                     >
-                      <Icon className="h-4 w-4 shrink-0 text-[#a3a3a3]" />
+                      <Icon className="h-4 w-4 shrink-0 text-[#a3a3a3] dark:text-[#EDEDED]" />
                       <span className="font-medium text-[#0d0d12] dark:text-app-text">
                         {command.prefix}
                       </span>
-                      <span className="text-xs text-[#a3a3a3]">{command.description}</span>
                     </button>
                   );
                 })}

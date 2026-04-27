@@ -35,6 +35,7 @@ type ListInlineMultiSelectFilterItem = {
   clearValue?: string;
   icon?: React.ReactNode;
   showSearch?: boolean;
+  appearance?: 'default' | 'status';
   setCurrentPage?: (page: number) => void;
 };
 
@@ -157,6 +158,7 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
               placeholder={filter.placeholder ?? `${TEXT.search} ${filter.defaultLabel}...`}
               icon={filter.icon}
               showSearch={filter.showSearch}
+              appearance={filter.appearance}
               setCurrentPage={filter.setCurrentPage}
             />
           ) : (

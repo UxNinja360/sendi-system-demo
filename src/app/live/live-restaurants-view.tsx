@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Search, Store } from 'lucide-react';
 import { useDelivery } from '../context/delivery-context-value';
+import { formatOrderNumber } from '../utils/order-number';
 
 export const LiveRestaurantsView: React.FC = () => {
   const { state } = useDelivery();
@@ -111,7 +112,7 @@ export const LiveRestaurantsView: React.FC = () => {
                       >
                         <div className="mb-1 flex items-center justify-between">
                           <span className="font-mono font-medium text-[#737373] dark:text-app-text-secondary">
-                            #{order.orderNumber}
+                            {formatOrderNumber(order.orderNumber)}
                           </span>
                           <span
                             className={`rounded-full px-2 py-0.5 text-[10px] font-bold text-white ${

@@ -2,15 +2,25 @@
 import { DeliveryStatus, DeliveryState } from '../types/delivery.types';
 import { COLUMN_MAP } from './column-defs';
 import { useDebounce } from '../hooks/useDebounce';
-import { isVisibleInDefaultDeliveriesView } from '../utils/delivery-status';
 
 export const PAGE_SIZE_OPTIONS = [25, 50, 100, 200, 500] as const;
+const DEFAULT_DELIVERY_STATUS_FILTERS: DeliveryStatus[] = [
+  'pending',
+  'assigned',
+  'delivering',
+  'delivered',
+  'cancelled',
+];
+
+const createDefaultStatusFilters = () => new Set(DEFAULT_DELIVERY_STATUS_FILTERS);
 
 export function useDeliveriesFilters(state: DeliveryState) {
   // Basic filters
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearchQuery = useDebounce(searchQuery, 250);
-  const [statusFilters, setStatusFilters] = useState<Set<DeliveryStatus>>(new Set());
+  const [statusFilters, setStatusFilters] = useState<Set<DeliveryStatus>>(
+    createDefaultStatusFilters,
+  );
 
   // Table sorting
   const [sortColumn, setSortColumn] = useState<string>('creation_time');
@@ -144,8 +154,7 @@ export function useDeliveriesFilters(state: DeliveryState) {
     if (selectedRestaurants.size > 0) filtered = filtered.filter(d => d.restaurantId != null && selectedRestaurants.has(d.restaurantId));
     if (selectedBranches.size > 0) filtered = filtered.filter(d => d.branchName != null && selectedBranches.has(d.branchName.trim()));
     if (selectedAreas.size > 0) filtered = filtered.filter(d => d.area != null && selectedAreas.has(d.area.trim()));
-    if (statusFilters.size > 0) filtered = filtered.filter(d => statusFilters.has(d.status));
-    else filtered = filtered.filter(isVisibleInDefaultDeliveriesView);
+    filtered = filtered.filter(d => statusFilters.has(d.status));
     if (debouncedSearchQuery) {
       const query = debouncedSearchQuery.toLowerCase();
       filtered = filtered.filter(d => {
@@ -233,8 +242,7 @@ export function useDeliveriesFilters(state: DeliveryState) {
   // סטטיסטיקות לפי טווחי זמן
   const dateRangeStats = useMemo(() => {
     let filtered = state.deliveries;
-    if (statusFilters.size > 0) filtered = filtered.filter(d => statusFilters.has(d.status));
-    else filtered = filtered.filter(isVisibleInDefaultDeliveriesView);
+    filtered = filtered.filter(d => statusFilters.has(d.status));
     if (selectedCouriers.size > 0) filtered = filtered.filter(d => d.courierId != null && selectedCouriers.has(d.courierId));
     if (selectedRestaurants.size > 0) filtered = filtered.filter(d => d.restaurantId != null && selectedRestaurants.has(d.restaurantId));
     if (selectedBranches.size > 0) filtered = filtered.filter(d => d.branchName != null && selectedBranches.has(d.branchName.trim()));
@@ -284,7 +292,7 @@ export function useDeliveriesFilters(state: DeliveryState) {
     setSelectedRestaurants(new Set());
     setSelectedBranches(new Set());
     setSelectedAreas(new Set());
-    setStatusFilters(new Set());
+    setStatusFilters(createDefaultStatusFilters());
   }, []);
 
   return {

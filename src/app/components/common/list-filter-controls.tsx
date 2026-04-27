@@ -33,6 +33,7 @@ type ListMultiSelectFilterProps = {
   setCurrentPage?: (page: number) => void;
   icon?: React.ReactNode;
   showSearch?: boolean;
+  appearance?: 'default' | 'status';
 };
 
 type ListSingleSelectFilterProps = {
@@ -62,11 +63,20 @@ const getOptionButtonClass = (isActive: boolean) =>
       : 'text-[#525252] hover:bg-[#f5f5f5] dark:text-app-text-secondary dark:hover:bg-[#262626]'
   }`;
 
+const TEXT = {
+  only: 'רק זה',
+  uncheck: 'בטל',
+  checkAll: 'סמן הכל',
+} as const;
+
+const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
+  classes.filter(Boolean).join(' ');
+
 export const getListFilterButtonClass = (isActive: boolean) =>
   `flex h-10 items-center gap-1.5 rounded-[4px] border px-3 text-sm font-medium transition-colors md:w-[112px] md:justify-between ${
     isActive
-      ? 'border-[#9fe870]/40 bg-[#9fe870]/15 text-[#6bc84a] dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#9fe870]'
-      : 'border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-app-text-secondary dark:hover:bg-[#1A1A1A]'
+      ? 'border-[#9fe870]/40 bg-[#9fe870]/15 text-[#6bc84a] dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#EDEDED]'
+      : 'border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#EDEDED] dark:hover:bg-[#1A1A1A]'
   }`;
 
 const FILTER_MENU_GAP = 6;
@@ -88,11 +98,20 @@ const useFixedFilterMenu = (isOpen: boolean, minWidth: number, externalRef: Filt
   const updateMenuPosition = React.useCallback(() => {
     const rect = rootRef.current?.getBoundingClientRect();
     if (!rect) return;
+    const width = Math.max(minWidth, rect.width);
+    const desiredRight = window.innerWidth - rect.right;
+    const maxRight = Math.max(
+      FILTER_MENU_VIEWPORT_MARGIN,
+      window.innerWidth - width - FILTER_MENU_VIEWPORT_MARGIN,
+    );
 
     setMenuStyle({
       top: rect.bottom + FILTER_MENU_GAP,
-      right: Math.max(FILTER_MENU_VIEWPORT_MARGIN, window.innerWidth - rect.right),
-      width: Math.max(minWidth, rect.width),
+      right: Math.min(
+        Math.max(FILTER_MENU_VIEWPORT_MARGIN, desiredRight),
+        maxRight,
+      ),
+      width,
     });
   }, [minWidth]);
 
@@ -120,6 +139,43 @@ const useFixedFilterMenu = (isOpen: boolean, minWidth: number, externalRef: Filt
   return { menuStyle, setRootRef };
 };
 
+const StatusDotSummary: React.FC<{
+  options: FilterOption[];
+  selectedValues: Set<string>;
+}> = ({ options, selectedValues }) => (
+  <span className="flex shrink-0 items-center -space-x-1" dir="ltr" aria-hidden="true">
+    {options.map((option) => (
+      <span
+        key={option.id}
+        className={joinClassNames(
+          'h-2 w-2 rounded-full ring-1 ring-[#0A0A0A]',
+          option.dotClassName ?? 'bg-[#525252]',
+          selectedValues.has(option.id) ? '' : 'opacity-25 grayscale',
+        )}
+      />
+    ))}
+  </span>
+);
+
+const StatusFilterCheckbox: React.FC<{ checked: boolean }> = ({ checked }) => (
+  <span
+    className={joinClassNames(
+      'flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors',
+      checked
+        ? 'border-[#EDEDED] bg-[#EDEDED] text-[#0A0A0A]'
+        : 'border-[#525252] bg-transparent text-transparent group-hover:border-[#737373]',
+    )}
+  >
+    {checked ? <Check className="h-3 w-3 stroke-[3]" /> : null}
+  </span>
+);
+
+const getStatusRowActionLabel = (isSelected: boolean, selectedCount: number) => {
+  if (!isSelected) return TEXT.only;
+  if (selectedCount <= 1) return TEXT.checkAll;
+  return TEXT.uncheck;
+};
+
 export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
   containerRef,
   isOpen,
@@ -137,19 +193,136 @@ export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
   setCurrentPage,
   icon,
   showSearch = true,
+  appearance = 'default',
 }) => {
-  const { menuStyle, setRootRef } = useFixedFilterMenu(isOpen, 200, containerRef);
-  const isActive = selectedValues.size > 0;
+  const isStatusAppearance = appearance === 'status';
+  const { menuStyle, setRootRef } = useFixedFilterMenu(
+    isOpen,
+    isStatusAppearance ? 230 : 200,
+    containerRef,
+  );
+  const selectedOptions = options.filter((option) => selectedValues.has(option.id));
+  const selectedCount = selectedOptions.length;
+  const isActive = selectedCount > 0;
   const selectedLabel =
-    selectedValues.size === 0
+    selectedCount === 0
       ? defaultLabel
-      : selectedValues.size === 1
-        ? (options.find((option) => selectedValues.has(option.id))?.label ?? defaultLabel)
-        : `${selectedValues.size} ${pluralLabel}`;
+      : selectedCount === 1
+        ? (selectedOptions[0]?.label ?? defaultLabel)
+        : `${selectedCount} ${pluralLabel}`;
 
   const filteredOptions = options.filter(
     (option) => !showSearch || !searchValue || option.label.includes(searchValue),
   );
+  const optionIds = options.map((option) => option.id);
+
+  const setValuesAndResetPage = (nextValues: Set<string>) => {
+    setSelectedValues(nextValues);
+    setCurrentPage?.(1);
+  };
+
+  const handleStatusRowAction = (optionId: string, isSelected: boolean) => {
+    if (!isSelected) {
+      setValuesAndResetPage(new Set([optionId]));
+      return;
+    }
+
+    if (selectedCount <= 1) {
+      setValuesAndResetPage(new Set(optionIds));
+      return;
+    }
+
+    setSelectedValues((current) => {
+      const next = new Set(current);
+      next.delete(optionId);
+      return next;
+    });
+    setCurrentPage?.(1);
+  };
+
+  if (isStatusAppearance) {
+    const statusButtonLabel = `${defaultLabel} ${selectedCount}/${options.length}`;
+
+    return (
+      <div className="relative w-[178px] shrink-0" ref={setRootRef}>
+        <button
+          type="button"
+          title={statusButtonLabel}
+          onClick={() => {
+            if (isOpen) {
+              setOpen(false);
+              return;
+            }
+
+            closeOtherMenus();
+            setOpen(true);
+          }}
+          className="flex h-10 w-full items-center gap-2 rounded-[6px] border border-app-nav-border bg-[#0A0A0A] px-3 text-sm font-semibold text-[#EDEDED] transition-colors hover:bg-[#1A1A1A]"
+        >
+          <StatusDotSummary options={options} selectedValues={selectedValues} />
+          <span className="min-w-0 flex-1 truncate text-right">{defaultLabel}</span>
+          <span className="shrink-0 rounded-full bg-[#262626] px-1.5 py-0.5 text-xs font-bold leading-none text-[#EDEDED]">
+            {selectedCount}/{options.length}
+          </span>
+          <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-[#737373] transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        </button>
+
+        {isOpen && typeof document !== 'undefined'
+          ? createPortal(
+              <div
+                className="fixed z-50 max-w-[calc(100vw-24px)] rounded-[8px] border border-app-nav-border bg-[#0A0A0A] p-1 shadow-xl"
+                dir="rtl"
+                style={menuStyle}
+                onMouseDown={(event) => event.stopPropagation()}
+              >
+                <div className="space-y-0.5">
+                  {filteredOptions.map((option) => {
+                    const optionActive = selectedValues.has(option.id);
+                    const actionLabel = getStatusRowActionLabel(optionActive, selectedCount);
+
+                    return (
+                      <div
+                        key={option.id}
+                        className="group flex h-8 items-center rounded-[6px] text-[#EDEDED] transition-colors hover:bg-[#1A1A1A]"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => {
+                            toggleValue(option.id);
+                            setCurrentPage?.(1);
+                          }}
+                          className="flex h-full min-w-0 flex-1 items-center gap-2 px-2 text-right text-sm font-semibold focus:outline-none"
+                        >
+                          <StatusFilterCheckbox checked={optionActive} />
+                          {option.dotClassName ? (
+                            <span
+                              className={joinClassNames(
+                                'h-2.5 w-2.5 shrink-0 rounded-full',
+                                option.dotClassName,
+                                optionActive ? '' : 'opacity-45 grayscale',
+                              )}
+                            />
+                          ) : null}
+                          <span className="min-w-0 flex-1 truncate">{option.label}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleStatusRowAction(option.id, optionActive)}
+                          className="h-full shrink-0 rounded-[6px] px-2 text-xs font-medium text-[#A1A1AA] opacity-0 transition-opacity hover:text-[#EDEDED] focus:opacity-100 focus:outline-none group-hover:opacity-100"
+                        >
+                          {actionLabel}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>,
+              document.body,
+            )
+          : null}
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-[112px] shrink-0" ref={setRootRef}>
@@ -183,7 +356,7 @@ export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
             <X className="h-3 w-3" />
           </span>
         ) : (
-          <ChevronDown className={`h-3 w-3 shrink-0 opacity-50 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`h-3 w-3 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         )}
       </button>
 
@@ -298,7 +471,7 @@ export const ListSingleSelectFilter: React.FC<ListSingleSelectFilterProps> = ({
             </span>
           </>
         ) : (
-          <ChevronDown className={`h-3 w-3 shrink-0 opacity-50 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`h-3 w-3 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         )}
       </button>
 

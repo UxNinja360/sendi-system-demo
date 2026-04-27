@@ -406,132 +406,108 @@ export function CourierDetailsScreen() {
 
   return (
     <div className="flex h-full flex-col bg-app-background">
-      {/* Header */}
-      <div className="bg-white dark:bg-app-surface border-b border-[#e5e5e5] dark:border-app-border">
-        <div className="p-4">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/couriers')}
-              className="p-2 hover:bg-[#f5f5f5] dark:hover:bg-[#262626] rounded-lg transition-colors"
-            >
-              <ArrowRight size={20} className="text-[#666d80] dark:text-app-text-secondary" />
-            </button>
-            
-            {/* תמונת פרופיל */}
-            <div className="relative">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#0fcdd3] to-[#0ab8c5] flex items-center justify-center text-white text-2xl font-bold">
-                {courier.name.charAt(0)}
-              </div>
-              <div className={`absolute bottom-0 right-0 w-5 h-5 rounded-full border-2 border-white dark:border-[#171717] ${
-                courier.status === 'available' ? 'bg-green-500' :
-                courier.status === 'busy' ? 'bg-orange-500' :
-                'bg-gray-500'
-              }`} />
-            </div>
-
-            <div className="flex-1">
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold text-[#0d0d12] dark:text-app-text">
-                  {courier.name}
-                </h1>
-                {earnedAchievements.length > 0 && (
-                  <div className="flex items-center gap-1">
-                    {earnedAchievements.slice(0, 3).map(achievement => {
-                      const Icon = achievement.icon;
-                      return (
-                        <div 
-                          key={achievement.id}
-                          className={`p-1.5 rounded-lg ${achievement.bg}`}
-                          title={achievement.name}
-                        >
-                          <Icon size={14} className={achievement.color} />
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center gap-3 mt-1">
-                <span className={`text-xs font-bold px-2 py-1 rounded-full ${config.bg} ${config.color}`}>
-                  {config.label}
-                </span>
-                <div className="flex items-center gap-1">
-                  <Star size={14} className="text-yellow-500 fill-yellow-500" />
-                  <span className="text-sm font-bold text-[#0d0d12] dark:text-app-text">
-                    {courier.rating}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 text-[#666d80] dark:text-app-text-secondary">
-                  <Trophy size={14} />
-                  <span className="text-sm">דירוג #{courierRanking.rank} מתוך {courierRanking.total}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="text-center px-4 border-r border-[#e5e5e5] dark:border-app-border">
-              <div className="text-xs text-[#666d80] dark:text-app-text-secondary mb-1">משלוחים פעילים</div>
-              <div className="text-3xl font-bold text-[#0fcdd3]">
-                {activeDeliveries.length}
-              </div>
-            </div>
-
-            <div className="text-center px-4">
-              <div className="text-xs text-[#666d80] dark:text-app-text-secondary mb-1">היום</div>
-              <div className="text-3xl font-bold text-[#16a34a] dark:text-[#22c55e]">
-                {todayDeliveries.length}
-              </div>
-            </div>
-
-            <button
-              onClick={handleAvailabilityToggle}
-              className={`mr-2 inline-flex items-center gap-2 rounded-[4px] px-3 py-2 text-sm font-medium transition-colors ${
-                isCourierAvailable
-                  ? 'bg-[#262626] text-white hover:bg-[#171717] dark:bg-[#fafafa] dark:text-[#0d0d12] dark:hover:bg-[#e5e5e5]'
-                  : 'bg-[#9fe870] text-[#0d0d12] hover:bg-[#8ddf59]'
-              }`}
-            >
-              <Power size={15} />
-              <span>{isCourierAvailable ? '\u05d4\u05e4\u05d5\u05da \u05dc\u05dc\u05d0 \u05d6\u05de\u05d9\u05df' : '\u05d4\u05e4\u05d5\u05da \u05dc\u05d6\u05de\u05d9\u05df'}</span>
-            </button>
-
-            <button
-              onClick={handleDeleteCourier}
-              className="inline-flex items-center gap-2 rounded-[4px] border border-red-200 px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-500/20 dark:text-red-400 dark:hover:bg-red-500/10"
-            >
-              <Trash2 size={15} />
-              <span>{'\u05de\u05d7\u05e7 \u05e9\u05dc\u05d9\u05d7'}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* הישגים ותגים */}
-        {earnedAchievements.length > 0 && (
-          <div className="px-4 pb-4">
-            <div className="flex items-center gap-2 flex-wrap">
-              <Award size={16} className="text-[#666d80] dark:text-app-text-secondary" />
-              <span className="text-sm font-bold text-[#666d80] dark:text-app-text-secondary">הישגים:</span>
-              {earnedAchievements.map(achievement => {
-                const Icon = achievement.icon;
-                return (
-                  <div 
-                    key={achievement.id}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${achievement.bg}`}
-                  >
-                    <Icon size={14} className={achievement.color} />
-                    <span className={`text-xs font-bold ${achievement.color}`}>
-                      {achievement.name}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Content */}
       <div className="flex-1 overflow-auto p-4">
         <div className="max-w-7xl mx-auto space-y-4">
+          <div className="rounded-[8px] border border-app-border bg-app-surface">
+            <div className="flex flex-col gap-4 p-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="relative shrink-0">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-[8px] border border-app-border bg-app-background text-base font-semibold text-app-text">
+                    {courier.name.charAt(0)}
+                  </div>
+                  <span
+                    className={`absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full border-2 border-app-surface ${
+                      courier.status === 'available'
+                        ? 'bg-green-500'
+                        : courier.status === 'busy'
+                          ? 'bg-orange-500'
+                          : 'bg-[#737373]'
+                    }`}
+                  />
+                </div>
+
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h1 className="truncate text-lg font-semibold text-app-text">{courier.name}</h1>
+                    <span className={`rounded-[4px] px-2 py-0.5 text-xs font-semibold ${config.bg} ${config.color}`}>
+                      {config.label}
+                    </span>
+                  </div>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-app-text-secondary">
+                    <span className="inline-flex items-center gap-1">
+                      <Star size={13} className="fill-yellow-500 text-yellow-500" />
+                      <span className="font-medium text-app-text">{courier.rating}</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <Trophy size={13} />
+                      דירוג #{courierRanking.rank} מתוך {courierRanking.total}
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <Bike size={13} />
+                      {courier.vehicleType}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+                <div className="grid grid-cols-2 gap-4 border-y border-app-border py-3 lg:border-x lg:border-y-0 lg:px-4 lg:py-0">
+                  <div>
+                    <div className="text-xs text-app-text-secondary">משלוחים פעילים</div>
+                    <div className="mt-0.5 text-xl font-semibold text-app-text">{activeDeliveries.length}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-app-text-secondary">היום</div>
+                    <div className="mt-0.5 text-xl font-semibold text-app-text">{todayDeliveries.length}</div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={handleAvailabilityToggle}
+                    className={`inline-flex h-9 items-center gap-2 rounded-[4px] px-3 text-sm font-medium transition-colors ${
+                      isCourierAvailable
+                        ? 'border border-app-border bg-app-background text-app-text hover:bg-app-surface-raised'
+                        : 'bg-[#9fe870] text-[#0d0d12] hover:bg-[#8ddf59]'
+                    }`}
+                  >
+                    <Power size={15} />
+                    <span>{isCourierAvailable ? '\u05d4\u05e4\u05d5\u05da \u05dc\u05dc\u05d0 \u05d6\u05de\u05d9\u05df' : '\u05d4\u05e4\u05d5\u05da \u05dc\u05d6\u05de\u05d9\u05df'}</span>
+                  </button>
+
+                  <button
+                    onClick={handleDeleteCourier}
+                    className="inline-flex h-9 items-center gap-2 rounded-[4px] border border-red-500/25 px-3 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/10"
+                  >
+                    <Trash2 size={15} />
+                    <span>{'\u05de\u05d7\u05e7 \u05e9\u05dc\u05d9\u05d7'}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {earnedAchievements.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-2 border-t border-app-border px-4 py-3">
+                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-app-text-secondary">
+                  <Award size={14} />
+                  הישגים
+                </span>
+                {earnedAchievements.map((achievement) => {
+                  const Icon = achievement.icon;
+
+                  return (
+                    <span
+                      key={achievement.id}
+                      className="inline-flex items-center gap-1.5 rounded-[4px] border border-app-border bg-app-background px-2 py-1 text-xs font-medium text-app-text"
+                    >
+                      <Icon size={13} className={achievement.color} />
+                      {achievement.name}
+                    </span>
+                  );
+                })}
+              </div>
+            ) : null}
+          </div>
           
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">

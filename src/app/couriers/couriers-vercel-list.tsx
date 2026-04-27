@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router';
 
 import { EntityRowActionTrigger } from '../components/common/entity-row-action-trigger';
 import type { Courier, Delivery } from '../types/delivery.types';
+import { formatOrderNumber } from '../utils/order-number';
 
 type CouriersVercelListProps = {
   couriers: Courier[];
@@ -24,35 +25,27 @@ type CouriersVercelListProps = {
 };
 
 const rowGridClass =
-  'grid grid-cols-[44px_minmax(220px,1.15fr)_minmax(132px,0.7fr)_minmax(132px,0.7fr)_minmax(220px,1.15fr)_minmax(160px,0.8fr)_minmax(112px,0.55fr)_44px]';
+  'grid grid-cols-[44px_minmax(210px,1.15fr)_minmax(92px,0.38fr)_minmax(170px,0.75fr)_minmax(220px,1.15fr)_minmax(160px,0.8fr)_minmax(112px,0.55fr)_44px]';
 
 const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(' ');
 
-const getOrderNumber = (delivery: Delivery) =>
-  delivery.orderNumber.startsWith('#') ? delivery.orderNumber : `#${delivery.orderNumber}`;
-
-const getStatusMeta = (courier: Courier) => {
-  if (courier.status === 'available') {
-    return {
-      label: 'זמין',
-      dot: 'bg-green-500',
-      chip: 'border-green-500/35 bg-green-500/10 text-green-400',
-    };
-  }
-
-  if (courier.status === 'busy') {
-    return {
-      label: 'בתפוסה',
-      dot: 'bg-yellow-500',
-      chip: 'border-yellow-500/35 bg-yellow-500/10 text-yellow-400',
-    };
-  }
+const getConnectionMeta = (courier: Courier) => {
+  const isConnected = courier.status !== 'offline';
 
   return {
-    label: 'לא מחובר',
-    dot: 'bg-zinc-500',
-    chip: 'border-zinc-500/35 bg-zinc-500/10 text-zinc-300',
+    label: isConnected ? '\u05de\u05d7\u05d5\u05d1\u05e8' : '\u05dc\u05d0 \u05de\u05d7\u05d5\u05d1\u05e8',
+    text: isConnected ? 'text-green-400' : 'text-zinc-400',
+  };
+};
+
+const getShiftMeta = (courier: Courier) => {
+  const isOnShift = courier.isOnShift;
+
+  return {
+    label: isOnShift ? '\u05d1\u05de\u05e9\u05de\u05e8\u05ea' : '\u05dc\u05d0 \u05d1\u05de\u05e9\u05de\u05e8\u05ea',
+    text: isOnShift ? 'text-app-text' : 'text-app-text-secondary',
+    icon: isOnShift ? 'text-green-400' : 'text-app-text-secondary',
   };
 };
 
@@ -93,9 +86,9 @@ const CourierVercelRow: React.FC<{
   onOpenContextMenu,
 }) => {
   const navigate = useNavigate();
-  const statusMeta = getStatusMeta(courier);
-  const shiftLabel = courier.isOnShift ? 'במשמרת' : 'לא במשמרת';
-  const deliveryLabel = currentDelivery ? getOrderNumber(currentDelivery) : '-';
+  const connectionMeta = getConnectionMeta(courier);
+  const shiftMeta = getShiftMeta(courier);
+  const deliveryLabel = currentDelivery ? formatOrderNumber(currentDelivery.orderNumber) : '-';
   const deliveryMeta = currentDelivery ? currentDelivery.rest_name || currentDelivery.restaurantName : 'ללא משלוח פעיל';
 
   const navigateToCourier = () => {
@@ -116,7 +109,7 @@ const CourierVercelRow: React.FC<{
       onContextMenu={(event) => onOpenContextMenu(courier, event)}
       className={joinClassNames(
         rowGridClass,
-        'group min-w-[1080px] cursor-pointer border-b border-app-nav-border bg-app-surface text-app-text outline-none transition-colors hover:bg-app-surface-raised focus-visible:bg-app-surface-raised',
+        'group min-w-[1060px] cursor-pointer border-b border-app-nav-border bg-app-surface text-app-text outline-none transition-colors hover:bg-app-surface-raised focus-visible:bg-app-surface-raised',
         isSelected && 'bg-app-surface-raised',
       )}
     >
@@ -132,28 +125,27 @@ const CourierVercelRow: React.FC<{
         </span>
         <div className="min-w-0">
           <div className="truncate text-sm font-semibold text-app-text">{courier.name}</div>
-          <div className="mt-0.5 flex items-center gap-1.5 text-xs text-app-text-secondary">
-            <Star className="h-3.5 w-3.5" />
-            <span>{courier.rating.toFixed(1)}</span>
+          <div className="mt-1 flex items-center">
+            <span className={joinClassNames('truncate text-xs font-medium', connectionMeta.text)}>
+              {connectionMeta.label}
+            </span>
           </div>
         </div>
       </div>
 
-      <div className="flex min-h-[58px] min-w-0 flex-col justify-center px-3 py-2">
-        <div className="flex items-center gap-2">
-          <span className={joinClassNames('h-2 w-2 rounded-full', statusMeta.dot)} />
-          <span className="truncate text-xs font-semibold text-app-text">{statusMeta.label}</span>
+      <div className="flex min-h-[58px] items-center justify-center px-3 py-2">
+        <div className="flex items-center gap-1.5 text-xs font-medium text-app-text-secondary">
+          <Star className="h-3.5 w-3.5 shrink-0" />
+          <span className="tabular-nums">{courier.rating.toFixed(1)}</span>
         </div>
-        <span className={joinClassNames('mt-1 w-fit rounded-md border px-2 py-0.5 text-[11px] font-semibold', statusMeta.chip)}>
-          {statusMeta.label}
-        </span>
       </div>
 
-      <div className="flex min-h-[58px] min-w-0 flex-col justify-center px-3 py-2">
-        <div className="truncate text-sm font-semibold text-app-text">{shiftLabel}</div>
-        <div className="mt-1 flex items-center gap-1.5 text-xs text-app-text-secondary">
-          <Clock3 className="h-3.5 w-3.5" />
-          <span>{courier.isOnShift ? 'פעיל' : 'כבוי'}</span>
+      <div className="flex min-h-[58px] min-w-0 items-center px-3 py-2">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <Clock3 className={joinClassNames('h-3.5 w-3.5', shiftMeta.icon)} />
+          <span className={joinClassNames('truncate text-xs font-medium', shiftMeta.text)}>
+            {shiftMeta.label}
+          </span>
         </div>
       </div>
 
@@ -213,7 +205,7 @@ export const CouriersVercelList: React.FC<CouriersVercelListProps> = ({
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-app-background">
       <div className="resource-list-scroll min-h-0 flex-1 overflow-auto px-3" dir="ltr">
-        <div className="min-w-[1080px] overflow-hidden border border-app-nav-border" dir="rtl">
+        <div className="min-w-[1060px] overflow-hidden border border-app-nav-border" dir="rtl">
           {couriers.map((courier) => (
             <CourierVercelRow
               key={courier.id}

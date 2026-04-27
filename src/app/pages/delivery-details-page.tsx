@@ -1,11 +1,12 @@
 import { useParams, useNavigate } from 'react-router';
 import { useDelivery } from '../context/delivery-context-value';
 import {
-  ArrowRight, MapPin, Phone, Clock,
+  MapPin, Phone, Clock,
   Bike, Package, CheckCircle2, XCircle, AlertCircle,
   Navigation, Store, User, ClockAlert
 } from 'lucide-react';
 import { formatCurrency, getDeliveryCustomerCharge } from '../utils/delivery-finance';
+import { formatOrderNumber } from '../utils/order-number';
 
 export function DeliveryDetailsPage() {
   const { deliveryId } = useParams<{ deliveryId: string }>();
@@ -38,6 +39,7 @@ export function DeliveryDetailsPage() {
 
   const cfg = statusConfig[delivery.status] ?? statusConfig.pending;
   const StatusIcon = cfg.icon;
+  const orderNumberLabel = formatOrderNumber(delivery.orderNumber);
 
   const elapsedMinutes = Math.floor((Date.now() - new Date(delivery.createdAt).getTime()) / 60000);
 
@@ -54,7 +56,7 @@ export function DeliveryDetailsPage() {
   const initials = (name: string) => name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
   const infoRows = [
-    { label: 'מזהה הזמנה',   value: `#${delivery.orderNumber}` },
+    { label: 'מזהה הזמנה',   value: orderNumberLabel },
     { label: 'סטטוס',        value: cfg.label, statusBadge: true },
     { label: 'נוצר',          value: new Date(delivery.createdAt).toLocaleString('he-IL', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }) },
     { label: 'זמן בטיפול',   value: `${elapsedMinutes} דק׳` },
@@ -66,15 +68,6 @@ export function DeliveryDetailsPage() {
 
   return (
     <div className="min-h-full bg-app-background">
-
-      {/* ── Header ── */}
-      <div className="bg-white dark:bg-app-surface border-b border-[#e5e5e5] dark:border-app-border px-6 h-16 flex items-center gap-3 shrink-0">
-        <button onClick={() => navigate(-1)} className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors shrink-0">
-          <ArrowRight size={17} className="text-[#666d80] dark:text-app-text-secondary" />
-        </button>
-        <span className="text-[15px] font-semibold text-[#0d0d12] dark:text-app-text flex-1">פרטי משלוח</span>
-        <span className="text-sm text-[#a3a3a3]">#{delivery.orderNumber}</span>
-      </div>
 
       <div className="p-6 max-w-4xl mx-auto space-y-4">
 

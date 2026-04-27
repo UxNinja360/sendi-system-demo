@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import { format as formatDate } from 'date-fns';
 import { useNavigate } from 'react-router';
 import {
@@ -13,6 +13,7 @@ import {
   Package,
   RotateCcw,
   Store,
+  UserRound,
   UserPlus,
   XCircle,
 } from 'lucide-react';
@@ -29,6 +30,7 @@ import {
 import { EntityRowActionTrigger } from '../components/common/entity-row-action-trigger';
 import { VercelEmptyState } from '../components/common/vercel-empty-state';
 import { STATUS_CONFIG } from './status-config';
+import { formatOrderNumber } from '../utils/order-number';
 
 type DeliveriesVercelListProps = {
   filteredDeliveries: Delivery[];
@@ -67,10 +69,7 @@ type DeliveryVercelRowProps = {
 };
 
 const rowGridClass =
-  'grid grid-cols-[44px_minmax(132px,0.85fr)_minmax(118px,0.7fr)_minmax(220px,1.25fr)_minmax(240px,1.35fr)_minmax(152px,0.85fr)_minmax(132px,0.7fr)_44px]';
-
-const getOrderNumber = (delivery: Delivery) =>
-  delivery.orderNumber.startsWith('#') ? delivery.orderNumber : `#${delivery.orderNumber}`;
+  'grid grid-cols-[44px_minmax(132px,0.85fr)_minmax(220px,1.25fr)_minmax(240px,1.35fr)_minmax(152px,0.85fr)_minmax(132px,0.7fr)_minmax(118px,0.7fr)_44px_44px]';
 
 const getDeliveryDate = (delivery: Delivery) =>
   delivery.creation_time ?? delivery.createdAt ?? delivery.delivery_date;
@@ -82,24 +81,6 @@ const formatDeliveryDate = (delivery: Delivery) => {
     return formatDate(value, 'HH:mm dd/MM');
   } catch {
     return '-';
-  }
-};
-
-const getStatusDotClassName = (status: DeliveryStatus) => {
-  switch (status) {
-    case 'pending':
-      return 'bg-orange-500';
-    case 'assigned':
-      return 'bg-yellow-500';
-    case 'delivering':
-      return 'bg-green-500';
-    case 'delivered':
-      return 'bg-blue-500';
-    case 'cancelled':
-      return 'bg-red-500';
-    case 'expired':
-    default:
-      return 'bg-zinc-500';
   }
 };
 
@@ -121,8 +102,80 @@ const getStatusChipClassName = (status: DeliveryStatus) => {
   }
 };
 
+const getStageIndicatorMeta = (status: DeliveryStatus) => {
+  switch (status) {
+    case 'pending':
+      return { activeSegments: 1, color: '#f97316' };
+    case 'assigned':
+      return { activeSegments: 2, color: '#eab308' };
+    case 'delivering':
+      return { activeSegments: 3, color: '#22c55e' };
+    case 'delivered':
+      return { activeSegments: 4, color: '#0070f3' };
+    case 'cancelled':
+      return { activeSegments: 4, color: '#ef4444' };
+    case 'expired':
+    default:
+      return { activeSegments: 0, color: '#71717a' };
+  }
+};
+
 const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(' ');
+
+const polarToCartesian = (centerX: number, centerY: number, radius: number, angleInDegrees: number) => {
+  const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180;
+
+  return {
+    x: centerX + radius * Math.cos(angleInRadians),
+    y: centerY + radius * Math.sin(angleInRadians),
+  };
+};
+
+const createArcPath = (startAngle: number, endAngle: number) => {
+  const start = polarToCartesian(16, 16, 11, endAngle);
+  const end = polarToCartesian(16, 16, 11, startAngle);
+
+  return `M ${start.x} ${start.y} A 11 11 0 0 0 ${end.x} ${end.y}`;
+};
+
+const stageRingSegments = [
+  createArcPath(12, 78),
+  createArcPath(102, 168),
+  createArcPath(192, 258),
+  createArcPath(282, 348),
+];
+
+const DeliveryStageIndicator: React.FC<{ status: DeliveryStatus }> = ({ status }) => {
+  const { activeSegments, color } = getStageIndicatorMeta(status);
+
+  return (
+    <span className="relative flex h-8 w-8 shrink-0 items-center justify-center">
+      <svg className="h-8 w-8" viewBox="0 0 32 32" aria-hidden="true">
+        {stageRingSegments.map((path, index) => (
+          <path
+            key={`stage-track-${index}`}
+            d={path}
+            fill="none"
+            stroke="#303030"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+        ))}
+        {stageRingSegments.slice(0, activeSegments).map((path, index) => (
+          <path
+            key={`stage-active-${index}`}
+            d={path}
+            fill="none"
+            stroke={color}
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+        ))}
+      </svg>
+    </span>
+  );
+};
 
 const getDeliveryEmptyStateCopy = (
   mode: DeliveriesVercelListProps['emptyStateMode'],
@@ -236,7 +289,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
       }}
       className={joinClassNames(
         rowGridClass,
-        'group min-w-[1100px] cursor-pointer border-b border-app-nav-border bg-app-surface text-app-text outline-none transition-colors hover:bg-app-surface-raised focus-visible:bg-app-surface-raised',
+        'group min-w-[1144px] cursor-pointer border-b border-app-nav-border bg-app-surface text-app-text outline-none transition-colors hover:bg-app-surface-raised focus-visible:bg-app-surface-raised',
         isSelected && 'bg-app-surface-raised',
         isDrawerTarget && 'shadow-[inset_2px_0_0_#ededed]',
       )}
@@ -249,56 +302,63 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
 
       <div className="flex min-h-[58px] min-w-0 flex-col justify-center px-3 py-2">
         <div className="flex items-center gap-2">
-          <span className="truncate text-sm font-semibold text-app-text">{getOrderNumber(delivery)}</span>
+          <span className="truncate text-sm font-semibold text-app-text">{formatOrderNumber(delivery.orderNumber)}</span>
           <span className="rounded-full border border-app-nav-border px-1.5 py-0.5 text-[10px] font-medium text-app-text-secondary">
             משלוח
           </span>
         </div>
-        <div className="mt-1 flex items-center gap-1.5 text-xs text-app-text-secondary">
+        <div className="mt-1 flex items-center gap-1.5 text-sm font-normal text-app-text-secondary">
           <Clock3 className="h-3.5 w-3.5" />
           <span>{formatDeliveryDate(delivery)}</span>
         </div>
       </div>
 
       <div className="flex min-h-[58px] min-w-0 flex-col justify-center px-3 py-2">
-        <div className="flex items-center gap-2">
-          <span className={joinClassNames('h-2 w-2 rounded-full', getStatusDotClassName(delivery.status))} />
-          <span className="truncate text-xs font-semibold text-app-text">{config.label}</span>
+        <div className="flex min-w-0 items-center gap-1.5">
+          <Store className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
+          <span className="truncate text-sm font-semibold text-app-text">{restaurantName}</span>
         </div>
-        <span className={joinClassNames('mt-1 w-fit rounded-md border px-2 py-0.5 text-[11px] font-semibold', getStatusChipClassName(delivery.status))}>
-          {config.label}
-        </span>
-      </div>
-
-      <div className="flex min-h-[58px] min-w-0 items-center gap-2 px-3 py-2">
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[#9fe870] text-black">
-          <Store className="h-3.5 w-3.5" />
-        </span>
-        <div className="min-w-0">
-          <div className="truncate text-sm font-semibold text-app-text">{restaurantName}</div>
-          <div className="mt-0.5 truncate text-xs text-app-text-secondary">{restaurantMeta}</div>
+        <div className="mt-1 flex min-w-0 items-center gap-1.5 text-sm font-normal text-app-text-secondary">
+          <MapPin className="h-3.5 w-3.5 shrink-0" />
+          <span className="truncate">{restaurantMeta}</span>
         </div>
       </div>
 
       <div className="flex min-h-[58px] min-w-0 flex-col justify-center px-3 py-2">
-        <div className="truncate text-sm font-semibold text-app-text">{clientName}</div>
-        <div className="mt-1 flex min-w-0 items-center gap-1.5 text-xs text-app-text-secondary">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <UserRound className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
+          <span className="truncate text-sm font-semibold text-app-text">{clientName}</span>
+        </div>
+        <div className="mt-1 flex min-w-0 items-center gap-1.5 text-sm font-normal text-app-text-secondary">
           <MapPin className="h-3.5 w-3.5 shrink-0" />
           <span className="truncate">{clientAddress}</span>
         </div>
       </div>
 
       <div className="flex min-h-[58px] min-w-0 flex-col justify-center px-3 py-2">
-        <div className="truncate text-sm font-semibold text-app-text">{courierName}</div>
-        <div className="mt-1 flex items-center gap-1.5 text-xs text-app-text-secondary">
-          <Bike className="h-3.5 w-3.5" />
+        <div className="flex min-w-0 items-center gap-1.5">
+          <UserRound className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
+          <span className="truncate text-sm font-semibold text-app-text">{courierName}</span>
+        </div>
+        <div className="mt-1 flex min-w-0 items-center gap-1.5 text-sm font-normal text-app-text-secondary">
+          <Bike className="h-3.5 w-3.5 shrink-0" />
           <span className="truncate">{courierMeta}</span>
         </div>
       </div>
 
       <div className="flex min-h-[58px] min-w-0 flex-col justify-center px-3 py-2 text-left" dir="ltr">
-        <span className="truncate text-xs font-semibold text-app-text">{remainingLabel}</span>
-        <span className="mt-1 truncate text-xs text-app-text-secondary">SLA</span>
+        <span className="truncate text-sm font-normal text-app-text">{remainingLabel}</span>
+        <span className="mt-1 truncate text-sm font-normal text-app-text-secondary">SLA</span>
+      </div>
+
+      <div className="flex min-h-[58px] min-w-0 items-center justify-center px-3 py-2">
+        <span className={joinClassNames('w-fit rounded-md border px-2 py-0.5 text-[11px] font-semibold', getStatusChipClassName(delivery.status))}>
+          {config.label}
+        </span>
+      </div>
+
+      <div className="flex min-h-[58px] items-center justify-center px-1">
+        <DeliveryStageIndicator status={delivery.status} />
       </div>
 
       <div className="flex min-h-[58px] items-center justify-center px-1" onClick={(event) => event.stopPropagation()}>
@@ -321,7 +381,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
               onPointerDown={(event) => event.stopPropagation()}
             >
               <EntityActionMenuHeader
-                title={getOrderNumber(delivery)}
+                title={formatOrderNumber(delivery.orderNumber)}
                 subtitle={<span className={`text-[11px] font-medium ${config.tableColor}`}>{config.label}</span>}
               />
               <EntityActionMenuItem
@@ -446,6 +506,37 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
   drawerDeliveryId,
   selectionBar,
 }) => {
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+
+  useLayoutEffect(() => {
+    const element = scrollContainerRef.current;
+    if (!element) return undefined;
+
+    const alignToRtlStartEdge = () => {
+      const maxScrollLeft = element.scrollWidth - element.clientWidth;
+      if (maxScrollLeft <= 0) return;
+      element.scrollLeft = maxScrollLeft;
+    };
+
+    const animationFrame = window.requestAnimationFrame(alignToRtlStartEdge);
+    const resizeObserver =
+      typeof ResizeObserver === 'undefined'
+        ? null
+        : new ResizeObserver(alignToRtlStartEdge);
+
+    resizeObserver?.observe(element);
+    if (element.firstElementChild) {
+      resizeObserver?.observe(element.firstElementChild);
+    }
+    window.addEventListener('resize', alignToRtlStartEdge);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', alignToRtlStartEdge);
+    };
+  }, [filteredDeliveries.length]);
+
   if (filteredDeliveries.length === 0) {
     const emptyStateCopy = getDeliveryEmptyStateCopy(emptyStateMode, totalCount);
 
@@ -463,8 +554,8 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-app-background">
-      <div className="deliveries-vercel-scroll min-h-0 flex-1 overflow-auto px-3" dir="ltr">
-        <div className="min-w-[1100px] overflow-hidden border border-app-nav-border" dir="rtl">
+      <div ref={scrollContainerRef} className="deliveries-vercel-scroll min-h-0 flex-1 overflow-auto px-3" dir="ltr">
+        <div className="min-w-[1144px] overflow-hidden border border-app-nav-border" dir="rtl">
           {filteredDeliveries.map((delivery) => {
             const courier = delivery.courierId
               ? couriers.find((candidate) => candidate.id === delivery.courierId) ?? null

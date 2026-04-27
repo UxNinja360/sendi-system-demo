@@ -23,6 +23,7 @@ import {
   getDeliveryOfferRemainingSeconds,
 } from '../utils/delivery-assignment';
 import { isOperationalDelivery } from '../utils/delivery-status';
+import { formatOrderNumber } from '../utils/order-number';
 
 const STATUS_META: Record<DeliveryStatus, { label: string; className: string }> = {
   pending: {
@@ -169,7 +170,7 @@ const CourierLoad: React.FC<{ courier: Courier; load: number }> = ({ courier, lo
 const DeliverySummary: React.FC<{ delivery: Delivery }> = ({ delivery }) => (
   <div className="min-w-0">
     <div className="mb-1 flex items-center gap-2">
-      <span className="font-mono text-xs font-bold text-[#fafafa]">#{delivery.orderNumber}</span>
+      <span className="font-mono text-xs font-bold text-[#fafafa]">{formatOrderNumber(delivery.orderNumber)}</span>
       <StatusPill status={delivery.status} />
       <span className="text-xs text-[#737373]">{formatAge(getDeliveryCreatedAt(delivery))}</span>
     </div>
@@ -349,7 +350,7 @@ export const DispatchLabPage: React.FC = () => {
               <>
                 <div className="text-xs font-semibold text-[#9fe870]">הבא בתור</div>
                 <div className="truncate text-sm text-[#fafafa]">
-                  #{nextDelivery.orderNumber} · {getRestaurantName(nextDelivery)} → {nextCourier.name}
+                  {formatOrderNumber(nextDelivery.orderNumber)} · {getRestaurantName(nextDelivery)} → {nextCourier.name}
                 </div>
               </>
             ) : (

@@ -688,7 +688,7 @@
 @layer base {
   body {
     @apply bg-background text-foreground;
-    font-family: 'Rubik', sans-serif;
+    font-family: 'Arimo', system-ui, sans-serif;
   }
 
   /**

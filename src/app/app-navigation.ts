@@ -19,8 +19,10 @@ export type AppNavIconKey =
   | 'layoutDashboard'
   | 'map'
   | 'package'
+  | 'palette'
   | 'ruler'
   | 'settings'
+  | 'sliders'
   | 'store'
   | 'trendingUp'
   | 'users'
@@ -38,6 +40,7 @@ export type AppNavItem = {
   exact?: boolean;
   activePathPrefixes?: string[];
   badge?: 'activeDeliveries' | 'deliveryBalance' | 'walletRevenue';
+  tag?: 'beta';
 };
 
 export type AppNavSection = {
@@ -127,6 +130,17 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
     activePathPrefixes: ['/delivery/'],
   },
   {
+    id: 'reports',
+    path: '/reports',
+    routePath: 'reports',
+    label: '\u05d3\u05d5\u05d7\u05d5\u05ea',
+    section: 'operations',
+    icon: 'fileText',
+    showInSidebar: true,
+    managedScroll: true,
+    exact: true,
+  },
+  {
     id: 'dispatch',
     path: '/dispatch',
     routePath: 'dispatch',
@@ -144,6 +158,28 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
     label: '\u05ea\u05d9\u05d1\u05ea \u05d7\u05e8\u05d9\u05d2\u05d9\u05dd',
     section: 'experiments',
     icon: 'alertTriangle',
+    showInSidebar: true,
+    managedScroll: true,
+    exact: true,
+  },
+  {
+    id: 'design-system',
+    path: '/design-system',
+    routePath: 'design-system',
+    label: 'מערכת עיצוב',
+    section: 'experiments',
+    icon: 'palette',
+    showInSidebar: true,
+    managedScroll: true,
+    exact: true,
+  },
+  {
+    id: 'design-system-playground',
+    path: '/design-system/playground',
+    routePath: 'design-system/playground',
+    label: 'פלייגראונד',
+    section: 'experiments',
+    icon: 'sliders',
     showInSidebar: true,
     managedScroll: true,
     exact: true,
@@ -182,6 +218,7 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
     showInSidebar: true,
     managedScroll: true,
     exact: true,
+    tag: 'beta',
   },
   {
     id: 'customers',
@@ -223,17 +260,6 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
     label: '\u05e9\u05e2\u05d5\u05ea \u05e4\u05e2\u05d9\u05dc\u05d5\u05ea',
     section: 'operationsTools',
     icon: 'clock',
-    showInSidebar: true,
-    managedScroll: true,
-    exact: true,
-  },
-  {
-    id: 'reports',
-    path: '/reports',
-    routePath: 'reports',
-    label: '\u05d3\u05d5\u05d7\u05d5\u05ea',
-    section: 'data',
-    icon: 'fileText',
     showInSidebar: true,
     managedScroll: true,
     exact: true,

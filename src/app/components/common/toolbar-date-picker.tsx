@@ -110,7 +110,7 @@ const CalendarPopover: React.FC<CalendarPopoverProps> = ({
           onClick={() =>
             setCalendarMonth((current) => new Date(current.getFullYear(), current.getMonth() - 1, 1))
           }
-          className="rounded-[4px] p-1.5 text-app-text-secondary hover:bg-app-surface-raised"
+          className="rounded-[4px] p-1.5 text-app-text-secondary hover:bg-app-surface-raised dark:text-[#EDEDED]"
         >
           <ChevronRight className="h-4 w-4" />
         </button>
@@ -120,7 +120,7 @@ const CalendarPopover: React.FC<CalendarPopoverProps> = ({
           onClick={() =>
             setCalendarMonth((current) => new Date(current.getFullYear(), current.getMonth() + 1, 1))
           }
-          className="rounded-[4px] p-1.5 text-app-text-secondary hover:bg-app-surface-raised"
+          className="rounded-[4px] p-1.5 text-app-text-secondary hover:bg-app-surface-raised dark:text-[#EDEDED]"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -303,7 +303,7 @@ export const ToolbarPeriodControl: React.FC<ToolbarPeriodControlProps> = ({
             : 'border-app-border bg-app-surface text-app-text hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#0A0A0A] dark:hover:bg-[#1A1A1A]'
         }`}
       >
-        <CalendarDays className="h-4 w-4 shrink-0 text-app-text-secondary" />
+        <CalendarDays className="h-4 w-4 shrink-0 text-app-text-secondary dark:text-[#EDEDED]" />
         <span className="truncate sm:hidden">{compactLabel}</span>
         <span className="hidden truncate sm:inline">{displayLabel}</span>
       </button>
@@ -414,7 +414,7 @@ export const ToolbarWeekPicker: React.FC<ToolbarWeekPickerProps> = ({
         onClick={() => setCalendarOpen((value) => !value)}
         className="flex h-10 min-w-[150px] items-center justify-center gap-2 rounded-[4px] border border-app-border bg-app-surface px-3 text-sm font-semibold text-app-text transition-colors hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#0A0A0A] dark:hover:bg-[#1A1A1A] sm:min-w-[190px]"
       >
-        <CalendarDays className="h-4 w-4 shrink-0 text-app-text-secondary" />
+        <CalendarDays className="h-4 w-4 shrink-0 text-app-text-secondary dark:text-[#EDEDED]" />
         <span className="truncate">{weekLabel}</span>
       </button>
       <ToolbarIconButton onClick={() => changeWeek(1)} label="שבוע הבא">

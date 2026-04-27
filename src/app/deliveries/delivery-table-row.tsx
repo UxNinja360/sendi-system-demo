@@ -31,6 +31,7 @@ import { ALL_COLUMNS, CUSTOM_COLUMN_IDS, COLUMN_MAP } from './column-defs';
 import type { ColumnDef } from './column-defs';
 import { STATUS_CONFIG } from './status-config';
 import { formatCurrency, getDeliveryCustomerCharge } from '../utils/delivery-finance';
+import { formatOrderNumber } from '../utils/order-number';
 
 interface DeliveryTableRowProps {
   delivery: Delivery;
@@ -246,7 +247,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
                 onPointerDown={(event) => event.stopPropagation()}
               >
                 <EntityActionMenuHeader
-                  title={`#${delivery.orderNumber}`}
+                  title={formatOrderNumber(delivery.orderNumber)}
                   subtitle={<span className={`text-[11px] font-medium ${config.tableColor}`}>{config.label}</span>}
                 />
 

@@ -20,6 +20,7 @@ import {
   SelectionActionButton,
 } from '../components/common/selection-action-bar';
 import { ListToolbarActions } from '../components/common/list-toolbar-actions';
+import { ToolbarIconButton } from '../components/common/toolbar-icon-button';
 import { getRestaurantChainId } from '../utils/restaurant-branding';
 import {
   formatCurrency,
@@ -217,6 +218,43 @@ const RestaurantNoResultsState: React.FC<{ query: string; onClear: () => void }>
 // ═══════════════════════════════════════
 // Component
 // ═══════════════════════════════════════
+const RestaurantToolbarToggle: React.FC<{
+  active: boolean;
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}> = ({ active, icon, label, onClick }) => (
+  <div className="relative flex h-10 shrink-0 items-center justify-center">
+    <ToolbarIconButton
+      active={active}
+      aria-pressed={active}
+      label={label}
+      title={label}
+      onClick={onClick}
+      className={
+        active
+          ? 'border-[#ededed] bg-[#101010] text-[#ededed] shadow-[inset_0_0_0_1px_rgba(237,237,237,0.35)]'
+          : 'border-app-nav-border text-[#8f8f8f]'
+      }
+    >
+      <span
+        className={`
+          flex items-center justify-center transition-transform
+          ${active ? '-translate-y-1' : 'translate-y-0'}
+        `}
+      >
+        {icon}
+      </span>
+    </ToolbarIconButton>
+    <span
+      className={`
+        pointer-events-none absolute bottom-1.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#ededed] transition-opacity
+        ${active ? 'opacity-100' : 'opacity-0'}
+      `}
+    />
+  </div>
+);
+
 export const RestaurantsScreen: React.FC = () => {
   const { state, dispatch } = useDelivery();
   const navigate = useNavigate();
@@ -225,6 +263,7 @@ export const RestaurantsScreen: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newRestaurant, setNewRestaurant] = useState({ name: '', phone: '', address: '', type: 'מסעדה' });
   const [searchQuery, setSearchQuery] = useState('');
+  const [restaurantConnectionFilter, setRestaurantConnectionFilter] = useState<'connected' | 'disconnected' | null>(null);
   const [sortColumn, setSortColumn] = useState<RestaurantSortableColumnId>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [isExportOpen, setIsExportOpen] = useState(false);
@@ -356,7 +395,10 @@ export const RestaurantsScreen: React.FC = () => {
         r.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
         r.contactPerson.toLowerCase().includes(searchQuery.toLowerCase()) ||
         r.phone.includes(searchQuery);
-      return matchesSearch;
+      const matchesConnection =
+        !restaurantConnectionFilter ||
+        (restaurantConnectionFilter === 'connected' ? r.isActive : !r.isActive);
+      return matchesSearch && matchesConnection;
     });
 
     const direction = sortDirection === 'asc' ? 1 : -1;
@@ -383,7 +425,7 @@ export const RestaurantsScreen: React.FC = () => {
           return 0;
       }
     });
-  }, [restaurants, searchQuery, sortColumn, sortDirection]);
+  }, [restaurants, restaurantConnectionFilter, searchQuery, sortColumn, sortDirection]);
 
   // Stats
   const stats = useMemo(() => ({
@@ -398,6 +440,7 @@ export const RestaurantsScreen: React.FC = () => {
   // Clear handlers
   const handleClearAll = () => {
     setSearchQuery('');
+    setRestaurantConnectionFilter(null);
   };
 
   const handleToggleSelectRestaurant = (restaurantId: string) => {
@@ -750,7 +793,20 @@ export const RestaurantsScreen: React.FC = () => {
               />
             }
             actions={
-              <ListToolbarActions
+              <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                <div className="flex shrink-0 items-center gap-1">
+                  <RestaurantToolbarToggle
+                    active={restaurantConnectionFilter === 'connected'}
+                    label={'\u05d4\u05e6\u05d2 \u05de\u05e1\u05e2\u05d3\u05d5\u05ea \u05de\u05d7\u05d5\u05d1\u05e8\u05d5\u05ea'}
+                    onClick={() =>
+                      setRestaurantConnectionFilter((value) =>
+                        value === 'connected' ? null : 'connected',
+                      )
+                    }
+                    icon={<StoreIcon className="h-3.5 w-3.5" />}
+                  />
+                </div>
+                <ListToolbarActions
                 searchQuery={searchQuery}
                 onSearchQueryChange={setSearchQuery}
                 searchPlaceholder="חפש מסעדה, עיר או איש קשר..."
@@ -758,6 +814,7 @@ export const RestaurantsScreen: React.FC = () => {
                 showColumnsToggle={false}
                 showExportButton={false}
               />
+              </div>
             }
           />
         }

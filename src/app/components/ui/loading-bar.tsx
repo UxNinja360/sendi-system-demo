@@ -44,9 +44,9 @@ export const LoadingBar: React.FC<LoadingBarProps> = ({ isLoading }) => {
   if (!visible) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 h-1 bg-transparent pointer-events-none" style={{ zIndex: 99999 }}>
+    <div className="fixed top-0 left-0 right-0 flex h-1 justify-end bg-transparent pointer-events-none" style={{ zIndex: 99999 }}>
       <div
-        className="h-full bg-gradient-to-r from-[#9fe870] via-[#7ec95a] to-[#9fe870] shadow-lg shadow-[#9fe870]/50 transition-opacity duration-300"
+        className="h-full bg-gradient-to-l from-[#9fe870] via-[#7ec95a] to-[#9fe870] shadow-lg shadow-[#9fe870]/50 transition-opacity duration-300"
         style={{
           width: `${progress}%`,
           opacity: opacity,

@@ -12,9 +12,11 @@ import {
   LayoutDashboard,
   Map,
   Package,
+  Palette,
   Power,
   Ruler,
   Settings,
+  SlidersHorizontal,
   Store,
   TrendingUp,
   TriangleAlert,
@@ -50,6 +52,7 @@ const LABELS = {
   settings: '\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea',
   wallet: '\u05d0\u05e8\u05e0\u05e7',
   deliveryBalance: '\u05d9\u05ea\u05e8\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
+  beta: '\u05d1\u05d8\u05d0',
 };
 
 const BUSINESSES = [
@@ -85,8 +88,10 @@ const NAV_ICON_MAP: Record<AppNavIconKey, React.FC<React.SVGProps<SVGSVGElement>
   layoutDashboard: LayoutDashboard,
   map: Map,
   package: Package,
+  palette: Palette,
   ruler: Ruler,
   settings: Settings,
+  sliders: SlidersHorizontal,
   store: Store,
   trendingUp: TrendingUp,
   users: Users,
@@ -278,6 +283,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
     const Icon = NAV_ICON_MAP[item.icon];
     const isActive = isNavItemActive(item, location.pathname);
     const badge = getNavBadge(item);
+    const tagLabel = item.tag === 'beta' ? LABELS.beta : null;
 
     return (
       <button
@@ -298,7 +304,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
         {isExpanded ? (
           <span className="flex h-9 items-center gap-3 px-4">
             <Icon size={19} className="shrink-0 stroke-[1.8px]" />
-            <span className="min-w-0 flex-1 truncate text-sm font-medium">{item.label}</span>
+            <span className="flex min-w-0 flex-1 items-center gap-2">
+              <span className="min-w-0 truncate text-sm font-medium">{item.label}</span>
+              {tagLabel && (
+                <span className="shrink-0 rounded-[4px] border border-app-nav-border bg-app-nav-hover-bg px-1.5 text-[10px] font-semibold leading-4 text-app-text-secondary">
+                  {tagLabel}
+                </span>
+              )}
+            </span>
             {badge && (
               <span
                 className={`shrink-0 rounded-[4px] px-1.5 text-[11px] font-medium tabular-nums ${
@@ -313,7 +326,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
           </span>
         ) : (
           <SidebarIconTooltip
-            label={badge ? `${item.label} • ${badge}` : item.label}
+            label={[item.label, tagLabel, badge].filter(Boolean).join(' • ')}
             className="flex h-9 items-center justify-center"
           >
             <Icon size={19} className="stroke-[1.8px]" />
@@ -322,6 +335,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       </button>
     );
   };
+
+  const renderStaticSectionItems = (section: (typeof SIDEBAR_NAV_SECTIONS)[number]) =>
+    section.items.map((item, itemIndex) => {
+      const shouldShowInlineDivider =
+        (section.id === 'core' &&
+          item.id === 'dashboard' &&
+          section.items[itemIndex - 1]?.id === 'live') ||
+        (section.id === 'operations' &&
+          item.id === 'restaurants' &&
+          section.items[itemIndex - 1]?.id === 'reports');
+
+      return (
+        <React.Fragment key={item.id}>
+          {shouldShowInlineDivider && <div className="mx-4 my-2 border-t border-app-nav-border" />}
+          {renderNavItem(item)}
+        </React.Fragment>
+      );
+    });
 
   const footerItemClass = (isActive: boolean) =>
     `w-full cursor-pointer border-b border-app-nav-border px-4 py-3 text-right transition-colors ${
@@ -473,6 +504,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
               {sectionIndex > 0 &&
                 section.id !== 'legacy' &&
                 !(
+                  SIDEBAR_NAV_SECTIONS[sectionIndex - 1]?.id === 'core' &&
+                  section.id === 'operations'
+                ) &&
+                !(
                   SIDEBAR_NAV_SECTIONS[sectionIndex - 1]?.id === 'operationsTools' &&
                   section.id === 'experiments'
                 ) && (
@@ -493,7 +528,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
               ) : section.id === 'legacy' ? (
                 renderCollapsibleSection(section, isLegacySectionOpen, setIsLegacySectionOpen)
               ) : (
-                section.items.map(renderNavItem)
+                renderStaticSectionItems(section)
               )}
             </React.Fragment>
           ))}

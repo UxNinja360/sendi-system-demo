@@ -481,6 +481,7 @@ export const DeliveriesPage: React.FC = () => {
         defaultLabel: 'סטטוס',
         pluralLabel: 'סטטוסים',
         showSearch: false,
+        appearance: 'status' as const,
         setCurrentPage,
       },
     ],
