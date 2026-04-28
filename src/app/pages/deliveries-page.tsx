@@ -576,8 +576,6 @@ export const DeliveriesPage: React.FC = () => {
               totalCount={stats.total}
               selectedIds={selectedIds}
               couriers={state.couriers}
-              calculateTimeRemaining={calculateTimeRemaining}
-              formatTime={formatTime}
               onToggleSelect={handleToggleSelect}
               onOpenDrawer={handleOpenDrawer}
               onStatusChange={handleStatusChange}

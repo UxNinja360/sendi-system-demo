@@ -1,8 +1,8 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { format as formatDate } from 'date-fns';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router';
 import {
-  Bike,
   CheckCircle2,
   Clock3,
   Copy,
@@ -38,8 +38,6 @@ type DeliveriesVercelListProps = {
   onClearFilters: () => void;
   totalCount: number;
   couriers: Courier[];
-  calculateTimeRemaining: (delivery: Delivery) => number | null;
-  formatTime: (seconds: number) => string;
   selectedIds: Set<string>;
   onToggleSelect: (id: string) => void;
   onOpenDrawer: (id: string) => void;
@@ -55,8 +53,6 @@ type DeliveriesVercelListProps = {
 type DeliveryVercelRowProps = {
   delivery: Delivery;
   courier: Courier | null;
-  timeRemaining: number | null;
-  formatTime: (seconds: number) => string;
   isSelected: boolean;
   isDrawerTarget: boolean;
   onToggleSelect: (id: string) => void;
@@ -69,7 +65,7 @@ type DeliveryVercelRowProps = {
 };
 
 const rowGridClass =
-  'grid grid-cols-[44px_minmax(132px,0.85fr)_minmax(220px,1.25fr)_minmax(240px,1.35fr)_minmax(152px,0.85fr)_minmax(132px,0.7fr)_minmax(118px,0.7fr)_44px_44px]';
+  'grid grid-cols-[44px_minmax(126px,0.55fr)_minmax(220px,0.8fr)_minmax(240px,0.9fr)_minmax(430px,2.4fr)_44px]';
 
 const getDeliveryDate = (delivery: Delivery) =>
   delivery.creation_time ?? delivery.createdAt ?? delivery.delivery_date;
@@ -84,22 +80,31 @@ const formatDeliveryDate = (delivery: Delivery) => {
   }
 };
 
-const getStatusChipClassName = (status: DeliveryStatus) => {
-  switch (status) {
-    case 'pending':
-      return 'border-orange-500/35 bg-orange-500/10 text-orange-400';
-    case 'assigned':
-      return 'border-yellow-500/35 bg-yellow-500/10 text-yellow-400';
-    case 'delivering':
-      return 'border-green-500/35 bg-green-500/10 text-green-400';
-    case 'delivered':
-      return 'border-blue-500/35 bg-blue-500/10 text-blue-400';
-    case 'cancelled':
-      return 'border-red-500/35 bg-red-500/10 text-red-400';
-    case 'expired':
-    default:
-      return 'border-zinc-500/35 bg-zinc-500/10 text-zinc-300';
-  }
+const toDeliveryDate = (value: Date | string | number | null | undefined) => {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const formatTimelineDate = (value: Date | string | number | null | undefined) => {
+  const date = toDeliveryDate(value);
+  if (!date) return '-';
+  return formatDate(date, 'HH:mm dd/MM/yyyy');
+};
+
+const formatRelativeAge = (value: Date | string | number | null | undefined) => {
+  const date = toDeliveryDate(value);
+  if (!date) return null;
+
+  const minutes = Math.max(0, Math.floor((Date.now() - date.getTime()) / 60000));
+  if (minutes < 1) return 'עכשיו';
+  if (minutes < 60) return `לפני ${minutes} דק׳`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `לפני ${hours} ש׳`;
+
+  const days = Math.floor(hours / 24);
+  return `לפני ${days} ימים`;
 };
 
 const getStageIndicatorMeta = (status: DeliveryStatus) => {
@@ -120,8 +125,40 @@ const getStageIndicatorMeta = (status: DeliveryStatus) => {
   }
 };
 
+const getCourierStatusText = (
+  delivery: Delivery,
+  courierName: string,
+  hasAssignedCourier: boolean,
+) => {
+  if (!hasAssignedCourier) {
+    if (delivery.status === 'expired') return 'פג תוקף';
+    return 'ממתין לשיבוץ';
+  }
+
+  switch (delivery.status) {
+    case 'assigned':
+      return `שובץ ל- ${courierName}`;
+    case 'delivering':
+      return `נאסף על ידי ${courierName}`;
+    case 'delivered':
+      return `נמסר על ידי ${courierName}`;
+    case 'cancelled':
+      return `בוטל לאחר שיוך לשליח ${courierName}`;
+    case 'expired':
+      return `פג תוקף לאחר שיוך לשליח ${courierName}`;
+    case 'pending':
+    default:
+      return courierName;
+  }
+};
+
 const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(' ');
+
+const deliveryHoverCardWidth = 260;
+const deliveryHoverCardEstimatedHeight = 116;
+const deliveryHoverCardGap = 8;
+const deliveryHoverCardViewportPadding = 8;
 
 const polarToCartesian = (centerX: number, centerY: number, radius: number, angleInDegrees: number) => {
   const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180;
@@ -177,6 +214,108 @@ const DeliveryStageIndicator: React.FC<{ status: DeliveryStatus }> = ({ status }
   );
 };
 
+const DeliveryStageTimelineTooltip: React.FC<{
+  delivery: Delivery;
+}> = ({ delivery }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [position, setPosition] = useState<{ left: number; top: number } | null>(null);
+  const triggerRef = useRef<HTMLSpanElement>(null);
+  const assignedAt = delivery.assignedAt ?? delivery.coupled_time ?? delivery.deliveryCreditConsumedAt;
+  const arrivedAtRestaurant =
+    delivery.arrivedAtRestaurantAt ?? delivery.arrived_at_rest ?? delivery.pickedUpAt ?? delivery.took_it_time;
+  const arrivedAtCustomer =
+    delivery.arrivedAtCustomerAt ?? delivery.arrived_at_client ?? delivery.deliveredAt ?? delivery.delivered_time;
+  const assignedAge = formatRelativeAge(assignedAt);
+
+  const timelineRows = [
+    { label: 'צוות לשליח', value: assignedAt },
+    { label: 'הגיע למסעדה', value: arrivedAtRestaurant },
+    { label: 'הגיע ללקוח', value: arrivedAtCustomer },
+  ];
+
+  useLayoutEffect(() => {
+    if (!isOpen || typeof window === 'undefined') return;
+
+    const updatePosition = () => {
+      const trigger = triggerRef.current;
+      if (!trigger) return;
+
+      const rect = trigger.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const preferredLeft = rect.right + deliveryHoverCardGap;
+      const fallbackLeft = rect.left - deliveryHoverCardWidth - deliveryHoverCardGap;
+      const left =
+        preferredLeft + deliveryHoverCardWidth <= viewportWidth - deliveryHoverCardViewportPadding
+          ? preferredLeft
+          : Math.max(deliveryHoverCardViewportPadding, fallbackLeft);
+      const centeredTop = rect.top + rect.height / 2 - deliveryHoverCardEstimatedHeight / 2;
+      const maxTop = viewportHeight - deliveryHoverCardEstimatedHeight - deliveryHoverCardViewportPadding;
+      const top = Math.min(
+        Math.max(deliveryHoverCardViewportPadding, centeredTop),
+        Math.max(deliveryHoverCardViewportPadding, maxTop),
+      );
+
+      setPosition({ left, top });
+    };
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
+  }, [isOpen]);
+
+  return (
+    <>
+      <span
+        ref={triggerRef}
+        className="relative flex h-8 w-8 shrink-0 items-center justify-center focus:outline-none"
+        tabIndex={0}
+        aria-label="ציר זמן סטטוס משלוח"
+        onMouseEnter={() => setIsOpen(true)}
+        onMouseLeave={() => setIsOpen(false)}
+        onFocus={() => setIsOpen(true)}
+        onBlur={() => setIsOpen(false)}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <DeliveryStageIndicator status={delivery.status} />
+      </span>
+      {isOpen && position && typeof document !== 'undefined'
+        ? createPortal(
+            <div
+              role="tooltip"
+              dir="rtl"
+              className="pointer-events-none fixed z-[9999] w-[260px] rounded-md border border-[#2a2a2a] bg-[#0b0b0b] px-3 py-2 text-xs text-[#ededed] shadow-2xl"
+              style={{ left: position.left, top: position.top }}
+            >
+              <div dir="rtl" className="space-y-2">
+                <div className="flex items-center justify-between gap-3 text-[#8f8f8f]">
+                  <span>ציר זמן שליח</span>
+                  {assignedAge ? <span dir="rtl">{assignedAge}</span> : null}
+                </div>
+                <div className="space-y-1.5">
+                  {timelineRows.map((row) => (
+                    <div key={row.label} className="flex items-center justify-between gap-4">
+                      <span className="text-[#8f8f8f]">{row.label}</span>
+                      <span dir="ltr" className="font-medium text-[#ededed]">
+                        {formatTimelineDate(row.value)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
+    </>
+  );
+};
+
 const getDeliveryEmptyStateCopy = (
   mode: DeliveriesVercelListProps['emptyStateMode'],
   totalCount: number,
@@ -226,8 +365,6 @@ const DeliveryRowCheckbox: React.FC<{
 const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
   delivery,
   courier,
-  timeRemaining,
-  formatTime,
   isSelected,
   isDrawerTarget,
   onToggleSelect,
@@ -245,9 +382,9 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
   const restaurantMeta = delivery.restaurantAddress || delivery.rest_city || delivery.restaurantCity || 'מסעדה';
   const clientName = delivery.client_name || delivery.customerName;
   const clientAddress = delivery.client_full_address || delivery.address;
-  const courierName = courier?.name || delivery.courierName || '-';
-  const courierMeta = courier?.vehicleType || delivery.vehicle_type || 'לא שובץ';
-  const remainingLabel = timeRemaining !== null ? formatTime(timeRemaining) : '-';
+  const hasAssignedCourier = Boolean(courier || delivery.courierId || delivery.runner_id || delivery.courierName);
+  const courierName = courier?.name || delivery.courierName || (hasAssignedCourier ? 'לא ידוע' : 'לא שובץ');
+  const courierStatusText = getCourierStatusText(delivery, courierName, hasAssignedCourier);
 
   const closeMenus = () => {
     setContextMenuPos(null);
@@ -289,7 +426,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
       }}
       className={joinClassNames(
         rowGridClass,
-        'group min-w-[1144px] cursor-pointer border-b border-app-nav-border bg-app-surface text-app-text outline-none transition-colors hover:bg-app-surface-raised focus-visible:bg-app-surface-raised',
+        'group min-w-[1120px] cursor-pointer border-b border-app-nav-border bg-app-surface text-app-text outline-none transition-colors last:border-b-0 hover:bg-app-surface-raised focus-visible:bg-app-surface-raised',
         isSelected && 'bg-app-surface-raised',
         isDrawerTarget && 'shadow-[inset_2px_0_0_#ededed]',
       )}
@@ -300,20 +437,17 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         label={`בחר משלוח ${delivery.orderNumber}`}
       />
 
-      <div className="flex min-h-[58px] min-w-0 flex-col justify-center px-3 py-2">
+      <div className="flex min-h-[72px] min-w-0 flex-col justify-center px-3 py-2">
         <div className="flex items-center gap-2">
           <span className="truncate text-sm font-semibold text-app-text">{formatOrderNumber(delivery.orderNumber)}</span>
-          <span className="rounded-full border border-app-nav-border px-1.5 py-0.5 text-[10px] font-medium text-app-text-secondary">
-            משלוח
-          </span>
         </div>
         <div className="mt-1 flex items-center gap-1.5 text-sm font-normal text-app-text-secondary">
+          <span dir="ltr">{formatDeliveryDate(delivery)}</span>
           <Clock3 className="h-3.5 w-3.5" />
-          <span>{formatDeliveryDate(delivery)}</span>
         </div>
       </div>
 
-      <div className="flex min-h-[58px] min-w-0 flex-col justify-center px-3 py-2">
+      <div className="flex min-h-[72px] min-w-0 flex-col justify-center px-3 py-2">
         <div className="flex min-w-0 items-center gap-1.5">
           <Store className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
           <span className="truncate text-sm font-normal text-app-text">{restaurantName}</span>
@@ -324,7 +458,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         </div>
       </div>
 
-      <div className="flex min-h-[58px] min-w-0 flex-col justify-center px-3 py-2">
+      <div className="flex min-h-[72px] min-w-0 flex-col justify-center px-3 py-2">
         <div className="flex min-w-0 items-center gap-1.5">
           <UserRound className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
           <span className="truncate text-sm font-normal text-app-text">{clientName}</span>
@@ -335,33 +469,16 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         </div>
       </div>
 
-      <div className="flex min-h-[58px] min-w-0 flex-col justify-center px-3 py-2">
-        <div className="flex min-w-0 items-center gap-1.5">
-          <UserRound className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
-          <span className="truncate text-sm font-normal text-app-text">{courierName}</span>
-        </div>
-        <div className="mt-1 flex min-w-0 items-center gap-1.5 text-sm font-normal text-app-text-secondary">
-          <Bike className="h-3.5 w-3.5 shrink-0" />
-          <span className="truncate">{courierMeta}</span>
+      <div className="flex min-h-[72px] min-w-0 items-center justify-end px-3 py-2">
+        <div className="flex w-full min-w-0 items-center justify-end gap-2">
+          <span className="min-w-0 truncate text-sm font-normal text-app-text-secondary">
+            {courierStatusText}
+          </span>
+          <DeliveryStageTimelineTooltip delivery={delivery} />
         </div>
       </div>
 
-      <div className="flex min-h-[58px] min-w-0 flex-col justify-center px-3 py-2 text-left" dir="ltr">
-        <span className="truncate text-sm font-normal text-app-text">{remainingLabel}</span>
-        <span className="mt-1 truncate text-sm font-normal text-app-text-secondary">SLA</span>
-      </div>
-
-      <div className="flex min-h-[58px] min-w-0 items-center justify-center px-3 py-2">
-        <span className={joinClassNames('w-fit rounded-md border px-2 py-0.5 text-[11px] font-semibold', getStatusChipClassName(delivery.status))}>
-          {config.label}
-        </span>
-      </div>
-
-      <div className="flex min-h-[58px] items-center justify-center px-1">
-        <DeliveryStageIndicator status={delivery.status} />
-      </div>
-
-      <div className="flex min-h-[58px] items-center justify-center px-1" onClick={(event) => event.stopPropagation()}>
+      <div className="flex min-h-[72px] items-center justify-center px-1" onClick={(event) => event.stopPropagation()}>
         <EntityRowActionTrigger
           onClick={(event) => {
             const rect = event.currentTarget.getBoundingClientRect();
@@ -493,8 +610,6 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
   onClearFilters,
   totalCount,
   couriers,
-  calculateTimeRemaining,
-  formatTime,
   selectedIds,
   onToggleSelect,
   onOpenDrawer,
@@ -555,7 +670,7 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-app-background">
       <div ref={scrollContainerRef} className="deliveries-vercel-scroll min-h-0 flex-1 overflow-auto px-3" dir="ltr">
-        <div className="min-w-[1144px] overflow-hidden border border-app-nav-border" dir="rtl">
+        <div className="min-w-[1120px] overflow-hidden border border-app-nav-border" dir="rtl">
           {filteredDeliveries.map((delivery) => {
             const courier = delivery.courierId
               ? couriers.find((candidate) => candidate.id === delivery.courierId) ?? null
@@ -566,8 +681,6 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
                 key={delivery.id}
                 delivery={delivery}
                 courier={courier}
-                timeRemaining={calculateTimeRemaining(delivery)}
-                formatTime={formatTime}
                 isSelected={selectedIds.has(delivery.id)}
                 isDrawerTarget={drawerDeliveryId === delivery.id}
                 onToggleSelect={onToggleSelect}

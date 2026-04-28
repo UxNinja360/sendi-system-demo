@@ -299,13 +299,20 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
   const inlineTokens = activeTokens.filter((token) => token.kind !== 'search');
   const hasInlineTokens = inlineTokens.length > 0;
   const showClearButton = Boolean(draft || hasInlineTokens);
+  const searchShellClassName = [
+    'flex h-10 w-full items-center gap-1.5 overflow-hidden rounded-[4px] border pr-9 pl-8 text-sm transition-[background-color,border-color,box-shadow,color]',
+    'text-[#0d0d12] dark:text-app-text',
+    isOpen
+      ? 'border-[#8F8F8F] bg-[#0A0A0A] shadow-[0_0_0_1px_rgba(143,143,143,0.16)]'
+      : 'border-[#e5e5e5] bg-[#f5f5f5] hover:border-[#8F8F8F] hover:bg-white dark:border-app-nav-border dark:bg-[#0A0A0A] dark:hover:border-[#8F8F8F]',
+  ].join(' ');
 
   return (
     <div ref={rootRef} className="relative z-30 flex min-w-0 flex-1" dir="rtl">
       <div className="relative min-w-0 flex-1">
         <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8F8F8F]" />
         <div
-          className="flex h-10 w-full items-center gap-1.5 overflow-hidden rounded-[4px] border border-[#e5e5e5] bg-[#f5f5f5] pr-9 pl-8 text-sm text-[#0d0d12] transition-colors focus-within:border-[#9fe870]/50 dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-app-text"
+          className={searchShellClassName}
           onClick={() => {
             setIsOpen(true);
             inputRef.current?.focus();

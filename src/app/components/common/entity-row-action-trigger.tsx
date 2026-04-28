@@ -14,10 +14,10 @@ export const EntityRowActionTrigger: React.FC<EntityRowActionTriggerProps> = ({
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center justify-center rounded-lg p-1.5 text-[#737373] transition-colors hover:bg-[#f5f5f5] dark:text-app-text-secondary dark:hover:bg-[#262626]"
+      className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#737373] transition-colors hover:bg-[#f5f5f5] dark:text-[#EDEDED] dark:hover:bg-[#262626]"
       title={title}
     >
-      <MoreHorizontal className="h-3.5 w-3.5" />
+      <MoreHorizontal className="h-[18px] w-[18px]" />
     </button>
   );
 };
