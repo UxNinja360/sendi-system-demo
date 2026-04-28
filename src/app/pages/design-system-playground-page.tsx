@@ -18,6 +18,10 @@ import {
 
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import {
+  DeliveryStageTimelineTooltip,
+  type DeliveryStageTimelineData,
+} from '../components/common/delivery-stage-timeline';
 
 type Density = 'compact' | 'comfortable' | 'spacious';
 type DeliveryStage = 'pending' | 'assigned' | 'delivering' | 'delivered' | 'cancelled';
@@ -221,6 +225,24 @@ const sampleRows = [
   },
 ];
 
+const createStageTimelineSample = (stage: DeliveryStage): DeliveryStageTimelineData => {
+  const now = Date.now();
+  const createdAt = new Date(now - 44_000);
+  const assignedAt = new Date(now - 36_000);
+  const arrivedAtRestaurantAt = new Date(now - 24_000);
+  const arrivedAtCustomerAt = new Date(now - 8_000);
+
+  return {
+    status: stage,
+    creation_time: createdAt,
+    assignedAt: stage === 'pending' ? null : assignedAt,
+    arrivedAtRestaurantAt: stage === 'delivering' || stage === 'delivered' || stage === 'cancelled'
+      ? arrivedAtRestaurantAt
+      : null,
+    arrivedAtCustomerAt: stage === 'delivered' || stage === 'cancelled' ? arrivedAtCustomerAt : null,
+  };
+};
+
 export const DesignSystemPlaygroundPage: React.FC = () => {
   const [density, setDensity] = useState<Density>('comfortable');
   const [stage, setStage] = useState<DeliveryStage>('assigned');
@@ -232,6 +254,7 @@ export const DesignSystemPlaygroundPage: React.FC = () => {
 
   const densityStyle = densityConfig[density];
   const stageStyle = stageConfig[stage];
+  const stageTimelineSample = useMemo(() => createStageTimelineSample(stage), [stage]);
 
   const rowClassName = useMemo(
     () =>
@@ -360,6 +383,21 @@ export const DesignSystemPlaygroundPage: React.FC = () => {
             </div>
           </Panel>
 
+          <Panel title="Delivery Stage Timeline">
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex h-14 items-center gap-3 rounded-[var(--app-radius-md)] border border-app-nav-border bg-app-background px-4">
+                <DeliveryStageTimelineTooltip delivery={stageTimelineSample} />
+                <div className="min-w-0">
+                  <div className="text-sm font-normal text-app-text">{stageStyle.label}</div>
+                  <div className="mt-1 text-sm font-normal text-app-text-secondary">hover על הטבעת</div>
+                </div>
+              </div>
+              <div className="text-sm text-app-text-secondary">
+                משתמש באותה קומפוננטה של מסך משלוחים, כולל ההובר והזמנים.
+              </div>
+            </div>
+          </Panel>
+
           <Panel title="Command Search Filters">
             <div className="rounded-[var(--app-radius-md)] border border-app-nav-border bg-app-background p-3">
               <div className="flex h-10 min-w-0 items-center gap-2 rounded-[var(--app-radius-xs)] border border-app-nav-border bg-app-surface px-3">
@@ -449,7 +487,7 @@ export const DesignSystemPlaygroundPage: React.FC = () => {
                       </span>
                     </div>
                     <div className={`flex items-center justify-center ${densityStyle.pad}`}>
-                      <ProgressRing stage={stage} />
+                      <DeliveryStageTimelineTooltip delivery={stageTimelineSample} />
                     </div>
                     <div className={`flex items-center justify-center ${densityStyle.pad}`}>
                       <button

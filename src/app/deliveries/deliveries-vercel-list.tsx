@@ -1,6 +1,5 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { format as formatDate } from 'date-fns';
-import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router';
 import {
   CheckCircle2,
@@ -27,6 +26,8 @@ import {
   EntityActionMenuItem,
   EntityActionMenuOverlay,
 } from '../components/common/entity-action-menu';
+import { DeliveryStageTimelineTooltip } from '../components/common/delivery-stage-timeline';
+import { DeliveryTimeDetailsTooltip } from '../components/common/delivery-time-details-tooltip';
 import { EntityRowActionTrigger } from '../components/common/entity-row-action-trigger';
 import { VercelEmptyState } from '../components/common/vercel-empty-state';
 import { STATUS_CONFIG } from './status-config';
@@ -80,51 +81,6 @@ const formatDeliveryDate = (delivery: Delivery) => {
   }
 };
 
-const toDeliveryDate = (value: Date | string | number | null | undefined) => {
-  if (!value) return null;
-  const date = value instanceof Date ? value : new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
-};
-
-const formatTimelineDate = (value: Date | string | number | null | undefined) => {
-  const date = toDeliveryDate(value);
-  if (!date) return '-';
-  return formatDate(date, 'HH:mm dd/MM/yyyy');
-};
-
-const formatRelativeAge = (value: Date | string | number | null | undefined) => {
-  const date = toDeliveryDate(value);
-  if (!date) return null;
-
-  const minutes = Math.max(0, Math.floor((Date.now() - date.getTime()) / 60000));
-  if (minutes < 1) return 'עכשיו';
-  if (minutes < 60) return `לפני ${minutes} דק׳`;
-
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `לפני ${hours} ש׳`;
-
-  const days = Math.floor(hours / 24);
-  return `לפני ${days} ימים`;
-};
-
-const getStageIndicatorMeta = (status: DeliveryStatus) => {
-  switch (status) {
-    case 'pending':
-      return { activeSegments: 1, color: '#f97316' };
-    case 'assigned':
-      return { activeSegments: 2, color: '#eab308' };
-    case 'delivering':
-      return { activeSegments: 3, color: '#22c55e' };
-    case 'delivered':
-      return { activeSegments: 4, color: '#0070f3' };
-    case 'cancelled':
-      return { activeSegments: 4, color: '#ef4444' };
-    case 'expired':
-    default:
-      return { activeSegments: 0, color: '#71717a' };
-  }
-};
-
 const getCourierStatusText = (
   delivery: Delivery,
   courierName: string,
@@ -154,167 +110,6 @@ const getCourierStatusText = (
 
 const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(' ');
-
-const deliveryHoverCardWidth = 260;
-const deliveryHoverCardEstimatedHeight = 116;
-const deliveryHoverCardGap = 8;
-const deliveryHoverCardViewportPadding = 8;
-
-const polarToCartesian = (centerX: number, centerY: number, radius: number, angleInDegrees: number) => {
-  const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180;
-
-  return {
-    x: centerX + radius * Math.cos(angleInRadians),
-    y: centerY + radius * Math.sin(angleInRadians),
-  };
-};
-
-const createArcPath = (startAngle: number, endAngle: number) => {
-  const start = polarToCartesian(16, 16, 11, endAngle);
-  const end = polarToCartesian(16, 16, 11, startAngle);
-
-  return `M ${start.x} ${start.y} A 11 11 0 0 0 ${end.x} ${end.y}`;
-};
-
-const stageRingSegments = [
-  createArcPath(12, 78),
-  createArcPath(102, 168),
-  createArcPath(192, 258),
-  createArcPath(282, 348),
-];
-
-const DeliveryStageIndicator: React.FC<{ status: DeliveryStatus }> = ({ status }) => {
-  const { activeSegments, color } = getStageIndicatorMeta(status);
-
-  return (
-    <span className="relative flex h-8 w-8 shrink-0 items-center justify-center">
-      <svg className="h-8 w-8" viewBox="0 0 32 32" aria-hidden="true">
-        {stageRingSegments.map((path, index) => (
-          <path
-            key={`stage-track-${index}`}
-            d={path}
-            fill="none"
-            stroke="#303030"
-            strokeWidth="3"
-            strokeLinecap="round"
-          />
-        ))}
-        {stageRingSegments.slice(0, activeSegments).map((path, index) => (
-          <path
-            key={`stage-active-${index}`}
-            d={path}
-            fill="none"
-            stroke={color}
-            strokeWidth="3"
-            strokeLinecap="round"
-          />
-        ))}
-      </svg>
-    </span>
-  );
-};
-
-const DeliveryStageTimelineTooltip: React.FC<{
-  delivery: Delivery;
-}> = ({ delivery }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [position, setPosition] = useState<{ left: number; top: number } | null>(null);
-  const triggerRef = useRef<HTMLSpanElement>(null);
-  const assignedAt = delivery.assignedAt ?? delivery.coupled_time ?? delivery.deliveryCreditConsumedAt;
-  const arrivedAtRestaurant =
-    delivery.arrivedAtRestaurantAt ?? delivery.arrived_at_rest ?? delivery.pickedUpAt ?? delivery.took_it_time;
-  const arrivedAtCustomer =
-    delivery.arrivedAtCustomerAt ?? delivery.arrived_at_client ?? delivery.deliveredAt ?? delivery.delivered_time;
-  const assignedAge = formatRelativeAge(assignedAt);
-
-  const timelineRows = [
-    { label: 'צוות לשליח', value: assignedAt },
-    { label: 'הגיע למסעדה', value: arrivedAtRestaurant },
-    { label: 'הגיע ללקוח', value: arrivedAtCustomer },
-  ];
-
-  useLayoutEffect(() => {
-    if (!isOpen || typeof window === 'undefined') return;
-
-    const updatePosition = () => {
-      const trigger = triggerRef.current;
-      if (!trigger) return;
-
-      const rect = trigger.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      const preferredLeft = rect.right + deliveryHoverCardGap;
-      const fallbackLeft = rect.left - deliveryHoverCardWidth - deliveryHoverCardGap;
-      const left =
-        preferredLeft + deliveryHoverCardWidth <= viewportWidth - deliveryHoverCardViewportPadding
-          ? preferredLeft
-          : Math.max(deliveryHoverCardViewportPadding, fallbackLeft);
-      const centeredTop = rect.top + rect.height / 2 - deliveryHoverCardEstimatedHeight / 2;
-      const maxTop = viewportHeight - deliveryHoverCardEstimatedHeight - deliveryHoverCardViewportPadding;
-      const top = Math.min(
-        Math.max(deliveryHoverCardViewportPadding, centeredTop),
-        Math.max(deliveryHoverCardViewportPadding, maxTop),
-      );
-
-      setPosition({ left, top });
-    };
-
-    updatePosition();
-    window.addEventListener('resize', updatePosition);
-    window.addEventListener('scroll', updatePosition, true);
-
-    return () => {
-      window.removeEventListener('resize', updatePosition);
-      window.removeEventListener('scroll', updatePosition, true);
-    };
-  }, [isOpen]);
-
-  return (
-    <>
-      <span
-        ref={triggerRef}
-        className="relative flex h-8 w-8 shrink-0 items-center justify-center focus:outline-none"
-        tabIndex={0}
-        aria-label="ציר זמן סטטוס משלוח"
-        onMouseEnter={() => setIsOpen(true)}
-        onMouseLeave={() => setIsOpen(false)}
-        onFocus={() => setIsOpen(true)}
-        onBlur={() => setIsOpen(false)}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <DeliveryStageIndicator status={delivery.status} />
-      </span>
-      {isOpen && position && typeof document !== 'undefined'
-        ? createPortal(
-            <div
-              role="tooltip"
-              dir="rtl"
-              className="pointer-events-none fixed z-[9999] w-[260px] rounded-md border border-[#2a2a2a] bg-[#0b0b0b] px-3 py-2 text-xs text-[#ededed] shadow-2xl"
-              style={{ left: position.left, top: position.top }}
-            >
-              <div dir="rtl" className="space-y-2">
-                <div className="flex items-center justify-between gap-3 text-[#8f8f8f]">
-                  <span>ציר זמן שליח</span>
-                  {assignedAge ? <span dir="rtl">{assignedAge}</span> : null}
-                </div>
-                <div className="space-y-1.5">
-                  {timelineRows.map((row) => (
-                    <div key={row.label} className="flex items-center justify-between gap-4">
-                      <span className="text-[#8f8f8f]">{row.label}</span>
-                      <span dir="ltr" className="font-medium text-[#ededed]">
-                        {formatTimelineDate(row.value)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>,
-            document.body,
-          )
-        : null}
-    </>
-  );
-};
 
 const getDeliveryEmptyStateCopy = (
   mode: DeliveriesVercelListProps['emptyStateMode'],
@@ -443,7 +238,9 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         </div>
         <div className="mt-1 flex items-center gap-1.5 text-sm font-normal text-app-text-secondary">
           <span dir="ltr">{formatDeliveryDate(delivery)}</span>
-          <Clock3 className="h-3.5 w-3.5" />
+          <DeliveryTimeDetailsTooltip delivery={delivery}>
+            <Clock3 className="h-3.5 w-3.5" />
+          </DeliveryTimeDetailsTooltip>
         </div>
       </div>
 
