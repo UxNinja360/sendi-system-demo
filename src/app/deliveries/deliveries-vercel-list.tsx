@@ -2,6 +2,8 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 import { format as formatDate } from 'date-fns';
 import { useNavigate } from 'react-router';
 import {
+  Bike,
+  Car,
   CheckCircle2,
   Clock3,
   Copy,
@@ -66,7 +68,7 @@ type DeliveryVercelRowProps = {
 };
 
 const rowGridClass =
-  'grid grid-cols-[minmax(0,1fr)_40px] md:grid-cols-[minmax(96px,150px)_minmax(130px,240px)_minmax(130px,240px)_minmax(160px,1fr)_44px] xl:grid-cols-[minmax(120px,176px)_minmax(180px,260px)_minmax(180px,260px)_minmax(240px,1fr)_44px] 2xl:grid-cols-[minmax(140px,190px)_minmax(220px,300px)_minmax(220px,300px)_minmax(320px,1fr)_44px]';
+  'grid grid-cols-[minmax(0,1fr)_76px] md:grid-cols-[minmax(96px,140px)_minmax(120px,210px)_minmax(120px,210px)_minmax(120px,190px)_minmax(120px,1fr)_44px] xl:grid-cols-[minmax(120px,166px)_minmax(170px,240px)_minmax(170px,240px)_minmax(150px,220px)_minmax(160px,1fr)_44px] 2xl:grid-cols-[minmax(140px,190px)_minmax(200px,280px)_minmax(200px,280px)_minmax(180px,260px)_minmax(220px,1fr)_44px]';
 
 const getDeliveryDate = (delivery: Delivery) =>
   delivery.creation_time ?? delivery.createdAt ?? delivery.delivery_date;
@@ -81,31 +83,9 @@ const formatDeliveryDate = (delivery: Delivery) => {
   }
 };
 
-const getCourierStatusText = (
-  delivery: Delivery,
-  courierName: string,
-  hasAssignedCourier: boolean,
-) => {
-  if (!hasAssignedCourier) {
-    if (delivery.status === 'expired') return 'פג תוקף';
-    return 'ממתין לשיבוץ';
-  }
-
-  switch (delivery.status) {
-    case 'assigned':
-      return `שובץ ל- ${courierName}`;
-    case 'delivering':
-      return `נאסף על ידי ${courierName}`;
-    case 'delivered':
-      return `נמסר על ידי ${courierName}`;
-    case 'cancelled':
-      return `בוטל לאחר שיוך לשליח ${courierName}`;
-    case 'expired':
-      return `פג תוקף לאחר שיוך לשליח ${courierName}`;
-    case 'pending':
-    default:
-      return courierName;
-  }
+const CourierVehicleIcon: React.FC<{ vehicleType?: string }> = ({ vehicleType }) => {
+  const Icon = vehicleType === '\u05e8\u05db\u05d1' ? Car : Bike;
+  return <Icon className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />;
 };
 
 const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
@@ -190,7 +170,8 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
   const clientAddress = delivery.client_full_address || delivery.address;
   const hasAssignedCourier = Boolean(courier || delivery.courierId || delivery.runner_id || delivery.courierName);
   const courierName = courier?.name || delivery.courierName || (hasAssignedCourier ? 'לא ידוע' : 'לא שובץ');
-  const courierStatusText = getCourierStatusText(delivery, courierName, hasAssignedCourier);
+  const courierVehicleType = hasAssignedCourier ? courier?.vehicleType || delivery.vehicle_type : undefined;
+  const courierColumnText = hasAssignedCourier ? courierName : '-';
 
   const closeMenus = () => {
     setContextMenuPos(null);
@@ -243,12 +224,27 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         label={`בחר משלוח ${delivery.orderNumber}`}
       />
 
+      <div
+        className="col-start-2 row-start-1 flex min-h-0 items-start justify-center gap-2 px-2 py-3 md:hidden"
+        dir="ltr"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <DeliveryStageTimelineTooltip delivery={delivery} />
+        <EntityRowActionTrigger
+          onClick={(event) => {
+            const rect = event.currentTarget.getBoundingClientRect();
+            setContextMenuPos({ x: Math.max(8, rect.left - 180), y: rect.bottom + 8 });
+          }}
+          title={`פעולות משלוח ${delivery.orderNumber}`}
+        />
+      </div>
+
       <div className="col-start-1 row-start-1 flex min-h-0 min-w-0 flex-col justify-center px-2 py-2 md:col-auto md:row-auto md:min-h-[72px] md:px-3">
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           <span className="truncate text-sm font-semibold text-app-text">{formatOrderNumber(delivery.orderNumber)}</span>
         </div>
         <div className="mt-1 flex items-center gap-1.5 text-sm font-normal text-app-text-secondary">
-          <span dir="ltr">{formatDeliveryDate(delivery)}</span>
+          <span className="whitespace-nowrap" dir="ltr">{formatDeliveryDate(delivery)}</span>
           <DeliveryTimeDetailsTooltip delivery={delivery}>
             <Clock3 className="h-3.5 w-3.5" />
           </DeliveryTimeDetailsTooltip>
@@ -277,23 +273,31 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         </div>
       </div>
 
-      <div className="col-start-1 row-start-4 flex min-h-0 min-w-0 items-center justify-end px-2 py-2 md:col-auto md:row-auto md:min-h-[72px] md:px-3">
-        <div className="flex w-full min-w-0 items-center justify-end gap-2 overflow-hidden">
-          <span className="min-w-0 truncate text-sm font-normal text-app-text-secondary">
-            {courierStatusText}
+      <div className="col-start-1 row-start-4 flex min-h-0 min-w-0 items-center justify-end px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:px-3 md:py-2">
+        <div className="flex w-full min-w-0 items-center justify-end gap-1.5 overflow-hidden text-right" dir="rtl">
+          {hasAssignedCourier ? <CourierVehicleIcon vehicleType={courierVehicleType} /> : null}
+          <span className="min-w-0 truncate text-sm font-normal text-[#EDEDED]">
+            {courierColumnText}
           </span>
+        </div>
+      </div>
+
+      <div className="hidden min-h-0 min-w-0 items-center justify-end px-2 py-2 md:col-auto md:row-auto md:flex md:min-h-[72px] md:px-3">
+        <div className="flex w-full min-w-0 items-center justify-end">
           <DeliveryStageTimelineTooltip delivery={delivery} />
         </div>
       </div>
 
-      <div className="col-start-2 row-span-4 row-start-1 flex min-h-0 items-center justify-center px-1 md:col-auto md:row-auto md:row-span-1 md:min-h-[72px]" onClick={(event) => event.stopPropagation()}>
-        <EntityRowActionTrigger
-          onClick={(event) => {
-            const rect = event.currentTarget.getBoundingClientRect();
-            setContextMenuPos({ x: Math.max(8, rect.left - 180), y: rect.bottom + 8 });
-          }}
-          title={`פעולות משלוח ${delivery.orderNumber}`}
-        />
+      <div className="contents min-h-0 items-center justify-center px-1 md:col-auto md:row-auto md:flex md:min-h-[72px]" onClick={(event) => event.stopPropagation()}>
+        <div className="hidden md:block">
+          <EntityRowActionTrigger
+            onClick={(event) => {
+              const rect = event.currentTarget.getBoundingClientRect();
+              setContextMenuPos({ x: Math.max(8, rect.left - 180), y: rect.bottom + 8 });
+            }}
+            title={`פעולות משלוח ${delivery.orderNumber}`}
+          />
+        </div>
         <EntityActionMenuOverlay
           open={Boolean(contextMenuPos)}
           position={contextMenuPos}
