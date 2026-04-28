@@ -184,7 +184,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
       )}
     >
       <div
-        className="col-start-2 row-start-1 flex min-h-0 items-start justify-center gap-2 px-2 py-3 md:hidden"
+        className="col-start-2 row-start-1 flex min-h-0 flex-row-reverse items-start justify-center gap-2 px-2 py-3 md:hidden"
         dir="ltr"
         onClick={(event) => event.stopPropagation()}
       >
@@ -199,14 +199,14 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
       </div>
 
       <div className="col-start-1 row-start-1 flex min-h-0 min-w-0 flex-col justify-center px-2 py-2 md:col-auto md:row-auto md:min-h-[72px] md:px-3">
-        <div className="flex min-w-0 items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2 md:flex-col md:items-start md:gap-0">
           <span className="truncate text-sm font-semibold text-app-text">{formatOrderNumber(delivery.orderNumber)}</span>
-        </div>
-        <div className="mt-1 flex items-center gap-1.5 text-sm font-normal text-app-text-secondary">
-          <span className="whitespace-nowrap" dir="ltr">{formatDeliveryDate(delivery)}</span>
-          <DeliveryTimeDetailsTooltip delivery={delivery}>
-            <Clock3 className="h-3.5 w-3.5" />
-          </DeliveryTimeDetailsTooltip>
+          <div className="flex shrink-0 items-center gap-1.5 text-sm font-normal text-app-text-secondary md:mt-1">
+            <span className="whitespace-nowrap" dir="ltr">{formatDeliveryDate(delivery)}</span>
+            <DeliveryTimeDetailsTooltip delivery={delivery}>
+              <Clock3 className="h-3.5 w-3.5" />
+            </DeliveryTimeDetailsTooltip>
+          </div>
         </div>
       </div>
 
@@ -230,9 +230,15 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
           <MapPin className="h-3.5 w-3.5 shrink-0" />
           <span className="truncate">{clientAddress}</span>
         </div>
+        <div className="mt-1 flex min-w-0 items-center gap-1.5 text-sm font-normal text-app-text-secondary md:hidden">
+          {hasAssignedCourier ? <CourierVehicleIcon vehicleType={courierVehicleType} /> : null}
+          <span className="min-w-0 truncate text-sm font-normal text-[#EDEDED]">
+            {courierColumnText}
+          </span>
+        </div>
       </div>
 
-      <div className="col-start-1 row-start-4 flex min-h-0 min-w-0 items-center justify-end px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:px-3 md:py-2">
+      <div className="hidden min-h-0 min-w-0 items-center justify-end px-2 py-1 md:col-auto md:row-auto md:flex md:min-h-[72px] md:px-3 md:py-2">
         <div className="flex w-full min-w-0 items-center justify-end gap-1.5 overflow-hidden text-right" dir="rtl">
           {hasAssignedCourier ? <CourierVehicleIcon vehicleType={courierVehicleType} /> : null}
           <span className="min-w-0 truncate text-sm font-normal text-[#EDEDED]">
