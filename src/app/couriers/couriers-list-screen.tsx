@@ -795,6 +795,7 @@ export const CouriersListScreen: React.FC = () => {
   return (
     <>
       <EntityListShell
+        contentClassName="items-center"
         sidePanel={
           <EntityListSidePanel
             exportOpen={isExportOpen}
@@ -829,47 +830,50 @@ export const CouriersListScreen: React.FC = () => {
           />
         }
         toolbar={
-          <PageToolbar
-            showBottomBorder={false}
-            showPeriodControl={false}
-            headerControls={
-              <ListToolbarActions
-                showSearch={false}
-                showColumnsToggle={false}
-                columnsOpen={columnsOpen}
-                onToggleColumns={() => { setColumnsOpen((value) => !value); setIsExportOpen(false); }}
-                onExport={() => { setIsExportOpen((value) => !value); setColumnsOpen(false); }}
-              />
-            }
-            actions={
-              <div className="flex min-w-0 flex-1 items-center gap-1.5">
-                <div className="flex shrink-0 items-center gap-1">
-                  <CourierToolbarToggle
-                    active={showConnectedOnly}
-                    label="הצג רק שליחים מחוברים"
-                    onClick={() => setShowConnectedOnly((value) => !value)}
-                    icon={<Bike className="h-3.5 w-3.5" />}
-                  />
-                  <CourierToolbarToggle
-                    active={showOnShiftOnly}
-                    label="הצג שליחים במשמרת"
-                    onClick={() => setShowOnShiftOnly((value) => !value)}
-                    icon={<Clock3 className="h-3.5 w-3.5" />}
+          <div className="mx-auto w-full max-w-[1200px]">
+            <PageToolbar
+              showBottomBorder={false}
+              showPeriodControl={false}
+              headerControls={
+                <ListToolbarActions
+                  showSearch={false}
+                  showColumnsToggle={false}
+                  columnsOpen={columnsOpen}
+                  onToggleColumns={() => { setColumnsOpen((value) => !value); setIsExportOpen(false); }}
+                  onExport={() => { setIsExportOpen((value) => !value); setColumnsOpen(false); }}
+                />
+              }
+              actions={
+                <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                  <div className="flex shrink-0 items-center gap-1">
+                    <CourierToolbarToggle
+                      active={showConnectedOnly}
+                      label="הצג רק שליחים מחוברים"
+                      onClick={() => setShowConnectedOnly((value) => !value)}
+                      icon={<Bike className="h-3.5 w-3.5" />}
+                    />
+                    <CourierToolbarToggle
+                      active={showOnShiftOnly}
+                      label="הצג שליחים במשמרת"
+                      onClick={() => setShowOnShiftOnly((value) => !value)}
+                      icon={<Clock3 className="h-3.5 w-3.5" />}
+                    />
+                  </div>
+                  <ListToolbarActions
+                    searchQuery={searchQuery}
+                    onSearchQueryChange={setSearchQuery}
+                    searchPlaceholder={TEXT.searchPlaceholder}
+                    searchWidthClass="w-48"
+                    showColumnsToggle={false}
+                    showExportButton={false}
                   />
                 </div>
-                <ListToolbarActions
-                  searchQuery={searchQuery}
-                  onSearchQueryChange={setSearchQuery}
-                  searchPlaceholder={TEXT.searchPlaceholder}
-                  searchWidthClass="w-48"
-                  showColumnsToggle={false}
-                  showExportButton={false}
-                />
-              </div>
-            }
-          />
+              }
+            />
+          </div>
         }
       >
+        <div className="flex min-h-0 w-full max-w-[1200px] flex-1 flex-col">
             <CouriersVercelList
               couriers={filteredCouriers}
               selectedIds={selectedCourierIds}
@@ -1059,6 +1063,7 @@ export const CouriersListScreen: React.FC = () => {
               ))}
             </ListTableSection>
             )}
+        </div>
       </EntityListShell>
 
       {isModalOpen && (

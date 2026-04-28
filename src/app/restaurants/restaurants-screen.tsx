@@ -737,6 +737,7 @@ export const RestaurantsScreen: React.FC = () => {
   return (
     <>
       <EntityListShell
+        contentClassName="items-center"
         sidePanel={
           <EntityListSidePanel
             exportOpen={isExportOpen}
@@ -780,47 +781,50 @@ export const RestaurantsScreen: React.FC = () => {
           />
         }
         toolbar={
-          <PageToolbar
-            showBottomBorder={false}
-            showPeriodControl={false}
-            headerControls={
-              <ListToolbarActions
-                showSearch={false}
-                showColumnsToggle={false}
-                columnsOpen={columnsOpen}
-                onExport={() => { setIsExportOpen((v) => !v); setColumnsOpen(false); }}
-                onToggleColumns={() => { setColumnsOpen((value) => !value); setIsExportOpen(false); }}
-              />
-            }
-            actions={
-              <div className="flex min-w-0 flex-1 items-center gap-1.5">
-                <div className="flex shrink-0 items-center gap-1">
-                  <RestaurantToolbarToggle
-                    active={restaurantConnectionFilter === 'connected'}
-                    label={'\u05d4\u05e6\u05d2 \u05de\u05e1\u05e2\u05d3\u05d5\u05ea \u05de\u05d7\u05d5\u05d1\u05e8\u05d5\u05ea'}
-                    onClick={() =>
-                      setRestaurantConnectionFilter((value) =>
-                        value === 'connected' ? null : 'connected',
-                      )
-                    }
-                    icon={<StoreIcon className="h-3.5 w-3.5" />}
+          <div className="mx-auto w-full max-w-[1200px]">
+            <PageToolbar
+              showBottomBorder={false}
+              showPeriodControl={false}
+              headerControls={
+                <ListToolbarActions
+                  showSearch={false}
+                  showColumnsToggle={false}
+                  columnsOpen={columnsOpen}
+                  onExport={() => { setIsExportOpen((v) => !v); setColumnsOpen(false); }}
+                  onToggleColumns={() => { setColumnsOpen((value) => !value); setIsExportOpen(false); }}
+                />
+              }
+              actions={
+                <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                  <div className="flex shrink-0 items-center gap-1">
+                    <RestaurantToolbarToggle
+                      active={restaurantConnectionFilter === 'connected'}
+                      label={'\u05d4\u05e6\u05d2 \u05de\u05e1\u05e2\u05d3\u05d5\u05ea \u05de\u05d7\u05d5\u05d1\u05e8\u05d5\u05ea'}
+                      onClick={() =>
+                        setRestaurantConnectionFilter((value) =>
+                          value === 'connected' ? null : 'connected',
+                        )
+                      }
+                      icon={<StoreIcon className="h-3.5 w-3.5" />}
+                    />
+                  </div>
+                  <ListToolbarActions
+                    searchQuery={searchQuery}
+                    onSearchQueryChange={setSearchQuery}
+                    searchPlaceholder="חפש מסעדה, עיר או איש קשר..."
+                    searchWidthClass="w-52"
+                    showColumnsToggle={false}
+                    showExportButton={false}
                   />
                 </div>
-                <ListToolbarActions
-                searchQuery={searchQuery}
-                onSearchQueryChange={setSearchQuery}
-                searchPlaceholder="חפש מסעדה, עיר או איש קשר..."
-                searchWidthClass="w-52"
-                showColumnsToggle={false}
-                showExportButton={false}
-              />
-              </div>
-            }
-          />
+              }
+            />
+          </div>
         }
       >
 
         {/* Content */}
+        <div className="flex min-h-0 w-full max-w-[1200px] flex-1 flex-col">
             {/* Table / Empty state */}
             <RestaurantsVercelList
               restaurants={filteredRestaurants}
@@ -1060,6 +1064,7 @@ export const RestaurantsScreen: React.FC = () => {
               ))}
             </ListTableSection>
             )}
+        </div>
       </EntityListShell>
 
       <EntityActionMenuOverlay

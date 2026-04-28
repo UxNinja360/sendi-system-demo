@@ -5,7 +5,6 @@ import {
   Bike,
   Car,
   CheckCircle2,
-  Clock3,
   Copy,
   Edit,
   FileText,
@@ -147,7 +146,9 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
     navigate(`/delivery/${delivery.id}`);
   };
 
-  const handleCopyOrderNumber = () => {
+  const handleCopyOrderNumber = (event?: React.MouseEvent) => {
+    event?.preventDefault();
+    event?.stopPropagation();
     navigator.clipboard.writeText(delivery.orderNumber);
     toast.success(`מספר הזמנה ${delivery.orderNumber} הועתק`);
     closeMenus();
@@ -199,12 +200,20 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
       </div>
 
       <div className="col-start-1 row-start-1 flex min-h-0 min-w-0 flex-col justify-center px-2 py-2 md:col-auto md:row-auto md:min-h-[72px] md:px-3">
-        <div className="flex min-w-0 items-center gap-2 md:flex-col md:items-start md:gap-0">
-          <span className="truncate text-sm font-semibold text-app-text">{formatOrderNumber(delivery.orderNumber)}</span>
-          <div className="flex shrink-0 items-center gap-1.5 text-sm font-normal text-app-text-secondary md:mt-1">
-            <span className="whitespace-nowrap" dir="ltr">{formatDeliveryDate(delivery)}</span>
+        <div className="flex min-w-0 flex-col items-start gap-0">
+          <button
+            type="button"
+            onClick={handleCopyOrderNumber}
+            onKeyDown={(event) => event.stopPropagation()}
+            className="group/order-number inline-flex max-w-full items-center gap-1.5 text-sm font-semibold text-app-text outline-none"
+            title={`העתק מספר הזמנה ${delivery.orderNumber}`}
+          >
+            <span className="min-w-0 truncate">{formatOrderNumber(delivery.orderNumber)}</span>
+            <Copy className="h-3.5 w-3.5 shrink-0 text-app-text-secondary opacity-0 transition-opacity group-hover/order-number:opacity-100 group-focus-visible/order-number:opacity-100" />
+          </button>
+          <div className="mt-1 flex shrink-0 items-center gap-1.5 text-sm font-normal text-app-text-secondary">
             <DeliveryTimeDetailsTooltip delivery={delivery}>
-              <Clock3 className="h-3.5 w-3.5" />
+              <span className="whitespace-nowrap" dir="ltr">{formatDeliveryDate(delivery)}</span>
             </DeliveryTimeDetailsTooltip>
           </div>
         </div>

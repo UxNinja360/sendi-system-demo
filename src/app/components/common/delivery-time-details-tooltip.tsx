@@ -206,7 +206,7 @@ export const DeliveryTimeDetailsTooltip: React.FC<{
     <>
       <span
         ref={triggerRef}
-        className="inline-flex h-4 w-4 shrink-0 items-center justify-center text-app-text-secondary focus:outline-none"
+        className="inline-flex shrink-0 cursor-help items-center text-app-text-secondary focus:outline-none"
         tabIndex={0}
         aria-label="פרטי זמן משלוח"
         onMouseEnter={() => setIsOpen(true)}
