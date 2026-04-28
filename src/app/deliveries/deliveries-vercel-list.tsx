@@ -316,7 +316,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
       <div className="flex min-h-[58px] min-w-0 flex-col justify-center px-3 py-2">
         <div className="flex min-w-0 items-center gap-1.5">
           <Store className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
-          <span className="truncate text-sm font-semibold text-app-text">{restaurantName}</span>
+          <span className="truncate text-sm font-normal text-app-text">{restaurantName}</span>
         </div>
         <div className="mt-1 flex min-w-0 items-center gap-1.5 text-sm font-normal text-app-text-secondary">
           <MapPin className="h-3.5 w-3.5 shrink-0" />
@@ -327,7 +327,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
       <div className="flex min-h-[58px] min-w-0 flex-col justify-center px-3 py-2">
         <div className="flex min-w-0 items-center gap-1.5">
           <UserRound className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
-          <span className="truncate text-sm font-semibold text-app-text">{clientName}</span>
+          <span className="truncate text-sm font-normal text-app-text">{clientName}</span>
         </div>
         <div className="mt-1 flex min-w-0 items-center gap-1.5 text-sm font-normal text-app-text-secondary">
           <MapPin className="h-3.5 w-3.5 shrink-0" />
@@ -338,7 +338,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
       <div className="flex min-h-[58px] min-w-0 flex-col justify-center px-3 py-2">
         <div className="flex min-w-0 items-center gap-1.5">
           <UserRound className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
-          <span className="truncate text-sm font-semibold text-app-text">{courierName}</span>
+          <span className="truncate text-sm font-normal text-app-text">{courierName}</span>
         </div>
         <div className="mt-1 flex min-w-0 items-center gap-1.5 text-sm font-normal text-app-text-secondary">
           <Bike className="h-3.5 w-3.5 shrink-0" />

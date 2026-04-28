@@ -387,7 +387,7 @@
   --app-border:             #2E2E2E;
   --app-border-strong:      #454545;
   --app-text:               #EDEDED;
-  --app-text-secondary:     #A1A1A1;
+  --app-text-secondary:     var(--ds-gray-700);
   --app-text-muted:         #7D7D7D;
   --app-nav-bg:             #000000;
   --app-nav-border:         #1f1f1f;
@@ -564,7 +564,7 @@
   --app-border: #2E2E2E;
   --app-border-strong: #454545;
   --app-text: #EDEDED;
-  --app-text-secondary: #A1A1A1;
+  --app-text-secondary: var(--ds-gray-700);
   --app-text-muted: #7D7D7D;
   --app-nav-bg: #000000;
   --app-nav-border: #1f1f1f;
