@@ -56,9 +56,7 @@ type DeliveriesVercelListProps = {
 type DeliveryVercelRowProps = {
   delivery: Delivery;
   courier: Courier | null;
-  isSelected: boolean;
   isDrawerTarget: boolean;
-  onToggleSelect: (id: string) => void;
   onOpenDrawer: (id: string) => void;
   onStatusChange: (deliveryId: string, status: DeliveryStatus) => void;
   onCancelDelivery: (deliveryId: string) => void;
@@ -118,42 +116,10 @@ const getDeliveryEmptyStateCopy = (
   };
 };
 
-const DeliveryRowCheckbox: React.FC<{
-  checked: boolean;
-  onChange: () => void;
-  label: string;
-  className?: string;
-}> = ({ checked, onChange, label, className }) => {
-  const visibilityClass = checked
-    ? 'pointer-events-auto opacity-100'
-    : 'pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100 group-focus:pointer-events-auto group-focus:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100';
-
-  return (
-    <label
-      className={joinClassNames(
-        'absolute left-11 top-1/2 z-20 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded bg-app-surface/90 transition-opacity duration-150 md:left-12',
-        visibilityClass,
-        className,
-      )}
-      onClick={(event) => event.stopPropagation()}
-    >
-      <span className="sr-only">{label}</span>
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={onChange}
-        className="h-4 w-4 cursor-pointer rounded border-[#404040] bg-transparent accent-[#ededed] focus:ring-1 focus:ring-[#ededed] focus:ring-offset-0"
-      />
-    </label>
-  );
-};
-
 const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
   delivery,
   courier,
-  isSelected,
   isDrawerTarget,
-  onToggleSelect,
   onOpenDrawer,
   onStatusChange,
   onCancelDelivery,
@@ -214,16 +180,9 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
       className={joinClassNames(
         rowGridClass,
         'group relative w-full min-w-0 cursor-pointer border-b border-app-nav-border bg-app-surface text-app-text outline-none transition-colors last:border-b-0 hover:bg-app-surface-raised focus-visible:bg-app-surface-raised',
-        isSelected && 'bg-app-surface-raised',
         isDrawerTarget && 'shadow-[inset_2px_0_0_#ededed]',
       )}
     >
-      <DeliveryRowCheckbox
-        checked={isSelected}
-        onChange={() => onToggleSelect(delivery.id)}
-        label={`בחר משלוח ${delivery.orderNumber}`}
-      />
-
       <div
         className="col-start-2 row-start-1 flex min-h-0 items-start justify-center gap-2 px-2 py-3 md:hidden"
         dir="ltr"
@@ -251,7 +210,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         </div>
       </div>
 
-      <div className="col-start-1 row-start-2 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:px-3 md:py-2">
+      <div className="col-start-1 row-start-2 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2 md:pl-3 md:pr-5">
         <div className="flex min-w-0 items-center gap-1.5">
           <Store className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
           <span className="truncate text-sm font-normal text-app-text">{restaurantName}</span>
@@ -422,8 +381,6 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
   onClearFilters,
   totalCount,
   couriers,
-  selectedIds,
-  onToggleSelect,
   onOpenDrawer,
   onStatusChange,
   onCancelDelivery,
@@ -431,7 +388,6 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
   onUnassignCourier,
   onEditDelivery,
   drawerDeliveryId,
-  selectionBar,
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -493,9 +449,7 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
                 key={delivery.id}
                 delivery={delivery}
                 courier={courier}
-                isSelected={selectedIds.has(delivery.id)}
                 isDrawerTarget={drawerDeliveryId === delivery.id}
-                onToggleSelect={onToggleSelect}
                 onOpenDrawer={onOpenDrawer}
                 onStatusChange={onStatusChange}
                 onCancelDelivery={onCancelDelivery}
@@ -507,7 +461,6 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
           })}
         </div>
       </div>
-      {selectionBar}
     </div>
   );
 };

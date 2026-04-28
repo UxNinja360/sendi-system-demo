@@ -874,7 +874,6 @@ export const CouriersListScreen: React.FC = () => {
               couriers={filteredCouriers}
               selectedIds={selectedCourierIds}
               activeDeliveriesByCourier={activeDeliveriesByCourier}
-              deliveriesCountByCourierInPeriod={deliveriesCountByCourierInPeriod}
               onToggleSelect={handleToggleSelectCourier}
               onOpenActionsMenu={openCourierActionsMenu}
               onOpenContextMenu={(courier, event) => {

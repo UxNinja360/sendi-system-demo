@@ -91,9 +91,9 @@ const getBusinessInitials = (name: string) =>
     .join('')
     .toUpperCase();
 
-const BusinessAvatar: React.FC<{ name: string; className?: string }> = ({ name, className = '' }) => (
+const BusinessAvatar: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
   <span
-    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#02B74F] text-[11px] font-bold text-[#04130a] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.22)] ${className}`}
+    className={`flex shrink-0 items-center justify-center rounded-full bg-[#02B74F] font-bold text-[#04130a] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.22)] ${className ?? 'h-7 w-7 text-[11px]'}`}
     aria-hidden="true"
   >
     {getBusinessInitials(name)}
@@ -607,7 +607,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                 aria-haspopup="dialog"
                 aria-label={LABELS.selectBusiness}
               >
-                <BusinessAvatar name={selectedBusiness} />
+                <BusinessAvatar name={selectedBusiness} className="h-5 w-5 text-[9px]" />
                 <span className="min-w-0 flex-1 truncate text-sm font-semibold">
                   {selectedBusiness}
                 </span>

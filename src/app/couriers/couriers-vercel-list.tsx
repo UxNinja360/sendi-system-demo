@@ -1,5 +1,5 @@
-import React from 'react';
-import { Bike, Clock3, Package, Phone, Star, UserRound } from 'lucide-react';
+import React, { useLayoutEffect, useRef } from 'react';
+import { Clock3, Package, Phone, Star, UserRound } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
 import { EntityRowActionTrigger } from '../components/common/entity-row-action-trigger';
@@ -10,7 +10,6 @@ type CouriersVercelListProps = {
   couriers: Courier[];
   selectedIds: Set<string>;
   activeDeliveriesByCourier: Map<string, Delivery>;
-  deliveriesCountByCourierInPeriod: Map<string, number>;
   onToggleSelect: (courierId: string) => void;
   onOpenActionsMenu: (
     courier: Courier,
@@ -25,7 +24,7 @@ type CouriersVercelListProps = {
 };
 
 const rowGridClass =
-  'grid grid-cols-[44px_minmax(210px,1.15fr)_minmax(92px,0.38fr)_minmax(170px,0.75fr)_minmax(220px,1.15fr)_minmax(160px,0.8fr)_minmax(112px,0.55fr)_44px]';
+  'grid grid-cols-[minmax(0,1fr)_44px] md:grid-cols-[44px_minmax(210px,1.15fr)_minmax(160px,0.75fr)_minmax(92px,0.38fr)_minmax(220px,1.15fr)_minmax(160px,0.8fr)_44px]';
 
 const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(' ');
@@ -53,9 +52,14 @@ const CourierRowCheckbox: React.FC<{
   checked: boolean;
   onChange: () => void;
   label: string;
-}> = ({ checked, onChange, label }) => (
+  className?: string;
+}> = ({ checked, onChange, label, className }) => (
   <label
-    className="flex h-full items-center justify-center"
+    className={joinClassNames(
+      'absolute left-11 top-4 z-20 flex h-6 w-6 items-center justify-center rounded bg-app-surface/90 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus:opacity-100 group-focus-within:opacity-100 md:static md:h-full md:w-auto md:bg-transparent md:opacity-100 md:transition-none',
+      checked && 'opacity-100',
+      className,
+    )}
     onClick={(event) => event.stopPropagation()}
   >
     <span className="sr-only">{label}</span>
@@ -71,7 +75,6 @@ const CourierRowCheckbox: React.FC<{
 const CourierVercelRow: React.FC<{
   courier: Courier;
   currentDelivery: Delivery | null;
-  deliveriesCount: number;
   isSelected: boolean;
   onToggleSelect: (courierId: string) => void;
   onOpenActionsMenu: CouriersVercelListProps['onOpenActionsMenu'];
@@ -79,7 +82,6 @@ const CourierVercelRow: React.FC<{
 }> = ({
   courier,
   currentDelivery,
-  deliveriesCount,
   isSelected,
   onToggleSelect,
   onOpenActionsMenu,
@@ -109,7 +111,7 @@ const CourierVercelRow: React.FC<{
       onContextMenu={(event) => onOpenContextMenu(courier, event)}
       className={joinClassNames(
         rowGridClass,
-        'group min-w-[1060px] cursor-pointer border-b border-app-nav-border bg-app-surface text-app-text outline-none transition-colors hover:bg-app-surface-raised focus-visible:bg-app-surface-raised',
+        'group relative w-full min-w-0 cursor-pointer border-b border-app-nav-border bg-app-surface text-app-text outline-none transition-colors hover:bg-app-surface-raised focus-visible:bg-app-surface-raised md:min-w-[1060px]',
         isSelected && 'bg-app-surface-raised',
       )}
     >
@@ -119,37 +121,35 @@ const CourierVercelRow: React.FC<{
         label={`בחר שליח ${courier.name}`}
       />
 
-      <div className="flex min-h-[58px] min-w-0 items-center gap-3 px-3 py-2">
+      <div className="col-start-1 row-start-1 flex min-h-0 min-w-0 items-center gap-3 px-2 py-3 md:col-auto md:row-auto md:min-h-[58px] md:px-3 md:py-2">
         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-app-nav-border bg-app-surface-raised text-app-text">
           <UserRound className="h-3.5 w-3.5" />
         </span>
         <div className="min-w-0">
           <div className="truncate text-sm font-semibold text-app-text">{courier.name}</div>
-          <div className="mt-1 flex items-center">
-            <span className={joinClassNames('truncate text-xs font-medium', connectionMeta.text)}>
-              {connectionMeta.label}
-            </span>
-          </div>
         </div>
       </div>
 
-      <div className="flex min-h-[58px] items-center justify-center px-3 py-2">
-        <div className="flex items-center gap-1.5 text-xs font-medium text-app-text-secondary">
-          <Star className="h-3.5 w-3.5 shrink-0" />
-          <span className="tabular-nums">{courier.rating.toFixed(1)}</span>
-        </div>
-      </div>
-
-      <div className="flex min-h-[58px] min-w-0 items-center px-3 py-2">
-        <div className="flex min-w-0 items-center gap-1.5">
-          <Clock3 className={joinClassNames('h-3.5 w-3.5', shiftMeta.icon)} />
+      <div className="col-start-1 row-start-2 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[58px] md:px-3 md:py-2">
+        <span className={joinClassNames('truncate text-sm font-semibold', connectionMeta.text)}>
+          {connectionMeta.label}
+        </span>
+        <div className="mt-1 flex min-w-0 items-center gap-1.5">
+          <Clock3 className={joinClassNames('h-3.5 w-3.5 shrink-0', shiftMeta.icon)} />
           <span className={joinClassNames('truncate text-xs font-medium', shiftMeta.text)}>
             {shiftMeta.label}
           </span>
         </div>
       </div>
 
-      <div className="flex min-h-[58px] min-w-0 flex-col justify-center px-3 py-2">
+      <div className="col-start-1 row-start-5 flex min-h-0 items-center justify-start px-2 py-1 md:col-auto md:row-auto md:min-h-[58px] md:justify-center md:px-3 md:py-2">
+        <div className="flex items-center gap-1.5 text-xs font-medium text-app-text-secondary">
+          <Star className="h-3.5 w-3.5 shrink-0" />
+          <span className="tabular-nums">{courier.rating.toFixed(1)}</span>
+        </div>
+      </div>
+
+      <div className="col-start-1 row-start-3 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[58px] md:px-3 md:py-2">
         <div className="truncate text-sm font-semibold text-app-text">{deliveryLabel}</div>
         <div className="mt-1 flex min-w-0 items-center gap-1.5 text-xs text-app-text-secondary">
           <Package className="h-3.5 w-3.5 shrink-0" />
@@ -157,7 +157,7 @@ const CourierVercelRow: React.FC<{
         </div>
       </div>
 
-      <div className="flex min-h-[58px] min-w-0 flex-col justify-center px-3 py-2">
+      <div className="col-start-1 row-start-4 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[58px] md:px-3 md:py-2">
         <div className="truncate text-sm font-semibold text-app-text">{courier.vehicleType}</div>
         <div className="mt-1 flex min-w-0 items-center gap-1.5 text-xs text-app-text-secondary">
           <Phone className="h-3.5 w-3.5 shrink-0" />
@@ -165,15 +165,7 @@ const CourierVercelRow: React.FC<{
         </div>
       </div>
 
-      <div className="flex min-h-[58px] min-w-0 flex-col justify-center px-3 py-2">
-        <div className="text-sm font-semibold text-app-text">{deliveriesCount}</div>
-        <div className="mt-1 flex items-center gap-1.5 text-xs text-app-text-secondary">
-          <Bike className="h-3.5 w-3.5" />
-          <span>משלוחים</span>
-        </div>
-      </div>
-
-      <div className="flex min-h-[58px] items-center justify-center px-1" onClick={(event) => event.stopPropagation()}>
+      <div className="col-start-2 row-start-1 flex min-h-0 items-start justify-center px-1 py-3 md:col-auto md:row-auto md:min-h-[58px] md:items-center md:py-0" onClick={(event) => event.stopPropagation()}>
         <EntityRowActionTrigger
           onClick={(event) => onOpenActionsMenu(courier, event)}
           title={`פעולות שליח ${courier.name}`}
@@ -187,13 +179,43 @@ export const CouriersVercelList: React.FC<CouriersVercelListProps> = ({
   couriers,
   selectedIds,
   activeDeliveriesByCourier,
-  deliveriesCountByCourierInPeriod,
   onToggleSelect,
   onOpenActionsMenu,
   onOpenContextMenu,
   emptyState,
   selectionBar,
 }) => {
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+
+  useLayoutEffect(() => {
+    const element = scrollContainerRef.current;
+    if (!element) return undefined;
+
+    const alignToRtlStartEdge = () => {
+      const maxScrollLeft = element.scrollWidth - element.clientWidth;
+      if (maxScrollLeft <= 0) return;
+      element.scrollLeft = maxScrollLeft;
+    };
+
+    const animationFrame = window.requestAnimationFrame(alignToRtlStartEdge);
+    const resizeObserver =
+      typeof ResizeObserver === 'undefined'
+        ? null
+        : new ResizeObserver(alignToRtlStartEdge);
+
+    resizeObserver?.observe(element);
+    if (element.firstElementChild) {
+      resizeObserver?.observe(element.firstElementChild);
+    }
+    window.addEventListener('resize', alignToRtlStartEdge);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', alignToRtlStartEdge);
+    };
+  }, [couriers.length]);
+
   if (couriers.length === 0) {
     return (
       <div className="flex min-h-0 flex-1 flex-col bg-app-background">
@@ -204,14 +226,13 @@ export const CouriersVercelList: React.FC<CouriersVercelListProps> = ({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-app-background">
-      <div className="resource-list-scroll min-h-0 flex-1 overflow-auto px-3" dir="ltr">
-        <div className="min-w-[1060px] overflow-hidden border border-app-nav-border" dir="rtl">
+      <div ref={scrollContainerRef} className="resource-list-scroll min-h-0 flex-1 overflow-auto px-2 md:px-3" dir="ltr">
+        <div className="w-full min-w-0 overflow-visible border border-app-nav-border md:min-w-[1060px] md:overflow-hidden" dir="rtl">
           {couriers.map((courier) => (
             <CourierVercelRow
               key={courier.id}
               courier={courier}
               currentDelivery={activeDeliveriesByCourier.get(courier.id) ?? null}
-              deliveriesCount={deliveriesCountByCourierInPeriod.get(courier.id) ?? 0}
               isSelected={selectedIds.has(courier.id)}
               onToggleSelect={onToggleSelect}
               onOpenActionsMenu={onOpenActionsMenu}
