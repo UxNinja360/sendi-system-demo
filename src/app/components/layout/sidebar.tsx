@@ -1,12 +1,14 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import {
   Activity,
   BarChart,
   Bike,
   Calendar,
+  Check,
   ChevronLeft,
   ChevronRight,
+  ChevronsUpDown,
   Clock,
   FileText,
   LayoutDashboard,
@@ -15,6 +17,7 @@ import {
   Palette,
   Power,
   Ruler,
+  Search,
   Settings,
   SlidersHorizontal,
   Store,
@@ -29,7 +32,6 @@ import type { AppNavIconKey, AppNavItem } from '../../app-navigation';
 import { useDelivery } from '../../context/delivery-context-value';
 import { getDeliveryCustomerCharge } from '../../utils/delivery-finance';
 import { isOperationalDelivery } from '../../utils/delivery-status';
-import { AppLogo } from '../icons/app-logo';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 interface SidebarProps {
@@ -45,6 +47,9 @@ interface SidebarIconTooltipProps {
 
 const LABELS = {
   selectBusiness: '\u05d1\u05d7\u05d9\u05e8\u05ea \u05e2\u05e1\u05e7',
+  searchBusiness: '\u05d7\u05e4\u05e9 \u05d7\u05d1\u05e8\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd...',
+  deliveryCompanies: '\u05d7\u05d1\u05e8\u05d5\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
+  noBusinesses: '\u05dc\u05d0 \u05e0\u05de\u05e6\u05d0\u05d5 \u05d7\u05d1\u05e8\u05d5\u05ea',
   acceptDeliveries: '\u05e7\u05d1\u05dc\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
   autoAssign: '\u05e9\u05d9\u05d1\u05d5\u05e5 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9',
   noActiveCouriers: '\u05d0\u05d9 \u05d0\u05e4\u05e9\u05e8 \u05dc\u05e4\u05ea\u05d5\u05d7 \u05e7\u05d1\u05dc\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd \u05d1\u05dc\u05d9 \u05e9\u05dc\u05d9\u05d7\u05d9\u05dd \u05e4\u05e2\u05d9\u05dc\u05d9\u05dd',
@@ -70,6 +75,39 @@ const BUSINESSES = [
   'Ramat Gan Deliveries',
   'Bnei Brak Delivery',
 ];
+
+const SIDEBAR_MIN_WIDTH = 250;
+const SIDEBAR_MAX_WIDTH = 400;
+const SIDEBAR_COLLAPSED_WIDTH = 60;
+
+const clampSidebarWidth = (width: number) =>
+  Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, width));
+
+const getBusinessInitials = (name: string) =>
+  name
+    .split(/[\s-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase();
+
+const BusinessAvatar: React.FC<{ name: string; className?: string }> = ({ name, className = '' }) => (
+  <span
+    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#02B74F] text-[11px] font-bold text-[#04130a] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.22)] ${className}`}
+    aria-hidden="true"
+  >
+    {getBusinessInitials(name)}
+  </span>
+);
+
+const BusinessPlanBadge: React.FC<{ className?: string }> = ({ className = '' }) => (
+  <span
+    className={`shrink-0 rounded-full bg-[#1F1F1F] px-2 py-0.5 text-[10px] font-semibold leading-4 text-[#EDEDED] ${className}`}
+  >
+    PRO
+  </span>
+);
 
 const ONBOARDING_BY_ID: Record<string, string> = {
   live: 'nav-live',
@@ -111,7 +149,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
   const navigate = useNavigate();
   const location = useLocation();
   const { state, dispatch } = useDelivery();
+  const businessSwitcherRef = useRef<HTMLDivElement | null>(null);
+  const businessSearchRef = useRef<HTMLInputElement | null>(null);
   const [isBusinessPopupOpen, setIsBusinessPopupOpen] = useState(false);
+  const [businessSearch, setBusinessSearch] = useState('');
   const [selectedBusiness, setSelectedBusiness] = useState(BUSINESSES[0]);
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768);
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -123,6 +164,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       return false;
     }
   });
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    try {
+      const saved = Number(localStorage.getItem('sidebar-width'));
+      return Number.isFinite(saved) ? clampSidebarWidth(saved) : SIDEBAR_MIN_WIDTH;
+    } catch {
+      return SIDEBAR_MIN_WIDTH;
+    }
+  });
+  const [isResizingSidebar, setIsResizingSidebar] = useState(false);
+  const sidebarResizeRef = useRef<{ startX: number; startWidth: number; didMove: boolean } | null>(null);
   const [isLegacySectionOpen, setIsLegacySectionOpen] = useState(() => {
     try {
       const saved = localStorage.getItem('sidebar-legacy-open');
@@ -158,6 +209,36 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
   const walletItem = getNavItemById('wallet');
   const balanceItem = getNavItemById('delivery-balance');
   const settingsItem = getNavItemById('settings');
+  const filteredBusinesses = useMemo(() => {
+    const query = businessSearch.trim().toLowerCase();
+    if (!query) return BUSINESSES;
+    return BUSINESSES.filter((business) => business.toLowerCase().includes(query));
+  }, [businessSearch]);
+
+  useEffect(() => {
+    if (!isBusinessPopupOpen) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (businessSwitcherRef.current?.contains(event.target as Node)) return;
+      setIsBusinessPopupOpen(false);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsBusinessPopupOpen(false);
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isBusinessPopupOpen]);
+
+  useEffect(() => {
+    if (!isBusinessPopupOpen) return;
+    window.setTimeout(() => businessSearchRef.current?.focus(), 0);
+  }, [isBusinessPopupOpen]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -177,6 +258,30 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       // Storage can fail in restricted contexts; the in-memory state is enough.
     }
   }, [isCollapsed]);
+
+  useEffect(() => {
+    if (!isDesktop) return;
+
+    try {
+      localStorage.setItem('sidebar-width', String(sidebarWidth));
+    } catch {
+      // Storage can fail in restricted contexts; the in-memory state is enough.
+    }
+  }, [isDesktop, sidebarWidth]);
+
+  useEffect(() => {
+    if (!isResizingSidebar) return;
+
+    const previousCursor = document.body.style.cursor;
+    const previousUserSelect = document.body.style.userSelect;
+    document.body.style.cursor = 'ew-resize';
+    document.body.style.userSelect = 'none';
+
+    return () => {
+      document.body.style.cursor = previousCursor;
+      document.body.style.userSelect = previousUserSelect;
+    };
+  }, [isResizingSidebar]);
 
   useEffect(() => {
     try {
@@ -247,6 +352,78 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
   const toggleMobileMenu = useCallback(() => {
     setIsCollapsed((prev) => !prev);
+  }, []);
+
+  const toggleDesktopSidebar = useCallback(() => {
+    setIsCollapsed((value) => {
+      const nextValue = !value;
+      if (!nextValue) setSidebarWidth(SIDEBAR_MIN_WIDTH);
+      return nextValue;
+    });
+  }, []);
+
+  const handleSidebarResizePointerDown = useCallback(
+    (event: React.PointerEvent<HTMLButtonElement>) => {
+      if (!isDesktop) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      event.currentTarget.setPointerCapture(event.pointerId);
+      sidebarResizeRef.current = {
+        startX: event.clientX,
+        startWidth: isCollapsed ? SIDEBAR_MIN_WIDTH : sidebarWidth,
+        didMove: false,
+      };
+      setIsResizingSidebar(true);
+    },
+    [isCollapsed, isDesktop, sidebarWidth],
+  );
+
+  const handleSidebarResizePointerMove = useCallback(
+    (event: React.PointerEvent<HTMLButtonElement>) => {
+      const resizeState = sidebarResizeRef.current;
+      if (!resizeState) return;
+
+      const delta = resizeState.startX - event.clientX;
+      if (Math.abs(delta) < 3 && !resizeState.didMove) return;
+
+      resizeState.didMove = true;
+      if (isCollapsed) setIsCollapsed(false);
+      setSidebarWidth(clampSidebarWidth(resizeState.startWidth + delta));
+    },
+    [isCollapsed],
+  );
+
+  const finishSidebarResize = useCallback(
+    (event: React.PointerEvent<HTMLButtonElement>) => {
+      const resizeState = sidebarResizeRef.current;
+      if (!resizeState) return;
+
+      try {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      } catch {
+        // The pointer may already be released by the browser.
+      }
+
+      if (!resizeState.didMove) {
+        toggleDesktopSidebar();
+      }
+
+      sidebarResizeRef.current = null;
+      setIsResizingSidebar(false);
+    },
+    [toggleDesktopSidebar],
+  );
+
+  const cancelSidebarResize = useCallback((event: React.PointerEvent<HTMLButtonElement>) => {
+    try {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    } catch {
+      // The pointer may already be released by the browser.
+    }
+
+    sidebarResizeRef.current = null;
+    setIsResizingSidebar(false);
   }, []);
 
   useEffect(() => {
@@ -370,73 +547,31 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
         />
       )}
 
-      {isBusinessPopupOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm"
-            onClick={() => setIsBusinessPopupOpen(false)}
-          />
-          <div className="fixed inset-0 z-[201] flex items-center justify-center p-4" dir="rtl">
-            <div className="flex max-h-[80vh] w-full max-w-md flex-col overflow-hidden rounded-[var(--app-radius-md)] border border-app-border bg-app-surface shadow-2xl">
-              <div className="border-b border-app-border px-6 py-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-app-text">
-                    {LABELS.selectBusiness}
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => setIsBusinessPopupOpen(false)}
-                    className="text-app-text-secondary transition-colors hover:text-app-text"
-                    aria-label="Close"
-                  >
-                    <X size={20} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-4">
-                {BUSINESSES.map((business) => (
-                  <button
-                    key={business}
-                    type="button"
-                    onClick={() => {
-                      setSelectedBusiness(business);
-                      setIsBusinessPopupOpen(false);
-                    }}
-                    className={`mb-1 flex w-full items-center gap-3 rounded-lg px-4 py-3 text-right text-sm transition-colors ${
-                      selectedBusiness === business
-                        ? 'bg-app-nav-active-bg font-medium text-app-nav-active-text shadow-[inset_0_0_0_1px_var(--app-border)]'
-                        : 'text-app-text-secondary hover:bg-app-nav-hover-bg hover:text-app-text'
-                    }`}
-                  >
-                    <Store size={18} className="shrink-0" />
-                    <span className="truncate">{business}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-
       <div
         dir="rtl"
         className={`app-shell-height group/sidebar fixed inset-y-0 right-0 z-[110] flex flex-col border-l border-app-nav-border bg-app-nav-bg shadow-xl md:static md:z-50 md:shadow-none ${
           isCollapsed ? 'translate-x-0' : 'translate-x-full md:translate-x-0'
         }`}
         style={{
-          width: isDesktop ? (isCollapsed ? '60px' : '256px') : '260px',
+          width: isDesktop ? (isCollapsed ? SIDEBAR_COLLAPSED_WIDTH : sidebarWidth) : '260px',
           transition: isDesktop
-            ? 'width 300ms cubic-bezier(0.4, 0, 0.2, 1)'
+            ? isResizingSidebar
+              ? 'none'
+              : 'width 300ms cubic-bezier(0.4, 0, 0.2, 1)'
             : 'transform 300ms cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
         {isDesktop && (
           <button
             type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              setIsCollapsed((value) => !value);
+            onPointerDown={handleSidebarResizePointerDown}
+            onPointerMove={handleSidebarResizePointerMove}
+            onPointerUp={finishSidebarResize}
+            onPointerCancel={cancelSidebarResize}
+            onKeyDown={(event) => {
+              if (event.key !== 'Enter' && event.key !== ' ') return;
+              event.preventDefault();
+              toggleDesktopSidebar();
             }}
             className="group/sidebar-resize absolute bottom-0 left-0 top-0 z-20 hidden w-4 -translate-x-1/2 cursor-ew-resize items-center justify-center focus:outline-none md:flex"
             aria-label={isCollapsed ? 'Open sidebar' : 'Collapse sidebar'}
@@ -454,25 +589,116 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
         )}
 
         <div
-          className="app-safe-header flex shrink-0 items-center justify-between border-b border-app-nav-border bg-app-nav-bg px-4 py-0"
+          className="app-safe-header relative flex shrink-0 items-center justify-between gap-2 border-b border-app-nav-border bg-app-nav-bg px-3 py-0"
         >
-          <div className="flex items-center gap-2 md:hidden">
-            <AppLogo size={20} className="text-[#02B74F]" />
-            <span className="text-base font-bold tracking-tight text-[#0d0d12] dark:text-app-text">Sendi</span>
+          <div
+            ref={businessSwitcherRef}
+            className={`relative flex min-w-0 ${isExpanded ? 'flex-1' : 'mx-auto'}`}
+          >
+            {isExpanded ? (
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setBusinessSearch('');
+                  setIsBusinessPopupOpen((value) => !value);
+                }}
+                className="group flex h-10 w-full min-w-0 flex-1 items-center gap-2 rounded-[6px] px-2 text-right text-app-text transition-colors focus:outline-none"
+                aria-expanded={isBusinessPopupOpen}
+                aria-haspopup="dialog"
+                aria-label={LABELS.selectBusiness}
+              >
+                <BusinessAvatar name={selectedBusiness} />
+                <span className="min-w-0 flex-1 truncate text-sm font-semibold">
+                  {selectedBusiness}
+                </span>
+                <BusinessPlanBadge />
+                <span
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] border transition-colors ${
+                    isBusinessPopupOpen
+                      ? 'border-[#303030] bg-[#1F1F1F] text-[#EDEDED]'
+                      : 'border-transparent text-app-text-secondary group-hover:border-[#303030] group-hover:bg-[#1F1F1F] group-hover:text-[#EDEDED]'
+                  }`}
+                >
+                  <ChevronsUpDown className="h-3.5 w-3.5" />
+                </span>
+              </button>
+            ) : (
+              <SidebarIconTooltip label={selectedBusiness} className="hidden justify-center md:flex">
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setBusinessSearch('');
+                    setIsBusinessPopupOpen((value) => !value);
+                  }}
+                  className={`flex h-10 w-10 items-center justify-center rounded-[6px] transition-colors ${
+                    isBusinessPopupOpen ? 'bg-[#1F1F1F]' : 'hover:bg-app-nav-hover-bg'
+                  }`}
+                  aria-expanded={isBusinessPopupOpen}
+                  aria-haspopup="dialog"
+                  aria-label={LABELS.selectBusiness}
+                >
+                  <BusinessAvatar name={selectedBusiness} className="h-6 w-6 text-[10px]" />
+                </button>
+              </SidebarIconTooltip>
+            )}
+
+            {isBusinessPopupOpen && (
+              <div className="absolute right-0 top-[calc(100%+8px)] z-[220] w-[340px] max-w-[calc(100vw-24px)] overflow-hidden rounded-[8px] border border-app-nav-border bg-[#0A0A0A] text-app-text shadow-2xl shadow-black/40">
+                <div className="border-b border-app-nav-border p-2">
+                  <div className="flex h-10 items-center gap-2 rounded-[6px] border border-transparent px-2 text-app-text-secondary focus-within:border-[#3A3A3A] focus-within:bg-[#111111]">
+                    <Search className="h-4 w-4 shrink-0" />
+                    <input
+                      ref={businessSearchRef}
+                      value={businessSearch}
+                      onChange={(event) => setBusinessSearch(event.target.value)}
+                      placeholder={LABELS.searchBusiness}
+                      className="min-w-0 flex-1 bg-transparent text-sm text-app-text outline-none placeholder:text-app-text-muted"
+                    />
+                    <span className="shrink-0 rounded-[4px] border border-app-nav-border px-1.5 py-0.5 text-[10px] font-medium text-app-text-secondary">
+                      Esc
+                    </span>
+                  </div>
+                </div>
+
+                <div className="max-h-[304px] overflow-y-auto p-2">
+                  {filteredBusinesses.length > 0 ? (
+                    filteredBusinesses.map((business) => {
+                      const isSelected = business === selectedBusiness;
+
+                      return (
+                        <button
+                          key={business}
+                          type="button"
+                          onClick={() => {
+                            setSelectedBusiness(business);
+                            setIsBusinessPopupOpen(false);
+                          }}
+                          className={`mb-1 flex h-11 w-full items-center gap-3 rounded-[6px] px-2 text-right text-sm transition-colors ${
+                            isSelected
+                              ? 'bg-[#1F1F1F] text-app-text'
+                              : 'text-app-text-secondary hover:bg-[#151515] hover:text-app-text'
+                          }`}
+                        >
+                          <BusinessAvatar name={business} className="h-6 w-6 text-[10px]" />
+                          <span className="min-w-0 flex-1 truncate font-medium">{business}</span>
+                          <BusinessPlanBadge className="px-1.5 text-[9px]" />
+                          {isSelected ? (
+                            <Check className="h-4 w-4 shrink-0 text-[#EDEDED]" />
+                          ) : null}
+                        </button>
+                      );
+                    })
+                  ) : (
+                    <div className="px-2 py-8 text-center text-sm text-app-text-secondary">
+                      {LABELS.noBusinesses}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
-
-          {!isCollapsed && (
-            <div className="hidden items-center gap-2 md:flex">
-              <AppLogo size={20} className="text-[#02B74F]" />
-              <span className="text-base font-bold tracking-tight text-[#0d0d12] dark:text-app-text">Sendi</span>
-            </div>
-          )}
-
-          {isCollapsed && (
-            <div className="mx-auto hidden md:flex">
-              <AppLogo size={20} className="text-[#02B74F]" />
-            </div>
-          )}
 
           <button
             type="button"
@@ -480,13 +706,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
               event.stopPropagation();
               closeMobileMenu();
             }}
-            className="text-app-text-secondary hover:text-app-text md:hidden"
+            className="shrink-0 text-app-text-secondary hover:text-app-text md:hidden"
             aria-label="Close menu"
           >
             <X size={18} />
           </button>
-
-          {!isCollapsed && <div className="hidden w-4 md:block" />}
         </div>
 
         <div
@@ -535,25 +759,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
         </div>
 
         <div className="mt-auto shrink-0 border-t border-app-nav-border">
-          <button
-            type="button"
-            onClick={() => setIsBusinessPopupOpen(!isBusinessPopupOpen)}
-            className={footerItemClass(false)}
-            aria-label={selectedBusiness}
-          >
-            {isExpanded ? (
-              <span className="flex items-center gap-2 text-xs text-current transition-colors">
-                <Store size={14} className="shrink-0" />
-                <span className="truncate">{selectedBusiness}</span>
-                <ChevronLeft size={12} className="shrink-0" />
-              </span>
-            ) : (
-              <SidebarIconTooltip label={selectedBusiness} className="hidden justify-center md:flex">
-                <Store size={15} className="text-current transition-colors" />
-              </SidebarIconTooltip>
-            )}
-          </button>
-
           <button
             type="button"
             onClick={() => handleNav(walletItem?.path ?? '/wallet')}

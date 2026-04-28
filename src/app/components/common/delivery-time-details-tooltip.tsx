@@ -23,6 +23,7 @@ const timeDetailsTooltipWidth = 328;
 const timeDetailsTooltipEstimatedHeight = 190;
 const timeDetailsTooltipGap = 8;
 const timeDetailsTooltipViewportPadding = 8;
+const timeDetailsTooltipCompactBreakpoint = 768;
 
 const toDeliveryDate = (value: DateValue) => {
   if (!value) return null;
@@ -96,7 +97,7 @@ export const DeliveryTimeDetailsTooltip: React.FC<{
   children: React.ReactNode;
 }> = ({ delivery, children }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [position, setPosition] = useState<{ left: number; top: number } | null>(null);
+  const [position, setPosition] = useState<{ left: number; top: number; width: number } | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const triggerRef = useRef<HTMLSpanElement>(null);
   const createdAt = getCreatedAt(delivery);
@@ -122,6 +123,28 @@ export const DeliveryTimeDetailsTooltip: React.FC<{
     return () => window.clearInterval(intervalId);
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!isOpen || typeof window === 'undefined') return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (triggerRef.current?.contains(event.target as Node)) return;
+      setIsOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
+
   useLayoutEffect(() => {
     if (!isOpen || typeof window === 'undefined') return;
 
@@ -132,20 +155,41 @@ export const DeliveryTimeDetailsTooltip: React.FC<{
       const rect = trigger.getBoundingClientRect();
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
-      const preferredLeft = rect.right + timeDetailsTooltipGap;
-      const fallbackLeft = rect.left - timeDetailsTooltipWidth - timeDetailsTooltipGap;
-      const left =
-        preferredLeft + timeDetailsTooltipWidth <= viewportWidth - timeDetailsTooltipViewportPadding
-          ? preferredLeft
-          : Math.max(timeDetailsTooltipViewportPadding, fallbackLeft);
-      const centeredTop = rect.top + rect.height / 2 - timeDetailsTooltipEstimatedHeight / 2;
+      const width = Math.min(
+        timeDetailsTooltipWidth,
+        viewportWidth - timeDetailsTooltipViewportPadding * 2,
+      );
+      const isCompact = viewportWidth < timeDetailsTooltipCompactBreakpoint;
+      let left = rect.left - width - timeDetailsTooltipGap;
+      let top = rect.top + rect.height / 2 - timeDetailsTooltipEstimatedHeight / 2;
+
+      if (isCompact) {
+        left = Math.max(timeDetailsTooltipViewportPadding, (viewportWidth - width) / 2);
+        const belowTop = rect.bottom + timeDetailsTooltipGap;
+        const aboveTop = rect.top - timeDetailsTooltipEstimatedHeight - timeDetailsTooltipGap;
+        top =
+          belowTop + timeDetailsTooltipEstimatedHeight <= viewportHeight - timeDetailsTooltipViewportPadding
+            ? belowTop
+            : aboveTop;
+      } else {
+        const preferredLeft = rect.left - width - timeDetailsTooltipGap;
+        const fallbackLeft = rect.right + timeDetailsTooltipGap;
+        left =
+          preferredLeft >= timeDetailsTooltipViewportPadding
+            ? preferredLeft
+            : Math.min(
+                Math.max(timeDetailsTooltipViewportPadding, fallbackLeft),
+                viewportWidth - width - timeDetailsTooltipViewportPadding,
+              );
+      }
+
       const maxTop = viewportHeight - timeDetailsTooltipEstimatedHeight - timeDetailsTooltipViewportPadding;
-      const top = Math.min(
-        Math.max(timeDetailsTooltipViewportPadding, centeredTop),
+      top = Math.min(
+        Math.max(timeDetailsTooltipViewportPadding, top),
         Math.max(timeDetailsTooltipViewportPadding, maxTop),
       );
 
-      setPosition({ left, top });
+      setPosition({ left, top, width });
     };
 
     updatePosition();
@@ -169,7 +213,10 @@ export const DeliveryTimeDetailsTooltip: React.FC<{
         onMouseLeave={() => setIsOpen(false)}
         onFocus={() => setIsOpen(true)}
         onBlur={() => setIsOpen(false)}
-        onClick={(event) => event.stopPropagation()}
+        onClick={(event) => {
+          event.stopPropagation();
+          setIsOpen(true);
+        }}
       >
         {children}
       </span>
@@ -178,8 +225,8 @@ export const DeliveryTimeDetailsTooltip: React.FC<{
             <div
               role="tooltip"
               dir="rtl"
-              className="pointer-events-none fixed z-[9999] w-[328px] rounded-md border border-[#2a2a2a] bg-[#0b0b0b] px-3.5 py-3 text-sm text-[#ededed] shadow-2xl"
-              style={{ left: position.left, top: position.top }}
+              className="pointer-events-none fixed z-[9999] max-w-[calc(100vw-16px)] rounded-md border border-[#2a2a2a] bg-[#0b0b0b] px-3.5 py-3 text-sm text-[#ededed] shadow-2xl"
+              style={{ left: position.left, top: position.top, width: position.width }}
             >
               <div dir="rtl" className="space-y-3">
                 <div className="text-right leading-5 text-[#8f8f8f]">{createdElapsed ?? '-'}</div>

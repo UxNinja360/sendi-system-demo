@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
-  ChevronDown,
   MessageSquare,
   MoreHorizontal,
   PackagePlus,
@@ -12,8 +11,6 @@ import { getNavItemForPath } from '../../app-navigation';
 import { useDelivery } from '../../context/delivery-context-value';
 import { formatOrderNumber } from '../../utils/order-number';
 import { AppTopBarAction, emitAppTopBarAction } from './app-top-bar-actions';
-
-const DEFAULT_WORKSPACE = 'Tel Aviv - Runners';
 
 type PageMenuAction = {
   action: AppTopBarAction;
@@ -161,15 +158,6 @@ export const AppTopBar: React.FC = () => {
       dir="rtl"
       className="relative flex h-12 shrink-0 items-center border-b border-app-nav-border bg-app-background px-3 text-app-text md:h-14 md:px-5"
     >
-      <button
-        type="button"
-        className="inline-flex h-8 max-w-[34vw] items-center gap-2 rounded-[var(--app-radius-sm)] px-2.5 text-sm font-semibold text-app-text transition-colors hover:bg-app-nav-hover-bg md:max-w-[220px]"
-        aria-label="בחירת סביבת עבודה"
-      >
-        <span className="truncate">{DEFAULT_WORKSPACE}</span>
-        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
-      </button>
-
       <div className="pointer-events-none absolute inset-x-[128px] flex justify-center sm:inset-x-[148px] md:inset-x-0">
         {topBarBreadcrumb ? (
           <nav

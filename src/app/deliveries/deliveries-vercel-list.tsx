@@ -66,7 +66,7 @@ type DeliveryVercelRowProps = {
 };
 
 const rowGridClass =
-  'grid grid-cols-[44px_minmax(126px,0.55fr)_minmax(220px,0.8fr)_minmax(240px,0.9fr)_minmax(430px,2.4fr)_44px]';
+  'grid grid-cols-[40px_minmax(0,1fr)_40px] md:grid-cols-[44px_minmax(96px,150px)_minmax(130px,240px)_minmax(130px,240px)_minmax(160px,1fr)_44px] xl:grid-cols-[44px_minmax(120px,176px)_minmax(180px,260px)_minmax(180px,260px)_minmax(240px,1fr)_44px] 2xl:grid-cols-[44px_minmax(140px,190px)_minmax(220px,300px)_minmax(220px,300px)_minmax(320px,1fr)_44px]';
 
 const getDeliveryDate = (delivery: Delivery) =>
   delivery.creation_time ?? delivery.createdAt ?? delivery.delivery_date;
@@ -142,9 +142,10 @@ const DeliveryRowCheckbox: React.FC<{
   checked: boolean;
   onChange: () => void;
   label: string;
-}> = ({ checked, onChange, label }) => (
+  className?: string;
+}> = ({ checked, onChange, label, className }) => (
   <label
-    className="flex h-full items-center justify-center"
+    className={joinClassNames('flex h-full items-center justify-center', className)}
     onClick={(event) => event.stopPropagation()}
   >
     <span className="sr-only">{label}</span>
@@ -221,7 +222,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
       }}
       className={joinClassNames(
         rowGridClass,
-        'group min-w-[1120px] cursor-pointer border-b border-app-nav-border bg-app-surface text-app-text outline-none transition-colors last:border-b-0 hover:bg-app-surface-raised focus-visible:bg-app-surface-raised',
+        'group w-full min-w-0 cursor-pointer border-b border-app-nav-border bg-app-surface text-app-text outline-none transition-colors last:border-b-0 hover:bg-app-surface-raised focus-visible:bg-app-surface-raised',
         isSelected && 'bg-app-surface-raised',
         isDrawerTarget && 'shadow-[inset_2px_0_0_#ededed]',
       )}
@@ -230,9 +231,10 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         checked={isSelected}
         onChange={() => onToggleSelect(delivery.id)}
         label={`בחר משלוח ${delivery.orderNumber}`}
+        className="col-start-1 row-span-4 row-start-1 md:col-auto md:row-auto md:row-span-1"
       />
 
-      <div className="flex min-h-[72px] min-w-0 flex-col justify-center px-3 py-2">
+      <div className="col-start-2 row-start-1 flex min-h-0 min-w-0 flex-col justify-center px-2 py-2 md:col-auto md:row-auto md:min-h-[72px] md:px-3">
         <div className="flex items-center gap-2">
           <span className="truncate text-sm font-semibold text-app-text">{formatOrderNumber(delivery.orderNumber)}</span>
         </div>
@@ -244,7 +246,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         </div>
       </div>
 
-      <div className="flex min-h-[72px] min-w-0 flex-col justify-center px-3 py-2">
+      <div className="col-start-2 row-start-2 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:px-3 md:py-2">
         <div className="flex min-w-0 items-center gap-1.5">
           <Store className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
           <span className="truncate text-sm font-normal text-app-text">{restaurantName}</span>
@@ -255,7 +257,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         </div>
       </div>
 
-      <div className="flex min-h-[72px] min-w-0 flex-col justify-center px-3 py-2">
+      <div className="col-start-2 row-start-3 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:px-3 md:py-2">
         <div className="flex min-w-0 items-center gap-1.5">
           <UserRound className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
           <span className="truncate text-sm font-normal text-app-text">{clientName}</span>
@@ -266,8 +268,8 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         </div>
       </div>
 
-      <div className="flex min-h-[72px] min-w-0 items-center justify-end px-3 py-2">
-        <div className="flex w-full min-w-0 items-center justify-end gap-2">
+      <div className="col-start-2 row-start-4 flex min-h-0 min-w-0 items-center justify-end px-2 py-2 md:col-auto md:row-auto md:min-h-[72px] md:px-3">
+        <div className="flex w-full min-w-0 items-center justify-end gap-2 overflow-hidden">
           <span className="min-w-0 truncate text-sm font-normal text-app-text-secondary">
             {courierStatusText}
           </span>
@@ -275,7 +277,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         </div>
       </div>
 
-      <div className="flex min-h-[72px] items-center justify-center px-1" onClick={(event) => event.stopPropagation()}>
+      <div className="col-start-3 row-span-4 row-start-1 flex min-h-0 items-center justify-center px-1 md:col-auto md:row-auto md:row-span-1 md:min-h-[72px]" onClick={(event) => event.stopPropagation()}>
         <EntityRowActionTrigger
           onClick={(event) => {
             const rect = event.currentTarget.getBoundingClientRect();
@@ -466,8 +468,8 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-app-background">
-      <div ref={scrollContainerRef} className="deliveries-vercel-scroll min-h-0 flex-1 overflow-auto px-3" dir="ltr">
-        <div className="min-w-[1120px] overflow-hidden border border-app-nav-border" dir="rtl">
+      <div ref={scrollContainerRef} className="deliveries-vercel-scroll min-h-0 flex-1 overflow-auto px-2 md:px-3" dir="ltr">
+        <div className="w-full min-w-0 overflow-visible border border-app-nav-border md:overflow-hidden" dir="rtl">
           {filteredDeliveries.map((delivery) => {
             const courier = delivery.courierId
               ? couriers.find((candidate) => candidate.id === delivery.courierId) ?? null

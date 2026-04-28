@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Filter, Search, X } from 'lucide-react';
+import { Check, ChevronDown, Filter, Search, X } from 'lucide-react';
 
 import {
   ListMultiSelectFilter,
@@ -58,6 +58,27 @@ const isMultiSelectFilter = (
   filter: ListInlineFilterItem,
 ): filter is ListInlineMultiSelectFilterItem => filter.kind === 'multi-select';
 
+const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
+  classes.filter(Boolean).join(' ');
+
+const MobileStatusDotSummary: React.FC<{
+  options: FilterOption[];
+  selectedValues: Set<string>;
+}> = ({ options, selectedValues }) => (
+  <span className="flex shrink-0 items-center -space-x-1" dir="ltr" aria-hidden="true">
+    {options.map((option) => (
+      <span
+        key={option.id}
+        className={joinClassNames(
+          'h-2 w-2 rounded-full ring-1 ring-[#0A0A0A]',
+          option.dotClassName ?? 'bg-[#525252]',
+          selectedValues.has(option.id) ? '' : 'opacity-25 grayscale',
+        )}
+      />
+    ))}
+  </span>
+);
+
 export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters }) => {
   const [openFilterKey, setOpenFilterKey] = useState<string | null>(null);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
@@ -87,6 +108,13 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
       }).length,
     [filters],
   );
+  const mobileStatusFilter =
+    filters.length === 1 &&
+    isMultiSelectFilter(filters[0]) &&
+    filters[0].appearance === 'status'
+      ? filters[0]
+      : null;
+  const mobileSheetTitle = mobileStatusFilter?.defaultLabel ?? TEXT.filters;
 
   useEffect(() => {
     const handleMouseDown = (event: MouseEvent) => {
@@ -115,21 +143,41 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setMobileSheetOpen(true)}
-        className={`${getListFilterButtonClass(activeFilterCount > 0)} md:hidden`}
-        aria-label={TEXT.filters}
-        title={TEXT.filters}
-      >
-        <Filter className="h-3.5 w-3.5" />
-        <span className="hidden sm:inline">{TEXT.filters}</span>
-        {activeFilterCount > 0 ? (
-          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#9fe870] text-[10px] font-bold text-[#0d0d12]">
-            {activeFilterCount}
+      {mobileStatusFilter ? (
+        <button
+          type="button"
+          onClick={() => setMobileSheetOpen(true)}
+          className="flex h-10 shrink-0 items-center gap-2 rounded-[6px] border border-app-nav-border bg-[#0A0A0A] px-3 text-sm font-semibold text-[#EDEDED] transition-colors hover:bg-[#1A1A1A] md:hidden"
+          aria-label={mobileStatusFilter.defaultLabel}
+          title={mobileStatusFilter.defaultLabel}
+        >
+          <MobileStatusDotSummary
+            options={mobileStatusFilter.options}
+            selectedValues={mobileStatusFilter.selectedValues}
+          />
+          <span className="min-w-0 truncate text-right">{mobileStatusFilter.defaultLabel}</span>
+          <span className="shrink-0 rounded-full bg-[#262626] px-1.5 py-0.5 text-xs font-bold leading-none text-[#EDEDED]">
+            {mobileStatusFilter.selectedValues.size}/{mobileStatusFilter.options.length}
           </span>
-        ) : null}
-      </button>
+          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-[#737373]" />
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setMobileSheetOpen(true)}
+          className={`${getListFilterButtonClass(activeFilterCount > 0)} md:hidden`}
+          aria-label={TEXT.filters}
+          title={TEXT.filters}
+        >
+          <Filter className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">{TEXT.filters}</span>
+          {activeFilterCount > 0 ? (
+            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#262626] text-[10px] font-bold text-[#EDEDED]">
+              {activeFilterCount}
+            </span>
+          ) : null}
+        </button>
+      )}
 
       <div className="hidden min-w-0 shrink-0 flex-nowrap items-center gap-1 md:flex">
         {filters.map((filter) =>
@@ -200,7 +248,7 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
               <div className="flex items-center gap-2">
                 <Filter className="h-4 w-4 text-[#737373]" />
                 <span className="text-sm font-semibold text-[#0d0d12] dark:text-app-text">
-                  {TEXT.filters}
+                  {mobileSheetTitle}
                 </span>
               </div>
               <button
