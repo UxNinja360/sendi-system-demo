@@ -5,20 +5,6 @@ import { ToolbarIconButton } from './toolbar-icon-button';
 export type PeriodMode = 'current_month' | 'custom_range';
 
 const WEEKDAY_LABELS = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
-const SHORT_MONTH_LABELS = [
-  'ינו',
-  'פבר',
-  'מרץ',
-  'אפר',
-  'מאי',
-  'יונ',
-  'יול',
-  'אוג',
-  'ספט',
-  'אוק',
-  'נוב',
-  'דצמ',
-] as const;
 
 const pad = (value: number) => value.toString().padStart(2, '0');
 
@@ -221,10 +207,6 @@ export const ToolbarPeriodControl: React.FC<ToolbarPeriodControlProps> = ({
     periodMode === 'custom_range' && customStartDate && customEndDate
       ? getRangeLabel(customStartDate, customEndDate)
       : formatMonthLabel(monthAnchor);
-  const compactLabel =
-    periodMode === 'custom_range'
-      ? displayLabel
-      : `${SHORT_MONTH_LABELS[monthAnchor.getMonth()]} ${monthAnchor.getFullYear()}`;
 
   const moveMonth = (direction: -1 | 1) => {
     setMonthAnchor((value) => new Date(value.getFullYear(), value.getMonth() + direction, 1));
@@ -297,15 +279,14 @@ export const ToolbarPeriodControl: React.FC<ToolbarPeriodControlProps> = ({
       <button
         type="button"
         onClick={() => setCalendarOpen((value) => !value)}
-        className={`flex h-10 min-w-[136px] items-center justify-center gap-2 rounded-[4px] border px-3 text-sm font-semibold transition-colors sm:min-w-[190px] ${
+        className={`flex h-10 min-w-[176px] shrink-0 items-center justify-center gap-2 rounded-[4px] border px-3 text-sm font-semibold transition-colors ${
           periodMode === 'custom_range'
             ? 'border-app-nav-border bg-[#0A0A0A] text-app-text'
             : 'border-app-border bg-app-surface text-app-text hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#0A0A0A] dark:hover:bg-[#1A1A1A]'
         }`}
       >
         <CalendarDays className="h-4 w-4 shrink-0 text-app-text-secondary dark:text-[#EDEDED]" />
-        <span className="truncate sm:hidden">{compactLabel}</span>
-        <span className="hidden truncate sm:inline">{displayLabel}</span>
+        <span className="whitespace-nowrap">{displayLabel}</span>
       </button>
 
       {periodMode !== 'custom_range' ? (
