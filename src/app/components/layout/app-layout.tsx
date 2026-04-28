@@ -66,7 +66,7 @@ export const AppLayout: React.FC = () => {
 
       <div className="flex h-full w-full flex-1 flex-col overflow-hidden">
         <LoadingBar isLoading={isLoading || isPageLoading} />
-        {!isLivePage && <AppTopBar />}
+        {!isLivePage && <AppTopBar onOpenMobileMenu={openMobileMenu} />}
 
         <div
           className={`relative flex-1 w-full bg-app-background ${

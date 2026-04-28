@@ -25,7 +25,6 @@ import {
   TriangleAlert,
   Users,
   Wallet,
-  X,
 } from 'lucide-react';
 import { getNavItemById, isNavItemActive, SIDEBAR_NAV_SECTIONS } from '../../app-navigation';
 import type { AppNavIconKey, AppNavItem } from '../../app-navigation';
@@ -700,17 +699,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
             )}
           </div>
 
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              closeMobileMenu();
-            }}
-            className="shrink-0 text-app-text-secondary hover:text-app-text md:hidden"
-            aria-label="Close menu"
-          >
-            <X size={18} />
-          </button>
         </div>
 
         <div

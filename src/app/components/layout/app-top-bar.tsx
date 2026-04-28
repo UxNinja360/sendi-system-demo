@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
+  Menu,
   MessageSquare,
   MoreHorizontal,
   PackagePlus,
@@ -22,6 +23,10 @@ type TopBarBreadcrumb = {
   parentLabel: string;
   parentPath: string;
   currentLabel: string;
+};
+
+type AppTopBarProps = {
+  onOpenMobileMenu?: () => void;
 };
 
 const getPageMenuAction = (pathname: string): PageMenuAction | null => {
@@ -57,7 +62,7 @@ const getPathDetailId = (pathname: string, prefix: string) => {
   return decodeURIComponent(pathname.slice(prefix.length));
 };
 
-export const AppTopBar: React.FC = () => {
+export const AppTopBar: React.FC<AppTopBarProps> = ({ onOpenMobileMenu }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { state } = useDelivery();
@@ -158,11 +163,20 @@ export const AppTopBar: React.FC = () => {
       dir="rtl"
       className="relative flex h-12 shrink-0 items-center border-b border-app-nav-border bg-app-background px-3 text-app-text md:h-14 md:px-5"
     >
-      <div className="pointer-events-none absolute inset-y-0 right-3 left-14 flex items-center justify-start sm:right-5 md:left-16">
+      <button
+        type="button"
+        onClick={onOpenMobileMenu}
+        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--app-radius-sm)] text-[#EDEDED] transition-colors hover:bg-app-nav-hover-bg md:hidden"
+        aria-label="פתח תפריט"
+      >
+        <Menu className="h-4 w-4" />
+      </button>
+
+      <div className="pointer-events-none absolute inset-y-0 right-14 left-14 flex items-center justify-center text-center sm:right-16 sm:left-16 md:right-5 md:left-16 md:justify-start md:text-right">
         {topBarBreadcrumb ? (
           <nav
             aria-label="ניווט פנימי"
-            className="pointer-events-auto flex h-5 max-w-full min-w-0 items-center gap-2 text-sm leading-5 md:max-w-[42vw]"
+            className="pointer-events-auto flex h-5 max-w-full min-w-0 items-center justify-center gap-2 text-sm leading-5 md:max-w-[42vw] md:justify-start"
           >
             <button
               type="button"
