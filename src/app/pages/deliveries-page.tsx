@@ -208,8 +208,12 @@ export const DeliveriesPage: React.FC = () => {
     selectedRestaurants,
     setSelectedRestaurants,
     toggleRestaurant,
+    selectedChains,
+    setSelectedChains,
+    toggleChain,
     courierOptions,
     restaurantOptions,
+    chainOptions,
     filteredDeliveries,
     statusCounts,
     dateRangeStats,
@@ -559,6 +563,10 @@ export const DeliveriesPage: React.FC = () => {
                 selectedRestaurants={selectedRestaurants}
                 setSelectedRestaurants={setSelectedRestaurants}
                 toggleRestaurant={toggleRestaurant}
+                chainOptions={chainOptions}
+                selectedChains={selectedChains}
+                setSelectedChains={setSelectedChains}
+                toggleChain={toggleChain}
                 courierOptions={courierOptions}
                 selectedCouriers={selectedCouriers}
                 setSelectedCouriers={setSelectedCouriers}

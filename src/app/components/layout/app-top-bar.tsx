@@ -158,7 +158,7 @@ export const AppTopBar: React.FC = () => {
       dir="rtl"
       className="relative flex h-12 shrink-0 items-center border-b border-app-nav-border bg-app-background px-3 text-app-text md:h-14 md:px-5"
     >
-      <div className="pointer-events-none absolute inset-x-[128px] flex justify-center sm:inset-x-[148px] md:inset-x-0">
+      <div className="pointer-events-none absolute inset-y-0 right-3 left-14 flex items-center justify-start sm:right-5 md:left-16">
         {topBarBreadcrumb ? (
           <nav
             aria-label="ניווט פנימי"
@@ -187,7 +187,7 @@ export const AppTopBar: React.FC = () => {
         <button
           type="button"
           onClick={() => setIsMenuOpen((value) => !value)}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--app-radius-sm)] text-app-text-secondary transition-colors hover:bg-app-nav-hover-bg hover:text-app-text"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--app-radius-sm)] text-[#EDEDED] transition-colors hover:bg-app-nav-hover-bg"
           aria-label="אפשרויות"
           aria-expanded={isMenuOpen}
         >

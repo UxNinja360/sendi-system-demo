@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Bike, Check, Search, Store, X } from 'lucide-react';
 
-type CommandKind = 'restaurants' | 'couriers';
+type CommandKind = 'restaurants' | 'chains' | 'couriers';
 
 type CommandOption = {
   id: string;
@@ -25,6 +25,10 @@ type DeliveriesCommandSearchProps = {
   selectedRestaurants: Set<string>;
   setSelectedRestaurants: React.Dispatch<React.SetStateAction<Set<string>>>;
   toggleRestaurant: (id: string) => void;
+  chainOptions: CommandOption[];
+  selectedChains: Set<string>;
+  setSelectedChains: React.Dispatch<React.SetStateAction<Set<string>>>;
+  toggleChain: (id: string) => void;
   courierOptions: CommandOption[];
   selectedCouriers: Set<string>;
   setSelectedCouriers: React.Dispatch<React.SetStateAction<Set<string>>>;
@@ -41,6 +45,7 @@ const TEXT = {
   clearAll: 'נקה הכל',
   noResults: 'אין התאמות לפילטר הזה',
   restaurants: 'מסעדות',
+  chains: 'רשתות',
   couriers: 'שליחים',
   freeSearch: 'חיפוש',
 } as const;
@@ -51,6 +56,12 @@ const COMMANDS: Array<{
   prefix: string;
   icon: React.ComponentType<{ className?: string }>;
 }> = [
+  {
+    kind: 'chains',
+    label: TEXT.chains,
+    prefix: `${TEXT.chains}:`,
+    icon: Store,
+  },
   {
     kind: 'restaurants',
     label: TEXT.restaurants,
@@ -72,6 +83,10 @@ const getCommandKind = (value: string): CommandKind | null => {
 
   if (normalized.startsWith('מסעדות:') || normalized.startsWith('מסעדה:')) {
     return 'restaurants';
+  }
+
+  if (normalized.startsWith('רשת:') || normalized.startsWith('רשתות:')) {
+    return 'chains';
   }
 
   if (normalized.startsWith('שליחים:') || normalized.startsWith('שליח:')) {
@@ -113,6 +128,10 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
   selectedRestaurants,
   setSelectedRestaurants,
   toggleRestaurant,
+  chainOptions,
+  selectedChains,
+  setSelectedChains,
+  toggleChain,
   courierOptions,
   selectedCouriers,
   setSelectedCouriers,
@@ -146,9 +165,14 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
   }, [isOpen]);
 
   const visibleOptions = useMemo(() => {
-    const options = activeCommand === 'restaurants' ? restaurantOptions : courierOptions;
+    const options =
+      activeCommand === 'restaurants'
+        ? restaurantOptions
+        : activeCommand === 'chains'
+          ? chainOptions
+          : courierOptions;
     return options.filter((option) => optionMatches(option, commandSearchValue)).slice(0, 12);
-  }, [activeCommand, commandSearchValue, courierOptions, restaurantOptions]);
+  }, [activeCommand, chainOptions, commandSearchValue, courierOptions, restaurantOptions]);
 
   const activeTokens = useMemo<ActiveToken[]>(() => {
     const restaurantTokens = restaurantOptions
@@ -160,6 +184,23 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
         value: option.label,
         onRemove: () => {
           setSelectedRestaurants((current) => {
+            const next = new Set(current);
+            next.delete(option.id);
+            return next;
+          });
+          setCurrentPage(1);
+        },
+      }));
+
+    const chainTokens = chainOptions
+      .filter((option) => selectedChains.has(option.id))
+      .map((option) => ({
+        key: `chain-${option.id}`,
+        kind: 'chains' as const,
+        label: TEXT.chains,
+        value: option.label,
+        onRemove: () => {
+          setSelectedChains((current) => {
             const next = new Set(current);
             next.delete(option.id);
             return next;
@@ -201,15 +242,18 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
         ]
       : [];
 
-    return [...searchToken, ...restaurantTokens, ...courierTokens];
+    return [...searchToken, ...restaurantTokens, ...chainTokens, ...courierTokens];
   }, [
+    chainOptions,
     courierOptions,
     onSearchQueryChange,
     restaurantOptions,
     searchQuery,
+    selectedChains,
     selectedCouriers,
     selectedRestaurants,
     setCurrentPage,
+    setSelectedChains,
     setSelectedCouriers,
     setSelectedRestaurants,
   ]);
@@ -248,6 +292,8 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
 
       if (activeCommand === 'restaurants') {
         toggleRestaurant(option.id);
+      } else if (activeCommand === 'chains') {
+        toggleChain(option.id);
       } else {
         toggleCourier(option.id);
       }
@@ -257,7 +303,7 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
       setCurrentPage(1);
       requestAnimationFrame(() => inputRef.current?.focus());
     },
-    [activeCommand, setCurrentPage, toggleCourier, toggleRestaurant],
+    [activeCommand, setCurrentPage, toggleChain, toggleCourier, toggleRestaurant],
   );
 
   const clearDraft = useCallback(() => {
@@ -271,12 +317,14 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
     setDraft('');
     onSearchQueryChange('');
     setSelectedRestaurants(new Set());
+    setSelectedChains(new Set());
     setSelectedCouriers(new Set());
     setCurrentPage(1);
     inputRef.current?.focus();
   }, [
     onSearchQueryChange,
     setCurrentPage,
+    setSelectedChains,
     setSelectedCouriers,
     setSelectedRestaurants,
   ]);
@@ -405,6 +453,8 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
                     const isSelected =
                       activeCommand === 'restaurants'
                         ? selectedRestaurants.has(option.id)
+                        : activeCommand === 'chains'
+                          ? selectedChains.has(option.id)
                         : selectedCouriers.has(option.id);
 
                     return (
