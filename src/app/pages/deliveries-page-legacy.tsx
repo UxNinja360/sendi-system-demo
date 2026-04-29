@@ -22,6 +22,7 @@ import {
 import { EntityListShell } from '../components/common/entity-list-shell';
 import { InfoBar } from '../components/common/info-bar';
 import { ENTITY_TABLE_WIDTHS } from '../components/common/entity-table-shared';
+import { addAppTopBarActionListener } from '../components/layout/app-top-bar-actions';
 import { getDeliveryCustomerCharge, sumDeliveryMoney } from '../utils/delivery-finance';
 import { DELIVERY_STORAGE_KEYS } from '../context/delivery-storage';
 import {
@@ -258,6 +259,13 @@ export const DeliveriesPageLegacy: React.FC = () => {
   const [restaurantSearch, setRestaurantSearch] = useState('');
   const [periodMode, setPeriodMode] = useState<PeriodMode>('current_month');
   const [monthAnchor, setMonthAnchor] = useState(new Date());
+
+  useEffect(() => (
+    addAppTopBarActionListener('export-deliveries', () => {
+      setExportOpen(true);
+      setColumnsOpen(false);
+    })
+  ), []);
 
   useEffect(() => {
     if (periodMode !== 'current_month') return;
@@ -577,6 +585,7 @@ export const DeliveriesPageLegacy: React.FC = () => {
                   setExportOpen(true);
                   setColumnsOpen(false);
                 }}
+                showExportButton={false}
               />
             }
             periodControl={

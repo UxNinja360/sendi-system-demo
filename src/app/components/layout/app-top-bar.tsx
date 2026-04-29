@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
+  Download,
   Menu,
   MessageSquare,
   MoreHorizontal,
@@ -11,7 +12,7 @@ import { useLocation, useNavigate } from 'react-router';
 import { getNavItemForPath } from '../../app-navigation';
 import { useDelivery } from '../../context/delivery-context-value';
 import { formatOrderNumber } from '../../utils/order-number';
-import { AppTopBarAction, emitAppTopBarAction } from './app-top-bar-actions';
+import { emitAppTopBarAction, type AppTopBarAction } from './app-top-bar-actions';
 
 type PageMenuAction = {
   action: AppTopBarAction;
@@ -57,6 +58,23 @@ const getPageMenuAction = (pathname: string): PageMenuAction | null => {
   return null;
 };
 
+const getPageMenuActions = (pathname: string): PageMenuAction[] => {
+  const primaryAction = getPageMenuAction(pathname);
+
+  if (pathname === '/deliveries') {
+    return [
+      ...(primaryAction ? [primaryAction] : []),
+      {
+        action: 'export-deliveries',
+        label: 'ייצוא',
+        icon: <Download className="h-4 w-4 text-app-text-secondary" />,
+      },
+    ];
+  }
+
+  return primaryAction ? [primaryAction] : [];
+};
+
 const getPathDetailId = (pathname: string, prefix: string) => {
   if (!pathname.startsWith(prefix)) return null;
   return decodeURIComponent(pathname.slice(prefix.length));
@@ -68,7 +86,7 @@ export const AppTopBar: React.FC<AppTopBarProps> = ({ onOpenMobileMenu }) => {
   const { state } = useDelivery();
   const currentItem = getNavItemForPath(location.pathname);
   const pageTitle = currentItem?.label ?? 'Sendi';
-  const pageMenuAction = getPageMenuAction(location.pathname);
+  const pageMenuActions = getPageMenuActions(location.pathname);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -152,9 +170,8 @@ export const AppTopBar: React.FC<AppTopBarProps> = ({ onOpenMobileMenu }) => {
     };
   }, [isMenuOpen]);
 
-  const handlePageMenuAction = () => {
-    if (!pageMenuAction) return;
-    emitAppTopBarAction(pageMenuAction.action);
+  const handlePageMenuAction = (action: AppTopBarAction) => {
+    emitAppTopBarAction(action);
     setIsMenuOpen(false);
   };
 
@@ -210,16 +227,19 @@ export const AppTopBar: React.FC<AppTopBarProps> = ({ onOpenMobileMenu }) => {
 
         {isMenuOpen ? (
           <div className="absolute left-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-[var(--app-radius-md)] border border-app-border bg-app-surface text-right shadow-[var(--app-shadow-panel)]">
-            {pageMenuAction ? (
+            {pageMenuActions.length > 0 ? (
               <>
-                <button
-                  type="button"
-                  onClick={handlePageMenuAction}
-                  className="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-app-text transition-colors hover:bg-app-surface-raised"
-                >
-                  {pageMenuAction.icon}
-                  <span>{pageMenuAction.label}</span>
-                </button>
+                {pageMenuActions.map((menuAction) => (
+                  <button
+                    key={menuAction.action}
+                    type="button"
+                    onClick={() => handlePageMenuAction(menuAction.action)}
+                    className="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-app-text transition-colors hover:bg-app-surface-raised"
+                  >
+                    {menuAction.icon}
+                    <span>{menuAction.label}</span>
+                  </button>
+                ))}
                 <div className="mx-2 border-t border-app-border" />
               </>
             ) : null}

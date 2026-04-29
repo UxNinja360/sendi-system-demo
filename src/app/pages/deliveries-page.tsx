@@ -15,7 +15,6 @@ import type { PeriodMode } from '../components/common/toolbar-period-control';
 import { PageToolbar } from '../components/common/page-toolbar';
 import { ToolbarPeriodControl } from '../components/common/toolbar-period-control';
 import { ListInlineFilters } from '../components/common/list-inline-filters';
-import { ListToolbarActions } from '../components/common/list-toolbar-actions';
 import {
   SelectionActionBar,
   SelectionActionButton,
@@ -252,6 +251,13 @@ export const DeliveriesPage: React.FC = () => {
 
   useEffect(() => (
     addAppTopBarActionListener('create-delivery', () => setNewDeliveryOpen(true))
+  ), []);
+
+  useEffect(() => (
+    addAppTopBarActionListener('export-deliveries', () => {
+      setExportOpen(true);
+      setColumnsOpen(false);
+    })
   ), []);
 
   useEffect(() => {
@@ -522,21 +528,6 @@ export const DeliveriesPage: React.FC = () => {
         toolbar={
           <PageToolbar
             showBottomBorder={false}
-            headerControls={
-              <ListToolbarActions
-                showSearch={false}
-                showColumnsToggle={false}
-                columnsOpen={columnsOpen}
-                onToggleColumns={() => {
-                  setColumnsOpen((current) => !current);
-                  setExportOpen(false);
-                }}
-                onExport={() => {
-                  setExportOpen(true);
-                  setColumnsOpen(false);
-                }}
-              />
-            }
             periodControl={
               <ToolbarPeriodControl
                 periodMode={periodMode}

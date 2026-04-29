@@ -289,7 +289,7 @@ export const ToolbarPeriodControl: React.FC<ToolbarPeriodControlProps> = ({
       <button
         type="button"
         onClick={() => setCalendarOpen((value) => !value)}
-        className={`flex h-10 min-w-0 shrink-0 items-center justify-center gap-2 rounded-[4px] border px-3 text-sm font-semibold transition-colors ${
+        className={`flex h-10 min-w-[176px] shrink-0 items-center justify-center gap-2 rounded-[4px] border px-3 text-sm font-semibold transition-colors ${
           periodMode === 'custom_range'
             ? 'border-app-nav-border bg-[#0A0A0A] text-app-text'
             : 'border-app-border bg-app-surface text-app-text hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#0A0A0A] dark:hover:bg-[#1A1A1A]'
