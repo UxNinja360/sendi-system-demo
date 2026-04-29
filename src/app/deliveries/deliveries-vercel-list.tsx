@@ -65,7 +65,7 @@ type DeliveryVercelRowProps = {
 };
 
 const rowGridClass =
-  'grid grid-cols-[minmax(0,1fr)_76px] md:grid-cols-[minmax(96px,140px)_minmax(120px,210px)_minmax(120px,210px)_minmax(120px,190px)_minmax(120px,1fr)_44px] xl:grid-cols-[minmax(120px,166px)_minmax(170px,240px)_minmax(170px,240px)_minmax(150px,220px)_minmax(160px,1fr)_44px] 2xl:grid-cols-[minmax(140px,190px)_minmax(200px,280px)_minmax(200px,280px)_minmax(180px,260px)_minmax(220px,1fr)_44px]';
+  'grid grid-cols-[minmax(0,1fr)_76px] md:grid-cols-[minmax(96px,128px)_minmax(140px,220px)_minmax(140px,220px)_minmax(96px,140px)_minmax(0,1fr)_44px_36px] xl:grid-cols-[minmax(104px,136px)_minmax(160px,240px)_minmax(160px,240px)_minmax(112px,150px)_minmax(0,1fr)_48px_36px] 2xl:grid-cols-[minmax(112px,144px)_minmax(180px,260px)_minmax(180px,260px)_minmax(124px,164px)_minmax(0,1fr)_52px_36px]';
 
 const getDeliveryDate = (delivery: Delivery) =>
   delivery.creation_time ?? delivery.createdAt ?? delivery.delivery_date;
@@ -128,7 +128,6 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
 }) => {
   const navigate = useNavigate();
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
-  const config = STATUS_CONFIG[delivery.status];
   const restaurantName = delivery.rest_name || delivery.restaurantName;
   const restaurantMeta = delivery.restaurantAddress || delivery.rest_city || delivery.restaurantCity || 'מסעדה';
   const clientName = delivery.client_name || delivery.customerName;
@@ -219,7 +218,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         </div>
       </div>
 
-      <div className="col-start-1 row-start-2 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2 md:pl-3 md:pr-5">
+      <div className="col-start-1 row-start-2 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:px-2 md:py-2">
         <div className="flex min-w-0 items-center gap-1.5">
           <Store className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
           <span className="truncate text-sm font-normal text-app-text">{restaurantName}</span>
@@ -230,7 +229,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         </div>
       </div>
 
-      <div className="col-start-1 row-start-3 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:px-3 md:py-2">
+      <div className="col-start-1 row-start-3 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:px-2 md:py-2">
         <div className="flex min-w-0 items-center gap-1.5">
           <UserRound className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
           <span className="truncate text-sm font-normal text-app-text">{clientName}</span>
@@ -247,8 +246,8 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         </div>
       </div>
 
-      <div className="hidden min-h-0 min-w-0 items-center justify-end px-2 py-1 md:col-auto md:row-auto md:flex md:min-h-[72px] md:px-3 md:py-2">
-        <div className="flex w-full min-w-0 items-center justify-end gap-1.5 overflow-hidden text-right" dir="rtl">
+      <div className="hidden min-h-0 min-w-0 items-center justify-start px-2 py-1 md:col-auto md:row-auto md:flex md:min-h-[72px] md:px-3 md:py-2">
+        <div className="flex w-full min-w-0 items-center justify-start gap-1.5 overflow-hidden text-right" dir="rtl">
           {hasAssignedCourier ? <CourierVehicleIcon vehicleType={courierVehicleType} /> : null}
           <span className="min-w-0 truncate text-sm font-normal text-[#EDEDED]">
             {courierColumnText}
@@ -256,13 +255,15 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         </div>
       </div>
 
-      <div className="hidden min-h-0 min-w-0 items-center justify-end px-2 py-2 md:col-auto md:row-auto md:flex md:min-h-[72px] md:px-3">
-        <div className="flex w-full min-w-0 items-center justify-end">
+      <div className="hidden min-h-0 min-w-0 md:block" aria-hidden="true" />
+
+      <div className="hidden min-h-0 min-w-0 items-center justify-center px-1 py-2 md:col-auto md:row-auto md:flex md:min-h-[72px]">
+        <div className="flex w-full min-w-0 items-center justify-center">
           <DeliveryStageTimelineTooltip delivery={delivery} />
         </div>
       </div>
 
-      <div className="contents min-h-0 items-center justify-center px-1 md:col-auto md:row-auto md:flex md:min-h-[72px]" onClick={(event) => event.stopPropagation()}>
+      <div className="contents min-h-0 items-center justify-center px-0 md:col-auto md:row-auto md:flex md:min-h-[72px]" onClick={(event) => event.stopPropagation()}>
         <div className="hidden md:block">
           <EntityRowActionTrigger
             onClick={(event) => {
