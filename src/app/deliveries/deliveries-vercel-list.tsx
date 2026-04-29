@@ -128,6 +128,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
 }) => {
   const navigate = useNavigate();
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
+  const config = STATUS_CONFIG[delivery.status];
   const restaurantName = delivery.rest_name || delivery.restaurantName;
   const restaurantMeta = delivery.restaurantAddress || delivery.rest_city || delivery.restaurantCity || 'מסעדה';
   const clientName = delivery.client_name || delivery.customerName;
