@@ -550,6 +550,7 @@ export const DeliveriesPage: React.FC = () => {
                 onCustomRangeChange={() => setDateRange('custom')}
                 onCustomRangeComplete={() => setCurrentPage(1)}
                 onReset={() => setCurrentPage(1)}
+                hideMonthNavigationOnMobile
               />
             }
             controls={

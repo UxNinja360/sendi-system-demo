@@ -1,5 +1,5 @@
 import React from 'react';
-import { CalendarDays, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { ToolbarIconButton } from './toolbar-icon-button';
 
 export type PeriodMode = 'current_month' | 'custom_range';
@@ -150,6 +150,7 @@ type ToolbarPeriodControlProps = {
   onCustomRangeChange?: () => void;
   onCustomRangeComplete?: () => void;
   onReset?: () => void;
+  hideMonthNavigationOnMobile?: boolean;
 };
 
 export const ToolbarPeriodControl: React.FC<ToolbarPeriodControlProps> = ({
@@ -164,6 +165,7 @@ export const ToolbarPeriodControl: React.FC<ToolbarPeriodControlProps> = ({
   onCustomRangeChange,
   onCustomRangeComplete,
   onReset,
+  hideMonthNavigationOnMobile = false,
 }) => {
   const [calendarOpen, setCalendarOpen] = React.useState(false);
   const [calendarMonth, setCalendarMonth] = React.useState(() => new Date());
@@ -271,15 +273,23 @@ export const ToolbarPeriodControl: React.FC<ToolbarPeriodControlProps> = ({
   return (
     <div ref={popoverRef} className="relative flex items-center gap-1" dir="rtl">
       {periodMode !== 'custom_range' ? (
-        <ToolbarIconButton onClick={() => moveMonth(-1)} label="חודש קודם">
-          <ChevronRight className="h-4 w-4" />
-        </ToolbarIconButton>
+        hideMonthNavigationOnMobile ? (
+          <div className="hidden md:block">
+            <ToolbarIconButton onClick={() => moveMonth(-1)} label="חודש קודם">
+              <ChevronRight className="h-4 w-4" />
+            </ToolbarIconButton>
+          </div>
+        ) : (
+          <ToolbarIconButton onClick={() => moveMonth(-1)} label="חודש קודם">
+            <ChevronRight className="h-4 w-4" />
+          </ToolbarIconButton>
+        )
       ) : null}
 
       <button
         type="button"
         onClick={() => setCalendarOpen((value) => !value)}
-        className={`flex h-10 min-w-[176px] shrink-0 items-center justify-center gap-2 rounded-[4px] border px-3 text-sm font-semibold transition-colors ${
+        className={`flex h-10 min-w-0 shrink-0 items-center justify-center gap-2 rounded-[4px] border px-3 text-sm font-semibold transition-colors ${
           periodMode === 'custom_range'
             ? 'border-app-nav-border bg-[#0A0A0A] text-app-text'
             : 'border-app-border bg-app-surface text-app-text hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#0A0A0A] dark:hover:bg-[#1A1A1A]'
@@ -287,12 +297,23 @@ export const ToolbarPeriodControl: React.FC<ToolbarPeriodControlProps> = ({
       >
         <CalendarDays className="h-4 w-4 shrink-0 text-app-text-secondary dark:text-[#EDEDED]" />
         <span className="whitespace-nowrap">{displayLabel}</span>
+        {hideMonthNavigationOnMobile ? (
+          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-[#737373] md:hidden" />
+        ) : null}
       </button>
 
       {periodMode !== 'custom_range' ? (
-        <ToolbarIconButton onClick={() => moveMonth(1)} label="חודש הבא">
-          <ChevronLeft className="h-4 w-4" />
-        </ToolbarIconButton>
+        hideMonthNavigationOnMobile ? (
+          <div className="hidden md:block">
+            <ToolbarIconButton onClick={() => moveMonth(1)} label="חודש הבא">
+              <ChevronLeft className="h-4 w-4" />
+            </ToolbarIconButton>
+          </div>
+        ) : (
+          <ToolbarIconButton onClick={() => moveMonth(1)} label="חודש הבא">
+            <ChevronLeft className="h-4 w-4" />
+          </ToolbarIconButton>
+        )
       ) : null}
 
       {periodMode === 'custom_range' ? (
