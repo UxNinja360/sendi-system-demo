@@ -65,6 +65,7 @@ const getOptionButtonClass = (isActive: boolean) =>
 
 const TEXT = {
   only: 'רק זה',
+  check: 'סמן',
   uncheck: 'בטל',
   checkAll: 'סמן הכל',
 } as const;
@@ -163,17 +164,90 @@ const StatusFilterCheckbox: React.FC<{ checked: boolean }> = ({ checked }) => (
       'flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors',
       checked
         ? 'border-[#EDEDED] bg-[#EDEDED] text-[#0A0A0A]'
-        : 'border-[#525252] bg-transparent text-transparent group-hover:border-[#737373]',
+        : 'border-[#525252] bg-transparent text-transparent',
     )}
   >
     {checked ? <Check className="h-3 w-3 stroke-[3]" /> : null}
   </span>
 );
 
-const getStatusRowActionLabel = (isSelected: boolean, selectedCount: number) => {
+const getStatusTextActionLabel = (
+  isSelected: boolean,
+  selectedCount: number,
+  totalCount: number,
+) => {
+  if (selectedCount === 0) return TEXT.check;
+  if (isSelected && selectedCount < totalCount) return TEXT.checkAll;
   if (!isSelected) return TEXT.only;
-  if (selectedCount <= 1) return TEXT.checkAll;
-  return TEXT.uncheck;
+  return TEXT.only;
+};
+
+const getStatusCheckboxActionLabel = (isSelected: boolean) => (
+  isSelected ? TEXT.uncheck : TEXT.check
+);
+
+type StatusFilterOptionRowProps = {
+  option: FilterOption;
+  isActive: boolean;
+  selectedCount: number;
+  totalCount: number;
+  onToggle: (optionId: string) => void;
+  onTextAction: (optionId: string, isActive: boolean) => void;
+};
+
+const StatusFilterOptionRow: React.FC<StatusFilterOptionRowProps> = ({
+  option,
+  isActive,
+  selectedCount,
+  totalCount,
+  onToggle,
+  onTextAction,
+}) => {
+  const checkboxActionLabel = getStatusCheckboxActionLabel(isActive);
+  const textActionLabel = getStatusTextActionLabel(isActive, selectedCount, totalCount);
+
+  return (
+    <div className="status-filter-row text-[#EDEDED]" dir="ltr">
+      <button
+        type="button"
+        onClick={() => onToggle(option.id)}
+        title={checkboxActionLabel}
+        aria-label={`${checkboxActionLabel} ${option.label}`}
+        className="status-filter-checkbox-zone flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] focus:outline-none"
+      >
+        <StatusFilterCheckbox checked={isActive} />
+      </button>
+      <button
+        type="button"
+        onClick={() => onTextAction(option.id, isActive)}
+        title={textActionLabel}
+        aria-label={`${textActionLabel} ${option.label}`}
+        className="status-filter-text-zone h-8 min-w-0 text-right text-sm font-semibold text-[#EDEDED] focus:outline-none"
+        dir="ltr"
+      >
+        <span className="status-filter-action-slot" dir="rtl" aria-hidden="true">
+          <span className="status-filter-action-cue status-filter-text-cue text-xs font-medium text-[#A1A1AA]">
+            {textActionLabel}
+          </span>
+          <span className="status-filter-action-cue status-filter-checkbox-cue text-xs font-medium text-[#A1A1AA]">
+            {checkboxActionLabel}
+          </span>
+        </span>
+        <span className="status-filter-label-zone flex h-full min-w-0 items-center gap-2 px-2" dir="rtl">
+          {option.dotClassName ? (
+            <span
+              className={joinClassNames(
+                'h-2.5 w-2.5 shrink-0 rounded-full',
+                option.dotClassName,
+                isActive ? '' : 'opacity-45 grayscale',
+              )}
+            />
+          ) : null}
+          <span className="min-w-0 flex-1 truncate text-[#EDEDED]">{option.label}</span>
+        </span>
+      </button>
+    </div>
+  );
 };
 
 export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
@@ -198,7 +272,7 @@ export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
   const isStatusAppearance = appearance === 'status';
   const { menuStyle, setRootRef } = useFixedFilterMenu(
     isOpen,
-    isStatusAppearance ? 230 : 200,
+    isStatusAppearance ? 220 : 200,
     containerRef,
   );
   const selectedOptions = options.filter((option) => selectedValues.has(option.id));
@@ -221,22 +295,17 @@ export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
     setCurrentPage?.(1);
   };
 
-  const handleStatusRowAction = (optionId: string, isSelected: boolean) => {
-    if (!isSelected) {
-      setValuesAndResetPage(new Set([optionId]));
-      return;
-    }
-
-    if (selectedCount <= 1) {
+  const handleStatusTextAction = (optionId: string, isSelected: boolean) => {
+    if (isSelected && selectedCount < options.length) {
       setValuesAndResetPage(new Set(optionIds));
       return;
     }
 
-    setSelectedValues((current) => {
-      const next = new Set(current);
-      next.delete(optionId);
-      return next;
-    });
+    setValuesAndResetPage(new Set([optionId]));
+  };
+
+  const handleStatusCheckboxToggle = (optionId: string) => {
+    toggleValue(optionId);
     setCurrentPage?.(1);
   };
 
@@ -270,7 +339,7 @@ export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
         {isOpen && typeof document !== 'undefined'
           ? createPortal(
               <div
-                className="fixed z-50 max-w-[calc(100vw-24px)] rounded-[8px] border border-app-nav-border bg-[#0A0A0A] p-1 shadow-xl"
+                className="fixed z-50 max-w-[calc(100vw-24px)] rounded-[8px] border border-app-nav-border bg-[#0A0A0A] p-2 shadow-xl"
                 dir="rtl"
                 style={menuStyle}
                 onMouseDown={(event) => event.stopPropagation()}
@@ -278,41 +347,17 @@ export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
                 <div className="space-y-0.5">
                   {filteredOptions.map((option) => {
                     const optionActive = selectedValues.has(option.id);
-                    const actionLabel = getStatusRowActionLabel(optionActive, selectedCount);
 
                     return (
-                      <div
+                      <StatusFilterOptionRow
                         key={option.id}
-                        className="group flex h-8 items-center rounded-[6px] text-[#EDEDED] transition-colors hover:bg-[#1A1A1A]"
-                      >
-                        <button
-                          type="button"
-                          onClick={() => {
-                            toggleValue(option.id);
-                            setCurrentPage?.(1);
-                          }}
-                          className="flex h-full min-w-0 flex-1 items-center gap-2 px-2 text-right text-sm font-semibold focus:outline-none"
-                        >
-                          <StatusFilterCheckbox checked={optionActive} />
-                          {option.dotClassName ? (
-                            <span
-                              className={joinClassNames(
-                                'h-2.5 w-2.5 shrink-0 rounded-full',
-                                option.dotClassName,
-                                optionActive ? '' : 'opacity-45 grayscale',
-                              )}
-                            />
-                          ) : null}
-                          <span className="min-w-0 flex-1 truncate">{option.label}</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleStatusRowAction(option.id, optionActive)}
-                          className="h-full shrink-0 rounded-[6px] px-2 text-xs font-medium text-[#A1A1AA] opacity-0 transition-opacity hover:text-[#EDEDED] focus:opacity-100 focus:outline-none group-hover:opacity-100"
-                        >
-                          {actionLabel}
-                        </button>
-                      </div>
+                        option={option}
+                        isActive={optionActive}
+                        selectedCount={selectedCount}
+                        totalCount={options.length}
+                        onToggle={handleStatusCheckboxToggle}
+                        onTextAction={handleStatusTextAction}
+                      />
                     );
                   })}
                 </div>
