@@ -14,7 +14,7 @@ export const EntityRowActionTrigger: React.FC<EntityRowActionTriggerProps> = ({
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#737373] transition-colors hover:bg-[#f5f5f5] dark:text-[#EDEDED] dark:hover:bg-[#262626]"
+      className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text"
       title={title}
     >
       <MoreHorizontal className="h-[18px] w-[18px]" />

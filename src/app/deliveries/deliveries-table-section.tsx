@@ -4,10 +4,7 @@ import { Delivery, DeliveryStatus, Courier } from '../types/delivery.types';
 import { DeliveryTableRow } from './delivery-table-row';
 import { EnhancedEmptyState } from './enhanced-empty-state';
 import type { ColumnDef } from './column-defs';
-import {
-  EntityTableActionsHeader,
-  EntityTableHeaderCheckbox,
-} from '../components/common/entity-table-shell';
+import { EntityTableActionsHeader } from '../components/common/entity-table-shell';
 import { EntityTableHeaderCell } from '../components/common/entity-table-header-cell';
 import { ENTITY_TABLE_WIDTHS } from '../components/common/entity-table-shared';
 import { ListTableSection } from '../components/common/list-table-section';
@@ -23,13 +20,10 @@ type DeliveriesTableSectionProps = {
   sortColumn: string;
   sortDirection: 'asc' | 'desc';
   onSort: (column: string) => void;
-  selectedIds: Set<string>;
-  onToggleSelectAll: () => void;
   onColumnReorder: (fromId: string, toId: string) => void;
   couriers: Courier[];
   calculateTimeRemaining: (delivery: Delivery) => number | null;
   formatTime: (seconds: number) => string;
-  onToggleSelect: (id: string) => void;
   onOpenDrawer: (id: string) => void;
   onStatusChange: (deliveryId: string, status: DeliveryStatus) => void;
   onCancelDelivery: (deliveryId: string) => void;
@@ -51,13 +45,10 @@ export const DeliveriesTableSection: React.FC<DeliveriesTableSectionProps> = ({
   sortColumn,
   sortDirection,
   onSort,
-  selectedIds,
-  onToggleSelectAll,
   onColumnReorder,
   couriers,
   calculateTimeRemaining,
   formatTime,
-  onToggleSelect,
   onOpenDrawer,
   onStatusChange,
   onCancelDelivery,
@@ -70,9 +61,6 @@ export const DeliveriesTableSection: React.FC<DeliveriesTableSectionProps> = ({
   const navigate = useNavigate();
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
-  const allVisibleDeliveriesSelected =
-    filteredDeliveries.length > 0 && filteredDeliveries.every((delivery) => selectedIds.has(delivery.id));
-  const someVisibleDeliveriesSelected = filteredDeliveries.some((delivery) => selectedIds.has(delivery.id));
 
   const handleDragStart = (event: React.DragEvent<HTMLTableCellElement>, columnId: string) => {
     event.dataTransfer.effectAllowed = 'move';
@@ -121,7 +109,6 @@ export const DeliveriesTableSection: React.FC<DeliveriesTableSectionProps> = ({
       ariaLabel="טבלת משלוחים"
       colgroup={
         <colgroup>
-          <col style={{ width: ENTITY_TABLE_WIDTHS.checkbox }} />
           {orderedColumns
             .filter((column) => visibleColumns.has(column.id))
             .map((column) => (
@@ -132,11 +119,6 @@ export const DeliveriesTableSection: React.FC<DeliveriesTableSectionProps> = ({
       }
       headerRow={
         <tr>
-          <EntityTableHeaderCheckbox
-            checked={allVisibleDeliveriesSelected}
-            indeterminate={someVisibleDeliveriesSelected}
-            onChange={onToggleSelectAll}
-          />
           {orderedColumns
             .filter((column) => visibleColumns.has(column.id))
             .map((column) => (
@@ -174,8 +156,6 @@ export const DeliveriesTableSection: React.FC<DeliveriesTableSectionProps> = ({
             formatTime={formatTime}
             visibleColumns={visibleColumns}
             onNavigate={() => navigate(`/delivery/${delivery.id}`)}
-            isSelected={selectedIds.has(delivery.id)}
-            onToggleSelect={onToggleSelect}
             onOpenDrawer={onOpenDrawer}
             onStatusChange={onStatusChange}
             onCancelDelivery={onCancelDelivery}

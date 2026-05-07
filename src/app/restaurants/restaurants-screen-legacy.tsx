@@ -61,6 +61,7 @@ import {
   ENTITY_TABLE_WIDTHS,
 } from '../components/common/entity-table-shared';
 import { DELIVERY_STORAGE_KEYS } from '../context/delivery-storage';
+import { TLV_RUNNERS_HUB_ID, getDeliveryHubNames } from '../constants/delivery-hubs';
 
 // ═══════════════════════════════════════
 // Types
@@ -322,7 +323,7 @@ export const RestaurantsScreenLegacy: React.FC = () => {
     status: r.isActive ? 'פעיל' as const : 'לא פעיל' as const,
     isActive: r.isActive,
     totalDeliveries: deliveriesCountByRestaurant.get(r.id) ?? 0,
-    linkedHubs: idx % 3 === 0 ? ['תל אביב מרכז', 'תל אביב צפון'] : idx % 2 === 0 ? ['תל אביב מרכז'] : ['תל אביב דרום'],
+    linkedHubs: getDeliveryHubNames(r.linkedHubIds),
     contactPerson: ['משה כהן', 'דנה לוי', 'יוסי אברהם', 'רונית גולן', 'אבי זהבי', 'דוד ישראלי', 'שרה מזרחי'][idx % 7],
     phone: r.phone,
     city: r.address.split(', ')[1] || 'תל אביב',
@@ -495,6 +496,7 @@ export const RestaurantsScreenLegacy: React.FC = () => {
       id: `r${Date.now()}`,
       name: newRestaurant.name.trim(),
       chainId: getRestaurantChainId(newRestaurant.name.trim()),
+      linkedHubIds: [TLV_RUNNERS_HUB_ID],
       phone: newRestaurant.phone.trim(),
       address: newRestaurant.address.trim() || 'ישראל',
       city: newRestaurant.address.includes(',') ? newRestaurant.address.split(',').pop()?.trim() ?? '' : '',

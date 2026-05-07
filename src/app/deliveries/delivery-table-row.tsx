@@ -20,7 +20,6 @@ import {
 } from '../components/common/entity-action-menu';
 import {
   EntityTableActionsCell,
-  EntityTableRowCheckbox,
 } from '../components/common/entity-table-shell';
 import { EntityRowActionTrigger } from '../components/common/entity-row-action-trigger';
 import {
@@ -40,8 +39,6 @@ interface DeliveryTableRowProps {
   formatTime: (seconds: number) => string;
   visibleColumns: Set<string>;
   onNavigate: () => void;
-  isSelected: boolean;
-  onToggleSelect: (id: string) => void;
   onOpenDrawer: (id: string) => void;
   onStatusChange: (deliveryId: string, status: DeliveryStatus) => void;
   onCancelDelivery: (deliveryId: string) => void;
@@ -59,8 +56,6 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
   formatTime,
   visibleColumns,
   onNavigate,
-  isSelected,
-  onToggleSelect,
   onOpenDrawer,
   onStatusChange,
   onCancelDelivery,
@@ -144,7 +139,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
 
       case 'price':
         return (
-          <td key={colId} className={`${dataCellClassName} text-[#16a34a] dark:text-[#22c55e] font-bold whitespace-nowrap`}>
+          <td key={colId} className={`${dataCellClassName} text-app-brand-text font-bold whitespace-nowrap`}>
             {formatCurrency(getDeliveryCustomerCharge(delivery))}
           </td>
         );
@@ -165,7 +160,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
     }
     // Money = green
     if (type === 'money') {
-      return 'text-[#16a34a] dark:text-[#22c55e]';
+      return 'text-app-brand-text';
     }
     // Mono for IDs
     if (colId.includes('_id') || colId === 'id' || colId.includes('Id') || colId === 'zipcode' || colId === 'sms_code') {
@@ -183,17 +178,10 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
       }}
       className={`${ENTITY_TABLE_ROW_CLASS} cursor-pointer ${
         isDrawerTarget
-          ? 'bg-[#dcfce7]/50 hover:bg-[#dcfce7]/50 dark:bg-[#14532d]/30 dark:hover:bg-[#14532d]/30'
-          : isSelected
-            ? 'bg-[#dbeafe]/50 hover:bg-[#dbeafe]/50 dark:bg-[#1e3a8a]/20 dark:hover:bg-[#1e3a8a]/20'
-            : ''
+          ? 'bg-app-brand-subtle hover:bg-app-brand-subtle dark:bg-app-brand-subtle dark:hover:bg-app-brand-subtle'
+          : ''
       }`}
     >
-      <EntityTableRowCheckbox
-        checked={isSelected}
-        onChange={() => onToggleSelect(delivery.id)}
-      />
-
       {/* Data columns - driven by column-defs */}
       {(orderedColumns || ALL_COLUMNS).map(col => {
         if (!visibleColumns.has(col.id)) return null;
@@ -259,7 +247,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
                 </EntityActionMenuItem>
                 <EntityActionMenuItem
                   onClick={() => { onOpenDrawer(delivery.id); closeMenus(); }}
-                  icon={<Info className="w-3.5 h-3.5 text-[#16a34a] dark:text-[#9fe870]" />}
+                  icon={<Info className="w-3.5 h-3.5 text-app-brand" />}
                 >
                   ??? ???? ??
                 </EntityActionMenuItem>
@@ -275,7 +263,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
                   <EntityActionMenuDivider />
                   <EntityActionMenuItem
                     onClick={() => { onEditDelivery(delivery.id); closeMenus(); }}
-                    icon={<Edit className="w-3.5 h-3.5 text-[#16a34a] dark:text-[#9fe870]" />}
+                    icon={<Edit className="w-3.5 h-3.5 text-app-brand" />}
                   >
                     ???? ?????
                   </EntityActionMenuItem>
@@ -287,7 +275,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
                   <EntityActionMenuDivider />
                   <EntityActionMenuItem
                     onClick={() => { onOpenDrawer(delivery.id); closeMenus(); }}
-                    icon={<UserPlus className="w-3.5 h-3.5 text-[#0fcdd3]" />}
+                    icon={<UserPlus className="w-3.5 h-3.5 text-app-brand" />}
                   >
                     ????? ????
                   </EntityActionMenuItem>
@@ -306,7 +294,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
                   <EntityActionMenuDivider />
                   <EntityActionMenuItem
                     onClick={() => { onOpenDrawer(delivery.id); closeMenus(); }}
-                    icon={<Edit className="w-3.5 h-3.5 text-[#0fcdd3]" />}
+                    icon={<Edit className="w-3.5 h-3.5 text-app-brand" />}
                   >
                     ????? ????
                   </EntityActionMenuItem>
@@ -333,7 +321,7 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
                   <EntityActionMenuDivider />
                   <EntityActionMenuItem
                     onClick={() => { onOpenDrawer(delivery.id); closeMenus(); }}
-                    icon={<Edit className="w-3.5 h-3.5 text-[#0fcdd3]" />}
+                    icon={<Edit className="w-3.5 h-3.5 text-app-brand" />}
                   >
                     ????? ????
                   </EntityActionMenuItem>

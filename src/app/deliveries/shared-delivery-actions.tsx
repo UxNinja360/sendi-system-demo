@@ -10,6 +10,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import type { Courier, Delivery, DeliveryStatus } from '../types/delivery.types';
+import { canCourierAcceptDelivery } from '../utils/courier-assignment';
 import {
   DELIVERY_ASSIGNMENT_BLOCK_COPY,
   getDeliveryAssignmentBlockReason,
@@ -55,9 +56,13 @@ export const SharedDeliveryActions: React.FC<SharedDeliveryActionsProps> = ({
 
   const isFinal = delivery.status === 'delivered' || delivery.status === 'cancelled' || delivery.status === 'expired';
   const availableCouriers = allCouriers.filter(
-    (item) => item.status !== 'offline' && (courierFilter === '' || item.name.includes(courierFilter))
+    (item) =>
+      canCourierAcceptDelivery(item, delivery.id) &&
+      (courierFilter === '' || item.name.includes(courierFilter))
   );
-  const assignableCourierCount = allCouriers.filter((item) => item.status !== 'offline').length;
+  const assignableCourierCount = allCouriers.filter((item) =>
+    canCourierAcceptDelivery(item, delivery.id)
+  ).length;
   const assignmentBlockReason = getDeliveryAssignmentBlockReason(delivery, {
     deliveryBalance,
     availableCourierCount: assignableCourierCount,
@@ -101,7 +106,7 @@ export const SharedDeliveryActions: React.FC<SharedDeliveryActionsProps> = ({
             className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
               assignmentBlockReason
                 ? 'cursor-not-allowed bg-[#f5f5f5] text-[#a3a3a3] dark:bg-[#1f1f1f] dark:text-[#737373]'
-                : 'bg-[#9fe870] hover:bg-[#8dd960] text-[#0d0d12]'
+                : 'bg-app-brand-solid hover:bg-app-brand-hover text-app-background'
             }`}
           >
             <UserPlus className="w-3.5 h-3.5" />
@@ -141,7 +146,11 @@ export const SharedDeliveryActions: React.FC<SharedDeliveryActionsProps> = ({
                       className="w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors text-right"
                     >
                       <span className="font-medium text-[#0d0d12] dark:text-app-text">{item.name}</span>
-                      <div className="flex items-center gap-1 text-[#a3a3a3]">
+                      <div className="flex items-center gap-1.5 text-[#a3a3a3]">
+                        <span>{item.employmentType}</span>
+                        {!item.isOnShift && item.employmentType !== 'שעתי' && (
+                          <span>ללא משמרת</span>
+                        )}
                         <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                         <span>{item.rating}</span>
                       </div>

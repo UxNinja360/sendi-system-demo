@@ -14,6 +14,7 @@ import { useDeliveriesExport } from '../deliveries/use-deliveries-export';
 import type { PeriodMode } from '../components/common/toolbar-period-control';
 import { PageToolbar } from '../components/common/page-toolbar';
 import { ToolbarPeriodControl } from '../components/common/toolbar-period-control';
+import { ViewModeToggle, type EntityViewMode } from '../components/common/view-mode-toggle';
 import { ListInlineFilters } from '../components/common/list-inline-filters';
 import {
   SelectionActionBar,
@@ -28,6 +29,7 @@ import {
   DELIVERY_ASSIGNMENT_BLOCK_COPY,
   getDeliveryAssignmentBlockReason,
 } from '../utils/delivery-assignment';
+import { canCourierAcceptDelivery } from '../utils/courier-assignment';
 
 const calculateTimeRemaining = (delivery: Delivery): number | null => {
   if (delivery.status === 'delivered' || delivery.status === 'cancelled' || delivery.status === 'expired') return null;
@@ -62,6 +64,7 @@ const PRODUCT_DEFAULT_VISIBLE_COLUMNS = new Set([
 const REQUIRED_PRODUCT_VISIBLE_COLUMNS = ['creation_time'];
 const COLUMN_ORDER_STORAGE_KEY = `${DELIVERY_STORAGE_KEYS.deliveriesColumnOrder}:product-v2`;
 const VISIBLE_COLUMNS_STORAGE_KEY = `${DELIVERY_STORAGE_KEYS.deliveriesVisibleColumns}:product-v7`;
+const DELIVERIES_VIEW_MODE_KEY = 'deliveries-view-mode-v1';
 const DELIVERY_COLUMN_CATEGORIES = [
   {
     id: 'core',
@@ -248,6 +251,13 @@ export const DeliveriesPage: React.FC = () => {
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [periodMode, setPeriodMode] = useState<PeriodMode>('current_month');
   const [monthAnchor, setMonthAnchor] = useState(new Date());
+  const [viewMode, setViewMode] = useState<EntityViewMode>(() => {
+    try {
+      const saved = localStorage.getItem(DELIVERIES_VIEW_MODE_KEY);
+      if (saved === 'list' || saved === 'cards') return saved;
+    } catch {}
+    return 'list';
+  });
 
   useEffect(() => (
     addAppTopBarActionListener('create-delivery', () => setNewDeliveryOpen(true))
@@ -278,6 +288,12 @@ export const DeliveriesPage: React.FC = () => {
       console.warn('Failed to save visible columns to localStorage:', e);
     }
   }, [visibleColumns]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(DELIVERIES_VIEW_MODE_KEY, viewMode);
+    } catch {}
+  }, [viewMode]);
 
   useEffect(() => {
     setVisibleColumns((current) => {
@@ -399,7 +415,9 @@ export const DeliveriesPage: React.FC = () => {
     const assigned = assignCourier(deliveryId, courierId);
     if (!assigned) {
       const delivery = state.deliveries.find((item) => item.id === deliveryId);
-      const availableCourierCount = state.couriers.filter((item) => item.status !== 'offline').length;
+      const availableCourierCount = state.couriers.filter((item) =>
+        canCourierAcceptDelivery(item, deliveryId)
+      ).length;
       const blockReason = delivery
         ? getDeliveryAssignmentBlockReason(delivery, {
             deliveryBalance: state.deliveryBalance,
@@ -548,35 +566,37 @@ export const DeliveriesPage: React.FC = () => {
               <ListInlineFilters filters={deliveryInlineFilters} />
             }
             actions={
-              <DeliveriesCommandSearch
-                searchQuery={searchQuery}
-                onSearchQueryChange={setSearchQuery}
-                restaurantOptions={restaurantOptions}
-                selectedRestaurants={selectedRestaurants}
-                setSelectedRestaurants={setSelectedRestaurants}
-                toggleRestaurant={toggleRestaurant}
-                chainOptions={chainOptions}
-                selectedChains={selectedChains}
-                setSelectedChains={setSelectedChains}
-                toggleChain={toggleChain}
-                courierOptions={courierOptions}
-                selectedCouriers={selectedCouriers}
-                setSelectedCouriers={setSelectedCouriers}
-                toggleCourier={toggleCourier}
-                setCurrentPage={setCurrentPage}
-              />
+              <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                <DeliveriesCommandSearch
+                  searchQuery={searchQuery}
+                  onSearchQueryChange={setSearchQuery}
+                  restaurantOptions={restaurantOptions}
+                  selectedRestaurants={selectedRestaurants}
+                  setSelectedRestaurants={setSelectedRestaurants}
+                  toggleRestaurant={toggleRestaurant}
+                  chainOptions={chainOptions}
+                  selectedChains={selectedChains}
+                  setSelectedChains={setSelectedChains}
+                  toggleChain={toggleChain}
+                  courierOptions={courierOptions}
+                  selectedCouriers={selectedCouriers}
+                  setSelectedCouriers={setSelectedCouriers}
+                  toggleCourier={toggleCourier}
+                  setCurrentPage={setCurrentPage}
+                />
+                <ViewModeToggle value={viewMode} onChange={setViewMode} />
+              </div>
             }
           />
         }
       >
             <DeliveriesVercelList
               filteredDeliveries={filteredDeliveries}
+              viewMode={viewMode}
               emptyStateMode={emptyStateMode}
               onClearFilters={handleClearAllFilters}
               totalCount={stats.total}
-              selectedIds={selectedIds}
               couriers={state.couriers}
-              onToggleSelect={handleToggleSelect}
               onOpenDrawer={handleOpenDrawer}
               onStatusChange={handleStatusChange}
               onCancelDelivery={handleCancelDelivery}

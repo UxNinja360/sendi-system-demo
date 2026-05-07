@@ -46,7 +46,7 @@ export const LoadingBar: React.FC<LoadingBarProps> = ({ isLoading }) => {
   return (
     <div className="fixed top-0 left-0 right-0 flex h-1 justify-end bg-transparent pointer-events-none" style={{ zIndex: 99999 }}>
       <div
-        className="h-full bg-gradient-to-l from-[#9fe870] via-[#7ec95a] to-[#9fe870] shadow-lg shadow-[#9fe870]/50 transition-opacity duration-300"
+        className="h-full bg-app-brand shadow-lg shadow-black/10 transition-opacity duration-300"
         style={{
           width: `${progress}%`,
           opacity: opacity,

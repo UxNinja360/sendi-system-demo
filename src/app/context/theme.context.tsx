@@ -31,10 +31,10 @@ const themeColors: Record<ThemeColor, ThemeClasses> = {
     text: 'text-green-600 dark:text-green-400',
   },
   blue: {
-    primary: '#2563eb',
-    primaryLight: '#3b82f6',
-    primaryDark: '#1d4ed8',
-    gradient: 'from-blue-500 to-cyan-500',
+    primary: '#0070f3',
+    primaryLight: '#3291ff',
+    primaryDark: '#0761d1',
+    gradient: 'from-blue-500 to-blue-600',
     border: 'border-blue-500/20',
     bg: 'bg-blue-500/10',
     text: 'text-blue-600 dark:text-blue-400',
@@ -79,7 +79,7 @@ const themeColors: Record<ThemeColor, ThemeClasses> = {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-const DEFAULT_THEME_COLOR: ThemeColor = 'green';
+const DEFAULT_THEME_COLOR: ThemeColor = 'blue';
 
 const safeLocalStorageGet = (key: string) => {
   try {
@@ -107,6 +107,7 @@ const safeLocalStorageRemove = (key: string) => {
 
 const readStoredThemeColor = (): ThemeColor => {
   const stored = safeLocalStorageGet('themeColor');
+  if (stored === 'green') return DEFAULT_THEME_COLOR;
   return stored && stored in themeColors ? (stored as ThemeColor) : DEFAULT_THEME_COLOR;
 };
 

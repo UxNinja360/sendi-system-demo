@@ -31,6 +31,7 @@ import { ListTableSection } from '../components/common/list-table-section';
 import { ListToolbarActions } from '../components/common/list-toolbar-actions';
 import { PageToolbar } from '../components/common/page-toolbar';
 import { ToolbarIconButton } from '../components/common/toolbar-icon-button';
+import { ViewModeToggle, type EntityViewMode } from '../components/common/view-mode-toggle';
 import type { PeriodMode } from '../components/common/toolbar-date-picker';
 import { VercelEmptyState } from '../components/common/vercel-empty-state';
 import { InfoBar, type InfoBarItem } from '../components/common/info-bar';
@@ -107,6 +108,7 @@ type CourierStats = {
 const VEHICLE_TYPES: Courier['vehicleType'][] = ['אופנוע', 'רכב', 'קורקינט'];
 const COURIER_COLUMN_ORDER_KEY = `${DELIVERY_STORAGE_KEYS.couriersColumnOrder}:product-v1`;
 const COURIER_VISIBLE_COLUMNS_KEY = `${DELIVERY_STORAGE_KEYS.couriersVisibleColumns}:product-v3`;
+const COURIER_VIEW_MODE_KEY = 'couriers-view-mode-v1';
 const DEFAULT_COURIER_VISIBLE_COLUMNS: CourierColumnId[] = [
   'name',
   'connection',
@@ -189,7 +191,7 @@ const getStatusLabel = (status: Courier['status']) => {
 };
 
 const getStatusColor = (status: Courier['status']) => {
-  if (status === 'available') return 'text-[#16a34a] dark:text-[#9fe870]';
+  if (status === 'available') return 'text-app-success-text';
   if (status === 'busy') return 'text-[#f97316] dark:text-[#ffa94d]';
   return 'text-[#737373] dark:text-app-text-secondary';
 };
@@ -239,8 +241,8 @@ const CourierToolbarToggle: React.FC<{
       onClick={onClick}
       className={
         active
-          ? 'border-[#ededed] bg-[#101010] text-[#ededed] shadow-[inset_0_0_0_1px_rgba(237,237,237,0.35)]'
-          : 'border-app-nav-border text-[#8f8f8f]'
+          ? 'border-app-border-strong bg-app-nav-active-bg text-app-nav-active-text shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--app-border-strong)_35%,transparent)]'
+          : 'border-app-border text-app-text-secondary'
       }
     >
       <span
@@ -254,7 +256,7 @@ const CourierToolbarToggle: React.FC<{
     </ToolbarIconButton>
     <span
       className={`
-        pointer-events-none absolute bottom-1.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#ededed] transition-opacity
+        pointer-events-none absolute bottom-1.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-app-nav-indicator transition-opacity
         ${active ? 'opacity-100' : 'opacity-0'}
       `}
     />
@@ -274,6 +276,13 @@ export const CouriersListScreen: React.FC = () => {
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; courier: Courier } | null>(null);
   const [selectedCourierIds, setSelectedCourierIds] = useState<Set<string>>(new Set());
+  const [viewMode, setViewMode] = useState<EntityViewMode>(() => {
+    try {
+      const saved = localStorage.getItem(COURIER_VIEW_MODE_KEY);
+      if (saved === 'list' || saved === 'cards') return saved;
+    } catch {}
+    return 'list';
+  });
   const [newCourier, setNewCourier] = useState<{ name: string; phone: string; vehicleType: Courier['vehicleType'] }>({
     name: '',
     phone: '',
@@ -319,6 +328,13 @@ export const CouriersListScreen: React.FC = () => {
     addAppTopBarActionListener('create-courier', () => setIsModalOpen(true))
   ), []);
 
+  useEffect(() => (
+    addAppTopBarActionListener('export-couriers', () => {
+      setIsExportOpen(true);
+      setColumnsOpen(false);
+    })
+  ), []);
+
   const activeDeliveriesByCourier = useMemo(() => {
     const map = new Map<string, typeof state.deliveries[number]>();
     state.deliveries.forEach((delivery) => {
@@ -349,6 +365,12 @@ export const CouriersListScreen: React.FC = () => {
       localStorage.setItem(COURIER_VISIBLE_COLUMNS_KEY, JSON.stringify(Array.from(visibleColumns)));
     } catch {}
   }, [visibleColumns]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(COURIER_VIEW_MODE_KEY, viewMode);
+    } catch {}
+  }, [viewMode]);
 
   const orderedCourierColumns = useMemo(() => {
     const map = new Map(COURIER_DATA_COLUMNS.map((column) => [column.id, column]));
@@ -704,7 +726,7 @@ export const CouriersListScreen: React.FC = () => {
       case 'connection':
         return (
           <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
-            <span className={`whitespace-nowrap text-xs font-medium ${courier.status === 'offline' ? 'text-[#737373] dark:text-app-text-secondary' : 'text-[#16a34a] dark:text-[#9fe870]'}`}>
+            <span className={`whitespace-nowrap text-xs font-medium ${courier.status === 'offline' ? 'text-[#737373] dark:text-app-text-secondary' : 'text-app-success-text'}`}>
               {courier.status === 'offline' ? TEXT.notConnected : TEXT.connected}
             </span>
           </td>
@@ -725,7 +747,7 @@ export const CouriersListScreen: React.FC = () => {
                 ? 'text-[#f97316] dark:text-[#ffa94d]'
                 : courier.status === 'offline' || !courier.isOnShift
                   ? 'text-[#737373] dark:text-app-text-secondary'
-                  : 'text-[#16a34a] dark:text-[#9fe870]'
+                  : 'text-app-success-text'
             }`}>
               {courier.status === 'busy' ? TEXT.inDelivery : courier.status === 'offline' || !courier.isOnShift ? '-' : TEXT.free}
             </span>
@@ -834,15 +856,6 @@ export const CouriersListScreen: React.FC = () => {
             <PageToolbar
               showBottomBorder={false}
               showPeriodControl={false}
-              headerControls={
-                <ListToolbarActions
-                  showSearch={false}
-                  showColumnsToggle={false}
-                  columnsOpen={columnsOpen}
-                  onToggleColumns={() => { setColumnsOpen((value) => !value); setIsExportOpen(false); }}
-                  onExport={() => { setIsExportOpen((value) => !value); setColumnsOpen(false); }}
-                />
-              }
               actions={
                 <div className="flex min-w-0 flex-1 items-center gap-1.5">
                   <div className="flex shrink-0 items-center gap-1">
@@ -867,6 +880,7 @@ export const CouriersListScreen: React.FC = () => {
                     showColumnsToggle={false}
                     showExportButton={false}
                   />
+                  <ViewModeToggle value={viewMode} onChange={setViewMode} />
                 </div>
               }
             />
@@ -876,9 +890,8 @@ export const CouriersListScreen: React.FC = () => {
         <div className="flex min-h-0 w-full max-w-[1200px] flex-1 flex-col">
             <CouriersVercelList
               couriers={filteredCouriers}
-              selectedIds={selectedCourierIds}
+              viewMode={viewMode}
               activeDeliveriesByCourier={activeDeliveriesByCourier}
-              onToggleSelect={handleToggleSelectCourier}
               onOpenActionsMenu={openCourierActionsMenu}
               onOpenContextMenu={(courier, event) => {
                 event.preventDefault();
@@ -940,7 +953,7 @@ export const CouriersListScreen: React.FC = () => {
               emptyState={
                 state.couriers.length === 0 ? (
                   <EntityEmptyState
-                    icon={<Bike className="h-12 w-12 text-[#9fe870]" />}
+                    icon={<Bike className="h-12 w-12 text-app-brand" />}
                     title="טרם נוספו שליחים"
                     description="כאשר יתווספו שליחים למערכת, הם יופיעו כאן עם זמינות, משמרת ומשלוח פעיל."
                     footerText="המערכת מוכנה לקבלת שליחים חדשים"
@@ -1093,7 +1106,7 @@ export const CouriersListScreen: React.FC = () => {
                   type="text"
                   value={newCourier.name}
                   onChange={(event) => setNewCourier({ ...newCourier, name: event.target.value })}
-                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-app-text"
+                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-app-brand dark:border-app-border dark:bg-app-surface dark:text-app-text"
                   placeholder={TEXT.enterFullName}
                   autoFocus
                 />
@@ -1104,7 +1117,7 @@ export const CouriersListScreen: React.FC = () => {
                   type="tel"
                   value={newCourier.phone}
                   onChange={(event) => setNewCourier({ ...newCourier, phone: event.target.value })}
-                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-app-text"
+                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-app-brand dark:border-app-border dark:bg-app-surface dark:text-app-text"
                   placeholder={TEXT.enterPhone}
                 />
               </div>
@@ -1113,7 +1126,7 @@ export const CouriersListScreen: React.FC = () => {
                 <select
                   value={newCourier.vehicleType}
                   onChange={(event) => setNewCourier({ ...newCourier, vehicleType: event.target.value as Courier['vehicleType'] })}
-                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-app-text"
+                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-app-brand dark:border-app-border dark:bg-app-surface dark:text-app-text"
                 >
                   {VEHICLE_TYPES.map((vehicleType) => (
                     <option key={vehicleType} value={vehicleType}>
@@ -1128,7 +1141,7 @@ export const CouriersListScreen: React.FC = () => {
                 type="button"
                 onClick={addCourier}
                 disabled={!newCourier.name.trim() || !newCourier.phone.trim()}
-                className="flex-1 rounded-lg bg-[#9fe870] px-4 py-2.5 font-medium text-[#0d0d12] transition-colors hover:bg-[#8fd65f] disabled:bg-[#e5e5e5] disabled:text-[#a3a3a3]"
+                className="flex-1 rounded-lg bg-app-brand-solid px-4 py-2.5 font-medium text-app-background transition-colors hover:bg-app-brand-hover disabled:bg-[#e5e5e5] disabled:text-[#a3a3a3]"
               >
                 {TEXT.addCourier}
               </button>
@@ -1185,7 +1198,7 @@ export const CouriersListScreen: React.FC = () => {
                 toggleCourierPower(contextMenu.courier);
                 closeCourierActionsMenu();
               }}
-              icon={<Power className="w-3.5 h-3.5 text-[#16a34a] dark:text-[#9fe870]" />}
+              icon={<Power className="w-3.5 h-3.5 text-app-success-text" />}
             >
               {contextMenu.courier.status === 'offline' ? TEXT.activate : TEXT.disable}
             </EntityActionMenuItem>
@@ -1197,7 +1210,7 @@ export const CouriersListScreen: React.FC = () => {
                 contextMenu.courier.isOnShift ? (
                   <LogOut className="w-3.5 h-3.5 text-[#f97316]" />
                 ) : (
-                  <Clock className="w-3.5 h-3.5 text-[#16a34a] dark:text-[#9fe870]" />
+                  <Clock className="w-3.5 h-3.5 text-app-success-text" />
                 )
               }
             >

@@ -37,7 +37,7 @@ export const EnhancedEmptyState: React.FC<EnhancedEmptyStateProps> = ({
   if (mode === 'no-data') {
     return (
       <EntityEmptyState
-        icon={<PackageOpen className="h-12 w-12 text-[#9fe870]" />}
+        icon={<PackageOpen className="h-12 w-12 text-app-brand" />}
         title={TEXT.noDataTitle}
         description={TEXT.noDataDescription}
         footerText={TEXT.noDataFooter}

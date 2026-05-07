@@ -153,23 +153,23 @@ export const SharedDeliverySidePanelShell: React.FC<SharedDeliverySidePanelShell
               onClick={onNavigatePrev}
               disabled={!hasPrev}
               title="הקודם"
-              className="p-1.5 rounded-lg hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] disabled:opacity-25 disabled:cursor-default transition-colors"
+              className="p-1.5 rounded-lg hover:bg-app-surface-raised disabled:opacity-25 disabled:cursor-default transition-colors"
             >
-              <ChevronUp className="w-3.5 h-3.5 text-[#737373]" />
+              <ChevronUp className="w-3.5 h-3.5 text-app-text-secondary" />
             </button>
-            <span className="text-[10px] text-[#a3a3a3] tabular-nums">{currentIndex + 1}/{totalCount}</span>
+            <span className="text-[10px] text-app-text-muted tabular-nums">{currentIndex + 1}/{totalCount}</span>
             <button
               onClick={onNavigateNext}
               disabled={!hasNext}
               title="הבא"
-              className="p-1.5 rounded-lg hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] disabled:opacity-25 disabled:cursor-default transition-colors"
+              className="p-1.5 rounded-lg hover:bg-app-surface-raised disabled:opacity-25 disabled:cursor-default transition-colors"
             >
-              <ChevronDown className="w-3.5 h-3.5 text-[#737373]" />
+              <ChevronDown className="w-3.5 h-3.5 text-app-text-secondary" />
             </button>
             <button
               onClick={onClose}
               title="סגור"
-              className="p-1.5 rounded-lg hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] text-[#a3a3a3] hover:text-[#0d0d12] dark:hover:text-[#fafafa] transition-colors ms-1"
+              className="p-1.5 rounded-lg hover:bg-app-surface-raised text-app-text-muted hover:text-app-text transition-colors ms-1"
             >
               <X className="w-4 h-4" />
             </button>
@@ -185,7 +185,15 @@ export const SharedDeliverySidePanelShell: React.FC<SharedDeliverySidePanelShell
             <div className="h-1.5 bg-white/60 dark:bg-black/20 rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-500"
-                style={{ width: `${progress}%`, backgroundColor: delivery.status === 'cancelled' || delivery.status === 'expired' ? '#71717a' : delivery.status === 'delivered' ? '#2563eb' : delivery.status === 'delivering' ? '#16a34a' : '#16a34a' }}
+                style={{
+                  width: `${progress}%`,
+                  backgroundColor:
+                    delivery.status === 'cancelled' || delivery.status === 'expired'
+                      ? 'var(--app-text-muted)'
+                      : delivery.status === 'delivered'
+                        ? 'var(--ds-blue-700)'
+                        : 'var(--app-brand)',
+                }}
               />
             </div>
           ) : (
@@ -236,7 +244,7 @@ export const SharedDeliverySidePanelShell: React.FC<SharedDeliverySidePanelShell
         </button>
         <button
           onClick={() => onEditDelivery(delivery.id)}
-          className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold bg-[#9fe870] hover:bg-[#8dd960] text-[#0d0d12] transition-colors"
+          className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-semibold bg-app-brand-solid hover:bg-app-brand-hover text-app-background transition-colors"
         >
           <Edit className="w-3.5 h-3.5" />
           ערוך משלוח

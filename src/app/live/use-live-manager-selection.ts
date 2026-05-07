@@ -1,10 +1,13 @@
 ﻿import type { Dispatch, SetStateAction } from 'react';
 import { useCallback, useEffect, useState } from 'react';
+import type { CourierEmploymentType } from '../types/delivery.types';
+import { isCourierShiftEligibleForDeliveryAssignment } from '../utils/courier-assignment';
 
 type LiveTab = 'deliveries' | 'couriers';
 
 type CourierSelectionState = {
   id: string;
+  employmentType: CourierEmploymentType;
   status: string;
   isOnShift: boolean;
 };
@@ -64,7 +67,13 @@ export const useLiveManagerSelection = ({
     if (!selectedCourierId) return;
 
     const selectedCourier = couriers.find((courier) => courier.id === selectedCourierId);
-    if (selectedCourier && selectedCourier.status !== 'offline' && selectedCourier.isOnShift) return;
+    if (
+      selectedCourier &&
+      selectedCourier.status !== 'offline' &&
+      isCourierShiftEligibleForDeliveryAssignment(selectedCourier)
+    ) {
+      return;
+    }
 
     clearCourierSelection();
   }, [clearCourierSelection, couriers, selectedCourierId]);

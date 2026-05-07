@@ -337,7 +337,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
       >
         <div className={`w-4 h-4 rounded-md border shrink-0 flex items-center justify-center transition-colors ${
           isSelected
-            ? 'bg-[#9fe870] border-[#9fe870]'
+            ? 'bg-[var(--app-brand)] border-[var(--app-brand)]'
             : 'border-[#3a3a3a] bg-[#111111] group-hover:border-[#525252]'
         }`}>
           {isSelected && <Check className="w-2.5 h-2.5 text-[#0d0d12]" />}
@@ -360,7 +360,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
             placeholder="חפש עמודה..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="w-full pr-10 pl-9 py-3 bg-[#0b0b0b] border border-[#2a2a2a] rounded-xl text-sm text-[#fafafa] placeholder:text-[#6b7280] outline-none focus:ring-2 focus:ring-[#9fe870]/15 focus:border-[#3a5327] transition-all"
+            className="w-full pr-10 pl-9 py-3 bg-[#0b0b0b] border border-[#2a2a2a] rounded-xl text-sm text-[#fafafa] placeholder:text-[#6b7280] outline-none focus:ring-2 focus:ring-app-brand/20 focus:border-app-brand transition-all"
           />
           {searchQuery && (
             <button
@@ -378,7 +378,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
         <div className="px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 text-xs text-[#9ca3af]">
             <span className="font-medium">עמודות פעילות</span>
-            <span className="inline-flex min-w-[28px] items-center justify-center rounded-full border border-[#2d3b21] px-2 py-0.5 font-semibold text-[#9fe870]">
+            <span className="inline-flex min-w-[28px] items-center justify-center rounded-full border border-[#2a2a2a] px-2 py-0.5 font-semibold text-[var(--app-brand)]">
               {visibleColumns.size}
             </span>
           </div>
@@ -394,7 +394,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
                 <span className="h-3.5 w-px bg-[#2a2a2a]" />
                 <button
                   onClick={() => { setShowSaveForm(v => !v); setNewPresetName(''); }}
-                  className="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium text-[#9fe870] hover:text-[#b5f27d] transition-colors"
+                  className="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium text-[var(--app-brand)] hover:text-[var(--app-brand-text)] transition-colors"
                 >
                   + שמור פריסט
                 </button>
@@ -437,7 +437,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
                     {cat.emoji && <span className="text-sm shrink-0 opacity-90">{cat.emoji}</span>}
                     <span className="flex-1 text-sm font-semibold tracking-tight text-[#fafafa]">{cat.label}</span>
                     {selected > 0 && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-transparent text-[#9fe870] shrink-0">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-transparent text-[var(--app-brand)] shrink-0">
                         {selected}/{cat.columns.length}
                       </span>
                     )}
@@ -452,7 +452,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
                         <span className="text-[11px] text-[#6b7280]">{selected} מתוך {cat.columns.length} נבחרו</span>
                         <button
                           onClick={e => { e.stopPropagation(); toggleAllInCategory(cat); }}
-                          className="text-[11px] font-medium text-[#9ca3af] hover:text-[#9fe870] transition-colors"
+                          className="text-[11px] font-medium text-[#9ca3af] hover:text-[var(--app-brand)] transition-colors"
                         >
                           {allSelected ? 'הסר הכל' : 'בחר הכל'}
                         </button>
@@ -545,7 +545,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
                     setShowSaveForm(false);
                   }
                 }}
-                className="px-3 py-2 rounded-xl text-xs font-medium bg-[#9fe870] text-[#0d0d12] hover:bg-[#8dd960] transition-colors"
+                className="px-3 py-2 rounded-xl text-xs font-medium bg-[var(--app-brand)] text-white hover:bg-[var(--app-brand-text)] transition-colors"
               >
                 שמור
               </button>
@@ -574,7 +574,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-[#262626] bg-[#151515]">
-              <Columns className="w-4 h-4 text-[#9fe870]" />
+              <Columns className="w-4 h-4 text-[var(--app-brand)]" />
             </div>
             <div className="text-right">
               <h3 className="text-sm font-semibold text-[#fafafa]">{title}</h3>

@@ -291,14 +291,14 @@ export const ToolbarPeriodControl: React.FC<ToolbarPeriodControlProps> = ({
         onClick={() => setCalendarOpen((value) => !value)}
         className={`flex h-10 min-w-[176px] shrink-0 items-center justify-center gap-2 rounded-[4px] border px-3 text-sm font-semibold transition-colors ${
           periodMode === 'custom_range'
-            ? 'border-app-nav-border bg-[#0A0A0A] text-app-text'
-            : 'border-app-border bg-app-surface text-app-text hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#0A0A0A] dark:hover:bg-[#1A1A1A]'
+            ? 'border-app-brand bg-app-brand-solid text-app-background dark:border-[#2E2E2E] dark:bg-[#0A0A0A] dark:text-[#EDEDED]'
+            : 'border-app-border bg-app-surface text-app-text hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#EDEDED] dark:hover:bg-[#111111]'
         }`}
       >
-        <CalendarDays className="h-4 w-4 shrink-0 text-app-text-secondary dark:text-[#EDEDED]" />
+        <CalendarDays className="h-4 w-4 shrink-0 text-app-text-secondary dark:text-app-text" />
         <span className="whitespace-nowrap">{displayLabel}</span>
         {hideMonthNavigationOnMobile ? (
-          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-[#737373] md:hidden" />
+          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-app-text-secondary md:hidden" />
         ) : null}
       </button>
 
@@ -414,9 +414,9 @@ export const ToolbarWeekPicker: React.FC<ToolbarWeekPickerProps> = ({
       <button
         type="button"
         onClick={() => setCalendarOpen((value) => !value)}
-        className="flex h-10 min-w-[150px] items-center justify-center gap-2 rounded-[4px] border border-app-border bg-app-surface px-3 text-sm font-semibold text-app-text transition-colors hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#0A0A0A] dark:hover:bg-[#1A1A1A] sm:min-w-[190px]"
+        className="flex h-10 min-w-[150px] items-center justify-center gap-2 rounded-[4px] border border-app-border bg-app-surface px-3 text-sm font-semibold text-app-text transition-colors hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#EDEDED] dark:hover:bg-[#111111] sm:min-w-[190px]"
       >
-        <CalendarDays className="h-4 w-4 shrink-0 text-app-text-secondary dark:text-[#EDEDED]" />
+        <CalendarDays className="h-4 w-4 shrink-0 text-app-text-secondary dark:text-app-text" />
         <span className="truncate">{weekLabel}</span>
       </button>
       <ToolbarIconButton onClick={() => changeWeek(1)} label="שבוע הבא">
@@ -428,7 +428,7 @@ export const ToolbarWeekPicker: React.FC<ToolbarWeekPickerProps> = ({
           onDateChange(new Date());
           setCalendarOpen(false);
         }}
-        className="hidden h-10 items-center rounded-[4px] border border-app-border bg-app-surface px-3 text-sm font-medium text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text dark:border-app-nav-border dark:bg-[#0A0A0A] dark:hover:bg-[#1A1A1A] sm:flex"
+        className="hidden h-10 items-center rounded-[4px] border border-app-border bg-app-surface px-3 text-sm font-medium text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#A1A1A1] dark:hover:bg-[#111111] dark:hover:text-[#EDEDED] sm:flex"
       >
         היום
       </button>

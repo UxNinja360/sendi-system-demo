@@ -60,15 +60,15 @@
   --app-nav-badge-text:     var(--ds-gray-800);
 
   /* Brand */
-  --app-brand:              #22c55e;
-  --app-brand-solid:        #16a34a;
-  --app-brand-hover:        #15803d;
-  --app-brand-subtle:       #dcfce7;
-  --app-brand-text:         #16a34a;
+  --app-brand:              var(--ds-blue-700);
+  --app-brand-solid:        var(--ds-gray-1000);
+  --app-brand-hover:        var(--ds-gray-900);
+  --app-brand-subtle:       var(--ds-blue-100);
+  --app-brand-text:         var(--ds-blue-900);
 
   /* Status — success */
   --app-success-subtle:     #dcfce7;
-  --app-success-text:       #22c55e;
+  --app-success-text:       var(--ds-green-900);
 
   /* Status — warning */
   --app-warning-subtle:     #fef3c7;
@@ -93,8 +93,8 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: #030213;
-  --primary-foreground: oklch(1 0 0);
+  --primary: var(--app-brand-solid);
+  --primary-foreground: var(--app-background);
   --secondary: oklch(0.95 0.0058 264.53);
   --secondary-foreground: #030213;
   --muted: #ececf0;
@@ -397,11 +397,11 @@
   --app-nav-hover-bg:       #1a1a1a;
   --app-nav-badge-bg:       #0A0A0A;
   --app-nav-badge-text:     #A1A1A1;
-  --app-brand:              #EDEDED;
-  --app-brand-solid:        #EDEDED;
-  --app-brand-hover:        #FAFAFA;
-  --app-brand-subtle:       #1F1F1F;
-  --app-brand-text:         #EDEDED;
+  --app-brand:              var(--ds-blue-900);
+  --app-brand-solid:        var(--geist-foreground);
+  --app-brand-hover:        var(--ds-gray-1000);
+  --app-brand-subtle:       var(--ds-blue-200);
+  --app-brand-text:         var(--ds-blue-1000);
   --app-success-subtle:     #052e16;
   --app-success-text:       #4ade80;
   --app-warning-subtle:     #78350f;
@@ -574,11 +574,11 @@
   --app-nav-hover-bg: #1a1a1a;
   --app-nav-badge-bg: #0A0A0A;
   --app-nav-badge-text: #A1A1A1;
-  --app-brand: #EDEDED;
-  --app-brand-solid: #EDEDED;
-  --app-brand-hover: #FAFAFA;
-  --app-brand-subtle: #1F1F1F;
-  --app-brand-text: #EDEDED;
+  --app-brand: var(--ds-blue-900);
+  --app-brand-solid: var(--geist-foreground);
+  --app-brand-hover: var(--ds-gray-1000);
+  --app-brand-subtle: var(--ds-blue-200);
+  --app-brand-text: var(--ds-blue-1000);
   --app-success-subtle: var(--ds-green-200);
   --app-success-text: var(--ds-green-900);
   --app-warning-subtle: var(--ds-amber-200);
@@ -807,16 +807,16 @@
     height: 24px;
     width: 24px;
     border-radius: 50%;
-    background: #9fe870;
+    background: var(--app-brand);
     cursor: pointer;
     margin-top: -8px;
-    box-shadow: 0 2px 8px rgba(159, 232, 112, 0.4);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--app-brand) 28%, transparent);
     transition: all 0.2s ease;
   }
 
   input[type='range']::-webkit-slider-thumb:hover {
-    background: #b2ed8d;
-    box-shadow: 0 4px 12px rgba(159, 232, 112, 0.6);
+    background: var(--app-brand-text);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--app-brand) 36%, transparent);
     transform: scale(1.1);
   }
 
@@ -837,16 +837,16 @@
     height: 24px;
     width: 24px;
     border-radius: 50%;
-    background: #9fe870;
+    background: var(--app-brand);
     cursor: pointer;
     border: none;
-    box-shadow: 0 2px 8px rgba(159, 232, 112, 0.4);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--app-brand) 28%, transparent);
     transition: all 0.2s ease;
   }
 
   input[type='range']::-moz-range-thumb:hover {
-    background: #b2ed8d;
-    box-shadow: 0 4px 12px rgba(159, 232, 112, 0.6);
+    background: var(--app-brand-text);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--app-brand) 36%, transparent);
     transform: scale(1.1);
   }
 
@@ -945,7 +945,7 @@
   }
 
   .sonner-toast[data-type='success']::before {
-    background: #22c55e;
+    background: var(--app-success-text);
   }
 
   .dark .sonner-toast[data-type='success'] {
@@ -954,7 +954,7 @@
   }
 
   .sonner-toast[data-type='success'] [data-icon] {
-    color: #22c55e !important;
+    color: var(--app-success-text) !important;
   }
 
   .sonner-toast[data-type='error'] {

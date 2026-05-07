@@ -8,6 +8,8 @@
   type MouseEvent,
   type SetStateAction,
 } from 'react';
+import type { CourierEmploymentType } from '../types/delivery.types';
+import { isCourierShiftEligibleForDeliveryAssignment } from '../utils/courier-assignment';
 
 type RouteStopRef = {
   id: string;
@@ -15,6 +17,7 @@ type RouteStopRef = {
 
 type SortableCourier = {
   id: string;
+  employmentType: CourierEmploymentType;
   name: string;
   status: string;
   isOnShift: boolean;
@@ -84,7 +87,12 @@ export const useLiveCouriersViewControls = <TCourier extends SortableCourier>({
       if (sortBy === 'status') {
         const statusOrder = (courier: SortableCourier) => {
           if (courier.activeOrders.length > 0) return 0;
-          if (courier.status !== 'offline' && courier.isOnShift) return 1;
+          if (
+            courier.status !== 'offline' &&
+            isCourierShiftEligibleForDeliveryAssignment(courier)
+          ) {
+            return 1;
+          }
           if (courier.status !== 'offline') return 2;
           return 3;
         };
@@ -102,8 +110,10 @@ export const useLiveCouriersViewControls = <TCourier extends SortableCourier>({
       } else if (sortBy === 'rating') {
         comparison = right.rating - left.rating;
       } else if (sortBy === 'available') {
-        const leftAssignable = left.status !== 'offline' && left.isOnShift;
-        const rightAssignable = right.status !== 'offline' && right.isOnShift;
+        const leftAssignable =
+          left.status !== 'offline' && isCourierShiftEligibleForDeliveryAssignment(left);
+        const rightAssignable =
+          right.status !== 'offline' && isCourierShiftEligibleForDeliveryAssignment(right);
 
         if (leftAssignable && !rightAssignable) comparison = -1;
         else if (!leftAssignable && rightAssignable) comparison = 1;
@@ -118,7 +128,12 @@ export const useLiveCouriersViewControls = <TCourier extends SortableCourier>({
 
   const displayedCouriers = useMemo(() => {
     if (quickFilter === 'free') {
-      return sortedCouriers.filter((courier) => courier.isOnShift && courier.activeOrders.length === 0);
+      return sortedCouriers.filter(
+        (courier) =>
+          courier.status !== 'offline' &&
+          isCourierShiftEligibleForDeliveryAssignment(courier) &&
+          courier.activeOrders.length === 0
+      );
     }
 
     if (quickFilter === 'busy') {

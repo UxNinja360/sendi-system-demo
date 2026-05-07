@@ -51,7 +51,6 @@ const LABELS = {
   noBusinesses: '\u05dc\u05d0 \u05e0\u05de\u05e6\u05d0\u05d5 \u05d7\u05d1\u05e8\u05d5\u05ea',
   acceptDeliveries: '\u05e7\u05d1\u05dc\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
   autoAssign: '\u05e9\u05d9\u05d1\u05d5\u05e5 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9',
-  noActiveCouriers: '\u05d0\u05d9 \u05d0\u05e4\u05e9\u05e8 \u05dc\u05e4\u05ea\u05d5\u05d7 \u05e7\u05d1\u05dc\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd \u05d1\u05dc\u05d9 \u05e9\u05dc\u05d9\u05d7\u05d9\u05dd \u05e4\u05e2\u05d9\u05dc\u05d9\u05dd',
   systemClosed: '\u05de\u05e2\u05e8\u05db\u05ea \u05e1\u05d2\u05d5\u05e8\u05d4',
   settings: '\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea',
   wallet: '\u05d0\u05e8\u05e0\u05e7',
@@ -93,7 +92,7 @@ const getBusinessInitials = (name: string) =>
 
 const BusinessAvatar: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
   <span
-    className={`flex shrink-0 items-center justify-center rounded-full bg-[#02B74F] font-bold text-[#04130a] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.22)] ${className ?? 'h-7 w-7 text-[11px]'}`}
+    className={`flex shrink-0 items-center justify-center rounded-full bg-app-brand-solid font-bold text-app-background shadow-[inset_0_0_0_1px_rgba(255,255,255,0.22)] ${className ?? 'h-7 w-7 text-[11px]'}`}
     aria-hidden="true"
   >
     {getBusinessInitials(name)}
@@ -199,12 +198,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
   });
 
   const isExpanded = !isCollapsed || !isDesktop;
-  const activeCouriersCount = state.couriers.filter((courier) => courier.status !== 'offline').length;
   const activeDeliveriesCount = state.deliveries.filter(isOperationalDelivery).length;
   const walletRevenue = state.deliveries
     .filter((delivery) => delivery.status === 'delivered')
     .reduce((sum, delivery) => sum + getDeliveryCustomerCharge(delivery), 0);
-  const isSystemToggleDisabled = !state.isSystemOpen && activeCouriersCount === 0;
   const walletItem = getNavItemById('wallet');
   const balanceItem = getNavItemById('delivery-balance');
   const settingsItem = getNavItemById('settings');
@@ -448,10 +445,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
   const toggleSystem = (event: React.MouseEvent) => {
     event.stopPropagation();
-    if (isSystemToggleDisabled) {
-      alert(LABELS.noActiveCouriers);
-      return;
-    }
     dispatch({ type: 'TOGGLE_SYSTEM' });
   };
 
@@ -517,10 +510,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       const shouldShowInlineDivider =
         (section.id === 'core' &&
           item.id === 'dashboard' &&
-          section.items[itemIndex - 1]?.id === 'live') ||
-        (section.id === 'operations' &&
-          item.id === 'restaurants' &&
-          section.items[itemIndex - 1]?.id === 'reports');
+          section.items[itemIndex - 1]?.id === 'live');
 
       return (
         <React.Fragment key={item.id}>
@@ -577,7 +567,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
             title={isCollapsed ? 'Open sidebar' : 'Collapse sidebar'}
           >
             <span className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-transparent transition-colors group-hover/sidebar-resize:bg-app-nav-border" />
-            <span className="pointer-events-none absolute top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border border-app-nav-border bg-app-nav-bg text-app-text-secondary opacity-0 shadow-[0_0_0_1px_rgba(255,255,255,0.04)] transition-[opacity,background-color,color,border-color] group-hover/sidebar-resize:opacity-100 group-hover/sidebar-resize:border-[#2E2E2E] group-hover/sidebar-resize:bg-[#1A1A1A] group-hover/sidebar-resize:text-app-text group-focus-visible/sidebar-resize:opacity-100 group-focus-visible/sidebar-resize:ring-2 group-focus-visible/sidebar-resize:ring-[#ededed]/20">
+            <span className="pointer-events-none absolute top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border border-app-nav-border bg-app-nav-bg text-app-text-secondary opacity-0 shadow-[0_0_0_1px_rgba(255,255,255,0.04)] transition-[opacity,background-color,color,border-color] group-hover/sidebar-resize:opacity-100 group-hover/sidebar-resize:border-app-border group-hover/sidebar-resize:bg-app-surface-raised group-hover/sidebar-resize:text-app-text group-focus-visible/sidebar-resize:opacity-100 group-focus-visible/sidebar-resize:ring-2 group-focus-visible/sidebar-resize:ring-app-brand/20">
               {isCollapsed ? (
                 <ChevronLeft className="h-3.5 w-3.5" />
               ) : (
@@ -615,8 +605,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                 <span
                   className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] border transition-colors ${
                     isBusinessPopupOpen
-                      ? 'border-[#303030] bg-[#1F1F1F] text-[#EDEDED]'
-                      : 'border-transparent text-app-text-secondary group-hover:border-[#303030] group-hover:bg-[#1F1F1F] group-hover:text-[#EDEDED]'
+                      ? 'border-app-border-strong bg-app-surface-raised text-app-text'
+                      : 'border-transparent text-app-text-secondary group-hover:border-app-border-strong group-hover:bg-app-surface-raised group-hover:text-app-text'
                   }`}
                 >
                   <ChevronsUpDown className="h-3.5 w-3.5" />
@@ -644,9 +634,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
             )}
 
             {isBusinessPopupOpen && (
-              <div className="absolute right-0 top-[calc(100%+8px)] z-[220] w-[340px] max-w-[calc(100vw-24px)] overflow-hidden rounded-[8px] border border-app-nav-border bg-[#0A0A0A] text-app-text shadow-2xl shadow-black/40">
+              <div className="absolute right-0 top-[calc(100%+8px)] z-[220] w-[340px] max-w-[calc(100vw-24px)] overflow-hidden rounded-[8px] border border-app-nav-border bg-app-surface text-app-text shadow-2xl shadow-black/10 dark:bg-[#0A0A0A] dark:shadow-black/40">
                 <div className="border-b border-app-nav-border p-2">
-                  <div className="flex h-10 items-center gap-2 rounded-[6px] border border-transparent px-2 text-app-text-secondary focus-within:border-[#3A3A3A] focus-within:bg-[#111111]">
+                  <div className="flex h-10 items-center gap-2 rounded-[6px] border border-transparent px-2 text-app-text-secondary focus-within:border-app-border-strong focus-within:bg-app-surface-raised dark:focus-within:border-[#3A3A3A] dark:focus-within:bg-[#111111]">
                     <Search className="h-4 w-4 shrink-0" />
                     <input
                       ref={businessSearchRef}
@@ -676,8 +666,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                           }}
                           className={`mb-1 flex h-11 w-full items-center gap-3 rounded-[6px] px-2 text-right text-sm transition-colors ${
                             isSelected
-                              ? 'bg-[#1F1F1F] text-app-text'
-                              : 'text-app-text-secondary hover:bg-[#151515] hover:text-app-text'
+                              ? 'bg-app-surface-raised text-app-text'
+                              : 'text-app-text-secondary hover:bg-app-surface-raised hover:text-app-text'
                           }`}
                         >
                           <BusinessAvatar name={business} className="h-6 w-6 text-[10px]" />
@@ -829,13 +819,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                   <button
                     type="button"
                     onClick={toggleSystem}
-                    disabled={isSystemToggleDisabled}
                     className={`relative h-5 w-10 rounded-full transition-colors ${
                       state.isSystemOpen
-                        ? 'bg-[#02B74F]'
-                        : isSystemToggleDisabled
-                          ? 'cursor-not-allowed bg-[#e5e5e5] opacity-50 dark:bg-[#404040]'
-                          : 'bg-[#e5e5e5] dark:bg-[#404040]'
+                        ? 'bg-app-success-text'
+                        : 'bg-[#e5e5e5] dark:bg-[#404040]'
                     }`}
                   >
                     <span
@@ -857,7 +844,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                       dispatch({ type: 'TOGGLE_AUTO_ASSIGN' });
                     }}
                     className={`relative h-5 w-10 rounded-full transition-colors ${
-                      state.autoAssignEnabled ? 'bg-[#02B74F]' : 'bg-[#e5e5e5] dark:bg-[#404040]'
+                      state.autoAssignEnabled ? 'bg-app-success-text' : 'bg-[#e5e5e5] dark:bg-[#404040]'
                     }`}
                   >
                     <span
@@ -876,10 +863,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                 <button
                   type="button"
                   onClick={toggleSystem}
-                  disabled={isSystemToggleDisabled}
                   className="flex items-center justify-center"
                 >
-                  <Power className={`h-4 w-4 transition-colors ${state.isSystemOpen ? 'text-[#02B74F]' : 'text-[#dc2626]'}`} />
+                  <Power className={`h-4 w-4 transition-colors ${state.isSystemOpen ? 'text-app-success-text' : 'text-[#dc2626]'}`} />
                 </button>
               </SidebarIconTooltip>
             )}

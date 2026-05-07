@@ -21,6 +21,7 @@ import {
 } from '../components/common/selection-action-bar';
 import { ListToolbarActions } from '../components/common/list-toolbar-actions';
 import { ToolbarIconButton } from '../components/common/toolbar-icon-button';
+import { ViewModeToggle, type EntityViewMode } from '../components/common/view-mode-toggle';
 import { getRestaurantChainId } from '../utils/restaurant-branding';
 import {
   formatCurrency,
@@ -65,13 +66,14 @@ import {
 } from '../components/common/entity-table-shared';
 import { DELIVERY_STORAGE_KEYS } from '../context/delivery-storage';
 import { RestaurantsVercelList } from './restaurants-vercel-list';
+import { DELIVERY_HUBS, TLV_RUNNERS_HUB_ID } from '../constants/delivery-hubs';
 
 // ═══════════════════════════════════════
 // Types
 // ═══════════════════════════════════════
 type RestaurantRow = {
   id: number; restaurantId: string; name: string; status: 'פעיל' | 'לא פעיל';
-  isActive: boolean; totalDeliveries: number; linkedHubs: string[];
+  isActive: boolean; totalDeliveries: number;
   contactPerson: string; phone: string; city: string; street: string; username: string; type: string; chainId: string;
 };
 
@@ -149,7 +151,8 @@ const DEFAULT_RESTAURANT_VISIBLE_COLUMNS: RestaurantColId[] = [
   'contact',
   'deliveries',
 ];
-const RESTAURANT_VISIBLE_COLUMNS_KEY = `${DELIVERY_STORAGE_KEYS.restaurantsVisibleColumns}:product-v2`;
+const RESTAURANT_VISIBLE_COLUMNS_KEY = `${DELIVERY_STORAGE_KEYS.restaurantsVisibleColumns}:product-v3`;
+const RESTAURANT_VIEW_MODE_KEY = 'restaurants-view-mode-v1';
 const RESTAURANT_COLUMN_CATEGORIES = [
   {
     id: 'core',
@@ -233,8 +236,8 @@ const RestaurantToolbarToggle: React.FC<{
       onClick={onClick}
       className={
         active
-          ? 'border-[#ededed] bg-[#101010] text-[#ededed] shadow-[inset_0_0_0_1px_rgba(237,237,237,0.35)]'
-          : 'border-app-nav-border text-[#8f8f8f]'
+          ? 'border-app-border-strong bg-app-nav-active-bg text-app-nav-active-text shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--app-border-strong)_35%,transparent)]'
+          : 'border-app-border text-app-text-secondary'
       }
     >
       <span
@@ -248,7 +251,7 @@ const RestaurantToolbarToggle: React.FC<{
     </ToolbarIconButton>
     <span
       className={`
-        pointer-events-none absolute bottom-1.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#ededed] transition-opacity
+        pointer-events-none absolute bottom-1.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-app-nav-indicator transition-opacity
         ${active ? 'opacity-100' : 'opacity-0'}
       `}
     />
@@ -261,7 +264,13 @@ export const RestaurantsScreen: React.FC = () => {
 
   // ── Basic state ──
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [newRestaurant, setNewRestaurant] = useState({ name: '', phone: '', address: '', type: 'מסעדה' });
+  const [newRestaurant, setNewRestaurant] = useState({
+    name: '',
+    phone: '',
+    address: '',
+    type: 'מסעדה',
+    linkedHubIds: [TLV_RUNNERS_HUB_ID],
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [restaurantConnectionFilter, setRestaurantConnectionFilter] = useState<'connected' | 'disconnected' | null>(null);
   const [sortColumn, setSortColumn] = useState<RestaurantSortableColumnId>('name');
@@ -271,6 +280,13 @@ export const RestaurantsScreen: React.FC = () => {
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [selectedRestaurantIds, setSelectedRestaurantIds] = useState<Set<string>>(new Set());
   const [columnsOpen, setColumnsOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<EntityViewMode>(() => {
+    try {
+      const saved = localStorage.getItem(RESTAURANT_VIEW_MODE_KEY);
+      if (saved === 'list' || saved === 'cards') return saved;
+    } catch {}
+    return 'list';
+  });
   const [periodMode] = useState<PeriodMode>('current_month');
   const [monthAnchor] = useState(() => new Date());
   const [customStartDate] = useState(() => {
@@ -321,11 +337,24 @@ export const RestaurantsScreen: React.FC = () => {
     addAppTopBarActionListener('create-restaurant', () => setIsAddModalOpen(true))
   ), []);
 
+  useEffect(() => (
+    addAppTopBarActionListener('export-restaurants', () => {
+      setIsExportOpen(true);
+      setColumnsOpen(false);
+    })
+  ), []);
+
   useEffect(() => {
     try {
       localStorage.setItem(RESTAURANT_VISIBLE_COLUMNS_KEY, JSON.stringify(Array.from(visibleColumns)));
     } catch {}
   }, [visibleColumns]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(RESTAURANT_VIEW_MODE_KEY, viewMode);
+    } catch {}
+  }, [viewMode]);
 
   const handleColumnReorder = useCallback((fromId: string, toId: string) => {
     setColumnOrder(prev => {
@@ -368,7 +397,6 @@ export const RestaurantsScreen: React.FC = () => {
     status: r.isActive ? 'פעיל' as const : 'לא פעיל' as const,
     isActive: r.isActive,
     totalDeliveries: deliveriesCountByRestaurant.get(r.id) ?? 0,
-    linkedHubs: idx % 3 === 0 ? ['תל אביב מרכז', 'תל אביב צפון'] : idx % 2 === 0 ? ['תל אביב מרכז'] : ['תל אביב דרום'],
     contactPerson: ['משה כהן', 'דנה לוי', 'יוסי אברהם', 'רונית גולן', 'אבי זהבי', 'דוד ישראלי', 'שרה מזרחי'][idx % 7],
     phone: r.phone,
     city: r.address.split(', ')[1] || 'תל אביב',
@@ -506,7 +534,29 @@ export const RestaurantsScreen: React.FC = () => {
 
   // ── Add restaurant ──
   const handleAddRestaurant = async () => {
-    if (!newRestaurant.name.trim()) return;
+    const selectedLinkedHubIds = newRestaurant.linkedHubIds.filter((hubId) =>
+      DELIVERY_HUBS.some((hub) => hub.id === hubId && hub.isActive)
+    );
+
+    if (!newRestaurant.name.trim()) {
+      toast.error('יש להזין שם מסעדה');
+      return;
+    }
+
+    if (!newRestaurant.phone.trim()) {
+      toast.error('יש להזין מספר טלפון למסעדה');
+      return;
+    }
+
+    if (!newRestaurant.address.trim()) {
+      toast.error('יש להזין כתובת מסעדה');
+      return;
+    }
+
+    if (selectedLinkedHubIds.length === 0) {
+      toast.error('יש לבחור לפחות מוקד משויך אחד');
+      return;
+    }
 
     // Geocode address with Nominatim
     let lat = 32.0853;
@@ -545,6 +595,7 @@ export const RestaurantsScreen: React.FC = () => {
       id: `r${Date.now()}`,
       name: newRestaurant.name.trim(),
       chainId: getRestaurantChainId(newRestaurant.name.trim()),
+      linkedHubIds: selectedLinkedHubIds,
       phone: newRestaurant.phone.trim(),
       address: newRestaurant.address.trim() || 'ישראל',
       city: newRestaurant.address.includes(',') ? newRestaurant.address.split(',').pop()?.trim() ?? '' : '',
@@ -564,7 +615,13 @@ export const RestaurantsScreen: React.FC = () => {
     };
     dispatch({ type: 'ADD_RESTAURANT', payload: restaurant });
     setIsAddModalOpen(false);
-    setNewRestaurant({ name: '', phone: '', address: '', type: 'מסעדה' });
+    setNewRestaurant({
+      name: '',
+      phone: '',
+      address: '',
+      type: 'מסעדה',
+      linkedHubIds: [TLV_RUNNERS_HUB_ID],
+    });
   };
 
   // ── Handlers ──
@@ -785,15 +842,6 @@ export const RestaurantsScreen: React.FC = () => {
             <PageToolbar
               showBottomBorder={false}
               showPeriodControl={false}
-              headerControls={
-                <ListToolbarActions
-                  showSearch={false}
-                  showColumnsToggle={false}
-                  columnsOpen={columnsOpen}
-                  onExport={() => { setIsExportOpen((v) => !v); setColumnsOpen(false); }}
-                  onToggleColumns={() => { setColumnsOpen((value) => !value); setIsExportOpen(false); }}
-                />
-              }
               actions={
                 <div className="flex min-w-0 flex-1 items-center gap-1.5">
                   <div className="flex shrink-0 items-center gap-1">
@@ -816,6 +864,7 @@ export const RestaurantsScreen: React.FC = () => {
                     showColumnsToggle={false}
                     showExportButton={false}
                   />
+                  <ViewModeToggle value={viewMode} onChange={setViewMode} />
                 </div>
               }
             />
@@ -828,8 +877,7 @@ export const RestaurantsScreen: React.FC = () => {
             {/* Table / Empty state */}
             <RestaurantsVercelList
               restaurants={filteredRestaurants}
-              selectedIds={selectedRestaurantIds}
-              onToggleSelect={handleToggleSelectRestaurant}
+              viewMode={viewMode}
               onOpenActionsMenu={(restaurant, event) => {
                 event.stopPropagation();
                 const rect = event.currentTarget.getBoundingClientRect();
@@ -894,7 +942,7 @@ export const RestaurantsScreen: React.FC = () => {
               emptyState={
                 restaurants.length === 0 ? (
                   <EntityEmptyState
-                    icon={<StoreIcon className="h-12 w-12 text-[#9fe870]" />}
+                    icon={<StoreIcon className="h-12 w-12 text-app-brand" />}
                     title="טרם נוספו מסעדות"
                     description="כאשר יתווספו מסעדות למערכת, הן יופיעו כאן עם כל הפרטים והאפשרויות לניהול מתקדם"
                     footerText="המערכת מוכנה לקבלת מסעדות חדשות"
@@ -1020,7 +1068,7 @@ export const RestaurantsScreen: React.FC = () => {
                         <span
                           className={`text-xs font-medium whitespace-nowrap ${
                             restaurant.isActive
-                              ? 'text-[#16a34a] dark:text-[#9fe870]'
+                              ? 'text-app-success-text'
                               : 'text-[#737373] dark:text-app-text-secondary'
                           }`}
                         >
@@ -1091,7 +1139,7 @@ export const RestaurantsScreen: React.FC = () => {
                   <span
                     className={`text-[11px] font-medium ${
                       restaurant.isActive
-                        ? 'text-[#16a34a] dark:text-[#9fe870]'
+                        ? 'text-app-success-text'
                         : 'text-[#737373] dark:text-app-text-secondary'
                     }`}
                   >
@@ -1117,7 +1165,7 @@ export const RestaurantsScreen: React.FC = () => {
                   setContextMenuPos(null);
                   setOpenActionsRestaurantId(null);
                 }}
-                icon={<Power className="w-3.5 h-3.5 text-[#16a34a] dark:text-[#9fe870]" />}
+                icon={<Power className="w-3.5 h-3.5 text-app-success-text" />}
               >
                 {restaurant.isActive ? 'השבת מסעדה' : 'הפעל מסעדה'}
               </EntityActionMenuItem>
@@ -1173,30 +1221,53 @@ export const RestaurantsScreen: React.FC = () => {
                   type="text"
                   value={newRestaurant.name}
                   onChange={e => setNewRestaurant(p => ({ ...p, name: e.target.value }))}
-                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-app-text"
+                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-app-brand dark:border-app-border dark:bg-app-surface dark:text-app-text"
                   placeholder="שם המסעדה"
                   autoFocus
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-app-text-secondary">טלפון</label>
+                <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-app-text-secondary">טלפון *</label>
                 <input
                   type="tel"
                   value={newRestaurant.phone}
                   onChange={e => setNewRestaurant(p => ({ ...p, phone: e.target.value }))}
-                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-app-text"
+                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-app-brand dark:border-app-border dark:bg-app-surface dark:text-app-text"
                   placeholder="050-0000000"
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-app-text-secondary">כתובת</label>
+                <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-app-text-secondary">כתובת *</label>
                 <input
                   type="text"
                   value={newRestaurant.address}
                   onChange={e => setNewRestaurant(p => ({ ...p, address: e.target.value }))}
-                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-app-text"
+                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-app-brand dark:border-app-border dark:bg-app-surface dark:text-app-text"
                   placeholder="רחוב, עיר"
                 />
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-app-text-secondary">מוקדים משויכים *</label>
+                <div className="space-y-2 rounded-lg border border-[#e5e5e5] bg-[#fafafa] p-3 dark:border-app-border dark:bg-app-surface">
+                  {DELIVERY_HUBS.map((hub) => (
+                    <label key={hub.id} className="flex cursor-pointer items-center justify-between gap-3 text-sm text-[#0d0d12] dark:text-app-text">
+                      <span>{hub.name}</span>
+                      <input
+                        type="checkbox"
+                        checked={newRestaurant.linkedHubIds.includes(hub.id)}
+                        onChange={(event) => {
+                          setNewRestaurant((previous) => ({
+                            ...previous,
+                            linkedHubIds: event.target.checked
+                              ? Array.from(new Set([...previous.linkedHubIds, hub.id]))
+                              : previous.linkedHubIds.filter((hubId) => hubId !== hub.id),
+                          }));
+                        }}
+                        className="h-4 w-4 cursor-pointer rounded border-[#d4d4d4] accent-app-brand"
+                      />
+                    </label>
+                  ))}
+                </div>
               </div>
               <div>
                 <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-app-text-secondary">סוג מטבח</label>
@@ -1204,7 +1275,7 @@ export const RestaurantsScreen: React.FC = () => {
                   type="text"
                   value={newRestaurant.type}
                   onChange={e => setNewRestaurant(p => ({ ...p, type: e.target.value }))}
-                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-app-text"
+                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-app-brand dark:border-app-border dark:bg-app-surface dark:text-app-text"
                   placeholder="פיצה, סושי, המבורגר..."
                 />
               </div>
@@ -1212,8 +1283,13 @@ export const RestaurantsScreen: React.FC = () => {
             <div className="mt-6 flex gap-3">
               <button
                 onClick={handleAddRestaurant}
-                disabled={!newRestaurant.name.trim()}
-                className="flex-1 rounded-lg bg-[#9fe870] px-4 py-2.5 font-medium text-[#0d0d12] transition-colors hover:bg-[#8fd65f] disabled:bg-[#e5e5e5] disabled:text-[#a3a3a3]"
+                disabled={
+                  !newRestaurant.name.trim() ||
+                  !newRestaurant.phone.trim() ||
+                  !newRestaurant.address.trim() ||
+                  newRestaurant.linkedHubIds.length === 0
+                }
+                className="flex-1 rounded-lg bg-app-brand-solid px-4 py-2.5 font-medium text-app-background transition-colors hover:bg-app-brand-hover disabled:bg-[#e5e5e5] disabled:text-[#a3a3a3]"
               >
                 הוסף מסעדה
               </button>

@@ -134,7 +134,7 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
     path: '/reports',
     routePath: 'reports',
     label: '\u05d3\u05d5\u05d7\u05d5\u05ea',
-    section: 'operations',
+    section: 'data',
     icon: 'fileText',
     showInSidebar: true,
     managedScroll: true,

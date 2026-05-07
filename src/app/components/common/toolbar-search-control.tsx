@@ -40,22 +40,22 @@ export const ToolbarSearchControl: React.FC<ToolbarSearchControlProps> = ({
       {isSearchVisible ? (
         <div className={alwaysOpen ? 'flex min-w-0 flex-1 items-center gap-1' : 'flex items-center gap-1'}>
           <div className={alwaysOpen ? 'relative min-w-0 flex-1' : 'relative'}>
-            <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#a3a3a3]" />
+            <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-app-text-muted" />
             <input
               ref={inputRef}
               type="text"
               placeholder={placeholder}
               value={searchQuery}
               onChange={(event) => onSearchQueryChange(event.target.value)}
-              className={`${widthClass} h-10 rounded-[4px] border border-[#e5e5e5] bg-[#f5f5f5] pr-9 pl-6 text-sm text-[#0d0d12] outline-none transition-all placeholder:text-[#a3a3a3] focus:border-[#9fe870]/50 dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-app-text dark:placeholder:text-app-text-secondary`}
+              className={`${widthClass} h-10 rounded-[4px] border border-app-border bg-app-surface-raised pr-9 pl-6 text-sm text-app-text outline-none transition-colors placeholder:text-app-text-muted focus:border-app-brand focus:bg-app-surface dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-app-text dark:placeholder:text-app-text-secondary`}
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => onSearchQueryChange('')}
-                className="absolute left-2 top-1/2 -translate-y-1/2 rounded p-0.5 transition-colors hover:bg-[#e5e5e5] dark:hover:bg-[#333333]"
+                className="absolute left-2 top-1/2 -translate-y-1/2 rounded p-0.5 transition-colors hover:bg-app-surface-inset dark:hover:bg-[#333333]"
               >
-                <X className="h-3 w-3 text-[#a3a3a3]" />
+                <X className="h-3 w-3 text-app-text-muted" />
               </button>
             )}
           </div>
@@ -68,9 +68,9 @@ export const ToolbarSearchControl: React.FC<ToolbarSearchControlProps> = ({
               }}
               title={TEXT.close}
               aria-label={TEXT.close}
-              className="rounded p-1 transition-colors hover:bg-[#f5f5f5] dark:hover:bg-[#262626]"
+              className="rounded p-1 transition-colors hover:bg-app-surface-raised dark:hover:bg-[#262626]"
             >
-              <X className="h-3.5 w-3.5 text-[#a3a3a3]" />
+              <X className="h-3.5 w-3.5 text-app-text-muted" />
             </button>
           )}
         </div>

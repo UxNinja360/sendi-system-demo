@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Delivery, DeliveryState } from '../types/delivery.types';
+import { canCourierAcceptDelivery } from '../utils/courier-assignment';
 import { getDeliveryCashAmount, getDeliveryCustomerCharge } from '../utils/delivery-finance';
 import { getDeliveryPickupBatchKey } from '../utils/pickup-batches';
 import {
@@ -266,9 +267,11 @@ export const useLiveManagerData = ({
 
   const freeCouriersCount = useMemo(
     () => state.couriers.filter(
-      (courier) => courier.isOnShift && !state.deliveries.some(
-        (delivery) => delivery.courierId === courier.id && ['assigned', 'delivering'].includes(delivery.status)
-      )
+      (courier) =>
+        canCourierAcceptDelivery(courier) &&
+        !state.deliveries.some(
+          (delivery) => delivery.courierId === courier.id && ['assigned', 'delivering'].includes(delivery.status)
+        )
     ).length,
     [state.couriers, state.deliveries]
   );
@@ -283,7 +286,7 @@ export const useLiveManagerData = ({
   );
 
   const availableCouriers = useMemo(
-    () => state.couriers.filter((courier) => courier.status !== 'offline' && courier.isOnShift),
+    () => state.couriers.filter((courier) => canCourierAcceptDelivery(courier)),
     [state.couriers]
   );
 

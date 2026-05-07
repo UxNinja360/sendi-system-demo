@@ -24,7 +24,7 @@ type InfoBarProps = {
 
 const toneClassName: Record<InfoBarTone, string> = {
   default: 'text-[#0d0d12] dark:text-app-text',
-  success: 'text-[#16a34a] dark:text-[#9fe870]',
+  success: 'text-app-success-text',
   warning: 'text-[#ca8a04] dark:text-[#facc15]',
   orange: 'text-[#f97316] dark:text-[#ffa94d]',
   info: 'text-[#2563eb] dark:text-[#60a5fa]',

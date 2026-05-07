@@ -72,6 +72,28 @@ const getPageMenuActions = (pathname: string): PageMenuAction[] => {
     ];
   }
 
+  if (pathname === '/couriers') {
+    return [
+      ...(primaryAction ? [primaryAction] : []),
+      {
+        action: 'export-couriers',
+        label: 'ייצוא',
+        icon: <Download className="h-4 w-4 text-app-text-secondary" />,
+      },
+    ];
+  }
+
+  if (pathname === '/restaurants') {
+    return [
+      ...(primaryAction ? [primaryAction] : []),
+      {
+        action: 'export-restaurants',
+        label: 'ייצוא',
+        icon: <Download className="h-4 w-4 text-app-text-secondary" />,
+      },
+    ];
+  }
+
   return primaryAction ? [primaryAction] : [];
 };
 
@@ -183,7 +205,7 @@ export const AppTopBar: React.FC<AppTopBarProps> = ({ onOpenMobileMenu }) => {
       <button
         type="button"
         onClick={onOpenMobileMenu}
-        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--app-radius-sm)] text-[#EDEDED] transition-colors hover:bg-app-nav-hover-bg md:hidden"
+        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--app-radius-sm)] text-app-text-secondary transition-colors hover:bg-app-nav-hover-bg hover:text-app-text md:hidden"
         aria-label="פתח תפריט"
       >
         <Menu className="h-4 w-4" />
@@ -218,7 +240,7 @@ export const AppTopBar: React.FC<AppTopBarProps> = ({ onOpenMobileMenu }) => {
         <button
           type="button"
           onClick={() => setIsMenuOpen((value) => !value)}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--app-radius-sm)] text-[#EDEDED] transition-colors hover:bg-app-nav-hover-bg"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--app-radius-sm)] text-app-text-secondary transition-colors hover:bg-app-nav-hover-bg hover:text-app-text"
           aria-label="אפשרויות"
           aria-expanded={isMenuOpen}
         >

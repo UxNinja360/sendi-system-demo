@@ -38,6 +38,7 @@ import {
   createStorageEpoch,
   ensureStorageEpoch,
 } from './delivery-storage';
+import { hasActiveLinkedDeliveryHub } from '../constants/delivery-hubs';
 
 const STORAGE_KEY = DELIVERY_STORAGE_KEYS.state;
 const STATE_EPOCH_KEY = DELIVERY_STORAGE_KEYS.stateEpoch;
@@ -671,9 +672,9 @@ const isLiveActiveDelivery = (delivery: Delivery) =>
 
 const getActiveSimulatedDeliveryLimit = (state: DeliveryState) => {
   const activeRestaurantCount = state.restaurants.filter((restaurant) => restaurant.isActive).length;
-  const activeCourierCount = state.couriers.filter((courier) => (
-    courier.isOnShift && courier.status !== 'offline'
-  )).length;
+  const activeCourierCount = state.couriers.filter((courier) =>
+    canCourierAcceptDelivery(courier)
+  ).length;
 
   return Math.min(
     MAX_ACTIVE_SIMULATED_DELIVERIES,
@@ -1345,7 +1346,9 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
 
       const openedAtMs = simulationOpenedAtRef.current ?? nowMs;
-      const activeRestaurants = stateNow.restaurants.filter((restaurant) => restaurant.isActive);
+      const activeRestaurants = stateNow.restaurants.filter(
+        (restaurant) => restaurant.isActive && hasActiveLinkedDeliveryHub(restaurant.linkedHubIds)
+      );
       const eligibleRestaurants = activeRestaurants
         .map((restaurant) => {
           const latestRestaurantDeliveryMs = getLatestDeliveryCreatedAtMs(stateNow.deliveries, restaurant);

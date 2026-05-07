@@ -23,7 +23,7 @@ const Field: React.FC<{ label: string; required?: boolean; children: React.React
   </div>
 );
 
-const inputCls = "w-full px-3 py-2.5 rounded-xl text-sm bg-[#f5f5f5] dark:bg-app-surface text-[#0d0d12] dark:text-app-text border border-transparent focus:border-[#9fe870]/50 outline-none transition-all placeholder-[#a3a3a3]";
+const inputCls = "w-full px-3 py-2.5 rounded-xl text-sm bg-[#f5f5f5] dark:bg-app-surface text-[#0d0d12] dark:text-app-text border border-transparent focus:border-app-brand outline-none transition-all placeholder-[#a3a3a3]";
 const selectCls = `${inputCls} appearance-none cursor-pointer`;
 
 export const NewDeliveryDialog: React.FC<NewDeliveryDialogProps> = ({
@@ -184,7 +184,7 @@ export const NewDeliveryDialog: React.FC<NewDeliveryDialogProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#f0f0f0] dark:border-app-border">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#9fe870]/15 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-app-brand-subtle flex items-center justify-center">
               <Package className="w-4 h-4 text-[#6bc84a]" />
             </div>
             <div>
@@ -270,7 +270,7 @@ export const NewDeliveryDialog: React.FC<NewDeliveryDialogProps> = ({
           </button>
           <button
             onClick={handleSubmit as any}
-            className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-[#0d0d12] bg-[#9fe870] hover:bg-[#8dd960] transition-colors"
+            className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-app-background bg-app-brand-solid hover:bg-app-brand-hover transition-colors"
           >
             צור משלוח
           </button>

@@ -201,7 +201,7 @@ export const EntityTableHeaderCheckbox: React.FC<EntityTableCheckboxProps> = ({
           type="checkbox"
           checked={checked}
           onChange={onChange}
-          className="h-4 w-4 cursor-pointer rounded border-[#d4d4d4] text-[#16a34a] accent-[#16a34a] focus:ring-[#16a34a] focus:ring-offset-0 dark:border-[#404040]"
+          className="h-4 w-4 cursor-pointer rounded border-[#d4d4d4] accent-app-brand focus:ring-app-brand focus:ring-offset-0 dark:border-[#404040]"
         />
       </label>
     </th>
@@ -221,7 +221,7 @@ export const EntityTableRowCheckbox: React.FC<EntityTableCheckboxProps> = ({
         type="checkbox"
         checked={checked}
         onChange={onChange}
-        className="h-4 w-4 cursor-pointer rounded border-[#d4d4d4] text-[#16a34a] accent-[#16a34a] focus:ring-[#16a34a] focus:ring-offset-0 dark:border-[#404040]"
+        className="h-4 w-4 cursor-pointer rounded border-[#d4d4d4] accent-app-brand focus:ring-app-brand focus:ring-offset-0 dark:border-[#404040]"
       />
     </label>
   </td>

@@ -109,8 +109,8 @@ export const DeliveryEditDialog: React.FC<DeliveryEditDialogProps> = ({
           {/* Header */}
           <div className="shrink-0 px-6 py-4 border-b border-[#e5e5e5] dark:border-app-border flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-[#9fe870]/10 rounded-xl">
-                <Package className="w-5 h-5 text-[#9fe870]" />
+              <div className="p-2 bg-app-brand-subtle rounded-lg">
+                <Package className="w-5 h-5 text-app-brand" />
               </div>
               <div>
                 <h2 className="text-lg font-bold text-[#0d0d12] dark:text-app-text">עריכת משלוח</h2>
@@ -137,8 +137,8 @@ export const DeliveryEditDialog: React.FC<DeliveryEditDialogProps> = ({
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 px-4 py-3 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${
                     isActive
-                      ? `border-[#9fe870] ${tab.color} bg-[#9fe870]/5`
-                      : 'border-transparent text-[#737373] hover:text-[#0d0d12] dark:hover:text-[#fafafa] hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a]'
+                      ? `border-app-brand ${tab.color} bg-app-brand-subtle`
+                      : 'border-transparent text-app-text-secondary hover:bg-app-surface-raised hover:text-app-text'
                   }`}
                 >
                   <Icon className={`w-4 h-4 ${isActive ? tab.color : ''}`} />
@@ -187,7 +187,7 @@ export const DeliveryEditDialog: React.FC<DeliveryEditDialogProps> = ({
               </button>
               <button
                 onClick={handleSave}
-                className="flex items-center gap-2 px-4 py-2 bg-[#9fe870] hover:bg-[#8fd65f] text-[#0d0d12] rounded-lg text-sm font-medium transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-app-brand-solid hover:bg-app-brand-hover text-app-background rounded-lg text-sm font-medium transition-colors"
               >
                 <Save className="w-4 h-4" />
                 שמור שינויים
@@ -226,7 +226,7 @@ const FormField: React.FC<{
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
-          className="w-full px-3 py-2 text-sm bg-[#fafafa] dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870] disabled:opacity-50"
+          className="w-full px-3 py-2 text-sm bg-[#fafafa] dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-lg focus:outline-none focus:ring-2 focus:ring-app-brand disabled:opacity-50"
         >
           <option value="">בחר...</option>
           {options.map(opt => (
@@ -240,7 +240,7 @@ const FormField: React.FC<{
             checked={value || false}
             onChange={(e) => onChange(e.target.checked)}
             disabled={disabled}
-            className="w-4 h-4 rounded border-[#e5e5e5] dark:border-app-border text-[#9fe870] focus:ring-2 focus:ring-[#9fe870] disabled:opacity-50"
+            className="w-4 h-4 rounded border-[#e5e5e5] dark:border-app-border accent-app-brand focus:ring-2 focus:ring-app-brand disabled:opacity-50"
           />
           <span className="text-xs text-[#0d0d12] dark:text-app-text">{value ? 'כן' : 'לא'}</span>
         </div>
@@ -251,7 +251,7 @@ const FormField: React.FC<{
           placeholder={placeholder}
           disabled={disabled}
           rows={3}
-          className="w-full px-3 py-2 text-sm bg-[#fafafa] dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870] disabled:opacity-50 resize-none"
+          className="w-full px-3 py-2 text-sm bg-[#fafafa] dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-lg focus:outline-none focus:ring-2 focus:ring-app-brand disabled:opacity-50 resize-none"
         />
       ) : type === 'datetime-local' ? (
         <input
@@ -259,7 +259,7 @@ const FormField: React.FC<{
           value={value ? new Date(value).toISOString().slice(0, 16) : ''}
           onChange={(e) => onChange(e.target.value ? new Date(e.target.value) : null)}
           disabled={disabled}
-          className="w-full px-3 py-2 text-sm bg-[#fafafa] dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870] disabled:opacity-50"
+          className="w-full px-3 py-2 text-sm bg-[#fafafa] dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-lg focus:outline-none focus:ring-2 focus:ring-app-brand disabled:opacity-50"
         />
       ) : (
         <input
@@ -268,7 +268,7 @@ const FormField: React.FC<{
           onChange={(e) => onChange(type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value)}
           placeholder={placeholder}
           disabled={disabled}
-          className="w-full px-3 py-2 text-sm bg-[#fafafa] dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9fe870] disabled:opacity-50"
+          className="w-full px-3 py-2 text-sm bg-[#fafafa] dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-lg focus:outline-none focus:ring-2 focus:ring-app-brand disabled:opacity-50"
         />
       )}
     </div>

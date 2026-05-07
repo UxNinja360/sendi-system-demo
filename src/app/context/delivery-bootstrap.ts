@@ -9,6 +9,7 @@
   WeeklyShiftDayConfig,
   WorkShift,
 } from '../types/delivery.types';
+import { TLV_RUNNERS_HUB_ID } from '../constants/delivery-hubs';
 import { getRestaurantChainId } from '../utils/restaurant-branding';
 
 export const ISRAELI_NAMES = [
@@ -36,6 +37,10 @@ export const normalizeCouriers = (couriers: Courier[]): Courier[] => couriers.ma
 const normalizeRestaurant = (restaurant: Restaurant): Restaurant => ({
   ...restaurant,
   chainId: restaurant.chainId || getRestaurantChainId(restaurant.name),
+  linkedHubIds:
+    Array.isArray(restaurant.linkedHubIds) && restaurant.linkedHubIds.length > 0
+      ? restaurant.linkedHubIds
+      : [TLV_RUNNERS_HUB_ID],
   defaultPreparationTime:
     typeof restaurant.defaultPreparationTime === 'number' && restaurant.defaultPreparationTime > 0
       ? restaurant.defaultPreparationTime
@@ -591,6 +596,7 @@ const generateRestaurants = (): Restaurant[] => {
       name: r.name,
       chainId: getRestaurantChainId(r.name),
       type: r.type,
+      linkedHubIds: [TLV_RUNNERS_HUB_ID],
       phone: r.phone,
       address: `${r.street} ${r.streetNumber}, ${r.city}`,
       city: r.city,

@@ -12,6 +12,7 @@ import {
   Package,
 } from 'lucide-react';
 import { Courier, Delivery } from '../types/delivery.types';
+import { isCourierShiftEligibleForDeliveryAssignment } from '../utils/courier-assignment';
 import { formatAddressWithArea } from '../utils/delivery-presenters';
 import { DraggableRouteStop } from './live-courier-route-stop';
 import { RouteStop } from './live-couriers-view-utils';
@@ -77,6 +78,7 @@ export const LiveCourierListItem: React.FC<LiveCourierListItemProps> = ({
   const lastRealStop = realStops[realStops.length - 1];
   const showRoute = isExpanded || isSelected;
   const isConnected = courier.status !== 'offline';
+  const isShiftEligible = isCourierShiftEligibleForDeliveryAssignment(courier);
   const shiftLabel = !isConnected
     ? 'לא מחובר'
     : courier.isOnShift
@@ -89,7 +91,7 @@ export const LiveCourierListItem: React.FC<LiveCourierListItemProps> = ({
       className={`border-b border-[#e5e5e5] transition-all dark:border-app-border ${
         isSelected
           ? 'bg-[#f0fdf4] dark:bg-[#0a2f1a]'
-          : isConnected && !courier.isOnShift
+          : isConnected && !isShiftEligible
             ? 'bg-[#fafafa] dark:bg-app-surface'
             : isHovered
               ? 'bg-[#f0f0f0] dark:bg-[#222222]'
@@ -108,7 +110,7 @@ export const LiveCourierListItem: React.FC<LiveCourierListItemProps> = ({
                   className={`h-3 w-3 flex-shrink-0 ${
                     !isConnected
                       ? 'fill-[#737373] text-[#737373]'
-                      : !courier.isOnShift
+                      : !isShiftEligible
                         ? 'fill-[#a3a3a3] text-[#a3a3a3]'
                         : totalActiveDeliveries > 0
                           ? 'fill-[#f59e0b] text-[#f59e0b]'

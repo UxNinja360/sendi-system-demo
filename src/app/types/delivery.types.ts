@@ -15,12 +15,19 @@ export type ShiftType = 'morning' | 'afternoon' | 'evening' | 'full';
 export type ShiftStatus = 'planned' | 'active' | 'completed';
 export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
+export interface DeliveryHub {
+  id: string;
+  name: string;
+  isActive: boolean;
+}
+
 // מסעדה
 export interface Restaurant {
   id: string;
   name: string;
   chainId: string;
   type: string; // סוג מטבח (פיצה, המבורגר, סושי וכו')
+  linkedHubIds: string[];
   phone: string;
   address: string;
   city: string;
@@ -436,6 +443,13 @@ export type DeliveryAction =
   | { type: 'SET_TIME_MULTIPLIER'; payload: number } // שינוי מכפיל הזמן
   | { type: 'ADD_DELIVERY'; payload: Delivery }
   | { type: 'ADD_COURIER'; payload: Courier }
+  | {
+      type: 'UPDATE_COURIER';
+      payload: {
+        courierId: string;
+        updates: Partial<Pick<Courier, 'name' | 'phone' | 'vehicleType' | 'employmentType' | 'rating'>>;
+      };
+    }
   | { type: 'REMOVE_COURIER'; payload: string } // courierId
   | { type: 'CREATE_SHIFT_TEMPLATE'; payload: ShiftTemplate }
   | { type: 'UPDATE_SHIFT_TEMPLATE'; payload: { templateId: string; updates: Partial<Omit<ShiftTemplate, 'id'>> } }

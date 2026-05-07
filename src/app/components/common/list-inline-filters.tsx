@@ -70,8 +70,8 @@ const MobileStatusDotSummary: React.FC<{
       <span
         key={option.id}
         className={joinClassNames(
-          'h-2 w-2 rounded-full ring-1 ring-[#0A0A0A]',
-          option.dotClassName ?? 'bg-[#525252]',
+          'h-2 w-2 rounded-full ring-1 ring-app-surface',
+          option.dotClassName ?? 'bg-app-text-muted',
           selectedValues.has(option.id) ? '' : 'opacity-25 grayscale',
         )}
       />
@@ -147,7 +147,7 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
         <button
           type="button"
           onClick={() => setMobileSheetOpen(true)}
-          className="flex h-10 shrink-0 items-center gap-2 rounded-[6px] border border-app-nav-border bg-[#0A0A0A] px-3 text-sm font-semibold text-[#EDEDED] transition-colors hover:bg-[#1A1A1A] md:hidden"
+          className="flex h-10 shrink-0 items-center gap-2 rounded-[6px] border border-app-border bg-app-surface px-3 text-sm font-semibold text-app-text transition-colors hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#EDEDED] dark:hover:bg-[#111111] md:hidden"
           aria-label={mobileStatusFilter.defaultLabel}
           title={mobileStatusFilter.defaultLabel}
         >
@@ -156,10 +156,10 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
             selectedValues={mobileStatusFilter.selectedValues}
           />
           <span className="min-w-0 truncate text-right">{mobileStatusFilter.defaultLabel}</span>
-          <span className="shrink-0 rounded-full bg-[#262626] px-1.5 py-0.5 text-xs font-bold leading-none text-[#EDEDED]">
+          <span className="shrink-0 rounded-full bg-app-nav-active-bg px-1.5 py-0.5 text-xs font-bold leading-none text-app-text">
             {mobileStatusFilter.selectedValues.size}/{mobileStatusFilter.options.length}
           </span>
-          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-[#737373]" />
+          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
         </button>
       ) : (
         <button
@@ -172,7 +172,7 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
           <Filter className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{TEXT.filters}</span>
           {activeFilterCount > 0 ? (
-            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#262626] text-[10px] font-bold text-[#EDEDED]">
+            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-app-nav-active-bg text-[10px] font-bold text-app-text">
               {activeFilterCount}
             </span>
           ) : null}
@@ -240,21 +240,21 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
           onClick={() => setMobileSheetOpen(false)}
         >
           <div
-            className="absolute inset-x-0 bottom-0 max-h-[80vh] overflow-hidden rounded-t-3xl border-t border-[#262626] bg-white dark:bg-app-surface"
+            className="absolute inset-x-0 bottom-0 max-h-[80vh] overflow-hidden rounded-t-3xl border-t border-app-border bg-app-surface"
             dir="rtl"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-[#f0f0f0] px-4 py-3 dark:border-app-border">
+            <div className="flex items-center justify-between border-b border-app-border px-4 py-3">
               <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-[#737373]" />
-                <span className="text-sm font-semibold text-[#0d0d12] dark:text-app-text">
+                <Filter className="h-4 w-4 text-app-text-secondary" />
+                <span className="text-sm font-semibold text-app-text">
                   {mobileSheetTitle}
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => setMobileSheetOpen(false)}
-                className="rounded-lg p-1.5 text-[#737373] transition-colors hover:bg-[#f5f5f5] dark:hover:bg-[#262626]"
+                className="rounded-lg p-1.5 text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text"
                 aria-label={TEXT.close}
               >
                 <X className="h-4 w-4" />
@@ -272,7 +272,7 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
                   return (
                     <section key={filter.key} className="space-y-2">
                       <div className="flex items-center justify-between gap-3">
-                        <span className="text-sm font-medium text-[#0d0d12] dark:text-app-text">
+                        <span className="text-sm font-medium text-app-text">
                           {filter.defaultLabel}
                         </span>
                         {isActive ? (
@@ -287,7 +287,7 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
                                 filter.setCurrentPage?.(1);
                               }
                             }}
-                            className="text-xs font-medium text-[#6bc84a]"
+                            className="text-xs font-medium text-app-brand-text"
                           >
                             {TEXT.clear}
                           </button>
@@ -296,17 +296,17 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
 
                       {isMultiSelectFilter(filter) && filter.showSearch !== false ? (
                         <div className="relative">
-                          <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#a3a3a3]" />
+                          <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-app-text-muted" />
                           <input
                             value={filter.searchValue ?? ''}
                             onChange={(event) => filter.setSearchValue?.(event.target.value)}
                             placeholder={filter.placeholder ?? `${TEXT.search} ${filter.defaultLabel}...`}
-                            className="w-full rounded-xl border border-[#e5e5e5] bg-[#fafafa] py-2 pr-9 pl-3 text-sm text-[#0d0d12] outline-none transition-colors focus:border-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-app-text"
+                            className="w-full rounded-xl border border-app-border bg-app-surface-raised py-2 pr-9 pl-3 text-sm text-app-text outline-none transition-colors placeholder:text-app-text-muted focus:border-app-brand focus:bg-app-surface"
                           />
                         </div>
                       ) : null}
 
-                      <div className="overflow-hidden rounded-xl border border-[#e5e5e5] dark:border-app-border">
+                      <div className="overflow-hidden rounded-xl border border-app-border">
                         {isMultiSelectFilter(filter)
                           ? filter.options
                               .filter(
@@ -320,21 +320,21 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
 
                                 return (
                                   <button
-                                  key={option.id}
-                                  type="button"
-                                  onClick={() => {
-                                    filter.toggleValue(option.id);
-                                    filter.setCurrentPage?.(1);
-                                  }}
-                                  className={`flex w-full items-center gap-2.5 px-3 py-3 text-right text-sm transition-colors ${
+                                    key={option.id}
+                                    type="button"
+                                    onClick={() => {
+                                      filter.toggleValue(option.id);
+                                      filter.setCurrentPage?.(1);
+                                    }}
+                                    className={`flex w-full items-center gap-2.5 px-3 py-3 text-right text-sm transition-colors ${
                                       isSelected
-                                        ? 'bg-[#f5f5f5] text-[#0d0d12] dark:bg-[#262626] dark:text-app-text'
-                                        : 'text-[#525252] hover:bg-[#f5f5f5] dark:text-app-text-secondary dark:hover:bg-[#202020]'
+                                        ? 'bg-app-surface-raised text-app-text'
+                                        : 'text-app-text-secondary hover:bg-app-surface-raised hover:text-app-text'
                                     }`}
                                   >
                                     <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                                       {isSelected ? (
-                                        <Check className="h-3.5 w-3.5 text-[#16a34a]" />
+                                        <Check className="h-3.5 w-3.5 text-app-brand" />
                                       ) : null}
                                     </span>
                                     {option.dotClassName ? (
@@ -346,7 +346,7 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
                                       {option.label}
                                     </span>
                                     {typeof option.count === 'number' ? (
-                                      <span className="rounded-full bg-[#f5f5f5] px-1.5 py-0.5 text-[10px] font-bold text-[#737373] dark:bg-[#202020] dark:text-app-text-secondary">
+                                      <span className="rounded-full bg-app-surface-raised px-1.5 py-0.5 text-[10px] font-bold text-app-text-secondary">
                                         {option.count}
                                       </span>
                                     ) : null}
@@ -366,13 +366,13 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
                                   }}
                                   className={`flex w-full items-center gap-2.5 px-3 py-3 text-right text-sm transition-colors ${
                                     isSelected
-                                      ? 'bg-[#f5f5f5] text-[#0d0d12] dark:bg-[#262626] dark:text-app-text'
-                                      : 'text-[#525252] hover:bg-[#f5f5f5] dark:text-app-text-secondary dark:hover:bg-[#202020]'
+                                      ? 'bg-app-surface-raised text-app-text'
+                                      : 'text-app-text-secondary hover:bg-app-surface-raised hover:text-app-text'
                                   }`}
                                 >
                                   <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                                     {isSelected ? (
-                                      <Check className="h-3.5 w-3.5 text-[#16a34a]" />
+                                      <Check className="h-3.5 w-3.5 text-app-brand" />
                                     ) : null}
                                   </span>
                                   {option.dotClassName ? (
@@ -384,7 +384,7 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
                                     {option.label}
                                   </span>
                                   {typeof option.count === 'number' ? (
-                                    <span className="rounded-full bg-[#f5f5f5] px-1.5 py-0.5 text-[10px] font-bold text-[#737373] dark:bg-[#202020] dark:text-app-text-secondary">
+                                    <span className="rounded-full bg-app-surface-raised px-1.5 py-0.5 text-[10px] font-bold text-app-text-secondary">
                                       {option.count}
                                     </span>
                                   ) : null}

@@ -66,7 +66,7 @@ export const EntityTableHeaderCell: React.FC<EntityTableHeaderCellProps> = ({
               event.stopPropagation();
               onSort();
             }}
-            className="flex items-center gap-1 whitespace-nowrap text-xs font-medium text-[#666d80] transition-colors hover:text-[#16a34a] dark:text-app-text-secondary dark:hover:text-[#22c55e]"
+            className="flex items-center gap-1 whitespace-nowrap text-xs font-medium text-[#666d80] transition-colors hover:text-app-brand dark:text-app-text-secondary dark:hover:text-app-brand"
           >
             <span>{label}</span>
             {sortDirection === 'asc' ? <ChevronUp className="h-3 w-3" /> : null}

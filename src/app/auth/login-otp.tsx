@@ -74,8 +74,8 @@ export const LoginOtp: React.FC<LoginOtpProps> = ({ phone, onSubmit, onBack }) =
     <div className="w-full flex items-center justify-center py-[max(1rem,env(safe-area-inset-top))]">
       <div className="w-full max-w-md">
         <div className="text-center mb-6 sm:mb-8">
-          <div className="inline-flex items-center justify-center h-16 w-16 sm:h-20 sm:w-20 bg-[#02B74F] rounded-2xl mb-4 shadow-lg">
-            <AppLogo size={40} className="text-white sm:h-12 sm:w-12" />
+          <div className="inline-flex items-center justify-center h-16 w-16 sm:h-20 sm:w-20 bg-app-brand-solid rounded-lg mb-4 shadow-lg">
+            <AppLogo size={40} className="text-app-background sm:h-12 sm:w-12" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0d0d12] dark:text-app-text mb-2">
             הזן קוד אימות
@@ -105,7 +105,7 @@ export const LoginOtp: React.FC<LoginOtpProps> = ({ phone, onSubmit, onBack }) =
                   onChange={(e) => handleChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
                   onPaste={index === 0 ? handlePaste : undefined}
-                  className={`h-12 w-10 sm:h-14 sm:w-12 text-center text-xl sm:text-2xl font-bold bg-[#fafafa] dark:bg-app-surface border-2 rounded-xl text-[#0d0d12] dark:text-app-text focus:outline-none focus:border-[#02B74F] transition-all ${
+                  className={`h-12 w-10 sm:h-14 sm:w-12 text-center text-xl sm:text-2xl font-bold bg-[#fafafa] dark:bg-app-surface border-2 rounded-lg text-[#0d0d12] dark:text-app-text focus:outline-none focus:border-app-brand transition-all ${
                     error
                       ? 'border-[#ea0b0b] animate-shake'
                       : 'border-[#e5e5e5] dark:border-app-border'
@@ -129,7 +129,7 @@ export const LoginOtp: React.FC<LoginOtpProps> = ({ phone, onSubmit, onBack }) =
             <div className="text-center">
               <button
                 type="button"
-                className="text-sm text-[#02B74F] hover:underline font-medium"
+                className="text-sm text-app-brand-text hover:underline font-medium"
               >
                 שלח קוד שוב
               </button>

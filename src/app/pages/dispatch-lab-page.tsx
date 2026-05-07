@@ -16,7 +16,10 @@ import {
 import { toast } from 'sonner';
 import { useDelivery } from '../context/delivery-context-value';
 import type { Courier, Delivery, DeliveryStatus } from '../types/delivery.types';
-import { canCourierAcceptDelivery } from '../utils/courier-assignment';
+import {
+  canCourierAcceptDelivery,
+  isCourierShiftEligibleForDeliveryAssignment,
+} from '../utils/courier-assignment';
 import {
   DELIVERY_ASSIGNMENT_BLOCK_COPY,
   getDeliveryAssignmentBlockReason,
@@ -152,9 +155,21 @@ const Metric: React.FC<{
 
 const CourierLoad: React.FC<{ courier: Courier; load: number }> = ({ courier, load }) => {
   const isFull = load >= 2;
-  const label = courier.status === 'offline' ? 'לא מחובר' : !courier.isOnShift ? 'לא במשמרת' : isFull ? 'מלא' : load === 0 ? 'פנוי' : 'בעבודה';
+  const shiftEligible = isCourierShiftEligibleForDeliveryAssignment(courier);
+  const label =
+    courier.status === 'offline'
+      ? 'לא מחובר'
+      : !shiftEligible
+        ? 'שעתי, לא במשמרת'
+        : isFull
+          ? 'מלא'
+          : !courier.isOnShift
+            ? 'זמין ללא משמרת'
+            : load === 0
+              ? 'פנוי'
+              : 'בעבודה';
   const className =
-    courier.status === 'offline' || !courier.isOnShift
+    courier.status === 'offline' || !shiftEligible
       ? 'text-[#737373]'
       : isFull
         ? 'text-[#facc15]'
@@ -506,7 +521,9 @@ export const DispatchLabPage: React.FC = () => {
                   </div>
                   <div className="shrink-0 text-left">
                     <CourierLoad courier={courier} load={load} />
-                    <div className="mt-0.5 text-[11px] text-[#525252]">{courier.vehicleType}</div>
+                    <div className="mt-0.5 text-[11px] text-[#525252]">
+                      {courier.vehicleType} · {courier.employmentType}
+                    </div>
                   </div>
                 </div>
               );

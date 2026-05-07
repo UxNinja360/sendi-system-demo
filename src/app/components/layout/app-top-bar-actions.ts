@@ -4,7 +4,9 @@ export type AppTopBarAction =
   | 'create-delivery'
   | 'create-courier'
   | 'create-restaurant'
-  | 'export-deliveries';
+  | 'export-deliveries'
+  | 'export-couriers'
+  | 'export-restaurants';
 
 export const emitAppTopBarAction = (action: AppTopBarAction) => {
   window.dispatchEvent(

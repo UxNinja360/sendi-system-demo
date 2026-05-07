@@ -167,7 +167,7 @@ body {
 .status-filter-checkbox-zone:focus-visible,
 .status-filter-text-zone:hover,
 .status-filter-text-zone:focus-visible {
-  background: #1A1A1A;
+  background: var(--app-surface-raised);
 }
 
 .status-filter-action-cue {

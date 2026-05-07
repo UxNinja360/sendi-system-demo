@@ -28,7 +28,7 @@ const ACTION_VARIANT_CLASSES: Record<
   string
 > = {
   primary:
-    'bg-[#16a34a] text-white shadow-[#16a34a]/20 hover:bg-[#15803d]',
+    'bg-app-brand-solid text-app-background shadow-black/10 hover:bg-app-brand-hover',
   neutral:
     'bg-[#404040] text-white shadow-black/10 hover:bg-[#262626]',
   outline:
@@ -81,7 +81,7 @@ export const SelectionActionBar: React.FC<SelectionActionBarProps> = ({
   return (
     <div className="sticky inset-x-0 bottom-0 z-20 border-t border-[#e5e5e5] bg-white shadow-[0_-4px_16px_rgba(0,0,0,0.08)] dark:border-app-border dark:bg-app-surface">
       <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center">
-        <div className="inline-flex w-fit items-center rounded-full border border-[#d7efc8] bg-[#ecfae2] px-3 py-1.5 text-sm font-semibold text-[#166534] dark:border-[#365314] dark:bg-[#163300] dark:text-[#b5f27d]">
+        <div className="inline-flex w-fit items-center rounded-full border border-app-brand bg-app-brand-subtle px-3 py-1.5 text-sm font-semibold text-app-brand-text dark:border-app-nav-border dark:bg-app-brand-subtle dark:text-app-brand-text">
           {resolvedSelectionLabel}
         </div>
         <div className="flex flex-1 flex-wrap items-center justify-start gap-2 sm:justify-end">

@@ -53,14 +53,14 @@ type FilterContainerRef = React.RefObject<HTMLDivElement | null> | ((node: HTMLD
 
 const getCheckboxClass = (isActive: boolean) =>
   `flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors ${
-    isActive ? 'border-[#9fe870] bg-[#9fe870]' : 'border-[#d4d4d4] dark:border-[#404040]'
+    isActive ? 'border-app-brand bg-app-brand' : 'border-[#d4d4d4] dark:border-[#404040]'
   }`;
 
 const getOptionButtonClass = (isActive: boolean) =>
   `w-full flex items-center gap-2.5 px-3 py-2 text-right text-sm transition-colors ${
     isActive
-      ? 'bg-[#f5f5f5] text-[#0d0d12] dark:bg-[#262626] dark:text-app-text'
-      : 'text-[#525252] hover:bg-[#f5f5f5] dark:text-app-text-secondary dark:hover:bg-[#262626]'
+      ? 'bg-app-surface-raised text-app-text dark:bg-app-nav-active-bg dark:text-app-text'
+      : 'text-app-text-secondary hover:bg-app-surface-raised dark:text-app-text-secondary dark:hover:bg-app-surface-raised'
   }`;
 
 const TEXT = {
@@ -76,8 +76,8 @@ const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
 export const getListFilterButtonClass = (isActive: boolean) =>
   `flex h-10 items-center gap-1.5 rounded-[4px] border px-3 text-sm font-medium transition-colors md:w-[112px] md:justify-between ${
     isActive
-      ? 'border-[#9fe870]/40 bg-[#9fe870]/15 text-[#6bc84a] dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#EDEDED]'
-      : 'border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#EDEDED] dark:hover:bg-[#1A1A1A]'
+      ? 'border-app-brand bg-app-brand-subtle text-app-brand-text dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#EDEDED]'
+      : 'border-app-border bg-app-surface text-app-text-secondary hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#EDEDED] dark:hover:bg-[#111111]'
   }`;
 
 const FILTER_MENU_GAP = 6;
@@ -149,8 +149,8 @@ const StatusDotSummary: React.FC<{
       <span
         key={option.id}
         className={joinClassNames(
-          'h-2 w-2 rounded-full ring-1 ring-[#0A0A0A]',
-          option.dotClassName ?? 'bg-[#525252]',
+          'h-2 w-2 rounded-full ring-1 ring-app-surface',
+          option.dotClassName ?? 'bg-app-text-muted',
           selectedValues.has(option.id) ? '' : 'opacity-25 grayscale',
         )}
       />
@@ -163,8 +163,8 @@ const StatusFilterCheckbox: React.FC<{ checked: boolean }> = ({ checked }) => (
     className={joinClassNames(
       'flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors',
       checked
-        ? 'border-[#EDEDED] bg-[#EDEDED] text-[#0A0A0A]'
-        : 'border-[#525252] bg-transparent text-transparent',
+        ? 'border-app-brand-solid bg-app-brand-solid text-app-background'
+        : 'border-app-border-strong bg-transparent text-transparent',
     )}
   >
     {checked ? <Check className="h-3 w-3 stroke-[3]" /> : null}
@@ -207,7 +207,7 @@ const StatusFilterOptionRow: React.FC<StatusFilterOptionRowProps> = ({
   const textActionLabel = getStatusTextActionLabel(isActive, selectedCount, totalCount);
 
   return (
-    <div className="status-filter-row text-[#EDEDED]" dir="ltr">
+    <div className="status-filter-row text-app-text" dir="ltr">
       <button
         type="button"
         onClick={() => onToggle(option.id)}
@@ -222,14 +222,14 @@ const StatusFilterOptionRow: React.FC<StatusFilterOptionRowProps> = ({
         onClick={() => onTextAction(option.id, isActive)}
         title={textActionLabel}
         aria-label={`${textActionLabel} ${option.label}`}
-        className="status-filter-text-zone h-8 min-w-0 text-right text-sm font-semibold text-[#EDEDED] focus:outline-none"
+        className="status-filter-text-zone h-8 min-w-0 text-right text-sm font-semibold text-app-text focus:outline-none"
         dir="ltr"
       >
         <span className="status-filter-action-slot" dir="rtl" aria-hidden="true">
-          <span className="status-filter-action-cue status-filter-text-cue text-xs font-medium text-[#A1A1AA]">
+          <span className="status-filter-action-cue status-filter-text-cue text-xs font-medium text-app-text-secondary">
             {textActionLabel}
           </span>
-          <span className="status-filter-action-cue status-filter-checkbox-cue text-xs font-medium text-[#A1A1AA]">
+          <span className="status-filter-action-cue status-filter-checkbox-cue text-xs font-medium text-app-text-secondary">
             {checkboxActionLabel}
           </span>
         </span>
@@ -243,7 +243,7 @@ const StatusFilterOptionRow: React.FC<StatusFilterOptionRowProps> = ({
               )}
             />
           ) : null}
-          <span className="min-w-0 flex-1 truncate text-[#EDEDED]">{option.label}</span>
+          <span className="min-w-0 flex-1 truncate text-app-text">{option.label}</span>
         </span>
       </button>
     </div>
@@ -326,20 +326,20 @@ export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
             closeOtherMenus();
             setOpen(true);
           }}
-          className="flex h-10 w-full items-center gap-2 rounded-[6px] border border-app-nav-border bg-[#0A0A0A] px-3 text-sm font-semibold text-[#EDEDED] transition-colors hover:bg-[#1A1A1A]"
+          className="flex h-10 w-full items-center gap-2 rounded-[6px] border border-app-border bg-app-surface px-3 text-sm font-semibold text-app-text transition-colors hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#EDEDED] dark:hover:bg-[#111111]"
         >
           <StatusDotSummary options={options} selectedValues={selectedValues} />
           <span className="min-w-0 flex-1 truncate text-right">{defaultLabel}</span>
-          <span className="shrink-0 rounded-full bg-[#262626] px-1.5 py-0.5 text-xs font-bold leading-none text-[#EDEDED]">
+          <span className="shrink-0 rounded-full bg-app-nav-active-bg px-1.5 py-0.5 text-xs font-bold leading-none text-app-text">
             {selectedCount}/{options.length}
           </span>
-          <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-[#737373] transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-app-text-secondary transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
 
         {isOpen && typeof document !== 'undefined'
           ? createPortal(
               <div
-                className="fixed z-50 max-w-[calc(100vw-24px)] rounded-[8px] border border-app-nav-border bg-[#0A0A0A] p-2 shadow-xl"
+                className="fixed z-50 max-w-[calc(100vw-24px)] rounded-[8px] border border-app-border bg-app-surface p-2 shadow-[var(--app-shadow-panel)] dark:border-app-nav-border"
                 dir="rtl"
                 style={menuStyle}
                 onMouseDown={(event) => event.stopPropagation()}
@@ -395,7 +395,7 @@ export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
               setOpen(false);
               setCurrentPage?.(1);
             }}
-            className="shrink-0 cursor-pointer rounded p-0.5 transition-colors hover:bg-[#dcfce7] dark:hover:bg-[#052e16]"
+            className="shrink-0 cursor-pointer rounded p-0.5 transition-colors hover:bg-app-brand-subtle dark:hover:bg-app-brand-subtle"
             role="button"
           >
             <X className="h-3 w-3" />
@@ -408,17 +408,17 @@ export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
       {isOpen && typeof document !== 'undefined'
         ? createPortal(
             <div
-              className="fixed z-50 flex max-h-[260px] min-w-[200px] max-w-[calc(100vw-24px)] flex-col rounded-xl border border-[#e5e5e5] bg-white shadow-xl dark:border-app-border dark:bg-app-surface"
+              className="fixed z-50 flex max-h-[260px] min-w-[200px] max-w-[calc(100vw-24px)] flex-col rounded-xl border border-app-border bg-app-surface shadow-[var(--app-shadow-panel)]"
               style={menuStyle}
               onMouseDown={(event) => event.stopPropagation()}
             >
               {showSearch ? (
-                <div className="border-b border-[#f0f0f0] p-2 dark:border-app-border">
+                <div className="border-b border-app-border p-2">
                   <input
                     value={searchValue}
                     onChange={(event) => setSearchValue(event.target.value)}
                     placeholder={placeholder}
-                    className="w-full rounded-lg bg-[#f5f5f5] px-2.5 py-1.5 text-sm text-[#0d0d12] outline-none placeholder-[#a3a3a3] dark:bg-app-surface dark:text-app-text"
+                    className="w-full rounded-lg bg-app-surface-raised px-2.5 py-1.5 text-sm text-app-text outline-none placeholder:text-app-text-muted"
                     style={{ direction: 'rtl' }}
                   />
                 </div>
@@ -436,7 +436,7 @@ export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
                       className={getOptionButtonClass(optionActive)}
                     >
                       <span className={getCheckboxClass(optionActive)}>
-                        {optionActive ? <Check className="h-2.5 w-2.5 text-[#0d0d12]" /> : null}
+                        {optionActive ? <Check className="h-2.5 w-2.5 text-white" /> : null}
                       </span>
                       {option.dotClassName ? (
                         <span
@@ -447,7 +447,7 @@ export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
                         {option.label}
                       </span>
                       {typeof option.count === 'number' ? (
-                        <span className="rounded-full bg-[#f5f5f5] px-1.5 py-0.5 text-[10px] font-bold text-[#737373] dark:bg-[#262626] dark:text-app-text-secondary">
+                        <span className="rounded-full bg-app-surface-raised px-1.5 py-0.5 text-[10px] font-bold text-app-text-secondary">
                           {option.count}
                         </span>
                       ) : null}
@@ -499,7 +499,7 @@ export const ListSingleSelectFilter: React.FC<ListSingleSelectFilterProps> = ({
         <span className="min-w-0 flex-1 truncate text-right">{buttonLabel}</span>
         {isActive ? (
           <>
-            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#9fe870] text-[10px] font-bold text-[#0d0d12]">
+            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-app-brand text-[10px] font-bold text-white">
               1
             </span>
             <span
@@ -510,7 +510,7 @@ export const ListSingleSelectFilter: React.FC<ListSingleSelectFilterProps> = ({
                 setOpen(false);
                 setCurrentPage?.(1);
               }}
-              className="shrink-0 cursor-pointer rounded p-0.5 transition-colors hover:bg-[#dcfce7] dark:hover:bg-[#052e16]"
+              className="shrink-0 cursor-pointer rounded p-0.5 transition-colors hover:bg-app-brand-subtle dark:hover:bg-app-brand-subtle"
             >
               <X className="h-3 w-3" />
             </span>
@@ -523,7 +523,7 @@ export const ListSingleSelectFilter: React.FC<ListSingleSelectFilterProps> = ({
       {isOpen && typeof document !== 'undefined'
         ? createPortal(
             <div
-              className="fixed z-50 min-w-[180px] max-w-[calc(100vw-24px)] rounded-[4px] border border-[#e5e5e5] bg-white py-1 shadow-xl dark:border-app-border dark:bg-app-surface"
+              className="fixed z-50 min-w-[180px] max-w-[calc(100vw-24px)] rounded-[4px] border border-app-border bg-app-surface py-1 shadow-[var(--app-shadow-panel)]"
               style={menuStyle}
               onMouseDown={(event) => event.stopPropagation()}
             >
@@ -540,14 +540,14 @@ export const ListSingleSelectFilter: React.FC<ListSingleSelectFilterProps> = ({
                     className={getOptionButtonClass(isSelected)}
                   >
                     <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                      {isSelected ? <Check className="h-3.5 w-3.5 text-[#16a34a]" /> : null}
+                      {isSelected ? <Check className="h-3.5 w-3.5 text-app-brand" /> : null}
                     </span>
                     {option.dotClassName ? (
                       <span className={`h-2 w-2 shrink-0 rounded-full ${option.dotClassName} ${isSelected ? '' : 'opacity-50'}`} />
                     ) : null}
                     <span className={`flex-1 text-right ${isSelected ? 'font-medium' : ''}`}>{option.label}</span>
                     {typeof option.count === 'number' ? (
-                      <span className="rounded-full bg-[#f5f5f5] px-1.5 py-0.5 text-[10px] font-bold text-[#737373] dark:bg-[#262626] dark:text-app-text-secondary">
+                      <span className="rounded-full bg-app-surface-raised px-1.5 py-0.5 text-[10px] font-bold text-app-text-secondary">
                         {option.count}
                       </span>
                     ) : null}

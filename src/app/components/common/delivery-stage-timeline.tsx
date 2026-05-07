@@ -87,7 +87,7 @@ const getStageIndicatorMeta = (status: DeliveryStatus) => {
     case 'assigned':
       return { activeSegments: 2, color: '#eab308' };
     case 'delivering':
-      return { activeSegments: 3, color: '#22c55e' };
+      return { activeSegments: 3, color: 'var(--app-success-text)' };
     case 'delivered':
       return { activeSegments: 4, color: '#0070f3' };
     case 'cancelled':

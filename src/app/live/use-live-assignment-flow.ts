@@ -1,14 +1,17 @@
 ﻿import type { Dispatch, SetStateAction } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { Delivery } from '../types/delivery.types';
+import { Delivery, type CourierEmploymentType } from '../types/delivery.types';
 import {
   createPickupBatchId,
   getDeliveryPickupBatchKey,
   getPickupGroupStopId,
   getRestaurantPickupBaseKey,
 } from '../utils/pickup-batches';
-import { MAX_ACTIVE_DELIVERIES_PER_COURIER } from '../utils/courier-assignment';
+import {
+  MAX_ACTIVE_DELIVERIES_PER_COURIER,
+  isCourierShiftEligibleForDeliveryAssignment,
+} from '../utils/courier-assignment';
 import { getCreditCostForAssignment } from '../utils/delivery-credits';
 import {
   DELIVERY_ASSIGNMENT_BLOCK_COPY,
@@ -19,6 +22,7 @@ type LiveTab = 'deliveries' | 'couriers';
 
 type LiveCourierState = {
   id: string;
+  employmentType: CourierEmploymentType;
   isOnShift: boolean;
   name: string;
   status: string;
@@ -132,7 +136,13 @@ export const useLiveAssignmentFlow = ({
 
   const canCourierTakeSelectedDeliveries = useCallback((courierId: string) => {
     const courier = couriers.find((item) => item.id === courierId);
-    if (!courier || courier.status === 'offline' || !courier.isOnShift) return false;
+    if (
+      !courier ||
+      courier.status === 'offline' ||
+      !isCourierShiftEligibleForDeliveryAssignment(courier)
+    ) {
+      return false;
+    }
 
     const selectedDeliveries = [...validSelectedDeliveryIds]
       .map((deliveryId) => deliveries.find((delivery) => delivery.id === deliveryId))
@@ -251,7 +261,7 @@ export const useLiveAssignmentFlow = ({
 
   const handleSelectCourier = useCallback((courierId: string) => {
     if (!canCourierTakeSelectedDeliveries(courierId)) {
-      toast.error('שליח זה לא זמין לשיבוץ (לא מחובר או לא במשמרת).', {
+      toast.error('שליח זה לא זמין לשיבוץ (לא מחובר, מלא או שעתי בלי משמרת).', {
         duration: 3000,
         position: 'top-center',
       });
@@ -279,7 +289,7 @@ export const useLiveAssignmentFlow = ({
     if (assignmentMode) {
       const canTake = canCourierTakeSelectedDeliveries(courierId);
       if (!canTake) {
-        toast.error('שליח זה לא זמין לשיבוץ (לא מחובר או לא במשמרת).', {
+        toast.error('שליח זה לא זמין לשיבוץ (לא מחובר, מלא או שעתי בלי משמרת).', {
           duration: 2500,
           position: 'top-center',
         });

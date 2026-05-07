@@ -112,7 +112,7 @@ export const WalletPage: React.FC = () => {
                 <span className="text-sm text-[#666d80] dark:text-app-text-secondary">
                   {TEXT.totalRevenue}
                 </span>
-                <Wallet className="h-5 w-5 text-[#16a34a] dark:text-[#9fe870]" />
+                <Wallet className="h-5 w-5 text-app-brand" />
               </div>
               <div className="mt-3 text-3xl font-semibold text-[#0d0d12] dark:text-app-text">
                 {formatCurrency(walletStats.totalRevenue)}
@@ -127,7 +127,7 @@ export const WalletPage: React.FC = () => {
                 <span className="text-sm text-[#666d80] dark:text-app-text-secondary">
                   {TEXT.courierPayments}
                 </span>
-                <Bike className="h-5 w-5 text-[#0fcdd3]" />
+                <Bike className="h-5 w-5 text-app-brand" />
               </div>
               <div className="mt-3 text-3xl font-semibold text-[#0d0d12] dark:text-app-text">
                 {formatCurrency(walletStats.totalCourierPay)}
@@ -142,7 +142,7 @@ export const WalletPage: React.FC = () => {
                 <span className="text-sm text-[#666d80] dark:text-app-text-secondary">
                   {TEXT.grossProfit}
                 </span>
-                <TrendingUp className="h-5 w-5 text-[#16a34a] dark:text-[#9fe870]" />
+                <TrendingUp className="h-5 w-5 text-app-brand" />
               </div>
               <div className="mt-3 text-3xl font-semibold text-[#166534] dark:text-[#4ade80]">
                 {formatCurrency(walletStats.grossProfit)}

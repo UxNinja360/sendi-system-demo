@@ -23,7 +23,7 @@ const initials = (name: string) =>
 
 const SectionTitle: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="px-4 pt-5 pb-2">
-    <span className="text-[10px] font-bold uppercase tracking-widest text-[#a3a3a3] dark:text-[#555]">
+    <span className="text-[10px] font-bold uppercase tracking-widest text-app-text-muted dark:text-[#555]">
       {children}
     </span>
   </div>
@@ -34,7 +34,7 @@ const InfoRow: React.FC<{ label: string; value: React.ReactNode; green?: boolean
   value,
   green,
 }) => (
-  <div className="flex items-center justify-between border-b border-[#f5f5f5] px-4 py-3 last:border-0 dark:border-[#1a1a1a]">
+  <div className="flex items-center justify-between border-b border-app-border px-4 py-3 last:border-0 dark:border-app-border">
     <span className="shrink-0 text-sm text-[#888] dark:text-[#666]">{label}</span>
     <span
       className={`max-w-[60%] text-left text-sm font-medium ${
@@ -73,7 +73,7 @@ export const SharedDeliveryDetailsContent: React.FC<Props> = ({ delivery, courie
   return (
     <div className="pb-2">
       <SectionTitle>???? ?????</SectionTitle>
-      <div className="border-t border-[#f5f5f5] dark:border-[#1a1a1a]">
+      <div className="border-t border-app-border dark:border-app-border">
         <InfoRow label="???? ?????" value={formatCurrency(customerCharge)} green />
         <InfoRow label="??? ?????" value={`${delivery.estimatedTime} ???`} />
         {delivery.delivery_distance ? (
@@ -98,14 +98,14 @@ export const SharedDeliveryDetailsContent: React.FC<Props> = ({ delivery, courie
       </div>
 
       <SectionTitle>???? ?????</SectionTitle>
-      <div className="border-t border-[#f5f5f5] px-4 py-3 dark:border-[#1a1a1a]">
+      <div className="border-t border-app-border px-4 py-3 dark:border-app-border">
         <div className="mb-3 flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-100 text-sm font-bold text-orange-600 dark:bg-orange-900/30 dark:text-orange-400">
             {initials(delivery.restaurantName)}
           </div>
           <div>
             <p className="text-sm font-semibold text-[#0d0d12] dark:text-app-text">{delivery.restaurantName}</p>
-            {delivery.branchName ? <p className="text-xs text-[#a3a3a3]">{delivery.branchName}</p> : null}
+            {delivery.branchName ? <p className="text-xs text-app-text-muted">{delivery.branchName}</p> : null}
           </div>
         </div>
         <div className="space-y-2">
@@ -119,7 +119,7 @@ export const SharedDeliveryDetailsContent: React.FC<Props> = ({ delivery, courie
       </div>
 
       <SectionTitle>???? ????</SectionTitle>
-      <div className="border-t border-[#f5f5f5] px-4 py-3 dark:border-[#1a1a1a]">
+      <div className="border-t border-app-border px-4 py-3 dark:border-app-border">
         <div className="mb-3 flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
             {initials(delivery.customerName)}
@@ -129,7 +129,7 @@ export const SharedDeliveryDetailsContent: React.FC<Props> = ({ delivery, courie
             {delivery.customerPhone ? (
               <a
                 href={`tel:${delivery.customerPhone}`}
-                className="flex items-center gap-1 text-xs text-[#a3a3a3] transition-colors hover:text-[#9fe870]"
+                className="flex items-center gap-1 text-xs text-app-text-muted transition-colors hover:text-app-brand"
               >
                 <Phone size={10} />
                 {delivery.customerPhone}
@@ -143,7 +143,7 @@ export const SharedDeliveryDetailsContent: React.FC<Props> = ({ delivery, courie
             <span>{formatAddressWithArea(delivery.address, delivery.area)}</span>
           </div>
           {delivery.customerBuilding || delivery.client_entry || delivery.client_floor || delivery.client_apartment ? (
-            <p className="pr-5 text-xs text-[#a3a3a3]">
+            <p className="pr-5 text-xs text-app-text-muted">
               {[
                 delivery.customerBuilding && `????? ${delivery.customerBuilding}`,
                 delivery.client_entry && `????? ${delivery.client_entry}`,
@@ -172,7 +172,7 @@ export const SharedDeliveryDetailsContent: React.FC<Props> = ({ delivery, courie
                 />
               ))}
               {delivery.customerFeedback ? (
-                <span className="mr-1 text-xs italic text-[#a3a3a3]">"{delivery.customerFeedback}"</span>
+                <span className="mr-1 text-xs italic text-app-text-muted">"{delivery.customerFeedback}"</span>
               ) : null}
             </div>
           ) : null}
@@ -180,7 +180,7 @@ export const SharedDeliveryDetailsContent: React.FC<Props> = ({ delivery, courie
       </div>
 
       <SectionTitle>???? ????</SectionTitle>
-      <div className="border-t border-[#f5f5f5] px-4 py-3 dark:border-[#1a1a1a]">
+      <div className="border-t border-app-border px-4 py-3 dark:border-app-border">
         {courier ? (
           <>
             <div className="mb-3 flex items-center gap-3">
@@ -195,7 +195,7 @@ export const SharedDeliveryDetailsContent: React.FC<Props> = ({ delivery, courie
                       ? 'text-green-500'
                       : courier.status === 'busy'
                         ? 'text-orange-400'
-                        : 'text-[#a3a3a3]'
+                        : 'text-app-text-muted'
                   }`}
                 >
                   {courier.status === 'available'
@@ -205,7 +205,7 @@ export const SharedDeliveryDetailsContent: React.FC<Props> = ({ delivery, courie
                       : '?? ?????'}
                 </span>
               </div>
-              <div className="mr-auto flex items-center gap-1 text-xs text-[#a3a3a3]">
+              <div className="mr-auto flex items-center gap-1 text-xs text-app-text-muted">
                 <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                 {courier.rating}
               </div>
@@ -213,37 +213,37 @@ export const SharedDeliveryDetailsContent: React.FC<Props> = ({ delivery, courie
             <div className="space-y-2">
               <a
                 href={`tel:${courier.phone}`}
-                className="flex items-center gap-2 text-xs text-[#666d80] transition-colors hover:text-[#9fe870] dark:text-app-text-secondary"
+                className="flex items-center gap-2 text-xs text-[#666d80] transition-colors hover:text-app-brand dark:text-app-text-secondary"
               >
                 <Phone size={12} className="shrink-0 text-[#bbb]" />
                 {courier.phone}
               </a>
-              <p className="text-xs text-[#a3a3a3]">{courier.totalDeliveries} ??????? ??"?</p>
+              <p className="text-xs text-app-text-muted">{courier.totalDeliveries} ??????? ??"?</p>
             </div>
           </>
         ) : (
-          <p className="text-sm text-[#a3a3a3] dark:text-[#555]">?? ???? ????</p>
+          <p className="text-sm text-app-text-muted dark:text-[#555]">?? ???? ????</p>
         )}
       </div>
 
       <SectionTitle>???? ?????</SectionTitle>
-      <div className="border-t border-[#f5f5f5] px-4 pt-2 pb-1 dark:border-[#1a1a1a]">
+      <div className="border-t border-app-border px-4 pt-2 pb-1 dark:border-app-border">
         <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-[#f0f0f0] dark:bg-[#262626]">
           <div
-            className="h-full rounded-full bg-[#9fe870]"
+            className="h-full rounded-full bg-app-brand"
             style={{ width: `${Math.round((doneCount / timelineSteps.length) * 100)}%` }}
           />
         </div>
         <div className="space-y-0">
           {timelineSteps.map((step) => {
             const isDeliveredStep = step.label === '????';
-            const doneClassName = isDeliveredStep ? 'bg-blue-500' : 'bg-[#9fe870]';
+            const doneClassName = isDeliveredStep ? 'bg-blue-500' : 'bg-app-brand';
             const doneIconClassName = isDeliveredStep ? 'text-white' : 'text-[#0d0d12]';
 
             return (
             <div
               key={step.label}
-              className="flex items-center gap-3 border-b border-[#f5f5f5] py-2.5 last:border-0 dark:border-[#1a1a1a]"
+              className="flex items-center gap-3 border-b border-app-border py-2.5 last:border-0 dark:border-app-border"
             >
               <div
                 className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
@@ -265,7 +265,7 @@ export const SharedDeliveryDetailsContent: React.FC<Props> = ({ delivery, courie
               >
                 {step.label}
               </span>
-              <span className="tabular-nums text-xs text-[#a3a3a3]">
+              <span className="tabular-nums text-xs text-app-text-muted">
                 {step.time ? format(step.time, 'HH:mm', { locale: he }) : '—'}
               </span>
             </div>
@@ -277,7 +277,7 @@ export const SharedDeliveryDetailsContent: React.FC<Props> = ({ delivery, courie
       {delivery.deliveryNotes || delivery.orderNotes || delivery.comment ? (
         <>
           <SectionTitle>?????</SectionTitle>
-          <div className="space-y-1.5 border-t border-[#f5f5f5] px-4 pt-3 pb-3 dark:border-[#1a1a1a]">
+          <div className="space-y-1.5 border-t border-app-border px-4 pt-3 pb-3 dark:border-app-border">
             {delivery.deliveryNotes ? (
               <p className="text-xs text-[#666d80] dark:text-app-text-secondary">?? {delivery.deliveryNotes}</p>
             ) : null}

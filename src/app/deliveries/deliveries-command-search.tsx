@@ -378,16 +378,16 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
       : TEXT.placeholder;
   const searchShellClassName = [
     'flex h-10 w-full items-center gap-1.5 overflow-hidden rounded-[4px] border pr-9 pl-8 text-sm transition-[background-color,border-color,box-shadow,color]',
-    'text-[#0d0d12] dark:text-app-text',
+    'text-app-text',
     isOpen
-      ? 'border-[#8F8F8F] bg-[#0A0A0A] shadow-[0_0_0_1px_rgba(143,143,143,0.16)]'
-      : 'border-[#e5e5e5] bg-[#f5f5f5] hover:border-[#8F8F8F] hover:bg-white dark:border-app-nav-border dark:bg-[#0A0A0A] dark:hover:border-[#8F8F8F]',
+      ? 'border-app-border-strong bg-app-surface shadow-[0_0_0_1px_color-mix(in_srgb,var(--app-border-strong)_18%,transparent)] dark:border-[#6B6B6B] dark:bg-[#050505] dark:shadow-none'
+      : 'border-app-border bg-app-surface-raised hover:border-app-border-strong hover:bg-app-surface dark:border-[#3A3A3A] dark:bg-[#050505] dark:hover:border-[#6B6B6B] dark:hover:bg-[#050505]',
   ].join(' ');
 
   return (
     <div ref={rootRef} className="relative z-30 flex min-w-0 flex-1" dir="rtl">
       <div className="relative min-w-0 flex-1">
-        <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8F8F8F]" />
+        <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-app-text-muted" />
         <div
           className={searchShellClassName}
           onClick={() => {
@@ -404,11 +404,11 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
                 event.stopPropagation();
                 clearCommandContext();
               }}
-              className="flex shrink-0 items-center gap-1 rounded-[4px] border border-[#9fe870]/40 bg-[#f0f9e8] px-1.5 py-0.5 text-xs font-medium text-[#0d0d12] transition-colors dark:border-[#335c1a] dark:bg-[#16210f] dark:text-app-text"
+              className="flex shrink-0 items-center gap-1 rounded-[4px] border border-app-brand bg-app-brand-subtle px-1.5 py-0.5 text-xs font-medium text-app-brand-text transition-colors dark:border-app-nav-border dark:bg-app-brand-subtle dark:text-app-brand-text"
               title={activeCommandConfig.label}
             >
               <span className="truncate">{activeCommandConfig.label}</span>
-              <X className="h-3 w-3 shrink-0 text-[#737373] dark:text-[#EDEDED]" />
+              <X className="h-3 w-3 shrink-0 text-app-text-secondary" />
             </button>
           ) : null}
           {inlineTokens.map((token) => (
@@ -420,14 +420,14 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
                 event.stopPropagation();
                 token.onRemove();
               }}
-              className="flex max-w-[42%] shrink-0 items-center gap-1 rounded-[4px] border border-[#d4d4d4] bg-white px-1.5 py-0.5 text-xs font-medium text-[#0d0d12] transition-colors hover:border-[#9fe870]/60 dark:border-app-nav-border dark:bg-[#171717] dark:text-app-text"
+              className="flex max-w-[42%] shrink-0 items-center gap-1 rounded-[4px] border border-app-border bg-app-surface px-1.5 py-0.5 text-xs font-medium text-app-text transition-colors hover:border-app-brand dark:border-app-nav-border"
               title={`${token.label}: ${token.value}`}
             >
-              <span className="shrink-0 rounded-[3px] bg-[#f5f5f5] px-1 py-0.5 text-[10px] font-semibold text-[#737373] dark:bg-[#262626] dark:text-app-text-secondary">
+              <span className="shrink-0 rounded-[3px] bg-app-surface-raised px-1 py-0.5 text-[10px] font-semibold text-app-text-secondary">
                 {token.label}
               </span>
               <span className="min-w-0 truncate">{token.value}</span>
-              <X className="h-3 w-3 shrink-0 text-[#737373] dark:text-[#EDEDED]" />
+              <X className="h-3 w-3 shrink-0 text-app-text-secondary" />
             </button>
           ))}
           <input
@@ -439,37 +439,37 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
             onFocus={() => setIsOpen(true)}
             onChange={(event) => handleDraftChange(event.target.value)}
             onKeyDown={handleKeyDown}
-            className="min-w-[120px] flex-1 bg-transparent text-sm text-[#8F8F8F] outline-none placeholder:text-[#8F8F8F]"
+            className="min-w-[120px] flex-1 bg-transparent text-sm text-app-text outline-none placeholder:text-app-text-muted"
           />
         </div>
         {showClearButton ? (
           <button
             type="button"
             onClick={draft ? clearDraft : commandContext ? clearCommandContext : clearAll}
-            className="absolute left-2 top-1/2 -translate-y-1/2 rounded p-0.5 transition-colors hover:bg-[#e5e5e5] dark:hover:bg-[#333333]"
+            className="absolute left-2 top-1/2 -translate-y-1/2 rounded p-0.5 transition-colors hover:bg-app-surface-raised"
             aria-label={draft ? TEXT.clear : commandContext ? TEXT.filters : TEXT.clearAll}
             title={draft ? TEXT.clear : commandContext ? TEXT.filters : TEXT.clearAll}
           >
-            <X className="h-3.5 w-3.5 text-[#a3a3a3] dark:text-[#EDEDED]" />
+            <X className="h-3.5 w-3.5 text-app-text-muted" />
           </button>
         ) : null}
       </div>
 
       {isOpen ? (
         <div
-          className="absolute right-0 top-[calc(100%+6px)] z-50 flex max-h-[360px] w-full min-w-[280px] flex-col overflow-hidden rounded-xl border border-[#e5e5e5] bg-white text-right shadow-xl dark:border-app-border dark:bg-app-surface"
+          className="absolute right-0 top-[calc(100%+6px)] z-50 flex max-h-[360px] w-full min-w-[280px] flex-col overflow-hidden rounded-[8px] border border-app-border bg-app-surface text-right shadow-[var(--app-shadow-panel)] dark:border-[#2E2E2E] dark:bg-[#050505] dark:shadow-none"
           onMouseDown={(event) => event.preventDefault()}
         >
           {activeTokens.length > 0 ? (
-            <div className="border-b border-[#f0f0f0] px-3 py-2 dark:border-app-border">
+            <div className="border-b border-app-border px-3 py-2 dark:border-[#1F1F1F]">
               <div className="mb-2 flex items-center justify-between gap-3">
-                <span className="text-xs font-semibold text-[#737373] dark:text-app-text-secondary">
+                <span className="text-xs font-semibold text-app-text-secondary">
                   {TEXT.activeFilters}
                 </span>
                 <button
                   type="button"
                   onClick={clearAll}
-                  className="text-xs font-medium text-[#6bc84a] transition-colors hover:text-[#9fe870]"
+                  className="text-xs font-medium text-app-brand-text transition-colors hover:text-app-brand"
                 >
                   {TEXT.clearAll}
                 </button>
@@ -480,14 +480,14 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
                     key={token.key}
                     type="button"
                     onClick={token.onRemove}
-                    className="flex max-w-full items-center gap-1 rounded-[4px] border border-[#d4d4d4] bg-[#fafafa] px-2 py-1 text-xs font-medium text-[#0d0d12] transition-colors hover:border-[#9fe870]/60 dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-app-text"
+                    className="flex max-w-full items-center gap-1 rounded-[4px] border border-app-border bg-app-surface-raised px-2 py-1 text-xs font-medium text-app-text transition-colors hover:border-app-brand dark:border-app-nav-border"
                     title={`${token.label}: ${token.value}`}
                   >
-                    <span className="shrink-0 rounded-[3px] bg-white px-1 py-0.5 text-[10px] font-semibold text-[#737373] dark:bg-[#262626] dark:text-app-text-secondary">
+                    <span className="shrink-0 rounded-[3px] bg-app-surface px-1 py-0.5 text-[10px] font-semibold text-app-text-secondary">
                       {token.label}
                     </span>
                     <span className="min-w-0 truncate">{token.value}</span>
-                    <X className="h-3 w-3 shrink-0 text-[#737373] dark:text-[#EDEDED]" />
+                    <X className="h-3 w-3 shrink-0 text-app-text-secondary" />
                   </button>
                 ))}
               </div>
@@ -496,7 +496,7 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
 
           {commandContext ? (
             <>
-              <div className="border-b border-[#f0f0f0] px-3 py-2 text-xs font-semibold text-[#737373] dark:border-app-border dark:text-app-text-secondary">
+              <div className="border-b border-app-border px-3 py-2 text-xs font-semibold text-app-text-secondary dark:border-[#1F1F1F]">
                 {`${TEXT.suggestions} - ${activeCommandConfig?.label ?? ''}`}
               </div>
               <div className="min-h-0 overflow-y-auto py-1">
@@ -516,18 +516,18 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
                         onClick={() => handleOptionClick(option)}
                         className={`flex w-full items-center gap-2.5 px-3 py-2 text-right text-sm transition-colors ${
                           isSelected
-                            ? 'bg-[#f5f5f5] text-[#0d0d12] dark:bg-[#262626] dark:text-app-text'
-                            : 'text-[#525252] hover:bg-[#f5f5f5] dark:text-[#EDEDED] dark:hover:bg-[#262626]'
+                            ? 'bg-app-surface-raised text-app-text dark:bg-[#111111]'
+                            : 'text-app-text-secondary hover:bg-app-surface-raised hover:text-app-text dark:hover:bg-[#111111] dark:hover:text-[#FAFAFA]'
                         }`}
                         >
                           <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                            {isSelected ? <Check className="h-3.5 w-3.5 text-[#16a34a]" /> : null}
+                            {isSelected ? <Check className="h-3.5 w-3.5 text-app-brand" /> : null}
                           </span>
                           <span className={`min-w-0 flex-1 truncate ${isSelected ? 'font-medium' : ''}`}>
                             {option.label}
                           </span>
                         {option.subtitle ? (
-                          <span className="max-w-[42%] shrink-0 truncate text-xs text-[#a3a3a3]">
+                          <span className="max-w-[42%] shrink-0 truncate text-xs text-app-text-muted">
                             {option.subtitle}
                           </span>
                         ) : null}
@@ -535,7 +535,7 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
                     );
                   })
                 ) : (
-                  <div className="px-3 py-4 text-sm text-[#737373] dark:text-app-text-secondary">
+                  <div className="px-3 py-4 text-sm text-app-text-secondary">
                     {TEXT.noResults}
                   </div>
                 )}
@@ -543,7 +543,7 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
             </>
           ) : (
             <div className="py-2">
-              <div className="px-3 pb-2 text-xs font-semibold text-[#737373] dark:text-app-text-secondary">
+              <div className="px-3 pb-2 text-xs font-semibold text-app-text-secondary">
                 {TEXT.filters}
               </div>
               <div className="space-y-1">
@@ -555,10 +555,10 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
                       key={command.kind}
                       type="button"
                       onClick={() => handleCommandClick(command.kind)}
-                      className="flex w-full items-center gap-2.5 px-3 py-2 text-right text-sm text-[#525252] transition-colors hover:bg-[#f5f5f5] dark:text-[#EDEDED] dark:hover:bg-[#262626]"
+                      className="flex w-full items-center gap-2.5 px-3 py-2 text-right text-sm text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text dark:hover:bg-[#111111] dark:hover:text-[#FAFAFA]"
                     >
-                      <Icon className="h-4 w-4 shrink-0 text-[#a3a3a3] dark:text-[#EDEDED]" />
-                      <span className="font-medium text-[#0d0d12] dark:text-app-text">
+                      <Icon className="h-4 w-4 shrink-0 text-app-text-muted dark:text-[#A3A3A3]" />
+                      <span className="font-medium text-app-text dark:text-[#FAFAFA]">
                         {command.prefix}
                       </span>
                     </button>

@@ -89,7 +89,7 @@ const SettingRow: React.FC<{
         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
           danger
             ? 'bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400'
-            : 'bg-[#f5f5f5] text-[#16a34a] dark:bg-app-surface dark:text-[#9fe870]'
+            : 'bg-[#f5f5f5] text-app-brand dark:bg-app-surface dark:text-app-brand'
         }`}
       >
         {icon}
@@ -113,7 +113,7 @@ const Toggle: React.FC<{ checked: boolean; onChange: () => void }> = ({ checked,
   <button
     type="button"
     onClick={onChange}
-    className={`relative h-7 w-12 rounded-full transition-colors ${checked ? 'bg-[#9fe870]' : 'bg-[#d4d4d4] dark:bg-[#404040]'}`}
+    className={`relative h-7 w-12 rounded-full transition-colors ${checked ? 'bg-app-brand' : 'bg-[#d4d4d4] dark:bg-[#404040]'}`}
     aria-pressed={checked}
   >
     <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all ${checked ? 'left-1' : 'left-6'}`} />
@@ -192,7 +192,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-3 py-3 md:px-5 md:py-5">
           <SectionCard
-            icon={<Palette className="h-4 w-4 text-[#16a34a] dark:text-[#9fe870]" />}
+            icon={<Palette className="h-4 w-4 text-app-brand" />}
             title={TEXT.personal}
             description={TEXT.personalDescription}
           >
@@ -205,7 +205,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
           </SectionCard>
 
           <SectionCard
-            icon={<LogOut className="h-4 w-4 text-[#16a34a] dark:text-[#9fe870]" />}
+            icon={<LogOut className="h-4 w-4 text-app-brand" />}
             title={TEXT.logout}
             description={TEXT.logoutHint}
           >

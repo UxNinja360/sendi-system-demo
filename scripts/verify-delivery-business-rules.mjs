@@ -16,6 +16,7 @@ import {
   isOperationalDelivery,
   isVisibleInDefaultDeliveriesView,
 } from './src/app/utils/delivery-status';
+import { canCourierAcceptDelivery } from './src/app/utils/courier-assignment';
 
 const assert = (condition, message) => {
   if (!condition) {
@@ -116,6 +117,19 @@ const networkRestaurant = state.restaurants.find((item) => item.chainId && item.
   ?? state.restaurants[0];
 const courier = state.couriers[0];
 
+const allCouriersOfflineState = {
+  ...state,
+  isSystemOpen: false,
+  couriers: state.couriers.map((item) => ({
+    ...item,
+    status: 'offline',
+    isOnShift: false,
+    activeDeliveryIds: [],
+  })),
+};
+const openedWithoutCouriers = deliveryReducer(allCouriersOfflineState, { type: 'TOGGLE_SYSTEM' });
+assert(openedWithoutCouriers.isSystemOpen, 'System did not open without active couriers');
+
 state = {
   ...state,
   deliveryBalance: 0,
@@ -186,7 +200,66 @@ state = assign(state, 'network-expired', courier.id);
 assert(state.deliveryBalance === beforeExpiredAssignBalance, 'Expired delivery assignment consumed credit');
 assert(state.deliveries.find((item) => item.id === 'network-expired').status === 'expired', 'Expired delivery assignment changed status');
 
+const hourlyOffShiftCourier = {
+  ...courier,
+  id: 'hourly-off-shift',
+  employmentType: 'שעתי',
+  status: 'available',
+  isOnShift: false,
+  activeDeliveryIds: [],
+};
+const perDeliveryOffShiftCourier = {
+  ...courier,
+  id: 'per-delivery-off-shift',
+  employmentType: 'פר משלוח',
+  status: 'available',
+  isOnShift: false,
+  activeDeliveryIds: [],
+};
+
+assert(!canCourierAcceptDelivery(hourlyOffShiftCourier), 'Hourly courier off shift should not accept deliveries');
+assert(canCourierAcceptDelivery(perDeliveryOffShiftCourier), 'Per-delivery courier off shift should accept deliveries');
+
+state = {
+  ...state,
+  deliveryBalance: 2,
+  deliveries: [],
+  couriers: [hourlyOffShiftCourier, perDeliveryOffShiftCourier],
+};
+state = deliveryReducer(state, { type: 'ADD_DELIVERY', payload: makeDelivery('hourly-blocked', restaurant) });
+let afterHourlyOffShiftAssign = assign(state, 'hourly-blocked', hourlyOffShiftCourier.id);
+assert(afterHourlyOffShiftAssign.deliveries.find((item) => item.id === 'hourly-blocked').status === 'pending', 'Hourly off-shift assignment changed status');
+assert(afterHourlyOffShiftAssign.deliveryBalance === state.deliveryBalance, 'Hourly off-shift assignment consumed credit');
+
+state = deliveryReducer(afterHourlyOffShiftAssign, { type: 'ADD_DELIVERY', payload: makeDelivery('per-delivery-assigned', restaurant) });
+state = assign(state, 'per-delivery-assigned', perDeliveryOffShiftCourier.id);
+const perDeliveryAssigned = state.deliveries.find((item) => item.id === 'per-delivery-assigned');
+assert(perDeliveryAssigned.status === 'assigned', 'Per-delivery off-shift courier was not assigned');
+assert(perDeliveryAssigned.courierId === perDeliveryOffShiftCourier.id, 'Per-delivery off-shift assignment did not set courierId');
+assert(perDeliveryAssigned.pending_runner_id === perDeliveryOffShiftCourier.id, 'Per-delivery assignment did not set pending runner');
+assert(perDeliveryAssigned.is_requires_approval === true, 'Per-delivery assignment should require approval');
+assert(perDeliveryAssigned.is_approved === false, 'Per-delivery assignment should start unapproved');
+
+state = deliveryReducer(state, {
+  type: 'UPDATE_STATUS',
+  payload: { deliveryId: 'per-delivery-assigned', status: 'delivering' },
+});
+const perDeliveryStarted = state.deliveries.find((item) => item.id === 'per-delivery-assigned');
+assert(perDeliveryStarted.is_approved === true, 'Per-delivery pickup did not mark approval');
+assert(perDeliveryStarted.pending_runner_id === undefined, 'Per-delivery pickup did not clear pending runner');
+
+state = deliveryReducer(state, { type: 'ADD_DELIVERY', payload: makeDelivery('per-delivery-unassign', restaurant) });
+state = assign(state, 'per-delivery-unassign', perDeliveryOffShiftCourier.id);
+state = deliveryReducer(state, { type: 'UNASSIGN_COURIER', payload: 'per-delivery-unassign' });
+const perDeliveryUnassigned = state.deliveries.find((item) => item.id === 'per-delivery-unassign');
+assert(perDeliveryUnassigned.status === 'pending', 'Unassigned delivery did not return to pending');
+assert(perDeliveryUnassigned.courierId === null, 'Unassigned delivery kept courierId');
+assert(perDeliveryUnassigned.runner_id === null, 'Unassigned delivery kept runner_id');
+assert(perDeliveryUnassigned.pending_runner_id === undefined, 'Unassigned delivery kept pending_runner_id');
+assert(perDeliveryUnassigned.is_requires_approval === false, 'Unassigned delivery kept approval requirement');
+
 export const results = [
+  'system can open without active couriers',
   'no credits hard-block assignment',
   'assignment consumes one credit',
   'cancel after assignment does not refund credit',
@@ -195,6 +268,11 @@ export const results = [
   'expired offer is excluded from operational delivery counts',
   'expired offer is hidden from the default deliveries view',
   'prep and SLA timers start at assignment',
+  'hourly couriers must be on shift for assignment',
+  'per-delivery couriers can receive assignments without a shift',
+  'per-delivery assignments are flagged for courier approval',
+  'pickup confirms per-delivery courier approval',
+  'unassign clears courier assignment metadata',
 ];
 `;
 

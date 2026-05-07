@@ -81,19 +81,19 @@ export const RowHeightSelector: React.FC<RowHeightSelectorProps> = ({
                 <AlignVerticalSpaceAround className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-[15px] font-bold text-[#0d0d12] dark:text-app-text">
+                <h3 className="text-[15px] font-bold text-app-text">
                   גובה שורות
                 </h3>
-                <p className="text-[11px] text-[#a3a3a3] dark:text-[#737373]">
+                <p className="text-[11px] text-app-text-muted">
                   התאם את צפיפות התצוגה
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] rounded-xl transition-colors"
+              className="p-2 hover:bg-app-surface-raised rounded-xl transition-colors"
             >
-              <X className="w-5 h-5 text-[#737373]" />
+              <X className="w-5 h-5 text-app-text-secondary" />
             </button>
           </div>
         </div>

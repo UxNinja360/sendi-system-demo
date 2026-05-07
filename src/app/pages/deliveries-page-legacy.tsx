@@ -29,6 +29,7 @@ import {
   DELIVERY_ASSIGNMENT_BLOCK_COPY,
   getDeliveryAssignmentBlockReason,
 } from '../utils/delivery-assignment';
+import { canCourierAcceptDelivery } from '../utils/courier-assignment';
 
 const calculateTimeRemaining = (delivery: Delivery): number | null => {
   if (delivery.status === 'delivered' || delivery.status === 'cancelled' || delivery.status === 'expired') return null;
@@ -406,7 +407,9 @@ export const DeliveriesPageLegacy: React.FC = () => {
     const assigned = assignCourier(deliveryId, courierId);
     if (!assigned) {
       const delivery = state.deliveries.find((item) => item.id === deliveryId);
-      const availableCourierCount = state.couriers.filter((item) => item.status !== 'offline').length;
+      const availableCourierCount = state.couriers.filter((item) =>
+        canCourierAcceptDelivery(item, deliveryId)
+      ).length;
       const blockReason = delivery
         ? getDeliveryAssignmentBlockReason(delivery, {
             deliveryBalance: state.deliveryBalance,

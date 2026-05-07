@@ -139,6 +139,8 @@ const updateDeliveriesForStatusChange = (
 
     const updated = { ...delivery, status };
     if (status === 'delivering') {
+      updated.is_approved = true;
+      updated.pending_runner_id = undefined;
       updated.arrivedAtRestaurantAt = now;
       updated.arrived_at_rest = now;
       updated.pickedUpAt = updated.pickedUpAt ?? now;
@@ -268,6 +270,14 @@ const unassignCourierState = (
       ? {
           ...item,
           courierId: null,
+          runner_id: null,
+          pending_runner_id: undefined,
+          shift_runner_id: undefined,
+          courierName: undefined,
+          courierEmploymentType: undefined,
+          vehicle_type: undefined,
+          is_requires_approval: false,
+          is_approved: false,
           status: 'pending' as DeliveryStatus,
           assignedAt: null,
           coupled_time: null,
@@ -1638,6 +1648,7 @@ const assignCourierState = (
     ? 0
     : DELIVERY_CREDITS_PER_ASSIGNMENT;
   const deliveryCreditConsumedAt = getDeliveryCreditConsumedAt(targetDelivery) ?? now;
+  const requiresCourierApproval = courier.employmentType !== 'שעתי';
 
   const nextDeliveries = state.deliveries.map((delivery) => {
     if (delivery.id !== deliveryId) return delivery;
@@ -1703,6 +1714,14 @@ const assignCourierState = (
     return {
       ...delivery,
       courierId,
+      runner_id: courierId,
+      courierName: courier.name,
+      courierEmploymentType: courier.employmentType,
+      vehicle_type: courier.vehicleType,
+      pending_runner_id: requiresCourierApproval ? courierId : undefined,
+      shift_runner_id: courier.isOnShift ? courierId : undefined,
+      is_requires_approval: requiresCourierApproval,
+      is_approved: !requiresCourierApproval,
       status: 'assigned' as DeliveryStatus,
       assignedAt: now,
       pickupBatchId:
@@ -2096,6 +2115,35 @@ const reduceDeliveryState = (state: DeliveryState, action: DeliveryAction): Deli
       return {
         ...state,
         ...nextState,
+      };
+    }
+
+    case 'UPDATE_COURIER': {
+      const { courierId, updates } = action.payload;
+      const couriers = state.couriers.map((courier) =>
+        courier.id === courierId
+          ? {
+              ...courier,
+              ...updates,
+            }
+          : courier
+      );
+      const deliveries = state.deliveries.map((delivery) =>
+        delivery.courierId === courierId
+          ? {
+              ...delivery,
+              courierName: updates.name ?? delivery.courierName,
+              courierEmploymentType: updates.employmentType ?? delivery.courierEmploymentType,
+              courierRating: updates.rating ?? delivery.courierRating,
+              vehicle_type: updates.vehicleType ?? delivery.vehicle_type,
+            }
+          : delivery
+      );
+
+      return {
+        ...state,
+        couriers,
+        deliveries,
       };
     }
 

@@ -4,16 +4,19 @@ import {
   ArrowRight, Bike, MapPin, Phone, Clock, TrendingUp,
   Package, CheckCircle2, DollarSign, Star, Activity,
   Award, Trophy, Zap, Target, Calendar, Filter, Search, Power,
-  TrendingDown, Users, Timer, Flame, Crown, Shield, Trash2
+  TrendingDown, Users, Timer, Flame, Crown, Shield, Trash2,
+  Pencil, Save, X
 } from 'lucide-react';
 import { formatDistanceToNow, format, startOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, subDays, subWeeks, differenceInMinutes } from 'date-fns';
 import { he } from 'date-fns/locale';
 import { useState, useMemo } from 'react';
+import type { ElementType, ReactNode } from 'react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import CountUp from 'react-countup';
 import { formatWorkedDuration, getAssignmentWorkedMinutes, getWorkedMinutesWithinRange } from '../utils/shift-work';
 import { formatCurrency, getDeliveryCourierBasePay, sumDeliveryMoney } from '../utils/delivery-finance';
 import { toast } from 'sonner';
+import type { Courier, CourierEmploymentType, CourierStatus, CourierVehicleType } from '../types/delivery.types';
 
 // מערכת הישגים ותגים
 const padDatePart = (value: number) => value.toString().padStart(2, '0');
@@ -63,6 +66,59 @@ const achievementsList = [
   },
 ];
 
+type CourierDetailsTab = 'performance' | 'details';
+
+type CourierDetailsForm = {
+  name: string;
+  phone: string;
+  vehicleType: CourierVehicleType;
+  employmentType: CourierEmploymentType;
+  status: CourierStatus;
+  rating: string;
+};
+
+const courierVehicleOptions: CourierVehicleType[] = ['אופנוע', 'רכב', 'קורקינט'];
+const courierEmploymentOptions: CourierEmploymentType[] = ['שעתי', 'פר משלוח'];
+const courierStatusOptions: Array<{ value: CourierStatus; label: string }> = [
+  { value: 'available', label: 'זמין' },
+  { value: 'busy', label: 'עסוק' },
+  { value: 'offline', label: 'לא פעיל' },
+];
+
+const courierDetailsControlClassName =
+  'mt-1 h-9 w-full rounded-[4px] border border-app-border bg-app-surface px-2.5 text-sm text-app-text outline-none transition-colors focus:border-[#0fcdd3]';
+
+const createCourierDetailsForm = (courier: Courier): CourierDetailsForm => ({
+  name: courier.name,
+  phone: courier.phone,
+  vehicleType: courier.vehicleType,
+  employmentType: courier.employmentType,
+  status: courier.status,
+  rating: courier.rating.toString(),
+});
+
+function CourierDetailsField({
+  icon: Icon,
+  label,
+  value,
+  children,
+}: {
+  icon: ElementType;
+  label: string;
+  value?: ReactNode;
+  children?: ReactNode;
+}) {
+  return (
+    <div className="flex min-w-0 items-start gap-3 rounded-[6px] border border-app-border bg-app-background p-3">
+      <Icon size={18} className="mt-0.5 shrink-0 text-app-text-secondary" />
+      <div className="min-w-0 flex-1">
+        <div className="text-xs text-app-text-secondary">{label}</div>
+        {children ?? <div className="mt-1 truncate text-sm font-semibold text-app-text">{value}</div>}
+      </div>
+    </div>
+  );
+}
+
 export function CourierDetailsScreen() {
   const { courierId } = useParams<{ courierId: string }>();
   const navigate = useNavigate();
@@ -70,6 +126,9 @@ export function CourierDetailsScreen() {
   const [filterStatus, setFilterStatus] = useState<'all' | 'delivered' | 'cancelled'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'all'>('week');
+  const [activeTab, setActiveTab] = useState<CourierDetailsTab>('performance');
+  const [isEditingDetails, setIsEditingDetails] = useState(false);
+  const [detailsForm, setDetailsForm] = useState<CourierDetailsForm | null>(null);
 
   const courier = state.couriers.find(c => c.id === courierId);
   
@@ -247,6 +306,79 @@ export function CourierDetailsScreen() {
 
   const config = statusConfig[courier.status];
   const isCourierAvailable = courier.status !== 'offline';
+  const courierDetailsForm = detailsForm ?? createCourierDetailsForm(courier);
+
+  const setCourierDetailsField = <Key extends keyof CourierDetailsForm>(
+    field: Key,
+    value: CourierDetailsForm[Key]
+  ) => {
+    setDetailsForm((current) => ({
+      ...(current ?? createCourierDetailsForm(courier)),
+      [field]: value,
+    }));
+  };
+
+  const handleStartDetailsEdit = () => {
+    setDetailsForm(createCourierDetailsForm(courier));
+    setIsEditingDetails(true);
+    setActiveTab('details');
+  };
+
+  const handleCancelDetailsEdit = () => {
+    setDetailsForm(createCourierDetailsForm(courier));
+    setIsEditingDetails(false);
+  };
+
+  const handleSaveDetails = () => {
+    const nextName = courierDetailsForm.name.trim();
+    const nextPhone = courierDetailsForm.phone.trim();
+    const nextRating = Number(courierDetailsForm.rating);
+
+    if (!nextName || !nextPhone) {
+      toast.error('שם וטלפון הם שדות חובה.');
+      return;
+    }
+
+    if (!Number.isFinite(nextRating) || nextRating < 0 || nextRating > 5) {
+      toast.error('דירוג שליח חייב להיות בין 0 ל-5.');
+      return;
+    }
+
+    const normalizedForm: CourierDetailsForm = {
+      ...courierDetailsForm,
+      name: nextName,
+      phone: nextPhone,
+      rating: nextRating.toString(),
+    };
+
+    dispatch({
+      type: 'UPDATE_COURIER',
+      payload: {
+        courierId: courier.id,
+        updates: {
+          name: nextName,
+          phone: nextPhone,
+          vehicleType: normalizedForm.vehicleType,
+          employmentType: normalizedForm.employmentType,
+          rating: nextRating,
+        },
+      },
+    });
+
+    if (normalizedForm.status !== courier.status) {
+      dispatch({
+        type: 'UPDATE_COURIER_STATUS',
+        payload: {
+          courierId: courier.id,
+          status: normalizedForm.status,
+        },
+      });
+    }
+
+    setDetailsForm(normalizedForm);
+    setIsEditingDetails(false);
+    toast.success('פרטי השליח עודכנו');
+  };
 
   const now = new Date();
   const todayStart = new Date(now);
@@ -486,7 +618,7 @@ export function CourierDetailsScreen() {
               </div>
             </div>
 
-            {earnedAchievements.length > 0 ? (
+            {activeTab === 'performance' && earnedAchievements.length > 0 ? (
               <div className="flex flex-wrap items-center gap-2 border-t border-app-border px-4 py-3">
                 <span className="inline-flex items-center gap-1.5 text-xs font-medium text-app-text-secondary">
                   <Award size={14} />
@@ -508,8 +640,37 @@ export function CourierDetailsScreen() {
               </div>
             ) : null}
           </div>
-          
+
+          <div className="inline-flex w-fit rounded-[8px] border border-app-border bg-app-surface p-1">
+            {[
+              { id: 'performance' as const, label: 'ביצועים', icon: TrendingUp },
+              { id: 'details' as const, label: 'פרטים', icon: Phone },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const selected = activeTab === tab.id;
+
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`inline-flex h-8 items-center gap-2 rounded-[6px] px-3 text-sm font-medium transition-colors ${
+                    selected
+                      ? 'bg-app-background text-app-text shadow-sm'
+                      : 'text-app-text-secondary hover:text-app-text'
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+           
           {/* Stats Grid */}
+          {activeTab === 'performance' ? (
+            <>
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div className="bg-white dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-xl p-4">
               <div className="flex items-center gap-3 mb-2">
@@ -806,52 +967,142 @@ export function CourierDetailsScreen() {
             )}
           </div>
 
+            </>
+          ) : null}
+
           {/* Courier Info */}
-          <div className="bg-white dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-xl p-6">
-            <h2 className="text-lg font-bold text-[#0d0d12] dark:text-app-text mb-4">
-              פרטי שליח
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center gap-3">
-                <Phone size={20} className="text-[#666d80] dark:text-app-text-secondary" />
-                <div>
-                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">טלפון</div>
-                  <div className="text-sm font-bold text-[#0d0d12] dark:text-app-text">
-                    {courier.phone}
-                  </div>
+          {activeTab === 'details' ? (
+            <div className="rounded-xl border border-[#e5e5e5] bg-white p-6 dark:border-app-border dark:bg-app-surface">
+              <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <h2 className="text-lg font-bold text-[#0d0d12] dark:text-app-text">
+                  פרטי שליח
+                </h2>
+
+                <div className="flex items-center gap-2">
+                  {isEditingDetails ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handleCancelDetailsEdit}
+                        className="inline-flex h-9 items-center gap-2 rounded-[4px] border border-app-border bg-app-background px-3 text-sm font-medium text-app-text transition-colors hover:bg-app-surface-raised"
+                      >
+                        <X size={15} />
+                        ביטול
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSaveDetails}
+                        className="inline-flex h-9 items-center gap-2 rounded-[4px] bg-[#0fcdd3] px-3 text-sm font-semibold text-white transition-colors hover:bg-[#0ab8c5]"
+                      >
+                        <Save size={15} />
+                        שמירה
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleStartDetailsEdit}
+                      className="inline-flex h-9 items-center gap-2 rounded-[4px] border border-app-border bg-app-background px-3 text-sm font-medium text-app-text transition-colors hover:bg-app-surface-raised"
+                    >
+                      <Pencil size={15} />
+                      עריכה
+                    </button>
+                  )}
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <Star size={20} className="text-[#666d80] dark:text-app-text-secondary" />
-                <div>
-                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">דירוג</div>
-                  <div className="text-sm font-bold text-[#0d0d12] dark:text-app-text">
-                    {courier.rating} ⭐
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Activity size={20} className="text-[#666d80] dark:text-app-text-secondary" />
-                <div>
-                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">סטטוס</div>
-                  <div className="text-sm font-bold text-[#0d0d12] dark:text-app-text">
-                    {config.label}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Calendar size={20} className="text-[#666d80] dark:text-app-text-secondary" />
-                <div>
-                  <div className="text-xs text-[#666d80] dark:text-app-text-secondary">משלוחים מבוטלים</div>
-                  <div className="text-sm font-bold text-[#0d0d12] dark:text-app-text">
-                    {cancelledDeliveries.length} ({courierDeliveries.length > 0 ? Math.round((cancelledDeliveries.length / courierDeliveries.length) * 100) : 0}%)
-                  </div>
-                </div>
+
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                <CourierDetailsField icon={Users} label="שם מלא" value={courier.name}>
+                  {isEditingDetails ? (
+                    <input
+                      value={courierDetailsForm.name}
+                      onChange={(event) => setCourierDetailsField('name', event.target.value)}
+                      className={courierDetailsControlClassName}
+                    />
+                  ) : null}
+                </CourierDetailsField>
+
+                <CourierDetailsField icon={Phone} label="טלפון" value={courier.phone}>
+                  {isEditingDetails ? (
+                    <input
+                      value={courierDetailsForm.phone}
+                      onChange={(event) => setCourierDetailsField('phone', event.target.value)}
+                      className={courierDetailsControlClassName}
+                      dir="ltr"
+                    />
+                  ) : null}
+                </CourierDetailsField>
+
+                <CourierDetailsField icon={Bike} label="כלי רכב" value={courier.vehicleType}>
+                  {isEditingDetails ? (
+                    <select
+                      value={courierDetailsForm.vehicleType}
+                      onChange={(event) => setCourierDetailsField('vehicleType', event.target.value as CourierVehicleType)}
+                      className={courierDetailsControlClassName}
+                    >
+                      {courierVehicleOptions.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  ) : null}
+                </CourierDetailsField>
+
+                <CourierDetailsField icon={Users} label="שיטת העסקה" value={courier.employmentType}>
+                  {isEditingDetails ? (
+                    <select
+                      value={courierDetailsForm.employmentType}
+                      onChange={(event) =>
+                        setCourierDetailsField('employmentType', event.target.value as CourierEmploymentType)
+                      }
+                      className={courierDetailsControlClassName}
+                    >
+                      {courierEmploymentOptions.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  ) : null}
+                </CourierDetailsField>
+
+                <CourierDetailsField icon={Activity} label="סטטוס" value={config.label}>
+                  {isEditingDetails ? (
+                    <select
+                      value={courierDetailsForm.status}
+                      onChange={(event) => setCourierDetailsField('status', event.target.value as CourierStatus)}
+                      className={courierDetailsControlClassName}
+                    >
+                      {courierStatusOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  ) : null}
+                </CourierDetailsField>
+
+                <CourierDetailsField icon={Star} label="דירוג" value={`${courier.rating} / 5`}>
+                  {isEditingDetails ? (
+                    <input
+                      type="number"
+                      min={0}
+                      max={5}
+                      step={0.1}
+                      value={courierDetailsForm.rating}
+                      onChange={(event) => setCourierDetailsField('rating', event.target.value)}
+                      className={courierDetailsControlClassName}
+                    />
+                  ) : null}
+                </CourierDetailsField>
+
               </div>
             </div>
-          </div>
+          ) : null}
 
           {/* היסטוריית משלוחים מלאה */}
+          {activeTab === 'performance' ? (
           <div className="bg-white dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-[#0d0d12] dark:text-app-text flex items-center gap-2">
@@ -983,6 +1234,7 @@ export function CourierDetailsScreen() {
               )}
             </div>
           </div>
+          ) : null}
 
         </div>
       </div>
