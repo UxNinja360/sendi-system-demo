@@ -4,7 +4,6 @@ import {
   AlertCircle,
   Bike,
   CheckCircle2,
-  ChevronDown,
   Clock,
   ClockAlert,
   CreditCard,
@@ -185,37 +184,6 @@ const Panel = ({
   </section>
 );
 
-const AccordionPanel = ({
-  title,
-  icon: Icon,
-  children,
-  meta,
-  defaultOpen,
-}: {
-  title: string;
-  icon: ElementType;
-  children: ReactNode;
-  meta?: ReactNode;
-  defaultOpen?: boolean;
-}) => (
-  <details
-    className="group overflow-hidden rounded-[8px] border border-app-border bg-app-surface"
-    open={defaultOpen}
-  >
-    <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 text-sm font-semibold text-app-text transition-colors hover:bg-app-surface-raised [&::-webkit-details-marker]:hidden">
-      <span className="flex min-w-0 items-center gap-2">
-        <ChevronDown className="h-4 w-4 shrink-0 text-app-text-secondary transition-transform group-open:rotate-180" />
-        <Icon className="h-4 w-4 shrink-0 text-app-text-secondary" />
-        <span className="truncate">{title}</span>
-      </span>
-      {meta ? (
-        <span className="shrink-0 text-xs font-medium text-app-text-secondary">{meta}</span>
-      ) : null}
-    </summary>
-    <div className="border-t border-app-border p-4">{children}</div>
-  </details>
-);
-
 const DetailField = ({
   label,
   value,
@@ -258,28 +226,189 @@ const TextInput = ({
   />
 );
 
-const SummaryItem = ({
+const StatusBadge = ({ config }: { config: StatusConfig }) => {
+  const Icon = config.icon;
+
+  return (
+    <span className={`inline-flex h-7 items-center gap-1.5 rounded-[4px] px-2.5 text-xs font-semibold ${config.badgeClassName}`}>
+      <Icon className="h-3.5 w-3.5" />
+      {config.label}
+    </span>
+  );
+};
+
+const OverviewActionButton = ({
+  children,
+  icon: Icon,
+  onClick,
+  primary,
+}: {
+  children: ReactNode;
+  icon: ElementType;
+  onClick: () => void;
+  primary?: boolean;
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`inline-flex h-8 items-center gap-2 rounded-[4px] px-3 text-sm font-medium transition-colors ${
+      primary
+        ? 'bg-app-brand-solid text-app-background hover:bg-app-brand-hover'
+        : 'border border-app-border bg-app-background text-app-text hover:bg-app-surface-raised'
+    }`}
+  >
+    <Icon className="h-4 w-4" />
+    {children}
+  </button>
+);
+
+const OverviewPanel = ({
+  title,
+  icon: Icon,
+  children,
+  action,
+  className = '',
+}: {
+  title: string;
+  icon: ElementType;
+  children: ReactNode;
+  action?: ReactNode;
+  className?: string;
+}) => (
+  <section className={`overflow-hidden rounded-[8px] border border-app-border bg-app-surface ${className}`}>
+    <div className="flex min-h-12 items-center justify-between gap-3 border-b border-app-border px-4">
+      <div className="flex min-w-0 items-center gap-2">
+        <Icon className="h-4 w-4 shrink-0 text-app-text-secondary" />
+        <h2 className="truncate text-sm font-semibold text-app-text">{title}</h2>
+      </div>
+      {action}
+    </div>
+    {children}
+  </section>
+);
+
+const OverviewMetric = ({
   label,
   value,
   detail,
   icon: Icon,
+  tone = 'default',
   dir,
 }: {
   label: string;
   value: ReactNode;
   detail?: ReactNode;
-  icon?: ElementType;
+  icon: ElementType;
+  tone?: 'default' | 'success' | 'warning' | 'info';
   dir?: 'rtl' | 'ltr';
+}) => {
+  const toneClassName = {
+    default: 'text-app-text-secondary',
+    success: 'text-app-success-text',
+    warning: 'text-app-warning-text',
+    info: 'text-app-info-text',
+  }[tone];
+
+  return (
+    <div className="min-w-0 px-4 py-3">
+      <div className="mb-2 flex items-center gap-1.5 text-xs text-app-text-secondary">
+        <Icon className={`h-3.5 w-3.5 ${toneClassName}`} />
+        <span>{label}</span>
+      </div>
+      <div className="truncate text-xl font-semibold tabular-nums text-app-text" dir={dir}>
+        {value || emptyValue}
+      </div>
+      {detail ? <div className="mt-1 truncate text-xs text-app-text-muted">{detail}</div> : null}
+    </div>
+  );
+};
+
+const RouteStop = ({
+  label,
+  title,
+  subtitle,
+  meta,
+  icon: Icon,
+}: {
+  label: string;
+  title: ReactNode;
+  subtitle?: ReactNode;
+  meta?: ReactNode;
+  icon: ElementType;
 }) => (
-  <div className="min-w-0">
-    <div className="mb-1 flex items-center gap-1.5 text-xs text-app-text-secondary">
-      {Icon ? <Icon className="h-3.5 w-3.5" /> : null}
-      <span>{label}</span>
+  <div className="grid grid-cols-[36px_minmax(0,1fr)] gap-3 px-4 py-3">
+    <span className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-[4px] border border-app-border bg-app-background text-app-text-secondary">
+      <Icon className="h-4 w-4" />
+    </span>
+    <div className="min-w-0">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-app-text-muted">{label}</div>
+        {meta ? <div className="text-xs text-app-text-secondary">{meta}</div> : null}
+      </div>
+      <div className="mt-1 truncate text-sm font-semibold text-app-text">{title || emptyValue}</div>
+      {subtitle ? <div className="mt-1 truncate text-xs text-app-text-secondary">{subtitle}</div> : null}
     </div>
-    <div className="truncate text-sm font-semibold text-app-text" dir={dir}>
+  </div>
+);
+
+type OverviewTimelineStep = {
+  label: string;
+  done: boolean;
+  time?: Date | string | null;
+};
+
+const TimelineOverview = ({
+  steps,
+  formatTime,
+}: {
+  steps: OverviewTimelineStep[];
+  formatTime: (value?: Date | string | null) => string;
+}) => (
+  <ol className="grid grid-cols-1 divide-y divide-app-border lg:grid-cols-6 lg:divide-x lg:divide-x-reverse lg:divide-y-0">
+    {steps.map((step, index) => (
+      <li key={step.label} className="min-w-0 px-4 py-3">
+        <div className="flex items-center gap-2">
+          <span
+            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
+              step.done
+                ? 'bg-app-brand-solid text-app-background'
+                : 'border border-app-border bg-app-background text-app-text-muted'
+            }`}
+          >
+            {step.done ? <CheckCircle2 className="h-3.5 w-3.5" /> : <span className="h-1.5 w-1.5 rounded-full bg-current" />}
+          </span>
+          <span className="text-xs tabular-nums text-app-text-muted">{index + 1}</span>
+        </div>
+        <div className={`mt-2 truncate text-sm ${step.done ? 'font-semibold text-app-text' : 'text-app-text-secondary'}`}>
+          {step.label}
+        </div>
+        <div className="mt-1 truncate text-xs tabular-nums text-app-text-muted" dir="ltr">
+          {formatTime(step.time)}
+        </div>
+      </li>
+    ))}
+  </ol>
+);
+
+const InfoLine = ({
+  label,
+  value,
+  dir,
+  strong,
+}: {
+  label: string;
+  value: ReactNode;
+  dir?: 'rtl' | 'ltr';
+  strong?: boolean;
+}) => (
+  <div className="flex min-h-10 items-center justify-between gap-4 border-b border-app-border px-4 py-2.5 last:border-b-0">
+    <span className="shrink-0 text-xs text-app-text-secondary">{label}</span>
+    <span
+      className={`min-w-0 truncate text-left text-sm ${strong ? 'font-semibold text-app-text' : 'font-medium text-app-text-secondary'}`}
+      dir={dir}
+    >
       {value || emptyValue}
-    </div>
-    {detail ? <div className="mt-1 truncate text-xs text-app-text-secondary">{detail}</div> : null}
+    </span>
   </div>
 );
 
@@ -354,6 +483,29 @@ export function DeliveryDetailsPage() {
   ];
   const completedSteps = timelineSteps.filter((step) => step.done).length;
   const isEditView = activeTab === 'edit' || editing;
+  const progressPercent = Math.round((completedSteps / timelineSteps.length) * 100);
+  const customerCharge = getDeliveryCustomerCharge(delivery);
+  const restaurantCharge = delivery.restaurantPrice ?? delivery.rest_price ?? 0;
+  const courierPayment = delivery.courierPayment ?? delivery.runner_price ?? 0;
+  const restaurantAddress = form.restaurantAddress || restaurant?.address || emptyValue;
+  const customerStructuredAddress = [delivery.client_city, delivery.client_street, delivery.client_building]
+    .filter(Boolean)
+    .join(', ');
+  const customerAddress = form.address || customerStructuredAddress || emptyValue;
+  const customerAccess = [
+    delivery.client_entry ? `כניסה ${delivery.client_entry}` : null,
+    delivery.client_floor ? `קומה ${delivery.client_floor}` : null,
+    delivery.client_apartment ? `דירה ${delivery.client_apartment}` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  const sourceLabel = delivery.source_platform ?? delivery.api_source ?? delivery.api_type ?? emptyValue;
+  const deliveryNotes = [
+    form.deliveryNotes ? `משלוח: ${form.deliveryNotes}` : null,
+    form.orderNotes ? `לקוח: ${form.orderNotes}` : null,
+    delivery.runner_took_comment ? `שליח באיסוף: ${delivery.runner_took_comment}` : null,
+    delivery.runner_delivered_comment ? `שליח במסירה: ${delivery.runner_delivered_comment}` : null,
+  ].filter(Boolean) as string[];
 
   const updateForm = <Key extends keyof DeliveryDetailsForm>(key: Key, value: DeliveryDetailsForm[Key]) => {
     setForm((current) => (current ? { ...current, [key]: value } : current));
@@ -452,166 +604,167 @@ export function DeliveryDetailsPage() {
           </nav>
         </div>
 
-        <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-4 px-4 py-4">
+        <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-4 px-4 py-4 lg:px-6">
           {activeTab === 'overview' ? (
-          <section className="overflow-hidden rounded-[8px] border border-app-border bg-app-surface">
-            <div className="flex min-h-14 flex-col gap-3 border-b border-app-border px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-sm font-semibold text-app-text">פרטי משלוח</h1>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-                {courier ? (
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/courier/${courier.id}`)}
-                    className="inline-flex h-8 items-center gap-2 rounded-[4px] border border-app-border bg-app-background px-3 text-sm font-medium text-app-text transition-colors hover:bg-app-surface-raised"
-                  >
-                    <Bike className="h-4 w-4" />
-                    שליח
-                  </button>
-                ) : null}
-
-              </div>
-            </div>
-
-            <div className="p-4">
-              <div className="min-w-0 py-1">
-                <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2 xl:grid-cols-4">
-                  <SummaryItem
-                    icon={Clock}
-                    label="נוצר"
-                    value={formatDateTime(delivery.createdAt)}
-                    detail={elapsedMinutes === null ? emptyValue : `${elapsedMinutes} דק׳ בטיפול`}
-                  />
-                  <SummaryItem
-                    icon={Navigation}
-                    label="ETA"
-                    value={etaLabel}
-                    detail={distanceLabel}
-                  />
-                  <SummaryItem icon={Store} label="מסעדה" value={restaurant?.name ?? form.restaurantName} detail={form.restaurantAddress || restaurant?.address} />
-                  <SummaryItem icon={User} label="לקוח" value={form.customerName} detail={form.address} />
-                  <SummaryItem icon={Bike} label="שליח" value={courierName} detail={courier?.phone ?? delivery.courierEmploymentType ?? emptyValue} />
-                </div>
-
-              </div>
-            </div>
-          </section>
-          ) : null}
-
-          {activeTab === 'overview' ? (
-            <div className="space-y-3">
-              <AccordionPanel title="ציר זמן" icon={Clock} meta={`${completedSteps}/${timelineSteps.length}`}>
-                <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-app-background">
-                  <div
-                    className="h-full rounded-full bg-app-brand-solid transition-all"
-                    style={{ width: `${Math.round((completedSteps / timelineSteps.length) * 100)}%` }}
-                  />
-                </div>
-                <div className="divide-y divide-app-border">
-                  {timelineSteps.map((step) => (
-                    <div key={step.label} className="grid grid-cols-[24px_minmax(0,1fr)_110px] items-center gap-3 py-3">
-                      <span className={`flex h-6 w-6 items-center justify-center rounded-full ${step.done ? 'bg-app-brand-solid text-app-background' : 'bg-app-background text-app-text-secondary'}`}>
-                        {step.done ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Clock className="h-3.5 w-3.5" />}
-                      </span>
-                      <span className={`truncate text-sm ${step.done ? 'font-medium text-app-text' : 'text-app-text-secondary'}`}>
-                        {step.label}
-                      </span>
-                      <span className="text-left text-xs text-app-text-secondary">{formatDateTime(step.time)}</span>
+            <div className="space-y-4">
+              <section className="overflow-hidden rounded-[8px] border border-app-border bg-app-surface">
+                <div className="min-w-0 p-5">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs font-medium text-app-text-secondary">משלוח</span>
+                        <span className="rounded-[4px] border border-app-border bg-app-background px-2 py-1 text-sm font-semibold tabular-nums text-app-text" dir="ltr">
+                          {orderNumberLabel}
+                        </span>
+                        <StatusBadge config={statusConfig} />
+                      </div>
+                      <h1 className="mt-3 truncate text-2xl font-semibold text-app-text">
+                        {form.restaurantName || emptyValue} · {form.customerName || emptyValue}
+                      </h1>
+                      <p className="mt-1 truncate text-sm text-app-text-secondary">
+                        {restaurantAddress} → {customerAddress}
+                      </p>
                     </div>
-                  ))}
-                </div>
-              </AccordionPanel>
 
-              <AccordionPanel title="פרטי משלוח" icon={Package}>
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-                  <DetailField label="מזהה הזמנה" value={orderNumberLabel} />
-                  <DetailField label="סטטוס" value={statusConfig.label} />
-                  <DetailField label="נוצר" value={formatDateTime(delivery.createdAt)} />
-                  <DetailField label="זמן בטיפול" value={elapsedMinutes === null ? emptyValue : `${elapsedMinutes} דק׳`} />
-                  <DetailField label="אזור" value={form.area} />
-                  <DetailField label="עדיפות" value={delivery.orderPriority ?? delivery.priority ?? emptyValue} />
-                </div>
-              </AccordionPanel>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <OverviewActionButton
+                        icon={FileText}
+                        primary
+                        onClick={() => {
+                          setActiveTab('edit');
+                          setEditing(true);
+                        }}
+                      >
+                        עריכה ונתונים
+                      </OverviewActionButton>
+                      {restaurant ? (
+                        <OverviewActionButton icon={Store} onClick={() => navigate(`/restaurant/${restaurant.id}`)}>
+                          מסעדה
+                        </OverviewActionButton>
+                      ) : null}
+                      {courier ? (
+                        <OverviewActionButton icon={Bike} onClick={() => navigate(`/courier/${courier.id}`)}>
+                          שליח
+                        </OverviewActionButton>
+                      ) : null}
+                    </div>
+                  </div>
 
-              <AccordionPanel title="מסעדה ואיסוף" icon={Store} meta={restaurant?.name ?? form.restaurantName ?? emptyValue}>
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-                  <DetailField label="שם מסעדה" value={form.restaurantName} />
-                  <DetailField label="טלפון מסעדה" value={restaurant?.phone ?? emptyValue} dir="ltr" />
-                  <DetailField label="כתובת איסוף" value={form.restaurantAddress || restaurant?.address} />
-                  <DetailField label="סוג מסעדה" value={restaurant?.type ?? emptyValue} />
-                  <DetailField label="זמן הכנה" value={formatMinutes(delivery.preparationTime ?? delivery.cook_time)} />
-                  <DetailField label="זמן מקסימלי למשלוח" value={formatMinutes(delivery.maxDeliveryTime ?? delivery.max_time_to_deliver)} />
+                  <div className="mt-5 grid grid-cols-1 divide-y divide-app-border border-t border-app-border md:grid-cols-2 md:divide-x md:divide-x-reverse md:divide-y-0 xl:grid-cols-4">
+                    <OverviewMetric
+                      icon={Clock}
+                      label="זמן בטיפול"
+                      value={elapsedMinutes === null ? emptyValue : `${elapsedMinutes} דק׳`}
+                      detail={`נוצר ${formatDateTime(delivery.createdAt)}`}
+                      tone={elapsedMinutes !== null && elapsedMinutes > 45 ? 'warning' : 'default'}
+                    />
+                    <OverviewMetric
+                      icon={Navigation}
+                      label="ETA"
+                      value={etaLabel}
+                      detail={distanceLabel}
+                      tone="info"
+                    />
+                    <OverviewMetric
+                      icon={CreditCard}
+                      label="חיוב לקוח"
+                      value={formatCurrency(customerCharge)}
+                      detail={delivery.is_cash ? 'מזומן' : 'אשראי/אונליין'}
+                      tone={delivery.is_cash ? 'success' : 'default'}
+                    />
+                    <OverviewMetric
+                      icon={Bike}
+                      label="שליח"
+                      value={courierName}
+                      detail={courier?.phone ?? approvalLabel}
+                    />
+                  </div>
                 </div>
-                {restaurant ? (
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/restaurant/${restaurant.id}`)}
-                    className="mt-3 inline-flex h-8 items-center gap-2 rounded-[4px] border border-app-border bg-app-background px-3 text-sm font-medium text-app-text transition-colors hover:bg-app-surface-raised"
+              </section>
+
+              <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+                <div className="space-y-4">
+                  <OverviewPanel title="מסלול ובעלי עניין" icon={MapPin}>
+                    <div className="divide-y divide-app-border">
+                      <RouteStop
+                        icon={Store}
+                        label="איסוף"
+                        title={form.restaurantName}
+                        subtitle={restaurantAddress}
+                        meta={restaurant?.phone ?? emptyValue}
+                      />
+                      <RouteStop
+                        icon={User}
+                        label="מסירה"
+                        title={form.customerName}
+                        subtitle={customerAccess ? `${customerAddress} · ${customerAccess}` : customerAddress}
+                        meta={form.customerPhone || emptyValue}
+                      />
+                      <RouteStop
+                        icon={Bike}
+                        label="שליח"
+                        title={courierName}
+                        subtitle={courier ? `${courier.vehicleType} · ${courier.employmentType}` : approvalLabel}
+                        meta={courier?.isOnShift ? 'במשמרת' : courier ? 'לא במשמרת' : emptyValue}
+                      />
+                    </div>
+                  </OverviewPanel>
+
+                  <OverviewPanel
+                    title="ציר זמן"
+                    icon={Clock}
+                    action={<span className="text-xs font-medium text-app-text-secondary">{completedSteps}/{timelineSteps.length}</span>}
                   >
-                    <Store className="h-4 w-4" />
-                    עמוד מסעדה
-                  </button>
-                ) : null}
-              </AccordionPanel>
+                    <div className="border-b border-app-border px-4 py-3">
+                      <div className="h-1.5 overflow-hidden rounded-full bg-app-background">
+                        <div
+                          className="h-full rounded-full bg-app-brand-solid transition-all"
+                          style={{ width: `${progressPercent}%` }}
+                        />
+                      </div>
+                    </div>
+                    <TimelineOverview steps={timelineSteps} formatTime={formatDateTime} />
+                  </OverviewPanel>
 
-              <AccordionPanel title="לקוח ומסירה" icon={User} meta={form.customerName || emptyValue}>
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                  <DetailField label="שם לקוח" value={form.customerName} />
-                  <DetailField label="טלפון לקוח" value={form.customerPhone} dir="ltr" />
-                  <DetailField label="כתובת מסירה" value={form.address} />
-                  <DetailField label="עיר/רחוב/בניין" value={[delivery.client_city, delivery.client_street, delivery.client_building].filter(Boolean).join(', ')} />
-                  <DetailField label="הערות משלוח" value={form.deliveryNotes} />
-                  <DetailField label="הערות לקוח" value={form.orderNotes} />
+                  <OverviewPanel title="הערות ובדיקות" icon={FileText}>
+                    {deliveryNotes.length ? (
+                      <div className="divide-y divide-app-border">
+                        {deliveryNotes.map((note) => (
+                          <div key={note} className="px-4 py-3 text-sm leading-6 text-app-text-secondary">
+                            {note}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="px-4 py-4 text-sm text-app-text-secondary">אין הערות למשלוח הזה.</div>
+                    )}
+                  </OverviewPanel>
                 </div>
-              </AccordionPanel>
 
-              <AccordionPanel title="שליח ושיבוץ" icon={Bike} meta={courierName}>
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-                  <DetailField label="שליח" value={courierName} />
-                  <DetailField label="טלפון" value={courier?.phone ?? emptyValue} dir="ltr" />
-                  <DetailField label="שיטת העסקה" value={courier?.employmentType ?? delivery.courierEmploymentType ?? emptyValue} />
-                  <DetailField label="רכב" value={courier?.vehicleType ?? delivery.vehicle_type ?? emptyValue} />
-                  <DetailField label="משמרת" value={courier ? (courier.isOnShift ? 'במשמרת' : 'לא במשמרת') : emptyValue} />
-                  <DetailField label="אישור שליח" value={approvalLabel} />
-                </div>
-                {courier ? (
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/courier/${courier.id}`)}
-                    className="mt-3 inline-flex h-8 items-center gap-2 rounded-[4px] border border-app-border bg-app-background px-3 text-sm font-medium text-app-text transition-colors hover:bg-app-surface-raised"
-                  >
-                    <Bike className="h-4 w-4" />
-                    עמוד שליח
-                  </button>
-                ) : null}
-              </AccordionPanel>
+                <aside className="space-y-4">
+                  <OverviewPanel title="כספים" icon={CreditCard}>
+                    <InfoLine label="חיוב לקוח" value={formatCurrency(customerCharge)} strong />
+                    <InfoLine label="חיוב מסעדה" value={formatCurrency(restaurantCharge)} />
+                    <InfoLine label="תשלום לשליח" value={formatCurrency(courierPayment)} />
+                    <InfoLine label="מזומן" value={delivery.is_cash ? 'כן' : 'לא'} />
+                  </OverviewPanel>
 
-              <AccordionPanel title="כספים" icon={CreditCard} meta={formatCurrency(getDeliveryCustomerCharge(delivery))}>
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
-                  <DetailField label="חיוב לקוח" value={formatCurrency(getDeliveryCustomerCharge(delivery))} />
-                  <DetailField label="חיוב מסעדה" value={formatCurrency(delivery.restaurantPrice ?? delivery.rest_price ?? 0)} />
-                  <DetailField label="תשלום לשליח" value={formatCurrency(delivery.courierPayment ?? delivery.runner_price ?? 0)} />
-                  <DetailField label="מזומן" value={delivery.is_cash ? 'כן' : 'לא'} />
-                </div>
-              </AccordionPanel>
+                  <OverviewPanel title="מסעדה" icon={Store}>
+                    <InfoLine label="שם" value={form.restaurantName} strong />
+                    <InfoLine label="טלפון" value={restaurant?.phone ?? emptyValue} dir="ltr" />
+                    <InfoLine label="זמן הכנה" value={formatMinutes(delivery.preparationTime ?? delivery.cook_time)} />
+                    <InfoLine label="זמן מקסימלי" value={formatMinutes(delivery.maxDeliveryTime ?? delivery.max_time_to_deliver)} />
+                  </OverviewPanel>
 
-              <AccordionPanel title="מזהים ומיקום" icon={FileText} meta={delivery.source_platform ?? delivery.api_source ?? delivery.api_type ?? emptyValue}>
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-                  <DetailField label="מזהה פנימי" value={delivery.id} dir="ltr" />
-                  <DetailField label="מזהה API קצר" value={delivery.api_short_order_id ?? delivery.orderNumber ?? emptyValue} dir="ltr" />
-                  <DetailField label="מזהה חיצוני" value={delivery.api_str_order_id ?? emptyValue} dir="ltr" />
-                  <DetailField label="מקור" value={delivery.source_platform ?? delivery.api_source ?? delivery.api_type ?? emptyValue} />
-                  <DetailField label="API" value={delivery.is_api ? 'כן' : 'לא'} />
-                  <DetailField label="סגירת הזמנה" value={delivery.close_order ? 'כן' : 'לא'} />
-                  <DetailField label="נקודת איסוף" value={[delivery.pickup_latitude, delivery.pickup_longitude].filter((value) => typeof value === 'number').join(', ')} dir="ltr" />
-                  <DetailField label="נקודת מסירה" value={[delivery.dropoff_latitude, delivery.dropoff_longitude].filter((value) => typeof value === 'number').join(', ')} dir="ltr" />
-                  <DetailField label="מרחק" value={delivery.delivery_distance ? `${delivery.delivery_distance} ק״מ` : emptyValue} />
-                </div>
-              </AccordionPanel>
+                  <OverviewPanel title="מזהים ומקור" icon={FileText}>
+                    <InfoLine label="מזהה פנימי" value={delivery.id} dir="ltr" />
+                    <InfoLine label="מזהה API קצר" value={delivery.api_short_order_id ?? delivery.orderNumber ?? emptyValue} dir="ltr" />
+                    <InfoLine label="מקור" value={sourceLabel} />
+                    <InfoLine label="API" value={delivery.is_api ? 'כן' : 'לא'} />
+                    <InfoLine label="מרחק" value={delivery.delivery_distance ? `${delivery.delivery_distance.toFixed(1)} ק״מ` : emptyValue} />
+                  </OverviewPanel>
+                </aside>
+              </div>
             </div>
           ) : null}
 
