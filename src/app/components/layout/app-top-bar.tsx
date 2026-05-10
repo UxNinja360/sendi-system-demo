@@ -208,13 +208,13 @@ export const AppTopBar: React.FC<AppTopBarProps> = ({ onOpenMobileMenu }) => {
       <button
         type="button"
         onClick={onOpenMobileMenu}
-        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--app-radius-sm)] text-app-text-secondary transition-colors hover:bg-app-nav-hover-bg hover:text-app-text min-[720px]:hidden"
+        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--app-radius-sm)] text-app-text-secondary transition-colors hover:bg-app-nav-hover-bg hover:text-app-text sm:hidden"
         aria-label="פתח תפריט"
       >
         <Menu className="h-4 w-4" />
       </button>
 
-      <div className="pointer-events-none absolute inset-y-0 right-14 left-14 flex items-center justify-center text-center sm:right-16 sm:left-16 min-[720px]:right-5 min-[720px]:left-16 min-[720px]:justify-start min-[720px]:text-right">
+      <div className="pointer-events-none absolute inset-y-0 right-14 left-14 flex items-center justify-center text-center sm:right-5 sm:left-16 sm:justify-start sm:text-right">
         {topBarBreadcrumb ? (
           <nav
             aria-label="ניווט פנימי"

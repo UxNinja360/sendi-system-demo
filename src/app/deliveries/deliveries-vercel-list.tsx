@@ -71,7 +71,7 @@ type DeliveryVercelRowProps = {
 };
 
 const rowGridClass =
-  'grid grid-cols-[minmax(0,1fr)_76px] sm:grid-cols-[minmax(96px,128px)_minmax(140px,220px)_minmax(140px,220px)_minmax(144px,200px)_minmax(0,1fr)_44px_36px] xl:grid-cols-[minmax(104px,136px)_minmax(160px,240px)_minmax(160px,240px)_minmax(156px,216px)_minmax(0,1fr)_48px_36px] 2xl:grid-cols-[minmax(112px,144px)_minmax(180px,260px)_minmax(180px,260px)_minmax(168px,232px)_minmax(0,1fr)_52px_36px]';
+  'grid grid-cols-[minmax(0,1fr)_76px] sm:grid-cols-[minmax(96px,128px)_minmax(140px,220px)_minmax(140px,220px)_minmax(176px,232px)_minmax(8px,1fr)_44px_36px] xl:grid-cols-[minmax(104px,136px)_minmax(160px,240px)_minmax(160px,240px)_minmax(188px,248px)_minmax(16px,1fr)_48px_36px] 2xl:grid-cols-[minmax(112px,144px)_minmax(180px,260px)_minmax(180px,260px)_minmax(200px,268px)_minmax(24px,1fr)_52px_36px]';
 
 const getDeliveryDate = (delivery: Delivery) =>
   delivery.creation_time ?? delivery.createdAt ?? delivery.delivery_date;
@@ -100,7 +100,7 @@ const CourierAssignmentLine: React.FC<{
   const Icon = assigned ? (vehicleType === 'רכב' ? Car : Bike) : UserPlus;
 
   return (
-    <div className={joinClassNames('flex min-w-0 items-center gap-1.5 text-right', className)} dir="rtl">
+    <div className={joinClassNames('flex min-w-0 items-center gap-2 text-right', className)} dir="rtl">
       <Icon className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
       <span
         className={joinClassNames(
@@ -300,7 +300,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         </div>
       </div>
 
-      <div className="hidden min-h-0 min-w-0 items-center justify-start px-2 py-1 sm:col-auto sm:row-auto sm:flex sm:min-h-[72px] sm:px-3 sm:py-2">
+      <div className="hidden min-h-0 min-w-0 items-center justify-start px-2 py-1 sm:col-auto sm:row-auto sm:flex sm:min-h-[72px] sm:px-4 sm:py-2">
         <CourierAssignmentLine
           assigned={hasAssignedCourier}
           label={courierColumnText}
