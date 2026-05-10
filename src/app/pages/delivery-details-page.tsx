@@ -4,6 +4,8 @@ import {
   AlertCircle,
   Bike,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   Clock,
   ClockAlert,
   CreditCard,
@@ -12,6 +14,7 @@ import {
   Navigation,
   Package,
   Save,
+  Settings,
   Store,
   User,
   X,
@@ -42,11 +45,6 @@ type DeliveryDetailsForm = {
 };
 
 type DeliveryDetailsTab = 'overview' | 'edit';
-
-const DELIVERY_DETAILS_TABS: Array<{ id: DeliveryDetailsTab; label: string }> = [
-  { id: 'overview', label: 'טיפול' },
-  { id: 'edit', label: 'עריכה ונתונים' },
-];
 
 type StatusConfig = {
   label: string;
@@ -514,6 +512,7 @@ export function DeliveryDetailsPage() {
   const handleCancelEdit = () => {
     setForm(createFormFromDelivery(delivery));
     setEditing(false);
+    setActiveTab('overview');
   };
 
   const handleSave = () => {
@@ -568,75 +567,43 @@ export function DeliveryDetailsPage() {
     });
 
     setEditing(false);
+    setActiveTab('overview');
     toast.success('פרטי המשלוח עודכנו');
   };
 
   return (
     <div className="flex h-full flex-col bg-app-background" dir="rtl">
       <div className="min-h-0 flex-1 overflow-auto">
-        <div className="sticky top-0 z-20 border-b border-[#1A1A1A] bg-app-background/95 backdrop-blur">
-          <nav className="flex h-11 w-full items-center gap-1 overflow-x-auto px-4" aria-label="ניווט עמוד משלוח">
-            {DELIVERY_DETAILS_TABS.map((tab) => {
-              const selected = activeTab === tab.id;
-
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => {
-                    setActiveTab(tab.id);
-                    if (tab.id === 'edit') {
-                      setEditing(true);
-                    } else {
-                      setEditing(false);
-                    }
-                  }}
-                  className={`h-8 shrink-0 rounded-[4px] px-3 text-sm font-medium transition-colors ${
-                    selected
-                      ? 'bg-app-surface-raised text-app-text'
-                      : 'text-app-text-secondary hover:bg-app-surface-raised hover:text-app-text'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-
-        <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-4 px-4 py-4 lg:px-6">
-          {activeTab === 'overview' ? (
-            <div className="space-y-4">
-              <section className="overflow-hidden rounded-[8px] border border-app-border bg-app-surface">
-                <div className="min-w-0 p-5">
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-xs font-medium text-app-text-secondary">משלוח</span>
-                        <span className="rounded-[4px] border border-app-border bg-app-background px-2 py-1 text-sm font-semibold tabular-nums text-app-text" dir="ltr">
-                          {orderNumberLabel}
-                        </span>
-                        <StatusBadge config={statusConfig} />
-                      </div>
-                      <h1 className="mt-3 truncate text-2xl font-semibold text-app-text">
+        <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-4 px-4 py-4">
+          <div className="space-y-4">
+              <header className="overflow-hidden rounded-[8px] border border-app-border bg-app-surface">
+                <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.25fr)_minmax(420px,0.75fr)]">
+                  <div className="min-w-0 p-4">
+                    <div className="mb-3 text-xs font-semibold text-app-text-secondary">תפעול משלוח</div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h1 className="truncate text-2xl font-semibold text-app-text">
                         {form.restaurantName || emptyValue} · {form.customerName || emptyValue}
                       </h1>
-                      <p className="mt-1 truncate text-sm text-app-text-secondary">
-                        {restaurantAddress} → {customerAddress}
-                      </p>
+                      <span className="rounded-[4px] border border-app-border bg-app-background px-2 py-1 text-sm font-semibold tabular-nums text-app-text" dir="ltr">
+                        {orderNumberLabel}
+                      </span>
+                      <StatusBadge config={statusConfig} />
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2">
-                      <OverviewActionButton
-                        icon={FileText}
-                        primary
-                        onClick={() => {
-                          setActiveTab('edit');
-                          setEditing(true);
-                        }}
-                      >
-                        עריכה ונתונים
-                      </OverviewActionButton>
+                    <div className="mt-3 grid grid-cols-1 gap-2 text-xs text-app-text-secondary md:grid-cols-2">
+                      <span className="flex min-w-0 items-center gap-1.5">
+                        <Store className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate">{restaurantAddress}</span>
+                      </span>
+                      <span className="flex min-w-0 items-center gap-1.5">
+                        <User className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate">{customerAddress}</span>
+                      </span>
+                      <span className="truncate" dir="ltr">{form.customerPhone || emptyValue}</span>
+                      <span className="truncate">נוצר: {formatDateTime(delivery.createdAt)}</span>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
                       {restaurant ? (
                         <OverviewActionButton icon={Store} onClick={() => navigate(`/restaurant/${restaurant.id}`)}>
                           מסעדה
@@ -650,7 +617,7 @@ export function DeliveryDetailsPage() {
                     </div>
                   </div>
 
-                  <div className="mt-5 grid grid-cols-1 divide-y divide-app-border border-t border-app-border md:grid-cols-2 md:divide-x md:divide-x-reverse md:divide-y-0 xl:grid-cols-4">
+                  <div className="grid grid-cols-1 divide-y divide-app-border border-t border-app-border sm:grid-cols-2 sm:divide-x sm:divide-x-reverse sm:divide-y-0 lg:border-r lg:border-t-0">
                     <OverviewMetric
                       icon={Clock}
                       label="זמן בטיפול"
@@ -680,7 +647,26 @@ export function DeliveryDetailsPage() {
                     />
                   </div>
                 </div>
-              </section>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const shouldOpen = activeTab !== 'edit';
+                    setActiveTab(shouldOpen ? 'edit' : 'overview');
+                    setEditing(shouldOpen);
+                  }}
+                  className="flex min-h-12 w-full items-center justify-between gap-3 border-t border-app-border px-4 text-right text-sm font-semibold text-app-text transition-colors hover:bg-app-surface-raised"
+                >
+                  <span className="flex min-w-0 items-center gap-2">
+                    {activeTab === 'edit' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    <span>הגדרות משלוח</span>
+                    <span className={`rounded-full px-2 py-0.5 text-xs ${statusConfig.badgeClassName}`}>
+                      {statusConfig.label}
+                    </span>
+                  </span>
+                  <Settings className="h-4 w-4 text-app-text-secondary" />
+                </button>
+              </header>
 
               <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
                 <div className="space-y-4">
@@ -765,8 +751,7 @@ export function DeliveryDetailsPage() {
                   </OverviewPanel>
                 </aside>
               </div>
-            </div>
-          ) : null}
+          </div>
 
           {activeTab === 'edit' ? (
             <div className="space-y-4">

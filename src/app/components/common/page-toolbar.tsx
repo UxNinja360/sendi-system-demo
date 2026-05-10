@@ -108,7 +108,7 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
     <>
       {hasToolbarRow ? (
         <div
-          className={`app-toolbar-shell sticky top-0 z-20 shrink-0 bg-app-surface dark:bg-[#000000] ${
+          className={`app-toolbar-shell sticky top-0 z-20 shrink-0 bg-app-background dark:bg-[#000000] ${
             showBottomBorder ? 'border-b border-app-border dark:border-app-nav-border' : ''
           }`.trim()}
         >

@@ -64,6 +64,7 @@ import {
   ENTITY_TABLE_ROW_CLASS,
   ENTITY_TABLE_WIDTHS,
 } from '../components/common/entity-table-shared';
+import { getDefaultRestaurantOwnerName, getDefaultRestaurantOwnerPhone } from '../context/delivery-bootstrap';
 import { DELIVERY_STORAGE_KEYS } from '../context/delivery-storage';
 import { RestaurantsVercelList } from './restaurants-vercel-list';
 import { DELIVERY_HUBS, TLV_RUNNERS_HUB_ID } from '../constants/delivery-hubs';
@@ -74,7 +75,7 @@ import { DELIVERY_HUBS, TLV_RUNNERS_HUB_ID } from '../constants/delivery-hubs';
 type RestaurantRow = {
   id: number; restaurantId: string; name: string; status: 'פעיל' | 'לא פעיל';
   isActive: boolean; totalDeliveries: number;
-  contactPerson: string; phone: string; city: string; street: string; username: string; type: string; chainId: string;
+  contactPerson: string; ownerPhone: string; phone: string; city: string; street: string; username: string; type: string; chainId: string; logoUrl?: string;
 };
 
 type RestaurantStats = {
@@ -114,7 +115,7 @@ const RESTAURANT_COLS = [
   { id: 'status',    label: 'סטטוס' },
   { id: 'address',   label: 'כתובת' },
   { id: 'phone',     label: 'טלפון' },
-  { id: 'contact',   label: 'איש קשר' },
+  { id: 'contact',   label: 'בעלים' },
   { id: 'deliveries',label: 'סך משלוחים' },
 ] as const;
 
@@ -169,7 +170,7 @@ const RESTAURANT_COLUMN_CATEGORIES = [
     columns: [
       { id: 'address', label: 'כתובת' },
       { id: 'phone', label: 'טלפון' },
-      { id: 'contact', label: 'איש קשר' },
+      { id: 'contact', label: 'בעלים' },
     ],
   },
   {
@@ -267,6 +268,8 @@ export const RestaurantsScreen: React.FC = () => {
   const [newRestaurant, setNewRestaurant] = useState({
     name: '',
     phone: '',
+    ownerName: '',
+    ownerPhone: '',
     address: '',
     type: 'מסעדה',
     linkedHubIds: [TLV_RUNNERS_HUB_ID],
@@ -390,14 +393,16 @@ export const RestaurantsScreen: React.FC = () => {
   }, [periodDeliveries]);
 
   // ── Data ──
-  const restaurants: RestaurantRow[] = useMemo(() => state.restaurants.map((r, idx) => ({
+  const restaurants: RestaurantRow[] = useMemo(() => state.restaurants.map((r) => ({
     id: parseInt(r.id.replace('r', '')),
     restaurantId: r.id,
     name: r.name,
+    logoUrl: r.logoUrl,
     status: r.isActive ? 'פעיל' as const : 'לא פעיל' as const,
     isActive: r.isActive,
     totalDeliveries: deliveriesCountByRestaurant.get(r.id) ?? 0,
-    contactPerson: ['משה כהן', 'דנה לוי', 'יוסי אברהם', 'רונית גולן', 'אבי זהבי', 'דוד ישראלי', 'שרה מזרחי'][idx % 7],
+    contactPerson: getDefaultRestaurantOwnerName(r),
+    ownerPhone: getDefaultRestaurantOwnerPhone(r),
     phone: r.phone,
     city: r.address.split(', ')[1] || 'תל אביב',
     street: r.address.split(', ')[0] || r.address,
@@ -422,6 +427,7 @@ export const RestaurantsScreen: React.FC = () => {
         r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         r.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
         r.contactPerson.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        r.ownerPhone.includes(searchQuery) ||
         r.phone.includes(searchQuery);
       const matchesConnection =
         !restaurantConnectionFilter ||
@@ -548,6 +554,16 @@ export const RestaurantsScreen: React.FC = () => {
       return;
     }
 
+    if (!newRestaurant.ownerName.trim()) {
+      toast.error('יש להזין שם בעלים');
+      return;
+    }
+
+    if (!newRestaurant.ownerPhone.trim()) {
+      toast.error('יש להזין טלפון בעלים');
+      return;
+    }
+
     if (!newRestaurant.address.trim()) {
       toast.error('יש להזין כתובת מסעדה');
       return;
@@ -596,6 +612,11 @@ export const RestaurantsScreen: React.FC = () => {
       name: newRestaurant.name.trim(),
       chainId: getRestaurantChainId(newRestaurant.name.trim()),
       linkedHubIds: selectedLinkedHubIds,
+      managerUsername: newRestaurant.name.trim().toLowerCase().replace(/\s+/g, '').replace(/[^\w\u0590-\u05ff]/g, ''),
+      managerPassword: '',
+      contactPerson: newRestaurant.ownerName.trim(),
+      ownerName: newRestaurant.ownerName.trim(),
+      ownerPhone: newRestaurant.ownerPhone.trim(),
       phone: newRestaurant.phone.trim(),
       address: newRestaurant.address.trim() || 'ישראל',
       city: newRestaurant.address.includes(',') ? newRestaurant.address.split(',').pop()?.trim() ?? '' : '',
@@ -612,12 +633,17 @@ export const RestaurantsScreen: React.FC = () => {
       deliveryRate: config.deliveryRate,
       deliveryInterval: config.deliveryInterval,
       maxDeliveriesPerHour: config.maxDeliveriesPerHour,
+      preparationMode: 'immediate',
+      preventReadyRepeatUpdates: true,
+      courierEtaDisplayMode: 'arrival',
     };
     dispatch({ type: 'ADD_RESTAURANT', payload: restaurant });
     setIsAddModalOpen(false);
     setNewRestaurant({
       name: '',
       phone: '',
+      ownerName: '',
+      ownerPhone: '',
       address: '',
       type: 'מסעדה',
       linkedHubIds: [TLV_RUNNERS_HUB_ID],
@@ -794,7 +820,6 @@ export const RestaurantsScreen: React.FC = () => {
   return (
     <>
       <EntityListShell
-        contentClassName="items-center"
         sidePanel={
           <EntityListSidePanel
             exportOpen={isExportOpen}
@@ -838,7 +863,7 @@ export const RestaurantsScreen: React.FC = () => {
           />
         }
         toolbar={
-          <div className="mx-auto w-full max-w-[1200px]">
+          <div className="w-full">
             <PageToolbar
               showBottomBorder={false}
               showPeriodControl={false}
@@ -847,7 +872,7 @@ export const RestaurantsScreen: React.FC = () => {
                   <div className="flex shrink-0 items-center gap-1">
                     <RestaurantToolbarToggle
                       active={restaurantConnectionFilter === 'connected'}
-                      label={'\u05d4\u05e6\u05d2 \u05de\u05e1\u05e2\u05d3\u05d5\u05ea \u05de\u05d7\u05d5\u05d1\u05e8\u05d5\u05ea'}
+                      label={'\u05d4\u05e6\u05d2 \u05de\u05e1\u05e2\u05d3\u05d5\u05ea \u05e4\u05e2\u05d9\u05dc\u05d5\u05ea'}
                       onClick={() =>
                         setRestaurantConnectionFilter((value) =>
                           value === 'connected' ? null : 'connected',
@@ -873,7 +898,7 @@ export const RestaurantsScreen: React.FC = () => {
       >
 
         {/* Content */}
-        <div className="flex min-h-0 w-full max-w-[1200px] flex-1 flex-col">
+        <div className="flex min-h-0 w-full flex-1 flex-col">
             {/* Table / Empty state */}
             <RestaurantsVercelList
               restaurants={filteredRestaurants}
@@ -1086,8 +1111,13 @@ export const RestaurantsScreen: React.FC = () => {
                         </span>
                       )}
                       {col.id === 'contact' && (
-                        <span className="block truncate text-xs text-[#666d80] dark:text-app-text-secondary whitespace-nowrap">
-                          {restaurant.contactPerson}
+                        <span className="block min-w-0">
+                          <span className="block truncate text-xs font-medium text-[#0d0d12] dark:text-app-text whitespace-nowrap">
+                            {restaurant.contactPerson}
+                          </span>
+                          <span className="mt-1 block truncate text-xs text-[#666d80] dark:text-app-text-secondary whitespace-nowrap" dir="ltr">
+                            {restaurant.ownerPhone || '-'}
+                          </span>
                         </span>
                       )}
                       {col.id === 'deliveries' && (
@@ -1227,13 +1257,33 @@ export const RestaurantsScreen: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-app-text-secondary">טלפון *</label>
+                <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-app-text-secondary">טלפון מסעדה *</label>
                 <input
                   type="tel"
                   value={newRestaurant.phone}
                   onChange={e => setNewRestaurant(p => ({ ...p, phone: e.target.value }))}
                   className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-app-brand dark:border-app-border dark:bg-app-surface dark:text-app-text"
                   placeholder="050-0000000"
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-app-text-secondary">שם בעלים *</label>
+                <input
+                  type="text"
+                  value={newRestaurant.ownerName}
+                  onChange={e => setNewRestaurant(p => ({ ...p, ownerName: e.target.value }))}
+                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-app-brand dark:border-app-border dark:bg-app-surface dark:text-app-text"
+                  placeholder="שם בעלים"
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-app-text-secondary">טלפון בעלים *</label>
+                <input
+                  type="tel"
+                  value={newRestaurant.ownerPhone}
+                  onChange={e => setNewRestaurant(p => ({ ...p, ownerPhone: e.target.value }))}
+                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-app-brand dark:border-app-border dark:bg-app-surface dark:text-app-text"
+                  placeholder="052-0000000"
                 />
               </div>
               <div>
@@ -1286,6 +1336,8 @@ export const RestaurantsScreen: React.FC = () => {
                 disabled={
                   !newRestaurant.name.trim() ||
                   !newRestaurant.phone.trim() ||
+                  !newRestaurant.ownerName.trim() ||
+                  !newRestaurant.ownerPhone.trim() ||
                   !newRestaurant.address.trim() ||
                   newRestaurant.linkedHubIds.length === 0
                 }

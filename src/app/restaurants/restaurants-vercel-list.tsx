@@ -1,17 +1,20 @@
 import React, { useLayoutEffect, useRef } from 'react';
-import { MapPin, Package, Phone, Store, UserRound } from 'lucide-react';
+import { Package, UserRound } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
 import { EntityRowActionTrigger } from '../components/common/entity-row-action-trigger';
 import type { EntityViewMode } from '../components/common/view-mode-toggle';
+import { RestaurantLogoMark } from './restaurant-logo-mark';
 
 export type RestaurantVercelListItem = {
   restaurantId: string;
   name: string;
+  logoUrl?: string;
   status: string;
   isActive: boolean;
   totalDeliveries: number;
   contactPerson: string;
+  ownerPhone: string;
   phone: string;
   city: string;
   street: string;
@@ -35,14 +38,16 @@ type RestaurantsVercelListProps = {
 };
 
 const rowGridClass =
-  'grid grid-cols-[minmax(0,1fr)_44px] md:grid-cols-[minmax(260px,1.4fr)_minmax(140px,0.7fr)_minmax(260px,1.25fr)_minmax(180px,0.85fr)_44px]';
+  'grid grid-cols-[minmax(0,1fr)_44px] md:grid-cols-[minmax(140px,220px)_minmax(96px,140px)_minmax(140px,220px)_minmax(0,1fr)_minmax(84px,124px)_36px] xl:grid-cols-[minmax(160px,240px)_minmax(112px,150px)_minmax(160px,240px)_minmax(0,1fr)_minmax(88px,132px)_36px] 2xl:grid-cols-[minmax(180px,260px)_minmax(124px,164px)_minmax(180px,260px)_minmax(0,1fr)_minmax(96px,140px)_36px]';
 
 const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(' ');
 
-const getConnectionMeta = (restaurant: RestaurantVercelListItem) => ({
-  label: restaurant.isActive ? 'מחובר' : 'לא מחובר',
-  text: restaurant.isActive ? 'text-app-success-text' : 'text-app-text-secondary',
+const getRestaurantStatusMeta = (restaurant: RestaurantVercelListItem) => ({
+  label: restaurant.status,
+  badge: restaurant.isActive
+    ? 'border-app-success-subtle bg-app-success-subtle text-app-success-text'
+    : 'border-app-nav-border bg-app-surface-raised text-app-text-secondary',
 });
 
 const RestaurantVercelRow: React.FC<{
@@ -56,7 +61,7 @@ const RestaurantVercelRow: React.FC<{
 }) => {
   const navigate = useNavigate();
   const address = [restaurant.street, restaurant.city].filter(Boolean).join(', ') || '-';
-  const connectionMeta = getConnectionMeta(restaurant);
+  const statusMeta = getRestaurantStatusMeta(restaurant);
 
   const navigateToRestaurant = () => {
     navigate(`/restaurant/${restaurant.restaurantId}`);
@@ -76,47 +81,45 @@ const RestaurantVercelRow: React.FC<{
       onContextMenu={(event) => onOpenContextMenu(restaurant, event)}
       className={joinClassNames(
         rowGridClass,
-        'group relative w-full min-w-0 cursor-pointer border-b border-app-nav-border bg-app-surface text-app-text outline-none transition-colors hover:bg-app-surface-raised focus-visible:bg-app-surface-raised md:min-w-[996px]',
+        'group relative w-full min-w-0 cursor-pointer border-b border-app-nav-border bg-app-surface text-app-text outline-none transition-colors hover:bg-app-surface-raised focus-visible:bg-app-surface-raised',
       )}
     >
-      <div className="col-start-1 row-start-1 flex min-h-0 min-w-0 items-center gap-3 px-2 py-3 md:col-auto md:row-auto md:min-h-[58px] md:px-3 md:py-2">
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-app-nav-border bg-app-surface-raised text-app-text">
-          <Store className="h-3.5 w-3.5" />
-        </span>
+      <div className="col-start-1 row-start-1 flex min-h-0 min-w-0 items-center gap-3 px-2 py-3 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
+        <RestaurantLogoMark name={restaurant.name} logoUrl={restaurant.logoUrl} size="sm" />
         <div className="min-w-0">
           <div className="truncate text-sm font-semibold text-app-text">{restaurant.name}</div>
-          <div className="mt-1 flex min-w-0 items-center gap-1.5 text-xs text-app-text-secondary">
-            <MapPin className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">{address}</span>
-          </div>
+          <div className="mt-1 truncate text-sm font-normal text-app-text-secondary">{address}</div>
         </div>
       </div>
 
-      <div className="col-start-1 row-start-2 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[58px] md:px-3 md:py-2">
+      <div className="col-start-1 row-start-2 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
         <div className="truncate text-sm font-semibold text-app-text">{restaurant.type}</div>
         {restaurant.chainId && restaurant.chainId !== '-' && (
-          <div className="mt-1 truncate text-xs text-app-text-secondary">{restaurant.chainId}</div>
+          <div className="mt-1 truncate text-sm font-normal text-app-text-secondary">{restaurant.chainId}</div>
         )}
       </div>
 
-      <div className="col-start-1 row-start-3 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[58px] md:px-3 md:py-2">
-        <div className={joinClassNames('truncate text-sm font-semibold', connectionMeta.text)}>
-          {connectionMeta.label}
-        </div>
-        <div className="mt-1 truncate text-xs text-app-text-secondary">{restaurant.status}</div>
-      </div>
-
-      <div className="col-start-1 row-start-4 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[58px] md:px-3 md:py-2">
+      <div className="col-start-1 row-start-3 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
         <div className="truncate text-sm font-semibold text-app-text">{restaurant.contactPerson || '-'}</div>
-        <div className="mt-1 flex min-w-0 items-center gap-1.5 text-xs text-app-text-secondary">
-          <Phone className="h-3.5 w-3.5 shrink-0" />
-          <span className="truncate" dir="ltr">
-            {restaurant.phone || '-'}
-          </span>
+        <div className="mt-1 truncate text-right text-sm font-normal text-app-text-secondary" dir="ltr">
+          {restaurant.ownerPhone || '-'}
         </div>
       </div>
 
-      <div className="col-start-2 row-start-1 flex min-h-0 items-start justify-center px-1 py-3 md:col-auto md:row-auto md:min-h-[58px] md:items-center md:py-0" onClick={(event) => event.stopPropagation()}>
+      <div className="hidden min-h-0 min-w-0 md:block" aria-hidden="true" />
+
+      <div className="col-start-1 row-start-4 flex min-h-0 min-w-0 flex-col items-end justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:px-3 md:py-2">
+        <span
+          className={joinClassNames(
+            'inline-flex max-w-full items-center rounded-full border px-2 py-0.5 text-xs font-semibold',
+            statusMeta.badge,
+          )}
+        >
+          <span className="truncate">{statusMeta.label}</span>
+        </span>
+      </div>
+
+      <div className="col-start-2 row-start-1 flex min-h-0 items-start justify-center px-1 py-3 md:col-auto md:row-auto md:min-h-[72px] md:items-center md:py-0" onClick={(event) => event.stopPropagation()}>
         <EntityRowActionTrigger
           onClick={(event) => onOpenActionsMenu(restaurant, event)}
           title={`פעולות מסעדה ${restaurant.name}`}
@@ -137,7 +140,7 @@ const RestaurantVercelCard: React.FC<{
 }) => {
   const navigate = useNavigate();
   const address = [restaurant.street, restaurant.city].filter(Boolean).join(', ') || '-';
-  const connectionMeta = getConnectionMeta(restaurant);
+  const statusMeta = getRestaurantStatusMeta(restaurant);
 
   const navigateToRestaurant = () => {
     navigate(`/restaurant/${restaurant.restaurantId}`);
@@ -161,15 +164,10 @@ const RestaurantVercelCard: React.FC<{
     >
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-app-nav-border bg-app-surface-raised text-app-text">
-            <Store className="h-3.5 w-3.5" />
-          </span>
+          <RestaurantLogoMark name={restaurant.name} logoUrl={restaurant.logoUrl} size="md" />
           <div className="min-w-0">
             <div className="truncate text-sm font-semibold text-app-text">{restaurant.name}</div>
-            <div className="mt-1 flex min-w-0 items-center gap-1.5 text-xs text-app-text-secondary">
-              <MapPin className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">{address}</span>
-            </div>
+            <div className="mt-1 truncate text-xs text-app-text-secondary">{address}</div>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1" onClick={(event) => event.stopPropagation()}>
@@ -186,29 +184,33 @@ const RestaurantVercelCard: React.FC<{
           <div className="mt-1 truncate text-sm font-semibold text-app-text">{restaurant.type || '-'}</div>
         </div>
         <div className="min-w-0">
-          <div className="text-[11px] text-app-text-secondary">חיבור</div>
-          <div className={joinClassNames('mt-1 truncate text-sm font-semibold', connectionMeta.text)}>
-            {connectionMeta.label}
+          <div className="text-[11px] text-app-text-secondary">סטטוס</div>
+          <div className="mt-1">
+            <span
+              className={joinClassNames(
+                'inline-flex max-w-full items-center rounded-full border px-2 py-0.5 text-xs font-semibold',
+                statusMeta.badge,
+              )}
+            >
+              <span className="truncate">{statusMeta.label}</span>
+            </span>
           </div>
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-1.5 text-[11px] text-app-text-secondary">
             <UserRound className="h-3.5 w-3.5 shrink-0" />
-            <span>איש קשר</span>
+            <span>בעלים</span>
           </div>
           <div className="mt-1 truncate text-sm font-semibold text-app-text">{restaurant.contactPerson || '-'}</div>
         </div>
         <div className="min-w-0">
-          <div className="flex items-center gap-1.5 text-[11px] text-app-text-secondary">
-            <Phone className="h-3.5 w-3.5 shrink-0" />
-            <span>טלפון</span>
-          </div>
-          <div className="mt-1 truncate text-sm font-semibold text-app-text" dir="ltr">{restaurant.phone || '-'}</div>
+          <div className="text-[11px] text-app-text-secondary">טלפון בעלים</div>
+          <div className="mt-1 truncate text-sm font-semibold text-app-text" dir="ltr">{restaurant.ownerPhone || '-'}</div>
         </div>
       </div>
 
       <div className="mt-4 flex items-center justify-between border-t border-app-nav-border pt-3 text-xs text-app-text-secondary">
-        <span>{restaurant.status}</span>
+        <span>{restaurant.chainId && restaurant.chainId !== '-' ? restaurant.chainId : restaurant.type || '-'}</span>
         <span className="inline-flex items-center gap-1.5">
           <Package className="h-3.5 w-3.5" />
           <span className="tabular-nums">{restaurant.totalDeliveries}</span>
@@ -288,7 +290,7 @@ export const RestaurantsVercelList: React.FC<RestaurantsVercelListProps> = ({
   return (
     <div data-view-mode="list" className="flex min-h-0 flex-1 flex-col bg-app-background">
       <div ref={scrollContainerRef} className="resource-list-scroll min-h-0 flex-1 overflow-auto px-2 md:px-3" dir="ltr">
-        <div className="w-full min-w-0 overflow-visible border border-app-nav-border md:min-w-[996px] md:overflow-hidden" dir="rtl">
+        <div className="w-full min-w-0 overflow-visible border border-app-nav-border md:overflow-hidden" dir="rtl">
           {restaurants.map((restaurant) => (
             <RestaurantVercelRow
               key={restaurant.restaurantId}

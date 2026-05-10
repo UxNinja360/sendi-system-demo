@@ -5,23 +5,20 @@ import {
   Bike,
   Car,
   CheckCircle2,
-  Clock,
   Copy,
   CreditCard,
   Edit,
   FileText,
   Info,
-  MapPin,
   Package,
   RotateCcw,
-  Store,
   UserRound,
   UserPlus,
   XCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import type { Courier, Delivery, DeliveryStatus } from '../types/delivery.types';
+import type { Courier, Delivery, DeliveryStatus, Restaurant } from '../types/delivery.types';
 import {
   EntityActionMenu,
   EntityActionMenuDivider,
@@ -37,6 +34,7 @@ import type { EntityViewMode } from '../components/common/view-mode-toggle';
 import { STATUS_CONFIG } from './status-config';
 import { formatOrderNumber } from '../utils/order-number';
 import { formatCurrency, getDeliveryCustomerCharge } from '../utils/delivery-finance';
+import { RestaurantLogoMark } from '../restaurants/restaurant-logo-mark';
 
 type DeliveriesVercelListProps = {
   filteredDeliveries: Delivery[];
@@ -45,6 +43,7 @@ type DeliveriesVercelListProps = {
   onClearFilters: () => void;
   totalCount: number;
   couriers: Courier[];
+  restaurants: Restaurant[];
   onOpenDrawer: (id: string) => void;
   onStatusChange: (deliveryId: string, status: DeliveryStatus) => void;
   onCancelDelivery: (deliveryId: string) => void;
@@ -58,6 +57,7 @@ type DeliveriesVercelListProps = {
 type DeliveryVercelRowProps = {
   delivery: Delivery;
   courier: Courier | null;
+  restaurant: Restaurant | null;
   isDrawerTarget: boolean;
   onOpenDrawer: (id: string) => void;
   onStatusChange: (deliveryId: string, status: DeliveryStatus) => void;
@@ -91,6 +91,16 @@ const CourierVehicleIcon: React.FC<{ vehicleType?: string }> = ({ vehicleType })
 const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(' ');
 
+const getRestaurantForDelivery = (delivery: Delivery, restaurants: Restaurant[]) => {
+  const restaurantId = delivery.restaurantId || delivery.rest_id;
+  const restaurantName = delivery.restaurantName || delivery.rest_name;
+
+  return restaurants.find((restaurant) =>
+    (restaurantId && restaurant.id === restaurantId) ||
+    (restaurantName && restaurant.name === restaurantName)
+  ) ?? null;
+};
+
 const getDeliveryEmptyStateCopy = (
   mode: DeliveriesVercelListProps['emptyStateMode'],
   totalCount: number,
@@ -121,6 +131,7 @@ const getDeliveryEmptyStateCopy = (
 const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
   delivery,
   courier,
+  restaurant,
   isDrawerTarget,
   onOpenDrawer,
   onStatusChange,
@@ -132,7 +143,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
   const navigate = useNavigate();
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
   const config = STATUS_CONFIG[delivery.status];
-  const restaurantName = delivery.rest_name || delivery.restaurantName;
+  const restaurantName = delivery.rest_name || delivery.restaurantName || restaurant?.name || '-';
   const restaurantMeta = delivery.restaurantAddress || delivery.rest_city || delivery.restaurantCity || 'מסעדה';
   const clientName = delivery.client_name || delivery.customerName;
   const clientAddress = delivery.client_full_address || delivery.address;
@@ -224,13 +235,10 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
 
       <div className="col-start-1 row-start-2 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:px-2 md:py-2">
         <div className="flex min-w-0 items-center gap-1.5">
-          <Store className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
-          <span className="truncate text-sm font-normal text-app-text">{restaurantName}</span>
+          <RestaurantLogoMark name={restaurantName} logoUrl={restaurant?.logoUrl} size="xs" />
+          <span className="truncate text-sm font-medium text-app-text">{restaurantName}</span>
         </div>
-        <div className="mt-1 flex min-w-0 items-center gap-1.5 text-sm font-normal text-app-text-secondary">
-          <MapPin className="h-3.5 w-3.5 shrink-0" />
-          <span className="truncate">{restaurantMeta}</span>
-        </div>
+        <div className="mt-1 truncate text-sm font-normal text-app-text-secondary">{restaurantMeta}</div>
       </div>
 
       <div className="col-start-1 row-start-3 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:px-2 md:py-2">
@@ -238,10 +246,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
           <UserRound className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
           <span className="truncate text-sm font-normal text-app-text">{clientName}</span>
         </div>
-        <div className="mt-1 flex min-w-0 items-center gap-1.5 text-sm font-normal text-app-text-secondary">
-          <MapPin className="h-3.5 w-3.5 shrink-0" />
-          <span className="truncate">{clientAddress}</span>
-        </div>
+        <div className="mt-1 truncate text-sm font-normal text-app-text-secondary">{clientAddress}</div>
         <div className="mt-1 flex min-w-0 items-center gap-1.5 text-sm font-normal text-app-text-secondary md:hidden">
           {hasAssignedCourier ? <CourierVehicleIcon vehicleType={courierVehicleType} /> : null}
           <span className="min-w-0 truncate text-sm font-normal text-app-text">
@@ -398,6 +403,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
 const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
   delivery,
   courier,
+  restaurant,
   isDrawerTarget,
   onOpenDrawer,
   onStatusChange,
@@ -410,7 +416,7 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
   const config = STATUS_CONFIG[delivery.status];
   const StatusIcon = config.icon;
-  const restaurantName = delivery.rest_name || delivery.restaurantName || '-';
+  const restaurantName = delivery.rest_name || delivery.restaurantName || restaurant?.name || '-';
   const restaurantMeta = delivery.restaurantAddress || delivery.rest_city || delivery.restaurantCity || 'מסעדה';
   const clientName = delivery.client_name || delivery.customerName || '-';
   const clientAddress = delivery.client_full_address || delivery.address || '-';
@@ -469,6 +475,9 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
     >
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
+          <span className="shrink-0" onClick={(event) => event.stopPropagation()}>
+            <DeliveryStageTimelineTooltip delivery={delivery} />
+          </span>
           <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-app-nav-border bg-app-surface-raised text-app-text">
             <Package className="h-3.5 w-3.5" />
           </span>
@@ -483,8 +492,7 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
               <span className="min-w-0 truncate">{formatOrderNumber(delivery.orderNumber)}</span>
               <Copy className="h-3.5 w-3.5 shrink-0 text-app-text-secondary opacity-0 transition-opacity group-hover/order-number:opacity-100 group-focus-visible/order-number:opacity-100" />
             </button>
-            <div className="mt-1 flex min-w-0 items-center gap-2 text-xs text-app-text-secondary">
-              <Clock className="h-3.5 w-3.5 shrink-0" />
+            <div className="mt-1 flex min-w-0 items-center text-xs text-app-text-secondary">
               <DeliveryTimeDetailsTooltip delivery={delivery}>
                 <span className="truncate" dir="ltr">{formatDeliveryDate(delivery)}</span>
               </DeliveryTimeDetailsTooltip>
@@ -493,7 +501,6 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
         </div>
 
         <div className="flex shrink-0 items-center gap-1" onClick={(event) => event.stopPropagation()}>
-          <DeliveryStageTimelineTooltip delivery={delivery} />
           <EntityRowActionTrigger
             onClick={(event) => {
               const rect = event.currentTarget.getBoundingClientRect();
@@ -506,11 +513,11 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
 
       <div className="mt-4 grid grid-cols-1 gap-3">
         <div className="min-w-0">
-          <div className="flex items-center gap-1.5 text-[11px] text-app-text-secondary">
-            <Store className="h-3.5 w-3.5 shrink-0" />
-            <span>מסעדה</span>
+          <div className="text-[11px] text-app-text-secondary">מסעדה</div>
+          <div className="mt-1 flex min-w-0 items-center gap-2">
+            <RestaurantLogoMark name={restaurantName} logoUrl={restaurant?.logoUrl} size="xs" />
+            <span className="truncate text-sm font-medium text-app-text">{restaurantName}</span>
           </div>
-          <div className="mt-1 truncate text-sm font-semibold text-app-text">{restaurantName}</div>
           <div className="mt-1 truncate text-xs text-app-text-secondary">{restaurantMeta}</div>
         </div>
 
@@ -520,10 +527,7 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
             <span>לקוח</span>
           </div>
           <div className="mt-1 truncate text-sm font-semibold text-app-text">{clientName}</div>
-          <div className="mt-1 flex min-w-0 items-center gap-1.5 text-xs text-app-text-secondary">
-            <MapPin className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">{clientAddress}</span>
-          </div>
+          <div className="mt-1 truncate text-xs text-app-text-secondary">{clientAddress}</div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
@@ -549,10 +553,7 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
           <StatusIcon className="h-3.5 w-3.5" />
           <span>{config.label}</span>
         </span>
-        <span className="inline-flex items-center gap-1.5">
-          <MapPin className="h-3.5 w-3.5" />
-          <span>{delivery.delivery_distance ? `${delivery.delivery_distance.toFixed(1)} ק״מ` : '-'}</span>
-        </span>
+        <span>{delivery.delivery_distance ? `${delivery.delivery_distance.toFixed(1)} ק״מ` : '-'}</span>
       </div>
 
       <EntityActionMenuOverlay
@@ -679,6 +680,7 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
   onClearFilters,
   totalCount,
   couriers,
+  restaurants,
   onOpenDrawer,
   onStatusChange,
   onCancelDelivery,
@@ -743,12 +745,14 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
               const courier = delivery.courierId
                 ? couriers.find((candidate) => candidate.id === delivery.courierId) ?? null
                 : null;
+              const restaurant = getRestaurantForDelivery(delivery, restaurants);
 
               return (
                 <DeliveryVercelCard
                   key={delivery.id}
                   delivery={delivery}
                   courier={courier}
+                  restaurant={restaurant}
                   isDrawerTarget={drawerDeliveryId === delivery.id}
                   onOpenDrawer={onOpenDrawer}
                   onStatusChange={onStatusChange}
@@ -774,12 +778,14 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
             const courier = delivery.courierId
               ? couriers.find((candidate) => candidate.id === delivery.courierId) ?? null
               : null;
+            const restaurant = getRestaurantForDelivery(delivery, restaurants);
 
             return (
               <DeliveryVercelRow
                 key={delivery.id}
                 delivery={delivery}
                 courier={courier}
+                restaurant={restaurant}
                 isDrawerTarget={drawerDeliveryId === delivery.id}
                 onOpenDrawer={onOpenDrawer}
                 onStatusChange={onStatusChange}

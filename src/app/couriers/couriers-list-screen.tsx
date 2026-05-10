@@ -817,7 +817,6 @@ export const CouriersListScreen: React.FC = () => {
   return (
     <>
       <EntityListShell
-        contentClassName="items-center"
         sidePanel={
           <EntityListSidePanel
             exportOpen={isExportOpen}
@@ -852,7 +851,7 @@ export const CouriersListScreen: React.FC = () => {
           />
         }
         toolbar={
-          <div className="mx-auto w-full max-w-[1200px]">
+          <div className="w-full">
             <PageToolbar
               showBottomBorder={false}
               showPeriodControl={false}
@@ -887,7 +886,7 @@ export const CouriersListScreen: React.FC = () => {
           </div>
         }
       >
-        <div className="flex min-h-0 w-full max-w-[1200px] flex-1 flex-col">
+        <div className="flex min-h-0 w-full flex-1 flex-col">
             <CouriersVercelList
               couriers={filteredCouriers}
               viewMode={viewMode}

@@ -25,9 +25,15 @@ export interface DeliveryHub {
 export interface Restaurant {
   id: string;
   name: string;
+  logoUrl?: string;
   chainId: string;
   type: string; // סוג מטבח (פיצה, המבורגר, סושי וכו')
   linkedHubIds: string[];
+  managerUsername?: string;
+  managerPassword?: string;
+  contactPerson?: string;
+  ownerName?: string;
+  ownerPhone?: string;
   phone: string;
   address: string;
   city: string;
@@ -43,6 +49,9 @@ export interface Restaurant {
   deliveryRate: number; // כמה משלוחים
   deliveryInterval: number; // תוך כמה דקות
   maxDeliveriesPerHour: number; // מקסימום משלוחים בשעה
+  preparationMode?: 'immediate' | 'future';
+  preventReadyRepeatUpdates?: boolean;
+  courierEtaDisplayMode?: 'arrival' | 'pickup';
 }
 
 // ========================================
@@ -307,6 +316,7 @@ export interface Delivery extends
 export interface Courier {
   id: string;
   name: string;
+  avatarUrl?: string;
   phone: string;
   vehicleType: CourierVehicleType;
   employmentType: CourierEmploymentType;

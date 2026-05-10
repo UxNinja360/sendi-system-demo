@@ -101,7 +101,7 @@ const BusinessAvatar: React.FC<{ name: string; className?: string }> = ({ name, 
 
 const BusinessPlanBadge: React.FC<{ className?: string }> = ({ className = '' }) => (
   <span
-    className={`shrink-0 rounded-full bg-[#1F1F1F] px-2 py-0.5 text-[10px] font-semibold leading-4 text-[#EDEDED] ${className}`}
+    className={`inline-flex h-[18px] shrink-0 items-center rounded-full border border-app-nav-border bg-app-surface-raised px-2 text-[11px] font-medium leading-none text-app-text dark:border-[#2E2E2E] dark:bg-[#1F1F1F] dark:text-[#EDEDED] ${className}`}
   >
     PRO
   </span>

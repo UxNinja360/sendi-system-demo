@@ -26,6 +26,33 @@ export const DEFAULT_RESTAURANT_MAX_DELIVERY_TIME = 30;
 
 const getDefaultPreparationTimeByType = (_type: string) => DEFAULT_RESTAURANT_PREPARATION_TIME;
 
+const getSeedFromText = (value: string) =>
+  Array.from(value).reduce((sum, char, index) => sum + char.charCodeAt(0) * (index + 1), 0);
+
+const getRestaurantOwnerSeedKey = (restaurant: Restaurant) =>
+  `${restaurant.id || ''}-${restaurant.name || ''}`;
+
+export const getDefaultRestaurantOwnerName = (restaurant: Restaurant) => {
+  const ownerName = restaurant.ownerName?.trim();
+  if (ownerName) return ownerName;
+
+  const contactPerson = restaurant.contactPerson?.trim();
+  if (contactPerson) return contactPerson;
+
+  return ISRAELI_NAMES[getSeedFromText(getRestaurantOwnerSeedKey(restaurant)) % ISRAELI_NAMES.length];
+};
+
+export const getDefaultRestaurantOwnerPhone = (restaurant: Restaurant) => {
+  const ownerPhone = restaurant.ownerPhone?.trim();
+  if (ownerPhone) return ownerPhone;
+
+  const seed = getSeedFromText(`${getRestaurantOwnerSeedKey(restaurant)}-owner-phone`);
+  const prefix = 2 + (seed % 8);
+  const number = 1000000 + ((seed * 7919) % 9000000);
+
+  return `05${prefix}-${String(number).padStart(7, '0')}`;
+};
+
 const normalizeCourier = (courier: Courier): Courier => ({
   ...courier,
   vehicleType: courier.vehicleType ?? DEFAULT_COURIER_VEHICLE_TYPE,
@@ -36,6 +63,8 @@ export const normalizeCouriers = (couriers: Courier[]): Courier[] => couriers.ma
 
 const normalizeRestaurant = (restaurant: Restaurant): Restaurant => ({
   ...restaurant,
+  ownerName: getDefaultRestaurantOwnerName(restaurant),
+  ownerPhone: getDefaultRestaurantOwnerPhone(restaurant),
   chainId: restaurant.chainId || getRestaurantChainId(restaurant.name),
   linkedHubIds:
     Array.isArray(restaurant.linkedHubIds) && restaurant.linkedHubIds.length > 0

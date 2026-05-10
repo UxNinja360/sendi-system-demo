@@ -1,9 +1,11 @@
 ﻿import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { format as formatDate } from 'date-fns';
+import { Map as MapIcon } from 'lucide-react';
 import { useDelivery } from '../context/delivery-context-value';
 import { Delivery, DeliveryStatus } from '../types/delivery.types';
 import { DeliveriesSidePanel } from '../deliveries/deliveries-side-panel';
 import { DeliveriesVercelList } from '../deliveries/deliveries-vercel-list';
+import { DeliveriesLiveMapPanel } from '../deliveries/deliveries-live-map-panel';
 import { DeliveriesOverlays } from '../deliveries/deliveries-overlays';
 import { DeliveriesCommandSearch } from '../deliveries/deliveries-command-search';
 import { ALL_COLUMNS, COLUMN_MAP } from '../deliveries/column-defs';
@@ -15,6 +17,7 @@ import type { PeriodMode } from '../components/common/toolbar-period-control';
 import { PageToolbar } from '../components/common/page-toolbar';
 import { ToolbarPeriodControl } from '../components/common/toolbar-period-control';
 import { ViewModeToggle, type EntityViewMode } from '../components/common/view-mode-toggle';
+import { ToolbarIconButton } from '../components/common/toolbar-icon-button';
 import { ListInlineFilters } from '../components/common/list-inline-filters';
 import {
   SelectionActionBar,
@@ -258,6 +261,7 @@ export const DeliveriesPage: React.FC = () => {
     } catch {}
     return 'list';
   });
+  const [mapOpen, setMapOpen] = useState(false);
 
   useEffect(() => (
     addAppTopBarActionListener('create-delivery', () => setNewDeliveryOpen(true))
@@ -563,7 +567,17 @@ export const DeliveriesPage: React.FC = () => {
               />
             }
             controls={
-              <ListInlineFilters filters={deliveryInlineFilters} />
+              <>
+                <ListInlineFilters filters={deliveryInlineFilters} />
+                <ViewModeToggle value={viewMode} onChange={setViewMode} />
+                <ToolbarIconButton
+                  active={mapOpen}
+                  label={mapOpen ? 'סגור מפה' : 'פתח מפה'}
+                  onClick={() => setMapOpen((current) => !current)}
+                >
+                  <MapIcon className="h-3.5 w-3.5" />
+                </ToolbarIconButton>
+              </>
             }
             actions={
               <div className="flex min-w-0 flex-1 items-center gap-1.5">
@@ -584,12 +598,32 @@ export const DeliveriesPage: React.FC = () => {
                   toggleCourier={toggleCourier}
                   setCurrentPage={setCurrentPage}
                 />
-                <ViewModeToggle value={viewMode} onChange={setViewMode} />
               </div>
             }
           />
         }
       >
+        <div
+          className={
+            mapOpen
+              ? 'grid min-h-0 flex-1 grid-cols-1 overflow-hidden xl:grid-cols-[minmax(420px,0.95fr)_minmax(0,1fr)] xl:[direction:ltr]'
+              : 'flex min-h-0 flex-1 flex-col overflow-hidden'
+          }
+        >
+          {mapOpen && (
+            <div className="min-h-[42vh] min-w-0 overflow-hidden border-b border-app-border bg-app-background xl:min-h-0 xl:border-b-0 xl:border-r xl:border-app-border" dir="rtl">
+              <DeliveriesLiveMapPanel
+                deliveries={filteredDeliveries}
+                couriers={state.couriers}
+                restaurants={state.restaurants}
+                routeStopOrders={state.courierRoutePlans}
+                selectedDeliveryIds={selectedIds}
+                onOpenDelivery={handleOpenDrawer}
+              />
+            </div>
+          )}
+
+          <div className="min-h-0 min-w-0 overflow-hidden xl:[direction:rtl]">
             <DeliveriesVercelList
               filteredDeliveries={filteredDeliveries}
               viewMode={viewMode}
@@ -597,6 +631,7 @@ export const DeliveriesPage: React.FC = () => {
               onClearFilters={handleClearAllFilters}
               totalCount={stats.total}
               couriers={state.couriers}
+              restaurants={state.restaurants}
               onOpenDrawer={handleOpenDrawer}
               onStatusChange={handleStatusChange}
               onCancelDelivery={handleCancelDelivery}
@@ -623,6 +658,8 @@ export const DeliveriesPage: React.FC = () => {
                 />
               }
             />
+          </div>
+        </div>
       </EntityListShell>
 
       <DeliveriesOverlays

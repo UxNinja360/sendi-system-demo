@@ -116,6 +116,7 @@ export const AppTopBar: React.FC<AppTopBarProps> = ({ onOpenMobileMenu }) => {
   const restaurantId = getPathDetailId(location.pathname, '/restaurant/');
   const courierId = getPathDetailId(location.pathname, '/courier/');
   const customerId = getPathDetailId(location.pathname, '/customer/');
+  const hasSecondaryTabs = Boolean(restaurantId);
 
   const topBarBreadcrumb: TopBarBreadcrumb | null = (() => {
     if (deliveryId) {
@@ -200,7 +201,9 @@ export const AppTopBar: React.FC<AppTopBarProps> = ({ onOpenMobileMenu }) => {
   return (
     <header
       dir="rtl"
-      className="relative flex h-12 shrink-0 items-center border-b border-app-nav-border bg-app-background px-3 text-app-text md:h-14 md:px-5"
+      className={`relative flex h-12 shrink-0 items-center bg-app-background px-3 text-app-text md:h-14 md:px-5 ${
+        hasSecondaryTabs ? '' : 'border-b border-app-nav-border'
+      }`}
     >
       <button
         type="button"

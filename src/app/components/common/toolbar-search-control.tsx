@@ -1,6 +1,12 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { ToolbarIconButton } from './toolbar-icon-button';
+import {
+  getToolbarSearchShellClassName,
+  toolbarSearchClearButtonClassName,
+  toolbarSearchIconClassName,
+  toolbarSearchInputClassName,
+} from './toolbar-search-primitives';
 
 interface ToolbarSearchControlProps {
   searchOpen: boolean;
@@ -27,6 +33,7 @@ export const ToolbarSearchControl: React.FC<ToolbarSearchControlProps> = ({
   alwaysOpen = false,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [inputFocused, setInputFocused] = useState(false);
   const isSearchVisible = alwaysOpen || searchOpen;
 
   useEffect(() => {
@@ -40,20 +47,30 @@ export const ToolbarSearchControl: React.FC<ToolbarSearchControlProps> = ({
       {isSearchVisible ? (
         <div className={alwaysOpen ? 'flex min-w-0 flex-1 items-center gap-1' : 'flex items-center gap-1'}>
           <div className={alwaysOpen ? 'relative min-w-0 flex-1' : 'relative'}>
-            <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-app-text-muted" />
-            <input
-              ref={inputRef}
-              type="text"
-              placeholder={placeholder}
-              value={searchQuery}
-              onChange={(event) => onSearchQueryChange(event.target.value)}
-              className={`${widthClass} h-10 rounded-[4px] border border-app-border bg-app-surface-raised pr-9 pl-6 text-sm text-app-text outline-none transition-colors placeholder:text-app-text-muted focus:border-app-brand focus:bg-app-surface dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-app-text dark:placeholder:text-app-text-secondary`}
-            />
+            <Search className={toolbarSearchIconClassName} />
+            <div
+              className={getToolbarSearchShellClassName({
+                active: inputFocused,
+                widthClass: alwaysOpen ? 'w-full' : widthClass,
+              })}
+              onClick={() => inputRef.current?.focus()}
+            >
+              <input
+                ref={inputRef}
+                type="text"
+                placeholder={placeholder}
+                value={searchQuery}
+                onFocus={() => setInputFocused(true)}
+                onBlur={() => setInputFocused(false)}
+                onChange={(event) => onSearchQueryChange(event.target.value)}
+                className={toolbarSearchInputClassName}
+              />
+            </div>
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => onSearchQueryChange('')}
-                className="absolute left-2 top-1/2 -translate-y-1/2 rounded p-0.5 transition-colors hover:bg-app-surface-inset dark:hover:bg-[#333333]"
+                className={toolbarSearchClearButtonClassName}
               >
                 <X className="h-3 w-3 text-app-text-muted" />
               </button>

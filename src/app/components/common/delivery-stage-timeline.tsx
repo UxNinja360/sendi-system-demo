@@ -80,6 +80,15 @@ const formatAssignmentDuration = (assignedAt: DateValue, deliveredAt: DateValue,
   return formatDurationParts(totalSeconds);
 };
 
+const stageStatusLabels: Record<DeliveryStatus, string> = {
+  pending: 'ממתין',
+  assigned: 'שובץ',
+  delivering: 'נאסף',
+  delivered: 'נמסר',
+  cancelled: 'בוטל',
+  expired: 'פג תוקף',
+};
+
 const getStageIndicatorMeta = (status: DeliveryStatus) => {
   switch (status) {
     case 'pending':
@@ -132,7 +141,7 @@ export const DeliveryStageIndicator: React.FC<{ status: DeliveryStatus }> = ({ s
             key={`stage-track-${index}`}
             d={path}
             fill="none"
-            stroke="#303030"
+            stroke="var(--app-border-strong)"
             strokeWidth="3"
             strokeLinecap="round"
           />
@@ -166,6 +175,7 @@ export const DeliveryStageTimelineTooltip: React.FC<{
   const arrivedAtCustomer =
     delivery.arrivedAtCustomerAt ?? delivery.arrived_at_client ?? deliveredAt;
   const assignmentDuration = formatAssignmentDuration(assignedAt, deliveredAt, now);
+  const statusLabel = stageStatusLabels[delivery.status];
 
   const timelineRows = [
     { label: 'צוות לשליח', value: assignedAt },
@@ -281,19 +291,26 @@ export const DeliveryStageTimelineTooltip: React.FC<{
             <div
               role="tooltip"
               dir="rtl"
-              className="pointer-events-none fixed z-[9999] max-w-[calc(100vw-16px)] rounded-md border border-[#2a2a2a] bg-[#0b0b0b] px-3.5 py-3 text-sm text-[#ededed] shadow-2xl"
+              className="pointer-events-none fixed z-[9999] max-w-[calc(100vw-16px)] rounded-[6px] border border-[#d9d9d9] bg-white px-3.5 py-3 text-sm text-[#1f2937] shadow-[0_6px_18px_rgba(0,0,0,0.12)]"
               style={{ left: position.left, top: position.top, width: position.width }}
             >
               <div dir="rtl" className="space-y-3">
-                <div className="text-right leading-5 text-[#8f8f8f]">{assignmentDuration ?? '-'}</div>
+                <div className="flex items-center justify-between gap-3 leading-5">
+                  <span className="shrink-0 rounded-[4px] border border-[#d9d9d9] bg-[#f5f5f5] px-1.5 py-0.5 text-xs font-medium text-[#1f2937]">
+                    {statusLabel}
+                  </span>
+                  {assignmentDuration ? (
+                    <span className="min-w-0 truncate text-[#4b5563]">{assignmentDuration}</span>
+                  ) : null}
+                </div>
                 <div className="space-y-2">
                   {timelineRows.map((row) => (
                     <div
                       key={row.label}
                       className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-8"
                     >
-                      <span className="min-w-0 text-[#8f8f8f]">{row.label}</span>
-                      <span dir="ltr" className="font-medium tabular-nums text-[#ededed]">
+                      <span className="min-w-0 text-[#4b5563]">{row.label}</span>
+                      <span dir="ltr" className="font-medium tabular-nums text-[#1f2937]">
                         {formatTimelineTime(row.value)}
                       </span>
                     </div>

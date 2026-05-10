@@ -1,5 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Bike, Check, Search, Store, X } from 'lucide-react';
+import {
+  getToolbarSearchShellClassName,
+  toolbarSearchClearButtonClassName,
+  toolbarSearchIconClassName,
+  toolbarSearchInputClassName,
+} from '../components/common/toolbar-search-primitives';
 
 type CommandKind = 'restaurants' | 'chains' | 'couriers';
 
@@ -376,18 +382,12 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
     : hasInlineTokens
       ? 'הוסף עוד פילטר...'
       : TEXT.placeholder;
-  const searchShellClassName = [
-    'flex h-10 w-full items-center gap-1.5 overflow-hidden rounded-[4px] border pr-9 pl-8 text-sm transition-[background-color,border-color,box-shadow,color]',
-    'text-app-text',
-    isOpen
-      ? 'border-app-border-strong bg-app-surface shadow-[0_0_0_1px_color-mix(in_srgb,var(--app-border-strong)_18%,transparent)] dark:border-[#6B6B6B] dark:bg-[#050505] dark:shadow-none'
-      : 'border-app-border bg-app-surface-raised hover:border-app-border-strong hover:bg-app-surface dark:border-[#3A3A3A] dark:bg-[#050505] dark:hover:border-[#6B6B6B] dark:hover:bg-[#050505]',
-  ].join(' ');
+  const searchShellClassName = getToolbarSearchShellClassName({ active: isOpen });
 
   return (
     <div ref={rootRef} className="relative z-30 flex min-w-0 flex-1" dir="rtl">
       <div className="relative min-w-0 flex-1">
-        <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-app-text-muted" />
+        <Search className={toolbarSearchIconClassName} />
         <div
           className={searchShellClassName}
           onClick={() => {
@@ -439,14 +439,14 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
             onFocus={() => setIsOpen(true)}
             onChange={(event) => handleDraftChange(event.target.value)}
             onKeyDown={handleKeyDown}
-            className="min-w-[120px] flex-1 bg-transparent text-sm text-app-text outline-none placeholder:text-app-text-muted"
+            className={toolbarSearchInputClassName}
           />
         </div>
         {showClearButton ? (
           <button
             type="button"
             onClick={draft ? clearDraft : commandContext ? clearCommandContext : clearAll}
-            className="absolute left-2 top-1/2 -translate-y-1/2 rounded p-0.5 transition-colors hover:bg-app-surface-raised"
+            className={toolbarSearchClearButtonClassName}
             aria-label={draft ? TEXT.clear : commandContext ? TEXT.filters : TEXT.clearAll}
             title={draft ? TEXT.clear : commandContext ? TEXT.filters : TEXT.clearAll}
           >

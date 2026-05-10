@@ -50,7 +50,7 @@
   --app-text-muted:         var(--ds-gray-700);
 
   /* Navigation */
-  --app-nav-bg:             var(--geist-background);
+  --app-nav-bg:             #FAFAFA;
   --app-nav-border:         var(--ds-gray-200);
   --app-nav-active-bg:      var(--ds-gray-100);
   --app-nav-active-text:    var(--ds-gray-1000);
@@ -334,7 +334,7 @@
   --app-text: var(--ds-gray-1000);
   --app-text-secondary: var(--ds-gray-900);
   --app-text-muted: var(--ds-gray-700);
-  --app-nav-bg: var(--geist-background);
+  --app-nav-bg: #FAFAFA;
   --app-nav-border: var(--ds-gray-200);
   --app-nav-active-bg: var(--ds-gray-100);
   --app-nav-active-text: var(--ds-gray-1000);
