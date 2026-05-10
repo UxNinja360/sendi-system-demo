@@ -12,7 +12,6 @@ import {
   Info,
   Package,
   RotateCcw,
-  UserRound,
   UserPlus,
   XCircle,
 } from 'lucide-react';
@@ -26,7 +25,10 @@ import {
   EntityActionMenuItem,
   EntityActionMenuOverlay,
 } from '../components/common/entity-action-menu';
-import { DeliveryStageTimelineTooltip } from '../components/common/delivery-stage-timeline';
+import {
+  DeliveryStageIndicator,
+  DeliveryStageTimelineTooltip,
+} from '../components/common/delivery-stage-timeline';
 import { DeliveryTimeDetailsTooltip } from '../components/common/delivery-time-details-tooltip';
 import { EntityRowActionTrigger } from '../components/common/entity-row-action-trigger';
 import { VercelEmptyState } from '../components/common/vercel-empty-state';
@@ -34,6 +36,7 @@ import type { EntityViewMode } from '../components/common/view-mode-toggle';
 import { STATUS_CONFIG } from './status-config';
 import { formatOrderNumber } from '../utils/order-number';
 import { formatCurrency, getDeliveryCustomerCharge } from '../utils/delivery-finance';
+import { CourierAvatarMark } from '../couriers/courier-avatar-mark';
 import { RestaurantLogoMark } from '../restaurants/restaurant-logo-mark';
 
 type DeliveriesVercelListProps = {
@@ -68,7 +71,7 @@ type DeliveryVercelRowProps = {
 };
 
 const rowGridClass =
-  'grid grid-cols-[minmax(0,1fr)_76px] md:grid-cols-[minmax(96px,128px)_minmax(140px,220px)_minmax(140px,220px)_minmax(96px,140px)_minmax(0,1fr)_44px_36px] xl:grid-cols-[minmax(104px,136px)_minmax(160px,240px)_minmax(160px,240px)_minmax(112px,150px)_minmax(0,1fr)_48px_36px] 2xl:grid-cols-[minmax(112px,144px)_minmax(180px,260px)_minmax(180px,260px)_minmax(124px,164px)_minmax(0,1fr)_52px_36px]';
+  'grid grid-cols-[minmax(0,1fr)_76px] md:grid-cols-[minmax(96px,128px)_minmax(140px,220px)_minmax(140px,220px)_minmax(144px,200px)_minmax(0,1fr)_44px_36px] xl:grid-cols-[minmax(104px,136px)_minmax(160px,240px)_minmax(160px,240px)_minmax(156px,216px)_minmax(0,1fr)_48px_36px] 2xl:grid-cols-[minmax(112px,144px)_minmax(180px,260px)_minmax(180px,260px)_minmax(168px,232px)_minmax(0,1fr)_52px_36px]';
 
 const getDeliveryDate = (delivery: Delivery) =>
   delivery.creation_time ?? delivery.createdAt ?? delivery.delivery_date;
@@ -83,13 +86,48 @@ const formatDeliveryDate = (delivery: Delivery) => {
   }
 };
 
-const CourierVehicleIcon: React.FC<{ vehicleType?: string }> = ({ vehicleType }) => {
-  const Icon = vehicleType === '\u05e8\u05db\u05d1' ? Car : Bike;
-  return <Icon className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />;
-};
+const UNASSIGNED_COURIER_LABEL = 'ממתין לשיבוץ';
 
 const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(' ');
+
+const CourierAssignmentLine: React.FC<{
+  assigned: boolean;
+  label: string;
+  vehicleType?: string;
+  className?: string;
+}> = ({ assigned, label, vehicleType, className }) => {
+  const Icon = assigned ? (vehicleType === 'רכב' ? Car : Bike) : UserPlus;
+
+  return (
+    <div className={joinClassNames('flex min-w-0 items-center gap-1.5 text-right', className)} dir="rtl">
+      <Icon className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
+      <span
+        className={joinClassNames(
+          'min-w-0 truncate text-sm font-semibold',
+          assigned ? 'text-app-text' : 'text-app-text-secondary',
+        )}
+      >
+        {label}
+      </span>
+    </div>
+  );
+};
+
+const DeliveryDirectionMark: React.FC<{
+  label: 'מ-' | 'ל-';
+  shape?: 'square' | 'circle';
+}> = ({ label, shape = 'square' }) => (
+  <span
+    className={joinClassNames(
+      'relative flex h-6 w-6 shrink-0 items-center justify-center border border-app-nav-border bg-app-surface-raised text-[10px] font-semibold leading-none text-app-text shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--app-border)_20%,transparent)]',
+      shape === 'circle' ? 'rounded-full' : 'rounded-[5px]',
+    )}
+    dir="rtl"
+  >
+    {label}
+  </span>
+);
 
 const getRestaurantForDelivery = (delivery: Delivery, restaurants: Restaurant[]) => {
   const restaurantId = delivery.restaurantId || delivery.rest_id;
@@ -145,12 +183,12 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
   const config = STATUS_CONFIG[delivery.status];
   const restaurantName = delivery.rest_name || delivery.restaurantName || restaurant?.name || '-';
   const restaurantMeta = delivery.restaurantAddress || delivery.rest_city || delivery.restaurantCity || 'מסעדה';
-  const clientName = delivery.client_name || delivery.customerName;
+  const clientName = delivery.client_name || delivery.customerName || '-';
   const clientAddress = delivery.client_full_address || delivery.address;
   const hasAssignedCourier = Boolean(courier || delivery.courierId || delivery.runner_id || delivery.courierName);
-  const courierName = courier?.name || delivery.courierName || (hasAssignedCourier ? 'לא ידוע' : 'לא שובץ');
+  const courierName = courier?.name || delivery.courierName || (hasAssignedCourier ? 'לא ידוע' : UNASSIGNED_COURIER_LABEL);
+  const courierColumnText = hasAssignedCourier ? courierName : UNASSIGNED_COURIER_LABEL;
   const courierVehicleType = hasAssignedCourier ? courier?.vehicleType || delivery.vehicle_type : undefined;
-  const courierColumnText = hasAssignedCourier ? courierName : '-';
 
   const closeMenus = () => {
     setContextMenuPos(null);
@@ -203,7 +241,9 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         dir="ltr"
         onClick={(event) => event.stopPropagation()}
       >
-        <DeliveryStageTimelineTooltip delivery={delivery} />
+        <DeliveryStageTimelineTooltip delivery={delivery}>
+          <DeliveryStageIndicator status={delivery.status} />
+        </DeliveryStageTimelineTooltip>
         <EntityRowActionTrigger
           onClick={(event) => {
             const rect = event.currentTarget.getBoundingClientRect();
@@ -234,41 +274,48 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
       </div>
 
       <div className="col-start-1 row-start-2 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:px-2 md:py-2">
-        <div className="flex min-w-0 items-center gap-1.5">
-          <RestaurantLogoMark name={restaurantName} logoUrl={restaurant?.logoUrl} size="xs" />
-          <span className="truncate text-sm font-medium text-app-text">{restaurantName}</span>
+        <div className="flex min-w-0 items-center gap-2 text-right" dir="rtl">
+          <DeliveryDirectionMark label="מ-" />
+          <div className="min-w-0 text-right">
+            <div className="truncate text-sm font-medium text-app-text">{restaurantName}</div>
+            <div className="mt-1 truncate text-sm font-normal text-app-text-secondary">{restaurantMeta}</div>
+          </div>
         </div>
-        <div className="mt-1 truncate text-sm font-normal text-app-text-secondary">{restaurantMeta}</div>
       </div>
 
       <div className="col-start-1 row-start-3 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:px-2 md:py-2">
-        <div className="flex min-w-0 items-center gap-1.5">
-          <UserRound className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
-          <span className="truncate text-sm font-normal text-app-text">{clientName}</span>
+        <div className="flex min-w-0 items-center gap-2 text-right" dir="rtl">
+          <DeliveryDirectionMark label="ל-" />
+          <div className="min-w-0 text-right">
+            <div className="truncate text-sm font-normal text-app-text">{clientName}</div>
+            <div className="mt-1 truncate text-sm font-normal text-app-text-secondary">{clientAddress}</div>
+          </div>
         </div>
-        <div className="mt-1 truncate text-sm font-normal text-app-text-secondary">{clientAddress}</div>
-        <div className="mt-1 flex min-w-0 items-center gap-1.5 text-sm font-normal text-app-text-secondary md:hidden">
-          {hasAssignedCourier ? <CourierVehicleIcon vehicleType={courierVehicleType} /> : null}
-          <span className="min-w-0 truncate text-sm font-normal text-app-text">
-            {courierColumnText}
-          </span>
+        <div className="mt-2 md:hidden">
+          <CourierAssignmentLine
+            assigned={hasAssignedCourier}
+            label={courierColumnText}
+            vehicleType={courierVehicleType}
+          />
         </div>
       </div>
 
       <div className="hidden min-h-0 min-w-0 items-center justify-start px-2 py-1 md:col-auto md:row-auto md:flex md:min-h-[72px] md:px-3 md:py-2">
-        <div className="flex w-full min-w-0 items-center justify-start gap-1.5 overflow-hidden text-right" dir="rtl">
-          {hasAssignedCourier ? <CourierVehicleIcon vehicleType={courierVehicleType} /> : null}
-          <span className="min-w-0 truncate text-sm font-normal text-app-text">
-            {courierColumnText}
-          </span>
-        </div>
+        <CourierAssignmentLine
+          assigned={hasAssignedCourier}
+          label={courierColumnText}
+          vehicleType={courierVehicleType}
+          className="w-full"
+        />
       </div>
 
       <div className="hidden min-h-0 min-w-0 md:block" aria-hidden="true" />
 
       <div className="hidden min-h-0 min-w-0 items-center justify-center px-1 py-2 md:col-auto md:row-auto md:flex md:min-h-[72px]">
         <div className="flex w-full min-w-0 items-center justify-center">
-          <DeliveryStageTimelineTooltip delivery={delivery} />
+          <DeliveryStageTimelineTooltip delivery={delivery}>
+            <DeliveryStageIndicator status={delivery.status} />
+          </DeliveryStageTimelineTooltip>
         </div>
       </div>
 
@@ -421,7 +468,8 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
   const clientName = delivery.client_name || delivery.customerName || '-';
   const clientAddress = delivery.client_full_address || delivery.address || '-';
   const hasAssignedCourier = Boolean(courier || delivery.courierId || delivery.runner_id || delivery.courierName);
-  const courierName = courier?.name || delivery.courierName || (hasAssignedCourier ? 'לא ידוע' : 'לא שובץ');
+  const courierName = courier?.name || delivery.courierName || (hasAssignedCourier ? 'לא ידוע' : UNASSIGNED_COURIER_LABEL);
+  const courierColumnText = hasAssignedCourier ? courierName : UNASSIGNED_COURIER_LABEL;
   const courierVehicleType = hasAssignedCourier ? courier?.vehicleType || delivery.vehicle_type : undefined;
   const priceLabel = formatCurrency(getDeliveryCustomerCharge(delivery));
 
@@ -476,7 +524,9 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
           <span className="shrink-0" onClick={(event) => event.stopPropagation()}>
-            <DeliveryStageTimelineTooltip delivery={delivery} />
+            <DeliveryStageTimelineTooltip delivery={delivery}>
+              <DeliveryStageIndicator status={delivery.status} />
+            </DeliveryStageTimelineTooltip>
           </span>
           <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-app-nav-border bg-app-surface-raised text-app-text">
             <Package className="h-3.5 w-3.5" />
@@ -516,26 +566,33 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
           <div className="text-[11px] text-app-text-secondary">מסעדה</div>
           <div className="mt-1 flex min-w-0 items-center gap-2">
             <RestaurantLogoMark name={restaurantName} logoUrl={restaurant?.logoUrl} size="xs" />
-            <span className="truncate text-sm font-medium text-app-text">{restaurantName}</span>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-medium text-app-text">{restaurantName}</div>
+              <div className="mt-1 truncate text-xs text-app-text-secondary">{restaurantMeta}</div>
+            </div>
           </div>
-          <div className="mt-1 truncate text-xs text-app-text-secondary">{restaurantMeta}</div>
         </div>
 
         <div className="min-w-0">
-          <div className="flex items-center gap-1.5 text-[11px] text-app-text-secondary">
-            <UserRound className="h-3.5 w-3.5 shrink-0" />
-            <span>לקוח</span>
+          <div className="text-[11px] text-app-text-secondary">לקוח</div>
+          <div className="mt-1 flex min-w-0 items-center gap-2">
+            <CourierAvatarMark name={clientName} size="xs" />
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-semibold text-app-text">{clientName}</div>
+              <div className="mt-1 truncate text-xs text-app-text-secondary">{clientAddress}</div>
+            </div>
           </div>
-          <div className="mt-1 truncate text-sm font-semibold text-app-text">{clientName}</div>
-          <div className="mt-1 truncate text-xs text-app-text-secondary">{clientAddress}</div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div className="min-w-0">
             <div className="text-[11px] text-app-text-secondary">שליח</div>
-            <div className="mt-1 flex min-w-0 items-center gap-1.5">
-              {hasAssignedCourier ? <CourierVehicleIcon vehicleType={courierVehicleType} /> : null}
-              <span className="truncate text-sm font-semibold text-app-text">{hasAssignedCourier ? courierName : '-'}</span>
+            <div className="mt-1">
+              <CourierAssignmentLine
+                assigned={hasAssignedCourier}
+                label={courierColumnText}
+                vehicleType={courierVehicleType}
+              />
             </div>
           </div>
           <div className="min-w-0">

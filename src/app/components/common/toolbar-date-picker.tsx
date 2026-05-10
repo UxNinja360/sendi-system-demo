@@ -1,5 +1,5 @@
 import React from 'react';
-import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { ToolbarIconButton } from './toolbar-icon-button';
 
 export type PeriodMode = 'current_month' | 'custom_range';
@@ -294,12 +294,9 @@ export const ToolbarPeriodControl: React.FC<ToolbarPeriodControlProps> = ({
             ? 'border-app-brand bg-app-brand-solid text-app-background dark:border-[#2E2E2E] dark:bg-[#0A0A0A] dark:text-[#EDEDED]'
             : 'border-app-border bg-app-surface text-app-text hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#EDEDED] dark:hover:bg-[#111111]'
         }`}
-      >
-        <CalendarDays className="h-4 w-4 shrink-0 text-app-text-secondary dark:text-app-text" />
-        <span className="whitespace-nowrap">{displayLabel}</span>
-        {hideMonthNavigationOnMobile ? (
-          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-app-text-secondary md:hidden" />
-        ) : null}
+        >
+          <CalendarDays className="h-4 w-4 shrink-0 text-app-text-secondary dark:text-app-text" />
+          <span className="whitespace-nowrap">{displayLabel}</span>
       </button>
 
       {periodMode !== 'custom_range' ? (

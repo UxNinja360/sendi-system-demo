@@ -1,5 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { format as formatDate } from 'date-fns';
+import { Clock3, MapPinned, PackageCheck, Store, UsersRound, type LucideIcon } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
 import type { DeliveryStatus } from '../../types/delivery.types';
@@ -24,8 +25,8 @@ export type DeliveryStageTimelineData = {
   delivered_time?: DateValue;
 };
 
-const deliveryHoverCardWidth = 328;
-const deliveryHoverCardEstimatedHeight = 132;
+const deliveryHoverCardWidth = 364;
+const deliveryHoverCardEstimatedHeight = 178;
 const deliveryHoverCardGap = 8;
 const deliveryHoverCardViewportPadding = 8;
 const deliveryHoverCardCompactBreakpoint = 768;
@@ -87,6 +88,15 @@ const stageStatusLabels: Record<DeliveryStatus, string> = {
   delivered: 'נמסר',
   cancelled: 'בוטל',
   expired: 'פג תוקף',
+};
+
+const stageStatusToneClassNames: Record<DeliveryStatus, string> = {
+  pending: 'bg-orange-500/10 text-orange-700 dark:bg-orange-500/15 dark:text-orange-300',
+  assigned: 'bg-yellow-500/10 text-yellow-700 dark:bg-yellow-500/15 dark:text-yellow-300',
+  delivering: 'bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
+  delivered: 'bg-blue-500/10 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300',
+  cancelled: 'bg-red-500/10 text-red-700 dark:bg-red-500/15 dark:text-red-300',
+  expired: 'bg-zinc-500/10 text-zinc-700 dark:bg-zinc-500/15 dark:text-zinc-300',
 };
 
 const getStageIndicatorMeta = (status: DeliveryStatus) => {
@@ -163,7 +173,9 @@ export const DeliveryStageIndicator: React.FC<{ status: DeliveryStatus }> = ({ s
 
 export const DeliveryStageTimelineTooltip: React.FC<{
   delivery: DeliveryStageTimelineData;
-}> = ({ delivery }) => {
+  children?: React.ReactNode;
+  triggerClassName?: string;
+}> = ({ delivery, children, triggerClassName }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState<{ left: number; top: number; width: number } | null>(null);
   const [now, setNow] = useState(() => Date.now());
@@ -177,10 +189,10 @@ export const DeliveryStageTimelineTooltip: React.FC<{
   const assignmentDuration = formatAssignmentDuration(assignedAt, deliveredAt, now);
   const statusLabel = stageStatusLabels[delivery.status];
 
-  const timelineRows = [
-    { label: 'צוות לשליח', value: assignedAt },
-    { label: 'הגיע למסעדה', value: arrivedAtRestaurant },
-    { label: 'הגיע ללקוח', value: arrivedAtCustomer },
+  const timelineRows: Array<{ label: string; value: DateValue; icon: LucideIcon }> = [
+    { label: 'צוות לשליח', value: assignedAt, icon: UsersRound },
+    { label: 'הגיע למסעדה', value: arrivedAtRestaurant, icon: Store },
+    { label: 'הגיע ללקוח', value: arrivedAtCustomer, icon: MapPinned },
   ];
 
   useEffect(() => {
@@ -272,7 +284,7 @@ export const DeliveryStageTimelineTooltip: React.FC<{
     <>
       <span
         ref={triggerRef}
-        className="relative flex h-8 w-8 shrink-0 items-center justify-center focus:outline-none"
+        className={triggerClassName ?? 'relative flex h-8 w-8 shrink-0 items-center justify-center focus:outline-none'}
         tabIndex={0}
         aria-label="ציר זמן סטטוס משלוח"
         onMouseEnter={() => setIsOpen(true)}
@@ -284,37 +296,48 @@ export const DeliveryStageTimelineTooltip: React.FC<{
           setIsOpen(true);
         }}
       >
-        <DeliveryStageIndicator status={delivery.status} />
+        {children ?? <DeliveryStageIndicator status={delivery.status} />}
       </span>
       {isOpen && position && typeof document !== 'undefined'
         ? createPortal(
             <div
               role="tooltip"
               dir="rtl"
-              className="pointer-events-none fixed z-[9999] max-w-[calc(100vw-16px)] rounded-[6px] border border-[#d9d9d9] bg-white px-3.5 py-3 text-sm text-[#1f2937] shadow-[0_6px_18px_rgba(0,0,0,0.12)]"
+              className="pointer-events-none fixed z-[9999] max-w-[calc(100vw-16px)] rounded-[6px] border border-app-border bg-app-surface p-2 text-sm text-app-text shadow-[0_8px_22px_rgba(0,0,0,0.22)]"
               style={{ left: position.left, top: position.top, width: position.width }}
             >
-              <div dir="rtl" className="space-y-3">
-                <div className="flex items-center justify-between gap-3 leading-5">
-                  <span className="shrink-0 rounded-[4px] border border-[#d9d9d9] bg-[#f5f5f5] px-1.5 py-0.5 text-xs font-medium text-[#1f2937]">
-                    {statusLabel}
+              <div dir="rtl" className="space-y-2">
+                <div
+                  className={`flex min-h-9 items-center justify-between gap-3 rounded-[4px] px-2.5 py-2 ${stageStatusToneClassNames[delivery.status]}`}
+                >
+                  <span className="flex min-w-0 items-center gap-2 text-sm font-medium">
+                    <PackageCheck className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{statusLabel}</span>
                   </span>
-                  {assignmentDuration ? (
-                    <span className="min-w-0 truncate text-[#4b5563]">{assignmentDuration}</span>
-                  ) : null}
+                  <span className="flex shrink-0 items-center gap-1.5 text-xs font-medium opacity-90">
+                    <Clock3 className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{assignmentDuration ?? '-'}</span>
+                  </span>
                 </div>
-                <div className="space-y-2">
-                  {timelineRows.map((row) => (
-                    <div
-                      key={row.label}
-                      className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-8"
-                    >
-                      <span className="min-w-0 text-[#4b5563]">{row.label}</span>
-                      <span dir="ltr" className="font-medium tabular-nums text-[#1f2937]">
-                        {formatTimelineTime(row.value)}
-                      </span>
-                    </div>
-                  ))}
+                <div className="space-y-1.5 px-1 py-1">
+                  {timelineRows.map((row) => {
+                    const RowIcon = row.icon;
+
+                    return (
+                      <div
+                        key={row.label}
+                        className="flex min-h-7 items-center justify-between gap-3"
+                      >
+                        <span className="flex min-w-0 items-center gap-2 text-app-text-secondary">
+                          <RowIcon className="h-4 w-4 shrink-0" />
+                          <span className="min-w-0 truncate">{row.label}</span>
+                        </span>
+                        <span dir="ltr" className="font-medium tabular-nums text-app-text">
+                          {formatTimelineTime(row.value)}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>,

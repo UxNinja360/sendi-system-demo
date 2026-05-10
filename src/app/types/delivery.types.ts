@@ -26,6 +26,7 @@ export interface Restaurant {
   id: string;
   name: string;
   logoUrl?: string;
+  photoUrl?: string;
   chainId: string;
   type: string; // סוג מטבח (פיצה, המבורגר, סושי וכו')
   linkedHubIds: string[];
@@ -321,6 +322,8 @@ export interface Courier {
   vehicleType: CourierVehicleType;
   employmentType: CourierEmploymentType;
   status: CourierStatus;
+  connectedAt?: Date | null;
+  disconnectedAt?: Date | null;
   isOnShift: boolean;
   shiftStartedAt: Date | null;
   shiftEndedAt: Date | null;

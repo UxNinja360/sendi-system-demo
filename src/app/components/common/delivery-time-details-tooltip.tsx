@@ -225,19 +225,19 @@ export const DeliveryTimeDetailsTooltip: React.FC<{
             <div
               role="tooltip"
               dir="rtl"
-              className="pointer-events-none fixed z-[9999] max-w-[calc(100vw-16px)] rounded-[6px] border border-[#d9d9d9] bg-white px-3.5 py-3 text-sm text-[#1f2937] shadow-[0_6px_18px_rgba(0,0,0,0.12)]"
+              className="pointer-events-none fixed z-[9999] max-w-[calc(100vw-16px)] rounded-[6px] border border-app-border bg-app-surface px-3.5 py-3 text-sm text-app-text shadow-[0_6px_18px_rgba(0,0,0,0.18)]"
               style={{ left: position.left, top: position.top, width: position.width }}
             >
               <div dir="rtl" className="space-y-3">
-                <div className="text-right leading-5 text-[#4b5563]">{createdElapsed ?? '-'}</div>
+                <div className="text-right leading-5 text-app-text-secondary">{createdElapsed ?? '-'}</div>
                 <div className="space-y-2">
                   {timeRows.map((row) => (
                     <div
                       key={row.label}
                       className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-8"
                     >
-                      <span className="min-w-0 text-[#4b5563]">{row.label}</span>
-                      <span dir="ltr" className="font-medium tabular-nums text-[#1f2937]">
+                      <span className="min-w-0 text-app-text-secondary">{row.label}</span>
+                      <span dir="ltr" className="font-medium tabular-nums text-app-text">
                         {row.value}
                       </span>
                     </div>

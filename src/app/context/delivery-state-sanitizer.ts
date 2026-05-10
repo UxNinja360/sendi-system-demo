@@ -253,11 +253,16 @@ export const sanitizeLoadedDeliveryState = (
         : activeDeliveryIds.length > 0
           ? 'busy'
           : 'available';
+    const connectedAt =
+      status === 'offline' ? null : courier.connectedAt ?? courier.shiftStartedAt ?? now;
+    const disconnectedAt = status === 'offline' ? courier.disconnectedAt ?? null : null;
 
     if (activeCandidate) {
       return {
         ...courier,
         status,
+        connectedAt,
+        disconnectedAt,
         isOnShift: true,
         shiftStartedAt: activeCandidate.startedAt,
         shiftEndedAt: null,
@@ -269,6 +274,8 @@ export const sanitizeLoadedDeliveryState = (
     return {
       ...courier,
       status,
+      connectedAt,
+      disconnectedAt,
       isOnShift: false,
       shiftEndedAt: courier.isOnShift ? now : courier.shiftEndedAt,
       currentShiftAssignmentId: null,

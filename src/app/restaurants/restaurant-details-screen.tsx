@@ -8,6 +8,7 @@ import {
   Download,
   FileText,
   Gauge,
+  ImageIcon,
   MapPin,
   MoreHorizontal,
   Package,
@@ -18,6 +19,7 @@ import {
   Store,
   Timer,
   TrendingUp,
+  Upload,
   UserRound,
   X,
 } from 'lucide-react';
@@ -43,6 +45,8 @@ type RestaurantDetailsForm = {
   ownerName: string;
   ownerPhone: string;
   phone: string;
+  logoUrl: string;
+  photoUrl: string;
   address: string;
   city: string;
   street: string;
@@ -65,8 +69,10 @@ type RestaurantDetailsForm = {
 };
 
 type RestaurantDetailsTab = 'overview' | 'transactions' | 'statistics' | 'deliveries';
+type RestaurantMediaField = 'logoUrl' | 'photoUrl';
 
 const emptyValue = '-';
+const maxRestaurantMediaFileSize = 3 * 1024 * 1024;
 const defaultSelectedStatuses = new Set<DeliveryStatus>(STATUS_ORDER);
 const restaurantDetailsTabs: Array<{ key: RestaurantDetailsTab; label: string }> = [
   { key: 'overview', label: 'פרטים' },
@@ -94,6 +100,14 @@ const parseOptionalNumber = (value: string) => {
   const numberValue = Number(value);
   return Number.isFinite(numberValue) ? numberValue : undefined;
 };
+
+const readImageFileAsDataUrl = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
 
 const formatNumber = (value?: number | null, suffix = '') => {
   if (typeof value !== 'number' || !Number.isFinite(value)) return emptyValue;
@@ -137,6 +151,8 @@ const createFormFromRestaurant = (restaurant: Restaurant): RestaurantDetailsForm
   ownerName: getDefaultRestaurantOwnerName(restaurant),
   ownerPhone: getDefaultRestaurantOwnerPhone(restaurant),
   phone: restaurant.phone,
+  logoUrl: restaurant.logoUrl || '',
+  photoUrl: restaurant.photoUrl || '',
   address: restaurant.address,
   city: restaurant.city,
   street: restaurant.street,
@@ -322,6 +338,103 @@ const SummaryField = ({
   </div>
 );
 
+const RestaurantPhotoPreview = ({
+  name,
+  photoUrl,
+  className = '',
+}: {
+  name: string;
+  photoUrl?: string;
+  className?: string;
+}) => (
+  <div
+    className={`relative flex min-h-[220px] overflow-hidden rounded-[6px] border border-app-border bg-app-background ${className}`}
+  >
+    {photoUrl ? (
+      <img src={photoUrl} alt={`תמונת חזית של ${name}`} className="h-full w-full object-cover" />
+    ) : (
+      <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-4 text-center">
+        <ImageIcon className="h-9 w-9 text-app-text-muted" />
+        <div className="text-sm font-semibold text-app-text">תמונת מסעדה</div>
+        <div className="max-w-[260px] text-xs leading-5 text-app-text-secondary">
+          כאן תופיע תמונת חזית או כניסה שתצולם למסעדה.
+        </div>
+      </div>
+    )}
+  </div>
+);
+
+const MediaUploadTile = ({
+  title,
+  description,
+  value,
+  restaurantName,
+  kind,
+  editing,
+  onUpload,
+  onClear,
+}: {
+  title: string;
+  description: string;
+  value: string;
+  restaurantName: string;
+  kind: RestaurantMediaField;
+  editing: boolean;
+  onUpload: (file?: File) => void;
+  onClear: () => void;
+}) => (
+  <div className="min-w-0 rounded-[6px] border border-app-border bg-app-background p-3">
+    <div className="flex min-w-0 items-start justify-between gap-3">
+      <div className="min-w-0">
+        <div className="text-sm font-semibold text-app-text">{title}</div>
+        <div className="mt-1 text-xs leading-5 text-app-text-secondary">{description}</div>
+      </div>
+      {editing ? (
+        <div className="flex shrink-0 items-center gap-2">
+          {value ? (
+            <button
+              type="button"
+              onClick={onClear}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-[4px] border border-app-border bg-app-surface text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text"
+              aria-label="הסר מדיה"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          ) : null}
+          <label className="inline-flex h-8 cursor-pointer items-center gap-2 rounded-[4px] border border-app-border bg-app-surface px-3 text-sm font-medium text-app-text transition-colors hover:bg-app-surface-raised">
+            <Upload className="h-4 w-4" />
+            העלאה
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(event) => {
+                onUpload(event.currentTarget.files?.[0]);
+                event.currentTarget.value = '';
+              }}
+            />
+          </label>
+        </div>
+      ) : null}
+    </div>
+
+    <div className="mt-3">
+      {kind === 'photoUrl' ? (
+        <RestaurantPhotoPreview name={restaurantName} photoUrl={value} className="min-h-[170px]" />
+      ) : (
+        <div className="flex min-h-[170px] items-center justify-center rounded-[6px] border border-app-border bg-app-surface">
+          <RestaurantLogoMark
+            name={restaurantName}
+            logoUrl={value}
+            size="lg"
+            className="h-24 w-24 rounded-[12px] text-2xl"
+          />
+        </div>
+      )}
+    </div>
+  </div>
+);
+
 const RestaurantDetailsTabs = ({
   activeTab,
   onChange,
@@ -329,8 +442,8 @@ const RestaurantDetailsTabs = ({
   activeTab: RestaurantDetailsTab;
   onChange: (tab: RestaurantDetailsTab) => void;
 }) => (
-  <div className="sticky top-0 z-10 border-b border-app-nav-border bg-[#FAFAFA]">
-    <div className="flex h-12 w-full flex-row items-center gap-px overflow-x-auto px-2 py-2 md:px-6 2xl:px-4">
+  <div className="sticky top-0 z-10 border-b border-app-nav-border bg-[#FAFAFA] dark:bg-app-background">
+    <div className="flex h-12 w-full flex-row items-center gap-px overflow-x-auto px-2 py-2 md:px-2">
       {restaurantDetailsTabs.map((tab) => {
         const selected = tab.key === activeTab;
 
@@ -666,6 +779,28 @@ export function RestaurantDetailsScreen() {
     setForm((current) => (current ? { ...current, [key]: value } : current));
   };
 
+  const handleMediaFileChange = async (field: RestaurantMediaField, file?: File) => {
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('אפשר להעלות רק קובץ תמונה.');
+      return;
+    }
+
+    if (file.size > maxRestaurantMediaFileSize) {
+      toast.error('התמונה גדולה מדי לדמו. נסה קובץ עד 3MB.');
+      return;
+    }
+
+    try {
+      const dataUrl = await readImageFileAsDataUrl(file);
+      updateForm(field, dataUrl);
+      toast.success('התמונה נוספה לטופס. לחץ שמור כדי לעדכן את המסעדה.');
+    } catch {
+      toast.error('לא הצלחנו לקרוא את קובץ התמונה.');
+    }
+  };
+
   const handleCancelEdit = () => {
     setForm(createFormFromRestaurant(restaurant));
     setEditing(false);
@@ -721,6 +856,8 @@ export function RestaurantDetailsScreen() {
     const nextContactPerson = form.contactPerson.trim() || nextOwnerName;
     const nextPhone = form.phone.trim();
     const nextAddress = form.address.trim();
+    const nextLogoUrl = form.logoUrl.trim();
+    const nextPhotoUrl = form.photoUrl.trim();
 
     if (!nextName || !nextManagerUsername || !nextOwnerName || !nextOwnerPhone || !nextPhone || !nextAddress) {
       toast.error('שם מסעדה, שם משתמש, בעלים, טלפון בעלים, טלפון מסעדה וכתובת הם שדות חובה.');
@@ -775,6 +912,8 @@ export function RestaurantDetailsScreen() {
           ownerName: nextOwnerName,
           ownerPhone: nextOwnerPhone,
           phone: nextPhone,
+          logoUrl: nextLogoUrl || undefined,
+          photoUrl: nextPhotoUrl || undefined,
           address: nextAddress,
           city: nextCity,
           street: nextStreet,
@@ -844,19 +983,15 @@ export function RestaurantDetailsScreen() {
                 <MoreHorizontal className="h-4 w-4" />
               </button>
             </div>
-            <div className="grid grid-cols-1 gap-5 p-4 lg:grid-cols-[180px_minmax(0,1fr)]">
-              <div className="flex min-h-[150px] items-center justify-center rounded-[6px] border border-app-border bg-app-background p-4">
-                <RestaurantLogoMark
-                  name={form.name}
-                  logoUrl={restaurant.logoUrl}
-                  size="lg"
-                  className="h-24 w-24 rounded-[12px] text-2xl"
-                />
-              </div>
+            <div className="grid grid-cols-1 gap-5 p-4 lg:grid-cols-[minmax(320px,400px)_minmax(0,1fr)]">
+              <RestaurantPhotoPreview name={form.name} photoUrl={form.photoUrl || restaurant.photoUrl} />
 
               <div className="min-w-0">
                 <div className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2 xl:grid-cols-4">
-                  <SummaryField label="שם מסעדה" value={form.name} />
+                  <SummaryField label="שם מסעדה">
+                    <RestaurantLogoMark name={form.name} logoUrl={form.logoUrl} size="xs" />
+                    <span className="truncate">{form.name || emptyValue}</span>
+                  </SummaryField>
                   <SummaryField label="סטטוס">
                     <span
                       className={`h-2.5 w-2.5 shrink-0 rounded-full ${
@@ -876,32 +1011,15 @@ export function RestaurantDetailsScreen() {
                       <MapPin className="h-4 w-4 shrink-0 text-app-text-secondary" />
                       <span className="truncate">{form.address || emptyValue}</span>
                     </div>
-                    <div className="flex min-w-0 items-center gap-2">
-                      <span className="flex h-4 w-4 shrink-0 items-center justify-center text-app-text-secondary">•</span>
-                      <span className="truncate">{form.city || emptyValue}</span>
-                      <span className="shrink-0 text-app-text-secondary">·</span>
-                      <span className="truncate text-app-text-secondary" dir="ltr">
+                    <div className="flex min-w-0 items-center gap-2 text-app-text-secondary">
+                      <span className="shrink-0 text-xs font-medium">נ.צ</span>
+                      <span className="truncate" dir="ltr">
                         {formatNumber(restaurant.lat)}, {formatNumber(restaurant.lng)}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-5 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
-                  <div className="min-w-0">
-                    <div className="text-sm leading-5 text-app-text-secondary">בעלים</div>
-                    <div className="mt-2 space-y-1.5 text-sm leading-5 text-app-text">
-                      <div className="truncate">{form.ownerName || emptyValue}</div>
-                      <div className="truncate text-app-text-secondary" dir="ltr">{form.ownerPhone || emptyValue}</div>
-                    </div>
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-sm leading-5 text-app-text-secondary">טלפון מסעדה</div>
-                    <div className="mt-2 truncate text-sm leading-5 text-app-text" dir="ltr">
-                      {form.phone || emptyValue}
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -955,6 +1073,28 @@ export function RestaurantDetailsScreen() {
             <section className="bg-app-background/40">
               <div className="grid grid-cols-1 gap-5 p-4 pt-3 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.45fr)]">
                 <div className="space-y-4">
+                  <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.35fr)_minmax(260px,0.65fr)]">
+                    <MediaUploadTile
+                      title="תמונת מסעדה"
+                      description="תמונת חזית או כניסה שתצולם למסעדה בשטח."
+                      value={form.photoUrl}
+                      restaurantName={form.name}
+                      kind="photoUrl"
+                      editing={editing}
+                      onUpload={(file) => void handleMediaFileChange('photoUrl', file)}
+                      onClear={() => updateForm('photoUrl', '')}
+                    />
+                    <MediaUploadTile
+                      title="לוגו מסעדה"
+                      description="הלוגו הקטן שמופיע ליד שם המסעדה ובטבלאות."
+                      value={form.logoUrl}
+                      restaurantName={form.name}
+                      kind="logoUrl"
+                      editing={editing}
+                      onUpload={(file) => void handleMediaFileChange('logoUrl', file)}
+                      onClear={() => updateForm('logoUrl', '')}
+                    />
+                  </div>
                   <Panel title="פרופיל מסעדה" icon={Store} variant="embedded">
                     <div className="grid grid-cols-1 gap-x-4 md:grid-cols-2">
                       <DetailField label="שם מסעדה" value={form.name} editing={editing}>

@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Package, Star } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
@@ -25,17 +25,47 @@ type CouriersVercelListProps = {
 };
 
 const rowGridClass =
-  'grid grid-cols-[minmax(0,1fr)_44px] md:grid-cols-[minmax(140px,220px)_minmax(112px,150px)_minmax(96px,140px)_minmax(0,1fr)_52px_36px] xl:grid-cols-[minmax(160px,240px)_minmax(124px,164px)_minmax(112px,150px)_minmax(0,1fr)_52px_36px] 2xl:grid-cols-[minmax(180px,260px)_minmax(132px,176px)_minmax(124px,164px)_minmax(0,1fr)_56px_36px]';
+  'grid grid-cols-[minmax(0,1fr)_44px] md:grid-cols-[minmax(140px,220px)_minmax(112px,150px)_minmax(112px,150px)_minmax(96px,140px)_minmax(0,1fr)_52px_36px] xl:grid-cols-[minmax(160px,240px)_minmax(124px,164px)_minmax(124px,164px)_minmax(112px,150px)_minmax(0,1fr)_52px_36px] 2xl:grid-cols-[minmax(180px,260px)_minmax(132px,176px)_minmax(132px,176px)_minmax(124px,164px)_minmax(0,1fr)_56px_36px]';
 
 const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(' ');
+
+type DateValue = Date | string | number | null | undefined;
+
+const toDate = (value: DateValue) => {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const formatElapsedDuration = (value: DateValue, now: number) => {
+  const date = toDate(value);
+  if (!date) return '-';
+
+  const totalSeconds = Math.max(0, Math.floor((now - date.getTime()) / 1000));
+  if (totalSeconds < 60) return `${totalSeconds} שנ׳`;
+
+  const totalMinutes = Math.floor(totalSeconds / 60);
+  if (totalMinutes < 60) return `${totalMinutes} דק׳`;
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours < 24) return minutes > 0 ? `${hours} שע׳ ${minutes} דק׳` : `${hours} שע׳`;
+
+  const days = Math.floor(hours / 24);
+  const remainingHours = hours % 24;
+  return remainingHours > 0 ? `${days} ימ׳ ${remainingHours} שע׳` : `${days} ימ׳`;
+};
 
 const getConnectionMeta = (courier: Courier) => {
   const isConnected = courier.status !== 'offline';
 
   return {
     label: isConnected ? '\u05de\u05d7\u05d5\u05d1\u05e8' : '\u05dc\u05d0 \u05de\u05d7\u05d5\u05d1\u05e8',
-    text: isConnected ? 'text-app-success-text' : 'text-app-text-secondary',
+    isActive: isConnected,
+    startedAt: isConnected ? courier.connectedAt ?? courier.shiftStartedAt : null,
+    dot: isConnected ? 'bg-[#50e3c2]' : 'bg-app-text-muted',
+    text: isConnected ? 'text-app-text' : 'text-app-text-secondary',
   };
 };
 
@@ -43,17 +73,43 @@ const getShiftMeta = (courier: Courier) => {
   const isOnShift = courier.isOnShift;
 
   return {
-    label: isOnShift ? '\u05d1\u05de\u05e9\u05de\u05e8\u05ea' : '\u05dc\u05d0 \u05d1\u05de\u05e9\u05de\u05e8\u05ea',
+    label: isOnShift ? '\u05e4\u05e2\u05d9\u05dc' : '\u05dc\u05d0 \u05e4\u05e2\u05d9\u05dc',
+    isActive: isOnShift,
+    startedAt: isOnShift ? courier.shiftStartedAt : null,
+    dot: isOnShift ? 'bg-[#50e3c2]' : 'bg-app-text-muted',
     text: isOnShift ? 'text-app-text' : 'text-app-text-secondary',
   };
 };
 
+const CourierLiveStatus: React.FC<{
+  label: string;
+  isActive: boolean;
+  startedAt: DateValue;
+  dotClassName: string;
+  textClassName: string;
+  now: number;
+}> = ({ label, isActive, startedAt, dotClassName, textClassName, now }) => (
+  <div className="min-w-0 text-right">
+    <div className="flex min-w-0 items-center justify-start gap-2">
+      <span className={joinClassNames('h-2.5 w-2.5 shrink-0 rounded-full', dotClassName)} />
+      <span className={joinClassNames('min-w-0 truncate text-sm font-medium', textClassName)}>
+        {label}
+      </span>
+    </div>
+    <div className="mt-1 truncate text-xs tabular-nums text-app-text-secondary" dir="rtl">
+      {isActive ? formatElapsedDuration(startedAt, now) : '-'}
+    </div>
+  </div>
+);
+
 const CourierVercelRow: React.FC<{
   courier: Courier;
+  now: number;
   onOpenActionsMenu: CouriersVercelListProps['onOpenActionsMenu'];
   onOpenContextMenu: CouriersVercelListProps['onOpenContextMenu'];
 }> = ({
   courier,
+  now,
   onOpenActionsMenu,
   onOpenContextMenu,
 }) => {
@@ -93,21 +149,35 @@ const CourierVercelRow: React.FC<{
       </div>
 
       <div className="col-start-1 row-start-2 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
-        <span className={joinClassNames('truncate text-sm font-semibold', connectionMeta.text)}>
-          {connectionMeta.label}
-        </span>
-        <div className={joinClassNames('mt-1 truncate text-sm font-normal', shiftMeta.text)}>
-          {shiftMeta.label}
-        </div>
+        <CourierLiveStatus
+          label={connectionMeta.label}
+          isActive={connectionMeta.isActive}
+          startedAt={connectionMeta.startedAt}
+          dotClassName={connectionMeta.dot}
+          textClassName={connectionMeta.text}
+          now={now}
+        />
       </div>
 
       <div className="col-start-1 row-start-3 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
+        <CourierLiveStatus
+          label={shiftMeta.label}
+          isActive={shiftMeta.isActive}
+          startedAt={shiftMeta.startedAt}
+          dotClassName={shiftMeta.dot}
+          textClassName={shiftMeta.text}
+          now={now}
+        />
+      </div>
+
+      <div className="col-start-1 row-start-4 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
         <div className="truncate text-sm font-semibold text-app-text">{courier.vehicleType}</div>
+        <div className="mt-1 truncate text-xs font-normal text-app-text-secondary">{courier.employmentType}</div>
       </div>
 
       <div className="hidden min-h-0 min-w-0 md:block" aria-hidden="true" />
 
-      <div className="col-start-1 row-start-4 flex min-h-0 items-center justify-start px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:justify-center md:px-3 md:py-2">
+      <div className="col-start-1 row-start-5 flex min-h-0 items-center justify-start px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:justify-center md:px-3 md:py-2">
         <div className="flex items-center gap-1.5 text-sm font-normal text-app-text-secondary">
           <Star className="h-3.5 w-3.5 shrink-0" />
           <span className="tabular-nums">{courier.rating.toFixed(1)}</span>
@@ -127,11 +197,13 @@ const CourierVercelRow: React.FC<{
 const CourierVercelCard: React.FC<{
   courier: Courier;
   currentDelivery: Delivery | null;
+  now: number;
   onOpenActionsMenu: CouriersVercelListProps['onOpenActionsMenu'];
   onOpenContextMenu: CouriersVercelListProps['onOpenContextMenu'];
 }> = ({
   courier,
   currentDelivery,
+  now,
   onOpenActionsMenu,
   onOpenContextMenu,
 }) => {
@@ -181,16 +253,24 @@ const CourierVercelCard: React.FC<{
 
       <div className="mt-4 grid grid-cols-2 gap-3">
         <div className="min-w-0">
-          <div className="text-[11px] text-app-text-secondary">חיבור</div>
-          <div className={joinClassNames('mt-1 truncate text-sm font-semibold', connectionMeta.text)}>
-            {connectionMeta.label}
-          </div>
+          <CourierLiveStatus
+            label={connectionMeta.label}
+            isActive={connectionMeta.isActive}
+            startedAt={connectionMeta.startedAt}
+            dotClassName={connectionMeta.dot}
+            textClassName={connectionMeta.text}
+            now={now}
+          />
         </div>
         <div className="min-w-0">
-          <div className="text-[11px] text-app-text-secondary">משמרת</div>
-          <div className={joinClassNames('mt-1 truncate text-sm font-semibold', shiftMeta.text)}>
-            {shiftMeta.label}
-          </div>
+          <CourierLiveStatus
+            label={shiftMeta.label}
+            isActive={shiftMeta.isActive}
+            startedAt={shiftMeta.startedAt}
+            dotClassName={shiftMeta.dot}
+            textClassName={shiftMeta.text}
+            now={now}
+          />
         </div>
         <div className="min-w-0">
           <div className="text-[11px] text-app-text-secondary">משלוח נוכחי</div>
@@ -228,6 +308,12 @@ export const CouriersVercelList: React.FC<CouriersVercelListProps> = ({
   selectionBar,
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(intervalId);
+  }, []);
 
   useLayoutEffect(() => {
     const element = scrollContainerRef.current;
@@ -276,6 +362,7 @@ export const CouriersVercelList: React.FC<CouriersVercelListProps> = ({
                 key={courier.id}
                 courier={courier}
                 currentDelivery={activeDeliveriesByCourier.get(courier.id) ?? null}
+                now={now}
                 onOpenActionsMenu={onOpenActionsMenu}
                 onOpenContextMenu={onOpenContextMenu}
               />
@@ -295,6 +382,7 @@ export const CouriersVercelList: React.FC<CouriersVercelListProps> = ({
             <CourierVercelRow
               key={courier.id}
               courier={courier}
+              now={now}
               onOpenActionsMenu={onOpenActionsMenu}
               onOpenContextMenu={onOpenContextMenu}
             />

@@ -198,6 +198,8 @@ const generateCouriers = (): Courier[] => {
       vehicleType: vehicleTypes[i % vehicleTypes.length],
       employmentType: employmentTypes[i % employmentTypes.length],
       status: 'offline',
+      connectedAt: null,
+      disconnectedAt: null,
       isOnShift: false,
       shiftStartedAt: null,
       shiftEndedAt: null,

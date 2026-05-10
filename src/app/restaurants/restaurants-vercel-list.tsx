@@ -38,16 +38,14 @@ type RestaurantsVercelListProps = {
 };
 
 const rowGridClass =
-  'grid grid-cols-[minmax(0,1fr)_44px] md:grid-cols-[minmax(140px,220px)_minmax(96px,140px)_minmax(140px,220px)_minmax(0,1fr)_minmax(84px,124px)_36px] xl:grid-cols-[minmax(160px,240px)_minmax(112px,150px)_minmax(160px,240px)_minmax(0,1fr)_minmax(88px,132px)_36px] 2xl:grid-cols-[minmax(180px,260px)_minmax(124px,164px)_minmax(180px,260px)_minmax(0,1fr)_minmax(96px,140px)_36px]';
+  'grid grid-cols-[minmax(0,1fr)_44px] md:grid-cols-[minmax(140px,220px)_minmax(84px,124px)_minmax(96px,140px)_minmax(140px,220px)_minmax(0,1fr)_36px] xl:grid-cols-[minmax(160px,240px)_minmax(88px,132px)_minmax(112px,150px)_minmax(160px,240px)_minmax(0,1fr)_36px] 2xl:grid-cols-[minmax(180px,260px)_minmax(96px,140px)_minmax(124px,164px)_minmax(180px,260px)_minmax(0,1fr)_36px]';
 
 const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(' ');
 
 const getRestaurantStatusMeta = (restaurant: RestaurantVercelListItem) => ({
   label: restaurant.status,
-  badge: restaurant.isActive
-    ? 'border-app-success-subtle bg-app-success-subtle text-app-success-text'
-    : 'border-app-nav-border bg-app-surface-raised text-app-text-secondary',
+  text: restaurant.isActive ? 'text-app-success-text' : 'text-app-text-secondary',
 });
 
 const RestaurantVercelRow: React.FC<{
@@ -93,13 +91,19 @@ const RestaurantVercelRow: React.FC<{
       </div>
 
       <div className="col-start-1 row-start-2 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
+        <span className={joinClassNames('truncate text-sm font-semibold', statusMeta.text)}>
+          {statusMeta.label}
+        </span>
+      </div>
+
+      <div className="col-start-1 row-start-3 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
         <div className="truncate text-sm font-semibold text-app-text">{restaurant.type}</div>
         {restaurant.chainId && restaurant.chainId !== '-' && (
           <div className="mt-1 truncate text-sm font-normal text-app-text-secondary">{restaurant.chainId}</div>
         )}
       </div>
 
-      <div className="col-start-1 row-start-3 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
+      <div className="col-start-1 row-start-4 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
         <div className="truncate text-sm font-semibold text-app-text">{restaurant.contactPerson || '-'}</div>
         <div className="mt-1 truncate text-right text-sm font-normal text-app-text-secondary" dir="ltr">
           {restaurant.ownerPhone || '-'}
@@ -107,17 +111,6 @@ const RestaurantVercelRow: React.FC<{
       </div>
 
       <div className="hidden min-h-0 min-w-0 md:block" aria-hidden="true" />
-
-      <div className="col-start-1 row-start-4 flex min-h-0 min-w-0 flex-col items-end justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:px-3 md:py-2">
-        <span
-          className={joinClassNames(
-            'inline-flex max-w-full items-center rounded-full border px-2 py-0.5 text-xs font-semibold',
-            statusMeta.badge,
-          )}
-        >
-          <span className="truncate">{statusMeta.label}</span>
-        </span>
-      </div>
 
       <div className="col-start-2 row-start-1 flex min-h-0 items-start justify-center px-1 py-3 md:col-auto md:row-auto md:min-h-[72px] md:items-center md:py-0" onClick={(event) => event.stopPropagation()}>
         <EntityRowActionTrigger
@@ -166,7 +159,12 @@ const RestaurantVercelCard: React.FC<{
         <div className="flex min-w-0 items-start gap-3">
           <RestaurantLogoMark name={restaurant.name} logoUrl={restaurant.logoUrl} size="md" />
           <div className="min-w-0">
-            <div className="truncate text-sm font-semibold text-app-text">{restaurant.name}</div>
+            <div className="flex min-w-0 items-baseline gap-2">
+              <div className="truncate text-sm font-semibold text-app-text">{restaurant.name}</div>
+              <span className={joinClassNames('shrink-0 text-sm font-semibold', statusMeta.text)}>
+                {statusMeta.label}
+              </span>
+            </div>
             <div className="mt-1 truncate text-xs text-app-text-secondary">{address}</div>
           </div>
         </div>
@@ -182,19 +180,6 @@ const RestaurantVercelCard: React.FC<{
         <div className="min-w-0">
           <div className="text-[11px] text-app-text-secondary">סוג</div>
           <div className="mt-1 truncate text-sm font-semibold text-app-text">{restaurant.type || '-'}</div>
-        </div>
-        <div className="min-w-0">
-          <div className="text-[11px] text-app-text-secondary">סטטוס</div>
-          <div className="mt-1">
-            <span
-              className={joinClassNames(
-                'inline-flex max-w-full items-center rounded-full border px-2 py-0.5 text-xs font-semibold',
-                statusMeta.badge,
-              )}
-            >
-              <span className="truncate">{statusMeta.label}</span>
-            </span>
-          </div>
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-1.5 text-[11px] text-app-text-secondary">

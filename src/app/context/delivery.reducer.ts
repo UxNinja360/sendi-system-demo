@@ -356,6 +356,13 @@ const updateCourierStatusState = (
       ? {
           ...courier,
           status,
+          connectedAt:
+            status === 'offline'
+              ? null
+              : courier.status === 'offline' || !courier.connectedAt
+                ? now
+                : courier.connectedAt,
+          disconnectedAt: status === 'offline' ? now : null,
           isOnShift: status === 'offline' ? false : courier.isOnShift,
           shiftEndedAt: status === 'offline' && courier.isOnShift ? now : courier.shiftEndedAt,
           currentShiftAssignmentId:
@@ -520,6 +527,9 @@ const updateCouriersForStartedShift = (
     courier.id === courierId
       ? {
           ...courier,
+          status: courier.status === 'offline' ? 'available' : courier.status,
+          connectedAt: courier.connectedAt ?? now,
+          disconnectedAt: null,
           isOnShift: true,
           shiftStartedAt: now,
           shiftEndedAt: null,
@@ -530,8 +540,8 @@ const updateCouriersForStartedShift = (
             ...courier,
             isOnShift: false,
             shiftEndedAt: now,
-          currentShiftAssignmentId: null,
-        }
+            currentShiftAssignmentId: null,
+          }
         : courier
   );
 
@@ -1071,6 +1081,9 @@ const startShiftAssignmentState = (
       item.id === assignment.courierId
         ? {
             ...item,
+            status: item.status === 'offline' ? 'available' : item.status,
+            connectedAt: item.connectedAt ?? now,
+            disconnectedAt: null,
             isOnShift: true,
             shiftStartedAt: now,
             shiftEndedAt: null,
@@ -2290,9 +2303,23 @@ const reduceDeliveryState = (state: DeliveryState, action: DeliveryAction): Deli
     }
 
     case 'ADD_COURIER': {
+      const now = new Date();
+      const courier =
+        action.payload.status === 'offline'
+          ? {
+              ...action.payload,
+              connectedAt: null,
+              disconnectedAt: action.payload.disconnectedAt ?? now,
+            }
+          : {
+              ...action.payload,
+              connectedAt: action.payload.connectedAt ?? now,
+              disconnectedAt: null,
+            };
+
       return {
         ...state,
-        couriers: [...state.couriers, action.payload],
+        couriers: [...state.couriers, courier],
       };
     }
 
