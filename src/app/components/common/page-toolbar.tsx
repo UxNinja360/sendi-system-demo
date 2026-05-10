@@ -113,7 +113,7 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
           }`.trim()}
         >
           <div className="app-toolbar-row overflow-visible px-3 py-2.5">
-            <div className="flex w-full min-w-0 flex-wrap items-center gap-1.5 md:flex-nowrap">
+            <div className="flex w-full min-w-0 flex-wrap items-center gap-1.5 min-[720px]:flex-nowrap">
               {renderedPeriodControl ? (
                 <div className="flex max-w-full shrink-0 flex-nowrap items-center gap-1">
                   {renderedPeriodControl}
@@ -121,7 +121,7 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
               ) : null}
               {actions ? (
                 <div
-                  className={`order-first mb-1 flex min-w-0 flex-1 basis-full flex-nowrap items-center gap-1 md:order-none md:mb-0 md:basis-0 ${actionsClassName}`.trim()}
+                  className={`order-first mb-1 flex min-w-0 flex-1 basis-full flex-nowrap items-center gap-1 min-[720px]:order-none min-[720px]:mb-0 min-[720px]:basis-0 ${actionsClassName}`.trim()}
                 >
                   {actions}
                 </div>

@@ -77,6 +77,7 @@ const BUSINESSES = [
 const SIDEBAR_MIN_WIDTH = 250;
 const SIDEBAR_MAX_WIDTH = 400;
 const SIDEBAR_COLLAPSED_WIDTH = 60;
+const DESKTOP_SIDEBAR_BREAKPOINT = 720;
 
 const clampSidebarWidth = (width: number) =>
   Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, width));
@@ -152,10 +153,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
   const [isBusinessPopupOpen, setIsBusinessPopupOpen] = useState(false);
   const [businessSearch, setBusinessSearch] = useState('');
   const [selectedBusiness, setSelectedBusiness] = useState(BUSINESSES[0]);
-  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768);
+  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= DESKTOP_SIDEBAR_BREAKPOINT);
   const [isCollapsed, setIsCollapsed] = useState(() => {
     try {
-      if (window.innerWidth < 768) return false;
+      if (window.innerWidth < DESKTOP_SIDEBAR_BREAKPOINT) return false;
       const saved = localStorage.getItem('sidebar-collapsed');
       return saved ? JSON.parse(saved) : false;
     } catch {
@@ -238,7 +239,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
   useEffect(() => {
     const handleResize = () => {
-      const desktop = window.innerWidth >= 768;
+      const desktop = window.innerWidth >= DESKTOP_SIDEBAR_BREAKPOINT;
       setIsDesktop(desktop);
       if (!desktop) setIsCollapsed(false);
     };
@@ -538,8 +539,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
       <div
         dir="rtl"
-        className={`app-shell-height group/sidebar fixed inset-y-0 right-0 z-[110] flex flex-col border-l border-app-nav-border bg-app-nav-bg shadow-xl md:static md:z-50 md:shadow-none ${
-          isCollapsed ? 'translate-x-0' : 'translate-x-full md:translate-x-0'
+        className={`app-shell-height group/sidebar fixed inset-y-0 right-0 z-[110] flex flex-col border-l border-app-nav-border bg-app-nav-bg shadow-xl min-[720px]:static min-[720px]:z-50 min-[720px]:shadow-none ${
+          isCollapsed ? 'translate-x-0' : 'translate-x-full min-[720px]:translate-x-0'
         }`}
         style={{
           width: isDesktop ? (isCollapsed ? SIDEBAR_COLLAPSED_WIDTH : sidebarWidth) : '260px',
@@ -562,7 +563,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
               event.preventDefault();
               toggleDesktopSidebar();
             }}
-            className="group/sidebar-resize absolute bottom-0 left-0 top-0 z-20 hidden w-4 -translate-x-1/2 cursor-ew-resize items-center justify-center focus:outline-none md:flex"
+            className="group/sidebar-resize absolute bottom-0 left-0 top-0 z-20 hidden w-4 -translate-x-1/2 cursor-ew-resize items-center justify-center focus:outline-none min-[720px]:flex"
             aria-label={isCollapsed ? 'Open sidebar' : 'Collapse sidebar'}
             title={isCollapsed ? 'Open sidebar' : 'Collapse sidebar'}
           >

@@ -50,7 +50,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ onOpenMenu }
     <nav
       dir="rtl"
       aria-label="ניווט ראשי"
-      className="shrink-0 border-t border-app-nav-border bg-app-nav-bg/95 px-3 pt-2 backdrop-blur md:hidden"
+      className="shrink-0 border-t border-app-nav-border bg-app-nav-bg/95 px-3 pt-2 backdrop-blur min-[720px]:hidden"
       style={{ paddingBottom: 'calc(0.5rem + var(--app-safe-bottom))' }}
     >
       <div className="grid grid-cols-5 items-stretch gap-1 rounded-[var(--app-radius-md)] border border-app-nav-border bg-app-nav-bg p-1">

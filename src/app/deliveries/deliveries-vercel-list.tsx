@@ -71,7 +71,7 @@ type DeliveryVercelRowProps = {
 };
 
 const rowGridClass =
-  'grid grid-cols-[minmax(0,1fr)_76px] md:grid-cols-[minmax(96px,128px)_minmax(140px,220px)_minmax(140px,220px)_minmax(144px,200px)_minmax(0,1fr)_44px_36px] xl:grid-cols-[minmax(104px,136px)_minmax(160px,240px)_minmax(160px,240px)_minmax(156px,216px)_minmax(0,1fr)_48px_36px] 2xl:grid-cols-[minmax(112px,144px)_minmax(180px,260px)_minmax(180px,260px)_minmax(168px,232px)_minmax(0,1fr)_52px_36px]';
+  'grid grid-cols-[minmax(0,1fr)_76px] sm:grid-cols-[minmax(96px,128px)_minmax(140px,220px)_minmax(140px,220px)_minmax(144px,200px)_minmax(0,1fr)_44px_36px] xl:grid-cols-[minmax(104px,136px)_minmax(160px,240px)_minmax(160px,240px)_minmax(156px,216px)_minmax(0,1fr)_48px_36px] 2xl:grid-cols-[minmax(112px,144px)_minmax(180px,260px)_minmax(180px,260px)_minmax(168px,232px)_minmax(0,1fr)_52px_36px]';
 
 const getDeliveryDate = (delivery: Delivery) =>
   delivery.creation_time ?? delivery.createdAt ?? delivery.delivery_date;
@@ -237,7 +237,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
       )}
     >
       <div
-        className="col-start-2 row-start-1 flex min-h-0 flex-row-reverse items-start justify-center gap-2 px-2 py-3 md:hidden"
+        className="col-start-2 row-start-1 flex min-h-0 flex-row-reverse items-start justify-center gap-2 px-2 py-3 sm:hidden"
         dir="ltr"
         onClick={(event) => event.stopPropagation()}
       >
@@ -253,7 +253,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         />
       </div>
 
-      <div className="col-start-1 row-start-1 flex min-h-0 min-w-0 flex-col justify-center px-2 py-2 md:col-auto md:row-auto md:min-h-[72px] md:px-3">
+      <div className="col-start-1 row-start-1 flex min-h-0 min-w-0 flex-col justify-center px-2 py-2 sm:col-auto sm:row-auto sm:min-h-[72px] sm:px-3">
         <div className="flex min-w-0 flex-col items-start gap-0">
           <button
             type="button"
@@ -273,7 +273,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         </div>
       </div>
 
-      <div className="col-start-1 row-start-2 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:px-2 md:py-2">
+      <div className="col-start-1 row-start-2 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 sm:col-auto sm:row-auto sm:min-h-[72px] sm:px-2 sm:py-2">
         <div className="flex min-w-0 items-center gap-2 text-right" dir="rtl">
           <DeliveryDirectionMark label="מ-" />
           <div className="min-w-0 text-right">
@@ -283,7 +283,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         </div>
       </div>
 
-      <div className="col-start-1 row-start-3 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:px-2 md:py-2">
+      <div className="col-start-1 row-start-3 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 sm:col-auto sm:row-auto sm:min-h-[72px] sm:px-2 sm:py-2">
         <div className="flex min-w-0 items-center gap-2 text-right" dir="rtl">
           <DeliveryDirectionMark label="ל-" />
           <div className="min-w-0 text-right">
@@ -291,7 +291,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
             <div className="mt-1 truncate text-sm font-normal text-app-text-secondary">{clientAddress}</div>
           </div>
         </div>
-        <div className="mt-2 md:hidden">
+        <div className="mt-2 sm:hidden">
           <CourierAssignmentLine
             assigned={hasAssignedCourier}
             label={courierColumnText}
@@ -300,7 +300,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         </div>
       </div>
 
-      <div className="hidden min-h-0 min-w-0 items-center justify-start px-2 py-1 md:col-auto md:row-auto md:flex md:min-h-[72px] md:px-3 md:py-2">
+      <div className="hidden min-h-0 min-w-0 items-center justify-start px-2 py-1 sm:col-auto sm:row-auto sm:flex sm:min-h-[72px] sm:px-3 sm:py-2">
         <CourierAssignmentLine
           assigned={hasAssignedCourier}
           label={courierColumnText}
@@ -309,9 +309,9 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         />
       </div>
 
-      <div className="hidden min-h-0 min-w-0 md:block" aria-hidden="true" />
+      <div className="hidden min-h-0 min-w-0 sm:block" aria-hidden="true" />
 
-      <div className="hidden min-h-0 min-w-0 items-center justify-center px-1 py-2 md:col-auto md:row-auto md:flex md:min-h-[72px]">
+      <div className="hidden min-h-0 min-w-0 items-center justify-center px-1 py-2 sm:col-auto sm:row-auto sm:flex sm:min-h-[72px]">
         <div className="flex w-full min-w-0 items-center justify-center">
           <DeliveryStageTimelineTooltip delivery={delivery}>
             <DeliveryStageIndicator status={delivery.status} />
@@ -319,8 +319,8 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         </div>
       </div>
 
-      <div className="contents min-h-0 items-center justify-center px-0 md:col-auto md:row-auto md:flex md:min-h-[72px]" onClick={(event) => event.stopPropagation()}>
-        <div className="hidden md:block">
+      <div className="contents min-h-0 items-center justify-center px-0 sm:col-auto sm:row-auto sm:flex sm:min-h-[72px]" onClick={(event) => event.stopPropagation()}>
+        <div className="hidden sm:block">
           <EntityRowActionTrigger
             onClick={(event) => {
               const rect = event.currentTarget.getBoundingClientRect();
@@ -796,7 +796,7 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
   if (viewMode === 'cards') {
     return (
       <div data-view-mode="cards" className="flex min-h-0 flex-1 flex-col bg-app-background">
-        <div className="resource-list-scroll min-h-0 flex-1 overflow-auto px-2 pb-3 md:px-3" dir="rtl">
+        <div className="resource-list-scroll min-h-0 flex-1 overflow-auto px-2 pb-3 sm:px-3" dir="rtl">
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
             {filteredDeliveries.map((delivery) => {
               const courier = delivery.courierId
@@ -829,8 +829,8 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
 
   return (
     <div data-view-mode="list" className="flex min-h-0 flex-1 flex-col bg-app-background">
-      <div ref={scrollContainerRef} className="deliveries-vercel-scroll min-h-0 flex-1 overflow-auto px-2 md:px-3" dir="ltr">
-        <div className="w-full min-w-0 overflow-visible border border-app-nav-border md:overflow-hidden" dir="rtl">
+      <div ref={scrollContainerRef} className="deliveries-vercel-scroll min-h-0 flex-1 overflow-auto px-2 sm:px-3" dir="ltr">
+        <div className="w-full min-w-0 overflow-visible border border-app-nav-border sm:overflow-hidden" dir="rtl">
           {filteredDeliveries.map((delivery) => {
             const courier = delivery.courierId
               ? couriers.find((candidate) => candidate.id === delivery.courierId) ?? null
