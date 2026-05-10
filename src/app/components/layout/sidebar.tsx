@@ -77,7 +77,7 @@ const BUSINESSES = [
 const SIDEBAR_MIN_WIDTH = 250;
 const SIDEBAR_MAX_WIDTH = 400;
 const SIDEBAR_COLLAPSED_WIDTH = 60;
-const DESKTOP_SIDEBAR_BREAKPOINT = 640;
+const DESKTOP_SIDEBAR_BREAKPOINT = 1024;
 
 const clampSidebarWidth = (width: number) =>
   Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, width));
@@ -539,8 +539,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
       <div
         dir="rtl"
-        className={`app-shell-height group/sidebar fixed inset-y-0 right-0 z-[110] flex flex-col border-l border-app-nav-border bg-app-nav-bg shadow-xl sm:static sm:z-50 sm:shadow-none ${
-          isCollapsed ? 'translate-x-0' : 'translate-x-full sm:translate-x-0'
+        className={`app-shell-height group/sidebar fixed inset-y-0 right-0 z-[110] flex flex-col border-l border-app-nav-border bg-app-nav-bg shadow-xl lg:static lg:z-50 lg:shadow-none ${
+          isCollapsed ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'
         }`}
         style={{
           width: isDesktop ? (isCollapsed ? SIDEBAR_COLLAPSED_WIDTH : sidebarWidth) : '260px',
@@ -563,7 +563,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
               event.preventDefault();
               toggleDesktopSidebar();
             }}
-            className="group/sidebar-resize absolute bottom-0 left-0 top-0 z-20 hidden w-4 -translate-x-1/2 cursor-ew-resize items-center justify-center focus:outline-none sm:flex"
+            className="group/sidebar-resize absolute bottom-0 left-0 top-0 z-20 hidden w-4 -translate-x-1/2 cursor-ew-resize items-center justify-center focus:outline-none lg:flex"
             aria-label={isCollapsed ? 'Open sidebar' : 'Collapse sidebar'}
             title={isCollapsed ? 'Open sidebar' : 'Collapse sidebar'}
           >
