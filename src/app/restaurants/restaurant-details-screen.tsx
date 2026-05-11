@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ElementType, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ElementType, type ReactNode, type SetStateAction } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import {
   CheckCircle2,
@@ -25,11 +25,17 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { ListInlineFilters } from '../components/common/list-inline-filters';
+import { PageToolbar } from '../components/common/page-toolbar';
 import { DeliveryStageTimelineTooltip } from '../components/common/delivery-stage-timeline';
+import { ToolbarIconButton } from '../components/common/toolbar-icon-button';
+import { ToolbarSearchControl } from '../components/common/toolbar-search-control';
 import { DELIVERY_HUBS, TLV_RUNNERS_HUB_ID, getDeliveryHubNames } from '../constants/delivery-hubs';
 import { getDefaultRestaurantOwnerName, getDefaultRestaurantOwnerPhone } from '../context/delivery-bootstrap';
 import { useDelivery } from '../context/delivery-context-value';
-import { ALL_STATUSES, STATUS_CONFIG, STATUS_ORDER } from '../deliveries/status-config';
+import { DeliveriesOverlays } from '../deliveries/deliveries-overlays';
+import { DeliveriesVercelList } from '../deliveries/deliveries-vercel-list';
+import { ALL_STATUSES, STATUS_CONFIG } from '../deliveries/status-config';
 import type { Delivery, DeliveryStatus, Restaurant } from '../types/delivery.types';
 import { formatCurrency, getDeliveryCustomerCharge, sumDeliveryMoney } from '../utils/delivery-finance';
 import { exportRowsToExcel, sanitizeExportFileName } from '../utils/export-utils';
@@ -73,7 +79,13 @@ type RestaurantMediaField = 'logoUrl' | 'photoUrl';
 
 const emptyValue = '-';
 const maxRestaurantMediaFileSize = 3 * 1024 * 1024;
-const defaultSelectedStatuses = new Set<DeliveryStatus>(STATUS_ORDER);
+const defaultSelectedStatuses = new Set<DeliveryStatus>([
+  'pending',
+  'assigned',
+  'delivering',
+  'delivered',
+  'cancelled',
+]);
 const restaurantDetailsTabs: Array<{ key: RestaurantDetailsTab; label: string }> = [
   { key: 'overview', label: 'פרטים' },
   { key: 'transactions', label: 'טרנזקציות' },
@@ -193,6 +205,8 @@ const getDeliverySearchText = (delivery: Delivery) =>
   [
     delivery.orderNumber,
     delivery.api_short_order_id,
+    delivery.rest_name,
+    delivery.restaurantName,
     delivery.client_name,
     delivery.customerName,
     delivery.client_full_address,
@@ -673,12 +687,15 @@ const DeliveryOperationsRow = ({
 export function RestaurantDetailsScreen() {
   const { restaurantId } = useParams<{ restaurantId: string }>();
   const navigate = useNavigate();
-  const { state, dispatch } = useDelivery();
+  const { state, dispatch, updateDelivery, unassignCourier, assignCourier } = useDelivery();
   const restaurant = state.restaurants.find((item) => item.id === restaurantId);
   const [editing, setEditing] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<RestaurantDetailsTab>('overview');
   const [deliverySearch, setDeliverySearch] = useState('');
+  const [deliverySearchOpen, setDeliverySearchOpen] = useState(true);
+  const [drawerDeliveryId, setDrawerDeliveryId] = useState<string | null>(null);
+  const [editDeliveryId, setEditDeliveryId] = useState<string | null>(null);
   const [selectedStatuses, setSelectedStatuses] = useState<Set<DeliveryStatus>>(
     () => new Set(defaultSelectedStatuses),
   );
@@ -730,6 +747,117 @@ export function RestaurantDetailsScreen() {
       return matchesStatus && matchesSearch;
     });
   }, [deliverySearch, selectedStatuses, sortedDeliveries]);
+
+  const deliveryStatusOptions = useMemo(
+    () =>
+      ALL_STATUSES.map((statusOption) => ({
+        id: statusOption.key,
+        label: STATUS_CONFIG[statusOption.key].label,
+        dotClassName: STATUS_CONFIG[statusOption.key].dotColor,
+        count: statusCounts[statusOption.key] ?? 0,
+      })),
+    [statusCounts],
+  );
+
+  const deliveryInlineFilters = useMemo(
+    () => [
+      {
+        key: 'status',
+        kind: 'multi-select' as const,
+        selectedValues: new Set(Array.from(selectedStatuses) as string[]),
+        setSelectedValues: (nextValue: SetStateAction<Set<string>>) => {
+          setSelectedStatuses((previous) => {
+            const previousValues = new Set(Array.from(previous) as string[]);
+            const resolved =
+              typeof nextValue === 'function'
+                ? nextValue(previousValues)
+                : nextValue;
+            return new Set(Array.from(resolved) as DeliveryStatus[]);
+          });
+        },
+        toggleValue: (value: string) => {
+          const status = value as DeliveryStatus;
+          setSelectedStatuses((current) => {
+            const next = new Set(current);
+            if (next.has(status)) {
+              next.delete(status);
+            } else {
+              next.add(status);
+            }
+            return next;
+          });
+        },
+        options: deliveryStatusOptions,
+        defaultLabel: 'סטטוס',
+        pluralLabel: 'סטטוסים',
+        showSearch: false,
+        appearance: 'status' as const,
+      },
+    ],
+    [deliveryStatusOptions, selectedStatuses],
+  );
+
+  const drawerDelivery = useMemo(
+    () =>
+      drawerDeliveryId
+        ? visibleDeliveries.find((delivery) => delivery.id === drawerDeliveryId) ??
+          state.deliveries.find((delivery) => delivery.id === drawerDeliveryId) ??
+          null
+        : null,
+    [drawerDeliveryId, state.deliveries, visibleDeliveries],
+  );
+
+  const drawerCourier = useMemo(
+    () =>
+      drawerDelivery?.courierId
+        ? state.couriers.find((courier) => courier.id === drawerDelivery.courierId) ?? null
+        : null,
+    [drawerDelivery, state.couriers],
+  );
+
+  const drawerIndex = useMemo(
+    () =>
+      drawerDeliveryId
+        ? visibleDeliveries.findIndex((delivery) => delivery.id === drawerDeliveryId)
+        : -1,
+    [drawerDeliveryId, visibleDeliveries],
+  );
+
+  const editDelivery = useMemo(
+    () =>
+      editDeliveryId
+        ? state.deliveries.find((delivery) => delivery.id === editDeliveryId) ?? null
+        : null,
+    [editDeliveryId, state.deliveries],
+  );
+
+  const restaurantDeliverySidePanelStats = useMemo(
+    () => ({
+      total: visibleDeliveries.length,
+      delivered: visibleDeliveries.filter((delivery) => delivery.status === 'delivered').length,
+      cancelled: visibleDeliveries.filter((delivery) => delivery.status === 'cancelled').length,
+      pending: visibleDeliveries.filter((delivery) => delivery.status === 'pending').length,
+      expired: visibleDeliveries.filter((delivery) => delivery.status === 'expired').length,
+      revenue: sumDeliveryMoney(visibleDeliveries, getDeliveryCustomerCharge),
+    }),
+    [visibleDeliveries],
+  );
+
+  const restaurantOptions = useMemo(
+    () =>
+      state.restaurants
+        .map((item) => ({ id: item.id, label: item.name }))
+        .sort((left, right) => left.label.localeCompare(right.label, 'he')),
+    [state.restaurants],
+  );
+
+  const courierOptions = useMemo(
+    () =>
+      state.couriers
+        .map((courier) => ({ id: courier.id, label: courier.name }))
+        .sort((left, right) => left.label.localeCompare(right.label, 'he')),
+    [state.couriers],
+  );
 
   useEffect(() => {
     if (!restaurant) return;
@@ -965,11 +1093,68 @@ export function RestaurantDetailsScreen() {
     toast.success('פרטי המסעדה עודכנו');
   };
 
+  const handleClearRestaurantDeliveryFilters = () => {
+    setDeliverySearch('');
+    setSelectedStatuses(new Set(defaultSelectedStatuses));
+  };
+
+  const handleOpenDrawer = (deliveryId: string) => {
+    setDrawerDeliveryId(deliveryId);
+  };
+
+  const handleCloseDrawer = () => {
+    setDrawerDeliveryId(null);
+  };
+
+  const handleDrawerPrev = () => {
+    if (drawerIndex > 0) {
+      setDrawerDeliveryId(visibleDeliveries[drawerIndex - 1].id);
+    }
+  };
+
+  const handleDrawerNext = () => {
+    if (drawerIndex >= 0 && drawerIndex < visibleDeliveries.length - 1) {
+      setDrawerDeliveryId(visibleDeliveries[drawerIndex + 1].id);
+    }
+  };
+
+  const handleDeliveryStatusChange = (deliveryId: string, status: DeliveryStatus) => {
+    dispatch({ type: 'UPDATE_STATUS', payload: { deliveryId, status } });
+  };
+
+  const handleCancelDelivery = (deliveryId: string) => {
+    dispatch({ type: 'CANCEL_DELIVERY', payload: deliveryId });
+  };
+
+  const handleCompleteDelivery = (deliveryId: string) => {
+    dispatch({ type: 'COMPLETE_DELIVERY', payload: deliveryId });
+  };
+
+  const handleAssignCourier = (deliveryId: string, courierId: string) => {
+    const assigned = assignCourier(deliveryId, courierId);
+    if (!assigned) {
+      toast.error('לא ניתן לשבץ את השליח כרגע.');
+    }
+  };
+
+  const handleOpenEdit = (deliveryId: string) => {
+    setEditDeliveryId(deliveryId);
+  };
+
+  const handleCloseEdit = () => {
+    setEditDeliveryId(null);
+  };
+
   return (
+    <>
     <div className="flex h-full flex-col bg-app-background" dir="rtl">
       <div className="resource-list-scroll min-h-0 flex-1 overflow-auto">
         <RestaurantDetailsTabs activeTab={activeTab} onChange={setActiveTab} />
-        <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-4 px-4 py-4">
+        <div
+          className={`mx-auto flex w-full flex-col gap-4 py-4 ${
+            activeTab === 'deliveries' ? 'max-w-none px-2 lg:px-3' : 'max-w-[1180px] px-4'
+          }`}
+        >
           {activeTab === 'overview' ? (
             <>
           <header className="overflow-hidden rounded-[8px] border border-app-border bg-app-surface">
@@ -1373,6 +1558,68 @@ export function RestaurantDetailsScreen() {
           ) : null}
 
           {activeTab === 'deliveries' ? (
+            <section className="flex min-h-[640px] flex-col overflow-hidden rounded-[8px] border border-app-nav-border bg-app-background">
+              <div className="flex min-h-11 items-center justify-between gap-3 border-b border-app-nav-border px-3">
+                <div className="min-w-0">
+                  <h2 className="truncate text-sm font-semibold text-app-text">פירוט משלוחים</h2>
+                  <p className="mt-0.5 truncate text-xs text-app-text-secondary">
+                    {visibleDeliveries.length.toLocaleString('he-IL')} מתוך {restaurantDeliveries.length.toLocaleString('he-IL')}
+                  </p>
+                </div>
+              </div>
+
+              <PageToolbar
+                showPeriodControl={false}
+                showBottomBorder={false}
+                actions={
+                  <ToolbarSearchControl
+                    alwaysOpen
+                    searchOpen={deliverySearchOpen}
+                    onSearchOpenChange={setDeliverySearchOpen}
+                    searchQuery={deliverySearch}
+                    onSearchQueryChange={setDeliverySearch}
+                    placeholder="חיפוש משלוחים"
+                  />
+                }
+                controls={
+                  <>
+                    <ListInlineFilters filters={deliveryInlineFilters} />
+                    <ToolbarIconButton
+                      label="ייצוא מסוננים"
+                      onClick={handleExportVisibleDeliveries}
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                    </ToolbarIconButton>
+                  </>
+                }
+              />
+
+              <DeliveriesVercelList
+                filteredDeliveries={visibleDeliveries}
+                viewMode="list"
+                emptyStateMode={
+                  restaurantDeliveries.length === 0
+                    ? 'no-data'
+                    : deliverySearch
+                      ? 'no-results'
+                      : 'filtered-empty'
+                }
+                onClearFilters={handleClearRestaurantDeliveryFilters}
+                totalCount={restaurantDeliveries.length}
+                couriers={state.couriers}
+                restaurants={state.restaurants}
+                onOpenDrawer={handleOpenDrawer}
+                onStatusChange={handleDeliveryStatusChange}
+                onCancelDelivery={handleCancelDelivery}
+                onCompleteDelivery={handleCompleteDelivery}
+                onUnassignCourier={unassignCourier}
+                onEditDelivery={handleOpenEdit}
+                drawerDeliveryId={drawerDeliveryId}
+              />
+            </section>
+          ) : null}
+
+          {false && activeTab === 'deliveries' ? (
             <section className="min-h-[520px] rounded-[8px] border border-app-border bg-app-surface">
               <div className="flex flex-col gap-3 border-b border-app-border px-4 py-3">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -1434,5 +1681,34 @@ export function RestaurantDetailsScreen() {
         </div>
       </div>
     </div>
+    <DeliveriesOverlays
+      drawerDeliveryId={drawerDeliveryId}
+      drawerDelivery={drawerDelivery}
+      drawerCourier={drawerCourier}
+      allCouriers={state.couriers}
+      deliveryBalance={state.deliveryBalance}
+      onCloseDrawer={handleCloseDrawer}
+      onDrawerPrev={handleDrawerPrev}
+      onDrawerNext={handleDrawerNext}
+      hasDrawerPrev={drawerIndex > 0}
+      hasDrawerNext={drawerIndex >= 0 && drawerIndex < visibleDeliveries.length - 1}
+      drawerIndex={drawerIndex}
+      filteredDeliveryCount={visibleDeliveries.length}
+      onStatusChange={handleDeliveryStatusChange}
+      onAssignCourier={handleAssignCourier}
+      onCancelDelivery={handleCancelDelivery}
+      onCompleteDelivery={handleCompleteDelivery}
+      onEditDelivery={handleOpenEdit}
+      sidePanelStats={restaurantDeliverySidePanelStats}
+      newDeliveryOpen={false}
+      onCloseNewDelivery={() => undefined}
+      restaurantOptions={restaurantOptions}
+      courierOptions={courierOptions}
+      editDelivery={editDelivery}
+      editDeliveryOpen={Boolean(editDeliveryId)}
+      onCloseEdit={handleCloseEdit}
+      onSaveDelivery={updateDelivery}
+    />
+    </>
   );
 }

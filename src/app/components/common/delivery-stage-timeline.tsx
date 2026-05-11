@@ -1,6 +1,17 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { format as formatDate } from 'date-fns';
-import { Clock3, MapPinned, PackageCheck, Store, UsersRound, type LucideIcon } from 'lucide-react';
+import {
+  Check,
+  Clock3,
+  Hourglass,
+  MapPinned,
+  PackageCheck,
+  Store,
+  TimerOff,
+  UsersRound,
+  X,
+  type LucideIcon,
+} from 'lucide-react';
 import { createPortal } from 'react-dom';
 
 import type { DeliveryStatus } from '../../types/delivery.types';
@@ -117,6 +128,18 @@ const getStageIndicatorMeta = (status: DeliveryStatus) => {
   }
 };
 
+const stageIndicatorIcons: Record<DeliveryStatus, LucideIcon> = {
+  pending: Hourglass,
+  assigned: UsersRound,
+  delivering: PackageCheck,
+  delivered: Check,
+  cancelled: X,
+  expired: TimerOff,
+};
+
+const stageRingRadius = 12;
+const stageRingStrokeWidth = 2.5;
+
 const polarToCartesian = (centerX: number, centerY: number, radius: number, angleInDegrees: number) => {
   const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180;
 
@@ -127,8 +150,8 @@ const polarToCartesian = (centerX: number, centerY: number, radius: number, angl
 };
 
 const createArcPath = (startAngle: number, endAngle: number) => {
-  const start = polarToCartesian(16, 16, 11, endAngle);
-  const end = polarToCartesian(16, 16, 11, startAngle);
+  const start = polarToCartesian(16, 16, stageRingRadius, endAngle);
+  const end = polarToCartesian(16, 16, stageRingRadius, startAngle);
 
   return `M ${start.x} ${start.y} A 11 11 0 0 0 ${end.x} ${end.y}`;
 };
@@ -142,6 +165,7 @@ const stageRingSegments = [
 
 export const DeliveryStageIndicator: React.FC<{ status: DeliveryStatus }> = ({ status }) => {
   const { activeSegments, color } = getStageIndicatorMeta(status);
+  const StageIcon = stageIndicatorIcons[status];
 
   return (
     <span className="relative flex h-8 w-8 shrink-0 items-center justify-center">
@@ -152,7 +176,7 @@ export const DeliveryStageIndicator: React.FC<{ status: DeliveryStatus }> = ({ s
             d={path}
             fill="none"
             stroke="var(--app-border-strong)"
-            strokeWidth="3"
+            strokeWidth={stageRingStrokeWidth}
             strokeLinecap="round"
           />
         ))}
@@ -162,11 +186,16 @@ export const DeliveryStageIndicator: React.FC<{ status: DeliveryStatus }> = ({ s
             d={path}
             fill="none"
             stroke={color}
-            strokeWidth="3"
+            strokeWidth={stageRingStrokeWidth}
             strokeLinecap="round"
           />
         ))}
       </svg>
+      <StageIcon
+        className="pointer-events-none absolute h-3.5 w-3.5 text-app-text-secondary"
+        strokeWidth={2.25}
+        aria-hidden="true"
+      />
     </span>
   );
 };
