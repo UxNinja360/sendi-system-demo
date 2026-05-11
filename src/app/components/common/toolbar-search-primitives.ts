@@ -23,8 +23,8 @@ export const getToolbarSearchShellClassName = ({
     widthClass,
     'text-app-text',
     active
-      ? 'border-app-border-strong bg-app-surface shadow-[0_0_0_1px_color-mix(in_srgb,var(--app-border-strong)_18%,transparent)] dark:border-[#6B6B6B] dark:bg-[#050505] dark:shadow-none'
-      : 'border-app-border bg-app-surface hover:border-app-border-strong hover:bg-app-surface dark:border-[#3A3A3A] dark:bg-[#050505] dark:hover:border-[#6B6B6B] dark:hover:bg-[#050505]',
+      ? 'border-app-border bg-app-surface shadow-none dark:border-app-nav-border dark:bg-[#0A0A0A]'
+      : 'border-app-border bg-app-surface hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#0A0A0A] dark:hover:bg-[#111111]',
     className,
   ]
     .filter(Boolean)

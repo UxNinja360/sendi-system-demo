@@ -12,6 +12,7 @@ import {
   Info,
   Package,
   RotateCcw,
+  Route,
   UserPlus,
   XCircle,
 } from 'lucide-react';
@@ -71,7 +72,7 @@ type DeliveryVercelRowProps = {
 };
 
 const rowGridClass =
-  'grid grid-cols-[minmax(0,1fr)_76px] lg:grid-cols-[minmax(96px,128px)_minmax(140px,220px)_minmax(140px,220px)_minmax(176px,232px)_minmax(8px,1fr)_44px_36px] xl:grid-cols-[minmax(104px,136px)_minmax(160px,240px)_minmax(160px,240px)_minmax(188px,248px)_minmax(16px,1fr)_48px_36px] 2xl:grid-cols-[minmax(112px,144px)_minmax(180px,260px)_minmax(180px,260px)_minmax(200px,268px)_minmax(24px,1fr)_52px_36px]';
+  'delivery-vercel-row';
 
 const getDeliveryDate = (delivery: Delivery) =>
   delivery.creation_time ?? delivery.createdAt ?? delivery.delivery_date;
@@ -181,6 +182,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
   const navigate = useNavigate();
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
   const config = STATUS_CONFIG[delivery.status];
+  const StatusIcon = config.icon;
   const restaurantName = delivery.rest_name || delivery.restaurantName || restaurant?.name || '-';
   const restaurantMeta = delivery.restaurantAddress || delivery.rest_city || delivery.restaurantCity || 'מסעדה';
   const clientName = delivery.client_name || delivery.customerName || '-';
@@ -189,6 +191,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
   const courierName = courier?.name || delivery.courierName || (hasAssignedCourier ? 'לא ידוע' : UNASSIGNED_COURIER_LABEL);
   const courierColumnText = hasAssignedCourier ? courierName : UNASSIGNED_COURIER_LABEL;
   const courierVehicleType = hasAssignedCourier ? courier?.vehicleType || delivery.vehicle_type : undefined;
+  const distanceLabel = delivery.delivery_distance ? `${delivery.delivery_distance.toFixed(1)} ק״מ` : '-';
 
   const closeMenus = () => {
     setContextMenuPos(null);
@@ -237,13 +240,10 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
       )}
     >
       <div
-        className="col-start-2 row-start-1 flex min-h-0 flex-row-reverse items-start justify-center gap-2 px-2 py-3 lg:hidden"
+        className="delivery-row__actions flex min-h-0 items-center justify-center"
         dir="ltr"
         onClick={(event) => event.stopPropagation()}
       >
-        <DeliveryStageTimelineTooltip delivery={delivery}>
-          <DeliveryStageIndicator status={delivery.status} />
-        </DeliveryStageTimelineTooltip>
         <EntityRowActionTrigger
           onClick={(event) => {
             const rect = event.currentTarget.getBoundingClientRect();
@@ -253,19 +253,30 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         />
       </div>
 
-      <div className="col-start-1 row-start-1 flex min-h-0 min-w-0 flex-col justify-center px-2 py-2 lg:col-auto lg:row-auto lg:min-h-[72px] lg:px-3">
-        <div className="flex min-w-0 flex-col items-start gap-0">
+      <div
+        className="delivery-row__progress flex min-h-0 items-center justify-center"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <span className="delivery-row__stage-cluster">
+          <DeliveryStageTimelineTooltip delivery={delivery}>
+            <DeliveryStageIndicator status={delivery.status} />
+          </DeliveryStageTimelineTooltip>
+        </span>
+      </div>
+
+      <div className="delivery-row__order flex min-h-0 min-w-0 flex-col justify-center" dir="rtl">
+        <div className="flex min-w-0 flex-col items-start gap-0 text-right">
           <button
             type="button"
             onClick={handleCopyOrderNumber}
             onKeyDown={(event) => event.stopPropagation()}
-            className="group/order-number inline-flex max-w-full items-center gap-1.5 text-sm font-semibold text-app-text outline-none"
+            className="group/order-number inline-flex max-w-full items-center justify-start gap-1.5 text-right text-sm font-semibold text-app-text outline-none"
             title={`העתק מספר הזמנה ${delivery.orderNumber}`}
           >
             <span className="min-w-0 truncate">{formatOrderNumber(delivery.orderNumber)}</span>
             <Copy className="h-3.5 w-3.5 shrink-0 text-app-text-secondary opacity-0 transition-opacity group-hover/order-number:opacity-100 group-focus-visible/order-number:opacity-100" />
           </button>
-          <div className="mt-1 flex shrink-0 items-center gap-1.5 text-sm font-normal text-app-text-secondary">
+          <div className="mt-1 flex shrink-0 items-center justify-start gap-1.5 text-right text-sm font-normal text-app-text-secondary">
             <DeliveryTimeDetailsTooltip delivery={delivery}>
               <span className="whitespace-nowrap" dir="ltr">{formatDeliveryDate(delivery)}</span>
             </DeliveryTimeDetailsTooltip>
@@ -273,62 +284,80 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         </div>
       </div>
 
-      <div className="col-start-1 row-start-2 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 lg:col-auto lg:row-auto lg:min-h-[72px] lg:px-2 lg:py-2">
-        <div className="flex min-w-0 items-center gap-2 text-right" dir="rtl">
-          <DeliveryDirectionMark label="מ-" />
-          <div className="min-w-0 text-right">
-            <div className="truncate text-sm font-medium text-app-text">{restaurantName}</div>
-            <div className="mt-1 truncate text-sm font-normal text-app-text-secondary">{restaurantMeta}</div>
+      <div className="delivery-row__route-table min-h-0 min-w-0 items-center">
+        <div className="delivery-row__route-table-pair flex w-full min-w-0 items-center gap-3" dir="rtl">
+          <div className="delivery-row__route-table-leg flex min-w-0 items-center gap-2 text-right" dir="rtl">
+            <DeliveryDirectionMark label="מ-" />
+            <div className="min-w-0 text-right">
+              <div className="truncate text-sm font-medium text-app-text">{restaurantName}</div>
+              <div className="mt-1 truncate text-sm font-normal text-app-text-secondary">{restaurantMeta}</div>
+            </div>
+          </div>
+
+          <div className="delivery-row__route-table-leg flex min-w-0 items-center gap-2 text-right" dir="rtl">
+            <DeliveryDirectionMark label="ל-" />
+            <div className="min-w-0 text-right">
+              <div className="truncate text-sm font-normal text-app-text">{clientName}</div>
+              <div className="mt-1 truncate text-sm font-normal text-app-text-secondary">{clientAddress}</div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="col-start-1 row-start-3 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 lg:col-auto lg:row-auto lg:min-h-[72px] lg:px-2 lg:py-2">
-        <div className="flex min-w-0 items-center gap-2 text-right" dir="rtl">
-          <DeliveryDirectionMark label="ל-" />
-          <div className="min-w-0 text-right">
-            <div className="truncate text-sm font-normal text-app-text">{clientName}</div>
-            <div className="mt-1 truncate text-sm font-normal text-app-text-secondary">{clientAddress}</div>
+      <div className="delivery-row__route-compact min-h-0 min-w-0 flex-wrap justify-start" dir="rtl">
+        <div className="delivery-row__route-compact-pair flex min-w-0 gap-3" dir="rtl">
+          <div className="delivery-row__route-compact-leg flex min-w-0 items-center justify-start gap-2 text-right" dir="rtl">
+            <DeliveryDirectionMark label="מ-" />
+            <div className="min-w-0 text-right">
+              <div className="truncate text-sm font-medium text-app-text">{restaurantName}</div>
+              <div className="mt-1 truncate text-sm font-normal text-app-text-secondary">{restaurantMeta}</div>
+            </div>
+          </div>
+
+          <div className="delivery-row__route-compact-leg flex min-w-0 items-center justify-start gap-2 text-right" dir="rtl">
+            <DeliveryDirectionMark label="ל-" />
+            <div className="min-w-0 text-right">
+              <div className="truncate text-sm font-normal text-app-text">{clientName}</div>
+              <div className="mt-1 truncate text-sm font-normal text-app-text-secondary">{clientAddress}</div>
+            </div>
           </div>
         </div>
-        <div className="mt-2 lg:hidden">
-          <CourierAssignmentLine
-            assigned={hasAssignedCourier}
-            label={courierColumnText}
-            vehicleType={courierVehicleType}
-          />
-        </div>
-      </div>
 
-      <div className="hidden min-h-0 min-w-0 items-center justify-start px-2 py-1 lg:col-auto lg:row-auto lg:flex lg:min-h-[72px] lg:px-4 lg:py-2">
         <CourierAssignmentLine
           assigned={hasAssignedCourier}
           label={courierColumnText}
           vehicleType={courierVehicleType}
-          className="w-full"
+          className="delivery-row__route-compact-courier w-full justify-start whitespace-nowrap"
+        />
+
+        <div className="delivery-row__compact-meta" dir="rtl">
+          <span className={joinClassNames('delivery-row__compact-meta-item font-medium', config.tableColor)}>
+            <StatusIcon className="h-3.5 w-3.5 shrink-0" />
+            <span className="min-w-0 truncate">{config.label}</span>
+          </span>
+          <span className="delivery-row__compact-meta-item text-app-text-secondary" dir="ltr">
+            <Route className="h-3.5 w-3.5 shrink-0" />
+            <span className="min-w-0 truncate">{distanceLabel}</span>
+          </span>
+        </div>
+      </div>
+
+      <div className="delivery-row__metrics-table min-h-0 min-w-0 items-center justify-start" dir="rtl">
+        <div className="delivery-row__metrics-inline min-w-0 text-right">
+          <span className="min-w-0 truncate text-app-text-secondary">{distanceLabel}</span>
+        </div>
+      </div>
+
+      <div className="delivery-row__courier-table min-h-0 min-w-0 items-center justify-start">
+        <CourierAssignmentLine
+          assigned={hasAssignedCourier}
+          label={courierColumnText}
+          vehicleType={courierVehicleType}
+          className="delivery-row__courier-line w-full"
         />
       </div>
 
-      <div className="hidden min-h-0 min-w-0 lg:block" aria-hidden="true" />
-
-      <div className="hidden min-h-0 min-w-0 items-center justify-center px-1 py-2 lg:col-auto lg:row-auto lg:flex lg:min-h-[72px]">
-        <div className="flex w-full min-w-0 items-center justify-center">
-          <DeliveryStageTimelineTooltip delivery={delivery}>
-            <DeliveryStageIndicator status={delivery.status} />
-          </DeliveryStageTimelineTooltip>
-        </div>
-      </div>
-
-      <div className="contents min-h-0 items-center justify-center px-0 lg:col-auto lg:row-auto lg:flex lg:min-h-[72px]" onClick={(event) => event.stopPropagation()}>
-        <div className="hidden lg:block">
-          <EntityRowActionTrigger
-            onClick={(event) => {
-              const rect = event.currentTarget.getBoundingClientRect();
-              setContextMenuPos({ x: Math.max(8, rect.left - 180), y: rect.bottom + 8 });
-            }}
-            title={`פעולות משלוח ${delivery.orderNumber}`}
-          />
-        </div>
+      <div className="contents" onClick={(event) => event.stopPropagation()}>
         <EntityActionMenuOverlay
           open={Boolean(contextMenuPos)}
           position={contextMenuPos}
@@ -527,9 +556,6 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
             <DeliveryStageTimelineTooltip delivery={delivery}>
               <DeliveryStageIndicator status={delivery.status} />
             </DeliveryStageTimelineTooltip>
-          </span>
-          <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-app-nav-border bg-app-surface-raised text-app-text">
-            <Package className="h-3.5 w-3.5" />
           </span>
           <div className="min-w-0">
             <button

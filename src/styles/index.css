@@ -102,11 +102,227 @@ body {
 }
 
 .deliveries-vercel-scroll {
+  container-type: inline-size;
   scrollbar-width: none;
 }
 
 .deliveries-vercel-scroll::-webkit-scrollbar {
   display: none;
+}
+
+.delivery-vercel-row {
+  direction: ltr;
+  display: grid;
+  grid-template-areas:
+    "actions progress order"
+    "actions progress route"
+    "actions progress courier";
+  grid-template-columns: 52px 48px minmax(0, 1fr);
+  min-height: 92px;
+}
+
+.delivery-row__actions {
+  align-self: center;
+  grid-area: actions;
+  justify-self: center;
+  min-width: 44px;
+  position: static;
+  transform: none;
+  z-index: 1;
+}
+
+.delivery-row__progress {
+  align-self: center;
+  grid-area: progress;
+  justify-self: center;
+  min-width: 44px;
+  position: static;
+  transform: none;
+  z-index: 1;
+}
+
+.delivery-row__stage-cluster {
+  align-items: center;
+  display: inline-flex;
+  justify-content: center;
+  position: relative;
+}
+
+.delivery-row__order {
+  align-self: end;
+  grid-area: order;
+  justify-self: end;
+  min-height: 36px;
+  padding: 8px 12px 0;
+}
+
+.delivery-row__route-compact {
+  display: flex;
+  grid-area: route;
+  gap: 4px 14px;
+  padding: 0 12px 4px;
+}
+
+.delivery-row__route-compact-pair {
+  flex: 1 1 340px;
+}
+
+.delivery-row__route-compact-leg {
+  flex: 1 1 150px;
+  max-width: 220px;
+}
+
+.delivery-row__route-compact-courier {
+  flex: 0 1 190px;
+  max-width: 190px;
+  min-width: 0;
+}
+
+.delivery-row__compact-meta {
+  display: none;
+}
+
+.delivery-row__metrics-table {
+  display: none;
+}
+
+.delivery-row__route-table,
+.delivery-row__courier-table {
+  display: none;
+}
+
+@container (max-width: 559px) {
+  .delivery-vercel-row {
+    grid-template-columns: 52px 48px minmax(0, 1fr);
+    min-height: 164px;
+  }
+
+  .delivery-row__actions,
+  .delivery-row__progress {
+    align-self: start;
+    padding-top: 14px;
+  }
+
+  .delivery-row__route-compact {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .delivery-row__route-compact-pair {
+    align-items: stretch;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .delivery-row__route-compact-leg,
+  .delivery-row__route-compact-courier {
+    flex: 1 1 auto;
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .delivery-row__compact-meta {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    justify-content: flex-start;
+    padding-top: 2px;
+    width: 100%;
+  }
+
+  .delivery-row__compact-meta-item {
+    align-items: center;
+    display: inline-flex;
+    gap: 6px;
+    max-width: 100%;
+    min-width: 0;
+    white-space: nowrap;
+  }
+}
+
+@container (min-width: 560px) {
+  .delivery-vercel-row {
+    grid-template-areas: "actions progress courier metrics route order";
+    grid-template-columns:
+      clamp(40px, 3.8%, 52px)
+      clamp(40px, 3.8%, 52px)
+      minmax(74px, clamp(88px, 10%, 150px))
+      minmax(112px, clamp(120px, 10%, 150px))
+      minmax(260px, 1fr)
+      clamp(88px, 10%, 128px);
+    grid-template-rows: minmax(72px, auto);
+    min-height: 72px;
+  }
+
+  .delivery-row__order {
+    align-self: center;
+    min-height: 72px;
+    padding: 8px 12px;
+  }
+
+  .delivery-row__route-compact {
+    display: none;
+  }
+
+  .delivery-row__metrics-table {
+    align-items: center;
+    display: flex;
+    grid-area: metrics;
+    min-height: 72px;
+    overflow: hidden;
+    padding: 8px 4px;
+  }
+
+  .delivery-row__metrics-inline {
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+    gap: 7px;
+    justify-content: flex-start;
+    max-width: 100%;
+    min-width: 0;
+    white-space: nowrap;
+    width: 100%;
+  }
+
+  .delivery-row__route-table {
+    align-items: center;
+    display: flex;
+    grid-area: route;
+    justify-content: flex-end;
+    min-height: 72px;
+    padding: 8px;
+  }
+
+  .delivery-row__route-table-pair {
+    justify-content: flex-start;
+    max-width: 540px;
+  }
+
+  .delivery-row__route-table-leg {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .delivery-row__courier-table {
+    align-items: center;
+    display: flex;
+    grid-area: courier;
+    justify-content: flex-start;
+    min-height: 72px;
+    overflow: hidden;
+    padding: 8px 2px 8px 6px;
+  }
+
+  .delivery-row__courier-line {
+    justify-content: flex-end;
+  }
 }
 
 .resource-list-scroll {
