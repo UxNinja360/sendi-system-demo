@@ -22,7 +22,6 @@ import type { Courier, Delivery, DeliveryStatus, Restaurant } from '../types/del
 import {
   EntityActionMenu,
   EntityActionMenuDivider,
-  EntityActionMenuHeader,
   EntityActionMenuItem,
   EntityActionMenuOverlay,
 } from '../components/common/entity-action-menu';
@@ -128,6 +127,24 @@ const DeliveryDirectionMark: React.FC<{
   >
     {label}
   </span>
+);
+
+const DeliveryDistanceInline: React.FC<{
+  label: string;
+  className?: string;
+}> = ({ label, className }) => (
+  <div
+    className={joinClassNames(
+      'delivery-row__route-distance inline-flex min-w-0 items-center gap-1.5 text-sm font-normal text-app-text-secondary',
+      className,
+    )}
+    dir="rtl"
+  >
+    <Route className="h-3.5 w-3.5 shrink-0" />
+    <span className="min-w-0 truncate" dir="ltr">
+      {label}
+    </span>
+  </div>
 );
 
 const getRestaurantForDelivery = (delivery: Delivery, restaurants: Restaurant[]) => {
@@ -301,6 +318,11 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
               <div className="mt-1 truncate text-sm font-normal text-app-text-secondary">{clientAddress}</div>
             </div>
           </div>
+
+          <DeliveryDistanceInline
+            label={distanceLabel}
+            className="delivery-row__route-table-distance"
+          />
         </div>
       </div>
 
@@ -321,6 +343,11 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
               <div className="mt-1 truncate text-sm font-normal text-app-text-secondary">{clientAddress}</div>
             </div>
           </div>
+
+          <DeliveryDistanceInline
+            label={distanceLabel}
+            className="delivery-row__route-compact-distance"
+          />
         </div>
 
         <CourierAssignmentLine
@@ -335,16 +362,6 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
             <StatusIcon className="h-3.5 w-3.5 shrink-0" />
             <span className="min-w-0 truncate">{config.label}</span>
           </span>
-          <span className="delivery-row__compact-meta-item text-app-text-secondary" dir="ltr">
-            <Route className="h-3.5 w-3.5 shrink-0" />
-            <span className="min-w-0 truncate">{distanceLabel}</span>
-          </span>
-        </div>
-      </div>
-
-      <div className="delivery-row__metrics-table min-h-0 min-w-0 items-center justify-start" dir="rtl">
-        <div className="delivery-row__metrics-inline min-w-0 text-right">
-          <span className="min-w-0 truncate text-app-text-secondary">{distanceLabel}</span>
         </div>
       </div>
 
@@ -369,10 +386,6 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
               onClick={(event) => event.stopPropagation()}
               onPointerDown={(event) => event.stopPropagation()}
             >
-              <EntityActionMenuHeader
-                title={formatOrderNumber(delivery.orderNumber)}
-                subtitle={<span className={`text-[11px] font-medium ${config.tableColor}`}>{config.label}</span>}
-              />
               <EntityActionMenuItem
                 onClick={() => {
                   navigateToDelivery();
@@ -650,10 +663,6 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
             onClick={(event) => event.stopPropagation()}
             onPointerDown={(event) => event.stopPropagation()}
           >
-            <EntityActionMenuHeader
-              title={formatOrderNumber(delivery.orderNumber)}
-              subtitle={<span className={`text-[11px] font-medium ${config.tableColor}`}>{config.label}</span>}
-            />
             <EntityActionMenuItem
               onClick={() => {
                 navigateToDelivery();

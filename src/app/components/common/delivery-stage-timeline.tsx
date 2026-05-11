@@ -54,7 +54,7 @@ const formatDurationParts = (totalSeconds: number) => {
 
   const addPart = (amount: number, singular: string, plural: string) => {
     if (amount === 1) {
-      parts.push(singular);
+      parts.push(`${amount} ${singular}`);
       return;
     }
     if (amount > 1) {

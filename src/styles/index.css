@@ -172,6 +172,12 @@ body {
   max-width: 220px;
 }
 
+.delivery-row__route-distance {
+  flex: 0 0 auto;
+  max-width: 100%;
+  white-space: nowrap;
+}
+
 .delivery-row__route-compact-courier {
   flex: 0 1 190px;
   max-width: 190px;
@@ -179,10 +185,6 @@ body {
 }
 
 .delivery-row__compact-meta {
-  display: none;
-}
-
-.delivery-row__metrics-table {
   display: none;
 }
 
@@ -226,6 +228,12 @@ body {
     width: 100%;
   }
 
+  .delivery-row__route-compact-distance {
+    align-self: flex-start;
+    margin-inline-start: 32px;
+    max-width: calc(100% - 32px);
+  }
+
   .delivery-row__compact-meta {
     align-items: center;
     display: flex;
@@ -248,13 +256,12 @@ body {
 
 @container (min-width: 560px) {
   .delivery-vercel-row {
-    grid-template-areas: "actions progress courier metrics route order";
+    grid-template-areas: "actions progress courier route order";
     grid-template-columns:
       clamp(40px, 3.8%, 52px)
       clamp(40px, 3.8%, 52px)
       minmax(74px, clamp(88px, 10%, 150px))
-      minmax(112px, clamp(120px, 10%, 150px))
-      minmax(260px, 1fr)
+      minmax(340px, 1fr)
       clamp(88px, 10%, 128px);
     grid-template-rows: minmax(72px, auto);
     min-height: 72px;
@@ -270,27 +277,6 @@ body {
     display: none;
   }
 
-  .delivery-row__metrics-table {
-    align-items: center;
-    display: flex;
-    grid-area: metrics;
-    min-height: 72px;
-    overflow: hidden;
-    padding: 8px 4px;
-  }
-
-  .delivery-row__metrics-inline {
-    align-items: center;
-    display: flex;
-    flex-direction: row;
-    gap: 7px;
-    justify-content: flex-start;
-    max-width: 100%;
-    min-width: 0;
-    white-space: nowrap;
-    width: 100%;
-  }
-
   .delivery-row__route-table {
     align-items: center;
     display: flex;
@@ -302,12 +288,17 @@ body {
 
   .delivery-row__route-table-pair {
     justify-content: flex-start;
-    max-width: 540px;
+    max-width: 620px;
   }
 
   .delivery-row__route-table-leg {
     flex: 1 1 0;
     min-width: 0;
+  }
+
+  .delivery-row__route-table-distance {
+    justify-content: center;
+    padding-inline: 2px;
   }
 
   .delivery-row__courier-table {

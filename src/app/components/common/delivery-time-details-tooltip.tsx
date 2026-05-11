@@ -5,9 +5,14 @@ import { createPortal } from 'react-dom';
 type DateValue = Date | string | number | null | undefined;
 
 export type DeliveryTimeDetailsData = {
+  status?: string;
   creation_time?: DateValue;
   createdAt?: DateValue;
   delivery_date?: DateValue;
+  deliveredAt?: DateValue;
+  delivered_time?: DateValue;
+  arrivedAtCustomerAt?: DateValue;
+  arrived_at_client?: DateValue;
   should_delivered_time?: DateValue;
   max_time_to_deliver?: number;
   maxDeliveryTime?: number;
@@ -54,7 +59,7 @@ const formatDurationParts = (totalSeconds: number) => {
 
   const addPart = (amount: number, singular: string, plural: string) => {
     if (amount === 1) {
-      parts.push(singular);
+      parts.push(`${amount} ${singular}`);
       return;
     }
     if (amount > 1) {
@@ -75,11 +80,27 @@ const formatElapsedSince = (value: DateValue, now: number) => {
   if (!date) return null;
 
   const totalSeconds = Math.max(0, Math.floor((now - date.getTime()) / 1000));
-  return `לפני ${formatDurationParts(totalSeconds)}`;
+  return formatDurationParts(totalSeconds);
+};
+
+const formatDurationBetween = (startValue: DateValue, endValue: DateValue) => {
+  const startDate = toDeliveryDate(startValue);
+  const endDate = toDeliveryDate(endValue);
+  if (!startDate || !endDate) return null;
+
+  const totalSeconds = Math.max(0, Math.floor((endDate.getTime() - startDate.getTime()) / 1000));
+  return formatDurationParts(totalSeconds);
 };
 
 const getCreatedAt = (delivery: DeliveryTimeDetailsData) =>
   delivery.creation_time ?? delivery.createdAt ?? delivery.delivery_date;
+
+const getDeliveredAt = (delivery: DeliveryTimeDetailsData) =>
+  delivery.deliveredAt ??
+  delivery.delivered_time ??
+  (delivery.status === 'delivered'
+    ? delivery.arrivedAtCustomerAt ?? delivery.arrived_at_client
+    : null);
 
 const getCommitmentTime = (delivery: DeliveryTimeDetailsData) => {
   const explicitCommitment = delivery.should_delivered_time ?? delivery.delivery_date;
@@ -101,13 +122,17 @@ export const DeliveryTimeDetailsTooltip: React.FC<{
   const [now, setNow] = useState(() => Date.now());
   const triggerRef = useRef<HTMLSpanElement>(null);
   const createdAt = getCreatedAt(delivery);
+  const deliveredAt = getDeliveredAt(delivery);
+  const hasDeliveredAt = Boolean(toDeliveryDate(deliveredAt));
   const commitmentTime = getCommitmentTime(delivery);
   const orderReadyTime = delivery.orderReadyTime ?? delivery.rest_approved_eta ?? delivery.rest_last_eta;
-  const createdElapsed = formatElapsedSince(createdAt, now);
+  const deliveryDuration = formatDurationBetween(createdAt, deliveredAt);
+  const createdElapsed = deliveryDuration ?? formatElapsedSince(createdAt, now);
 
   const timeRows = [
     { label: 'תאריך', value: formatDateOnly(createdAt) },
     { label: 'שעת יצירה', value: formatTime(createdAt) },
+    ...(hasDeliveredAt ? [{ label: 'שעת מסירה', value: formatTime(deliveredAt) }] : []),
     { label: 'התחייבות', value: formatTime(commitmentTime) },
     { label: 'מוכן במסעדה', value: formatTime(orderReadyTime) },
     { label: 'ETA למסעדה', value: formatTime(delivery.estimatedArrivalAtRestaurant) },
@@ -118,10 +143,12 @@ export const DeliveryTimeDetailsTooltip: React.FC<{
     if (!isOpen || typeof window === 'undefined') return;
 
     setNow(Date.now());
+    if (hasDeliveredAt) return;
+
     const intervalId = window.setInterval(() => setNow(Date.now()), 1000);
 
     return () => window.clearInterval(intervalId);
-  }, [isOpen]);
+  }, [hasDeliveredAt, isOpen]);
 
   useEffect(() => {
     if (!isOpen || typeof window === 'undefined') return;
