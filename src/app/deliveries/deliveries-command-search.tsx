@@ -53,6 +53,7 @@ const TEXT = {
   restaurants: 'מסעדות',
   chains: 'רשתות',
   couriers: 'שליחים',
+  search: 'חפש',
   freeSearch: 'חיפוש',
 } as const;
 
@@ -313,7 +314,8 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
       }
 
       setDraft('');
-      setIsOpen(true);
+      setCommandContext(null);
+      setIsOpen(false);
       setCurrentPage(1);
       requestAnimationFrame(() => inputRef.current?.focus());
     },

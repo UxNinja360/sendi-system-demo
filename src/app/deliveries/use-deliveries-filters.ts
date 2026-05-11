@@ -89,22 +89,27 @@ export function useDeliveriesFilters(state: DeliveryState) {
     }).sort((a, b) => a.label.localeCompare(b.label, 'he'));
   }, [state.couriers, state.deliveries]);
 
-  // קבלת רשימת מסעדות עם מספר משלוחים
-  const restaurantOptions = useMemo(() => {
-    const deliveryCountMap = new Map<string, number>();
-    state.deliveries.forEach(d => {
-      if (d.restaurantName) {
-        deliveryCountMap.set(d.restaurantName, (deliveryCountMap.get(d.restaurantName) || 0) + 1);
-      }
+  const selectedRestaurantNames = useMemo(() => {
+    if (selectedRestaurants.size === 0) return new Set<string>();
+
+    const names = new Set<string>();
+    state.restaurants.forEach((restaurant) => {
+      if (selectedRestaurants.has(restaurant.id)) names.add(restaurant.name);
     });
-    return state.restaurants
-      .map(r => ({
-        id: r.id,
-        label: r.name,
-        subtitle: `${deliveryCountMap.get(r.name) || 0} משלוחים`
-      }))
-      .sort((a, b) => a.label.localeCompare(b.label, 'he'));
-  }, [state.deliveries, state.restaurants]);
+    return names;
+  }, [selectedRestaurants, state.restaurants]);
+
+  const matchesSelectedRestaurant = useCallback(
+    (delivery: { restaurantId?: string | null; restaurantName: string }) => {
+      if (selectedRestaurants.size === 0) return true;
+
+      return (
+        (delivery.restaurantId != null && selectedRestaurants.has(delivery.restaurantId)) ||
+        selectedRestaurantNames.has(delivery.restaurantName)
+      );
+    },
+    [selectedRestaurants, selectedRestaurantNames],
+  );
 
   const restaurantChainById = useMemo(() => {
     const chainMap = new Map<string, string>();
@@ -124,6 +129,79 @@ export function useDeliveriesFilters(state: DeliveryState) {
       getRestaurantChainId(delivery.restaurantName),
     [restaurantChainById],
   );
+
+  // קבלת רשימת מסעדות עם מספר משלוחים בהתאם לפילטרים הפעילים.
+  const restaurantOptions = useMemo(() => {
+    const deliveryCountMap = new Map<string, number>();
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const query = debouncedSearchQuery.toLowerCase();
+
+    state.deliveries.forEach(d => {
+      if (!d.restaurantName || !statusFilters.has(d.status)) return;
+
+      if (dateRange !== 'all') {
+        const deliveryDate = new Date(d.createdAt);
+        if (dateRange === 'today') {
+          if (deliveryDate < today) return;
+        } else if (dateRange === 'week') {
+          const weekAgo = new Date(today);
+          weekAgo.setDate(weekAgo.getDate() - 7);
+          if (deliveryDate < weekAgo) return;
+        } else if (dateRange === 'month') {
+          const monthAgo = new Date(today);
+          monthAgo.setMonth(monthAgo.getMonth() - 1);
+          if (deliveryDate < monthAgo) return;
+        } else if (dateRange === 'custom' && customStartDate) {
+          const startDate = new Date(customStartDate);
+          const endDate = customEndDate ? new Date(customEndDate) : new Date();
+          endDate.setHours(23, 59, 59, 999);
+          if (deliveryDate < startDate || deliveryDate > endDate) return;
+        }
+      }
+
+      if (selectedCouriers.size > 0 && (d.courierId == null || !selectedCouriers.has(d.courierId))) return;
+      if (selectedChains.size > 0 && !selectedChains.has(getDeliveryChainId(d))) return;
+      if (selectedBranches.size > 0 && (d.branchName == null || !selectedBranches.has(d.branchName.trim()))) return;
+      if (selectedAreas.size > 0 && (d.area == null || !selectedAreas.has(d.area.trim()))) return;
+
+      if (query) {
+        const courierName = d.courierId ? state.couriers.find(c => c.id === d.courierId)?.name || '' : '';
+        const matchesQuery =
+          d.orderNumber.toLowerCase().includes(query) ||
+          d.customerName.toLowerCase().includes(query) ||
+          d.restaurantName.toLowerCase().includes(query) ||
+          d.address.toLowerCase().includes(query) ||
+          (d.branchName || '').toLowerCase().includes(query) ||
+          courierName.toLowerCase().includes(query);
+        if (!matchesQuery) return;
+      }
+
+      deliveryCountMap.set(d.restaurantName, (deliveryCountMap.get(d.restaurantName) || 0) + 1);
+    });
+
+    return state.restaurants
+      .map(r => ({
+        id: r.id,
+        label: r.name,
+        subtitle: `${deliveryCountMap.get(r.name) || 0} משלוחים`
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'he'));
+  }, [
+    customEndDate,
+    customStartDate,
+    dateRange,
+    debouncedSearchQuery,
+    getDeliveryChainId,
+    selectedAreas,
+    selectedBranches,
+    selectedChains,
+    selectedCouriers,
+    state.couriers,
+    state.deliveries,
+    state.restaurants,
+    statusFilters,
+  ]);
 
   const chainOptions = useMemo(() => {
     const chainMap = new Map<string, { restaurantCount: number; deliveryCount: number }>();
@@ -208,7 +286,7 @@ export function useDeliveriesFilters(state: DeliveryState) {
       }
     }
     if (selectedCouriers.size > 0) filtered = filtered.filter(d => d.courierId != null && selectedCouriers.has(d.courierId));
-    if (selectedRestaurants.size > 0) filtered = filtered.filter(d => d.restaurantId != null && selectedRestaurants.has(d.restaurantId));
+    if (selectedRestaurants.size > 0) filtered = filtered.filter(matchesSelectedRestaurant);
     if (selectedChains.size > 0) filtered = filtered.filter(d => selectedChains.has(getDeliveryChainId(d)));
     if (selectedBranches.size > 0) filtered = filtered.filter(d => d.branchName != null && selectedBranches.has(d.branchName.trim()));
     if (selectedAreas.size > 0) filtered = filtered.filter(d => d.area != null && selectedAreas.has(d.area.trim()));
@@ -264,7 +342,7 @@ export function useDeliveriesFilters(state: DeliveryState) {
       }
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-  }, [state.deliveries, state.couriers, debouncedSearchQuery, statusFilters, sortColumn, sortDirection, dateRange, customStartDate, customEndDate, selectedCouriers, selectedRestaurants, selectedChains, selectedBranches, selectedAreas, getDeliveryChainId]);
+  }, [state.deliveries, state.couriers, debouncedSearchQuery, statusFilters, sortColumn, sortDirection, dateRange, customStartDate, customEndDate, selectedCouriers, selectedRestaurants, matchesSelectedRestaurant, selectedChains, selectedBranches, selectedAreas, getDeliveryChainId]);
 
   // Reset page when filters change
   useEffect(() => { setCurrentPage(1); }, [debouncedSearchQuery, statusFilters, dateRange, selectedCouriers, selectedRestaurants, selectedChains, selectedBranches, selectedAreas, itemsPerPage]);
@@ -288,7 +366,7 @@ export function useDeliveriesFilters(state: DeliveryState) {
       else if (dateRange === 'custom' && customStartDate) { const s = new Date(customStartDate); const e = customEndDate ? new Date(customEndDate) : new Date(); e.setHours(23,59,59,999); filtered = filtered.filter(d => { const dd = new Date(d.createdAt); return dd >= s && dd <= e; }); }
     }
     if (selectedCouriers.size > 0) filtered = filtered.filter(d => d.courierId != null && selectedCouriers.has(d.courierId));
-    if (selectedRestaurants.size > 0) filtered = filtered.filter(d => d.restaurantId != null && selectedRestaurants.has(d.restaurantId));
+    if (selectedRestaurants.size > 0) filtered = filtered.filter(matchesSelectedRestaurant);
     if (selectedChains.size > 0) filtered = filtered.filter(d => selectedChains.has(getDeliveryChainId(d)));
     if (selectedBranches.size > 0) filtered = filtered.filter(d => d.branchName != null && selectedBranches.has(d.branchName.trim()));
     if (selectedAreas.size > 0) filtered = filtered.filter(d => d.area != null && selectedAreas.has(d.area.trim()));
@@ -296,14 +374,14 @@ export function useDeliveriesFilters(state: DeliveryState) {
     const counts: Record<string, number> = {};
     filtered.forEach(d => { counts[d.status] = (counts[d.status] || 0) + 1; });
     return counts;
-  }, [state.deliveries, state.couriers, dateRange, customStartDate, customEndDate, selectedCouriers, selectedRestaurants, selectedChains, selectedBranches, selectedAreas, debouncedSearchQuery, getDeliveryChainId]);
+  }, [state.deliveries, state.couriers, dateRange, customStartDate, customEndDate, selectedCouriers, selectedRestaurants, matchesSelectedRestaurant, selectedChains, selectedBranches, selectedAreas, debouncedSearchQuery, getDeliveryChainId]);
 
   // סטטיסטיקות לפי טווחי זמן
   const dateRangeStats = useMemo(() => {
     let filtered = state.deliveries;
     filtered = filtered.filter(d => statusFilters.has(d.status));
     if (selectedCouriers.size > 0) filtered = filtered.filter(d => d.courierId != null && selectedCouriers.has(d.courierId));
-    if (selectedRestaurants.size > 0) filtered = filtered.filter(d => d.restaurantId != null && selectedRestaurants.has(d.restaurantId));
+    if (selectedRestaurants.size > 0) filtered = filtered.filter(matchesSelectedRestaurant);
     if (selectedChains.size > 0) filtered = filtered.filter(d => selectedChains.has(getDeliveryChainId(d)));
     if (selectedBranches.size > 0) filtered = filtered.filter(d => d.branchName != null && selectedBranches.has(d.branchName.trim()));
     if (selectedAreas.size > 0) filtered = filtered.filter(d => d.area != null && selectedAreas.has(d.area.trim()));
@@ -325,7 +403,7 @@ export function useDeliveriesFilters(state: DeliveryState) {
         return filtered.filter(d => { const dd = new Date(d.createdAt); return dd >= s && dd <= e; }).length;
       })() : 0,
     };
-  }, [state.deliveries, state.couriers, statusFilters, selectedCouriers, selectedRestaurants, selectedChains, selectedBranches, selectedAreas, debouncedSearchQuery, customStartDate, customEndDate, getDeliveryChainId]);
+  }, [state.deliveries, state.couriers, statusFilters, selectedCouriers, selectedRestaurants, matchesSelectedRestaurant, selectedChains, selectedBranches, selectedAreas, debouncedSearchQuery, customStartDate, customEndDate, getDeliveryChainId]);
 
   // Check if has active filters
   const hasActiveFilters = useMemo(() =>

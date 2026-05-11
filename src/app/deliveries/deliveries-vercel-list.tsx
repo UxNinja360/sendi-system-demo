@@ -5,6 +5,7 @@ import {
   Bike,
   Car,
   CheckCircle2,
+  Clock3,
   Copy,
   CreditCard,
   Edit,
@@ -42,6 +43,7 @@ import { RestaurantLogoMark } from '../restaurants/restaurant-logo-mark';
 type DeliveriesVercelListProps = {
   filteredDeliveries: Delivery[];
   viewMode?: EntityViewMode;
+  showDateForToday?: boolean;
   emptyStateMode: 'no-data' | 'no-results' | 'filtered-empty';
   onClearFilters: () => void;
   totalCount: number;
@@ -61,6 +63,7 @@ type DeliveryVercelRowProps = {
   delivery: Delivery;
   courier: Courier | null;
   restaurant: Restaurant | null;
+  showDateForToday: boolean;
   isDrawerTarget: boolean;
   onOpenDrawer: (id: string) => void;
   onStatusChange: (deliveryId: string, status: DeliveryStatus) => void;
@@ -76,11 +79,20 @@ const rowGridClass =
 const getDeliveryDate = (delivery: Delivery) =>
   delivery.creation_time ?? delivery.createdAt ?? delivery.delivery_date;
 
-const formatDeliveryDate = (delivery: Delivery) => {
+const isSameCalendarDay = (left: Date, right: Date) =>
+  left.getFullYear() === right.getFullYear() &&
+  left.getMonth() === right.getMonth() &&
+  left.getDate() === right.getDate();
+
+const formatDeliveryDate = (delivery: Delivery, showDateForToday: boolean) => {
   const value = getDeliveryDate(delivery);
   if (!value) return '-';
   try {
-    return formatDate(value, 'HH:mm dd/MM');
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return '-';
+    const formatPattern =
+      !showDateForToday && isSameCalendarDay(date, new Date()) ? 'HH:mm' : 'HH:mm dd/MM';
+    return formatDate(date, formatPattern);
   } catch {
     return '-';
   }
@@ -104,7 +116,7 @@ const CourierAssignmentLine: React.FC<{
       <Icon className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
       <span
         className={joinClassNames(
-          'min-w-0 truncate text-sm font-semibold',
+          'min-w-0 truncate text-sm font-normal',
           assigned ? 'text-app-text' : 'text-app-text-secondary',
         )}
       >
@@ -188,6 +200,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
   delivery,
   courier,
   restaurant,
+  showDateForToday,
   isDrawerTarget,
   onOpenDrawer,
   onStatusChange,
@@ -208,6 +221,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
   const courierName = courier?.name || delivery.courierName || (hasAssignedCourier ? 'לא ידוע' : UNASSIGNED_COURIER_LABEL);
   const courierColumnText = hasAssignedCourier ? courierName : UNASSIGNED_COURIER_LABEL;
   const courierVehicleType = hasAssignedCourier ? courier?.vehicleType || delivery.vehicle_type : undefined;
+  const shouldShowCourierAssignment = delivery.status !== 'cancelled' || hasAssignedCourier;
   const distanceLabel = delivery.delivery_distance ? `${delivery.delivery_distance.toFixed(1)} ק״מ` : '-';
 
   const closeMenus = () => {
@@ -294,8 +308,9 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
             <Copy className="h-3.5 w-3.5 shrink-0 text-app-text-secondary opacity-0 transition-opacity group-hover/order-number:opacity-100 group-focus-visible/order-number:opacity-100" />
           </button>
           <div className="mt-1 flex shrink-0 items-center justify-start gap-1.5 text-right text-sm font-normal text-app-text-secondary">
+            <span className="whitespace-nowrap" dir="ltr">{formatDeliveryDate(delivery, showDateForToday)}</span>
             <DeliveryTimeDetailsTooltip delivery={delivery}>
-              <span className="whitespace-nowrap" dir="ltr">{formatDeliveryDate(delivery)}</span>
+              <Clock3 className="h-3.5 w-3.5 shrink-0" />
             </DeliveryTimeDetailsTooltip>
           </div>
         </div>
@@ -350,28 +365,26 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
           />
         </div>
 
-        <CourierAssignmentLine
-          assigned={hasAssignedCourier}
-          label={courierColumnText}
-          vehicleType={courierVehicleType}
-          className="delivery-row__route-compact-courier w-full justify-start whitespace-nowrap"
-        />
+        {shouldShowCourierAssignment ? (
+          <CourierAssignmentLine
+            assigned={hasAssignedCourier}
+            label={courierColumnText}
+            vehicleType={courierVehicleType}
+            className="delivery-row__route-compact-courier w-full justify-start whitespace-nowrap"
+          />
+        ) : null}
 
-        <div className="delivery-row__compact-meta" dir="rtl">
-          <span className={joinClassNames('delivery-row__compact-meta-item font-medium', config.tableColor)}>
-            <StatusIcon className="h-3.5 w-3.5 shrink-0" />
-            <span className="min-w-0 truncate">{config.label}</span>
-          </span>
-        </div>
       </div>
 
       <div className="delivery-row__courier-table min-h-0 min-w-0 items-center justify-start">
-        <CourierAssignmentLine
-          assigned={hasAssignedCourier}
-          label={courierColumnText}
-          vehicleType={courierVehicleType}
-          className="delivery-row__courier-line w-full"
-        />
+        {shouldShowCourierAssignment ? (
+          <CourierAssignmentLine
+            assigned={hasAssignedCourier}
+            label={courierColumnText}
+            vehicleType={courierVehicleType}
+            className="delivery-row__courier-line w-full"
+          />
+        ) : null}
       </div>
 
       <div className="contents" onClick={(event) => event.stopPropagation()}>
@@ -493,6 +506,7 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
   delivery,
   courier,
   restaurant,
+  showDateForToday,
   isDrawerTarget,
   onOpenDrawer,
   onStatusChange,
@@ -581,9 +595,10 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
               <span className="min-w-0 truncate">{formatOrderNumber(delivery.orderNumber)}</span>
               <Copy className="h-3.5 w-3.5 shrink-0 text-app-text-secondary opacity-0 transition-opacity group-hover/order-number:opacity-100 group-focus-visible/order-number:opacity-100" />
             </button>
-            <div className="mt-1 flex min-w-0 items-center text-xs text-app-text-secondary">
+            <div className="mt-1 flex min-w-0 items-center gap-1.5 text-xs text-app-text-secondary">
+              <span className="truncate" dir="ltr">{formatDeliveryDate(delivery, showDateForToday)}</span>
               <DeliveryTimeDetailsTooltip delivery={delivery}>
-                <span className="truncate" dir="ltr">{formatDeliveryDate(delivery)}</span>
+                <Clock3 className="h-3.5 w-3.5 shrink-0" />
               </DeliveryTimeDetailsTooltip>
             </div>
           </div>
@@ -768,6 +783,7 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
 export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
   filteredDeliveries,
   viewMode = 'list',
+  showDateForToday = true,
   emptyStateMode,
   onClearFilters,
   totalCount,
@@ -845,6 +861,7 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
                   delivery={delivery}
                   courier={courier}
                   restaurant={restaurant}
+                  showDateForToday={showDateForToday}
                   isDrawerTarget={drawerDeliveryId === delivery.id}
                   onOpenDrawer={onOpenDrawer}
                   onStatusChange={onStatusChange}
@@ -878,6 +895,7 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
                 delivery={delivery}
                 courier={courier}
                 restaurant={restaurant}
+                showDateForToday={showDateForToday}
                 isDrawerTarget={drawerDeliveryId === delivery.id}
                 onOpenDrawer={onOpenDrawer}
                 onStatusChange={onStatusChange}

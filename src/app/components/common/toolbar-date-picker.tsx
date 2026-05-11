@@ -59,6 +59,14 @@ const formatShortDate = (date: Date, withYear = false) =>
     ...(withYear ? { year: 'numeric' } : {}),
   });
 
+const DAY_LABELS = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
+
+const formatDayLabel = (date: Date) =>
+  `יום ${DAY_LABELS[date.getDay()]} ${pad(date.getDate())}/${pad(date.getMonth() + 1)}`;
+
+const formatSelectedDayLabel = (date: Date) =>
+  toDateKey(date) === toDateKey(new Date()) ? `היום ${formatDayLabel(date)}` : formatDayLabel(date);
+
 const getRangeLabel = (startDate: string, endDate: string) =>
   `${parseDateKey(startDate).toLocaleDateString('he-IL', {
     day: '2-digit',
@@ -76,6 +84,7 @@ type CalendarPopoverProps = {
   onDayClick: (date: Date, key: string) => void;
   onDayMouseEnter?: (key: string) => void;
   onDayMouseLeave?: () => void;
+  footer?: React.ReactNode;
 };
 
 const CalendarPopover: React.FC<CalendarPopoverProps> = ({
@@ -85,6 +94,7 @@ const CalendarPopover: React.FC<CalendarPopoverProps> = ({
   onDayClick,
   onDayMouseEnter,
   onDayMouseLeave,
+  footer,
 }) => {
   const monthDays = React.useMemo(() => getMonthDays(calendarMonth), [calendarMonth]);
 
@@ -134,6 +144,8 @@ const CalendarPopover: React.FC<CalendarPopoverProps> = ({
           </button>
         ))}
       </div>
+
+      {footer ? <div className="mt-3 border-t border-app-border pt-3">{footer}</div> : null}
     </div>
   );
 };
@@ -337,6 +349,261 @@ export const ToolbarPeriodControl: React.FC<ToolbarPeriodControlProps> = ({
             if (!pickingStart && !customEndDate) setHoverDate(key);
           }}
           onDayMouseLeave={() => setHoverDate(null)}
+        />
+      ) : null}
+    </div>
+  );
+};
+
+type ToolbarDayPickerProps = {
+  selectedDate: Date;
+  onDateChange: (date: Date) => void;
+  rangeStartDate?: string;
+  rangeEndDate?: string;
+  onRangeChange?: (startDate: string, endDate: string) => void;
+};
+
+export const ToolbarDayPicker: React.FC<ToolbarDayPickerProps> = ({
+  selectedDate,
+  onDateChange,
+  rangeStartDate = '',
+  rangeEndDate = '',
+  onRangeChange,
+}) => {
+  const [calendarOpen, setCalendarOpen] = React.useState(false);
+  const [calendarMonth, setCalendarMonth] = React.useState(
+    () => new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1),
+  );
+  const [rangePicking, setRangePicking] = React.useState(false);
+  const [rangeDraftStart, setRangeDraftStart] = React.useState('');
+  const [rangeDraftEnd, setRangeDraftEnd] = React.useState('');
+  const [hoverDate, setHoverDate] = React.useState<string | null>(null);
+  const popoverRef = React.useRef<HTMLDivElement>(null);
+  const selectedDateKey = toDateKey(selectedDate);
+  const todayKey = toDateKey(new Date());
+  const hasRangeSelection = Boolean(rangeStartDate && rangeEndDate);
+  const displayLabel = hasRangeSelection
+    ? getRangeLabel(rangeStartDate, rangeEndDate)
+    : formatSelectedDayLabel(selectedDate);
+
+  React.useEffect(() => {
+    if (!calendarOpen) return;
+    const handler = (event: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+        setCalendarOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [calendarOpen]);
+
+  React.useEffect(() => {
+    if (!calendarOpen) return;
+    setCalendarMonth(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
+  }, [calendarOpen, selectedDate]);
+
+  const getDayClassName = ({ key, inMonth }: { key: string; inMonth: boolean }) => {
+    if (rangePicking || hasRangeSelection) {
+      const startKey = rangePicking ? rangeDraftStart : rangeStartDate;
+      const rawEndKey = rangePicking
+        ? rangeDraftEnd || (rangeDraftStart ? hoverDate : '')
+        : rangeEndDate;
+      const orderedKeys =
+        startKey && rawEndKey
+          ? [startKey, rawEndKey].sort()
+          : [startKey, rawEndKey || ''];
+      const rangeStart = orderedKeys[0];
+      const rangeEnd = orderedKeys[1];
+      const isStart = Boolean(startKey) && key === startKey;
+      const isEnd = Boolean(rawEndKey) && key === rawEndKey;
+      const inRange = Boolean(rangeStart && rangeEnd && key > rangeStart && key < rangeEnd);
+      const isToday = key === todayKey;
+
+      return [
+        'aspect-square rounded-[4px] text-xs transition-colors',
+        isStart || isEnd
+          ? 'bg-[#0d0d12] text-white dark:bg-[#fafafa] dark:text-[#0d0d12]'
+          : inRange
+            ? 'bg-app-surface-raised text-app-text'
+            : inMonth
+              ? 'text-app-text hover:bg-app-surface-raised'
+              : 'text-app-text-muted',
+        isToday && !isStart && !isEnd ? 'ring-1 ring-[#ededed]/35' : '',
+      ].join(' ');
+    }
+
+    const isSelected = key === selectedDateKey;
+    const isToday = key === todayKey;
+
+    return [
+      'aspect-square rounded-[4px] text-xs transition-colors',
+      isSelected
+        ? 'bg-[#0d0d12] text-white dark:bg-[#fafafa] dark:text-[#0d0d12]'
+        : inMonth
+          ? 'text-app-text hover:bg-app-surface-raised'
+          : 'text-app-text-muted',
+      isToday && !isSelected ? 'ring-1 ring-[#ededed]/35' : '',
+    ].join(' ');
+  };
+
+  const handleDayClick = (date: Date, key: string) => {
+    if (!rangePicking) {
+      onDateChange(date);
+      setCalendarOpen(false);
+      return;
+    }
+
+    if (!rangeDraftStart || key < rangeDraftStart) {
+      setRangeDraftStart(key);
+      setRangeDraftEnd('');
+      setHoverDate(null);
+      return;
+    }
+
+    onRangeChange?.(rangeDraftStart, key);
+    setRangePicking(false);
+    setRangeDraftStart('');
+    setRangeDraftEnd('');
+    setHoverDate(null);
+    setCalendarOpen(false);
+  };
+
+  const selectCalendarMonth = () => {
+    const monthStart = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1);
+    const monthEnd = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 0);
+    onRangeChange?.(toDateKey(monthStart), toDateKey(monthEnd));
+    setRangePicking(false);
+    setRangeDraftStart('');
+    setRangeDraftEnd('');
+    setHoverDate(null);
+    setCalendarOpen(false);
+  };
+
+  const startRangePicking = () => {
+    setRangePicking(true);
+    setRangeDraftStart(rangeStartDate);
+    setRangeDraftEnd(rangeEndDate);
+    setHoverDate(null);
+  };
+
+  const cancelRangePicking = () => {
+    setRangePicking(false);
+    setRangeDraftStart('');
+    setRangeDraftEnd('');
+    setHoverDate(null);
+  };
+
+  const selectToday = () => {
+    onDateChange(new Date());
+    setRangePicking(false);
+    setRangeDraftStart('');
+    setRangeDraftEnd('');
+    setHoverDate(null);
+    setCalendarOpen(false);
+  };
+
+  const applyDraftRange = () => {
+    if (!rangeDraftStart || !rangeDraftEnd) return;
+    const [startDate, endDate] = [rangeDraftStart, rangeDraftEnd].sort();
+    onRangeChange?.(startDate, endDate);
+    setRangePicking(false);
+    setRangeDraftStart('');
+    setRangeDraftEnd('');
+    setHoverDate(null);
+    setCalendarOpen(false);
+  };
+
+  const footer = onRangeChange ? (
+    rangePicking ? (
+      <div className="space-y-2 text-right">
+        <div className="text-xs text-app-text-secondary">
+          {rangeDraftStart ? 'בחר תאריך סיום בלוח או הקלד טווח' : 'בחר תאריך התחלה בלוח או הקלד טווח'}
+        </div>
+        <label className="block text-xs text-app-text-secondary">
+          התחלה
+          <input
+            type="date"
+            value={rangeDraftStart}
+            onChange={(event) => setRangeDraftStart(event.target.value)}
+            className="mt-1 h-9 w-full rounded-[4px] border border-app-border bg-app-background px-2 text-sm text-app-text outline-none focus:border-app-brand"
+          />
+        </label>
+        <label className="block text-xs text-app-text-secondary">
+          סיום
+          <input
+            type="date"
+            value={rangeDraftEnd}
+            onChange={(event) => setRangeDraftEnd(event.target.value)}
+            className="mt-1 h-9 w-full rounded-[4px] border border-app-border bg-app-background px-2 text-sm text-app-text outline-none focus:border-app-brand"
+          />
+        </label>
+        <div className="grid grid-cols-2 gap-2 pt-1">
+          <button
+            type="button"
+            onClick={cancelRangePicking}
+            className="h-9 rounded-[4px] border border-app-border px-3 text-xs font-medium text-app-text transition-colors hover:bg-app-surface-raised"
+          >
+            ביטול
+          </button>
+          <button
+            type="button"
+            onClick={applyDraftRange}
+            disabled={!rangeDraftStart || !rangeDraftEnd}
+            className="h-9 rounded-[4px] border border-app-border bg-app-surface px-3 text-xs font-medium text-app-text transition-colors hover:bg-app-surface-raised disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            החל
+          </button>
+        </div>
+      </div>
+    ) : (
+      <div className="flex flex-col gap-2">
+        <button
+          type="button"
+          onClick={selectToday}
+          className="h-9 w-full rounded-[4px] border border-app-border bg-app-surface px-3 text-xs font-medium text-app-text transition-colors hover:bg-app-surface-raised"
+        >
+          היום
+        </button>
+        <button
+          type="button"
+          onClick={selectCalendarMonth}
+          className="h-9 w-full rounded-[4px] border border-app-border bg-app-surface px-3 text-xs font-medium text-app-text transition-colors hover:bg-app-surface-raised"
+        >
+          כל החודש
+        </button>
+        <button
+          type="button"
+          onClick={startRangePicking}
+          className="h-9 w-full rounded-[4px] border border-app-border bg-app-surface px-3 text-xs font-medium text-app-text transition-colors hover:bg-app-surface-raised"
+        >
+          טווח תאריכים
+        </button>
+      </div>
+    )
+  ) : null;
+
+  return (
+    <div ref={popoverRef} className="relative flex items-center gap-1" dir="rtl">
+      <button
+        type="button"
+        onClick={() => setCalendarOpen((value) => !value)}
+        className="flex h-10 min-w-[176px] shrink-0 items-center justify-center gap-2 rounded-[4px] border border-app-border bg-app-surface px-3 text-sm font-semibold text-app-text transition-colors hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#EDEDED] dark:hover:bg-[#111111]"
+      >
+        <CalendarDays className="h-4 w-4 shrink-0 text-app-text-secondary dark:text-app-text" />
+        <span className="whitespace-nowrap">{displayLabel}</span>
+      </button>
+
+      {calendarOpen ? (
+        <CalendarPopover
+          calendarMonth={calendarMonth}
+          setCalendarMonth={setCalendarMonth}
+          getDayClassName={getDayClassName}
+          onDayClick={handleDayClick}
+          onDayMouseEnter={(key) => {
+            if (rangePicking && rangeDraftStart) setHoverDate(key);
+          }}
+          onDayMouseLeave={() => setHoverDate(null)}
+          footer={footer}
         />
       ) : null}
     </div>

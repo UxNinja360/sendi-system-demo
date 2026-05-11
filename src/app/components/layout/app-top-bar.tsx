@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   Download,
+  Map as MapIcon,
   Menu,
   MessageSquare,
   MoreHorizontal,
@@ -64,6 +65,11 @@ const getPageMenuActions = (pathname: string): PageMenuAction[] => {
   if (pathname === '/deliveries') {
     return [
       ...(primaryAction ? [primaryAction] : []),
+      {
+        action: 'toggle-deliveries-map',
+        label: 'פתח מפה',
+        icon: <MapIcon className="h-4 w-4 text-app-text-secondary" />,
+      },
       {
         action: 'export-deliveries',
         label: 'ייצוא',

@@ -33,7 +33,8 @@ export const EntityActionMenu = React.forwardRef<HTMLDivElement, EntityActionMen
     return (
       <div
         ref={ref}
-        className="absolute min-w-[180px] bg-white dark:bg-app-surface border border-[#e5e5e5] dark:border-app-border rounded-xl shadow-2xl overflow-hidden py-1"
+        dir="rtl"
+        className="absolute w-56 overflow-hidden rounded-[var(--app-radius-md)] border border-app-border bg-app-surface py-1 text-right shadow-[var(--app-shadow-panel)]"
         style={style}
         onClick={onClick}
         onPointerDown={onPointerDown}
@@ -84,8 +85,8 @@ export const EntityActionMenuHeader: React.FC<EntityActionMenuHeaderProps> = ({
   subtitle,
 }) => {
   return (
-    <div className="px-3 py-2 border-b border-[#f5f5f5] dark:border-app-border mb-1">
-      <p className="text-xs font-semibold text-[#0d0d12] dark:text-app-text truncate">
+    <div className="mx-2 mb-1 border-b border-app-border px-1 py-2">
+      <p className="truncate text-sm font-semibold text-app-text">
         {title}
       </p>
       {subtitle ? <div className="mt-0.5">{subtitle}</div> : null}
@@ -101,10 +102,10 @@ export const EntityActionMenuItem: React.FC<EntityActionMenuItemProps> = ({
   disabled = false,
 }) => {
   const baseClassName =
-    'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors';
+    'flex w-full items-center gap-2 px-3 py-2.5 text-sm transition-colors [&>svg]:h-4 [&>svg]:w-4 [&>svg]:shrink-0 [&>svg]:text-app-text-secondary';
   const toneClassName = danger
-    ? 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10'
-    : 'text-[#0d0d12] dark:text-app-text hover:bg-[#f5f5f5] dark:hover:bg-[#262626]';
+    ? 'text-red-500 hover:bg-red-500/10'
+    : 'text-app-text hover:bg-app-surface-raised';
 
   return (
     <button
@@ -122,5 +123,5 @@ export const EntityActionMenuItem: React.FC<EntityActionMenuItemProps> = ({
 };
 
 export const EntityActionMenuDivider: React.FC = () => {
-  return <div className="border-t border-[#f5f5f5] dark:border-app-border my-1" />;
+  return <div className="mx-2 my-1 border-t border-app-border" />;
 };

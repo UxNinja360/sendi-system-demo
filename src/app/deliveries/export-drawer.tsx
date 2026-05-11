@@ -16,6 +16,7 @@ import {
   Table2,
   Layers,
   Eye,
+  Columns3,
 } from 'lucide-react';
 import { ALL_COLUMNS } from './column-defs';
 import {
@@ -54,8 +55,16 @@ interface ExportDrawerProps {
   deliveryCount: number;
   selectedCount: number;
   groupCounts: { couriers: number; restaurants: number };
+  scopeItems?: ExportScopeItem[];
   isEmbedded?: boolean;
 }
+
+export type ExportScopeItem = {
+  id: string;
+  label: string;
+  value: string;
+  tone?: 'default' | 'strong' | 'muted';
+};
 
 // ═══════════════════════════════════════
 // Component
@@ -69,6 +78,7 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
   deliveryCount,
   selectedCount,
   groupCounts,
+  scopeItems = [],
   isEmbedded = false,
 }) => {
   // Config state
@@ -221,20 +231,62 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
     return `${count} משלוחים · ${entity} · ${format === 'excel' ? 'Excel ZIP' : 'PDF'}`;
   }, [mode, format, selectedCount, deliveryCount, exportColumnCount, groupBy, groupCounts]);
 
+  const columnScopeLabel = useMemo(() => {
+    if (columnMode === 'visible') return `${visibleColumns.size.toLocaleString('he-IL')} מוצגות`;
+    if (columnMode === 'all') return `כל העמודות (${ALL_COLUMNS.length.toLocaleString('he-IL')})`;
+    return `${customColumns.size.toLocaleString('he-IL')} בבחירה`;
+  }, [columnMode, customColumns.size, visibleColumns.size]);
+
+  const normalizedScopeItems = useMemo<ExportScopeItem[]>(() => {
+    if (scopeItems.length > 0) {
+      return scopeItems.map((item) =>
+        item.id === 'columns' ? { ...item, value: columnScopeLabel } : item,
+      );
+    }
+
+    return [
+      {
+        id: 'deliveries',
+        label: 'משלוחים',
+        value: `${(selectedCount > 0 ? selectedCount : deliveryCount).toLocaleString('he-IL')} משלוחים`,
+        tone: 'strong',
+      },
+      {
+        id: 'columns',
+        label: 'עמודות',
+        value: columnScopeLabel,
+      },
+    ];
+  }, [columnScopeLabel, deliveryCount, scopeItems, selectedCount]);
+
   const generalFields = SUMMARY_FIELDS.filter(f => f.category === 'general');
   const financialFields = SUMMARY_FIELDS.filter(f => f.category === 'financial');
 
 
   const exportContent = (
-    <div className="flex-1 overflow-y-auto overscroll-contain min-h-0 p-4 space-y-5">
+    <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-3.5 py-3.5">
+
+      <section className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-medium uppercase tracking-wide text-[#a3a3a3]">מה מיוצא</span>
+          <span className="rounded-full border border-app-border bg-app-background px-2 py-0.5 text-[10px] text-app-text-secondary">
+            {selectedCount > 0 ? 'בחירה ידנית' : 'הסינון הנוכחי'}
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {normalizedScopeItems.map((item) => (
+            <ScopeItem key={item.id} item={item} />
+          ))}
+        </div>
+      </section>
 
       {/* ① סוג הייצוא — Mode cards with descriptions */}
       <div className="space-y-2">
         <span className="text-[11px] font-medium text-[#a3a3a3] uppercase tracking-wide">סוג הייצוא</span>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2.5">
           <button
             onClick={() => setMode('simple')}
-            className={`flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl transition-all border ${
+            className={`flex min-h-[92px] flex-col items-center justify-center gap-1.5 rounded-[8px] border px-3 py-3 transition-all ${
               mode === 'simple'
                 ? 'bg-app-brand-subtle border-app-brand'
                 : 'bg-white dark:bg-app-surface border-[#e5e5e5] dark:border-app-border hover:border-app-brand'
@@ -246,7 +298,7 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
           </button>
           <button
             onClick={() => setMode('grouped')}
-            className={`flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl transition-all border ${
+            className={`flex min-h-[92px] flex-col items-center justify-center gap-1.5 rounded-[8px] border px-3 py-3 transition-all ${
               mode === 'grouped'
                 ? 'bg-app-brand-subtle border-app-brand'
                 : 'bg-white dark:bg-app-surface border-[#e5e5e5] dark:border-app-border hover:border-app-brand'
@@ -260,8 +312,81 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
       </div>
 
       {/* ③ הגדרות קיבוץ — מופיע רק במצב מקובץ, עם אנימציה */}
+      <section className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-medium uppercase tracking-wide text-[#a3a3a3]">עמודות</span>
+          <span className="text-[11px] tabular-nums text-app-text-secondary">
+            {exportColumnCount.toLocaleString('he-IL')} עמודות
+          </span>
+        </div>
+        <div className="grid grid-cols-3 gap-1.5">
+          <ColumnModeButton
+            active={columnMode === 'visible'}
+            icon={<Eye className="h-3.5 w-3.5" />}
+            label="מוצגות"
+            onClick={() => setColumnMode('visible')}
+          />
+          <ColumnModeButton
+            active={columnMode === 'all'}
+            icon={<Columns3 className="h-3.5 w-3.5" />}
+            label="הכל"
+            onClick={() => setColumnMode('all')}
+          />
+          <ColumnModeButton
+            active={columnMode === 'custom'}
+            icon={<Table2 className="h-3.5 w-3.5" />}
+            label="בחירה"
+            onClick={() => setColumnMode('custom')}
+          />
+        </div>
+
+        {columnMode === 'custom' && (
+          <div className="animate-in rounded-[8px] border border-app-border bg-app-background p-2.5 duration-150 slide-in-from-top-1">
+            <div className="relative">
+              <Search className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-app-text-muted" />
+              <input
+                ref={searchRef}
+                value={columnSearch}
+                onChange={(event) => setColumnSearch(event.target.value)}
+                placeholder="חפש עמודה..."
+                className="h-8 w-full rounded-[6px] border border-app-border bg-app-surface px-8 text-xs text-app-text outline-none transition-colors placeholder:text-app-text-muted focus:border-app-brand"
+              />
+            </div>
+            <div className="mt-2 max-h-52 space-y-2 overflow-y-auto pr-0.5">
+              {filteredCategories.map((category) => {
+                const selectedInCategory = category.columns.filter((columnId) => customColumns.has(columnId)).length;
+                return (
+                  <div key={category.id} className="rounded-[7px] border border-app-border bg-app-surface p-2">
+                    <button
+                      type="button"
+                      onClick={() => toggleCategoryColumns(category.columns)}
+                      className="mb-1.5 flex w-full items-center justify-between text-right"
+                    >
+                      <span className="text-xs font-medium text-app-text">{category.label}</span>
+                      <span className="text-[10px] tabular-nums text-app-text-muted">
+                        {selectedInCategory}/{category.columns.length}
+                      </span>
+                    </button>
+                    <div className="flex flex-wrap gap-1.5">
+                      {category.columns.map((columnId) => (
+                        <FieldChip
+                          key={columnId}
+                          label={COLUMN_LABEL_MAP.get(columnId) || columnId}
+                          selected={customColumns.has(columnId)}
+                          onClick={() => toggleCustomColumn(columnId)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </section>
+
       {mode === 'grouped' && (
-        <div className="space-y-3 animate-in slide-in-from-top-2 duration-200 p-3.5 bg-[#fafafa] dark:bg-app-surface rounded-xl border border-[#e5e5e5] dark:border-app-border">
+        <div className="animate-in space-y-3 rounded-[8px] border border-[#e5e5e5] bg-[#fafafa] p-3.5 duration-200 slide-in-from-top-2 dark:border-app-border dark:bg-app-surface">
           <OptionRow label="קיבוץ לפי">
             <OptionBtn active={groupBy === 'courier'} onClick={() => setGroupBy('courier')}>
               שליח <span className="opacity-60 mr-0.5">({groupCounts.couriers})</span>
@@ -313,10 +438,10 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
       {/* ④ פורמט */}
       <div className="space-y-2">
         <span className="text-[11px] font-medium text-[#a3a3a3] uppercase tracking-wide">פורמט</span>
-        <div className="grid grid-cols-2 gap-1.5">
+        <div className="grid grid-cols-2 gap-2.5">
           <button
             onClick={() => setFormat('excel')}
-            className={`flex flex-col items-center gap-1 py-2.5 px-2 rounded-xl border transition-all ${
+            className={`flex min-h-[76px] flex-col items-center justify-center gap-1 rounded-[8px] border px-2 py-2.5 transition-all ${
               format === 'excel'
                 ? 'bg-app-brand-subtle border-app-brand'
                 : 'bg-white dark:bg-app-surface border-[#e5e5e5] dark:border-app-border hover:border-app-brand'
@@ -330,7 +455,7 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
           </button>
           <button
             onClick={() => setFormat('pdf')}
-            className={`flex flex-col items-center gap-1 py-2.5 px-2 rounded-xl border transition-all ${
+            className={`flex min-h-[76px] flex-col items-center justify-center gap-1 rounded-[8px] border px-2 py-2.5 transition-all ${
               format === 'pdf'
                 ? 'bg-app-brand-subtle border-app-brand'
                 : 'bg-white dark:bg-app-surface border-[#e5e5e5] dark:border-app-border hover:border-app-brand'
@@ -347,11 +472,11 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
   );
 
   const exportFooter = (
-    <div className="shrink-0 border-t border-[#e5e5e5] dark:border-app-border px-4 py-3 bg-[#fafafa] dark:bg-app-surface">
+    <div className="shrink-0 border-t border-[#e5e5e5] bg-app-surface px-3.5 py-3 dark:border-app-border">
       <button
         onClick={handleExport}
         disabled={!canExport}
-        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold text-app-background bg-app-brand-solid hover:bg-app-brand-hover shadow-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+        className="flex w-full items-center justify-center gap-2 rounded-[6px] bg-app-brand-solid py-2.5 text-sm font-semibold text-app-background shadow-sm transition-all hover:bg-app-brand-hover disabled:cursor-not-allowed disabled:opacity-40"
       >
         <Download className="w-4 h-4" />
         הורד {format === 'excel' ? (mode === 'grouped' ? 'Excel ZIP' : 'Excel') : 'PDF'}
@@ -423,11 +548,56 @@ export const ExportDrawer: React.FC<ExportDrawerProps> = ({
 // Sub-components
 // ═══════════════════════════════════════
 
+function ScopeItem({ item }: { item: ExportScopeItem }) {
+  const valueClass =
+    item.tone === 'strong'
+      ? 'text-app-text'
+      : item.tone === 'muted'
+        ? 'text-app-text-muted'
+        : 'text-app-text-secondary';
+
+  return (
+    <div className="min-w-0 rounded-[8px] border border-app-border bg-app-background px-2.5 py-2">
+      <div className="text-[10px] font-medium text-app-text-muted">{item.label}</div>
+      <div className={`mt-0.5 truncate text-xs font-medium ${valueClass}`} title={item.value}>
+        {item.value}
+      </div>
+    </div>
+  );
+}
+
+function ColumnModeButton({
+  active,
+  icon,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex h-9 items-center justify-center gap-1.5 rounded-[7px] border px-2 text-xs font-medium transition-all ${
+        active
+          ? 'border-app-brand bg-app-brand-subtle text-app-text'
+          : 'border-app-border bg-app-surface text-app-text-secondary hover:border-app-brand hover:text-app-text'
+      }`}
+    >
+      {icon}
+      <span className="truncate">{label}</span>
+    </button>
+  );
+}
+
 function ToggleRow({ label, enabled, onToggle }: { label: string; enabled: boolean; onToggle: () => void }) {
   return (
     <button
       onClick={onToggle}
-      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] transition-all text-right border ${
+      className={`flex w-full items-center gap-2 rounded-[8px] border px-3 py-2 text-right text-[11px] transition-all ${
         enabled
           ? 'bg-app-brand-subtle dark:bg-app-brand-subtle border-app-brand'
           : 'bg-white dark:bg-app-surface border-[#e5e5e5] dark:border-app-border opacity-60'
@@ -447,7 +617,7 @@ function FieldChip({ label, selected, onClick }: { label: string; selected: bool
   return (
     <button
       onClick={onClick}
-      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all border ${
+      className={`inline-flex items-center gap-1 rounded-[6px] border px-2.5 py-1 text-[10px] font-medium transition-all ${
         selected
           ? 'bg-app-brand-solid border-app-brand-solid text-app-background shadow-sm'
           : 'bg-white dark:bg-app-surface border-[#e5e5e5] dark:border-app-border text-[#525252] dark:text-app-text-secondary hover:border-app-brand hover:text-[#0d0d12] dark:hover:text-[#fafafa]'
@@ -472,7 +642,7 @@ function OptionBtn({ active, onClick, children }: { active: boolean; onClick: ()
   return (
     <button
       onClick={onClick}
-      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+      className={`rounded-[6px] border px-3 py-1.5 text-xs font-medium transition-all ${
         active
           ? 'bg-app-brand-solid border-app-brand-solid text-app-background shadow-sm'
           : 'bg-white dark:bg-app-surface border-[#e5e5e5] dark:border-app-border text-[#525252] dark:text-app-text-secondary hover:border-app-brand hover:text-[#0d0d12] dark:hover:text-[#fafafa]'

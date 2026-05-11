@@ -4,6 +4,7 @@ export type AppTopBarAction =
   | 'create-delivery'
   | 'create-courier'
   | 'create-restaurant'
+  | 'toggle-deliveries-map'
   | 'export-deliveries'
   | 'export-couriers'
   | 'export-restaurants';

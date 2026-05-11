@@ -1,9 +1,9 @@
 ﻿import React from 'react';
 import { Download } from 'lucide-react';
-import { ExportDrawer } from './export-drawer';
+import { ExportDrawer, type ExportScopeItem } from './export-drawer';
 import { EntityListSidePanel } from '../components/common/entity-list-side-panel';
-import { ListSidePanelHeader } from '../components/common/list-side-panel-header';
 import { type ColumnCategory } from '../components/common/column-selector';
+import { ListSidePanelHeader } from '../components/common/list-side-panel-header';
 
 type DeliveriesSidePanelProps = {
   exportOpen: boolean;
@@ -16,6 +16,7 @@ type DeliveriesSidePanelProps = {
   deliveryCount: number;
   selectedCount: number;
   groupCounts: React.ComponentProps<typeof ExportDrawer>['groupCounts'];
+  exportScopeItems?: ExportScopeItem[];
   columnCategories?: ColumnCategory[];
   defaultVisibleColumns?: Iterable<string>;
 };
@@ -31,6 +32,7 @@ export const DeliveriesSidePanel: React.FC<DeliveriesSidePanelProps> = ({
   deliveryCount,
   selectedCount,
   groupCounts,
+  exportScopeItems,
   columnCategories,
   defaultVisibleColumns,
 }) => {
@@ -54,6 +56,7 @@ export const DeliveriesSidePanel: React.FC<DeliveriesSidePanelProps> = ({
             deliveryCount={deliveryCount}
             selectedCount={selectedCount}
             groupCounts={groupCounts}
+            scopeItems={exportScopeItems}
           />
         </>
       }

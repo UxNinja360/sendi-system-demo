@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { format as formatDate } from 'date-fns';
 import {
-  Check,
+  CheckCheck,
   Clock3,
   Hourglass,
   MapPinned,
@@ -132,13 +132,13 @@ const stageIndicatorIcons: Record<DeliveryStatus, LucideIcon> = {
   pending: Hourglass,
   assigned: UsersRound,
   delivering: PackageCheck,
-  delivered: Check,
+  delivered: CheckCheck,
   cancelled: X,
   expired: TimerOff,
 };
 
 const stageRingRadius = 12;
-const stageRingStrokeWidth = 2.5;
+const stageRingStrokeWidth = 2.2;
 
 const polarToCartesian = (centerX: number, centerY: number, radius: number, angleInDegrees: number) => {
   const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180;
@@ -166,6 +166,8 @@ const stageRingSegments = [
 export const DeliveryStageIndicator: React.FC<{ status: DeliveryStatus }> = ({ status }) => {
   const { activeSegments, color } = getStageIndicatorMeta(status);
   const StageIcon = stageIndicatorIcons[status];
+  const iconSizeClassName = status === 'delivered' ? 'h-4 w-4' : 'h-3.5 w-3.5';
+  const iconStrokeWidth = status === 'delivered' ? 2 : 2.25;
 
   return (
     <span className="relative flex h-8 w-8 shrink-0 items-center justify-center">
@@ -192,8 +194,8 @@ export const DeliveryStageIndicator: React.FC<{ status: DeliveryStatus }> = ({ s
         ))}
       </svg>
       <StageIcon
-        className="pointer-events-none absolute h-3.5 w-3.5 text-app-text-secondary"
-        strokeWidth={2.25}
+        className={`pointer-events-none absolute ${iconSizeClassName} text-app-text-secondary`}
+        strokeWidth={iconStrokeWidth}
         aria-hidden="true"
       />
     </span>

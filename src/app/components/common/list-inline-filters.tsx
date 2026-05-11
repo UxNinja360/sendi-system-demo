@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Check, ChevronDown, Filter, Search, X } from 'lucide-react';
+import { Check, Filter, Search, X } from 'lucide-react';
 
 import {
   ListMultiSelectFilter,
@@ -58,27 +58,6 @@ const isMultiSelectFilter = (
   filter: ListInlineFilterItem,
 ): filter is ListInlineMultiSelectFilterItem => filter.kind === 'multi-select';
 
-const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
-  classes.filter(Boolean).join(' ');
-
-const MobileStatusDotSummary: React.FC<{
-  options: FilterOption[];
-  selectedValues: Set<string>;
-}> = ({ options, selectedValues }) => (
-  <span className="flex shrink-0 items-center -space-x-1" dir="ltr" aria-hidden="true">
-    {options.map((option) => (
-      <span
-        key={option.id}
-        className={joinClassNames(
-          'h-2 w-2 rounded-full ring-1 ring-app-surface',
-          option.dotClassName ?? 'bg-app-text-muted',
-          selectedValues.has(option.id) ? '' : 'opacity-25 grayscale',
-        )}
-      />
-    ))}
-  </span>
-);
-
 export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters }) => {
   const [openFilterKey, setOpenFilterKey] = useState<string | null>(null);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
@@ -114,7 +93,7 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
     filters[0].appearance === 'status'
       ? filters[0]
       : null;
-  const mobileSheetTitle = mobileStatusFilter?.defaultLabel ?? TEXT.filters;
+  const mobileSheetTitle = TEXT.filters;
 
   useEffect(() => {
     const handleMouseDown = (event: MouseEvent) => {
@@ -144,23 +123,34 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
   return (
     <>
       {mobileStatusFilter ? (
-        <button
-          type="button"
-          onClick={() => setMobileSheetOpen(true)}
-          className="flex h-10 shrink-0 items-center gap-2 rounded-[6px] border border-app-border bg-app-surface px-3 text-sm font-semibold text-app-text transition-colors hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#EDEDED] dark:hover:bg-[#111111] md:hidden"
-          aria-label={mobileStatusFilter.defaultLabel}
-          title={mobileStatusFilter.defaultLabel}
-        >
-          <MobileStatusDotSummary
-            options={mobileStatusFilter.options}
+        <div className="flex min-w-0 shrink-0 flex-nowrap items-center gap-1">
+          <ListMultiSelectFilter
+            containerRef={refCallbacks[mobileStatusFilter.key]}
+            isOpen={openFilterKey === mobileStatusFilter.key}
+            setOpen={(nextOpen) => {
+              const resolvedOpen =
+                typeof nextOpen === 'function'
+                  ? nextOpen(openFilterKey === mobileStatusFilter.key)
+                  : nextOpen;
+
+              setOpenFilterKey(resolvedOpen ? mobileStatusFilter.key : null);
+            }}
+            closeOtherMenus={() => setOpenFilterKey(null)}
             selectedValues={mobileStatusFilter.selectedValues}
+            setSelectedValues={mobileStatusFilter.setSelectedValues}
+            toggleValue={mobileStatusFilter.toggleValue}
+            options={mobileStatusFilter.options}
+            searchValue={mobileStatusFilter.searchValue ?? ''}
+            setSearchValue={mobileStatusFilter.setSearchValue ?? (() => undefined)}
+            defaultLabel={mobileStatusFilter.defaultLabel}
+            pluralLabel={mobileStatusFilter.pluralLabel}
+            placeholder={mobileStatusFilter.placeholder ?? `${TEXT.search} ${mobileStatusFilter.defaultLabel}...`}
+            icon={mobileStatusFilter.icon}
+            showSearch={mobileStatusFilter.showSearch}
+            appearance={mobileStatusFilter.appearance}
+            setCurrentPage={mobileStatusFilter.setCurrentPage}
           />
-          <span className="min-w-0 truncate text-right">{mobileStatusFilter.defaultLabel}</span>
-          <span className="shrink-0 rounded-full bg-app-nav-active-bg px-1.5 py-0.5 text-xs font-bold leading-none text-app-text">
-            {mobileStatusFilter.selectedValues.size}/{mobileStatusFilter.options.length}
-          </span>
-          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
-        </button>
+        </div>
       ) : (
         <button
           type="button"
@@ -179,60 +169,62 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
         </button>
       )}
 
-      <div className="hidden min-w-0 shrink-0 flex-nowrap items-center gap-1 md:flex">
-        {filters.map((filter) =>
-          isMultiSelectFilter(filter) ? (
-            <ListMultiSelectFilter
-              key={filter.key}
-              containerRef={refCallbacks[filter.key]}
-              isOpen={openFilterKey === filter.key}
-              setOpen={(nextOpen) => {
-                const resolvedOpen =
-                  typeof nextOpen === 'function'
-                    ? nextOpen(openFilterKey === filter.key)
-                    : nextOpen;
+      {!mobileStatusFilter ? (
+        <div className="hidden min-w-0 shrink-0 flex-nowrap items-center gap-1 md:flex">
+          {filters.map((filter) =>
+            isMultiSelectFilter(filter) ? (
+              <ListMultiSelectFilter
+                key={filter.key}
+                containerRef={refCallbacks[filter.key]}
+                isOpen={openFilterKey === filter.key}
+                setOpen={(nextOpen) => {
+                  const resolvedOpen =
+                    typeof nextOpen === 'function'
+                      ? nextOpen(openFilterKey === filter.key)
+                      : nextOpen;
 
-                setOpenFilterKey(resolvedOpen ? filter.key : null);
-              }}
-              closeOtherMenus={() => setOpenFilterKey(null)}
-              selectedValues={filter.selectedValues}
-              setSelectedValues={filter.setSelectedValues}
-              toggleValue={filter.toggleValue}
-              options={filter.options}
-              searchValue={filter.searchValue ?? ''}
-              setSearchValue={filter.setSearchValue ?? (() => undefined)}
-              defaultLabel={filter.defaultLabel}
-              pluralLabel={filter.pluralLabel}
-              placeholder={filter.placeholder ?? `${TEXT.search} ${filter.defaultLabel}...`}
-              icon={filter.icon}
-              showSearch={filter.showSearch}
-              appearance={filter.appearance}
-              setCurrentPage={filter.setCurrentPage}
-            />
-          ) : (
-            <ListSingleSelectFilter
-              key={filter.key}
-              containerRef={refCallbacks[filter.key]}
-              isOpen={openFilterKey === filter.key}
-              setOpen={(nextOpen) => {
-                const resolvedOpen =
-                  typeof nextOpen === 'function'
-                    ? nextOpen(openFilterKey === filter.key)
-                    : nextOpen;
+                  setOpenFilterKey(resolvedOpen ? filter.key : null);
+                }}
+                closeOtherMenus={() => setOpenFilterKey(null)}
+                selectedValues={filter.selectedValues}
+                setSelectedValues={filter.setSelectedValues}
+                toggleValue={filter.toggleValue}
+                options={filter.options}
+                searchValue={filter.searchValue ?? ''}
+                setSearchValue={filter.setSearchValue ?? (() => undefined)}
+                defaultLabel={filter.defaultLabel}
+                pluralLabel={filter.pluralLabel}
+                placeholder={filter.placeholder ?? `${TEXT.search} ${filter.defaultLabel}...`}
+                icon={filter.icon}
+                showSearch={filter.showSearch}
+                appearance={filter.appearance}
+                setCurrentPage={filter.setCurrentPage}
+              />
+            ) : (
+              <ListSingleSelectFilter
+                key={filter.key}
+                containerRef={refCallbacks[filter.key]}
+                isOpen={openFilterKey === filter.key}
+                setOpen={(nextOpen) => {
+                  const resolvedOpen =
+                    typeof nextOpen === 'function'
+                      ? nextOpen(openFilterKey === filter.key)
+                      : nextOpen;
 
-                setOpenFilterKey(resolvedOpen ? filter.key : null);
-              }}
-              closeOtherMenus={() => setOpenFilterKey(null)}
-              value={filter.value}
-              onChange={filter.onChange}
-              options={filter.options}
-              defaultLabel={filter.defaultLabel}
-              clearValue={filter.clearValue}
-              setCurrentPage={filter.setCurrentPage}
-            />
-          ),
-        )}
-      </div>
+                  setOpenFilterKey(resolvedOpen ? filter.key : null);
+                }}
+                closeOtherMenus={() => setOpenFilterKey(null)}
+                value={filter.value}
+                onChange={filter.onChange}
+                options={filter.options}
+                defaultLabel={filter.defaultLabel}
+                clearValue={filter.clearValue}
+                setCurrentPage={filter.setCurrentPage}
+              />
+            ),
+          )}
+        </div>
+      ) : null}
 
       {mobileSheetOpen ? (
         <div

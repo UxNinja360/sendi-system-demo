@@ -1,9 +1,9 @@
 ﻿import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { format as formatDate } from 'date-fns';
-import { Map as MapIcon } from 'lucide-react';
 import { useDelivery } from '../context/delivery-context-value';
 import { Delivery, DeliveryStatus } from '../types/delivery.types';
 import { DeliveriesSidePanel } from '../deliveries/deliveries-side-panel';
+import type { ExportScopeItem } from '../deliveries/export-drawer';
 import { DeliveriesVercelList } from '../deliveries/deliveries-vercel-list';
 import { DeliveriesLiveMapPanel } from '../deliveries/deliveries-live-map-panel';
 import { DeliveriesOverlays } from '../deliveries/deliveries-overlays';
@@ -13,11 +13,8 @@ import type { ColumnDef } from '../deliveries/column-defs';
 import { toast } from 'sonner';
 import { useDeliveriesFilters } from '../deliveries/use-deliveries-filters';
 import { useDeliveriesExport } from '../deliveries/use-deliveries-export';
-import type { PeriodMode } from '../components/common/toolbar-period-control';
 import { PageToolbar } from '../components/common/page-toolbar';
-import { ToolbarPeriodControl } from '../components/common/toolbar-period-control';
-import { ViewModeToggle, type EntityViewMode } from '../components/common/view-mode-toggle';
-import { ToolbarIconButton } from '../components/common/toolbar-icon-button';
+import { ToolbarDayPicker } from '../components/common/toolbar-period-control';
 import { ListInlineFilters } from '../components/common/list-inline-filters';
 import {
   SelectionActionBar,
@@ -67,7 +64,6 @@ const PRODUCT_DEFAULT_VISIBLE_COLUMNS = new Set([
 const REQUIRED_PRODUCT_VISIBLE_COLUMNS = ['creation_time'];
 const COLUMN_ORDER_STORAGE_KEY = `${DELIVERY_STORAGE_KEYS.deliveriesColumnOrder}:product-v2`;
 const VISIBLE_COLUMNS_STORAGE_KEY = `${DELIVERY_STORAGE_KEYS.deliveriesVisibleColumns}:product-v7`;
-const DELIVERIES_VIEW_MODE_KEY = 'deliveries-view-mode-v1';
 const DELIVERY_COLUMN_CATEGORIES = [
   {
     id: 'core',
@@ -127,6 +123,37 @@ const STATUS_CHIP_CONFIG = [
   { status: 'cancelled'  as DeliveryStatus, label: 'בוטל',  dot: 'bg-red-500',    active: 'bg-red-500/10 text-red-600 dark:text-red-400' },
   { status: 'expired'    as DeliveryStatus, label: 'פג תוקף', dot: 'bg-zinc-500', active: 'bg-zinc-500/10 text-zinc-600 dark:text-zinc-300' },
 ];
+const HEBREW_DAY_LABELS = ['יום א׳', 'יום ב׳', 'יום ג׳', 'יום ד׳', 'יום ה׳', 'יום ו׳', 'שבת'];
+
+const parseDateKey = (dateKey: string): Date => {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  return new Date(year, (month || 1) - 1, day || 1);
+};
+
+const formatShortDateLabel = (dateKey: string) => formatDate(parseDateKey(dateKey), 'dd/MM');
+
+const formatExportDayLabel = (date: Date): string => {
+  const todayKey = formatDate(new Date(), 'yyyy-MM-dd');
+  const dateKey = formatDate(date, 'yyyy-MM-dd');
+  const prefix = dateKey === todayKey ? 'היום ' : '';
+  return `${prefix}${HEBREW_DAY_LABELS[date.getDay()]} ${formatDate(date, 'dd/MM')}`;
+};
+
+const describeSelectedOptions = (
+  selectedValues: Set<string>,
+  options: Array<{ id: string; label: string }>,
+  allLabel: string,
+  pluralLabel: string,
+): string => {
+  if (selectedValues.size === 0) return allLabel;
+
+  const labels = Array.from(selectedValues)
+    .map((id) => options.find((option) => option.id === id)?.label ?? id)
+    .filter(Boolean);
+
+  if (labels.length === 1) return labels[0];
+  return `${labels.length.toLocaleString('he-IL')} ${pluralLabel}`;
+};
 
 type DeliveriesOverviewStats = {
   filtered: number;
@@ -252,15 +279,8 @@ export const DeliveriesPage: React.FC = () => {
   const [exportOpen, setExportOpen] = useState(false);
   const [newDeliveryOpen, setNewDeliveryOpen] = useState(false);
   const [columnsOpen, setColumnsOpen] = useState(false);
-  const [periodMode, setPeriodMode] = useState<PeriodMode>('current_month');
-  const [monthAnchor, setMonthAnchor] = useState(new Date());
-  const [viewMode, setViewMode] = useState<EntityViewMode>(() => {
-    try {
-      const saved = localStorage.getItem(DELIVERIES_VIEW_MODE_KEY);
-      if (saved === 'list' || saved === 'cards') return saved;
-    } catch {}
-    return 'list';
-  });
+  const [selectedDay, setSelectedDay] = useState(new Date());
+  const [dateSelectionMode, setDateSelectionMode] = useState<'day' | 'range'>('day');
   const [mapOpen, setMapOpen] = useState(false);
 
   useEffect(() => (
@@ -268,22 +288,43 @@ export const DeliveriesPage: React.FC = () => {
   ), []);
 
   useEffect(() => (
+    addAppTopBarActionListener('toggle-deliveries-map', () => {
+      setExportOpen(false);
+      setMapOpen((current) => !current);
+    })
+  ), []);
+
+  useEffect(() => (
     addAppTopBarActionListener('export-deliveries', () => {
-      setExportOpen(true);
       setColumnsOpen(false);
+      setMapOpen(false);
+      setExportOpen(true);
     })
   ), []);
 
   useEffect(() => {
-    if (periodMode !== 'current_month') return;
+    if (dateSelectionMode !== 'day') return;
 
-    const monthStart = formatDate(new Date(monthAnchor.getFullYear(), monthAnchor.getMonth(), 1), 'yyyy-MM-dd');
-    const monthEnd = formatDate(new Date(monthAnchor.getFullYear(), monthAnchor.getMonth() + 1, 0), 'yyyy-MM-dd');
+    const dayKey = formatDate(selectedDay, 'yyyy-MM-dd');
 
     if (dateRange !== 'custom') setDateRange('custom');
-    if (customStartDate !== monthStart) setCustomStartDate(monthStart);
-    if (customEndDate !== monthEnd) setCustomEndDate(monthEnd);
-  }, [periodMode, monthAnchor, dateRange, customStartDate, customEndDate, setDateRange, setCustomStartDate, setCustomEndDate]);
+    if (customStartDate !== dayKey) setCustomStartDate(dayKey);
+    if (customEndDate !== dayKey) setCustomEndDate(dayKey);
+  }, [dateSelectionMode, selectedDay, dateRange, customStartDate, customEndDate, setDateRange, setCustomStartDate, setCustomEndDate]);
+
+  const handleSelectedDayChange = useCallback((date: Date) => {
+    setDateSelectionMode('day');
+    setSelectedDay(date);
+    setCurrentPage(1);
+  }, [setCurrentPage]);
+
+  const handleSelectedDateRangeChange = useCallback((startDate: string, endDate: string) => {
+    setDateSelectionMode('range');
+    if (dateRange !== 'custom') setDateRange('custom');
+    setCustomStartDate(startDate);
+    setCustomEndDate(endDate);
+    setCurrentPage(1);
+  }, [dateRange, setCurrentPage, setCustomEndDate, setCustomStartDate, setDateRange]);
 
   useEffect(() => {
     try {
@@ -292,12 +333,6 @@ export const DeliveriesPage: React.FC = () => {
       console.warn('Failed to save visible columns to localStorage:', e);
     }
   }, [visibleColumns]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(DELIVERIES_VIEW_MODE_KEY, viewMode);
-    } catch {}
-  }, [viewMode]);
 
   useEffect(() => {
     setVisibleColumns((current) => {
@@ -525,6 +560,85 @@ export const DeliveriesPage: React.FC = () => {
       toggleStatusFilter,
     ],
   );
+
+  const exportDateLabel = useMemo(() => {
+    if (dateSelectionMode === 'range') {
+      const start = customStartDate || formatDate(selectedDay, 'yyyy-MM-dd');
+      const end = customEndDate || start;
+      if (start === end) return formatExportDayLabel(parseDateKey(start));
+      return `${formatShortDateLabel(start)} - ${formatShortDateLabel(end)}`;
+    }
+
+    return formatExportDayLabel(selectedDay);
+  }, [customEndDate, customStartDate, dateSelectionMode, selectedDay]);
+
+  const exportStatusLabel = useMemo(() => {
+    const allStatuses = STATUS_CHIP_CONFIG.map((item) => item.status);
+    if (statusFilters.size === allStatuses.length) return 'כל הסטטוסים';
+    if (statusFilters.size === 0) return 'ללא סטטוסים';
+
+    const labels = allStatuses
+      .filter((status) => statusFilters.has(status))
+      .map((status) => STATUS_CHIP_CONFIG.find((item) => item.status === status)?.label ?? status);
+
+    if (labels.length === 1) return labels[0];
+    return `${labels.length.toLocaleString('he-IL')}/${allStatuses.length} סטטוסים`;
+  }, [statusFilters]);
+
+  const exportScopeItems = useMemo<ExportScopeItem[]>(() => {
+    const items: ExportScopeItem[] = [
+      { id: 'date', label: 'תאריך', value: exportDateLabel, tone: 'strong' },
+      {
+        id: 'deliveries',
+        label: 'משלוחים',
+        value: selectedIds.size > 0
+          ? `${selectedIds.size.toLocaleString('he-IL')} נבחרו מתוך ${filteredStats.filtered.toLocaleString('he-IL')}`
+          : `${filteredStats.filtered.toLocaleString('he-IL')} משלוחים`,
+        tone: 'strong',
+      },
+      {
+        id: 'restaurants',
+        label: 'מסעדות',
+        value: describeSelectedOptions(selectedRestaurants, restaurantOptions, 'כל המסעדות', 'מסעדות'),
+      },
+      {
+        id: 'couriers',
+        label: 'שליחים',
+        value: describeSelectedOptions(selectedCouriers, courierOptions, 'כל השליחים', 'שליחים'),
+      },
+      { id: 'statuses', label: 'סטטוסים', value: exportStatusLabel },
+      { id: 'columns', label: 'עמודות', value: `${visibleColumns.size.toLocaleString('he-IL')} מוצגות`, tone: 'muted' },
+    ];
+
+    if (selectedChains.size > 0) {
+      items.splice(4, 0, {
+        id: 'chains',
+        label: 'רשתות',
+        value: describeSelectedOptions(selectedChains, chainOptions, 'כל הרשתות', 'רשתות'),
+      });
+    }
+
+    const trimmedSearch = searchQuery.trim();
+    if (trimmedSearch) {
+      items.push({ id: 'search', label: 'חיפוש', value: trimmedSearch });
+    }
+
+    return items;
+  }, [
+    chainOptions,
+    courierOptions,
+    exportDateLabel,
+    exportStatusLabel,
+    filteredStats.filtered,
+    restaurantOptions,
+    searchQuery,
+    selectedChains,
+    selectedCouriers,
+    selectedIds.size,
+    selectedRestaurants,
+    visibleColumns.size,
+  ]);
+
   return (
     <>
       <EntityListShell
@@ -543,6 +657,7 @@ export const DeliveriesPage: React.FC = () => {
             deliveryCount={filteredStats.filtered}
             selectedCount={selectedIds.size}
             groupCounts={reportGroupCounts}
+            exportScopeItems={exportScopeItems}
             columnCategories={[...DELIVERY_COLUMN_CATEGORIES]}
             defaultVisibleColumns={PRODUCT_DEFAULT_VISIBLE_COLUMNS}
           />
@@ -551,31 +666,17 @@ export const DeliveriesPage: React.FC = () => {
           <PageToolbar
             showBottomBorder={false}
             periodControl={
-              <ToolbarPeriodControl
-                periodMode={periodMode}
-                setPeriodMode={setPeriodMode}
-                monthAnchor={monthAnchor}
-                setMonthAnchor={setMonthAnchor}
-                customStartDate={customStartDate}
-                setCustomStartDate={setCustomStartDate}
-                customEndDate={customEndDate}
-                setCustomEndDate={setCustomEndDate}
-                onCustomRangeChange={() => setDateRange('custom')}
-                onCustomRangeComplete={() => setCurrentPage(1)}
-                onReset={() => setCurrentPage(1)}
+              <ToolbarDayPicker
+                selectedDate={selectedDay}
+                onDateChange={handleSelectedDayChange}
+                rangeStartDate={dateSelectionMode === 'range' ? customStartDate : ''}
+                rangeEndDate={dateSelectionMode === 'range' ? customEndDate : ''}
+                onRangeChange={handleSelectedDateRangeChange}
               />
             }
             controls={
               <>
                 <ListInlineFilters filters={deliveryInlineFilters} />
-                <ViewModeToggle value={viewMode} onChange={setViewMode} />
-                <ToolbarIconButton
-                  active={mapOpen}
-                  label={mapOpen ? 'סגור מפה' : 'פתח מפה'}
-                  onClick={() => setMapOpen((current) => !current)}
-                >
-                  <MapIcon className="h-3.5 w-3.5" />
-                </ToolbarIconButton>
               </>
             }
             actions={
@@ -609,7 +710,7 @@ export const DeliveriesPage: React.FC = () => {
               : 'flex min-h-0 flex-1 flex-col overflow-hidden'
           }
         >
-          {mapOpen && (
+          {mapOpen ? (
             <div className="min-h-[42vh] min-w-0 overflow-hidden border-b border-app-border bg-app-background xl:min-h-0 xl:border-b-0 xl:border-r xl:border-app-border" dir="rtl">
               <DeliveriesLiveMapPanel
                 deliveries={filteredDeliveries}
@@ -620,12 +721,12 @@ export const DeliveriesPage: React.FC = () => {
                 onOpenDelivery={handleOpenDrawer}
               />
             </div>
-          )}
+          ) : null}
 
           <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden xl:[direction:rtl]">
             <DeliveriesVercelList
               filteredDeliveries={filteredDeliveries}
-              viewMode={viewMode}
+              showDateForToday={dateSelectionMode !== 'day'}
               emptyStateMode={emptyStateMode}
               onClearFilters={handleClearAllFilters}
               totalCount={stats.total}
@@ -649,6 +750,7 @@ export const DeliveriesPage: React.FC = () => {
                       onClick={() => {
                         setExportOpen(true);
                         setColumnsOpen(false);
+                        setMapOpen(false);
                       }}
                     >
                       {'\u05d9\u05d9\u05e6\u05d5\u05d0 \u05e0\u05d1\u05d7\u05e8\u05d9\u05dd'}

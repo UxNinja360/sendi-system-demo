@@ -817,6 +817,7 @@ export const CouriersListScreen: React.FC = () => {
   return (
     <>
       <EntityListShell
+        mainClassName="mx-auto w-full max-w-[1280px]"
         sidePanel={
           <EntityListSidePanel
             exportOpen={isExportOpen}
