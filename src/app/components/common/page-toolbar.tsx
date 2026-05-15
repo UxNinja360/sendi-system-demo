@@ -115,7 +115,7 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
           <div className="app-toolbar-row overflow-visible px-3 py-2.5">
             <div className="flex w-full min-w-0 flex-wrap items-center gap-1.5 min-[900px]:flex-nowrap">
               {renderedPeriodControl ? (
-                <div className="flex max-w-full shrink-0 flex-nowrap items-center gap-1">
+                <div className="flex min-w-0 flex-1 basis-[calc(50%-0.1875rem)] flex-nowrap items-center gap-1 min-[900px]:max-w-full min-[900px]:shrink-0 min-[900px]:basis-auto min-[900px]:flex-none">
                   {renderedPeriodControl}
                 </div>
               ) : null}
@@ -128,7 +128,7 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
               ) : null}
               {controls ? (
                 <div
-                  className={`flex max-w-full shrink-0 basis-auto flex-nowrap items-center gap-1 ${controlsClassName}`.trim()}
+                  className={`flex min-w-0 flex-1 basis-[calc(50%-0.1875rem)] flex-nowrap items-center gap-1 min-[900px]:max-w-full min-[900px]:shrink-0 min-[900px]:basis-auto min-[900px]:flex-none ${controlsClassName}`.trim()}
                 >
                   {controls}
                 </div>

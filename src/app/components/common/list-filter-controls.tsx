@@ -313,7 +313,7 @@ export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
     const statusButtonLabel = `${defaultLabel} ${selectedCount}/${options.length}`;
 
     return (
-      <div className="relative w-[178px] shrink-0" ref={setRootRef}>
+      <div className="relative w-full min-w-0 shrink md:w-[178px] md:shrink-0" ref={setRootRef}>
         <button
           type="button"
           title={statusButtonLabel}
@@ -326,7 +326,7 @@ export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
             closeOtherMenus();
             setOpen(true);
           }}
-          className="flex h-10 w-full items-center gap-2 rounded-[6px] border border-app-border bg-app-surface px-3 text-sm font-semibold text-app-text transition-colors hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#EDEDED] dark:hover:bg-[#111111]"
+          className="flex h-10 w-full min-w-0 items-center gap-1.5 rounded-[6px] border border-app-border bg-app-surface px-2 text-sm font-semibold text-app-text transition-colors hover:bg-app-surface-raised md:gap-2 md:px-3 dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#EDEDED] dark:hover:bg-[#111111]"
         >
           <StatusDotSummary options={options} selectedValues={selectedValues} />
           <span className="min-w-0 flex-1 truncate text-right">{defaultLabel}</span>

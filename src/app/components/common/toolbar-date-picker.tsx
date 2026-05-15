@@ -658,14 +658,14 @@ export const ToolbarDayPicker: React.FC<ToolbarDayPickerProps> = ({
   ) : null;
 
   return (
-    <div ref={popoverRef} className="relative flex items-center gap-1" dir="rtl">
+    <div ref={popoverRef} className="relative flex w-full min-w-0 items-center gap-1 md:w-auto" dir="rtl">
       <button
         type="button"
         onClick={() => setCalendarOpen((value) => !value)}
-        className="flex h-10 min-w-[176px] shrink-0 items-center justify-center gap-2 rounded-[4px] border border-app-border bg-app-surface px-3 text-sm font-semibold text-app-text transition-colors hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#EDEDED] dark:hover:bg-[#111111]"
+        className="flex h-10 w-full min-w-0 shrink items-center justify-center gap-1.5 rounded-[4px] border border-app-border bg-app-surface px-2 text-sm font-semibold text-app-text transition-colors hover:bg-app-surface-raised md:min-w-[176px] md:gap-2 md:px-3 dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#EDEDED] dark:hover:bg-[#111111]"
       >
         <CalendarDays className="h-4 w-4 shrink-0 text-app-text-secondary dark:text-app-text" />
-        <span className="whitespace-nowrap">{displayLabel}</span>
+        <span className="min-w-0 truncate">{displayLabel}</span>
       </button>
 
       {calendarOpen ? (
