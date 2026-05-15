@@ -285,8 +285,8 @@ type PendingActionToast = {
   timeoutId: ReturnType<typeof setTimeout>;
 };
 
-const ACTION_TOAST_DELAY_MS = 120;
-const ACTION_TOAST_DURATION_MS = 2600;
+const ACTION_TOAST_DELAY_MS = 60;
+const ACTION_TOAST_DURATION_MS = 2200;
 
 const getActionDeliveryLabel = (state: DeliveryState, deliveryId: string) =>
   state.deliveries.find((delivery) => delivery.id === deliveryId)?.orderNumber ?? deliveryId;
@@ -627,6 +627,17 @@ const getAggregateActionToastTitle = (actionType: DeliveryAction['type'], count:
   }
 };
 
+const shouldUseNeutralActionToast = (actionType: DeliveryAction['type']) =>
+  actionType === 'TOGGLE_SYSTEM' ||
+  actionType === 'TOGGLE_AUTO_ASSIGN' ||
+  actionType === 'SET_TIME_MULTIPLIER' ||
+  actionType === 'UPDATE_DELIVERY' ||
+  actionType === 'UPDATE_STATUS' ||
+  actionType === 'SET_COURIER_ROUTE_PLAN' ||
+  actionType === 'SET_COURIER_ROUTE_PLANS' ||
+  actionType === 'CLEAR_COURIER_ROUTE_PLAN' ||
+  actionType === 'REORDER_DELIVERY';
+
 const reviveDates = (value: unknown): unknown => {
   if (Array.isArray(value)) {
     return value.map(reviveDates);
@@ -843,7 +854,11 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (!pending) return;
 
     pendingActionToastsRef.current.delete(key);
-    toast.success(
+    const showToast = shouldUseNeutralActionToast(pending.toast.actionType)
+      ? toast.info
+      : toast.success;
+
+    showToast(
       pending.count > 1
         ? getAggregateActionToastTitle(pending.toast.actionType, pending.count)
         : pending.toast.title,

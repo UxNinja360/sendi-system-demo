@@ -5,9 +5,6 @@ import { useDelivery } from '../context/delivery-context-value';
 import type { Delivery } from '../types/delivery.types';
 import { getAlertPreferences } from './alert-preferences';
 
-const ALERT_PERMISSION_PROMPT_KEY = 'sendi-alert-permission-prompted-v1';
-const ALERT_TOAST_ID = 'sendi-alert-permission';
-
 type AudioWindow = Window &
   typeof globalThis & {
     webkitAudioContext?: typeof AudioContext;
@@ -120,32 +117,6 @@ export const requestNotificationPermission = async () => {
   return false;
 };
 
-const promptForNotificationsOnce = () => {
-  if (!getAlertPreferences().browserNotificationsEnabled) return;
-  if (!canUseBrowserNotifications() || Notification.permission !== 'default') return;
-
-  try {
-    if (window.localStorage.getItem(ALERT_PERMISSION_PROMPT_KEY) === 'true') return;
-    window.localStorage.setItem(ALERT_PERMISSION_PROMPT_KEY, 'true');
-  } catch {
-    // If localStorage is unavailable, still avoid blocking the app.
-  }
-
-  window.setTimeout(() => {
-    toast('להפעיל התראות למשלוחים חדשים?', {
-      id: ALERT_TOAST_ID,
-      description: 'נשמיע צליל קצר ונציג התראת מערכת כשהטאב לא בפוקוס.',
-      duration: 12000,
-      action: {
-        label: 'הפעל',
-        onClick: () => {
-          void requestNotificationPermission();
-        },
-      },
-    });
-  }, 1200);
-};
-
 export const OperationalAlerts: React.FC = () => {
   const { state } = useDelivery();
   const navigate = useNavigate();
@@ -161,7 +132,6 @@ export const OperationalAlerts: React.FC = () => {
       passive: true,
     });
     window.addEventListener('keydown', handleFirstInteraction, { once: true });
-    promptForNotificationsOnce();
 
     return () => {
       window.removeEventListener('pointerdown', handleFirstInteraction);

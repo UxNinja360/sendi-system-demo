@@ -3,12 +3,15 @@ import { Toaster as SonnerToaster } from 'sonner';
 export const Toaster = () => {
   return (
     <SonnerToaster
-      position="bottom-center"
+      position="top-center"
       dir="rtl"
       richColors={false}
-      expand={false}
+      expand
       gap={8}
-      visibleToasts={3}
+      visibleToasts={4}
+      duration={2400}
+      offset={{ top: 'calc(var(--app-topbar-offset) + 10px)' }}
+      mobileOffset={{ top: 'calc(var(--app-topbar-offset) + 8px)' }}
       toastOptions={{
         style: {
           fontFamily: 'system-ui, -apple-system, sans-serif',
