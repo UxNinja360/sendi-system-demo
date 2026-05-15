@@ -1,19 +1,30 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   AlertTriangle,
+  BellRing,
   ChevronLeft,
   LogOut,
   Moon,
   Palette,
   RotateCcw,
   Sun,
-  Users,
-  Wallet,
-  Zap,
+  Volume2,
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useTheme } from '../context/theme.context';
 import { useDelivery } from '../context/delivery-context-value';
+import {
+  ALERT_PREFERENCES_EVENT,
+  getAlertPreferences,
+  setAlertPreference,
+  type AlertPreferences,
+} from '../notifications/alert-preferences';
+import {
+  canUseBrowserNotifications,
+  playNewDeliverySound,
+  requestNotificationPermission,
+  unlockAlertSound,
+} from '../notifications/operational-alerts';
 
 const TEXT = {
   title: '\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea',
@@ -55,6 +66,21 @@ const TEXT = {
   darkModeHint: '\u05de\u05e2\u05d1\u05e8 \u05d9\u05d3\u05e0\u05d9 \u05d1\u05d9\u05df \u05d1\u05d4\u05d9\u05e8 \u05dc\u05db\u05d4\u05d4.',
   autoTheme: '\u05ea\u05d1\u05e0\u05d9\u05ea \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9\u05ea',
   autoThemeHint: '\u05d4\u05ea\u05d0\u05de\u05d4 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9\u05ea \u05e9\u05dc \u05d4\u05de\u05de\u05e9\u05e7.',
+  alerts: 'צלילים והתראות',
+  alertsDescription: 'שליטה במה שקורה כשנכנס משלוח חדש.',
+  newDeliverySound: 'צליל משלוח חדש',
+  newDeliverySoundHint: 'השמעת צליל קצר בכל משלוח חדש.',
+  browserNotifications: 'התראות דפדפן',
+  browserNotificationsHint: 'התראה כשהאפליקציה פתוחה ברקע או לא בפוקוס.',
+  notificationPermission: 'הרשאת התראות',
+  notificationPermissionHint: 'נדרש כדי להציג התראות מערכת במחשב וב-PWA.',
+  enableNotifications: 'אפשר',
+  notificationsAllowed: 'מאושר',
+  notificationsBlocked: 'חסום',
+  notificationsDefault: 'לא הופעל',
+  notificationsUnsupported: 'לא נתמך',
+  testSound: 'בדיקת צליל',
+  playSound: 'נגן',
   advanced: '\u05de\u05ea\u05e7\u05d3\u05dd',
   advancedDescription: '\u05e4\u05e2\u05d5\u05dc\u05d5\u05ea \u05de\u05e2\u05e8\u05db\u05ea \u05e8\u05d2\u05d9\u05e9\u05d5\u05ea. \u05de\u05d5\u05de\u05dc\u05e5 \u05dc\u05d2\u05e2\u05ea \u05d1\u05d4\u05df \u05e8\u05e7 \u05db\u05e9\u05d1\u05d0\u05de\u05ea \u05e6\u05e8\u05d9\u05da.',
   logout: '\u05d4\u05ea\u05e0\u05ea\u05e7\u05d5\u05ea',
@@ -166,11 +192,39 @@ const OpenButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
   </button>
 );
 
+type NotificationPermissionState = NotificationPermission | 'unsupported';
+
+const getNotificationPermissionState = (): NotificationPermissionState => {
+  if (!canUseBrowserNotifications()) return 'unsupported';
+  return Notification.permission;
+};
+
+const getNotificationPermissionLabel = (permission: NotificationPermissionState) => {
+  if (permission === 'granted') return TEXT.notificationsAllowed;
+  if (permission === 'denied') return TEXT.notificationsBlocked;
+  if (permission === 'unsupported') return TEXT.notificationsUnsupported;
+  return TEXT.notificationsDefault;
+};
+
 export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
   const navigate = useNavigate();
   const { isDark, toggleDark } = useTheme();
   const { resetSystem } = useDelivery();
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [alertPreferences, setAlertPreferencesState] = useState<AlertPreferences>(() =>
+    getAlertPreferences(),
+  );
+  const [notificationPermission, setNotificationPermission] =
+    useState<NotificationPermissionState>(() => getNotificationPermissionState());
+
+  useEffect(() => {
+    const handlePreferencesChange = () => {
+      setAlertPreferencesState(getAlertPreferences());
+    };
+
+    window.addEventListener(ALERT_PREFERENCES_EVENT, handlePreferencesChange);
+    return () => window.removeEventListener(ALERT_PREFERENCES_EVENT, handlePreferencesChange);
+  }, []);
 
   const handleLogout = () => {
     if (onLogout) {
@@ -187,6 +241,38 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
     resetSystem();
   };
 
+  const updateAlertPreference = <Key extends keyof AlertPreferences>(
+    key: Key,
+    value: AlertPreferences[Key],
+  ) => {
+    setAlertPreference(key, value);
+    setAlertPreferencesState(getAlertPreferences());
+  };
+
+  const handleBrowserNotificationsToggle = () => {
+    const nextValue = !alertPreferences.browserNotificationsEnabled;
+    updateAlertPreference('browserNotificationsEnabled', nextValue);
+
+    if (nextValue && notificationPermission === 'default') {
+      void requestNotificationPermission().then(() => {
+        setNotificationPermission(getNotificationPermissionState());
+      });
+    }
+  };
+
+  const handleRequestNotificationPermission = () => {
+    void requestNotificationPermission().then(() => {
+      setNotificationPermission(getNotificationPermissionState());
+    });
+  };
+
+  const handleTestSound = () => {
+    unlockAlertSound();
+    window.setTimeout(() => {
+      playNewDeliverySound({ force: true });
+    }, 60);
+  };
+
   return (
     <div className="flex h-full flex-col overflow-hidden bg-app-background" dir="rtl">
       <div className="flex-1 overflow-y-auto">
@@ -201,6 +287,74 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
               title={TEXT.darkMode}
               hint={TEXT.darkModeHint}
               control={<Toggle checked={isDark} onChange={() => toggleDark()} />}
+            />
+          </SectionCard>
+
+          <SectionCard
+            icon={<BellRing className="h-4 w-4 text-app-brand" />}
+            title={TEXT.alerts}
+            description={TEXT.alertsDescription}
+          >
+            <SettingRow
+              icon={<Volume2 className="h-4 w-4" />}
+              title={TEXT.newDeliverySound}
+              hint={TEXT.newDeliverySoundHint}
+              control={
+                <Toggle
+                  checked={alertPreferences.newDeliverySoundEnabled}
+                  onChange={() => {
+                    const nextValue = !alertPreferences.newDeliverySoundEnabled;
+                    updateAlertPreference('newDeliverySoundEnabled', nextValue);
+                    if (nextValue) handleTestSound();
+                  }}
+                />
+              }
+            />
+            <SettingRow
+              icon={<BellRing className="h-4 w-4" />}
+              title={TEXT.browserNotifications}
+              hint={TEXT.browserNotificationsHint}
+              control={
+                <Toggle
+                  checked={alertPreferences.browserNotificationsEnabled}
+                  onChange={handleBrowserNotificationsToggle}
+                />
+              }
+            />
+            <SettingRow
+              icon={<BellRing className="h-4 w-4" />}
+              title={TEXT.notificationPermission}
+              hint={TEXT.notificationPermissionHint}
+              control={
+                notificationPermission === 'default' ? (
+                  <button
+                    type="button"
+                    onClick={handleRequestNotificationPermission}
+                    className="inline-flex items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
+                  >
+                    <BellRing className="h-4 w-4" />
+                    <span>{TEXT.enableNotifications}</span>
+                  </button>
+                ) : (
+                  <span className="rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#666d80] dark:bg-app-surface dark:text-app-text-secondary">
+                    {getNotificationPermissionLabel(notificationPermission)}
+                  </span>
+                )
+              }
+            />
+            <SettingRow
+              icon={<Volume2 className="h-4 w-4" />}
+              title={TEXT.testSound}
+              control={
+                <button
+                  type="button"
+                  onClick={handleTestSound}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
+                >
+                  <Volume2 className="h-4 w-4" />
+                  <span>{TEXT.playSound}</span>
+                </button>
+              }
             />
           </SectionCard>
 

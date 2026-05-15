@@ -78,6 +78,9 @@ const SIDEBAR_MIN_WIDTH = 250;
 const SIDEBAR_MAX_WIDTH = 400;
 const SIDEBAR_COLLAPSED_WIDTH = 60;
 const DESKTOP_SIDEBAR_BREAKPOINT = 1024;
+const SIDEBAR_LEGACY_OPEN_KEY = 'sidebar-legacy-open-v2';
+const SIDEBAR_EXPERIMENTS_OPEN_KEY = 'sidebar-experiments-open-v2';
+const SIDEBAR_OPERATIONS_TOOLS_OPEN_KEY = 'sidebar-operations-tools-open-v2';
 
 const clampSidebarWidth = (width: number) =>
   Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, width));
@@ -175,26 +178,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
   const sidebarResizeRef = useRef<{ startX: number; startWidth: number; didMove: boolean } | null>(null);
   const [isLegacySectionOpen, setIsLegacySectionOpen] = useState(() => {
     try {
-      const saved = localStorage.getItem('sidebar-legacy-open');
-      return saved ? JSON.parse(saved) : true;
+      const saved = localStorage.getItem(SIDEBAR_LEGACY_OPEN_KEY);
+      return saved ? JSON.parse(saved) : false;
     } catch {
-      return true;
+      return false;
     }
   });
   const [isExperimentsSectionOpen, setIsExperimentsSectionOpen] = useState(() => {
     try {
-      const saved = localStorage.getItem('sidebar-experiments-open');
-      return saved ? JSON.parse(saved) : true;
+      const saved = localStorage.getItem(SIDEBAR_EXPERIMENTS_OPEN_KEY);
+      return saved ? JSON.parse(saved) : false;
     } catch {
-      return true;
+      return false;
     }
   });
   const [isOperationsToolsSectionOpen, setIsOperationsToolsSectionOpen] = useState(() => {
     try {
-      const saved = localStorage.getItem('sidebar-operations-tools-open');
-      return saved ? JSON.parse(saved) : true;
+      const saved = localStorage.getItem(SIDEBAR_OPERATIONS_TOOLS_OPEN_KEY);
+      return saved ? JSON.parse(saved) : false;
     } catch {
-      return true;
+      return false;
     }
   });
 
@@ -282,7 +285,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
   useEffect(() => {
     try {
-      localStorage.setItem('sidebar-legacy-open', JSON.stringify(isLegacySectionOpen));
+      localStorage.setItem(SIDEBAR_LEGACY_OPEN_KEY, JSON.stringify(isLegacySectionOpen));
     } catch {
       // Storage can fail in restricted contexts; the in-memory state is enough.
     }
@@ -290,7 +293,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
   useEffect(() => {
     try {
-      localStorage.setItem('sidebar-experiments-open', JSON.stringify(isExperimentsSectionOpen));
+      localStorage.setItem(SIDEBAR_EXPERIMENTS_OPEN_KEY, JSON.stringify(isExperimentsSectionOpen));
     } catch {
       // Storage can fail in restricted contexts; the in-memory state is enough.
     }
@@ -298,7 +301,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
   useEffect(() => {
     try {
-      localStorage.setItem('sidebar-operations-tools-open', JSON.stringify(isOperationsToolsSectionOpen));
+      localStorage.setItem(SIDEBAR_OPERATIONS_TOOLS_OPEN_KEY, JSON.stringify(isOperationsToolsSectionOpen));
     } catch {
       // Storage can fail in restricted contexts; the in-memory state is enough.
     }

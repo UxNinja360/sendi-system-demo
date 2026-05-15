@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { useDelivery } from '../context/delivery-context-value';
 import type { Delivery } from '../types/delivery.types';
+import { getAlertPreferences } from './alert-preferences';
 
 const ALERT_PERMISSION_PROMPT_KEY = 'sendi-alert-permission-prompted-v1';
 const ALERT_TOAST_ID = 'sendi-alert-permission';
@@ -26,7 +27,7 @@ const getAudioContext = () => {
   return audioContext;
 };
 
-const unlockAlertSound = () => {
+export const unlockAlertSound = () => {
   const context = getAudioContext();
   if (!context) return false;
 
@@ -59,7 +60,9 @@ const playTone = (
   oscillator.stop(startAt + duration + 0.02);
 };
 
-const playNewDeliverySound = () => {
+export const playNewDeliverySound = ({ force = false }: { force?: boolean } = {}) => {
+  if (!force && !getAlertPreferences().newDeliverySoundEnabled) return false;
+
   const context = getAudioContext();
   if (!context) return false;
 
@@ -75,7 +78,7 @@ const playNewDeliverySound = () => {
   return true;
 };
 
-const canUseBrowserNotifications = () =>
+export const canUseBrowserNotifications = () =>
   typeof window !== 'undefined' && 'Notification' in window;
 
 const getDeliveryTitle = (delivery: Delivery, totalNew: number) => {
@@ -89,6 +92,8 @@ const getDeliveryBody = (delivery: Delivery) =>
     .join(' · ');
 
 const shouldShowBrowserNotification = () => {
+  if (!getAlertPreferences().browserNotificationsEnabled) return false;
+
   if (!canUseBrowserNotifications() || Notification.permission !== 'granted') {
     return false;
   }
@@ -96,25 +101,27 @@ const shouldShowBrowserNotification = () => {
   return typeof document === 'undefined' || document.hidden || !document.hasFocus();
 };
 
-const requestNotificationPermission = async () => {
+export const requestNotificationPermission = async () => {
   unlockAlertSound();
 
   if (!canUseBrowserNotifications()) {
     toast.error('הדפדפן הזה לא תומך בהתראות מערכת');
-    return;
+    return false;
   }
 
   const permission = await Notification.requestPermission();
   if (permission === 'granted') {
     toast.success('התראות למשלוחים חדשים הופעלו');
-    playNewDeliverySound();
-    return;
+    playNewDeliverySound({ force: true });
+    return true;
   }
 
   toast.error('לא התקבלה הרשאה להתראות');
+  return false;
 };
 
 const promptForNotificationsOnce = () => {
+  if (!getAlertPreferences().browserNotificationsEnabled) return;
   if (!canUseBrowserNotifications() || Notification.permission !== 'default') return;
 
   try {
