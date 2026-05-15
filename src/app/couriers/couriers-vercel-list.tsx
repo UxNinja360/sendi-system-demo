@@ -25,7 +25,7 @@ type CouriersVercelListProps = {
 };
 
 const rowGridClass =
-  'grid grid-cols-[minmax(0,1fr)_44px] md:grid-cols-[minmax(140px,220px)_minmax(112px,150px)_minmax(112px,150px)_minmax(96px,140px)_minmax(0,1fr)_52px_36px] xl:grid-cols-[minmax(160px,240px)_minmax(124px,164px)_minmax(124px,164px)_minmax(112px,150px)_minmax(0,1fr)_52px_36px] 2xl:grid-cols-[minmax(180px,260px)_minmax(132px,176px)_minmax(132px,176px)_minmax(124px,164px)_minmax(0,1fr)_56px_36px]';
+  'courier-vercel-row grid grid-cols-[minmax(0,1fr)_44px] md:grid-cols-[minmax(140px,220px)_minmax(112px,150px)_minmax(112px,150px)_minmax(96px,140px)_minmax(0,1fr)_52px_36px] xl:grid-cols-[minmax(160px,240px)_minmax(124px,164px)_minmax(124px,164px)_minmax(112px,150px)_minmax(0,1fr)_52px_36px] 2xl:grid-cols-[minmax(180px,260px)_minmax(132px,176px)_minmax(132px,176px)_minmax(124px,164px)_minmax(0,1fr)_56px_36px]';
 
 const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(' ');
@@ -138,7 +138,7 @@ const CourierVercelRow: React.FC<{
         'group relative w-full min-w-0 cursor-pointer border-b border-app-nav-border bg-app-surface text-app-text outline-none transition-colors hover:bg-app-surface-raised focus-visible:bg-app-surface-raised',
       )}
     >
-      <div className="col-start-1 row-start-1 flex min-h-0 min-w-0 items-center gap-3 px-2 py-3 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
+      <div className="courier-row__identity col-start-1 row-start-1 flex min-h-0 min-w-0 items-center gap-3 px-2 py-3 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
         <CourierAvatarMark name={courier.name} avatarUrl={courier.avatarUrl} size="sm" />
         <div className="min-w-0">
           <div className="truncate text-sm font-semibold text-app-text">{courier.name}</div>
@@ -148,7 +148,7 @@ const CourierVercelRow: React.FC<{
         </div>
       </div>
 
-      <div className="col-start-1 row-start-2 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
+      <div className="courier-row__connection col-start-1 row-start-2 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
         <CourierLiveStatus
           label={connectionMeta.label}
           isActive={connectionMeta.isActive}
@@ -159,7 +159,7 @@ const CourierVercelRow: React.FC<{
         />
       </div>
 
-      <div className="col-start-1 row-start-3 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
+      <div className="courier-row__shift col-start-1 row-start-3 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
         <CourierLiveStatus
           label={shiftMeta.label}
           isActive={shiftMeta.isActive}
@@ -170,21 +170,25 @@ const CourierVercelRow: React.FC<{
         />
       </div>
 
-      <div className="col-start-1 row-start-4 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
+      <div className="courier-row__vehicle col-start-1 row-start-4 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
         <div className="truncate text-sm font-semibold text-app-text">{courier.vehicleType}</div>
         <div className="mt-1 truncate text-xs font-normal text-app-text-secondary">{courier.employmentType}</div>
       </div>
 
       <div className="hidden min-h-0 min-w-0 md:block" aria-hidden="true" />
 
-      <div className="col-start-1 row-start-5 flex min-h-0 items-center justify-start px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:justify-center md:px-3 md:py-2">
+      <div className="courier-row__footer col-start-1 row-start-5 flex min-h-0 items-center justify-start px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:justify-center md:px-3 md:py-2">
         <div className="flex items-center gap-1.5 text-sm font-normal text-app-text-secondary">
           <Star className="h-3.5 w-3.5 shrink-0" />
           <span className="tabular-nums">{courier.rating.toFixed(1)}</span>
         </div>
+        <div className="courier-row__footer-total hidden items-center gap-1.5 text-sm font-normal text-app-text-secondary">
+          <Package className="h-3.5 w-3.5 shrink-0" />
+          <span className="tabular-nums">{courier.totalDeliveries}</span>
+        </div>
       </div>
 
-      <div className="col-start-2 row-start-1 flex min-h-0 items-start justify-center px-1 py-3 md:col-auto md:row-auto md:min-h-[72px] md:items-center md:py-0" onClick={(event) => event.stopPropagation()}>
+      <div className="courier-row__actions col-start-2 row-start-1 flex min-h-0 items-start justify-center px-1 py-3 md:col-auto md:row-auto md:min-h-[72px] md:items-center md:py-0" onClick={(event) => event.stopPropagation()}>
         <EntityRowActionTrigger
           onClick={(event) => onOpenActionsMenu(courier, event)}
           title={`פעולות שליח ${courier.name}`}
@@ -377,7 +381,7 @@ export const CouriersVercelList: React.FC<CouriersVercelListProps> = ({
   return (
     <div data-view-mode="list" className="flex min-h-0 flex-1 flex-col bg-app-background">
       <div ref={scrollContainerRef} className="resource-list-scroll min-h-0 flex-1 overflow-auto px-2 md:px-3" dir="ltr">
-        <div className="w-full min-w-0 overflow-visible border border-app-nav-border md:overflow-hidden" dir="rtl">
+        <div className="courier-vercel-list-frame w-full min-w-0 overflow-visible border border-app-nav-border md:overflow-hidden" dir="rtl">
           {couriers.map((courier) => (
             <CourierVercelRow
               key={courier.id}

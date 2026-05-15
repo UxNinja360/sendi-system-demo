@@ -290,18 +290,18 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
       </div>
 
       <div className="delivery-row__order flex min-h-0 min-w-0 flex-col justify-center" dir="rtl">
-        <div className="flex min-w-0 flex-col items-start gap-0 text-right">
+        <div className="delivery-row__order-inner flex min-w-0 flex-col items-start gap-0 text-right">
           <button
             type="button"
             onClick={handleCopyOrderNumber}
             onKeyDown={(event) => event.stopPropagation()}
-            className="group/order-number inline-flex max-w-full items-center justify-start gap-1.5 text-right text-sm font-semibold text-app-text outline-none"
+            className="delivery-row__order-number group/order-number inline-flex max-w-full items-center justify-start gap-1.5 text-right text-sm font-semibold text-app-text outline-none"
             title={`העתק מספר הזמנה ${delivery.orderNumber}`}
           >
             <span className="min-w-0 truncate">{formatOrderNumber(delivery.orderNumber)}</span>
-            <Copy className="h-3.5 w-3.5 shrink-0 text-app-text-secondary opacity-0 transition-opacity group-hover/order-number:opacity-100 group-focus-visible/order-number:opacity-100" />
+            <Copy className="delivery-row__copy-icon h-3.5 w-3.5 shrink-0 text-app-text-secondary opacity-0 transition-opacity group-hover/order-number:opacity-100 group-focus-visible/order-number:opacity-100" />
           </button>
-          <div className="mt-1 flex shrink-0 items-center justify-start gap-1.5 text-right text-sm font-normal text-app-text-secondary">
+          <div className="delivery-row__time mt-1 flex shrink-0 items-center justify-start gap-1.5 text-right text-sm font-normal text-app-text-secondary">
             <span className="whitespace-nowrap" dir="ltr">{formatDeliveryDate(delivery, showDateForToday)}</span>
             <DeliveryTimeDetailsTooltip delivery={delivery}>
               <Clock3 className="h-3.5 w-3.5 shrink-0" />
@@ -352,22 +352,23 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
               <div className="mt-1 truncate text-sm font-normal text-app-text-secondary">{clientAddress}</div>
             </div>
           </div>
+        </div>
 
+        <div className="delivery-row__route-compact-footer flex min-w-0 items-center justify-between gap-3" dir="rtl">
           <DeliveryDistanceInline
             label={distanceLabel}
             className="delivery-row__route-compact-distance"
           />
+
+          {shouldShowCourierAssignment ? (
+            <CourierAssignmentLine
+              assigned={hasAssignedCourier}
+              label={courierColumnText}
+              vehicleType={courierVehicleType}
+              className="delivery-row__route-compact-courier justify-end whitespace-nowrap"
+            />
+          ) : null}
         </div>
-
-        {shouldShowCourierAssignment ? (
-          <CourierAssignmentLine
-            assigned={hasAssignedCourier}
-            label={courierColumnText}
-            vehicleType={courierVehicleType}
-            className="delivery-row__route-compact-courier w-full justify-start whitespace-nowrap"
-          />
-        ) : null}
-
       </div>
 
       <div className="delivery-row__courier-table min-h-0 min-w-0 items-center justify-start">
@@ -867,7 +868,7 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
   return (
     <div data-view-mode="list" className="flex min-h-0 flex-1 flex-col bg-app-background">
       <div ref={scrollContainerRef} className="deliveries-vercel-scroll min-h-0 flex-1 overflow-auto px-2 lg:px-3" dir="ltr">
-        <div className="w-full min-w-0 overflow-visible border border-app-nav-border lg:overflow-hidden" dir="rtl">
+        <div className="delivery-vercel-list-frame w-full min-w-0 overflow-visible border border-app-nav-border lg:overflow-hidden" dir="rtl">
           {filteredDeliveries.map((delivery) => {
             const courier = delivery.courierId
               ? couriers.find((candidate) => candidate.id === delivery.courierId) ?? null
