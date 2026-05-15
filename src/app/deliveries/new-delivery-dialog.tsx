@@ -174,15 +174,15 @@ export const NewDeliveryDialog: React.FC<NewDeliveryDialogProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" dir="rtl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4" dir="rtl">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={handleClose} />
 
       {/* Dialog */}
-      <div className="relative w-full max-w-lg bg-white dark:bg-app-surface rounded-2xl shadow-2xl border border-[#e5e5e5] dark:border-app-border flex flex-col max-h-[90vh]">
+      <div className="relative flex max-h-[calc(100dvh-1rem)] w-full max-w-lg flex-col rounded-xl border border-[#e5e5e5] bg-white shadow-2xl dark:border-app-border dark:bg-app-surface sm:max-h-[90vh] sm:rounded-2xl">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#f0f0f0] dark:border-app-border">
+        <div className="flex items-center justify-between border-b border-[#f0f0f0] px-4 py-3.5 dark:border-app-border sm:px-5 sm:py-4">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-app-brand-subtle flex items-center justify-center">
               <Package className="w-4 h-4 text-[#6bc84a]" />
@@ -199,7 +199,7 @@ export const NewDeliveryDialog: React.FC<NewDeliveryDialogProps> = ({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
-          <div className="p-5 space-y-4">
+          <div className="space-y-4 p-4 sm:p-5">
 
             {/* Restaurant */}
             <Field label="מסעדה" required>
@@ -215,7 +215,7 @@ export const NewDeliveryDialog: React.FC<NewDeliveryDialogProps> = ({
             </Field>
 
             {/* Customer */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Field label="שם לקוח" required>
                 <input value={customerName} onChange={e => setCustomerName(e.target.value)} className={inputCls} placeholder="ישראל ישראלי" required style={{ direction: 'rtl' }} />
               </Field>
@@ -225,8 +225,8 @@ export const NewDeliveryDialog: React.FC<NewDeliveryDialogProps> = ({
             </div>
 
             {/* Address */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="col-span-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="sm:col-span-2">
                 <Field label="כתובת" required>
                   <input value={address} onChange={e => setAddress(e.target.value)} className={inputCls} placeholder="רחוב ומספר בית" required style={{ direction: 'rtl' }} />
                 </Field>
@@ -239,7 +239,7 @@ export const NewDeliveryDialog: React.FC<NewDeliveryDialogProps> = ({
             </div>
 
             {/* Pricing */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Field label="חיוב משלוח (₪)">
                 <input value={price} onChange={e => setPrice(e.target.value)} className={inputCls} placeholder="0" type="number" min="0" step="0.5" style={{ direction: 'ltr' }} />
               </Field>
@@ -264,7 +264,7 @@ export const NewDeliveryDialog: React.FC<NewDeliveryDialogProps> = ({
         </form>
 
         {/* Footer */}
-        <div className="flex items-center gap-3 px-5 py-4 border-t border-[#f0f0f0] dark:border-app-border">
+        <div className="flex items-center gap-2 border-t border-[#f0f0f0] bg-white px-4 py-3.5 dark:border-app-border dark:bg-app-surface sm:gap-3 sm:px-5 sm:py-4">
           <button type="button" onClick={handleClose} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-[#737373] dark:text-app-text-secondary bg-[#f5f5f5] dark:bg-app-surface hover:bg-[#e5e5e5] dark:hover:bg-[#1f1f1f] transition-colors">
             ביטול
           </button>

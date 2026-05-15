@@ -206,8 +206,8 @@ body {
     grid-template-areas:
       "actions progress order"
       "route route route";
-    grid-template-columns: 44px 48px minmax(0, 1fr);
-    grid-template-rows: 58px auto;
+    grid-template-columns: 40px 44px minmax(0, 1fr);
+    grid-template-rows: 54px auto;
     min-height: 0;
   }
 
@@ -219,7 +219,7 @@ body {
   .delivery-row__progress {
     align-self: stretch;
     box-shadow: inset 0 -1px 0 var(--app-nav-border);
-    min-height: 58px;
+    min-height: 54px;
     padding-top: 0;
   }
 
@@ -227,14 +227,14 @@ body {
     align-self: stretch;
     box-shadow: inset 0 -1px 0 var(--app-nav-border);
     justify-self: stretch;
-    min-height: 58px;
-    padding: 0 12px 0 4px;
+    min-height: 54px;
+    padding: 0 10px 0 4px;
   }
 
   .delivery-row__order-inner {
     align-items: center;
     flex-direction: row;
-    gap: 16px;
+    gap: 10px;
     height: 100%;
     justify-content: flex-start;
     width: 100%;
@@ -253,8 +253,8 @@ body {
   .delivery-row__route-compact {
     align-items: stretch;
     flex-direction: column;
-    gap: 8px;
-    padding: 12px;
+    gap: 9px;
+    padding: 12px 12px 10px;
   }
 
   .delivery-row__route-compact-pair {
@@ -274,8 +274,8 @@ body {
   .delivery-row__route-compact-footer {
     border-top: 1px solid var(--app-nav-border);
     margin-top: 4px;
-    min-height: 32px;
-    padding-top: 10px;
+    min-height: 34px;
+    padding-top: 9px;
     width: 100%;
   }
 
@@ -382,6 +382,48 @@ body {
 
   .delivery-row__courier-line {
     justify-content: flex-end;
+  }
+}
+
+@container (max-width: 419px) {
+  .delivery-vercel-row {
+    grid-template-columns: 36px 40px minmax(0, 1fr);
+    grid-template-rows: 52px auto;
+  }
+
+  .delivery-row__actions,
+  .delivery-row__progress,
+  .delivery-row__order {
+    min-height: 52px;
+  }
+
+  .delivery-row__order {
+    padding-inline-end: 8px;
+  }
+
+  .delivery-row__order-number,
+  .delivery-row__time {
+    font-size: 0.8125rem;
+  }
+
+  .delivery-row__route-compact {
+    padding: 11px 10px 9px;
+  }
+
+  .delivery-row__route-compact-pair {
+    gap: 7px;
+  }
+
+  .delivery-row__route-compact-footer {
+    gap: 8px;
+  }
+
+  .delivery-row__route-compact-distance {
+    max-width: 42%;
+  }
+
+  .delivery-row__route-compact-courier {
+    max-width: 58%;
   }
 }
 
