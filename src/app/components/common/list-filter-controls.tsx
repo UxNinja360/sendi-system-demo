@@ -210,6 +210,7 @@ const StatusFilterOptionRow: React.FC<StatusFilterOptionRowProps> = ({
     <div className="status-filter-row text-app-text" dir="ltr">
       <button
         type="button"
+        data-haptic="selection"
         onClick={() => onToggle(option.id)}
         title={checkboxActionLabel}
         aria-label={`${checkboxActionLabel} ${option.label}`}
@@ -219,6 +220,7 @@ const StatusFilterOptionRow: React.FC<StatusFilterOptionRowProps> = ({
       </button>
       <button
         type="button"
+        data-haptic="medium"
         onClick={() => onTextAction(option.id, isActive)}
         title={textActionLabel}
         aria-label={`${textActionLabel} ${option.label}`}
@@ -316,6 +318,7 @@ export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
       <div className="relative w-full min-w-0 shrink min-[540px]:w-[178px] min-[540px]:shrink-0" ref={setRootRef}>
         <button
           type="button"
+          data-haptic="medium"
           title={statusButtonLabel}
           onClick={() => {
             if (isOpen) {
@@ -373,6 +376,7 @@ export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
     <div className="relative w-[112px] shrink-0" ref={setRootRef}>
       <button
         type="button"
+        data-haptic="medium"
         title={selectedLabel}
         onClick={() => {
           if (isOpen) {
@@ -389,6 +393,7 @@ export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
         <span className="min-w-0 flex-1 truncate text-right">{selectedLabel}</span>
         {isActive ? (
           <span
+            data-haptic="light"
             onClick={(event) => {
               event.stopPropagation();
               setSelectedValues(new Set());
@@ -429,6 +434,8 @@ export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
                   return (
                     <button
                       key={option.id}
+                      type="button"
+                      data-haptic="selection"
                       onClick={() => {
                         toggleValue(option.id);
                         setCurrentPage?.(1);
@@ -484,6 +491,7 @@ export const ListSingleSelectFilter: React.FC<ListSingleSelectFilterProps> = ({
     <div className="relative w-[112px] shrink-0" ref={setRootRef}>
       <button
         type="button"
+        data-haptic="medium"
         title={buttonLabel}
         onClick={() => {
           if (isOpen) {
@@ -504,6 +512,7 @@ export const ListSingleSelectFilter: React.FC<ListSingleSelectFilterProps> = ({
             </span>
             <span
               role="button"
+              data-haptic="light"
               onClick={(event) => {
                 event.stopPropagation();
                 onChange(clearValue);
@@ -532,6 +541,8 @@ export const ListSingleSelectFilter: React.FC<ListSingleSelectFilterProps> = ({
                 return (
                   <button
                     key={option.id}
+                    type="button"
+                    data-haptic="selection"
                     onClick={() => {
                       onChange(option.id);
                       setOpen(false);

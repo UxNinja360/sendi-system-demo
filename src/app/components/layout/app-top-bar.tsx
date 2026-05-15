@@ -213,6 +213,7 @@ export const AppTopBar: React.FC<AppTopBarProps> = ({ onOpenMobileMenu }) => {
     >
       <button
         type="button"
+        data-haptic="medium"
         onClick={onOpenMobileMenu}
         className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--app-radius-sm)] text-app-text-secondary transition-colors hover:bg-app-nav-hover-bg hover:text-app-text lg:hidden"
         aria-label="פתח תפריט"
@@ -248,6 +249,7 @@ export const AppTopBar: React.FC<AppTopBarProps> = ({ onOpenMobileMenu }) => {
       <div ref={menuRef} className="relative mr-auto">
         <button
           type="button"
+          data-haptic="medium"
           onClick={() => setIsMenuOpen((value) => !value)}
           className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--app-radius-sm)] text-app-text-secondary transition-colors hover:bg-app-nav-hover-bg hover:text-app-text"
           aria-label="אפשרויות"
@@ -264,6 +266,7 @@ export const AppTopBar: React.FC<AppTopBarProps> = ({ onOpenMobileMenu }) => {
                   <button
                     key={menuAction.action}
                     type="button"
+                    data-haptic="selection"
                     onClick={() => handlePageMenuAction(menuAction.action)}
                     className="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-app-text transition-colors hover:bg-app-surface-raised"
                   >
@@ -276,6 +279,7 @@ export const AppTopBar: React.FC<AppTopBarProps> = ({ onOpenMobileMenu }) => {
             ) : null}
             <button
               type="button"
+              data-haptic="selection"
               onClick={() => setIsMenuOpen(false)}
               className="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-app-text transition-colors hover:bg-app-surface-raised"
             >

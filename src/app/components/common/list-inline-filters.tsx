@@ -154,6 +154,7 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
       ) : (
         <button
           type="button"
+          data-haptic="medium"
           onClick={() => setMobileSheetOpen(true)}
           className={`${getListFilterButtonClass(activeFilterCount > 0)} md:hidden`}
           aria-label={TEXT.filters}
@@ -245,6 +246,7 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
               </div>
               <button
                 type="button"
+                data-haptic="selection"
                 onClick={() => setMobileSheetOpen(false)}
                 className="rounded-lg p-1.5 text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text"
                 aria-label={TEXT.close}
@@ -270,6 +272,7 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
                         {isActive ? (
                           <button
                             type="button"
+                            data-haptic="light"
                             onClick={() => {
                               if (isMultiSelectFilter(filter)) {
                                 filter.setSelectedValues(new Set());
@@ -314,6 +317,7 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
                                   <button
                                     key={option.id}
                                     type="button"
+                                    data-haptic="selection"
                                     onClick={() => {
                                       filter.toggleValue(option.id);
                                       filter.setCurrentPage?.(1);
@@ -352,6 +356,7 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
                                 <button
                                   key={option.id}
                                   type="button"
+                                  data-haptic="selection"
                                   onClick={() => {
                                     filter.onChange(option.id);
                                     filter.setCurrentPage?.(1);

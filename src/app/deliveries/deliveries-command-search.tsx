@@ -447,6 +447,7 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
         {showClearButton ? (
           <button
             type="button"
+            data-haptic="light"
             onClick={draft ? clearDraft : commandContext ? clearCommandContext : clearAll}
             className={toolbarSearchClearButtonClassName}
             aria-label={draft ? TEXT.clear : commandContext ? TEXT.filters : TEXT.clearAll}
@@ -470,6 +471,7 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
                 </span>
                 <button
                   type="button"
+                  data-haptic="light"
                   onClick={clearAll}
                   className="text-xs font-medium text-app-brand-text transition-colors hover:text-app-brand"
                 >
@@ -481,6 +483,7 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
                   <button
                     key={token.key}
                     type="button"
+                    data-haptic="light"
                     onClick={token.onRemove}
                     className="flex max-w-full items-center gap-1 rounded-[4px] border border-app-border bg-app-surface-raised px-2 py-1 text-xs font-medium text-app-text transition-colors hover:border-app-brand dark:border-app-nav-border"
                     title={`${token.label}: ${token.value}`}
@@ -515,6 +518,7 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
                       <button
                         key={option.id}
                         type="button"
+                        data-haptic="selection"
                         onClick={() => handleOptionClick(option)}
                         className={`flex w-full items-center gap-2.5 px-3 py-2 text-right text-sm transition-colors ${
                           isSelected
@@ -556,6 +560,7 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
                     <button
                       key={command.kind}
                       type="button"
+                      data-haptic="medium"
                       onClick={() => handleCommandClick(command.kind)}
                       className="flex w-full items-center gap-2.5 px-3 py-2 text-right text-sm text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text dark:hover:bg-[#111111] dark:hover:text-[#FAFAFA]"
                     >
