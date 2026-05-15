@@ -1,7 +1,8 @@
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { format as formatDate } from 'date-fns';
 import { useNavigate } from 'react-router';
 import {
+  AlertTriangle,
   Bike,
   Car,
   CheckCircle2,
@@ -14,6 +15,8 @@ import {
   Package,
   RotateCcw,
   Route,
+  Search,
+  Star,
   UserPlus,
   XCircle,
 } from 'lucide-react';
@@ -39,6 +42,14 @@ import { formatOrderNumber } from '../utils/order-number';
 import { formatCurrency, getDeliveryCustomerCharge } from '../utils/delivery-finance';
 import { CourierAvatarMark } from '../couriers/courier-avatar-mark';
 import { RestaurantLogoMark } from '../restaurants/restaurant-logo-mark';
+import {
+  canCourierAcceptDelivery,
+  getCourierActiveDeliveryCount,
+} from '../utils/courier-assignment';
+import {
+  DELIVERY_ASSIGNMENT_BLOCK_COPY,
+  getDeliveryAssignmentBlockReason,
+} from '../utils/delivery-assignment';
 
 type DeliveriesVercelListProps = {
   filteredDeliveries: Delivery[];
@@ -49,24 +60,30 @@ type DeliveriesVercelListProps = {
   totalCount: number;
   couriers: Courier[];
   restaurants: Restaurant[];
+  deliveryBalance: number;
   onOpenDrawer: (id: string) => void;
   onStatusChange: (deliveryId: string, status: DeliveryStatus) => void;
+  onAssignCourier: (deliveryId: string, courierId: string) => void;
   onCancelDelivery: (deliveryId: string) => void;
   onCompleteDelivery: (deliveryId: string) => void;
   onUnassignCourier: (deliveryId: string) => void;
   onEditDelivery: (deliveryId: string) => void;
   drawerDeliveryId: string | null;
   selectionBar?: React.ReactNode;
+  onSearchRowHiddenChange?: (hidden: boolean) => void;
 };
 
 type DeliveryVercelRowProps = {
   delivery: Delivery;
   courier: Courier | null;
   restaurant: Restaurant | null;
+  couriers: Courier[];
+  deliveryBalance: number;
   showDateForToday: boolean;
   isDrawerTarget: boolean;
   onOpenDrawer: (id: string) => void;
   onStatusChange: (deliveryId: string, status: DeliveryStatus) => void;
+  onAssignCourier: (deliveryId: string, courierId: string) => void;
   onCancelDelivery: (deliveryId: string) => void;
   onCompleteDelivery: (deliveryId: string) => void;
   onUnassignCourier: (deliveryId: string) => void;
@@ -159,6 +176,207 @@ const DeliveryDistanceInline: React.FC<{
   </div>
 );
 
+const getFloatingAssignmentPosition = (rect: DOMRect) => {
+  const width = 320;
+  const estimatedHeight = 380;
+  if (typeof window === 'undefined') {
+    return { x: rect.left, y: rect.bottom + 8 };
+  }
+
+  const maxX = Math.max(8, window.innerWidth - width - 8);
+  const x = Math.min(Math.max(8, rect.right - width), maxX);
+  const hasRoomBelow = rect.bottom + 8 + estimatedHeight <= window.innerHeight;
+  const y = hasRoomBelow
+    ? rect.bottom + 8
+    : Math.max(8, rect.top - estimatedHeight - 8);
+
+  return { x, y };
+};
+
+const getCourierStatusLabel = (courier: Courier) => {
+  if (courier.status === 'offline') return 'לא מחובר';
+  if (courier.status === 'busy') return 'עסוק';
+  return 'זמין';
+};
+
+const DeliveryAssignmentMenu: React.FC<{
+  open: boolean;
+  position: { x: number; y: number } | null;
+  delivery: Delivery;
+  currentCourier: Courier | null;
+  allCouriers: Courier[];
+  deliveryBalance: number;
+  onClose: () => void;
+  onAssignCourier: (deliveryId: string, courierId: string) => void;
+  onUnassignCourier: (deliveryId: string) => void;
+}> = ({
+  open,
+  position,
+  delivery,
+  currentCourier,
+  allCouriers,
+  deliveryBalance,
+  onClose,
+  onAssignCourier,
+  onUnassignCourier,
+}) => {
+  const [courierFilter, setCourierFilter] = useState('');
+  const normalizedFilter = courierFilter.trim().toLowerCase();
+  const canOpenAssignmentList = delivery.status === 'pending' || delivery.status === 'assigned';
+  const assignableCourierCount = useMemo(
+    () => allCouriers.filter((courier) => canCourierAcceptDelivery(courier, delivery.id)).length,
+    [allCouriers, delivery.id],
+  );
+  const assignmentBlockReason = delivery.status === 'pending'
+    ? getDeliveryAssignmentBlockReason(delivery, {
+        deliveryBalance,
+        availableCourierCount: assignableCourierCount,
+      })
+    : null;
+  const assignmentBlockCopy = assignmentBlockReason
+    ? DELIVERY_ASSIGNMENT_BLOCK_COPY[assignmentBlockReason]
+    : null;
+  const availableCouriers = useMemo(
+    () =>
+      allCouriers.filter((courier) => {
+        if (courier.id === currentCourier?.id) return false;
+        if (!canCourierAcceptDelivery(courier, delivery.id)) return false;
+        if (!normalizedFilter) return true;
+        const haystack = [
+          courier.name,
+          courier.phone,
+          courier.vehicleType,
+          courier.employmentType,
+        ].join(' ').toLowerCase();
+        return haystack.includes(normalizedFilter);
+      }),
+    [allCouriers, currentCourier?.id, delivery.id, normalizedFilter],
+  );
+
+  return (
+    <EntityActionMenuOverlay open={open} position={position} onClose={onClose}>
+      {position ? (
+        <div
+          dir="rtl"
+          className="absolute w-[min(20rem,calc(100vw-1rem))] overflow-hidden rounded-[var(--app-radius-md)] border border-app-border bg-app-surface text-right shadow-[var(--app-shadow-panel)]"
+          style={{ top: position.y, left: position.x }}
+          onClick={(event) => event.stopPropagation()}
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          <div className="border-b border-app-border px-3 py-2.5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-app-text">שיבוץ מהיר</p>
+                <p className="mt-0.5 truncate text-xs text-app-text-secondary">
+                  {formatOrderNumber(delivery.orderNumber)}
+                </p>
+              </div>
+              <UserPlus className="h-4 w-4 shrink-0 text-app-text-secondary" />
+            </div>
+          </div>
+
+          {currentCourier ? (
+            <div className="border-b border-app-border px-3 py-2.5">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-xs text-app-text-secondary">משובץ עכשיו</p>
+                  <p className="mt-1 truncate text-sm font-semibold text-app-text">{currentCourier.name}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onUnassignCourier(delivery.id);
+                    onClose();
+                  }}
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-app-border px-2 py-1.5 text-xs font-medium text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  הסר
+                </button>
+              </div>
+            </div>
+          ) : null}
+
+          {assignmentBlockCopy ? (
+            <div className="flex items-start gap-2 px-3 py-3 text-xs text-app-text-secondary">
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-orange-400" />
+              <span>{assignmentBlockCopy}</span>
+            </div>
+          ) : canOpenAssignmentList ? (
+            <>
+              <div className="border-b border-app-border p-2">
+                <label className="flex items-center gap-2 rounded-md border border-app-border bg-app-surface-raised px-2 py-1.5">
+                  <Search className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
+                  <input
+                    autoFocus
+                    value={courierFilter}
+                    onChange={(event) => setCourierFilter(event.target.value)}
+                    placeholder="חפש שליח..."
+                    className="min-w-0 flex-1 bg-transparent text-sm text-app-text outline-none placeholder:text-app-text-muted"
+                  />
+                </label>
+              </div>
+
+              <div className="max-h-64 overflow-y-auto py-1">
+                {availableCouriers.length === 0 ? (
+                  <p className="px-3 py-4 text-center text-xs text-app-text-secondary">
+                    אין שליחים זמינים
+                  </p>
+                ) : (
+                  availableCouriers.map((courier) => {
+                    const activeCount = getCourierActiveDeliveryCount(courier, delivery.id);
+                    return (
+                      <button
+                        key={courier.id}
+                        type="button"
+                        onClick={() => {
+                          onAssignCourier(delivery.id, courier.id);
+                          onClose();
+                        }}
+                        className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-right transition-colors hover:bg-app-surface-raised"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-app-text">{courier.name}</p>
+                          <p className="mt-0.5 truncate text-xs text-app-text-secondary">
+                            {courier.vehicleType} · {courier.employmentType} · {activeCount}/2 פעילים
+                          </p>
+                        </div>
+                        <div className="flex shrink-0 flex-col items-end gap-1 text-xs text-app-text-secondary">
+                          <span className="inline-flex items-center gap-1.5">
+                            <span
+                              className={joinClassNames(
+                                'h-2 w-2 rounded-full',
+                                courier.status === 'offline'
+                                  ? 'bg-app-text-muted'
+                                  : courier.status === 'busy'
+                                    ? 'bg-orange-400'
+                                    : 'bg-[#50e3c2]',
+                              )}
+                            />
+                            {getCourierStatusLabel(courier)}
+                          </span>
+                          <span className="inline-flex items-center gap-1">
+                            <Star className="h-3 w-3 text-yellow-400" />
+                            {courier.rating.toFixed(1)}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="px-3 py-3 text-xs text-app-text-secondary">
+              ניתן לשנות שיבוץ רק במשלוח ממתין או משובץ.
+            </div>
+          )}
+        </div>
+      ) : null}
+    </EntityActionMenuOverlay>
+  );
+};
+
 const getRestaurantForDelivery = (delivery: Delivery, restaurants: Restaurant[]) => {
   const restaurantId = delivery.restaurantId || delivery.rest_id;
   const restaurantName = delivery.restaurantName || delivery.rest_name;
@@ -200,10 +418,13 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
   delivery,
   courier,
   restaurant,
+  couriers,
+  deliveryBalance,
   showDateForToday,
   isDrawerTarget,
   onOpenDrawer,
   onStatusChange,
+  onAssignCourier,
   onCancelDelivery,
   onCompleteDelivery,
   onUnassignCourier,
@@ -211,6 +432,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
 }) => {
   const navigate = useNavigate();
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
+  const [assignmentMenuPos, setAssignmentMenuPos] = useState<{ x: number; y: number } | null>(null);
   const config = STATUS_CONFIG[delivery.status];
   const StatusIcon = config.icon;
   const restaurantName = delivery.rest_name || delivery.restaurantName || restaurant?.name || '-';
@@ -226,6 +448,15 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
 
   const closeMenus = () => {
     setContextMenuPos(null);
+    setAssignmentMenuPos(null);
+  };
+
+  const openAssignmentMenu = (event: React.MouseEvent<HTMLElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const rect = event.currentTarget.getBoundingClientRect();
+    setContextMenuPos(null);
+    setAssignmentMenuPos(getFloatingAssignmentPosition(rect));
   };
 
   const navigateToDelivery = () => {
@@ -361,26 +592,52 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
           />
 
           {shouldShowCourierAssignment ? (
-            <CourierAssignmentLine
-              assigned={hasAssignedCourier}
-              label={courierColumnText}
-              vehicleType={courierVehicleType}
-              className="delivery-row__route-compact-courier justify-end whitespace-nowrap"
-            />
+            <button
+              type="button"
+              onClick={openAssignmentMenu}
+              className="delivery-row__route-compact-courier flex rounded-md outline-none transition-colors hover:bg-app-surface-raised focus-visible:ring-2 focus-visible:ring-app-brand/60"
+              title={hasAssignedCourier ? 'שנה שיבוץ שליח' : 'שבץ שליח'}
+            >
+              <CourierAssignmentLine
+                assigned={hasAssignedCourier}
+                label={courierColumnText}
+                vehicleType={courierVehicleType}
+                className="w-full justify-end whitespace-nowrap px-1 py-1"
+              />
+            </button>
           ) : null}
         </div>
       </div>
 
       <div className="delivery-row__courier-table min-h-0 min-w-0 items-center justify-start">
         {shouldShowCourierAssignment ? (
-          <CourierAssignmentLine
-            assigned={hasAssignedCourier}
-            label={courierColumnText}
-            vehicleType={courierVehicleType}
-            className="delivery-row__courier-line w-full"
-          />
+          <button
+            type="button"
+            onClick={openAssignmentMenu}
+            className="flex w-full min-w-0 justify-end rounded-md outline-none transition-colors hover:bg-app-surface-raised focus-visible:ring-2 focus-visible:ring-app-brand/60"
+            title={hasAssignedCourier ? 'שנה שיבוץ שליח' : 'שבץ שליח'}
+          >
+            <CourierAssignmentLine
+              assigned={hasAssignedCourier}
+              label={courierColumnText}
+              vehicleType={courierVehicleType}
+              className="delivery-row__courier-line w-full px-1 py-1"
+            />
+          </button>
         ) : null}
       </div>
+
+      <DeliveryAssignmentMenu
+        open={Boolean(assignmentMenuPos)}
+        position={assignmentMenuPos}
+        delivery={delivery}
+        currentCourier={courier}
+        allCouriers={couriers}
+        deliveryBalance={deliveryBalance}
+        onClose={() => setAssignmentMenuPos(null)}
+        onAssignCourier={onAssignCourier}
+        onUnassignCourier={onUnassignCourier}
+      />
 
       <div className="contents" onClick={(event) => event.stopPropagation()}>
         <EntityActionMenuOverlay
@@ -433,10 +690,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
                 <>
                   <EntityActionMenuDivider />
                   <EntityActionMenuItem
-                    onClick={() => {
-                      onOpenDrawer(delivery.id);
-                      closeMenus();
-                    }}
+                    onClick={openAssignmentMenu}
                     icon={<UserPlus className="h-3.5 w-3.5 text-app-text-secondary" />}
                   >
                     שיבוץ שליח
@@ -501,10 +755,13 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
   delivery,
   courier,
   restaurant,
+  couriers,
+  deliveryBalance,
   showDateForToday,
   isDrawerTarget,
   onOpenDrawer,
   onStatusChange,
+  onAssignCourier,
   onCancelDelivery,
   onCompleteDelivery,
   onUnassignCourier,
@@ -512,6 +769,7 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
 }) => {
   const navigate = useNavigate();
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
+  const [assignmentMenuPos, setAssignmentMenuPos] = useState<{ x: number; y: number } | null>(null);
   const config = STATUS_CONFIG[delivery.status];
   const StatusIcon = config.icon;
   const restaurantName = delivery.rest_name || delivery.restaurantName || restaurant?.name || '-';
@@ -526,6 +784,15 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
 
   const closeMenus = () => {
     setContextMenuPos(null);
+    setAssignmentMenuPos(null);
+  };
+
+  const openAssignmentMenu = (event: React.MouseEvent<HTMLElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const rect = event.currentTarget.getBoundingClientRect();
+    setContextMenuPos(null);
+    setAssignmentMenuPos(getFloatingAssignmentPosition(rect));
   };
 
   const navigateToDelivery = () => {
@@ -627,13 +894,19 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
         <div className="grid grid-cols-2 gap-3">
           <div className="min-w-0">
             <div className="text-[11px] text-app-text-secondary">שליח</div>
-            <div className="mt-1">
+            <button
+              type="button"
+              onClick={openAssignmentMenu}
+              className="mt-1 max-w-full rounded-md outline-none transition-colors hover:bg-app-surface-raised focus-visible:ring-2 focus-visible:ring-app-brand/60"
+              title={hasAssignedCourier ? 'שנה שיבוץ שליח' : 'שבץ שליח'}
+            >
               <CourierAssignmentLine
                 assigned={hasAssignedCourier}
                 label={courierColumnText}
                 vehicleType={courierVehicleType}
+                className="px-1 py-1"
               />
-            </div>
+            </button>
           </div>
           <div className="min-w-0">
             <div className="text-[11px] text-app-text-secondary">חיוב</div>
@@ -703,10 +976,7 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
               <>
                 <EntityActionMenuDivider />
                 <EntityActionMenuItem
-                  onClick={() => {
-                    onOpenDrawer(delivery.id);
-                    closeMenus();
-                  }}
+                  onClick={openAssignmentMenu}
                   icon={<UserPlus className="h-3.5 w-3.5 text-app-text-secondary" />}
                 >
                   שיבוץ שליח
@@ -762,6 +1032,18 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
           </EntityActionMenu>
         ) : null}
       </EntityActionMenuOverlay>
+
+      <DeliveryAssignmentMenu
+        open={Boolean(assignmentMenuPos)}
+        position={assignmentMenuPos}
+        delivery={delivery}
+        currentCourier={courier}
+        allCouriers={couriers}
+        deliveryBalance={deliveryBalance}
+        onClose={() => setAssignmentMenuPos(null)}
+        onAssignCourier={onAssignCourier}
+        onUnassignCourier={onUnassignCourier}
+      />
     </div>
   );
 };
@@ -775,16 +1057,24 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
   totalCount,
   couriers,
   restaurants,
+  deliveryBalance,
   onOpenDrawer,
   onStatusChange,
+  onAssignCourier,
   onCancelDelivery,
   onCompleteDelivery,
   onUnassignCourier,
   onEditDelivery,
   drawerDeliveryId,
   selectionBar,
+  onSearchRowHiddenChange,
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const scrollDirectionRef = useRef({
+    animationFrame: 0,
+    hidden: false,
+    lastScrollTop: 0,
+  });
 
   useLayoutEffect(() => {
     const element = scrollContainerRef.current;
@@ -814,6 +1104,49 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
       window.removeEventListener('resize', alignToRtlStartEdge);
     };
   }, [filteredDeliveries.length]);
+
+  useLayoutEffect(() => {
+    const element = scrollContainerRef.current;
+    if (!element || !onSearchRowHiddenChange) return undefined;
+
+    const scrollState = scrollDirectionRef.current;
+    const setHidden = (hidden: boolean) => {
+      if (scrollState.hidden === hidden) return;
+      scrollState.hidden = hidden;
+      onSearchRowHiddenChange(hidden);
+    };
+    const handleScroll = () => {
+      if (scrollState.animationFrame) return;
+      scrollState.animationFrame = window.requestAnimationFrame(() => {
+        const nextScrollTop = element.scrollTop;
+        const delta = nextScrollTop - scrollState.lastScrollTop;
+
+        if (nextScrollTop < 12) {
+          setHidden(false);
+        } else if (delta > 10) {
+          setHidden(true);
+        } else if (delta < -8) {
+          setHidden(false);
+        }
+
+        scrollState.lastScrollTop = Math.max(0, nextScrollTop);
+        scrollState.animationFrame = 0;
+      });
+    };
+
+    scrollState.lastScrollTop = element.scrollTop;
+    setHidden(false);
+    element.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      if (scrollState.animationFrame) {
+        window.cancelAnimationFrame(scrollState.animationFrame);
+        scrollState.animationFrame = 0;
+      }
+      element.removeEventListener('scroll', handleScroll);
+      setHidden(false);
+    };
+  }, [filteredDeliveries.length, onSearchRowHiddenChange]);
 
   if (filteredDeliveries.length === 0) {
     const emptyStateCopy = getDeliveryEmptyStateCopy(emptyStateMode, totalCount);
@@ -847,10 +1180,13 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
                   delivery={delivery}
                   courier={courier}
                   restaurant={restaurant}
+                  couriers={couriers}
+                  deliveryBalance={deliveryBalance}
                   showDateForToday={showDateForToday}
                   isDrawerTarget={drawerDeliveryId === delivery.id}
                   onOpenDrawer={onOpenDrawer}
                   onStatusChange={onStatusChange}
+                  onAssignCourier={onAssignCourier}
                   onCancelDelivery={onCancelDelivery}
                   onCompleteDelivery={onCompleteDelivery}
                   onUnassignCourier={onUnassignCourier}
@@ -881,10 +1217,13 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
                 delivery={delivery}
                 courier={courier}
                 restaurant={restaurant}
+                couriers={couriers}
+                deliveryBalance={deliveryBalance}
                 showDateForToday={showDateForToday}
                 isDrawerTarget={drawerDeliveryId === delivery.id}
                 onOpenDrawer={onOpenDrawer}
                 onStatusChange={onStatusChange}
+                onAssignCourier={onAssignCourier}
                 onCancelDelivery={onCancelDelivery}
                 onCompleteDelivery={onCompleteDelivery}
                 onUnassignCourier={onUnassignCourier}

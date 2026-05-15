@@ -20,6 +20,7 @@ type PageToolbarProps = {
   controlsClassName?: string;
   actionsClassName?: string;
   pairControlsOnMobile?: boolean;
+  actionsHidden?: boolean;
 };
 
 const toDateInputValue = (date: Date) =>
@@ -39,6 +40,7 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
   controlsClassName = '',
   actionsClassName = '',
   pairControlsOnMobile = false,
+  actionsHidden = false,
 }) => {
   const primaryActionMenuRef = React.useRef<HTMLDivElement | null>(null);
   const [primaryActionMenuOpen, setPrimaryActionMenuOpen] = React.useState(false);
@@ -112,6 +114,9 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
   const controlsWrapperClassName = shouldPairControlsOnMobile
     ? 'flex min-w-0 flex-1 basis-[calc(50%-0.1875rem)] flex-nowrap items-center gap-1 min-[540px]:max-w-full min-[540px]:shrink-0 min-[540px]:basis-auto min-[540px]:flex-none'
     : 'flex max-w-full shrink-0 basis-auto flex-nowrap items-center gap-1';
+  const actionsVisibilityClassName = actionsHidden
+    ? 'mb-0 max-h-0 -translate-y-1 overflow-hidden opacity-0 pointer-events-none md:mb-0 md:max-h-none md:translate-y-0 md:overflow-visible md:opacity-100 md:pointer-events-auto'
+    : 'max-h-20 translate-y-0 overflow-visible opacity-100';
 
   return (
     <>
@@ -130,7 +135,7 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
               ) : null}
               {actions ? (
                 <div
-                  className={`order-first mb-1 flex min-w-0 flex-1 basis-full flex-nowrap items-center gap-1 min-[900px]:order-none min-[900px]:mb-0 min-[900px]:basis-0 ${actionsClassName}`.trim()}
+                  className={`order-first mb-1 flex min-w-0 flex-1 basis-full flex-nowrap items-center gap-1 transition-[max-height,opacity,transform,margin] duration-200 ease-out min-[900px]:order-none min-[900px]:mb-0 min-[900px]:basis-0 ${actionsVisibilityClassName} ${actionsClassName}`.trim()}
                 >
                   {actions}
                 </div>

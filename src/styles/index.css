@@ -193,7 +193,7 @@ body {
   display: none;
 }
 
-@container (max-width: 559px) {
+@container (max-width: 719px) {
   .delivery-vercel-list-frame {
     border: 0;
     display: flex;
@@ -312,23 +312,31 @@ body {
   }
 }
 
-@container (min-width: 560px) {
+@container (min-width: 720px) {
   .delivery-vercel-row {
     grid-template-areas: "actions progress courier route order";
     grid-template-columns:
-      clamp(40px, 3.8%, 52px)
-      clamp(40px, 3.8%, 52px)
-      minmax(74px, clamp(88px, 10%, 150px))
-      minmax(340px, 1fr)
-      clamp(88px, 10%, 128px);
-    grid-template-rows: minmax(72px, auto);
-    min-height: 72px;
+      clamp(36px, 4%, 48px)
+      clamp(40px, 4%, 48px)
+      minmax(104px, clamp(112px, 12%, 150px))
+      minmax(360px, 1fr)
+      clamp(84px, 10%, 128px);
+    grid-template-rows: minmax(70px, auto);
+    min-height: 70px;
+  }
+
+  .delivery-row__actions {
+    min-width: 36px;
+  }
+
+  .delivery-row__progress {
+    min-width: 40px;
   }
 
   .delivery-row__order {
     align-self: center;
-    min-height: 72px;
-    padding: 8px 12px;
+    min-height: 70px;
+    padding: 7px 10px;
   }
 
   .delivery-row__route-compact {
@@ -340,22 +348,25 @@ body {
     display: flex;
     grid-area: route;
     justify-content: flex-end;
-    min-height: 72px;
-    padding: 8px;
+    min-height: 70px;
+    padding: 7px 6px;
   }
 
   .delivery-row__route-table-pair {
     justify-content: flex-start;
-    max-width: 620px;
+    gap: 8px;
+    max-width: clamp(620px, 70%, 760px);
   }
 
   .delivery-row__route-table-leg {
     flex: 1 1 0;
+    gap: 6px;
     min-width: 0;
   }
 
   .delivery-row__route-table-distance {
     justify-content: center;
+    min-width: 54px;
     padding-inline: 2px;
   }
 
@@ -364,9 +375,9 @@ body {
     display: flex;
     grid-area: courier;
     justify-content: flex-start;
-    min-height: 72px;
+    min-height: 70px;
     overflow: hidden;
-    padding: 8px 2px 8px 6px;
+    padding: 7px 1px 7px 5px;
   }
 
   .delivery-row__courier-line {
@@ -394,11 +405,10 @@ body {
     border: 1px solid var(--app-nav-border);
     grid-template-areas:
       "identity identity actions"
-      "connection shift shift"
-      "vehicle vehicle vehicle"
+      "shift vehicle vehicle"
       "footer footer footer";
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 44px;
-    grid-template-rows: minmax(58px, auto) auto auto 38px;
+    grid-template-rows: minmax(58px, auto) auto 38px;
     min-height: 0;
   }
 
@@ -422,19 +432,14 @@ body {
     padding: 0;
   }
 
-  .courier-row__connection {
-    grid-area: connection;
-    padding: 12px 12px 6px;
-  }
-
   .courier-row__shift {
     grid-area: shift;
-    padding: 12px 8px 6px 12px;
+    padding: 12px 12px 10px;
   }
 
   .courier-row__vehicle {
     grid-area: vehicle;
-    padding: 6px 12px 10px;
+    padding: 12px 8px 10px 12px;
   }
 
   .courier-row__footer {

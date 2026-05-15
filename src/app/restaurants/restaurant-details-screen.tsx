@@ -1608,8 +1608,10 @@ export function RestaurantDetailsScreen() {
                 totalCount={restaurantDeliveries.length}
                 couriers={state.couriers}
                 restaurants={state.restaurants}
+                deliveryBalance={state.deliveryBalance}
                 onOpenDrawer={handleOpenDrawer}
                 onStatusChange={handleDeliveryStatusChange}
+                onAssignCourier={handleAssignCourier}
                 onCancelDelivery={handleCancelDelivery}
                 onCompleteDelivery={handleCompleteDelivery}
                 onUnassignCourier={unassignCourier}

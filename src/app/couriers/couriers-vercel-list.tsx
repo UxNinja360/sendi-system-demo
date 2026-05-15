@@ -62,8 +62,6 @@ const getConnectionMeta = (courier: Courier) => {
 
   return {
     label: isConnected ? '\u05de\u05d7\u05d5\u05d1\u05e8' : '\u05dc\u05d0 \u05de\u05d7\u05d5\u05d1\u05e8',
-    isActive: isConnected,
-    startedAt: isConnected ? courier.connectedAt ?? courier.shiftStartedAt : null,
     dot: isConnected ? 'bg-[#50e3c2]' : 'bg-app-text-muted',
     text: isConnected ? 'text-app-text' : 'text-app-text-secondary',
   };
@@ -99,6 +97,24 @@ const CourierLiveStatus: React.FC<{
     <div className="mt-1 truncate text-xs tabular-nums text-app-text-secondary" dir="rtl">
       {isActive ? formatElapsedDuration(startedAt, now) : '-'}
     </div>
+  </div>
+);
+
+const CourierConnectionBadge: React.FC<{
+  label: string;
+  dotClassName: string;
+  textClassName: string;
+}> = ({ label, dotClassName, textClassName }) => (
+  <span className={joinClassNames('inline-flex shrink-0 items-center gap-1.5 text-xs font-medium', textClassName)}>
+    <span className={joinClassNames('h-2 w-2 rounded-full', dotClassName)} />
+    <span>{label}</span>
+  </span>
+);
+
+const CourierDeliveryCount: React.FC<{ count: number; className?: string }> = ({ count, className }) => (
+  <div className={joinClassNames('flex items-center gap-1.5 text-sm font-normal text-app-text-secondary', className)}>
+    <Package className="h-3.5 w-3.5 shrink-0" />
+    <span className="tabular-nums">{count}</span>
   </div>
 );
 
@@ -141,22 +157,22 @@ const CourierVercelRow: React.FC<{
       <div className="courier-row__identity col-start-1 row-start-1 flex min-h-0 min-w-0 items-center gap-3 px-2 py-3 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
         <CourierAvatarMark name={courier.name} avatarUrl={courier.avatarUrl} size="sm" />
         <div className="min-w-0">
-          <div className="truncate text-sm font-semibold text-app-text">{courier.name}</div>
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="min-w-0 truncate text-sm font-semibold text-app-text">{courier.name}</div>
+            <CourierConnectionBadge
+              label={connectionMeta.label}
+              dotClassName={connectionMeta.dot}
+              textClassName={connectionMeta.text}
+            />
+          </div>
           <div className="mt-1 truncate text-right text-sm font-normal text-app-text-secondary" dir="ltr">
             {courier.phone || '-'}
           </div>
         </div>
       </div>
 
-      <div className="courier-row__connection col-start-1 row-start-2 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
-        <CourierLiveStatus
-          label={connectionMeta.label}
-          isActive={connectionMeta.isActive}
-          startedAt={connectionMeta.startedAt}
-          dotClassName={connectionMeta.dot}
-          textClassName={connectionMeta.text}
-          now={now}
-        />
+      <div className="courier-row__deliveries hidden min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:flex md:min-h-[72px] md:py-2">
+        <CourierDeliveryCount count={courier.totalDeliveries} />
       </div>
 
       <div className="courier-row__shift col-start-1 row-start-3 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
@@ -182,10 +198,7 @@ const CourierVercelRow: React.FC<{
           <Star className="h-3.5 w-3.5 shrink-0" />
           <span className="tabular-nums">{courier.rating.toFixed(1)}</span>
         </div>
-        <div className="courier-row__footer-total hidden items-center gap-1.5 text-sm font-normal text-app-text-secondary">
-          <Package className="h-3.5 w-3.5 shrink-0" />
-          <span className="tabular-nums">{courier.totalDeliveries}</span>
-        </div>
+        <CourierDeliveryCount count={courier.totalDeliveries} className="courier-row__footer-total hidden" />
       </div>
 
       <div className="courier-row__actions col-start-2 row-start-1 flex min-h-0 items-start justify-center px-1 py-3 md:col-auto md:row-auto md:min-h-[72px] md:items-center md:py-0" onClick={(event) => event.stopPropagation()}>
@@ -241,7 +254,14 @@ const CourierVercelCard: React.FC<{
         <div className="flex min-w-0 items-start gap-3">
           <CourierAvatarMark name={courier.name} avatarUrl={courier.avatarUrl} size="md" className="mt-0.5" />
           <div className="min-w-0">
-            <div className="truncate text-sm font-semibold text-app-text">{courier.name}</div>
+            <div className="flex min-w-0 items-center gap-2">
+              <div className="min-w-0 truncate text-sm font-semibold text-app-text">{courier.name}</div>
+              <CourierConnectionBadge
+                label={connectionMeta.label}
+                dotClassName={connectionMeta.dot}
+                textClassName={connectionMeta.text}
+              />
+            </div>
             <div className="mt-1 truncate text-right text-xs text-app-text-secondary" dir="ltr">
               {courier.phone || '-'}
             </div>
@@ -256,16 +276,6 @@ const CourierVercelCard: React.FC<{
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3">
-        <div className="min-w-0">
-          <CourierLiveStatus
-            label={connectionMeta.label}
-            isActive={connectionMeta.isActive}
-            startedAt={connectionMeta.startedAt}
-            dotClassName={connectionMeta.dot}
-            textClassName={connectionMeta.text}
-            now={now}
-          />
-        </div>
         <div className="min-w-0">
           <CourierLiveStatus
             label={shiftMeta.label}

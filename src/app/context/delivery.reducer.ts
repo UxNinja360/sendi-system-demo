@@ -1656,6 +1656,7 @@ const assignCourierState = (
       delivery.status !== 'cancelled' &&
       delivery.status !== 'expired'
   );
+  const previousCourierId = targetDelivery.courierId ?? targetDelivery.runner_id ?? null;
 
   const creditCost = getDeliveryCreditConsumedAt(targetDelivery)
     ? 0
@@ -1756,8 +1757,17 @@ const assignCourierState = (
     };
   });
 
+  const couriersWithoutPreviousAssignment =
+    previousCourierId && previousCourierId !== courierId
+      ? updateCourierActiveDeliveries(
+          state.couriers,
+          previousCourierId,
+          (activeDeliveryIds) => activeDeliveryIds.filter((id) => id !== deliveryId)
+        )
+      : state.couriers;
+
   const nextCouriers = updateCourierActiveDeliveries(
-    state.couriers,
+    couriersWithoutPreviousAssignment,
     courierId,
     (activeDeliveryIds) => Array.from(new Set([...activeDeliveryIds, deliveryId]))
   );

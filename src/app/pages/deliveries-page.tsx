@@ -435,6 +435,7 @@ export const DeliveriesPage: React.FC = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const [drawerDeliveryId, setDrawerDeliveryId] = useState<string | null>(null);
+  const [searchRowHidden, setSearchRowHidden] = useState(false);
 
   const [editDeliveryId, setEditDeliveryId] = useState<string | null>(null);
 
@@ -477,6 +478,9 @@ export const DeliveriesPage: React.FC = () => {
     setDrawerDeliveryId(id);
   }, []);
   const handleCloseDrawer = useCallback(() => { setDrawerDeliveryId(null); }, []);
+  const handleSearchRowHiddenChange = useCallback((hidden: boolean) => {
+    setSearchRowHidden((current) => (current === hidden ? current : hidden));
+  }, []);
 
   const drawerDelivery = useMemo(() =>
     drawerDeliveryId ? filteredDeliveries.find(d => d.id === drawerDeliveryId) || null : null
@@ -722,6 +726,7 @@ export const DeliveriesPage: React.FC = () => {
           <PageToolbar
             showBottomBorder={false}
             pairControlsOnMobile
+            actionsHidden={searchRowHidden}
             periodControl={
               <ToolbarDayPicker
                 selectedDate={selectedDay}
@@ -792,13 +797,16 @@ export const DeliveriesPage: React.FC = () => {
               totalCount={stats.total}
               couriers={state.couriers}
               restaurants={state.restaurants}
+              deliveryBalance={state.deliveryBalance}
               onOpenDrawer={handleOpenDrawer}
               onStatusChange={handleStatusChange}
+              onAssignCourier={handleAssignCourier}
               onCancelDelivery={handleCancelDelivery}
               onCompleteDelivery={handleCompleteDelivery}
               onUnassignCourier={handleUnassignCourier}
               onEditDelivery={handleOpenEdit}
               drawerDeliveryId={drawerDeliveryId}
+              onSearchRowHiddenChange={handleSearchRowHiddenChange}
               selectionBar={
                 <SelectionActionBar
                   selectedCount={selectedIds.size}
