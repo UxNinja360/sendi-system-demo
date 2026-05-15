@@ -124,6 +124,8 @@ const STATUS_CHIP_CONFIG = [
   { status: 'expired'    as DeliveryStatus, label: 'פג תוקף', dot: 'bg-zinc-500', active: 'bg-zinc-500/10 text-zinc-600 dark:text-zinc-300' },
 ];
 const HEBREW_DAY_LABELS = ['יום א׳', 'יום ב׳', 'יום ג׳', 'יום ד׳', 'יום ה׳', 'יום ו׳', 'שבת'];
+const DEFAULT_DAY_START_TIME = '00:00';
+const DEFAULT_DAY_END_TIME = '23:59';
 
 const parseDateKey = (dateKey: string): Date => {
   const [year, month, day] = dateKey.split('-').map(Number);
@@ -234,6 +236,10 @@ export const DeliveriesPage: React.FC = () => {
     setCustomStartDate,
     customEndDate,
     setCustomEndDate,
+    customStartTime,
+    setCustomStartTime,
+    customEndTime,
+    setCustomEndTime,
     selectedCouriers,
     setSelectedCouriers,
     toggleCourier,
@@ -249,6 +255,7 @@ export const DeliveriesPage: React.FC = () => {
     filteredDeliveries,
     statusCounts,
     dateRangeStats,
+    deliveryCountsByDay,
     hasActiveFilters,
     activeFilterCount,
     handleClearAllFilters,
@@ -310,21 +317,66 @@ export const DeliveriesPage: React.FC = () => {
     if (dateRange !== 'custom') setDateRange('custom');
     if (customStartDate !== dayKey) setCustomStartDate(dayKey);
     if (customEndDate !== dayKey) setCustomEndDate(dayKey);
-  }, [dateSelectionMode, selectedDay, dateRange, customStartDate, customEndDate, setDateRange, setCustomStartDate, setCustomEndDate]);
+    if (customStartTime !== DEFAULT_DAY_START_TIME) setCustomStartTime(DEFAULT_DAY_START_TIME);
+    if (customEndTime !== DEFAULT_DAY_END_TIME) setCustomEndTime(DEFAULT_DAY_END_TIME);
+  }, [
+    dateSelectionMode,
+    selectedDay,
+    dateRange,
+    customStartDate,
+    customEndDate,
+    customStartTime,
+    customEndTime,
+    setDateRange,
+    setCustomStartDate,
+    setCustomEndDate,
+    setCustomStartTime,
+    setCustomEndTime,
+  ]);
 
   const handleSelectedDayChange = useCallback((date: Date) => {
+    const dayKey = formatDate(date, 'yyyy-MM-dd');
+
     setDateSelectionMode('day');
     setSelectedDay(date);
+    if (dateRange !== 'custom') setDateRange('custom');
+    setCustomStartDate(dayKey);
+    setCustomEndDate(dayKey);
+    setCustomStartTime(DEFAULT_DAY_START_TIME);
+    setCustomEndTime(DEFAULT_DAY_END_TIME);
     setCurrentPage(1);
-  }, [setCurrentPage]);
+  }, [
+    dateRange,
+    setCurrentPage,
+    setCustomEndDate,
+    setCustomEndTime,
+    setCustomStartDate,
+    setCustomStartTime,
+    setDateRange,
+  ]);
 
-  const handleSelectedDateRangeChange = useCallback((startDate: string, endDate: string) => {
+  const handleSelectedDateRangeChange = useCallback((
+    startDate: string,
+    endDate: string,
+    startTime = DEFAULT_DAY_START_TIME,
+    endTime = DEFAULT_DAY_END_TIME,
+  ) => {
     setDateSelectionMode('range');
     if (dateRange !== 'custom') setDateRange('custom');
     setCustomStartDate(startDate);
     setCustomEndDate(endDate);
+    setCustomStartTime(startTime);
+    setCustomEndTime(endTime);
     setCurrentPage(1);
-  }, [dateRange, setCurrentPage, setCustomEndDate, setCustomStartDate, setDateRange]);
+  }, [
+    dateRange,
+    setCurrentPage,
+    setCustomEndDate,
+    setCustomEndTime,
+    setCustomStartDate,
+    setCustomStartTime,
+    setDateRange,
+  ]);
 
   useEffect(() => {
     try {
@@ -565,12 +617,16 @@ export const DeliveriesPage: React.FC = () => {
     if (dateSelectionMode === 'range') {
       const start = customStartDate || formatDate(selectedDay, 'yyyy-MM-dd');
       const end = customEndDate || start;
-      if (start === end) return formatExportDayLabel(parseDateKey(start));
-      return `${formatShortDateLabel(start)} - ${formatShortDateLabel(end)}`;
+      const timeLabel =
+        customStartTime !== DEFAULT_DAY_START_TIME || customEndTime !== DEFAULT_DAY_END_TIME
+          ? ` · ${customStartTime}-${customEndTime}`
+          : '';
+      if (start === end) return `${formatExportDayLabel(parseDateKey(start))}${timeLabel}`;
+      return `${formatShortDateLabel(start)} - ${formatShortDateLabel(end)}${timeLabel}`;
     }
 
     return formatExportDayLabel(selectedDay);
-  }, [customEndDate, customStartDate, dateSelectionMode, selectedDay]);
+  }, [customEndDate, customEndTime, customStartDate, customStartTime, dateSelectionMode, selectedDay]);
 
   const exportStatusLabel = useMemo(() => {
     const allStatuses = STATUS_CHIP_CONFIG.map((item) => item.status);
@@ -671,7 +727,10 @@ export const DeliveriesPage: React.FC = () => {
                 onDateChange={handleSelectedDayChange}
                 rangeStartDate={dateSelectionMode === 'range' ? customStartDate : ''}
                 rangeEndDate={dateSelectionMode === 'range' ? customEndDate : ''}
+                rangeStartTime={dateSelectionMode === 'range' ? customStartTime : DEFAULT_DAY_START_TIME}
+                rangeEndTime={dateSelectionMode === 'range' ? customEndTime : DEFAULT_DAY_END_TIME}
                 onRangeChange={handleSelectedDateRangeChange}
+                dayCounts={deliveryCountsByDay}
               />
             }
             controls={

@@ -2,12 +2,12 @@ import { useEffect, useMemo, useState, type ElementType, type ReactNode } from '
 import { useNavigate, useParams } from 'react-router';
 import {
   AlertCircle,
+  ArrowRight,
   Bike,
   CheckCircle2,
-  ChevronDown,
-  ChevronUp,
   Clock,
   ClockAlert,
+  Copy,
   CreditCard,
   FileText,
   MapPin,
@@ -112,6 +112,19 @@ const formatDateTime = (value?: Date | string | null) => {
 
 const formatMinutes = (value?: number | null) =>
   typeof value === 'number' && Number.isFinite(value) ? `${value} דק׳` : emptyValue;
+
+const formatDuration = (value?: number | null) => {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return emptyValue;
+
+  const totalMinutes = Math.max(0, Math.floor(value));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (!hours) return `${minutes} דק׳`;
+
+  const hoursLabel = hours === 1 ? '1 שעה' : `${hours} שעות`;
+  return minutes ? `${hoursLabel} ו-${minutes} דק׳` : hoursLabel;
+};
 
 const toInputNumber = (value?: number | null) =>
   typeof value === 'number' && Number.isFinite(value) ? String(value) : '';
@@ -457,9 +470,12 @@ export function DeliveryDetailsPage() {
   const statusConfig = STATUS_CONFIG[form.status] ?? STATUS_CONFIG.pending;
   const orderNumberLabel = formatOrderNumber(delivery.orderNumber);
   const createdAt = new Date(delivery.createdAt);
-  const elapsedMinutes = Number.isNaN(createdAt.getTime())
+  const lifecycleEndAt = delivery.deliveredAt ?? delivery.cancelledAt ?? delivery.expiredAt ?? null;
+  const lifecycleEndDate = lifecycleEndAt ? new Date(lifecycleEndAt) : new Date();
+  const elapsedMinutes = Number.isNaN(createdAt.getTime()) || Number.isNaN(lifecycleEndDate.getTime())
     ? null
-    : Math.max(0, Math.floor((Date.now() - createdAt.getTime()) / 60000));
+    : Math.max(0, Math.floor((lifecycleEndDate.getTime() - createdAt.getTime()) / 60000));
+  const elapsedLabel = formatDuration(elapsedMinutes);
   const courierName = courier?.name ?? pendingCourier?.name ?? delivery.courierName ?? emptyValue;
   const approvalLabel = delivery.is_requires_approval
     ? delivery.is_approved
@@ -571,39 +587,70 @@ export function DeliveryDetailsPage() {
     toast.success('פרטי המשלוח עודכנו');
   };
 
+  const handleCopyOrderNumber = async () => {
+    try {
+      await navigator.clipboard.writeText(orderNumberLabel);
+      toast.success('מספר המשלוח הועתק');
+    } catch {
+      toast.error('לא הצלחתי להעתיק את מספר המשלוח');
+    }
+  };
+
   return (
     <div className="flex h-full flex-col bg-app-background" dir="rtl">
       <div className="min-h-0 flex-1 overflow-auto">
-        <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-4 px-4 py-4">
+        <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-4 px-4 py-4">
           <div className="space-y-4">
-              <header className="overflow-hidden rounded-[8px] border border-app-border bg-app-surface">
-                <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.25fr)_minmax(420px,0.75fr)]">
-                  <div className="min-w-0 p-4">
-                    <div className="mb-3 text-xs font-semibold text-app-text-secondary">תפעול משלוח</div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h1 className="truncate text-2xl font-semibold text-app-text">
-                        {form.restaurantName || emptyValue} · {form.customerName || emptyValue}
-                      </h1>
-                      <span className="rounded-[4px] border border-app-border bg-app-background px-2 py-1 text-sm font-semibold tabular-nums text-app-text" dir="ltr">
-                        {orderNumberLabel}
-                      </span>
-                      <StatusBadge config={statusConfig} />
+            <header className="overflow-hidden rounded-[8px] border border-app-border bg-app-surface">
+                <div className="flex flex-col gap-4 p-4 lg:p-5">
+                  <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                    <div className="min-w-0 space-y-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => navigate('/deliveries')}
+                          className="inline-flex h-8 items-center gap-2 rounded-[4px] border border-app-border bg-app-background px-3 text-sm font-medium text-app-text transition-colors hover:bg-app-surface-raised"
+                        >
+                          <ArrowRight className="h-4 w-4" />
+                          משלוחים
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleCopyOrderNumber}
+                          className="inline-flex h-8 items-center gap-2 rounded-[4px] border border-app-border bg-app-background px-3 text-sm font-semibold tabular-nums text-app-text transition-colors hover:bg-app-surface-raised"
+                          dir="ltr"
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                          {orderNumberLabel}
+                        </button>
+                        <StatusBadge config={statusConfig} />
+                      </div>
+
+                      <div className="min-w-0">
+                        <h1 className="truncate text-xl font-semibold text-app-text md:text-2xl">
+                          {form.restaurantName || emptyValue} · {form.customerName || emptyValue}
+                        </h1>
+                        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-app-text-secondary">
+                          <span className="truncate">נוצר {formatDateTime(delivery.createdAt)}</span>
+                          <span className="truncate">משך {elapsedLabel}</span>
+                          <span className="truncate">{distanceLabel}</span>
+                          <span className="truncate">{etaLabel}</span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-2 text-xs text-app-text-secondary md:grid-cols-2">
+                        <span className="flex min-w-0 items-center gap-1.5">
+                          <Store className="h-3.5 w-3.5 shrink-0" />
+                          <span className="truncate">{restaurantAddress}</span>
+                        </span>
+                        <span className="flex min-w-0 items-center gap-1.5">
+                          <User className="h-3.5 w-3.5 shrink-0" />
+                          <span className="truncate">{customerAddress}</span>
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="mt-3 grid grid-cols-1 gap-2 text-xs text-app-text-secondary md:grid-cols-2">
-                      <span className="flex min-w-0 items-center gap-1.5">
-                        <Store className="h-3.5 w-3.5 shrink-0" />
-                        <span className="truncate">{restaurantAddress}</span>
-                      </span>
-                      <span className="flex min-w-0 items-center gap-1.5">
-                        <User className="h-3.5 w-3.5 shrink-0" />
-                        <span className="truncate">{customerAddress}</span>
-                      </span>
-                      <span className="truncate" dir="ltr">{form.customerPhone || emptyValue}</span>
-                      <span className="truncate">נוצר: {formatDateTime(delivery.createdAt)}</span>
-                    </div>
-
-                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <div className="flex shrink-0 flex-wrap items-center gap-2">
                       {restaurant ? (
                         <OverviewActionButton icon={Store} onClick={() => navigate(`/restaurant/${restaurant.id}`)}>
                           מסעדה
@@ -614,20 +661,59 @@ export function DeliveryDetailsPage() {
                           שליח
                         </OverviewActionButton>
                       ) : null}
+                      {activeTab === 'edit' ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={handleCancelEdit}
+                            className="inline-flex h-8 items-center gap-2 rounded-[4px] border border-app-border bg-app-background px-3 text-sm font-medium text-app-text transition-colors hover:bg-app-surface-raised"
+                          >
+                            <X className="h-4 w-4" />
+                            ביטול
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleSave}
+                            className="inline-flex h-8 items-center gap-2 rounded-[4px] bg-app-brand-solid px-3 text-sm font-semibold text-app-background transition-colors hover:bg-app-brand-hover"
+                          >
+                            <Save className="h-4 w-4" />
+                            שמור
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveTab('edit');
+                            setEditing(true);
+                          }}
+                          className="inline-flex h-8 items-center gap-2 rounded-[4px] border border-app-border bg-app-background px-3 text-sm font-medium text-app-text transition-colors hover:bg-app-surface-raised"
+                        >
+                          <Settings className="h-4 w-4" />
+                          עריכה
+                        </button>
+                      )}
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 divide-y divide-app-border border-t border-app-border sm:grid-cols-2 sm:divide-x sm:divide-x-reverse sm:divide-y-0 lg:border-r lg:border-t-0">
+                  <div className="grid overflow-hidden rounded-[8px] border border-app-border bg-app-background sm:grid-cols-2 xl:grid-cols-4">
+                    <OverviewMetric
+                      icon={statusConfig.icon}
+                      label="סטטוס"
+                      value={statusConfig.label}
+                      detail={`${completedSteps}/${timelineSteps.length} · ${progressPercent}%`}
+                      tone={form.status === 'delivered' ? 'info' : form.status === 'cancelled' || form.status === 'expired' ? 'warning' : 'default'}
+                    />
                     <OverviewMetric
                       icon={Clock}
-                      label="זמן בטיפול"
-                      value={elapsedMinutes === null ? emptyValue : `${elapsedMinutes} דק׳`}
-                      detail={`נוצר ${formatDateTime(delivery.createdAt)}`}
+                      label="משך"
+                      value={elapsedLabel}
+                      detail={lifecycleEndAt ? `נסגר ${formatDateTime(lifecycleEndAt)}` : `נוצר ${formatDateTime(delivery.createdAt)}`}
                       tone={elapsedMinutes !== null && elapsedMinutes > 45 ? 'warning' : 'default'}
                     />
                     <OverviewMetric
                       icon={Navigation}
-                      label="ETA"
+                      label="ETA ומרחק"
                       value={etaLabel}
                       detail={distanceLabel}
                       tone="info"
@@ -639,34 +725,9 @@ export function DeliveryDetailsPage() {
                       detail={delivery.is_cash ? 'מזומן' : 'אשראי/אונליין'}
                       tone={delivery.is_cash ? 'success' : 'default'}
                     />
-                    <OverviewMetric
-                      icon={Bike}
-                      label="שליח"
-                      value={courierName}
-                      detail={courier?.phone ?? approvalLabel}
-                    />
                   </div>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    const shouldOpen = activeTab !== 'edit';
-                    setActiveTab(shouldOpen ? 'edit' : 'overview');
-                    setEditing(shouldOpen);
-                  }}
-                  className="flex min-h-12 w-full items-center justify-between gap-3 border-t border-app-border px-4 text-right text-sm font-semibold text-app-text transition-colors hover:bg-app-surface-raised"
-                >
-                  <span className="flex min-w-0 items-center gap-2">
-                    {activeTab === 'edit' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    <span>הגדרות משלוח</span>
-                    <span className={`rounded-full px-2 py-0.5 text-xs ${statusConfig.badgeClassName}`}>
-                      {statusConfig.label}
-                    </span>
-                  </span>
-                  <Settings className="h-4 w-4 text-app-text-secondary" />
-                </button>
-              </header>
+            </header>
 
               <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
                 <div className="space-y-4">
@@ -801,7 +862,7 @@ export function DeliveryDetailsPage() {
                         </select>
                       </DetailField>
                       <DetailField label="נוצר" value={formatDateTime(delivery.createdAt)} />
-                      <DetailField label="זמן בטיפול" value={elapsedMinutes === null ? emptyValue : `${elapsedMinutes} דק׳`} />
+                      <DetailField label="זמן בטיפול" value={elapsedLabel} />
                       <DetailField label="אזור" value={form.area} editing={isEditView}>
                         <TextInput value={form.area} onChange={(value) => updateForm('area', value)} />
                       </DetailField>

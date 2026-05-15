@@ -41,7 +41,7 @@ const InfoRow: React.FC<{ label: string; value: React.ReactNode; green?: boolean
         green ? 'text-green-600 dark:text-green-400' : 'text-[#0d0d12] dark:text-app-text'
       }`}
     >
-      {value || '�'}
+      {value || '—'}
     </span>
   </div>
 );
@@ -53,14 +53,14 @@ interface Props {
 
 export const SharedDeliveryDetailsContent: React.FC<Props> = ({ delivery, courier }) => {
   const timelineSteps = [
-    { label: '????', time: delivery.createdAt, done: true },
-    { label: '???? ????', time: delivery.assignedAt, done: !!delivery.assignedAt },
-    { label: '????? ?????', time: delivery.started_pickup, done: !!delivery.started_pickup },
-    { label: '???? ??????', time: delivery.arrivedAtRestaurantAt, done: !!delivery.arrivedAtRestaurantAt },
-    { label: '????', time: delivery.pickedUpAt, done: !!delivery.pickedUpAt },
-    { label: '????? ?????', time: delivery.started_dropoff, done: !!delivery.started_dropoff },
-    { label: '???? ?????', time: delivery.arrivedAtCustomerAt, done: !!delivery.arrivedAtCustomerAt },
-    { label: '????', time: delivery.deliveredAt, done: !!delivery.deliveredAt },
+    { label: 'נוצר', time: delivery.createdAt, done: true },
+    { label: 'שובץ שליח', time: delivery.assignedAt, done: !!delivery.assignedAt },
+    { label: 'התחיל איסוף', time: delivery.started_pickup, done: !!delivery.started_pickup },
+    { label: 'הגיע למסעדה', time: delivery.arrivedAtRestaurantAt, done: !!delivery.arrivedAtRestaurantAt },
+    { label: 'נאסף', time: delivery.pickedUpAt, done: !!delivery.pickedUpAt },
+    { label: 'התחיל מסירה', time: delivery.started_dropoff, done: !!delivery.started_dropoff },
+    { label: 'הגיע ללקוח', time: delivery.arrivedAtCustomerAt, done: !!delivery.arrivedAtCustomerAt },
+    { label: 'נמסר', time: delivery.deliveredAt, done: !!delivery.deliveredAt },
   ];
   const doneCount = timelineSteps.filter((step) => step.done).length;
   const customerCharge = getDeliveryCustomerCharge(delivery);
@@ -72,32 +72,32 @@ export const SharedDeliveryDetailsContent: React.FC<Props> = ({ delivery, courie
 
   return (
     <div className="pb-2">
-      <SectionTitle>???? ?????</SectionTitle>
+      <SectionTitle>פרטי משלוח</SectionTitle>
       <div className="border-t border-app-border dark:border-app-border">
-        <InfoRow label="???? ?????" value={formatCurrency(customerCharge)} green />
-        <InfoRow label="??? ?????" value={`${delivery.estimatedTime} ???`} />
+        <InfoRow label="חיוב לקוח" value={formatCurrency(customerCharge)} green />
+        <InfoRow label="זמן משוער" value={`${delivery.estimatedTime} דק׳`} />
         {delivery.delivery_distance ? (
-          <InfoRow label="????" value={`${delivery.delivery_distance.toFixed(1)} ?"?`} />
+          <InfoRow label="מרחק" value={`${delivery.delivery_distance.toFixed(1)} ק״מ`} />
         ) : null}
         {offerExpiresAt && !Number.isNaN(offerExpiresAt.getTime()) ? (
-          <InfoRow label="???? ????" value={offerExpiresAt.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })} />
+          <InfoRow label="תוקף הצעה" value={offerExpiresAt.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })} />
         ) : null}
         {delivery.is_cash ? (
           <InfoRow
-            label="?????"
+            label="תשלום"
             value={
               <span className="font-semibold text-green-600 dark:text-green-400">
-                ?? ????? {formatCurrency(cashAmount)}
+                מזומן {formatCurrency(cashAmount)}
               </span>
             }
           />
         ) : null}
-        {restaurantCharge > 0 ? <InfoRow label="???? ?????" value={formatCurrency(restaurantCharge)} /> : null}
-        {courierPay > 0 ? <InfoRow label="????? ????" value={formatCurrency(courierPay)} /> : null}
-        {courierTip > 0 ? <InfoRow label="???" value={formatCurrency(courierTip)} /> : null}
+        {restaurantCharge > 0 ? <InfoRow label="חיוב מסעדה" value={formatCurrency(restaurantCharge)} /> : null}
+        {courierPay > 0 ? <InfoRow label="תשלום שליח" value={formatCurrency(courierPay)} /> : null}
+        {courierTip > 0 ? <InfoRow label="טיפ" value={formatCurrency(courierTip)} /> : null}
       </div>
 
-      <SectionTitle>???? ?????</SectionTitle>
+      <SectionTitle>פרטי מסעדה</SectionTitle>
       <div className="border-t border-app-border px-4 py-3 dark:border-app-border">
         <div className="mb-3 flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-100 text-sm font-bold text-orange-600 dark:bg-orange-900/30 dark:text-orange-400">
@@ -118,7 +118,7 @@ export const SharedDeliveryDetailsContent: React.FC<Props> = ({ delivery, courie
         </div>
       </div>
 
-      <SectionTitle>???? ????</SectionTitle>
+      <SectionTitle>פרטי לקוח</SectionTitle>
       <div className="border-t border-app-border px-4 py-3 dark:border-app-border">
         <div className="mb-3 flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
@@ -145,18 +145,18 @@ export const SharedDeliveryDetailsContent: React.FC<Props> = ({ delivery, courie
           {delivery.customerBuilding || delivery.client_entry || delivery.client_floor || delivery.client_apartment ? (
             <p className="pr-5 text-xs text-app-text-muted">
               {[
-                delivery.customerBuilding && `????? ${delivery.customerBuilding}`,
-                delivery.client_entry && `????? ${delivery.client_entry}`,
-                delivery.client_floor && `???? ${delivery.client_floor}`,
-                delivery.client_apartment && `???? ${delivery.client_apartment}`,
+                delivery.customerBuilding && `בניין ${delivery.customerBuilding}`,
+                delivery.client_entry && `כניסה ${delivery.client_entry}`,
+                delivery.client_floor && `קומה ${delivery.client_floor}`,
+                delivery.client_apartment && `דירה ${delivery.client_apartment}`,
               ]
                 .filter(Boolean)
-                .join(' � ')}
+                .join(' · ')}
             </p>
           ) : null}
           {delivery.client_comment ? (
             <div className="mt-1 rounded-lg border border-yellow-200 bg-yellow-50 px-2.5 py-1.5 text-xs text-yellow-800 dark:border-yellow-800 dark:bg-yellow-950/30 dark:text-yellow-300">
-              ?? {delivery.client_comment}
+              הערה: {delivery.client_comment}
             </div>
           ) : null}
           {delivery.customerRating ? (
@@ -179,7 +179,7 @@ export const SharedDeliveryDetailsContent: React.FC<Props> = ({ delivery, courie
         </div>
       </div>
 
-      <SectionTitle>???? ????</SectionTitle>
+      <SectionTitle>פרטי שליח</SectionTitle>
       <div className="border-t border-app-border px-4 py-3 dark:border-app-border">
         {courier ? (
           <>
@@ -199,10 +199,10 @@ export const SharedDeliveryDetailsContent: React.FC<Props> = ({ delivery, courie
                   }`}
                 >
                   {courier.status === 'available'
-                    ? '????'
+                    ? 'זמין'
                     : courier.status === 'busy'
-                      ? '????'
-                      : '?? ?????'}
+                      ? 'עסוק'
+                      : 'לא זמין'}
                 </span>
               </div>
               <div className="mr-auto flex items-center gap-1 text-xs text-app-text-muted">
@@ -218,15 +218,15 @@ export const SharedDeliveryDetailsContent: React.FC<Props> = ({ delivery, courie
                 <Phone size={12} className="shrink-0 text-[#bbb]" />
                 {courier.phone}
               </a>
-              <p className="text-xs text-app-text-muted">{courier.totalDeliveries} ??????? ??"?</p>
+              <p className="text-xs text-app-text-muted">{courier.totalDeliveries} משלוחים סה״כ</p>
             </div>
           </>
         ) : (
-          <p className="text-sm text-app-text-muted dark:text-[#555]">?? ???? ????</p>
+          <p className="text-sm text-app-text-muted dark:text-[#555]">לא שובץ שליח</p>
         )}
       </div>
 
-      <SectionTitle>???? ?????</SectionTitle>
+      <SectionTitle>ציר זמן</SectionTitle>
       <div className="border-t border-app-border px-4 pt-2 pb-1 dark:border-app-border">
         <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-[#f0f0f0] dark:bg-[#262626]">
           <div
@@ -236,7 +236,7 @@ export const SharedDeliveryDetailsContent: React.FC<Props> = ({ delivery, courie
         </div>
         <div className="space-y-0">
           {timelineSteps.map((step) => {
-            const isDeliveredStep = step.label === '????';
+            const isDeliveredStep = step.label === 'נמסר';
             const doneClassName = isDeliveredStep ? 'bg-blue-500' : 'bg-app-brand';
             const doneIconClassName = isDeliveredStep ? 'text-white' : 'text-[#0d0d12]';
 
@@ -266,7 +266,7 @@ export const SharedDeliveryDetailsContent: React.FC<Props> = ({ delivery, courie
                 {step.label}
               </span>
               <span className="tabular-nums text-xs text-app-text-muted">
-                {step.time ? format(step.time, 'HH:mm', { locale: he }) : '�'}
+                {step.time ? format(step.time, 'HH:mm', { locale: he }) : '—'}
               </span>
             </div>
             );
@@ -276,16 +276,16 @@ export const SharedDeliveryDetailsContent: React.FC<Props> = ({ delivery, courie
 
       {delivery.deliveryNotes || delivery.orderNotes || delivery.comment ? (
         <>
-          <SectionTitle>?????</SectionTitle>
+          <SectionTitle>הערות</SectionTitle>
           <div className="space-y-1.5 border-t border-app-border px-4 pt-3 pb-3 dark:border-app-border">
             {delivery.deliveryNotes ? (
-              <p className="text-xs text-[#666d80] dark:text-app-text-secondary">?? {delivery.deliveryNotes}</p>
+              <p className="text-xs text-[#666d80] dark:text-app-text-secondary">משלוח: {delivery.deliveryNotes}</p>
             ) : null}
             {delivery.orderNotes ? (
-              <p className="text-xs text-[#666d80] dark:text-app-text-secondary">?? {delivery.orderNotes}</p>
+              <p className="text-xs text-[#666d80] dark:text-app-text-secondary">הזמנה: {delivery.orderNotes}</p>
             ) : null}
             {delivery.comment ? (
-              <p className="text-xs text-[#666d80] dark:text-app-text-secondary">?? {delivery.comment}</p>
+              <p className="text-xs text-[#666d80] dark:text-app-text-secondary">כללי: {delivery.comment}</p>
             ) : null}
           </div>
         </>

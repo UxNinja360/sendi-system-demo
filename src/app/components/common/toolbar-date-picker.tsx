@@ -5,6 +5,8 @@ import { ToolbarIconButton } from './toolbar-icon-button';
 export type PeriodMode = 'current_month' | 'custom_range';
 
 const WEEKDAY_LABELS = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
+const DEFAULT_RANGE_START_TIME = '00:00';
+const DEFAULT_RANGE_END_TIME = '23:59';
 
 const pad = (value: number) => value.toString().padStart(2, '0');
 
@@ -77,6 +79,11 @@ const getRangeLabel = (startDate: string, endDate: string) =>
     year: 'numeric',
   })}`;
 
+const getRangeTimeLabel = (startTime: string, endTime: string) =>
+  startTime !== DEFAULT_RANGE_START_TIME || endTime !== DEFAULT_RANGE_END_TIME
+    ? ` · ${startTime}-${endTime}`
+    : '';
+
 type CalendarPopoverProps = {
   calendarMonth: Date;
   setCalendarMonth: React.Dispatch<React.SetStateAction<Date>>;
@@ -84,6 +91,7 @@ type CalendarPopoverProps = {
   onDayClick: (date: Date, key: string) => void;
   onDayMouseEnter?: (key: string) => void;
   onDayMouseLeave?: () => void;
+  dayCounts?: Record<string, number>;
   footer?: React.ReactNode;
 };
 
@@ -94,6 +102,7 @@ const CalendarPopover: React.FC<CalendarPopoverProps> = ({
   onDayClick,
   onDayMouseEnter,
   onDayMouseLeave,
+  dayCounts,
   footer,
 }) => {
   const monthDays = React.useMemo(() => getMonthDays(calendarMonth), [calendarMonth]);
@@ -131,18 +140,27 @@ const CalendarPopover: React.FC<CalendarPopoverProps> = ({
       </div>
 
       <div className="grid grid-cols-7 gap-1">
-        {monthDays.map((day) => (
-          <button
-            key={day.key}
-            type="button"
-            onClick={() => onDayClick(day.date, day.key)}
-            onMouseEnter={() => onDayMouseEnter?.(day.key)}
-            onMouseLeave={onDayMouseLeave}
-            className={getDayClassName(day)}
-          >
-            {day.date.getDate()}
-          </button>
-        ))}
+        {monthDays.map((day) => {
+          const count = dayCounts?.[day.key] ?? 0;
+
+          return (
+            <button
+              key={day.key}
+              type="button"
+              onClick={() => onDayClick(day.date, day.key)}
+              onMouseEnter={() => onDayMouseEnter?.(day.key)}
+              onMouseLeave={onDayMouseLeave}
+              className={`${getDayClassName(day)} relative overflow-hidden`}
+            >
+              <span className="relative z-10">{day.date.getDate()}</span>
+              {count > 0 ? (
+                <span className="absolute bottom-0.5 left-1/2 min-w-3 -translate-x-1/2 rounded-full px-0.5 text-[9px] leading-3 text-app-text-secondary">
+                  {count > 99 ? '99+' : count}
+                </span>
+              ) : null}
+            </button>
+          );
+        })}
       </div>
 
       {footer ? <div className="mt-3 border-t border-app-border pt-3">{footer}</div> : null}
@@ -360,7 +378,10 @@ type ToolbarDayPickerProps = {
   onDateChange: (date: Date) => void;
   rangeStartDate?: string;
   rangeEndDate?: string;
-  onRangeChange?: (startDate: string, endDate: string) => void;
+  rangeStartTime?: string;
+  rangeEndTime?: string;
+  onRangeChange?: (startDate: string, endDate: string, startTime?: string, endTime?: string) => void;
+  dayCounts?: Record<string, number>;
 };
 
 export const ToolbarDayPicker: React.FC<ToolbarDayPickerProps> = ({
@@ -368,7 +389,10 @@ export const ToolbarDayPicker: React.FC<ToolbarDayPickerProps> = ({
   onDateChange,
   rangeStartDate = '',
   rangeEndDate = '',
+  rangeStartTime = DEFAULT_RANGE_START_TIME,
+  rangeEndTime = DEFAULT_RANGE_END_TIME,
   onRangeChange,
+  dayCounts,
 }) => {
   const [calendarOpen, setCalendarOpen] = React.useState(false);
   const [calendarMonth, setCalendarMonth] = React.useState(
@@ -377,13 +401,15 @@ export const ToolbarDayPicker: React.FC<ToolbarDayPickerProps> = ({
   const [rangePicking, setRangePicking] = React.useState(false);
   const [rangeDraftStart, setRangeDraftStart] = React.useState('');
   const [rangeDraftEnd, setRangeDraftEnd] = React.useState('');
+  const [rangeDraftStartTime, setRangeDraftStartTime] = React.useState(DEFAULT_RANGE_START_TIME);
+  const [rangeDraftEndTime, setRangeDraftEndTime] = React.useState(DEFAULT_RANGE_END_TIME);
   const [hoverDate, setHoverDate] = React.useState<string | null>(null);
   const popoverRef = React.useRef<HTMLDivElement>(null);
   const selectedDateKey = toDateKey(selectedDate);
   const todayKey = toDateKey(new Date());
   const hasRangeSelection = Boolean(rangeStartDate && rangeEndDate);
   const displayLabel = hasRangeSelection
-    ? getRangeLabel(rangeStartDate, rangeEndDate)
+    ? `${getRangeLabel(rangeStartDate, rangeEndDate)}${getRangeTimeLabel(rangeStartTime, rangeEndTime)}`
     : formatSelectedDayLabel(selectedDate);
 
   React.useEffect(() => {
@@ -460,10 +486,17 @@ export const ToolbarDayPicker: React.FC<ToolbarDayPickerProps> = ({
       return;
     }
 
-    onRangeChange?.(rangeDraftStart, key);
+    onRangeChange?.(
+      rangeDraftStart,
+      key,
+      rangeDraftStartTime || DEFAULT_RANGE_START_TIME,
+      rangeDraftEndTime || DEFAULT_RANGE_END_TIME,
+    );
     setRangePicking(false);
     setRangeDraftStart('');
     setRangeDraftEnd('');
+    setRangeDraftStartTime(DEFAULT_RANGE_START_TIME);
+    setRangeDraftEndTime(DEFAULT_RANGE_END_TIME);
     setHoverDate(null);
     setCalendarOpen(false);
   };
@@ -471,10 +504,12 @@ export const ToolbarDayPicker: React.FC<ToolbarDayPickerProps> = ({
   const selectCalendarMonth = () => {
     const monthStart = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1);
     const monthEnd = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 0);
-    onRangeChange?.(toDateKey(monthStart), toDateKey(monthEnd));
+    onRangeChange?.(toDateKey(monthStart), toDateKey(monthEnd), DEFAULT_RANGE_START_TIME, DEFAULT_RANGE_END_TIME);
     setRangePicking(false);
     setRangeDraftStart('');
     setRangeDraftEnd('');
+    setRangeDraftStartTime(DEFAULT_RANGE_START_TIME);
+    setRangeDraftEndTime(DEFAULT_RANGE_END_TIME);
     setHoverDate(null);
     setCalendarOpen(false);
   };
@@ -483,6 +518,8 @@ export const ToolbarDayPicker: React.FC<ToolbarDayPickerProps> = ({
     setRangePicking(true);
     setRangeDraftStart(rangeStartDate);
     setRangeDraftEnd(rangeEndDate);
+    setRangeDraftStartTime(rangeStartTime || DEFAULT_RANGE_START_TIME);
+    setRangeDraftEndTime(rangeEndTime || DEFAULT_RANGE_END_TIME);
     setHoverDate(null);
   };
 
@@ -490,6 +527,8 @@ export const ToolbarDayPicker: React.FC<ToolbarDayPickerProps> = ({
     setRangePicking(false);
     setRangeDraftStart('');
     setRangeDraftEnd('');
+    setRangeDraftStartTime(DEFAULT_RANGE_START_TIME);
+    setRangeDraftEndTime(DEFAULT_RANGE_END_TIME);
     setHoverDate(null);
   };
 
@@ -498,17 +537,31 @@ export const ToolbarDayPicker: React.FC<ToolbarDayPickerProps> = ({
     setRangePicking(false);
     setRangeDraftStart('');
     setRangeDraftEnd('');
+    setRangeDraftStartTime(DEFAULT_RANGE_START_TIME);
+    setRangeDraftEndTime(DEFAULT_RANGE_END_TIME);
     setHoverDate(null);
     setCalendarOpen(false);
   };
 
   const applyDraftRange = () => {
     if (!rangeDraftStart || !rangeDraftEnd) return;
-    const [startDate, endDate] = [rangeDraftStart, rangeDraftEnd].sort();
-    onRangeChange?.(startDate, endDate);
+    const start = {
+      date: rangeDraftStart,
+      time: rangeDraftStartTime || DEFAULT_RANGE_START_TIME,
+    };
+    const end = {
+      date: rangeDraftEnd,
+      time: rangeDraftEndTime || DEFAULT_RANGE_END_TIME,
+    };
+    const [orderedStart, orderedEnd] =
+      `${start.date}T${start.time}` <= `${end.date}T${end.time}` ? [start, end] : [end, start];
+
+    onRangeChange?.(orderedStart.date, orderedEnd.date, orderedStart.time, orderedEnd.time);
     setRangePicking(false);
     setRangeDraftStart('');
     setRangeDraftEnd('');
+    setRangeDraftStartTime(DEFAULT_RANGE_START_TIME);
+    setRangeDraftEndTime(DEFAULT_RANGE_END_TIME);
     setHoverDate(null);
     setCalendarOpen(false);
   };
@@ -519,24 +572,46 @@ export const ToolbarDayPicker: React.FC<ToolbarDayPickerProps> = ({
         <div className="text-xs text-app-text-secondary">
           {rangeDraftStart ? 'בחר תאריך סיום בלוח או הקלד טווח' : 'בחר תאריך התחלה בלוח או הקלד טווח'}
         </div>
-        <label className="block text-xs text-app-text-secondary">
-          התחלה
-          <input
-            type="date"
-            value={rangeDraftStart}
-            onChange={(event) => setRangeDraftStart(event.target.value)}
-            className="mt-1 h-9 w-full rounded-[4px] border border-app-border bg-app-background px-2 text-sm text-app-text outline-none focus:border-app-brand"
-          />
-        </label>
-        <label className="block text-xs text-app-text-secondary">
-          סיום
-          <input
-            type="date"
-            value={rangeDraftEnd}
-            onChange={(event) => setRangeDraftEnd(event.target.value)}
-            className="mt-1 h-9 w-full rounded-[4px] border border-app-border bg-app-background px-2 text-sm text-app-text outline-none focus:border-app-brand"
-          />
-        </label>
+        <div className="grid grid-cols-[minmax(0,1fr)_124px] gap-2">
+          <label className="block text-xs text-app-text-secondary">
+            תאריך התחלה
+            <input
+              type="date"
+              value={rangeDraftStart}
+              onChange={(event) => setRangeDraftStart(event.target.value)}
+              className="mt-1 h-9 w-full rounded-[4px] border border-app-border bg-app-background px-2 text-sm text-app-text outline-none focus:border-app-brand"
+            />
+          </label>
+          <label className="block text-xs text-app-text-secondary">
+            שעה
+            <input
+              type="time"
+              value={rangeDraftStartTime}
+              onChange={(event) => setRangeDraftStartTime(event.target.value)}
+              className="mt-1 h-9 w-full rounded-[4px] border border-app-border bg-app-background px-1.5 text-sm text-app-text outline-none focus:border-app-brand"
+            />
+          </label>
+        </div>
+        <div className="grid grid-cols-[minmax(0,1fr)_124px] gap-2">
+          <label className="block text-xs text-app-text-secondary">
+            תאריך סיום
+            <input
+              type="date"
+              value={rangeDraftEnd}
+              onChange={(event) => setRangeDraftEnd(event.target.value)}
+              className="mt-1 h-9 w-full rounded-[4px] border border-app-border bg-app-background px-2 text-sm text-app-text outline-none focus:border-app-brand"
+            />
+          </label>
+          <label className="block text-xs text-app-text-secondary">
+            שעה
+            <input
+              type="time"
+              value={rangeDraftEndTime}
+              onChange={(event) => setRangeDraftEndTime(event.target.value)}
+              className="mt-1 h-9 w-full rounded-[4px] border border-app-border bg-app-background px-1.5 text-sm text-app-text outline-none focus:border-app-brand"
+            />
+          </label>
+        </div>
         <div className="grid grid-cols-2 gap-2 pt-1">
           <button
             type="button"
@@ -603,6 +678,7 @@ export const ToolbarDayPicker: React.FC<ToolbarDayPickerProps> = ({
             if (rangePicking && rangeDraftStart) setHoverDate(key);
           }}
           onDayMouseLeave={() => setHoverDate(null)}
+          dayCounts={dayCounts}
           footer={footer}
         />
       ) : null}

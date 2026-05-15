@@ -14,7 +14,13 @@ export default defineConfig({
       devOptions: {
         enabled: false,
       },
-      includeAssets: ['icon.svg'],
+      includeAssets: [
+        'favicon-32.png',
+        'apple-touch-icon.png',
+        'app-icon-192.png',
+        'app-icon-512.png',
+        'app-icon-1024.png',
+      ],
       manifest: {
         name: 'Sendi',
         short_name: 'Sendi',
@@ -30,10 +36,22 @@ export default defineConfig({
         scope: '/',
         icons: [
           {
-            src: '/icon.svg',
+            src: '/app-icon-192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any',
+          },
+          {
+            src: '/app-icon-512.png',
             sizes: '512x512',
-            type: 'image/svg+xml',
+            type: 'image/png',
             purpose: 'any maskable',
+          },
+          {
+            src: '/app-icon-1024.png',
+            sizes: '1024x1024',
+            type: 'image/png',
+            purpose: 'any',
           },
         ],
       },

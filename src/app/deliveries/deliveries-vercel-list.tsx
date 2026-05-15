@@ -109,11 +109,11 @@ const CourierAssignmentLine: React.FC<{
   vehicleType?: string;
   className?: string;
 }> = ({ assigned, label, vehicleType, className }) => {
-  const Icon = assigned ? (vehicleType === 'רכב' ? Car : Bike) : UserPlus;
+  const Icon = assigned ? (vehicleType === 'רכב' ? Car : Bike) : null;
 
   return (
     <div className={joinClassNames('flex min-w-0 items-center gap-2 text-right', className)} dir="rtl">
-      <Icon className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
+      {Icon ? <Icon className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" /> : null}
       <span
         className={joinClassNames(
           'min-w-0 truncate text-sm font-normal',
@@ -254,19 +254,13 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
 
   return (
     <div
-      role="button"
-      tabIndex={0}
-      onClick={navigateToDelivery}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter') navigateToDelivery();
-      }}
       onContextMenu={(event) => {
         event.preventDefault();
         setContextMenuPos({ x: event.clientX, y: event.clientY });
       }}
       className={joinClassNames(
         rowGridClass,
-        'group relative w-full min-w-0 cursor-pointer border-b border-app-nav-border bg-app-surface text-app-text outline-none transition-colors last:border-b-0 hover:bg-app-surface-raised focus-visible:bg-app-surface-raised',
+        'group relative w-full min-w-0 cursor-default border-b border-app-nav-border bg-app-surface text-app-text outline-none transition-colors last:border-b-0 hover:bg-app-surface-raised',
         isDrawerTarget && 'shadow-[inset_2px_0_0_var(--app-brand)]',
       )}
     >
@@ -559,21 +553,12 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
 
   return (
     <div
-      role="button"
-      tabIndex={0}
-      onClick={navigateToDelivery}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          navigateToDelivery();
-        }
-      }}
       onContextMenu={(event) => {
         event.preventDefault();
         setContextMenuPos({ x: event.clientX, y: event.clientY });
       }}
       className={joinClassNames(
-        'group min-w-0 cursor-pointer rounded-lg border border-app-nav-border bg-app-surface p-3 text-app-text outline-none transition-colors hover:bg-app-surface-raised focus-visible:bg-app-surface-raised',
+        'group min-w-0 cursor-default rounded-lg border border-app-nav-border bg-app-surface p-3 text-app-text outline-none transition-colors hover:bg-app-surface-raised',
         isDrawerTarget && 'shadow-[inset_2px_0_0_var(--app-brand)]',
       )}
     >
