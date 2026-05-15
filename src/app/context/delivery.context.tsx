@@ -277,6 +277,7 @@ type ActionToastPayload = {
   actionType: DeliveryAction['type'];
   title: string;
   description?: string;
+  dedupeKey?: string;
 };
 
 type PendingActionToast = {
@@ -358,6 +359,7 @@ const createActionToast = (action: DeliveryAction, state: DeliveryState): Action
         actionType: action.type,
         title: 'משלוח חדש נוצר',
         description: `${action.payload.orderNumber} · ${action.payload.restaurantName}`,
+        dedupeKey: `delivery-${action.payload.id}`,
       };
     case 'ASSIGN_COURIER': {
       const delivery = state.deliveries.find((item) => item.id === action.payload.deliveryId);
@@ -871,7 +873,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   const enqueueActionToast = useCallback((actionToast: ActionToastPayload) => {
-    const key = actionToast.actionType;
+    const key = actionToast.dedupeKey ?? actionToast.actionType;
     const existing = pendingActionToastsRef.current.get(key);
     if (existing) {
       clearTimeout(existing.timeoutId);

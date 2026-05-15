@@ -8,7 +8,7 @@ export const Toaster = () => {
       richColors={false}
       expand
       gap={8}
-      visibleToasts={4}
+      visibleToasts={8}
       duration={2400}
       offset={{ top: 'calc(var(--app-topbar-offset) + 10px)' }}
       mobileOffset={{ top: 'calc(var(--app-topbar-offset) + 8px)' }}

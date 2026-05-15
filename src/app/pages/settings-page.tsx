@@ -9,6 +9,7 @@ import {
   RotateCcw,
   Sun,
   Volume2,
+  Zap,
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useTheme } from '../context/theme.context';
@@ -25,6 +26,7 @@ import {
   requestNotificationPermission,
   unlockAlertSound,
 } from '../notifications/operational-alerts';
+import { playHaptic } from '../utils/haptics';
 
 const TEXT = {
   title: '\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea',
@@ -67,11 +69,15 @@ const TEXT = {
   autoTheme: '\u05ea\u05d1\u05e0\u05d9\u05ea \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9\u05ea',
   autoThemeHint: '\u05d4\u05ea\u05d0\u05de\u05d4 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9\u05ea \u05e9\u05dc \u05d4\u05de\u05de\u05e9\u05e7.',
   alerts: 'צלילים והתראות',
-  alertsDescription: 'שליטה במה שקורה כשנכנס משלוח חדש.',
+  alertsDescription: 'שליטה בצליל, רטט והתראות כשנכנס משלוח חדש.',
   newDeliverySound: 'צליל משלוח חדש',
   newDeliverySoundHint: 'השמעת צליל קצר בכל משלוח חדש.',
+  hapticFeedback: 'הפטיק בממשק',
+  hapticFeedbackHint: 'רטט קצר בלחיצה על כפתורים ופקדים תומכים.',
+  newDeliveryHaptic: 'רטט למשלוח חדש',
+  newDeliveryHapticHint: 'ניסיון להפעיל רטט/הפטיק בכל משלוח חדש.',
   browserNotifications: 'התראות דפדפן',
-  browserNotificationsHint: 'התראה כשהאפליקציה פתוחה ברקע או לא בפוקוס.',
+  browserNotificationsHint: 'התראה נפרדת לכל משלוח חדש, גם כשהאפליקציה פתוחה.',
   notificationPermission: 'הרשאת התראות',
   notificationPermissionHint: 'נדרש כדי להציג התראות מערכת במחשב וב-PWA.',
   enableNotifications: 'אפשר',
@@ -81,6 +87,8 @@ const TEXT = {
   notificationsUnsupported: 'לא נתמך',
   testSound: 'בדיקת צליל',
   playSound: 'נגן',
+  testHaptic: 'בדיקת רטט',
+  playHaptic: 'רטט',
   advanced: '\u05de\u05ea\u05e7\u05d3\u05dd',
   advancedDescription: '\u05e4\u05e2\u05d5\u05dc\u05d5\u05ea \u05de\u05e2\u05e8\u05db\u05ea \u05e8\u05d2\u05d9\u05e9\u05d5\u05ea. \u05de\u05d5\u05de\u05dc\u05e5 \u05dc\u05d2\u05e2\u05ea \u05d1\u05d4\u05df \u05e8\u05e7 \u05db\u05e9\u05d1\u05d0\u05de\u05ea \u05e6\u05e8\u05d9\u05da.',
   logout: '\u05d4\u05ea\u05e0\u05ea\u05e7\u05d5\u05ea',
@@ -273,6 +281,10 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
     }, 60);
   };
 
+  const handleTestHaptic = () => {
+    playHaptic('success', { force: true });
+  };
+
   return (
     <div className="flex h-full flex-col overflow-hidden bg-app-background" dir="rtl">
       <div className="flex-1 overflow-y-auto">
@@ -306,6 +318,36 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
                     const nextValue = !alertPreferences.newDeliverySoundEnabled;
                     updateAlertPreference('newDeliverySoundEnabled', nextValue);
                     if (nextValue) handleTestSound();
+                  }}
+                />
+              }
+            />
+            <SettingRow
+              icon={<Zap className="h-4 w-4" />}
+              title={TEXT.hapticFeedback}
+              hint={TEXT.hapticFeedbackHint}
+              control={
+                <Toggle
+                  checked={alertPreferences.hapticFeedbackEnabled}
+                  onChange={() => {
+                    const nextValue = !alertPreferences.hapticFeedbackEnabled;
+                    updateAlertPreference('hapticFeedbackEnabled', nextValue);
+                    if (nextValue) handleTestHaptic();
+                  }}
+                />
+              }
+            />
+            <SettingRow
+              icon={<Zap className="h-4 w-4" />}
+              title={TEXT.newDeliveryHaptic}
+              hint={TEXT.newDeliveryHapticHint}
+              control={
+                <Toggle
+                  checked={alertPreferences.newDeliveryHapticEnabled}
+                  onChange={() => {
+                    const nextValue = !alertPreferences.newDeliveryHapticEnabled;
+                    updateAlertPreference('newDeliveryHapticEnabled', nextValue);
+                    if (nextValue) handleTestHaptic();
                   }}
                 />
               }
@@ -353,6 +395,20 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
                 >
                   <Volume2 className="h-4 w-4" />
                   <span>{TEXT.playSound}</span>
+                </button>
+              }
+            />
+            <SettingRow
+              icon={<Zap className="h-4 w-4" />}
+              title={TEXT.testHaptic}
+              control={
+                <button
+                  type="button"
+                  onClick={handleTestHaptic}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
+                >
+                  <Zap className="h-4 w-4" />
+                  <span>{TEXT.playHaptic}</span>
                 </button>
               }
             />

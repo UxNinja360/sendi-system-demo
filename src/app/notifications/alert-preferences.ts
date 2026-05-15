@@ -1,15 +1,21 @@
 export type AlertPreferences = {
   newDeliverySoundEnabled: boolean;
+  hapticFeedbackEnabled: boolean;
+  newDeliveryHapticEnabled: boolean;
   browserNotificationsEnabled: boolean;
 };
 
 export const ALERT_PREFERENCES_EVENT = 'sendi-alert-preferences-change';
 
 const NEW_DELIVERY_SOUND_KEY = 'sendi-new-delivery-sound-enabled-v1';
+const HAPTIC_FEEDBACK_KEY = 'sendi-haptic-feedback-enabled-v1';
+const NEW_DELIVERY_HAPTIC_KEY = 'sendi-new-delivery-haptic-enabled-v1';
 const BROWSER_NOTIFICATIONS_KEY = 'sendi-browser-notifications-enabled-v1';
 
 export const DEFAULT_ALERT_PREFERENCES: AlertPreferences = {
   newDeliverySoundEnabled: true,
+  hapticFeedbackEnabled: true,
+  newDeliveryHapticEnabled: true,
   browserNotificationsEnabled: true,
 };
 
@@ -40,6 +46,14 @@ export const getAlertPreferences = (): AlertPreferences => ({
     NEW_DELIVERY_SOUND_KEY,
     DEFAULT_ALERT_PREFERENCES.newDeliverySoundEnabled,
   ),
+  hapticFeedbackEnabled: readBooleanPreference(
+    HAPTIC_FEEDBACK_KEY,
+    DEFAULT_ALERT_PREFERENCES.hapticFeedbackEnabled,
+  ),
+  newDeliveryHapticEnabled: readBooleanPreference(
+    NEW_DELIVERY_HAPTIC_KEY,
+    DEFAULT_ALERT_PREFERENCES.newDeliveryHapticEnabled,
+  ),
   browserNotificationsEnabled: readBooleanPreference(
     BROWSER_NOTIFICATIONS_KEY,
     DEFAULT_ALERT_PREFERENCES.browserNotificationsEnabled,
@@ -54,6 +68,14 @@ export const setAlertPreference = <Key extends keyof AlertPreferences>(
     writeBooleanPreference(NEW_DELIVERY_SOUND_KEY, value);
   }
 
+  if (key === 'hapticFeedbackEnabled') {
+    writeBooleanPreference(HAPTIC_FEEDBACK_KEY, value);
+  }
+
+  if (key === 'newDeliveryHapticEnabled') {
+    writeBooleanPreference(NEW_DELIVERY_HAPTIC_KEY, value);
+  }
+
   if (key === 'browserNotificationsEnabled') {
     writeBooleanPreference(BROWSER_NOTIFICATIONS_KEY, value);
   }
@@ -66,4 +88,3 @@ export const setAlertPreference = <Key extends keyof AlertPreferences>(
     );
   }
 };
-

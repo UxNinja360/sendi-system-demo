@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { useDelivery } from '../context/delivery-context-value';
 import type { Delivery } from '../types/delivery.types';
+import { playHaptic } from '../utils/haptics';
 import { getAlertPreferences } from './alert-preferences';
 
 type AudioWindow = Window &
@@ -78,15 +79,18 @@ export const playNewDeliverySound = ({ force = false }: { force?: boolean } = {}
 export const canUseBrowserNotifications = () =>
   typeof window !== 'undefined' && 'Notification' in window;
 
-const getDeliveryTitle = (delivery: Delivery, totalNew: number) => {
-  if (totalNew > 1) return `${totalNew.toLocaleString('he-IL')} משלוחים חדשים`;
-  return `משלוח חדש #${delivery.orderNumber}`;
-};
+const getDeliveryTitle = (delivery: Delivery) => `משלוח חדש #${delivery.orderNumber}`;
 
 const getDeliveryBody = (delivery: Delivery) =>
   [delivery.restaurantName, delivery.customerName, delivery.address]
     .filter(Boolean)
     .join(' · ');
+
+const getDeliveryTimestamp = (delivery: Delivery) => {
+  const value = delivery.createdAt ?? delivery.creation_time;
+  const timestamp = value instanceof Date ? value.getTime() : new Date(value).getTime();
+  return Number.isFinite(timestamp) ? timestamp : Date.now();
+};
 
 const shouldShowBrowserNotification = () => {
   if (!getAlertPreferences().browserNotificationsEnabled) return false;
@@ -95,7 +99,7 @@ const shouldShowBrowserNotification = () => {
     return false;
   }
 
-  return typeof document === 'undefined' || document.hidden || !document.hasFocus();
+  return true;
 };
 
 export const requestNotificationPermission = async () => {
@@ -157,26 +161,35 @@ export const OperationalAlerts: React.FC = () => {
     if (newDeliveries.length === 0) return;
 
     playNewDeliverySound();
+    if (getAlertPreferences().newDeliveryHapticEnabled) {
+      playHaptic('success', { force: true });
+    }
 
     if (!shouldShowBrowserNotification()) return;
 
-    const newestDelivery = newDeliveries[newDeliveries.length - 1];
-    const notification = new Notification(
-      getDeliveryTitle(newestDelivery, newDeliveries.length),
-      {
-        body: getDeliveryBody(newestDelivery),
-        icon: '/app-icon-192.png',
-        badge: '/app-icon-192.png',
-        dir: 'rtl',
-        tag: 'sendi-new-delivery',
-      },
-    );
+    newDeliveries.forEach((delivery) => {
+      try {
+        const notification = new Notification(getDeliveryTitle(delivery), {
+          body: getDeliveryBody(delivery),
+          icon: '/app-icon-192.png',
+          badge: '/app-icon-192.png',
+          dir: 'rtl',
+          tag: `sendi-new-delivery-${delivery.id}`,
+          timestamp: getDeliveryTimestamp(delivery),
+          requireInteraction: true,
+          silent: false,
+          data: { deliveryId: delivery.id },
+        });
 
-    notification.onclick = () => {
-      window.focus();
-      navigate('/deliveries');
-      notification.close();
-    };
+        notification.onclick = () => {
+          window.focus();
+          navigate('/deliveries');
+          notification.close();
+        };
+      } catch {
+        // Some iOS/browser states expose Notification but still reject creation.
+      }
+    });
   }, [navigate, state.deliveries]);
 
   return null;

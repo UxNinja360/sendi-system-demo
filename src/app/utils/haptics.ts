@@ -1,3 +1,5 @@
+import { getAlertPreferences } from '../notifications/alert-preferences';
+
 export type HapticPatternName =
   | 'selection'
   | 'light'
@@ -153,7 +155,11 @@ const playResolvedHaptic = (name: string | undefined) => {
   return playIOSSwitchHaptic(name);
 };
 
-export const playHaptic = (name: HapticPatternName = 'light') => {
+export const playHaptic = (
+  name: HapticPatternName = 'light',
+  options: { force?: boolean } = {},
+) => {
+  if (!options.force && !getAlertPreferences().hapticFeedbackEnabled) return false;
   return playResolvedHaptic(name);
 };
 
@@ -169,6 +175,8 @@ export const installHapticFeedback = (root?: Document | HTMLElement) => {
 
   const handlePointerDown = (event: PointerEvent) => {
     if (event.defaultPrevented || event.button > 0) return;
+    if (!getAlertPreferences().hapticFeedbackEnabled) return;
+
     const target = event.target;
     if (!(target instanceof Element)) return;
 
