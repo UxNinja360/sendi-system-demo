@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { useDelivery } from '../context/delivery-context-value';
 import type { Delivery } from '../types/delivery.types';
 import { playHaptic } from '../utils/haptics';
+import { setPendingDeliveriesBadge } from './app-badge';
 import { getAlertPreferences } from './alert-preferences';
 
 type AudioWindow = Window &
@@ -102,6 +103,50 @@ const shouldShowBrowserNotification = () => {
   return true;
 };
 
+const getPendingDeliveryCount = (deliveries: Delivery[]) =>
+  deliveries.filter((delivery) => delivery.status === 'pending').length;
+
+const getNotificationOptions = (delivery: Delivery, pendingCount: number): NotificationOptions => ({
+  body: getDeliveryBody(delivery),
+  icon: '/app-icon-192.png',
+  badge: '/app-icon-192.png',
+  dir: 'rtl',
+  tag: `sendi-new-delivery-${delivery.id}`,
+  renotify: true,
+  requireInteraction: true,
+  silent: false,
+  timestamp: getDeliveryTimestamp(delivery),
+  data: {
+    url: '/deliveries',
+    deliveryId: delivery.id,
+    pendingCount,
+  },
+});
+
+const showDeliveryNotification = async (
+  delivery: Delivery,
+  pendingCount: number,
+  onClick: (notification: Notification) => void,
+) => {
+  const title = getDeliveryTitle(delivery);
+  const options = getNotificationOptions(delivery, pendingCount);
+
+  if ('serviceWorker' in navigator) {
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      if ('showNotification' in registration) {
+        await registration.showNotification(title, options);
+        return;
+      }
+    } catch {
+      // Fall back to the page-level Notification constructor below.
+    }
+  }
+
+  const notification = new Notification(title, options);
+  notification.onclick = () => onClick(notification);
+};
+
 export const requestNotificationPermission = async () => {
   unlockAlertSound();
 
@@ -125,6 +170,7 @@ export const OperationalAlerts: React.FC = () => {
   const { state } = useDelivery();
   const navigate = useNavigate();
   const knownDeliveryIdsRef = React.useRef<Set<string> | null>(null);
+  const pendingDeliveryCount = getPendingDeliveryCount(state.deliveries);
 
   React.useEffect(() => {
     const handleFirstInteraction = () => {
@@ -146,6 +192,7 @@ export const OperationalAlerts: React.FC = () => {
   React.useEffect(() => {
     const currentDeliveryIds = new Set(state.deliveries.map((delivery) => delivery.id));
     const knownDeliveryIds = knownDeliveryIdsRef.current;
+    void setPendingDeliveriesBadge(pendingDeliveryCount);
 
     if (!knownDeliveryIds) {
       knownDeliveryIdsRef.current = currentDeliveryIds;
@@ -168,29 +215,15 @@ export const OperationalAlerts: React.FC = () => {
     if (!shouldShowBrowserNotification()) return;
 
     newDeliveries.forEach((delivery) => {
-      try {
-        const notification = new Notification(getDeliveryTitle(delivery), {
-          body: getDeliveryBody(delivery),
-          icon: '/app-icon-192.png',
-          badge: '/app-icon-192.png',
-          dir: 'rtl',
-          tag: `sendi-new-delivery-${delivery.id}`,
-          timestamp: getDeliveryTimestamp(delivery),
-          requireInteraction: true,
-          silent: false,
-          data: { deliveryId: delivery.id },
-        });
-
-        notification.onclick = () => {
-          window.focus();
-          navigate('/deliveries');
-          notification.close();
-        };
-      } catch {
+      void showDeliveryNotification(delivery, pendingDeliveryCount, (notification) => {
+        window.focus();
+        navigate('/deliveries');
+        notification.close();
+      }).catch(() => {
         // Some iOS/browser states expose Notification but still reject creation.
-      }
+      });
     });
-  }, [navigate, state.deliveries]);
+  }, [navigate, pendingDeliveryCount, state.deliveries]);
 
   return null;
 };

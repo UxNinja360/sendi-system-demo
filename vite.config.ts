@@ -32,6 +32,7 @@ export default defineConfig({
         orientation: 'any',
         dir: 'rtl',
         lang: 'he',
+        id: '/',
         start_url: '/',
         scope: '/',
         icons: [
@@ -60,6 +61,7 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
+        importScripts: ['/sendi-sw-push.js'],
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff,woff2}'],
         runtimeCaching: [
           {
