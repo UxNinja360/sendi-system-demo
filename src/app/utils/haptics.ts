@@ -20,16 +20,81 @@ const resolveHapticPattern = (name: string | undefined): number | number[] | nul
   return HAPTIC_PATTERNS[name as HapticPatternName] ?? HAPTIC_PATTERNS.light;
 };
 
-export const playHaptic = (name: HapticPatternName = 'light') => {
-  if (typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') {
-    return false;
-  }
+const isLikelyIOSTouchDevice = () => {
+  if (typeof navigator === 'undefined' || typeof window === 'undefined') return false;
+
+  const platform = navigator.platform ?? '';
+  const userAgent = navigator.userAgent ?? '';
+  const isIOS =
+    /iPad|iPhone|iPod/.test(userAgent) ||
+    (platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const hasCoarsePointer =
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(pointer: coarse)').matches;
+
+  return isIOS && hasCoarsePointer;
+};
+
+const triggerIOSSwitchTick = () => {
+  if (typeof document === 'undefined') return false;
 
   try {
-    return navigator.vibrate(HAPTIC_PATTERNS[name]);
+    const labelEl = document.createElement('label');
+    labelEl.setAttribute('aria-hidden', 'true');
+    labelEl.style.display = 'none';
+
+    const inputEl = document.createElement('input');
+    inputEl.type = 'checkbox';
+    inputEl.setAttribute('switch', '');
+    inputEl.tabIndex = -1;
+
+    labelEl.appendChild(inputEl);
+    document.head.appendChild(labelEl);
+    labelEl.click();
+    document.head.removeChild(labelEl);
+
+    return true;
   } catch {
     return false;
   }
+};
+
+const getIOSSwitchTickCount = (name: string | undefined) => {
+  if (name === 'warning' || name === 'heavy') return 3;
+  if (name === 'success' || name === 'medium') return 2;
+  return 1;
+};
+
+const playIOSSwitchHaptic = (name: string | undefined) => {
+  if (!isLikelyIOSTouchDevice()) return false;
+
+  const tickCount = getIOSSwitchTickCount(name);
+  const played = triggerIOSSwitchTick();
+
+  for (let index = 1; index < tickCount; index += 1) {
+    window.setTimeout(triggerIOSSwitchTick, index * 90);
+  }
+
+  return played;
+};
+
+const playResolvedHaptic = (name: string | undefined) => {
+  const pattern = resolveHapticPattern(name);
+  if (!pattern) return false;
+
+  if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+    try {
+      if (navigator.vibrate(pattern)) return true;
+    } catch {
+      // Fall through to the iOS switch fallback.
+    }
+  }
+
+  return playIOSSwitchHaptic(name);
+};
+
+export const playHaptic = (name: HapticPatternName = 'light') => {
+  return playResolvedHaptic(name);
 };
 
 export const installHapticFeedback = (root?: Document | HTMLElement) => {
@@ -52,16 +117,9 @@ export const installHapticFeedback = (root?: Document | HTMLElement) => {
     const now = window.performance.now();
     if (now - lastFeedbackAt < 35) return;
 
-    const pattern = resolveHapticPattern(hapticTarget.dataset.haptic ?? 'light');
-    if (!pattern || typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') {
-      return;
-    }
-
-    try {
-      navigator.vibrate(pattern);
+    const hapticName = hapticTarget.dataset.haptic ?? 'light';
+    if (playResolvedHaptic(hapticName)) {
       lastFeedbackAt = now;
-    } catch {
-      // Unsupported browsers should stay silent.
     }
   };
 
