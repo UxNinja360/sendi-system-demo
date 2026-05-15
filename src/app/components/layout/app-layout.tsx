@@ -6,6 +6,7 @@ import { AppTopBar } from './app-top-bar';
 import { PageLoader } from '../ui/page-loader';
 import { LoadingBar } from '../ui/loading-bar';
 import { Toaster } from '../common/toaster';
+import { OperationalAlerts } from '../../notifications/operational-alerts';
 import { APP_MANAGED_SCROLL_PATHS } from '../../app-navigation';
 
 export const AppLayout: React.FC = () => {
@@ -60,6 +61,7 @@ export const AppLayout: React.FC = () => {
   return (
     <div className="app-shell-height flex w-full overflow-hidden bg-app-background text-[#0d0d12] transition-colors duration-300 dark:text-app-text">
       <Toaster />
+      <OperationalAlerts />
 
       <Sidebar onLogout={handleLogout} onMobileMenuToggleReady={registerMobileMenuToggle} />
 
