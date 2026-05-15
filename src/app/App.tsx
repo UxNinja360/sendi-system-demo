@@ -7,7 +7,11 @@ export default function App() {
   useEffect(() => {
     document.documentElement.setAttribute("lang", "he");
     document.documentElement.setAttribute("dir", "rtl");
-    localStorage.removeItem("language");
+    try {
+      localStorage.removeItem("language");
+    } catch {
+      // Some browser modes block storage; the app should still render.
+    }
     // PWA will only be active after build (not in dev mode)
 
     return installHapticFeedback();
