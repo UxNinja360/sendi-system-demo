@@ -14,6 +14,7 @@ export type MapPosition = {
 export type LiveSimulationStatusUpdate = {
   type: 'delivering' | 'complete' | 'arrived_pickup';
   deliveryIds: string[];
+  occurredAt: Date;
 };
 
 export type LiveSimulationTickResult = {
@@ -28,7 +29,7 @@ export const COURIER_TRAVEL_SPEED_KMH = 18;
 export const COURIER_ARRIVAL_DISTANCE_KM = 0.03;
 const SIMULATION_MIN_STEP_MS = 250;
 const SIMULATION_FALLBACK_STEP_MS = 1000;
-const SIMULATION_BACKGROUND_CATCHUP_MS = 30 * 60 * 1000;
+const SIMULATION_BACKGROUND_CATCHUP_MS = 8 * 60 * 60 * 1000;
 
 export const COURIER_FALLBACK_POSITIONS: MapPosition[] = [
   { lat: 32.0700, lng: 34.7735 }, { lat: 32.0752, lng: 34.7731 },
@@ -242,6 +243,20 @@ const isDeliveryReadyForPickup = (
   return nowMs - prepAnchorMs >= (prepMinutes * 60000) / (timeMultiplier || 1);
 };
 
+const getDeliveryReadyForPickupAtMs = (
+  delivery: Delivery,
+  timeMultiplier: number
+) => {
+  const orderReadyMs = getDateTime(delivery.orderReadyTime);
+  if (orderReadyMs) return orderReadyMs;
+
+  const prepAnchorMs = getDateTime(delivery.assignedAt ?? delivery.coupled_time);
+  if (!prepAnchorMs) return null;
+
+  const prepMinutes = delivery.preparationTime || delivery.cook_time || 5;
+  return prepAnchorMs + (prepMinutes * 60000) / (timeMultiplier || 1);
+};
+
 export const advanceLiveSimulation = ({
   state,
   currentPositions,
@@ -391,16 +406,28 @@ export const advanceLiveSimulation = ({
       return candidate ? Math.max(latest, candidate) : latest;
     }, 0);
 
-    const queueArrivalUpdates = () => {
+    const queueArrivalUpdates = (occurredAt: Date) => {
       if (nextStopType === 'pickup') {
         const areAllOrdersReady = nextStopDeliveries.every((delivery) =>
           isDeliveryReadyForPickup(delivery, nowMs, state.timeMultiplier)
         );
 
         if (areAllOrdersReady) {
+          const readyAtTimes = nextStopDeliveries
+            .map((delivery) => getDeliveryReadyForPickupAtMs(delivery, state.timeMultiplier))
+            .filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
+          const pickupOccurredAtMs = Math.min(
+            nowMs,
+            Math.max(
+              occurredAt.getTime(),
+              readyAtTimes.length > 0 ? Math.max(...readyAtTimes) : occurredAt.getTime()
+            )
+          );
+
           statusUpdates.push({
             type: 'delivering',
             deliveryIds: nextStopDeliveries.map((delivery) => delivery.id),
+            occurredAt: new Date(pickupOccurredAtMs),
           });
         } else {
           const notArrivedDeliveryIds = nextStopDeliveries
@@ -408,22 +435,32 @@ export const advanceLiveSimulation = ({
             .map((delivery) => delivery.id);
 
           if (notArrivedDeliveryIds.length > 0) {
-            statusUpdates.push({ type: 'arrived_pickup', deliveryIds: notArrivedDeliveryIds });
+            statusUpdates.push({
+              type: 'arrived_pickup',
+              deliveryIds: notArrivedDeliveryIds,
+              occurredAt,
+            });
           }
         }
       } else {
         statusUpdates.push({
           type: 'complete',
           deliveryIds: nextStopDeliveries.map((delivery) => delivery.id),
+          occurredAt,
         });
       }
     };
 
     if (distanceKm < arrivalDistanceKm) {
+      const arrivalAnchorMs = previousTimestamp ?? (routeStartedAtMs || nowMs);
+      const arrivedAtMs = Math.min(
+        nowMs,
+        Math.max(arrivalAnchorMs, routeStartedAtMs || 0)
+      );
       nextPositions.set(courier.id, nextStopPosition);
-      nextTimestamps.set(courier.id, nowMs);
+      nextTimestamps.set(courier.id, arrivedAtMs);
       positionChanged = true;
-      queueArrivalUpdates();
+      queueArrivalUpdates(new Date(arrivedAtMs));
     } else {
       const elapsedFromMs = previousTimestamp
         ? Math.max(previousTimestamp, routeStartedAtMs || previousTimestamp)
@@ -438,14 +475,20 @@ export const advanceLiveSimulation = ({
       const reachedStop = stepKm >= Math.max(0, distanceKm - arrivalDistanceKm);
 
       if (reachedStop) {
+        const arrivalTravelMs =
+          simulationSpeedKmh > 0
+            ? (Math.max(0, distanceKm - arrivalDistanceKm) / simulationSpeedKmh) * 3600000
+            : boundedElapsedMs;
+        const arrivedAtMs = Math.min(nowMs, elapsedFromMs + arrivalTravelMs);
         nextPositions.set(courier.id, nextStopPosition);
-        queueArrivalUpdates();
+        nextTimestamps.set(courier.id, arrivedAtMs);
+        queueArrivalUpdates(new Date(arrivedAtMs));
       } else {
         const nextPosition = advanceAlongRoutePath(routePath, stepKm);
         nextPositions.set(courier.id, nextPosition ?? currentPosition);
+        nextTimestamps.set(courier.id, nowMs);
       }
 
-      nextTimestamps.set(courier.id, nowMs);
       positionChanged = true;
     }
   });

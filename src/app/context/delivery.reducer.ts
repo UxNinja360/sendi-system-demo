@@ -2020,12 +2020,16 @@ const reduceDeliveryState = (state: DeliveryState, action: DeliveryAction): Deli
     }
 
     case 'COMPLETE_DELIVERY': {
-      const deliveryId = action.payload;
+      const deliveryId =
+        typeof action.payload === 'string' ? action.payload : action.payload.deliveryId;
       const delivery = state.deliveries.find(d => d.id === deliveryId);
       if (!delivery || delivery.status === 'delivered') {
         return state;
       }
-      const now = new Date();
+      const now =
+        typeof action.payload === 'string'
+          ? new Date()
+          : toValidDateValue(action.payload.completedAt) ?? new Date();
 
       const deliveriesAfterCompletion = updateDeliveriesForCompletion(
         state.deliveries,

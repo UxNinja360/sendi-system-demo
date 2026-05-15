@@ -502,7 +502,7 @@ export type DeliveryAction =
   | { type: 'UPDATE_RESTAURANT'; payload: { restaurantId: string; updates: Partial<Omit<Restaurant, 'id'>> } }
   | { type: 'REMOVE_RESTAURANT'; payload: string }
   | { type: 'SET_RESTAURANTS'; payload: Restaurant[] } // עדכון מלא של רשימת המסעדות
-  | { type: 'COMPLETE_DELIVERY'; payload: string }
+  | { type: 'COMPLETE_DELIVERY'; payload: string | { deliveryId: string; completedAt?: Date } }
   | { type: 'ADD_DELIVERY_BALANCE'; payload: number } // הוספת יתרת משלוחים
   | { type: 'REORDER_DELIVERY'; payload: { deliveryId: string; newPriority: number } } // שינוי סדר משלוח בתוך שליח
   | { type: 'SET_COURIER_ROUTE_PLANS'; payload: Record<string, string[]> }

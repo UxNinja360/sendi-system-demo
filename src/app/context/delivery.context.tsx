@@ -53,6 +53,12 @@ const ACTIVE_DELIVERIES_PER_RESTAURANT = 2;
 const ACTIVE_DELIVERIES_PER_ON_SHIFT_COURIER = 4;
 const INITIAL_RESTAURANT_STAGGER_MIN_MS = 2500;
 const INITIAL_RESTAURANT_STAGGER_RANGE_MS = 27500;
+const MAX_PROGRESS_CATCH_UP_PASSES = 12;
+
+type CompleteDeliveryPayload = Extract<DeliveryAction, { type: 'COMPLETE_DELIVERY' }>['payload'];
+
+const getCompleteDeliveryId = (payload: CompleteDeliveryPayload) =>
+  typeof payload === 'string' ? payload : payload.deliveryId;
 
 const createActivityLogEntry = (action: DeliveryAction, state: DeliveryState): ActivityLogEntry | null => {
   const now = new Date();
@@ -122,7 +128,7 @@ const createActivityLogEntry = (action: DeliveryAction, state: DeliveryState): A
         id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
         timestamp: now,
         title: 'משלוח נמסר',
-        description: getDeliveryLabel(action.payload),
+        description: getDeliveryLabel(getCompleteDeliveryId(action.payload)),
         actionType: action.type,
         category: 'delivery',
       };
@@ -392,13 +398,14 @@ const createActionToast = (action: DeliveryAction, state: DeliveryState): Action
       };
     }
     case 'COMPLETE_DELIVERY': {
-      const delivery = state.deliveries.find((item) => item.id === action.payload);
+      const deliveryId = getCompleteDeliveryId(action.payload);
+      const delivery = state.deliveries.find((item) => item.id === deliveryId);
       if (!delivery || delivery.status === 'delivered') return null;
 
       return {
         actionType: action.type,
         title: 'המשלוח סומן כנמסר',
-        description: getActionDeliveryLabel(state, action.payload),
+        description: getActionDeliveryLabel(state, deliveryId),
       };
     }
     case 'UNASSIGN_COURIER': {
@@ -1525,57 +1532,91 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       );
     };
 
-    const runProgressTick = () => {
-      const tick = advanceLiveSimulation({
-        state: stateRef.current,
-        currentPositions: courierPositionsRef.current,
-        currentTimestamps: courierPositionTimestampsRef.current,
-        routeStopOrders: stateRef.current.courierRoutePlans,
-      });
+    const runProgressTick = ({ catchUp = false }: { catchUp?: boolean } = {}) => {
+      let draftState = stateRef.current;
+      let draftPositions = courierPositionsRef.current;
+      let draftTimestamps = courierPositionTimestampsRef.current;
+      let shouldPersistPositions = false;
+      const passCount = catchUp ? MAX_PROGRESS_CATCH_UP_PASSES : 1;
+      const tickNow = new Date();
 
-      if (tick.positionChanged) {
-        courierPositionsRef.current = tick.courierPositions;
-        courierPositionTimestampsRef.current = tick.courierPositionTimestamps;
-        persistCourierPositions();
+      for (let passIndex = 0; passIndex < passCount; passIndex += 1) {
+        const tick = advanceLiveSimulation({
+          state: draftState,
+          currentPositions: draftPositions,
+          currentTimestamps: draftTimestamps,
+          routeStopOrders: draftState.courierRoutePlans,
+          now: tickNow,
+        });
+
+        if (tick.positionChanged) {
+          draftPositions = tick.courierPositions;
+          draftTimestamps = tick.courierPositionTimestamps;
+          shouldPersistPositions = true;
+        }
+
+        const tickActions: DeliveryAction[] = [];
+
+        tick.phaseUpdates.forEach((updates, deliveryId) => {
+          tickActions.push({ type: 'UPDATE_DELIVERY', payload: { deliveryId, updates } });
+        });
+
+        tick.statusUpdates.forEach(({ type, deliveryIds, occurredAt }) => {
+          deliveryIds.forEach((id) => {
+            if (type === 'complete') {
+              tickActions.push({
+                type: 'COMPLETE_DELIVERY',
+                payload: { deliveryId: id, completedAt: occurredAt },
+              });
+            } else if (type === 'arrived_pickup') {
+              tickActions.push({
+                type: 'UPDATE_DELIVERY',
+                payload: {
+                  deliveryId: id,
+                  updates: {
+                    arrivedAtRestaurantAt: occurredAt,
+                    arrived_at_rest: occurredAt,
+                  },
+                },
+              });
+            } else if (type === 'delivering') {
+              tickActions.push({
+                type: 'UPDATE_DELIVERY',
+                payload: {
+                  deliveryId: id,
+                  updates: {
+                    status: 'delivering',
+                    arrivedAtRestaurantAt: occurredAt,
+                    arrived_at_rest: occurredAt,
+                    pickedUpAt: occurredAt,
+                    took_it_time: occurredAt,
+                    started_pickup: occurredAt,
+                  },
+                },
+              });
+            }
+          });
+        });
+
+        if (tickActions.length === 0) break;
+
+        tickActions.forEach((action) => {
+          rawDispatch(action);
+          draftState = deliveryReducer(draftState, action);
+        });
+
+        if (!catchUp || tick.statusUpdates.length === 0) break;
       }
 
-      tick.phaseUpdates.forEach((updates, deliveryId) => {
-        rawDispatch({ type: 'UPDATE_DELIVERY', payload: { deliveryId, updates } });
-      });
-
-      tick.statusUpdates.forEach(({ type, deliveryIds }) => {
-        const now = new Date();
-
-        deliveryIds.forEach((id) => {
-          if (type === 'complete') {
-            rawDispatch({ type: 'COMPLETE_DELIVERY', payload: id });
-          } else if (type === 'arrived_pickup') {
-            rawDispatch({
-              type: 'UPDATE_DELIVERY',
-              payload: { deliveryId: id, updates: { arrivedAtRestaurantAt: now, arrived_at_rest: now } },
-            });
-          } else if (type === 'delivering') {
-            rawDispatch({
-              type: 'UPDATE_DELIVERY',
-              payload: {
-                deliveryId: id,
-                updates: {
-                  status: 'delivering',
-                  arrivedAtRestaurantAt: now,
-                  arrived_at_rest: now,
-                  pickedUpAt: now,
-                  took_it_time: now,
-                  started_pickup: now,
-                },
-              },
-            });
-          }
-        });
-      });
+      if (shouldPersistPositions) {
+        courierPositionsRef.current = draftPositions;
+        courierPositionTimestampsRef.current = draftTimestamps;
+        persistCourierPositions();
+      }
     };
 
     const handleProgressWake = () => {
-      runProgressTick();
+      runProgressTick({ catchUp: true });
     };
 
     const handleVisibilityChange = () => {
@@ -1584,7 +1625,8 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
     };
 
-    const interval = setInterval(runProgressTick, 1000);
+    runProgressTick({ catchUp: true });
+    const interval = setInterval(() => runProgressTick(), 1000);
 
     if (typeof window !== 'undefined') {
       window.addEventListener('focus', handleProgressWake);
