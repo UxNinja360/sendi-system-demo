@@ -20,6 +20,64 @@ const resolveHapticPattern = (name: string | undefined): number | number[] | nul
   return HAPTIC_PATTERNS[name as HapticPatternName] ?? HAPTIC_PATTERNS.light;
 };
 
+type CapacitorHapticsModule = typeof import('@capacitor/haptics');
+type CapacitorWindow = Window & {
+  Capacitor?: {
+    getPlatform?: () => string;
+    isNativePlatform?: () => boolean;
+  };
+};
+
+let capacitorHapticsPromise: Promise<CapacitorHapticsModule | null> | null = null;
+
+const isCapacitorNativePlatform = () => {
+  if (typeof window === 'undefined') return false;
+
+  const capacitor = (window as CapacitorWindow).Capacitor;
+  if (!capacitor) return false;
+  if (typeof capacitor.isNativePlatform === 'function') {
+    return capacitor.isNativePlatform();
+  }
+
+  return typeof capacitor.getPlatform === 'function' && capacitor.getPlatform() !== 'web';
+};
+
+const loadCapacitorHaptics = () => {
+  capacitorHapticsPromise ??= import('@capacitor/haptics').catch(() => null);
+  return capacitorHapticsPromise;
+};
+
+const playCapacitorHaptic = (name: string | undefined) => {
+  if (!isCapacitorNativePlatform()) return false;
+
+  void loadCapacitorHaptics().then((module) => {
+    if (!module) return;
+
+    const { Haptics, ImpactStyle, NotificationType } = module;
+
+    if (name === 'success') {
+      void Haptics.notification({ type: NotificationType.Success }).catch(() => undefined);
+      return;
+    }
+
+    if (name === 'warning') {
+      void Haptics.notification({ type: NotificationType.Warning }).catch(() => undefined);
+      return;
+    }
+
+    const style =
+      name === 'heavy'
+        ? ImpactStyle.Heavy
+        : name === 'medium'
+          ? ImpactStyle.Medium
+          : ImpactStyle.Light;
+
+    void Haptics.impact({ style }).catch(() => undefined);
+  });
+
+  return true;
+};
+
 const isLikelyIOSTouchDevice = () => {
   if (typeof navigator === 'undefined' || typeof window === 'undefined') return false;
 
@@ -82,6 +140,8 @@ const playResolvedHaptic = (name: string | undefined) => {
   const pattern = resolveHapticPattern(name);
   if (!pattern) return false;
 
+  if (playCapacitorHaptic(name)) return true;
+
   if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
     try {
       if (navigator.vibrate(pattern)) return true;
@@ -100,6 +160,10 @@ export const playHaptic = (name: HapticPatternName = 'light') => {
 export const installHapticFeedback = (root?: Document | HTMLElement) => {
   const targetRoot = root ?? (typeof document !== 'undefined' ? document : null);
   if (!targetRoot) return () => undefined;
+
+  if (isCapacitorNativePlatform()) {
+    void loadCapacitorHaptics();
+  }
 
   let lastFeedbackAt = 0;
 
