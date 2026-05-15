@@ -721,6 +721,7 @@ export const DeliveriesPage: React.FC = () => {
         toolbar={
           <PageToolbar
             showBottomBorder={false}
+            pairControlsOnMobile
             periodControl={
               <ToolbarDayPicker
                 selectedDate={selectedDay}

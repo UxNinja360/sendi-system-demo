@@ -19,6 +19,7 @@ type PageToolbarProps = {
   actions?: React.ReactNode;
   controlsClassName?: string;
   actionsClassName?: string;
+  pairControlsOnMobile?: boolean;
 };
 
 const toDateInputValue = (date: Date) =>
@@ -37,6 +38,7 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
   actions,
   controlsClassName = '',
   actionsClassName = '',
+  pairControlsOnMobile = false,
 }) => {
   const primaryActionMenuRef = React.useRef<HTMLDivElement | null>(null);
   const [primaryActionMenuOpen, setPrimaryActionMenuOpen] = React.useState(false);
@@ -103,6 +105,13 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
   const hasToolbarRow = Boolean(
     renderedPrimaryAction || renderedPeriodControl || controls || actions || headerControls,
   );
+  const shouldPairControlsOnMobile = pairControlsOnMobile && Boolean(renderedPeriodControl && controls);
+  const periodControlClassName = shouldPairControlsOnMobile
+    ? 'flex min-w-0 flex-1 basis-[calc(50%-0.1875rem)] flex-nowrap items-center gap-1 min-[900px]:max-w-full min-[900px]:shrink-0 min-[900px]:basis-auto min-[900px]:flex-none'
+    : 'flex max-w-full shrink-0 flex-nowrap items-center gap-1';
+  const controlsWrapperClassName = shouldPairControlsOnMobile
+    ? 'flex min-w-0 flex-1 basis-[calc(50%-0.1875rem)] flex-nowrap items-center gap-1 min-[900px]:max-w-full min-[900px]:shrink-0 min-[900px]:basis-auto min-[900px]:flex-none'
+    : 'flex max-w-full shrink-0 basis-auto flex-nowrap items-center gap-1';
 
   return (
     <>
@@ -115,7 +124,7 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
           <div className="app-toolbar-row overflow-visible px-3 py-2.5">
             <div className="flex w-full min-w-0 flex-wrap items-center gap-1.5 min-[900px]:flex-nowrap">
               {renderedPeriodControl ? (
-                <div className="flex min-w-0 flex-1 basis-[calc(50%-0.1875rem)] flex-nowrap items-center gap-1 min-[900px]:max-w-full min-[900px]:shrink-0 min-[900px]:basis-auto min-[900px]:flex-none">
+                <div className={periodControlClassName}>
                   {renderedPeriodControl}
                 </div>
               ) : null}
@@ -128,7 +137,7 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
               ) : null}
               {controls ? (
                 <div
-                  className={`flex min-w-0 flex-1 basis-[calc(50%-0.1875rem)] flex-nowrap items-center gap-1 min-[900px]:max-w-full min-[900px]:shrink-0 min-[900px]:basis-auto min-[900px]:flex-none ${controlsClassName}`.trim()}
+                  className={`${controlsWrapperClassName} ${controlsClassName}`.trim()}
                 >
                   {controls}
                 </div>
