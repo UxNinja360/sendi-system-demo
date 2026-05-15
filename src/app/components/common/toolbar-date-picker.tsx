@@ -112,6 +112,7 @@ const CalendarPopover: React.FC<CalendarPopoverProps> = ({
       <div className="mb-3 flex items-center justify-between gap-2">
         <button
           type="button"
+          data-haptic="light"
           onClick={() =>
             setCalendarMonth((current) => new Date(current.getFullYear(), current.getMonth() - 1, 1))
           }
@@ -122,6 +123,7 @@ const CalendarPopover: React.FC<CalendarPopoverProps> = ({
         <div className="text-sm font-medium text-app-text">{formatMonthLabel(calendarMonth)}</div>
         <button
           type="button"
+          data-haptic="light"
           onClick={() =>
             setCalendarMonth((current) => new Date(current.getFullYear(), current.getMonth() + 1, 1))
           }
@@ -147,6 +149,7 @@ const CalendarPopover: React.FC<CalendarPopoverProps> = ({
             <button
               key={day.key}
               type="button"
+              data-haptic="selection"
               onClick={() => onDayClick(day.date, day.key)}
               onMouseEnter={() => onDayMouseEnter?.(day.key)}
               onMouseLeave={onDayMouseLeave}
@@ -318,6 +321,7 @@ export const ToolbarPeriodControl: React.FC<ToolbarPeriodControlProps> = ({
 
       <button
         type="button"
+        data-haptic="medium"
         onClick={() => setCalendarOpen((value) => !value)}
         className={`flex h-10 min-w-[176px] shrink-0 items-center justify-center gap-2 rounded-[4px] border px-3 text-sm font-semibold transition-colors ${
           periodMode === 'custom_range'
@@ -615,6 +619,7 @@ export const ToolbarDayPicker: React.FC<ToolbarDayPickerProps> = ({
         <div className="grid grid-cols-2 gap-2 pt-1">
           <button
             type="button"
+            data-haptic="light"
             onClick={cancelRangePicking}
             className="h-9 rounded-[4px] border border-app-border px-3 text-xs font-medium text-app-text transition-colors hover:bg-app-surface-raised"
           >
@@ -622,6 +627,7 @@ export const ToolbarDayPicker: React.FC<ToolbarDayPickerProps> = ({
           </button>
           <button
             type="button"
+            data-haptic="medium"
             onClick={applyDraftRange}
             disabled={!rangeDraftStart || !rangeDraftEnd}
             className="h-9 rounded-[4px] border border-app-border bg-app-surface px-3 text-xs font-medium text-app-text transition-colors hover:bg-app-surface-raised disabled:cursor-not-allowed disabled:opacity-45"
@@ -634,6 +640,7 @@ export const ToolbarDayPicker: React.FC<ToolbarDayPickerProps> = ({
       <div className="flex flex-col gap-2">
         <button
           type="button"
+          data-haptic="selection"
           onClick={selectToday}
           className="h-9 w-full rounded-[4px] border border-app-border bg-app-surface px-3 text-xs font-medium text-app-text transition-colors hover:bg-app-surface-raised"
         >
@@ -641,6 +648,7 @@ export const ToolbarDayPicker: React.FC<ToolbarDayPickerProps> = ({
         </button>
         <button
           type="button"
+          data-haptic="selection"
           onClick={selectCalendarMonth}
           className="h-9 w-full rounded-[4px] border border-app-border bg-app-surface px-3 text-xs font-medium text-app-text transition-colors hover:bg-app-surface-raised"
         >
@@ -648,6 +656,7 @@ export const ToolbarDayPicker: React.FC<ToolbarDayPickerProps> = ({
         </button>
         <button
           type="button"
+          data-haptic="medium"
           onClick={startRangePicking}
           className="h-9 w-full rounded-[4px] border border-app-border bg-app-surface px-3 text-xs font-medium text-app-text transition-colors hover:bg-app-surface-raised"
         >
@@ -661,6 +670,7 @@ export const ToolbarDayPicker: React.FC<ToolbarDayPickerProps> = ({
     <div ref={popoverRef} className="relative flex w-full min-w-0 items-center gap-1 min-[540px]:w-auto" dir="rtl">
       <button
         type="button"
+        data-haptic="medium"
         onClick={() => setCalendarOpen((value) => !value)}
         className="flex h-10 w-full min-w-0 shrink items-center justify-center gap-1.5 rounded-[4px] border border-app-border bg-app-surface px-2 text-sm font-semibold text-app-text transition-colors hover:bg-app-surface-raised min-[540px]:min-w-[176px] min-[540px]:gap-2 min-[540px]:px-3 dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#EDEDED] dark:hover:bg-[#111111]"
       >
@@ -753,6 +763,7 @@ export const ToolbarWeekPicker: React.FC<ToolbarWeekPickerProps> = ({
       </ToolbarIconButton>
       <button
         type="button"
+        data-haptic="medium"
         onClick={() => setCalendarOpen((value) => !value)}
         className="flex h-10 min-w-[150px] items-center justify-center gap-2 rounded-[4px] border border-app-border bg-app-surface px-3 text-sm font-semibold text-app-text transition-colors hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#EDEDED] dark:hover:bg-[#111111] sm:min-w-[190px]"
       >
@@ -764,6 +775,7 @@ export const ToolbarWeekPicker: React.FC<ToolbarWeekPickerProps> = ({
       </ToolbarIconButton>
       <button
         type="button"
+        data-haptic="selection"
         onClick={() => {
           onDateChange(new Date());
           setCalendarOpen(false);
