@@ -45,19 +45,26 @@ export const SelectionActionButton: React.FC<SelectionActionButtonProps> = ({
   type = 'button',
   variant = 'primary',
   ...buttonProps
-}) => (
-  <button
-    {...buttonProps}
-    type={type}
-    className={joinClassNames(
-      'inline-flex min-h-9 items-center justify-center rounded-lg px-4 py-2 text-sm font-bold shadow-md transition-colors disabled:cursor-not-allowed disabled:opacity-40',
-      ACTION_VARIANT_CLASSES[variant],
-      className,
-    )}
-  >
-    {children}
-  </button>
-);
+}) => {
+  const haptic =
+    (buttonProps as { 'data-haptic'?: string })['data-haptic'] ??
+    (variant === 'warning' ? 'warning' : variant === 'primary' ? 'medium' : 'light');
+
+  return (
+    <button
+      {...buttonProps}
+      type={type}
+      data-haptic={haptic}
+      className={joinClassNames(
+        'inline-flex min-h-9 items-center justify-center rounded-lg px-4 py-2 text-sm font-bold shadow-md transition-colors disabled:cursor-not-allowed disabled:opacity-40',
+        ACTION_VARIANT_CLASSES[variant],
+        className,
+      )}
+    >
+      {children}
+    </button>
+  );
+};
 
 export const SelectionActionBar: React.FC<SelectionActionBarProps> = ({
   selectedCount,
@@ -89,6 +96,7 @@ export const SelectionActionBar: React.FC<SelectionActionBarProps> = ({
           <button
             type="button"
             onClick={onClear}
+            data-haptic="light"
             className="min-h-9 rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm font-semibold text-[#737373] transition-colors hover:bg-[#f5f5f5] dark:border-app-border dark:text-app-text-secondary dark:hover:bg-[#262626]"
           >
             {clearLabel}

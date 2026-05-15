@@ -96,6 +96,8 @@ export const SharedDeliveryActions: React.FC<SharedDeliveryActionsProps> = ({
           )}
 
           <button
+            type="button"
+            data-haptic="medium"
             disabled={Boolean(assignmentBlockReason)}
             onClick={() => {
               if (assignmentBlockReason) return;
@@ -139,6 +141,8 @@ export const SharedDeliveryActions: React.FC<SharedDeliveryActionsProps> = ({
                   availableCouriers.map((item) => (
                     <button
                       key={item.id}
+                      type="button"
+                      data-haptic="success"
                       onClick={() => {
                         onAssignCourier(delivery.id, item.id);
                         setAssignOpen(false);
@@ -165,6 +169,8 @@ export const SharedDeliveryActions: React.FC<SharedDeliveryActionsProps> = ({
 
       {delivery.status === 'assigned' && (
         <button
+          type="button"
+          data-haptic="success"
           onClick={() => onStatusChange(delivery.id, 'delivering')}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-green-100 dark:bg-green-950/50 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900 transition-colors"
         >
@@ -175,6 +181,8 @@ export const SharedDeliveryActions: React.FC<SharedDeliveryActionsProps> = ({
 
       {delivery.status === 'delivering' && (
         <button
+          type="button"
+          data-haptic="success"
           onClick={() => onCompleteDelivery(delivery.id)}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900 transition-colors"
         >
@@ -184,6 +192,8 @@ export const SharedDeliveryActions: React.FC<SharedDeliveryActionsProps> = ({
       )}
 
       <button
+        type="button"
+        data-haptic="warning"
         onClick={() => onCancelDelivery(delivery.id)}
         className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900 transition-colors ms-auto"
       >

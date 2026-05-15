@@ -65,6 +65,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ onOpenMenu }
               type="button"
               onClick={() => navigate(item.path)}
               aria-label={item.label}
+              data-haptic={isActive ? 'selection' : 'light'}
               className={`relative flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-[var(--app-radius-sm)] px-1 py-1.5 text-[10px] font-medium transition-colors ${
                 isActive
                   ? 'bg-app-nav-active-bg text-app-text shadow-sm ring-1 ring-app-nav-border'
@@ -97,6 +98,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ onOpenMenu }
           type="button"
           onClick={onOpenMenu}
           aria-label="פתח תפריט"
+          data-haptic="light"
           className={`relative flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-[var(--app-radius-sm)] px-1 py-1.5 text-[10px] font-medium transition-colors ${
             !isPrimaryRouteActive
               ? 'bg-app-nav-active-bg text-app-text shadow-sm ring-1 ring-app-nav-border'

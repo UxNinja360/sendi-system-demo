@@ -284,6 +284,7 @@ const DeliveryAssignmentMenu: React.FC<{
                 </div>
                 <button
                   type="button"
+                  data-haptic="warning"
                   onClick={() => {
                     onUnassignCourier(delivery.id);
                     onClose();
@@ -329,6 +330,7 @@ const DeliveryAssignmentMenu: React.FC<{
                       <button
                         key={courier.id}
                         type="button"
+                        data-haptic="success"
                         onClick={() => {
                           onAssignCourier(delivery.id, courier.id);
                           onClose();

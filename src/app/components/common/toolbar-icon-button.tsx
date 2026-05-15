@@ -41,6 +41,8 @@ export const ToolbarIconButton = React.forwardRef<
     ref,
   ) => {
     const ariaLabel = buttonProps['aria-label'] ?? label;
+    const haptic =
+      (buttonProps as { 'data-haptic'?: string })['data-haptic'] ?? 'light';
 
     return (
       <button
@@ -49,6 +51,7 @@ export const ToolbarIconButton = React.forwardRef<
         type={type}
         title={title ?? label}
         aria-label={ariaLabel}
+        data-haptic={haptic}
         className={getToolbarIconButtonClassName(active, className)}
       >
         {children}

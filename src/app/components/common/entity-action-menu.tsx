@@ -112,6 +112,7 @@ export const EntityActionMenuItem: React.FC<EntityActionMenuItemProps> = ({
       type="button"
       onClick={onClick}
       disabled={disabled}
+      data-haptic={danger ? 'warning' : 'selection'}
       className={`${baseClassName} ${toneClassName} ${
         disabled ? 'opacity-50 cursor-not-allowed' : ''
       }`}

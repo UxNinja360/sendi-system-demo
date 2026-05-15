@@ -19,6 +19,9 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props 
 }) => {
+  const haptic =
+    (props as { 'data-haptic'?: string })['data-haptic'] ??
+    (variant === 'danger' ? 'warning' : variant === 'primary' ? 'medium' : 'light');
   const baseClasses = 'inline-flex items-center justify-center gap-2 rounded-[var(--app-radius-xs)] font-medium transition-colors outline-none focus:ring-2 focus:ring-app-brand/35 focus:ring-offset-2 focus:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50';
   
   const variantClasses = {
@@ -46,6 +49,7 @@ export const Button: React.FC<ButtonProps> = ({
       `}
       disabled={disabled}
       {...props}
+      data-haptic={haptic}
     >
       {icon && iconPosition === 'right' && icon}
       {children}
@@ -67,6 +71,9 @@ export const IconButton: React.FC<IconButtonProps> = ({
   className = '',
   ...props 
 }) => {
+  const haptic =
+    (props as { 'data-haptic'?: string })['data-haptic'] ??
+    (variant === 'danger' ? 'warning' : variant === 'primary' ? 'medium' : 'light');
   const baseClasses = 'inline-flex items-center justify-center rounded-[var(--app-radius-xs)] transition-colors outline-none focus:ring-2 focus:ring-app-brand/35 disabled:cursor-not-allowed disabled:opacity-50';
   
   const variantClasses = {
@@ -91,6 +98,7 @@ export const IconButton: React.FC<IconButtonProps> = ({
         ${className}
       `}
       {...props}
+      data-haptic={haptic}
     >
       {icon}
     </button>
