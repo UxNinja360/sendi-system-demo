@@ -107,10 +107,10 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
   );
   const shouldPairControlsOnMobile = pairControlsOnMobile && Boolean(renderedPeriodControl && controls);
   const periodControlClassName = shouldPairControlsOnMobile
-    ? 'flex min-w-0 flex-1 basis-[calc(50%-0.1875rem)] flex-nowrap items-center gap-1 min-[900px]:max-w-full min-[900px]:shrink-0 min-[900px]:basis-auto min-[900px]:flex-none'
+    ? 'flex min-w-0 flex-1 basis-[calc(50%-0.1875rem)] flex-nowrap items-center gap-1 min-[540px]:max-w-full min-[540px]:shrink-0 min-[540px]:basis-auto min-[540px]:flex-none'
     : 'flex max-w-full shrink-0 flex-nowrap items-center gap-1';
   const controlsWrapperClassName = shouldPairControlsOnMobile
-    ? 'flex min-w-0 flex-1 basis-[calc(50%-0.1875rem)] flex-nowrap items-center gap-1 min-[900px]:max-w-full min-[900px]:shrink-0 min-[900px]:basis-auto min-[900px]:flex-none'
+    ? 'flex min-w-0 flex-1 basis-[calc(50%-0.1875rem)] flex-nowrap items-center gap-1 min-[540px]:max-w-full min-[540px]:shrink-0 min-[540px]:basis-auto min-[540px]:flex-none'
     : 'flex max-w-full shrink-0 basis-auto flex-nowrap items-center gap-1';
 
   return (

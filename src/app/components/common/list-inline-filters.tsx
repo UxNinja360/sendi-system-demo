@@ -123,7 +123,7 @@ export const ListInlineFilters: React.FC<ListInlineFiltersProps> = ({ filters })
   return (
     <>
       {mobileStatusFilter ? (
-        <div className="flex w-full min-w-0 flex-nowrap items-center gap-1">
+        <div className="flex w-full min-w-0 flex-nowrap items-center gap-1 min-[540px]:w-auto">
           <ListMultiSelectFilter
             containerRef={refCallbacks[mobileStatusFilter.key]}
             isOpen={openFilterKey === mobileStatusFilter.key}

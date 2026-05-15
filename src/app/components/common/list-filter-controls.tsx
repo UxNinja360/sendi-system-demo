@@ -313,7 +313,7 @@ export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
     const statusButtonLabel = `${defaultLabel} ${selectedCount}/${options.length}`;
 
     return (
-      <div className="relative w-full min-w-0 shrink md:w-[178px] md:shrink-0" ref={setRootRef}>
+      <div className="relative w-full min-w-0 shrink min-[540px]:w-[178px] min-[540px]:shrink-0" ref={setRootRef}>
         <button
           type="button"
           title={statusButtonLabel}
