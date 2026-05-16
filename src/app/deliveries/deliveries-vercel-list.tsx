@@ -571,12 +571,8 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
           </div>
 
           {shouldShowCourierAssignment ? (
-            <button
-              type="button"
-              disabled={!hasAssignedCourier}
-              onClick={hasAssignedCourier ? openAssignmentMenu : undefined}
-              className="delivery-row__route-table-courier flex rounded-md outline-none transition-colors hover:bg-app-surface-raised focus-visible:ring-2 focus-visible:ring-app-brand/60 disabled:cursor-default disabled:hover:bg-transparent"
-              title={hasAssignedCourier ? 'שנה שיבוץ שליח' : undefined}
+            <div
+              className="delivery-row__route-table-courier flex rounded-md"
             >
               <CourierAssignmentLine
                 assigned={hasAssignedCourier}
@@ -584,7 +580,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
                 vehicleType={courierVehicleType}
                 className="delivery-row__courier-line w-full px-1 py-1"
               />
-            </button>
+            </div>
           ) : null}
         </div>
       </div>
@@ -610,12 +606,8 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
 
         <div className="delivery-row__route-compact-footer flex min-w-0 items-center justify-between gap-3" dir="rtl">
           {shouldShowCourierAssignment ? (
-            <button
-              type="button"
-              disabled={!hasAssignedCourier}
-              onClick={hasAssignedCourier ? openAssignmentMenu : undefined}
-              className="delivery-row__route-compact-courier flex rounded-md outline-none transition-colors hover:bg-app-surface-raised focus-visible:ring-2 focus-visible:ring-app-brand/60 disabled:cursor-default disabled:hover:bg-transparent"
-              title={hasAssignedCourier ? 'שנה שיבוץ שליח' : undefined}
+            <div
+              className="delivery-row__route-compact-courier flex rounded-md"
             >
               <CourierAssignmentLine
                 assigned={hasAssignedCourier}
@@ -623,7 +615,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
                 vehicleType={courierVehicleType}
                 className="w-full justify-start whitespace-nowrap px-1 py-1"
               />
-            </button>
+            </div>
           ) : null}
 
           <DeliveryDistanceInline
@@ -909,12 +901,8 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
         <div className="grid grid-cols-2 gap-3">
           <div className="min-w-0">
             <div className="text-[11px] text-app-text-secondary">שליח</div>
-            <button
-              type="button"
-              disabled={!hasAssignedCourier}
-              onClick={hasAssignedCourier ? openAssignmentMenu : undefined}
-              className="mt-1 max-w-full rounded-md outline-none transition-colors hover:bg-app-surface-raised focus-visible:ring-2 focus-visible:ring-app-brand/60 disabled:cursor-default disabled:hover:bg-transparent"
-              title={hasAssignedCourier ? 'שנה שיבוץ שליח' : undefined}
+            <div
+              className="mt-1 max-w-full rounded-md"
             >
               <CourierAssignmentLine
                 assigned={hasAssignedCourier}
@@ -922,7 +910,7 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
                 vehicleType={courierVehicleType}
                 className="px-1 py-1"
               />
-            </button>
+            </div>
           </div>
           <div className="min-w-0">
             <div className="text-[11px] text-app-text-secondary">חיוב</div>

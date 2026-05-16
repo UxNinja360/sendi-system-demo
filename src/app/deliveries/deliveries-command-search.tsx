@@ -150,6 +150,8 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
 }) => {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const skipNextShellClickRef = useRef(false);
+  const skipNextShellClickTimerRef = useRef<number | null>(null);
   const [draft, setDraft] = useState(searchQuery);
   const [isOpen, setIsOpen] = useState(false);
   const [commandContext, setCommandContext] = useState<CommandKind | null>(null);
@@ -172,6 +174,14 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
     window.addEventListener('pointerdown', handlePointerDown);
     return () => window.removeEventListener('pointerdown', handlePointerDown);
   }, [isOpen]);
+
+  useEffect(() => {
+    return () => {
+      if (skipNextShellClickTimerRef.current) {
+        window.clearTimeout(skipNextShellClickTimerRef.current);
+      }
+    };
+  }, []);
 
   const visibleOptions = useMemo(() => {
     const options =
@@ -376,6 +386,43 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
     [clearCommandContext, commandContext, draft, handleOptionClick, visibleOptions],
   );
 
+  const handleSearchShellPointerDownCapture = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (isOpen) return;
+      if (event.button !== 0) return;
+      if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
+
+      const target = event.target as HTMLElement;
+      if (target.closest('button')) return;
+
+      event.preventDefault();
+      skipNextShellClickRef.current = true;
+      if (skipNextShellClickTimerRef.current) {
+        window.clearTimeout(skipNextShellClickTimerRef.current);
+      }
+      skipNextShellClickTimerRef.current = window.setTimeout(() => {
+        skipNextShellClickRef.current = false;
+        skipNextShellClickTimerRef.current = null;
+      }, 1000);
+      setIsOpen(true);
+    },
+    [isOpen],
+  );
+
+  const handleSearchShellClick = useCallback(() => {
+    if (skipNextShellClickRef.current) {
+      skipNextShellClickRef.current = false;
+      if (skipNextShellClickTimerRef.current) {
+        window.clearTimeout(skipNextShellClickTimerRef.current);
+        skipNextShellClickTimerRef.current = null;
+      }
+      return;
+    }
+
+    setIsOpen(true);
+    inputRef.current?.focus();
+  }, []);
+
   const inlineTokens = activeTokens.filter((token) => token.kind !== 'search');
   const hasInlineTokens = inlineTokens.length > 0;
   const showClearButton = Boolean(draft || commandContext || hasInlineTokens);
@@ -392,10 +439,8 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
         <Search className={toolbarSearchIconClassName} />
         <div
           className={searchShellClassName}
-          onClick={() => {
-            setIsOpen(true);
-            inputRef.current?.focus();
-          }}
+          onPointerDownCapture={handleSearchShellPointerDownCapture}
+          onClick={handleSearchShellClick}
         >
           {activeCommandConfig ? (
             <button
