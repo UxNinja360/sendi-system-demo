@@ -151,6 +151,7 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
   const rootRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const skipNextShellClickRef = useRef(false);
+  const skipNextInputFocusRef = useRef(false);
   const skipNextShellClickTimerRef = useRef<number | null>(null);
   const [draft, setDraft] = useState(searchQuery);
   const [isOpen, setIsOpen] = useState(false);
@@ -397,11 +398,13 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
 
       event.preventDefault();
       skipNextShellClickRef.current = true;
+      skipNextInputFocusRef.current = true;
       if (skipNextShellClickTimerRef.current) {
         window.clearTimeout(skipNextShellClickTimerRef.current);
       }
       skipNextShellClickTimerRef.current = window.setTimeout(() => {
         skipNextShellClickRef.current = false;
+        skipNextInputFocusRef.current = false;
         skipNextShellClickTimerRef.current = null;
       }, 1000);
       setIsOpen(true);
@@ -412,6 +415,7 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
   const handleSearchShellClick = useCallback(() => {
     if (skipNextShellClickRef.current) {
       skipNextShellClickRef.current = false;
+      skipNextInputFocusRef.current = false;
       if (skipNextShellClickTimerRef.current) {
         window.clearTimeout(skipNextShellClickTimerRef.current);
         skipNextShellClickTimerRef.current = null;
@@ -421,6 +425,17 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
 
     setIsOpen(true);
     inputRef.current?.focus();
+  }, []);
+
+  const handleInputFocus = useCallback(() => {
+    if (skipNextInputFocusRef.current) {
+      skipNextInputFocusRef.current = false;
+      setIsOpen(true);
+      requestAnimationFrame(() => inputRef.current?.blur());
+      return;
+    }
+
+    setIsOpen(true);
   }, []);
 
   const inlineTokens = activeTokens.filter((token) => token.kind !== 'search');
@@ -480,11 +495,10 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
           <input
             ref={inputRef}
             type="text"
-            data-haptic="light"
             value={draft}
             placeholder={inputPlaceholder}
             aria-label={commandContext ? `${TEXT.search} ${activeCommandConfig?.label ?? ''}` : TEXT.placeholder}
-            onFocus={() => setIsOpen(true)}
+            onFocus={handleInputFocus}
             onChange={(event) => handleDraftChange(event.target.value)}
             onKeyDown={handleKeyDown}
             className={toolbarSearchInputClassName}
