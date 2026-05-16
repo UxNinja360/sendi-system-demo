@@ -612,7 +612,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
                 assigned={hasAssignedCourier}
                 label={courierColumnText}
                 vehicleType={courierVehicleType}
-                className="w-full justify-end whitespace-nowrap px-1 py-1"
+                className="w-full justify-start whitespace-nowrap px-1 py-1"
               />
             </button>
           ) : null}

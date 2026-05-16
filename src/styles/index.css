@@ -273,6 +273,7 @@ body {
 
   .delivery-row__route-compact-footer {
     border-top: 1px solid var(--app-nav-border);
+    direction: ltr;
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     margin-top: 4px;
@@ -376,9 +377,13 @@ body {
 
   .delivery-row__route-table-courier {
     flex: 0 1 clamp(112px, 20%, 160px);
-    justify-content: flex-end;
+    justify-content: flex-start;
     max-width: 160px;
     min-width: 0;
+  }
+
+  .delivery-row__route-table-courier .delivery-row__courier-line {
+    justify-content: flex-start;
   }
 
   .delivery-row__courier-table {
