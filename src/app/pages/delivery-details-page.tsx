@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 
 import { useDelivery } from '../context/delivery-context-value';
 import type { Courier, Delivery, DeliveryStatus, Restaurant } from '../types/delivery.types';
+import { showActionErrorToast, showActionToast } from '../notifications/toast-helpers';
 import { formatCurrency, getDeliveryCustomerCharge } from '../utils/delivery-finance';
 import { formatOrderNumber } from '../utils/order-number';
 
@@ -590,9 +591,11 @@ export function DeliveryDetailsPage() {
   const handleCopyOrderNumber = async () => {
     try {
       await navigator.clipboard.writeText(orderNumberLabel);
-      toast.success('מספר המשלוח הועתק');
+      showActionToast('מספר המשלוח הועתק', { id: 'copy-order-number' });
     } catch {
-      toast.error('לא הצלחתי להעתיק את מספר המשלוח');
+      showActionErrorToast('לא הצלחתי להעתיק את מספר המשלוח', {
+        id: 'copy-order-number',
+      });
     }
   };
 

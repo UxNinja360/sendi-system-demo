@@ -1,5 +1,4 @@
 ﻿import React, { useReducer, useEffect, useCallback, useRef } from 'react';
-import { toast } from 'sonner';
 import {
   ActivityLogEntry,
   DeliveryState,
@@ -20,6 +19,7 @@ import {
   canAssignDeliveryWithCredits,
 } from '../utils/delivery-credits';
 import { isDeliveryOfferExpired } from '../utils/delivery-offers';
+import { showActionInfoToast, showActionToast } from '../notifications/toast-helpers';
 import {
   DEFAULT_RESTAURANT_MAX_DELIVERY_TIME,
   DEFAULT_RESTAURANT_PREPARATION_TIME,
@@ -857,8 +857,8 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     pendingActionToastsRef.current.delete(key);
     const showToast = shouldUseNeutralActionToast(pending.toast.actionType)
-      ? toast.info
-      : toast.success;
+      ? showActionInfoToast
+      : showActionToast;
 
     showToast(
       pending.count > 1
@@ -867,7 +867,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       {
         description: pending.count > 1 ? undefined : pending.toast.description,
         duration: ACTION_TOAST_DURATION_MS,
-        id: `action-toast-${key}`,
+        id: 'sendi-action-toast',
       }
     );
   }, []);

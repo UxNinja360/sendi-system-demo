@@ -1,11 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router';
-import { toast } from 'sonner';
 import { useDelivery } from '../context/delivery-context-value';
 import type { Delivery } from '../types/delivery.types';
 import { playHaptic } from '../utils/haptics';
 import { setPendingDeliveriesBadge } from './app-badge';
 import { ALERT_PREFERENCES_EVENT, getAlertPreferences } from './alert-preferences';
+import {
+  showActionErrorToast,
+  showActionToast,
+  showDeliveryAlertToast,
+} from './toast-helpers';
 import { sendDeliveryPushNotification } from './web-push';
 
 type AudioWindow = Window &
@@ -172,9 +176,9 @@ const showDeliveryNotification = async (
 const showInAppDeliveryAlert = (delivery: Delivery) => {
   const body = getDeliveryBody(delivery);
 
-  toast.success(getDeliveryTitle(delivery), {
+  showDeliveryAlertToast(getDeliveryTitle(delivery), {
     description: body || undefined,
-    duration: 3600,
+    id: `new-delivery-${delivery.id}`,
   });
 };
 
@@ -182,18 +186,18 @@ export const requestNotificationPermission = async () => {
   unlockAlertSound();
 
   if (!canUseBrowserNotifications()) {
-    toast.error('הדפדפן הזה לא תומך בהתראות מערכת');
+    showActionErrorToast('הדפדפן הזה לא תומך בהתראות מערכת');
     return false;
   }
 
   const permission = await Notification.requestPermission();
   if (permission === 'granted') {
-    toast.success('התראות למשלוחים חדשים הופעלו');
+    showActionToast('התראות למשלוחים חדשים הופעלו');
     playNewDeliverySound({ force: true });
     return true;
   }
 
-  toast.error('לא התקבלה הרשאה להתראות');
+  showActionErrorToast('לא התקבלה הרשאה להתראות');
   return false;
 };
 

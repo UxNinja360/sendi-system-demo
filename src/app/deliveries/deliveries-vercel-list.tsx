@@ -20,9 +20,9 @@ import {
   UserPlus,
   XCircle,
 } from 'lucide-react';
-import { toast } from 'sonner';
 
 import type { Courier, Delivery, DeliveryStatus, Restaurant } from '../types/delivery.types';
+import { showActionToast } from '../notifications/toast-helpers';
 import {
   EntityActionMenu,
   EntityActionMenuDivider,
@@ -469,7 +469,9 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
     event?.preventDefault();
     event?.stopPropagation();
     navigator.clipboard.writeText(delivery.orderNumber);
-    toast.success(`מספר הזמנה ${delivery.orderNumber} הועתק`);
+    showActionToast(`מספר הזמנה ${delivery.orderNumber} הועתק`, {
+      id: 'copy-order-number',
+    });
     closeMenus();
   };
 
@@ -805,7 +807,9 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
     event?.preventDefault();
     event?.stopPropagation();
     navigator.clipboard.writeText(delivery.orderNumber);
-    toast.success(`מספר הזמנה ${delivery.orderNumber} הועתק`);
+    showActionToast(`מספר הזמנה ${delivery.orderNumber} הועתק`, {
+      id: 'copy-order-number',
+    });
     closeMenus();
   };
 

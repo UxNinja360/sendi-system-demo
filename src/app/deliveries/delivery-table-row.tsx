@@ -10,7 +10,6 @@ import {
   Edit,
   RotateCcw,
 } from 'lucide-react';
-import { toast } from 'sonner';
 import {
   EntityActionMenu,
   EntityActionMenuDivider,
@@ -29,6 +28,7 @@ import {
 import { ALL_COLUMNS, CUSTOM_COLUMN_IDS, COLUMN_MAP } from './column-defs';
 import type { ColumnDef } from './column-defs';
 import { STATUS_CONFIG } from './status-config';
+import { showActionToast } from '../notifications/toast-helpers';
 import { formatCurrency, getDeliveryCustomerCharge } from '../utils/delivery-finance';
 import { formatOrderNumber } from '../utils/order-number';
 
@@ -84,7 +84,9 @@ export const DeliveryTableRow: React.FC<DeliveryTableRowProps> = ({
 
   const handleCopyOrderNumber = () => {
     navigator.clipboard.writeText(delivery.orderNumber);
-    toast.success(`???? ????? ${delivery.orderNumber} ?????`);
+    showActionToast(`מספר הזמנה ${delivery.orderNumber} הועתק`, {
+      id: 'copy-order-number',
+    });
     setContextMenuPos(null);
   };
 

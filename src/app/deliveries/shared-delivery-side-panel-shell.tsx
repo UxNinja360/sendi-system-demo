@@ -12,8 +12,8 @@ import {
   Edit,
   Timer,
 } from 'lucide-react';
-import { toast } from 'sonner';
 import { Delivery, Courier, DeliveryStatus } from '../types/delivery.types';
+import { showActionToast } from '../notifications/toast-helpers';
 import { STATUS_CONFIG, STATUS_ORDER } from './status-config';
 import { SharedDeliveryDetailsContent } from './shared-delivery-details-content';
 import { SharedDeliveryActions } from './shared-delivery-actions';
@@ -88,7 +88,7 @@ export const SharedDeliverySidePanelShell: React.FC<SharedDeliverySidePanelShell
   const handleCopy = useCallback(() => {
     if (!delivery) return;
     navigator.clipboard.writeText(delivery.orderNumber);
-    toast.success(`${delivery.orderNumber} הועתק`);
+    showActionToast(`${delivery.orderNumber} הועתק`, { id: 'copy-order-number' });
   }, [delivery]);
 
   if (!delivery) {
