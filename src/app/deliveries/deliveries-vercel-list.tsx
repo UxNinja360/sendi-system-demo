@@ -12,6 +12,7 @@ import {
   Edit,
   FileText,
   Info,
+  LoaderCircle,
   Package,
   RotateCcw,
   Route,
@@ -126,11 +127,16 @@ const CourierAssignmentLine: React.FC<{
   vehicleType?: string;
   className?: string;
 }> = ({ assigned, label, vehicleType, className }) => {
-  const Icon = assigned ? (vehicleType === 'רכב' ? Car : Bike) : null;
+  const Icon = assigned ? (vehicleType === 'רכב' ? Car : Bike) : LoaderCircle;
 
   return (
     <div className={joinClassNames('flex min-w-0 items-center gap-2 text-right', className)} dir="rtl">
-      {Icon ? <Icon className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" /> : null}
+      <Icon
+        className={joinClassNames(
+          'h-3.5 w-3.5 shrink-0',
+          assigned ? 'text-app-text-secondary' : 'animate-spin text-app-warning-text',
+        )}
+      />
       <span
         className={joinClassNames(
           'min-w-0 truncate text-sm font-normal',
