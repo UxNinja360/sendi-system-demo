@@ -2,6 +2,7 @@ import { RouterProvider } from "react-router";
 import { router } from "./routes";
 import { useEffect } from "react";
 import { installHapticFeedback } from "./utils/haptics";
+import { AppUpdateBanner } from "./components/common/app-update-banner";
 
 export default function App() {
   useEffect(() => {
@@ -17,5 +18,10 @@ export default function App() {
     return installHapticFeedback();
   }, []);
 
-  return <RouterProvider router={router} />;
+  return (
+    <>
+      <RouterProvider router={router} />
+      <AppUpdateBanner />
+    </>
+  );
 }

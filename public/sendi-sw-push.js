@@ -106,6 +106,11 @@ self.addEventListener('push', (event) => {
 self.addEventListener('message', (event) => {
   const payload = event.data || {};
 
+  if (payload.type === 'SKIP_WAITING') {
+    event.waitUntil?.(self.skipWaiting());
+    return;
+  }
+
   if (payload.type === 'SENDI_SET_BADGE') {
     event.waitUntil?.(setSendiBadge(payload.count));
     return;
