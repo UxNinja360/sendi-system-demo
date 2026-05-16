@@ -31,6 +31,7 @@ type CapacitorWindow = Window & {
 };
 
 let capacitorHapticsPromise: Promise<CapacitorHapticsModule | null> | null = null;
+let iosSwitchInput: HTMLInputElement | null = null;
 
 const isCapacitorNativePlatform = () => {
   if (typeof window === 'undefined') return false;
@@ -99,19 +100,24 @@ const triggerIOSSwitchTick = () => {
   if (typeof document === 'undefined') return false;
 
   try {
-    const labelEl = document.createElement('label');
-    labelEl.setAttribute('aria-hidden', 'true');
-    labelEl.style.display = 'none';
+    if (!iosSwitchInput || !document.body.contains(iosSwitchInput)) {
+      iosSwitchInput = document.createElement('input');
+      iosSwitchInput.type = 'checkbox';
+      iosSwitchInput.setAttribute('switch', '');
+      iosSwitchInput.setAttribute('aria-hidden', 'true');
+      iosSwitchInput.tabIndex = -1;
+      iosSwitchInput.style.position = 'fixed';
+      iosSwitchInput.style.left = '-64px';
+      iosSwitchInput.style.top = '0';
+      iosSwitchInput.style.width = '44px';
+      iosSwitchInput.style.height = '44px';
+      iosSwitchInput.style.opacity = '0.01';
+      iosSwitchInput.style.pointerEvents = 'none';
+      iosSwitchInput.style.zIndex = '-1';
+      document.body.appendChild(iosSwitchInput);
+    }
 
-    const inputEl = document.createElement('input');
-    inputEl.type = 'checkbox';
-    inputEl.setAttribute('switch', '');
-    inputEl.tabIndex = -1;
-
-    labelEl.appendChild(inputEl);
-    document.head.appendChild(labelEl);
-    labelEl.click();
-    document.head.removeChild(labelEl);
+    iosSwitchInput.click();
 
     return true;
   } catch {

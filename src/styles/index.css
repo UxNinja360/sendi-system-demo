@@ -525,11 +525,9 @@ body {
     border: 1px solid var(--app-nav-border);
     grid-template-areas:
       "identity identity actions"
-      "status type type"
-      "contact contact contact"
       "footer footer footer";
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 44px;
-    grid-template-rows: minmax(58px, auto) auto auto 38px;
+    grid-template-rows: minmax(58px, auto) 38px;
     min-height: 0;
   }
 

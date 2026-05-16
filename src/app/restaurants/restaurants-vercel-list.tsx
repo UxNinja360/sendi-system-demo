@@ -84,26 +84,31 @@ const RestaurantVercelRow: React.FC<{
     >
       <div className="restaurant-row__identity col-start-1 row-start-1 flex min-h-0 min-w-0 items-center gap-3 px-2 py-3 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
         <RestaurantLogoMark name={restaurant.name} logoUrl={restaurant.logoUrl} size="sm" />
-        <div className="min-w-0">
-          <div className="truncate text-sm font-semibold text-app-text">{restaurant.name}</div>
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center justify-between gap-2">
+            <div className="truncate text-sm font-semibold text-app-text">{restaurant.name}</div>
+            <span className={joinClassNames('shrink-0 text-sm font-semibold md:hidden', statusMeta.text)}>
+              {statusMeta.label}
+            </span>
+          </div>
           <div className="mt-1 truncate text-sm font-normal text-app-text-secondary">{address}</div>
         </div>
       </div>
 
-      <div className="restaurant-row__status col-start-1 row-start-2 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
+      <div className="restaurant-row__status col-start-1 row-start-2 hidden min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:flex md:min-h-[72px] md:py-2">
         <span className={joinClassNames('truncate text-sm font-semibold', statusMeta.text)}>
           {statusMeta.label}
         </span>
       </div>
 
-      <div className="restaurant-row__type col-start-1 row-start-3 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
+      <div className="restaurant-row__type col-start-1 row-start-3 hidden min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:flex md:min-h-[72px] md:py-2">
         <div className="truncate text-sm font-semibold text-app-text">{restaurant.type}</div>
         {restaurant.chainId && restaurant.chainId !== '-' && (
           <div className="mt-1 truncate text-sm font-normal text-app-text-secondary">{restaurant.chainId}</div>
         )}
       </div>
 
-      <div className="restaurant-row__contact col-start-1 row-start-4 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
+      <div className="restaurant-row__contact col-start-1 row-start-4 hidden min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:flex md:min-h-[72px] md:py-2">
         <div className="truncate text-sm font-semibold text-app-text">{restaurant.contactPerson || '-'}</div>
         <div className="mt-1 truncate text-right text-sm font-normal text-app-text-secondary" dir="ltr">
           {restaurant.ownerPhone || '-'}
@@ -119,9 +124,8 @@ const RestaurantVercelRow: React.FC<{
         />
       </div>
 
-      <div className="restaurant-row__footer hidden min-h-0 items-center justify-between gap-3 text-sm font-normal text-app-text-secondary md:hidden">
-        <span className="min-w-0 truncate">{restaurant.chainId && restaurant.chainId !== '-' ? restaurant.chainId : restaurant.type || '-'}</span>
-        <span className="inline-flex shrink-0 items-center gap-1.5">
+      <div className="restaurant-row__footer hidden min-h-0 items-center gap-3 text-sm font-normal text-app-text-secondary md:hidden">
+        <span className="ms-auto inline-flex shrink-0 items-center gap-1.5">
           <Package className="h-3.5 w-3.5" />
           <span className="tabular-nums">{restaurant.totalDeliveries}</span>
         </span>
