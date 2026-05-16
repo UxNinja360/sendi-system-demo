@@ -173,11 +173,8 @@ export const installHapticFeedback = (root?: Document | HTMLElement) => {
 
   let lastFeedbackAt = 0;
 
-  const handlePointerDown = (event: PointerEvent) => {
-    if (event.defaultPrevented || event.button > 0) return;
+  const playFeedbackForTarget = (target: EventTarget | null) => {
     if (!getAlertPreferences().hapticFeedbackEnabled) return;
-
-    const target = event.target;
     if (!(target instanceof Element)) return;
 
     const hapticTarget = target.closest<HTMLElement>(
@@ -187,7 +184,7 @@ export const installHapticFeedback = (root?: Document | HTMLElement) => {
     if (hapticTarget.closest('[disabled], [aria-disabled="true"]')) return;
 
     const now = window.performance.now();
-    if (now - lastFeedbackAt < 35) return;
+    if (now - lastFeedbackAt < 220) return;
 
     const hapticName = hapticTarget.dataset.haptic ?? 'light';
     if (playResolvedHaptic(hapticName)) {
@@ -195,9 +192,22 @@ export const installHapticFeedback = (root?: Document | HTMLElement) => {
     }
   };
 
+  const handlePointerDown = (event: PointerEvent) => {
+    if (event.defaultPrevented || event.button > 0) return;
+    if (isLikelyIOSTouchDevice()) return;
+    playFeedbackForTarget(event.target);
+  };
+
+  const handleClick = (event: MouseEvent) => {
+    if (event.defaultPrevented) return;
+    playFeedbackForTarget(event.target);
+  };
+
   targetRoot.addEventListener('pointerdown', handlePointerDown, { passive: true });
+  targetRoot.addEventListener('click', handleClick, { passive: true });
 
   return () => {
     targetRoot.removeEventListener('pointerdown', handlePointerDown);
+    targetRoot.removeEventListener('click', handleClick);
   };
 };
