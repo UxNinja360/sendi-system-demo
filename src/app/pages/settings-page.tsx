@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import {
   AlertTriangle,
   BellRing,
@@ -26,6 +27,12 @@ import {
   requestNotificationPermission,
   unlockAlertSound,
 } from '../notifications/operational-alerts';
+import {
+  getDeliveryPushStatus,
+  sendTestDeliveryPushNotification,
+  subscribeToDeliveryPushNotifications,
+  type DeliveryPushStatus,
+} from '../notifications/web-push';
 import { playHaptic } from '../utils/haptics';
 
 const TEXT = {
@@ -77,7 +84,17 @@ const TEXT = {
   newDeliveryHaptic: 'רטט למשלוח חדש',
   newDeliveryHapticHint: 'ניסיון להפעיל רטט/הפטיק בכל משלוח חדש.',
   browserNotifications: 'התראות דפדפן',
-  browserNotificationsHint: 'התראה נפרדת לכל משלוח חדש, גם כשהאפליקציה פתוחה.',
+  browserNotificationsHint: 'התראות מערכת כשהאפליקציה אינה בפוקוס. כשהיא פתוחה נשתמש בהתראה פנימית.',
+  realPush: 'פוש אמיתי ברקע',
+  realPushHint: 'רישום המכשיר ל-Web Push כדי לקבל התראות כשה-PWA ממוזער או סגור.',
+  enableRealPush: 'חבר',
+  testRealPush: 'בדיקה',
+  realPushSubscribed: 'מחובר',
+  realPushReady: 'מוכן',
+  realPushNeedsPermission: 'צריך הרשאה',
+  realPushNotConfigured: 'חסר VAPID בשרת',
+  realPushUnsupported: 'לא נתמך',
+  realPushError: 'שגיאה',
   notificationPermission: 'הרשאת התראות',
   notificationPermissionHint: 'נדרש כדי להציג התראות מערכת במחשב וב-PWA.',
   enableNotifications: 'אפשר',
@@ -214,6 +231,17 @@ const getNotificationPermissionLabel = (permission: NotificationPermissionState)
   return TEXT.notificationsDefault;
 };
 
+const getDeliveryPushStatusLabel = (status: DeliveryPushStatus | null) => {
+  if (status === 'subscribed') return TEXT.realPushSubscribed;
+  if (status === 'ready') return TEXT.realPushReady;
+  if (status === 'permission-needed') return TEXT.realPushNeedsPermission;
+  if (status === 'permission-denied') return TEXT.notificationsBlocked;
+  if (status === 'not-configured') return TEXT.realPushNotConfigured;
+  if (status === 'unsupported') return TEXT.realPushUnsupported;
+  if (status === 'error') return TEXT.realPushError;
+  return TEXT.notificationsDefault;
+};
+
 export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
   const navigate = useNavigate();
   const { isDark, toggleDark } = useTheme();
@@ -224,6 +252,8 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
   );
   const [notificationPermission, setNotificationPermission] =
     useState<NotificationPermissionState>(() => getNotificationPermissionState());
+  const [deliveryPushStatus, setDeliveryPushStatus] = useState<DeliveryPushStatus | null>(null);
+  const [isDeliveryPushBusy, setIsDeliveryPushBusy] = useState(false);
 
   useEffect(() => {
     const handlePreferencesChange = () => {
@@ -232,6 +262,12 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
 
     window.addEventListener(ALERT_PREFERENCES_EVENT, handlePreferencesChange);
     return () => window.removeEventListener(ALERT_PREFERENCES_EVENT, handlePreferencesChange);
+  }, []);
+
+  useEffect(() => {
+    void getDeliveryPushStatus()
+      .then((result) => setDeliveryPushStatus(result.status))
+      .catch(() => setDeliveryPushStatus('error'));
   }, []);
 
   const handleLogout = () => {
@@ -272,6 +308,59 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
     void requestNotificationPermission().then(() => {
       setNotificationPermission(getNotificationPermissionState());
     });
+  };
+
+  const refreshDeliveryPushStatus = () => {
+    void getDeliveryPushStatus()
+      .then((result) => setDeliveryPushStatus(result.status))
+      .catch(() => setDeliveryPushStatus('error'));
+  };
+
+  const handleEnableDeliveryPush = () => {
+    setIsDeliveryPushBusy(true);
+    void subscribeToDeliveryPushNotifications()
+      .then((result) => {
+        setDeliveryPushStatus(result.status);
+        setNotificationPermission(getNotificationPermissionState());
+
+        if (result.ok) {
+          toast.success('פוש אמיתי חובר');
+          return;
+        }
+
+        toast.error(
+          result.status === 'not-configured'
+            ? 'צריך להגדיר VAPID בשרת'
+            : result.status === 'unsupported'
+              ? 'המכשיר לא תומך בפוש Web Push'
+              : 'לא הצלחנו לחבר פוש אמיתי',
+        );
+      })
+      .catch(() => {
+        setDeliveryPushStatus('error');
+        toast.error('לא הצלחנו לחבר פוש אמיתי');
+      })
+      .finally(() => setIsDeliveryPushBusy(false));
+  };
+
+  const handleTestDeliveryPush = () => {
+    setIsDeliveryPushBusy(true);
+    void sendTestDeliveryPushNotification()
+      .then((result) => {
+        if (result.ok) {
+          toast.success('פוש בדיקה נשלח');
+          refreshDeliveryPushStatus();
+          return;
+        }
+
+        toast.error(
+          result.message === 'no_subscriptions'
+            ? 'אין מכשירים רשומים לפוש'
+            : 'פוש הבדיקה לא נשלח',
+        );
+      })
+      .catch(() => toast.error('פוש הבדיקה לא נשלח'))
+      .finally(() => setIsDeliveryPushBusy(false));
   };
 
   const handleTestSound = () => {
@@ -382,6 +471,35 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
                     {getNotificationPermissionLabel(notificationPermission)}
                   </span>
                 )
+              }
+            />
+            <SettingRow
+              icon={<BellRing className="h-4 w-4" />}
+              title={TEXT.realPush}
+              hint={TEXT.realPushHint}
+              control={
+                <div className="flex items-center gap-2">
+                  <span className="hidden rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#666d80] dark:bg-app-surface dark:text-app-text-secondary sm:inline-flex">
+                    {getDeliveryPushStatusLabel(deliveryPushStatus)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleEnableDeliveryPush}
+                    disabled={isDeliveryPushBusy}
+                    className="inline-flex items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] disabled:cursor-wait disabled:opacity-60 dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
+                  >
+                    <BellRing className="h-4 w-4" />
+                    <span>{TEXT.enableRealPush}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleTestDeliveryPush}
+                    disabled={isDeliveryPushBusy || deliveryPushStatus !== 'subscribed'}
+                    className="inline-flex items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
+                  >
+                    <span>{TEXT.testRealPush}</span>
+                  </button>
+                </div>
               }
             />
             <SettingRow

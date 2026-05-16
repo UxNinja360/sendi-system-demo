@@ -85,6 +85,24 @@ const buildNotificationOptions = (payload) => {
 };
 
 const showSendiNotification = async (payload) => {
+  const windowClients = await self.clients.matchAll({
+    type: 'window',
+    includeUncontrolled: true,
+  });
+  const hasVisibleClient = windowClients.some(
+    (client) => client.focused || client.visibilityState === 'visible',
+  );
+
+  if (hasVisibleClient) {
+    windowClients.forEach((client) => {
+      client.postMessage({
+        type: 'SENDI_DELIVERY_PUSH_RECEIVED',
+        payload,
+      });
+    });
+    return;
+  }
+
   const title = getNotificationTitle(payload);
   await self.registration.showNotification(title, buildNotificationOptions(payload));
 };

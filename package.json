@@ -9,6 +9,7 @@
     "ios:add": "npm run build && cap add ios",
     "ios:sync": "npm run build && cap sync ios",
     "ios:open": "cap open ios",
+    "push:keys": "web-push generate-vapid-keys",
     "verify:business": "node scripts/verify-delivery-business-rules.mjs"
   },
   "dependencies": {
@@ -32,6 +33,7 @@
     "recharts": "2.15.2",
     "sonner": "2.0.3",
     "tailwind-merge": "3.2.0",
+    "web-push": "^3.6.7",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
