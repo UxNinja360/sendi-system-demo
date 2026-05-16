@@ -33,6 +33,7 @@ type CapacitorWindow = Window & {
 let capacitorHapticsPromise: Promise<CapacitorHapticsModule | null> | null = null;
 let iosSwitchLabel: HTMLLabelElement | null = null;
 let iosSwitchInput: HTMLInputElement | null = null;
+let iosDecorateFrame = 0;
 
 const isCapacitorNativePlatform = () => {
   if (typeof window === 'undefined') return false;
@@ -169,6 +170,61 @@ const playResolvedHaptic = (name: string | undefined) => {
   return playIOSSwitchHaptic(name);
 };
 
+const addIOSNativeHapticProxy = (target: HTMLElement) => {
+  if (target.dataset.iosHapticDecorated === 'true') return;
+  if (target.dataset.haptic === 'off') return;
+  if (target.matches('input, textarea, select')) return;
+
+  const existingProxy = target.querySelector(':scope > input[data-ios-haptic-proxy="true"]');
+  if (existingProxy) {
+    target.dataset.iosHapticDecorated = 'true';
+    return;
+  }
+
+  const computedStyle = window.getComputedStyle(target);
+  if (computedStyle.position === 'static') {
+    target.style.position = 'relative';
+    target.dataset.iosHapticPositioned = 'true';
+  }
+
+  const proxy = document.createElement('input');
+  proxy.type = 'checkbox';
+  proxy.setAttribute('switch', '');
+  proxy.setAttribute('aria-hidden', 'true');
+  proxy.tabIndex = -1;
+  proxy.dataset.iosHapticProxy = 'true';
+  proxy.style.position = 'absolute';
+  proxy.style.inset = '0';
+  proxy.style.width = '100%';
+  proxy.style.height = '100%';
+  proxy.style.margin = '0';
+  proxy.style.opacity = '0.01';
+  proxy.style.cursor = 'inherit';
+  proxy.style.zIndex = '1';
+
+  proxy.addEventListener('click', (event) => {
+    const parent = proxy.parentElement;
+    if (parent?.matches(':disabled, [aria-disabled="true"]')) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  });
+  proxy.addEventListener('focus', () => proxy.blur());
+  target.appendChild(proxy);
+  target.dataset.iosHapticDecorated = 'true';
+};
+
+const decorateIOSNativeHapticTargets = (root: Document | HTMLElement) => {
+  if (!isLikelyIOSTouchDevice() || isCapacitorNativePlatform()) return;
+
+  const scope = root instanceof Document ? root.body : root;
+  if (!scope) return;
+
+  scope
+    .querySelectorAll<HTMLElement>('[data-haptic]:not([data-haptic="off"])')
+    .forEach(addIOSNativeHapticProxy);
+};
+
 export const playHaptic = (
   name: HapticPatternName = 'light',
   options: { force?: boolean } = {},
@@ -190,6 +246,7 @@ export const installHapticFeedback = (root?: Document | HTMLElement) => {
   const playFeedbackForTarget = (target: EventTarget | null) => {
     if (!getAlertPreferences().hapticFeedbackEnabled) return;
     if (!(target instanceof Element)) return;
+    if (target instanceof HTMLElement && target.dataset.iosHapticProxy === 'true') return;
 
     const hapticTarget = target.closest<HTMLElement>(
       '[data-haptic], button, [role="button"], a[href], input[type="checkbox"], input[type="radio"]',
@@ -220,8 +277,30 @@ export const installHapticFeedback = (root?: Document | HTMLElement) => {
   targetRoot.addEventListener('pointerdown', handlePointerDown, { passive: true });
   targetRoot.addEventListener('click', handleClick, { passive: true });
 
+  const shouldDecorateIOS = isLikelyIOSTouchDevice() && !isCapacitorNativePlatform();
+  const observerTarget =
+    targetRoot instanceof Document
+      ? targetRoot.body ?? targetRoot.documentElement
+      : targetRoot;
+  const mutationObserver =
+    shouldDecorateIOS && typeof MutationObserver !== 'undefined'
+      ? new MutationObserver(() => {
+          window.cancelAnimationFrame(iosDecorateFrame);
+          iosDecorateFrame = window.requestAnimationFrame(() => {
+            decorateIOSNativeHapticTargets(targetRoot);
+          });
+        })
+      : null;
+
+  if (shouldDecorateIOS) {
+    decorateIOSNativeHapticTargets(targetRoot);
+    mutationObserver?.observe(observerTarget, { childList: true, subtree: true });
+  }
+
   return () => {
     targetRoot.removeEventListener('pointerdown', handlePointerDown);
     targetRoot.removeEventListener('click', handleClick);
+    window.cancelAnimationFrame(iosDecorateFrame);
+    mutationObserver?.disconnect();
   };
 };
