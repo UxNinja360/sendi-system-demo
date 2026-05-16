@@ -66,8 +66,11 @@ const DAY_LABELS = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
 const formatDayLabel = (date: Date) =>
   `יום ${DAY_LABELS[date.getDay()]} ${pad(date.getDate())}/${pad(date.getMonth() + 1)}`;
 
+const formatTodayLabel = (date: Date) =>
+  `היום ${DAY_LABELS[date.getDay()]} ${pad(date.getDate())}/${pad(date.getMonth() + 1)}`;
+
 const formatSelectedDayLabel = (date: Date) =>
-  toDateKey(date) === toDateKey(new Date()) ? 'היום' : formatDayLabel(date);
+  toDateKey(date) === toDateKey(new Date()) ? formatTodayLabel(date) : formatDayLabel(date);
 
 const getRangeLabel = (startDate: string, endDate: string) =>
   `${parseDateKey(startDate).toLocaleDateString('he-IL', {
