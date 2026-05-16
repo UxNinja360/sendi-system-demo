@@ -4,6 +4,7 @@ import { useDelivery } from '../context/delivery-context-value';
 import type { Delivery } from '../types/delivery.types';
 import { playHaptic } from '../utils/haptics';
 import { setPendingDeliveriesBadge } from './app-badge';
+import { getAlertSoundPreset, type AlertSoundPreset } from './alert-sounds';
 import { ALERT_PREFERENCES_EVENT, getAlertPreferences } from './alert-preferences';
 import {
   showActionErrorToast,
@@ -18,8 +19,8 @@ type AudioWindow = Window &
   };
 
 let audioContext: AudioContext | null = null;
-let fallbackAudioElement: HTMLAudioElement | null = null;
-let fallbackAudioUrl: string | null = null;
+const fallbackAudioElements = new Map<string, HTMLAudioElement>();
+const fallbackAudioUrls = new Map<string, string>();
 
 type NavigatorWithStandalone = Navigator & {
   standalone?: boolean;
@@ -52,20 +53,22 @@ const writeAscii = (view: DataView, offset: number, value: string) => {
   }
 };
 
-const createDeliverySoundUrl = () => {
-  if (fallbackAudioUrl) return fallbackAudioUrl;
+const createDeliverySoundUrl = (preset: AlertSoundPreset) => {
+  const cachedUrl = fallbackAudioUrls.get(preset.id);
+  if (cachedUrl) return cachedUrl;
   if (typeof Blob === 'undefined' || typeof URL === 'undefined') return null;
 
   const sampleRate = 44100;
-  const tones = [
-    { frequency: 880, duration: 0.12, gain: 0.28 },
-    { frequency: 1174.66, duration: 0.16, gain: 0.24 },
-  ];
   const samples: number[] = [];
 
-  tones.forEach((tone) => {
+  preset.tones.forEach((tone) => {
     const sampleCount = Math.floor(sampleRate * tone.duration);
     for (let index = 0; index < sampleCount; index += 1) {
+      if (tone.frequency <= 0 || tone.gain <= 0) {
+        samples.push(0);
+        continue;
+      }
+
       const progress = index / sampleCount;
       const envelope = Math.sin(Math.PI * progress);
       samples.push(
@@ -99,26 +102,30 @@ const createDeliverySoundUrl = () => {
     view.setInt16(44 + index * 2, Math.round(clamped * 32767), true);
   });
 
-  fallbackAudioUrl = URL.createObjectURL(new Blob([buffer], { type: 'audio/wav' }));
-  return fallbackAudioUrl;
+  const url = URL.createObjectURL(new Blob([buffer], { type: 'audio/wav' }));
+  fallbackAudioUrls.set(preset.id, url);
+  return url;
 };
 
-const getFallbackAudioElement = () => {
+const getFallbackAudioElement = (preset: AlertSoundPreset) => {
   if (typeof Audio === 'undefined') return null;
-  if (fallbackAudioElement) return fallbackAudioElement;
+  const cachedElement = fallbackAudioElements.get(preset.id);
+  if (cachedElement) return cachedElement;
 
-  const url = createDeliverySoundUrl();
+  const url = createDeliverySoundUrl(preset);
   if (!url) return null;
 
-  fallbackAudioElement = new Audio(url);
-  fallbackAudioElement.preload = 'auto';
-  fallbackAudioElement.setAttribute('playsinline', 'true');
-  return fallbackAudioElement;
+  const audioElement = new Audio(url);
+  audioElement.preload = 'auto';
+  audioElement.setAttribute('playsinline', 'true');
+  fallbackAudioElements.set(preset.id, audioElement);
+  return audioElement;
 };
 
 export const unlockAlertSound = () => {
+  const soundPreset = getAlertSoundPreset(getAlertPreferences().newDeliverySoundId);
   const context = getAudioContext();
-  const fallbackAudio = getFallbackAudioElement();
+  const fallbackAudio = getFallbackAudioElement(soundPreset);
 
   if (context?.state === 'suspended') {
     void context.resume().catch(() => undefined);
@@ -151,17 +158,30 @@ const playTone = (
   oscillator.stop(startAt + duration + 0.02);
 };
 
-const playNewDeliveryToneSequence = (context: AudioContext) => {
+const playNewDeliveryToneSequence = (
+  context: AudioContext,
+  preset: AlertSoundPreset,
+) => {
   const startAt = context.currentTime + 0.01;
-  playTone(context, 880, startAt, 0.12, 0.085);
-  playTone(context, 1174.66, startAt + 0.12, 0.16, 0.075);
+  let offset = 0;
+
+  preset.tones.forEach((tone) => {
+    if (tone.frequency > 0 && tone.gain > 0) {
+      playTone(context, tone.frequency, startAt + offset, tone.duration, tone.gain * 0.32);
+    }
+
+    offset += tone.duration;
+  });
 };
 
 export const playNewDeliverySound = ({ force = false }: { force?: boolean } = {}) => {
-  if (!force && !getAlertPreferences().newDeliverySoundEnabled) return false;
+  const preferences = getAlertPreferences();
+  if (!force && !preferences.newDeliverySoundEnabled) return false;
+
+  const soundPreset = getAlertSoundPreset(preferences.newDeliverySoundId);
 
   if (isStandalonePwa()) {
-    const fallbackAudio = getFallbackAudioElement();
+    const fallbackAudio = getFallbackAudioElement(soundPreset);
     if (fallbackAudio) {
       fallbackAudio.pause();
       fallbackAudio.currentTime = 0;
@@ -178,14 +198,14 @@ export const playNewDeliverySound = ({ force = false }: { force?: boolean } = {}
       .resume()
       .then(() => {
         if (context.state === 'running') {
-          playNewDeliveryToneSequence(context);
+          playNewDeliveryToneSequence(context, soundPreset);
         }
       })
       .catch(() => undefined);
     return true;
   }
 
-  playNewDeliveryToneSequence(context);
+  playNewDeliveryToneSequence(context, soundPreset);
 
   return true;
 };

@@ -21,6 +21,7 @@ import {
   setAlertPreference,
   type AlertPreferences,
 } from '../notifications/alert-preferences';
+import { ALERT_SOUND_PRESETS, type AlertSoundId } from '../notifications/alert-sounds';
 import {
   canUseBrowserNotifications,
   playNewDeliverySound,
@@ -170,6 +171,34 @@ const Toggle: React.FC<{ checked: boolean; onChange: () => void }> = ({ checked,
   >
     <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all ${checked ? 'left-1' : 'left-6'}`} />
   </button>
+);
+
+const SoundPicker: React.FC<{
+  selectedSoundId: AlertSoundId;
+  onSelect: (soundId: AlertSoundId) => void;
+}> = ({ selectedSoundId, onSelect }) => (
+  <div className="grid w-full grid-cols-2 gap-1.5 sm:grid-cols-5" dir="rtl">
+    {ALERT_SOUND_PRESETS.map((sound) => {
+      const selected = sound.id === selectedSoundId;
+
+      return (
+        <button
+          key={sound.id}
+          type="button"
+          data-haptic={selected ? 'selection' : 'light'}
+          onClick={() => onSelect(sound.id)}
+          className={`min-h-9 rounded-xl border px-2.5 py-2 text-xs font-semibold transition-colors ${
+            selected
+              ? 'border-app-brand bg-app-brand/15 text-app-brand-text'
+              : 'border-app-border bg-[#f5f5f5] text-[#0d0d12] hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised'
+          }`}
+          aria-pressed={selected}
+        >
+          {sound.label}
+        </button>
+      );
+    })}
+  </div>
 );
 
 const SectionCard: React.FC<{
@@ -373,6 +402,12 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
     playHaptic('success', { force: true });
   };
 
+  const handleSelectDeliverySound = (soundId: AlertSoundId) => {
+    updateAlertPreference('newDeliverySoundId', soundId);
+    unlockAlertSound();
+    playNewDeliverySound({ force: true });
+  };
+
   return (
     <div className="flex h-full flex-col overflow-hidden bg-app-background" dir="rtl">
       <div className="flex-1 overflow-y-auto">
@@ -407,6 +442,17 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
                     updateAlertPreference('newDeliverySoundEnabled', nextValue);
                     if (nextValue) handleTestSound();
                   }}
+                />
+              }
+            />
+            <SettingRow
+              icon={<Volume2 className="h-4 w-4" />}
+              title="בחירת צליל"
+              hint="בחר איזה צליל יופעל כשנכנס משלוח חדש."
+              control={
+                <SoundPicker
+                  selectedSoundId={alertPreferences.newDeliverySoundId}
+                  onSelect={handleSelectDeliverySound}
                 />
               }
             />
