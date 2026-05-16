@@ -563,10 +563,21 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
             </div>
           </div>
 
-          <DeliveryDistanceInline
-            label={distanceLabel}
-            className="delivery-row__route-table-distance"
-          />
+          {shouldShowCourierAssignment ? (
+            <button
+              type="button"
+              onClick={openAssignmentMenu}
+              className="delivery-row__route-table-courier flex rounded-md outline-none transition-colors hover:bg-app-surface-raised focus-visible:ring-2 focus-visible:ring-app-brand/60"
+              title={hasAssignedCourier ? 'שנה שיבוץ שליח' : 'שבץ שליח'}
+            >
+              <CourierAssignmentLine
+                assigned={hasAssignedCourier}
+                label={courierColumnText}
+                vehicleType={courierVehicleType}
+                className="delivery-row__courier-line w-full px-1 py-1"
+              />
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -590,11 +601,6 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         </div>
 
         <div className="delivery-row__route-compact-footer flex min-w-0 items-center justify-between gap-3" dir="rtl">
-          <DeliveryDistanceInline
-            label={distanceLabel}
-            className="delivery-row__route-compact-distance"
-          />
-
           {shouldShowCourierAssignment ? (
             <button
               type="button"
@@ -610,25 +616,19 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
               />
             </button>
           ) : null}
+
+          <DeliveryDistanceInline
+            label={distanceLabel}
+            className="delivery-row__route-compact-distance"
+          />
         </div>
       </div>
 
       <div className="delivery-row__courier-table min-h-0 min-w-0 items-center justify-start">
-        {shouldShowCourierAssignment ? (
-          <button
-            type="button"
-            onClick={openAssignmentMenu}
-            className="flex w-full min-w-0 justify-end rounded-md outline-none transition-colors hover:bg-app-surface-raised focus-visible:ring-2 focus-visible:ring-app-brand/60"
-            title={hasAssignedCourier ? 'שנה שיבוץ שליח' : 'שבץ שליח'}
-          >
-            <CourierAssignmentLine
-              assigned={hasAssignedCourier}
-              label={courierColumnText}
-              vehicleType={courierVehicleType}
-              className="delivery-row__courier-line w-full px-1 py-1"
-            />
-          </button>
-        ) : null}
+        <DeliveryDistanceInline
+          label={distanceLabel}
+          className="delivery-row__route-table-distance"
+        />
       </div>
 
       <DeliveryAssignmentMenu

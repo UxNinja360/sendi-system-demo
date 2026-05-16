@@ -273,6 +273,8 @@ body {
 
   .delivery-row__route-compact-footer {
     border-top: 1px solid var(--app-nav-border);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     margin-top: 4px;
     min-height: 34px;
     padding-top: 9px;
@@ -280,15 +282,17 @@ body {
   }
 
   .delivery-row__route-compact-distance {
-    flex: 0 0 auto;
+    grid-column: 1;
+    justify-self: start;
     justify-content: flex-start;
-    max-width: 45%;
+    max-width: 100%;
   }
 
   .delivery-row__route-compact-courier {
-    flex: 1 1 auto;
+    grid-column: 2;
+    justify-self: end;
     justify-content: flex-end;
-    max-width: 55%;
+    max-width: 100%;
     min-width: 0;
   }
 
@@ -370,6 +374,13 @@ body {
     padding-inline: 2px;
   }
 
+  .delivery-row__route-table-courier {
+    flex: 0 1 clamp(112px, 20%, 160px);
+    justify-content: flex-end;
+    max-width: 160px;
+    min-width: 0;
+  }
+
   .delivery-row__courier-table {
     align-items: center;
     display: flex;
@@ -419,11 +430,11 @@ body {
   }
 
   .delivery-row__route-compact-distance {
-    max-width: 42%;
+    max-width: 100%;
   }
 
   .delivery-row__route-compact-courier {
-    max-width: 58%;
+    max-width: 100%;
   }
 }
 
