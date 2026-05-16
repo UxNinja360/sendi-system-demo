@@ -150,9 +150,6 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
 }) => {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const skipNextShellClickRef = useRef(false);
-  const skipNextInputFocusRef = useRef(false);
-  const skipNextShellClickTimerRef = useRef<number | null>(null);
   const [draft, setDraft] = useState(searchQuery);
   const [isOpen, setIsOpen] = useState(false);
   const [commandContext, setCommandContext] = useState<CommandKind | null>(null);
@@ -175,14 +172,6 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
     window.addEventListener('pointerdown', handlePointerDown);
     return () => window.removeEventListener('pointerdown', handlePointerDown);
   }, [isOpen]);
-
-  useEffect(() => {
-    return () => {
-      if (skipNextShellClickTimerRef.current) {
-        window.clearTimeout(skipNextShellClickTimerRef.current);
-      }
-    };
-  }, []);
 
   const visibleOptions = useMemo(() => {
     const options =
@@ -387,54 +376,12 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
     [clearCommandContext, commandContext, draft, handleOptionClick, visibleOptions],
   );
 
-  const handleSearchShellPointerDownCapture = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      if (isOpen) return;
-      if (event.button !== 0) return;
-      if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
-
-      const target = event.target as HTMLElement;
-      if (target.closest('button')) return;
-
-      event.preventDefault();
-      skipNextShellClickRef.current = true;
-      skipNextInputFocusRef.current = true;
-      if (skipNextShellClickTimerRef.current) {
-        window.clearTimeout(skipNextShellClickTimerRef.current);
-      }
-      skipNextShellClickTimerRef.current = window.setTimeout(() => {
-        skipNextShellClickRef.current = false;
-        skipNextInputFocusRef.current = false;
-        skipNextShellClickTimerRef.current = null;
-      }, 1000);
-      setIsOpen(true);
-    },
-    [isOpen],
-  );
-
   const handleSearchShellClick = useCallback(() => {
-    if (skipNextShellClickRef.current) {
-      skipNextShellClickRef.current = false;
-      skipNextInputFocusRef.current = false;
-      if (skipNextShellClickTimerRef.current) {
-        window.clearTimeout(skipNextShellClickTimerRef.current);
-        skipNextShellClickTimerRef.current = null;
-      }
-      return;
-    }
-
     setIsOpen(true);
     inputRef.current?.focus();
   }, []);
 
   const handleInputFocus = useCallback(() => {
-    if (skipNextInputFocusRef.current) {
-      skipNextInputFocusRef.current = false;
-      setIsOpen(true);
-      requestAnimationFrame(() => inputRef.current?.blur());
-      return;
-    }
-
     setIsOpen(true);
   }, []);
 
@@ -454,7 +401,6 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
         <Search className={toolbarSearchIconClassName} />
         <div
           className={searchShellClassName}
-          onPointerDownCapture={handleSearchShellPointerDownCapture}
           onClick={handleSearchShellClick}
         >
           {activeCommandConfig ? (
@@ -507,7 +453,6 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
         {showClearButton ? (
           <button
             type="button"
-            data-haptic="light"
             onClick={draft ? clearDraft : commandContext ? clearCommandContext : clearAll}
             className={toolbarSearchClearButtonClassName}
             aria-label={draft ? TEXT.clear : commandContext ? TEXT.filters : TEXT.clearAll}
@@ -531,7 +476,6 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
                 </span>
                 <button
                   type="button"
-                  data-haptic="light"
                   onClick={clearAll}
                   className="text-xs font-medium text-app-brand-text transition-colors hover:text-app-brand"
                 >
@@ -543,7 +487,6 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
                   <button
                     key={token.key}
                     type="button"
-                    data-haptic="light"
                     onClick={token.onRemove}
                     className="flex max-w-full items-center gap-1 rounded-[4px] border border-app-border bg-app-surface-raised px-2 py-1 text-xs font-medium text-app-text transition-colors hover:border-app-brand dark:border-app-nav-border"
                     title={`${token.label}: ${token.value}`}
@@ -578,7 +521,6 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
                       <button
                         key={option.id}
                         type="button"
-                        data-haptic="selection"
                         onClick={() => handleOptionClick(option)}
                         className={`flex w-full items-center gap-2.5 px-3 py-2 text-right text-sm transition-colors ${
                           isSelected
@@ -620,7 +562,6 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
                     <button
                       key={command.kind}
                       type="button"
-                      data-haptic="medium"
                       onClick={() => handleCommandClick(command.kind)}
                       className="flex w-full items-center gap-2.5 px-3 py-2 text-right text-sm text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text dark:hover:bg-[#111111] dark:hover:text-[#FAFAFA]"
                     >
