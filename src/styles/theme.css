@@ -884,6 +884,27 @@
     transform: translateX(-50%) !important;
   }
 
+  @media (max-width: 600px) {
+    [data-sonner-toaster][data-x-position='center'] {
+      left: 50% !important;
+      right: auto !important;
+      width: var(--width) !important;
+      transform: translateX(-50%) !important;
+    }
+
+    [data-sonner-toaster][data-x-position='center'][dir='rtl'] {
+      left: 50% !important;
+      right: auto !important;
+    }
+
+    [data-sonner-toaster][data-x-position='center'] [data-sonner-toast] {
+      left: 0 !important;
+      right: auto !important;
+      width: var(--width) !important;
+      max-width: calc(100vw - 24px) !important;
+    }
+  }
+
   [data-sonner-toast] {
     direction: rtl !important;
   }
