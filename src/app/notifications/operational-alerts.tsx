@@ -64,6 +64,12 @@ const playTone = (
   oscillator.stop(startAt + duration + 0.02);
 };
 
+const playNewDeliveryToneSequence = (context: AudioContext) => {
+  const startAt = context.currentTime + 0.01;
+  playTone(context, 880, startAt, 0.12, 0.085);
+  playTone(context, 1174.66, startAt + 0.12, 0.16, 0.075);
+};
+
 export const playNewDeliverySound = ({ force = false }: { force?: boolean } = {}) => {
   if (!force && !getAlertPreferences().newDeliverySoundEnabled) return false;
 
@@ -71,13 +77,18 @@ export const playNewDeliverySound = ({ force = false }: { force?: boolean } = {}
   if (!context) return false;
 
   if (context.state === 'suspended') {
-    void context.resume().catch(() => undefined);
-    return false;
+    void context
+      .resume()
+      .then(() => {
+        if (context.state === 'running') {
+          playNewDeliveryToneSequence(context);
+        }
+      })
+      .catch(() => undefined);
+    return true;
   }
 
-  const startAt = context.currentTime + 0.01;
-  playTone(context, 880, startAt, 0.12, 0.085);
-  playTone(context, 1174.66, startAt + 0.12, 0.16, 0.075);
+  playNewDeliveryToneSequence(context);
 
   return true;
 };

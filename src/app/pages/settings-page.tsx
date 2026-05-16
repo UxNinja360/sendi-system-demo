@@ -365,9 +365,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
 
   const handleTestSound = () => {
     unlockAlertSound();
-    window.setTimeout(() => {
-      playNewDeliverySound({ force: true });
-    }, 60);
+    playNewDeliverySound({ force: true });
   };
 
   const handleTestHaptic = () => {
