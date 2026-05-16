@@ -40,6 +40,7 @@ type DeliveriesCommandSearchProps = {
   setSelectedCouriers: React.Dispatch<React.SetStateAction<Set<string>>>;
   toggleCourier: (id: string) => void;
   setCurrentPage: (page: number) => void;
+  onOpenChange?: (open: boolean) => void;
 };
 
 const TEXT = {
@@ -147,6 +148,7 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
   setSelectedCouriers,
   toggleCourier,
   setCurrentPage,
+  onOpenChange,
 }) => {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -154,6 +156,10 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
   const [isOpen, setIsOpen] = useState(false);
   const [commandContext, setCommandContext] = useState<CommandKind | null>(null);
   const activeCommandConfig = commandContext ? getCommandConfig(commandContext) : null;
+
+  useEffect(() => {
+    onOpenChange?.(isOpen);
+  }, [isOpen, onOpenChange]);
 
   useEffect(() => {
     if (commandContext) return;
@@ -435,6 +441,7 @@ export const DeliveriesCommandSearch: React.FC<DeliveriesCommandSearchProps> = (
           <input
             ref={inputRef}
             type="text"
+            data-haptic="light"
             value={draft}
             placeholder={inputPlaceholder}
             aria-label={commandContext ? `${TEXT.search} ${activeCommandConfig?.label ?? ''}` : TEXT.placeholder}

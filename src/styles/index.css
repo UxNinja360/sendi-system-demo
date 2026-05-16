@@ -556,16 +556,6 @@ body {
     padding: 12px 12px 6px;
   }
 
-  .restaurant-row__type {
-    grid-area: type;
-    padding: 12px 8px 6px 12px;
-  }
-
-  .restaurant-row__contact {
-    grid-area: contact;
-    padding: 6px 12px 10px;
-  }
-
   .restaurant-row__footer {
     border-top: 1px solid var(--app-nav-border);
     display: flex;

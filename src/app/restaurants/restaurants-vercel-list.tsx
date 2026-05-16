@@ -38,7 +38,7 @@ type RestaurantsVercelListProps = {
 };
 
 const rowGridClass =
-  'restaurant-vercel-row grid grid-cols-[minmax(0,1fr)_44px] md:grid-cols-[minmax(140px,220px)_minmax(84px,124px)_minmax(96px,140px)_minmax(140px,220px)_minmax(0,1fr)_36px] xl:grid-cols-[minmax(160px,240px)_minmax(88px,132px)_minmax(112px,150px)_minmax(160px,240px)_minmax(0,1fr)_36px] 2xl:grid-cols-[minmax(180px,260px)_minmax(96px,140px)_minmax(124px,164px)_minmax(180px,260px)_minmax(0,1fr)_36px]';
+  'restaurant-vercel-row grid grid-cols-[minmax(0,1fr)_44px] md:grid-cols-[minmax(0,1fr)_minmax(84px,124px)_36px] xl:grid-cols-[minmax(0,1fr)_minmax(88px,132px)_36px] 2xl:grid-cols-[minmax(0,1fr)_minmax(96px,140px)_36px]';
 
 const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(' ');
@@ -100,22 +100,6 @@ const RestaurantVercelRow: React.FC<{
           {statusMeta.label}
         </span>
       </div>
-
-      <div className="restaurant-row__type col-start-1 row-start-3 hidden min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:flex md:min-h-[72px] md:py-2">
-        <div className="truncate text-sm font-semibold text-app-text">{restaurant.type}</div>
-        {restaurant.chainId && restaurant.chainId !== '-' && (
-          <div className="mt-1 truncate text-sm font-normal text-app-text-secondary">{restaurant.chainId}</div>
-        )}
-      </div>
-
-      <div className="restaurant-row__contact col-start-1 row-start-4 hidden min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:flex md:min-h-[72px] md:py-2">
-        <div className="truncate text-sm font-semibold text-app-text">{restaurant.contactPerson || '-'}</div>
-        <div className="mt-1 truncate text-right text-sm font-normal text-app-text-secondary" dir="ltr">
-          {restaurant.ownerPhone || '-'}
-        </div>
-      </div>
-
-      <div className="hidden min-h-0 min-w-0 md:block" aria-hidden="true" />
 
       <div className="restaurant-row__actions col-start-2 row-start-1 flex min-h-0 items-start justify-center px-1 py-3 md:col-auto md:row-auto md:min-h-[72px] md:items-center md:py-0" onClick={(event) => event.stopPropagation()}>
         <EntityRowActionTrigger

@@ -3,6 +3,7 @@ import { format as formatDate } from 'date-fns';
 import { useNavigate } from 'react-router';
 import {
   AlertTriangle,
+  ArrowUp,
   Bike,
   Car,
   CheckCircle2,
@@ -1082,6 +1083,7 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
   onSearchRowHiddenChange,
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const [showScrollTopFab, setShowScrollTopFab] = useState(false);
   const scrollDirectionRef = useRef({
     animationFrame: 0,
     hidden: false,
@@ -1160,6 +1162,52 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
     };
   }, [filteredDeliveries.length, onSearchRowHiddenChange]);
 
+  useLayoutEffect(() => {
+    const element = scrollContainerRef.current;
+    if (!element) return undefined;
+
+    let animationFrame = 0;
+    const updateVisibility = () => {
+      animationFrame = 0;
+      setShowScrollTopFab(element.scrollTop > 640);
+    };
+    const handleScroll = () => {
+      if (animationFrame) return;
+      animationFrame = window.requestAnimationFrame(updateVisibility);
+    };
+
+    updateVisibility();
+    element.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      if (animationFrame) {
+        window.cancelAnimationFrame(animationFrame);
+      }
+      element.removeEventListener('scroll', handleScroll);
+    };
+  }, [filteredDeliveries.length, viewMode]);
+
+  const handleScrollToTop = () => {
+    const element = scrollContainerRef.current;
+    if (!element) return;
+
+    onSearchRowHiddenChange?.(false);
+    element.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const scrollTopFab = showScrollTopFab ? (
+    <button
+      type="button"
+      data-haptic="medium"
+      onClick={handleScrollToTop}
+      className="absolute bottom-4 left-4 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full border border-app-border bg-app-surface/95 text-app-text shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur transition-[transform,background-color,border-color] hover:-translate-y-0.5 hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 md:bottom-5 md:left-5"
+      aria-label="גלול למעלה"
+      title="גלול למעלה"
+    >
+      <ArrowUp className="h-5 w-5" />
+    </button>
+  ) : null;
+
   if (filteredDeliveries.length === 0) {
     const emptyStateCopy = getDeliveryEmptyStateCopy(emptyStateMode, totalCount);
 
@@ -1177,8 +1225,8 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
 
   if (viewMode === 'cards') {
     return (
-      <div data-view-mode="cards" className="flex min-h-0 flex-1 flex-col bg-app-background">
-        <div className="resource-list-scroll min-h-0 flex-1 overflow-auto px-2 pb-3 lg:px-3" dir="rtl">
+      <div data-view-mode="cards" className="relative flex min-h-0 flex-1 flex-col bg-app-background">
+        <div ref={scrollContainerRef} className="resource-list-scroll min-h-0 flex-1 overflow-auto px-2 pb-3 lg:px-3" dir="rtl">
           <div className="grid grid-cols-1 gap-2 lg:grid-cols-2 xl:grid-cols-3">
             {filteredDeliveries.map((delivery) => {
               const courier = delivery.courierId
@@ -1208,13 +1256,14 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
             })}
           </div>
         </div>
+        {scrollTopFab}
         {selectionBar}
       </div>
     );
   }
 
   return (
-    <div data-view-mode="list" className="flex min-h-0 flex-1 flex-col bg-app-background">
+    <div data-view-mode="list" className="relative flex min-h-0 flex-1 flex-col bg-app-background">
       <div ref={scrollContainerRef} className="deliveries-vercel-scroll min-h-0 flex-1 overflow-auto px-2 lg:px-3" dir="ltr">
         <div className="delivery-vercel-list-frame w-full min-w-0 overflow-visible border border-app-nav-border lg:overflow-hidden" dir="rtl">
           {filteredDeliveries.map((delivery) => {
@@ -1245,6 +1294,7 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
           })}
         </div>
       </div>
+      {scrollTopFab}
       {selectionBar}
     </div>
   );

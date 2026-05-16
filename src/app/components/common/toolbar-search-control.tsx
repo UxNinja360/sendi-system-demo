@@ -58,6 +58,7 @@ export const ToolbarSearchControl: React.FC<ToolbarSearchControlProps> = ({
               <input
                 ref={inputRef}
                 type="text"
+                data-haptic="light"
                 placeholder={placeholder}
                 value={searchQuery}
                 onFocus={() => setInputFocused(true)}
@@ -69,6 +70,7 @@ export const ToolbarSearchControl: React.FC<ToolbarSearchControlProps> = ({
             {searchQuery && (
               <button
                 type="button"
+                data-haptic="light"
                 onClick={() => onSearchQueryChange('')}
                 className={toolbarSearchClearButtonClassName}
               >
@@ -79,6 +81,7 @@ export const ToolbarSearchControl: React.FC<ToolbarSearchControlProps> = ({
           {alwaysOpen ? null : (
             <button
               type="button"
+              data-haptic="off"
               onClick={() => {
                 onSearchOpenChange(false);
                 onSearchQueryChange('');

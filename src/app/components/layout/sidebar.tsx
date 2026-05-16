@@ -316,7 +316,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       {isExpanded ? (
         <button
           type="button"
-          data-haptic="selection"
+          data-haptic="off"
           onClick={() => setIsOpen((value) => !value)}
           className="mx-2 mb-1 flex h-9 w-[calc(100%-1rem)] items-center gap-3 rounded-[var(--app-radius-sm)] px-4 text-right text-sm font-medium text-app-text-secondary transition-colors hover:bg-app-nav-hover-bg hover:text-app-text"
           aria-expanded={isOpen}
@@ -335,7 +335,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
         >
           <button
             type="button"
-            data-haptic="selection"
+            data-haptic="off"
             onClick={() => setIsOpen((value) => !value)}
             aria-label={section.label}
             aria-expanded={isOpen}
@@ -464,7 +464,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       <button
         key={item.id}
         type="button"
-        data-haptic={isActive ? 'selection' : 'light'}
+        data-haptic="off"
         data-onboarding={ONBOARDING_BY_ID[item.id]}
         onClick={(event) => {
           event.stopPropagation();
@@ -560,7 +560,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
         {isDesktop && (
           <button
             type="button"
-            data-haptic="medium"
+            data-haptic="off"
             onPointerDown={handleSidebarResizePointerDown}
             onPointerMove={handleSidebarResizePointerMove}
             onPointerUp={finishSidebarResize}
@@ -595,7 +595,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
             {isExpanded ? (
               <button
                 type="button"
-                data-haptic="medium"
+                data-haptic="off"
                 onClick={(event) => {
                   event.stopPropagation();
                   setBusinessSearch('');
@@ -625,7 +625,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
               <SidebarIconTooltip label={selectedBusiness} className="hidden justify-center md:flex">
                 <button
                   type="button"
-                  data-haptic="medium"
+                  data-haptic="off"
                   onClick={(event) => {
                     event.stopPropagation();
                     setBusinessSearch('');
@@ -670,7 +670,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                         <button
                           key={business}
                           type="button"
-                          data-haptic={isSelected ? 'selection' : 'light'}
+                          data-haptic="off"
                           onClick={() => {
                             setSelectedBusiness(business);
                             setIsBusinessPopupOpen(false);
@@ -750,7 +750,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
         <div className="mt-auto shrink-0 border-t border-app-nav-border">
           <button
             type="button"
-            data-haptic={location.pathname === (walletItem?.path ?? '/wallet') ? 'selection' : 'light'}
+            data-haptic="off"
             onClick={() => handleNav(walletItem?.path ?? '/wallet')}
             className={footerItemClass(location.pathname === (walletItem?.path ?? '/wallet'))}
           >
@@ -781,7 +781,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
           <button
             type="button"
-            data-haptic={location.pathname === (balanceItem?.path ?? '/delivery-balance') ? 'selection' : 'light'}
+            data-haptic="off"
             onClick={() => handleNav(balanceItem?.path ?? '/delivery-balance')}
             className={footerItemClass(location.pathname === (balanceItem?.path ?? '/delivery-balance'))}
           >
@@ -889,7 +889,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
           <button
             type="button"
-            data-haptic={location.pathname.startsWith(settingsItem?.path ?? '/settings') ? 'selection' : 'light'}
+            data-haptic="off"
             onClick={() => handleNav(settingsItem?.path ?? '/settings')}
             className={`w-full cursor-pointer px-4 py-3 text-right transition-colors ${
               location.pathname.startsWith(settingsItem?.path ?? '/settings')
