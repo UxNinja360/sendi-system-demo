@@ -13,6 +13,7 @@ type AudioWindow = Window &
   };
 
 let audioContext: AudioContext | null = null;
+const BACKGROUND_RETURN_NOTIFICATION_WINDOW_MS = 6000;
 
 const getAudioContext = () => {
   if (typeof window === 'undefined') return null;
@@ -200,6 +201,8 @@ export const OperationalAlerts: React.FC = () => {
   const { state } = useDelivery();
   const navigate = useNavigate();
   const knownDeliveryIdsRef = React.useRef<Set<string> | null>(null);
+  const backgroundedAtRef = React.useRef<number | null>(null);
+  const backgroundReturnWindowUntilRef = React.useRef(0);
   const pendingDeliveryCount = getPendingDeliveryCount(state.deliveries);
 
   React.useEffect(() => {
@@ -237,7 +240,11 @@ export const OperationalAlerts: React.FC = () => {
 
     if (newDeliveries.length === 0) return;
 
-    if (isAppInForeground()) {
+    const appInForeground = isAppInForeground();
+    const shouldNotifyAsBackground =
+      !appInForeground || Date.now() <= backgroundReturnWindowUntilRef.current;
+
+    if (appInForeground && !shouldNotifyAsBackground) {
       playNewDeliverySound();
       if (getAlertPreferences().newDeliveryHapticEnabled) {
         playHaptic('success', { force: true });
@@ -246,7 +253,16 @@ export const OperationalAlerts: React.FC = () => {
       return;
     }
 
-    if (!shouldShowBrowserNotification()) return;
+    if (!shouldShowBrowserNotification()) {
+      if (appInForeground) {
+        playNewDeliverySound();
+        if (getAlertPreferences().newDeliveryHapticEnabled) {
+          playHaptic('success', { force: true });
+        }
+        newDeliveries.forEach(showInAppDeliveryAlert);
+      }
+      return;
+    }
 
     newDeliveries.forEach((delivery) => {
       void showDeliveryNotification(delivery, pendingDeliveryCount, (notification) => {
@@ -257,7 +273,82 @@ export const OperationalAlerts: React.FC = () => {
         // Some iOS/browser states expose Notification but still reject creation.
       });
     });
+
+    if (shouldNotifyAsBackground && appInForeground) {
+      backgroundReturnWindowUntilRef.current = 0;
+      backgroundedAtRef.current = null;
+    }
   }, [navigate, pendingDeliveryCount, state.deliveries]);
+
+  React.useEffect(() => {
+    let clearReturnWindowTimer: number | undefined;
+
+    const clearReturnWindowLater = () => {
+      if (typeof window === 'undefined') return;
+      if (clearReturnWindowTimer !== undefined) {
+        window.clearTimeout(clearReturnWindowTimer);
+      }
+
+      clearReturnWindowTimer = window.setTimeout(() => {
+        if (Date.now() >= backgroundReturnWindowUntilRef.current) {
+          backgroundReturnWindowUntilRef.current = 0;
+          backgroundedAtRef.current = null;
+        }
+      }, BACKGROUND_RETURN_NOTIFICATION_WINDOW_MS + 250);
+    };
+
+    const updateAppPresence = () => {
+      const now = Date.now();
+
+      if (!isAppInForeground()) {
+        if (backgroundedAtRef.current === null) {
+          backgroundedAtRef.current = now;
+        }
+        backgroundReturnWindowUntilRef.current = 0;
+        if (clearReturnWindowTimer !== undefined) {
+          window.clearTimeout(clearReturnWindowTimer);
+          clearReturnWindowTimer = undefined;
+        }
+        return;
+      }
+
+      if (backgroundedAtRef.current !== null) {
+        backgroundReturnWindowUntilRef.current =
+          now + BACKGROUND_RETURN_NOTIFICATION_WINDOW_MS;
+        clearReturnWindowLater();
+      }
+    };
+
+    updateAppPresence();
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('blur', updateAppPresence);
+      window.addEventListener('focus', updateAppPresence);
+      window.addEventListener('pagehide', updateAppPresence);
+      window.addEventListener('pageshow', updateAppPresence);
+    }
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', updateAppPresence);
+    }
+
+    return () => {
+      if (clearReturnWindowTimer !== undefined) {
+        window.clearTimeout(clearReturnWindowTimer);
+      }
+
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('blur', updateAppPresence);
+        window.removeEventListener('focus', updateAppPresence);
+        window.removeEventListener('pagehide', updateAppPresence);
+        window.removeEventListener('pageshow', updateAppPresence);
+      }
+
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', updateAppPresence);
+      }
+    };
+  }, []);
 
   React.useEffect(() => {
     const syncBadge = () => {
