@@ -5,6 +5,21 @@ const toPositiveBadgeCount = (value) => {
   return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
 };
 
+const formatOrderNumber = (orderNumber) => {
+  const value = String(orderNumber || '').trim();
+  if (!value) return '';
+  return value.startsWith('#') ? value : `#${value}`;
+};
+
+const getNotificationTitle = (payload) => {
+  if (payload.title || payload.notificationTitle) {
+    return payload.title || payload.notificationTitle;
+  }
+
+  const orderNumber = formatOrderNumber(payload.orderNumber || payload.api_short_order_id);
+  return orderNumber ? `משלוח חדש ${orderNumber}` : 'משלוח חדש';
+};
+
 const readPushPayload = (event) => {
   if (!event.data) return {};
 
@@ -45,7 +60,11 @@ const buildNotificationOptions = (payload) => {
   );
   const body =
     payload.body ||
-    [payload.restaurantName, payload.customerName, payload.address].filter(Boolean).join(' - ');
+    [
+      payload.restaurantName || payload.rest_name,
+      payload.customerName || payload.client_name,
+      payload.address || payload.client_full_address,
+    ].filter(Boolean).join(' · ');
 
   return {
     body,
@@ -66,7 +85,7 @@ const buildNotificationOptions = (payload) => {
 };
 
 const showSendiNotification = async (payload) => {
-  const title = payload.title || payload.notificationTitle || 'משלוח חדש';
+  const title = getNotificationTitle(payload);
   await self.registration.showNotification(title, buildNotificationOptions(payload));
 };
 

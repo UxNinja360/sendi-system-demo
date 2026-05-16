@@ -80,12 +80,23 @@ export const playNewDeliverySound = ({ force = false }: { force?: boolean } = {}
 export const canUseBrowserNotifications = () =>
   typeof window !== 'undefined' && 'Notification' in window;
 
-const getDeliveryTitle = (delivery: Delivery) => `משלוח חדש #${delivery.orderNumber}`;
+const formatOrderNumber = (orderNumber: Delivery['orderNumber']) => {
+  const value = String(orderNumber ?? '').trim();
+  if (!value) return '';
+  return value.startsWith('#') ? value : `#${value}`;
+};
+
+const getDeliveryTitle = (delivery: Delivery) =>
+  `משלוח חדש ${formatOrderNumber(delivery.orderNumber)}`.trim();
 
 const getDeliveryBody = (delivery: Delivery) =>
-  [delivery.restaurantName, delivery.customerName, delivery.address]
+  [
+    delivery.restaurantName ?? delivery.rest_name,
+    delivery.customerName ?? delivery.client_name,
+    delivery.address ?? delivery.client_full_address,
+  ]
     .filter(Boolean)
-    .join(' · ');
+    .join(' \u00b7 ');
 
 const getDeliveryTimestamp = (delivery: Delivery) => {
   const value = delivery.createdAt ?? delivery.creation_time;
@@ -101,6 +112,16 @@ const shouldShowBrowserNotification = () => {
   }
 
   return true;
+};
+
+const isAppInForeground = () => {
+  if (typeof document === 'undefined') return true;
+
+  const isVisible = document.visibilityState === 'visible';
+  const hasFocus =
+    typeof document.hasFocus === 'function' ? document.hasFocus() : true;
+
+  return isVisible && hasFocus;
 };
 
 const getPendingDeliveryCount = (deliveries: Delivery[]) =>
@@ -145,6 +166,15 @@ const showDeliveryNotification = async (
 
   const notification = new Notification(title, options);
   notification.onclick = () => onClick(notification);
+};
+
+const showInAppDeliveryAlert = (delivery: Delivery) => {
+  const body = getDeliveryBody(delivery);
+
+  toast.success(getDeliveryTitle(delivery), {
+    description: body || undefined,
+    duration: 3600,
+  });
 };
 
 export const requestNotificationPermission = async () => {
@@ -207,9 +237,13 @@ export const OperationalAlerts: React.FC = () => {
 
     if (newDeliveries.length === 0) return;
 
-    playNewDeliverySound();
-    if (getAlertPreferences().newDeliveryHapticEnabled) {
-      playHaptic('success', { force: true });
+    if (isAppInForeground()) {
+      playNewDeliverySound();
+      if (getAlertPreferences().newDeliveryHapticEnabled) {
+        playHaptic('success', { force: true });
+      }
+      newDeliveries.forEach(showInAppDeliveryAlert);
+      return;
     }
 
     if (!shouldShowBrowserNotification()) return;
