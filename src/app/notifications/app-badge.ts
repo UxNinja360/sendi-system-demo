@@ -25,6 +25,12 @@ const postBadgeToServiceWorker = (count: number) => {
   };
 
   navigator.serviceWorker.controller?.postMessage(message);
+  void navigator.serviceWorker.ready
+    .then((registration) => {
+      registration.active?.postMessage(message);
+      registration.waiting?.postMessage(message);
+    })
+    .catch(() => undefined);
 };
 
 export const setPendingDeliveriesBadge = async (count: number) => {

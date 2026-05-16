@@ -5,7 +5,7 @@ import { useDelivery } from '../context/delivery-context-value';
 import type { Delivery } from '../types/delivery.types';
 import { playHaptic } from '../utils/haptics';
 import { setPendingDeliveriesBadge } from './app-badge';
-import { getAlertPreferences } from './alert-preferences';
+import { ALERT_PREFERENCES_EVENT, getAlertPreferences } from './alert-preferences';
 
 type AudioWindow = Window &
   typeof globalThis & {
@@ -258,6 +258,43 @@ export const OperationalAlerts: React.FC = () => {
       });
     });
   }, [navigate, pendingDeliveryCount, state.deliveries]);
+
+  React.useEffect(() => {
+    const syncBadge = () => {
+      void setPendingDeliveriesBadge(pendingDeliveryCount);
+    };
+
+    syncBadge();
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('pageshow', syncBadge);
+      window.addEventListener(ALERT_PREFERENCES_EVENT, syncBadge);
+    }
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', syncBadge);
+    }
+
+    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('controllerchange', syncBadge);
+      void navigator.serviceWorker.ready.then(syncBadge).catch(() => undefined);
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('pageshow', syncBadge);
+        window.removeEventListener(ALERT_PREFERENCES_EVENT, syncBadge);
+      }
+
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', syncBadge);
+      }
+
+      if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener('controllerchange', syncBadge);
+      }
+    };
+  }, [pendingDeliveryCount]);
 
   return null;
 };
