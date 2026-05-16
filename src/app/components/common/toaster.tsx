@@ -11,11 +11,11 @@ export const Toaster = () => {
       visibleToasts={3}
       duration={1800}
       offset={{
-        top: 'calc(var(--app-safe-top) + 46px)',
+        top: 'calc(var(--app-safe-top) + 6px)',
         bottom: 'calc(var(--app-safe-bottom) + 18px)',
       }}
       mobileOffset={{
-        top: 'calc(var(--app-safe-top) + 46px)',
+        top: 'calc(var(--app-safe-top) + 6px)',
         bottom: 'calc(var(--app-safe-bottom) + 14px)',
       }}
       toastOptions={{

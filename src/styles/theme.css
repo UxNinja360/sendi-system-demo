@@ -878,6 +878,12 @@
     --width: fit-content !important;
   }
 
+  [data-sonner-toaster][data-y-position='top'][data-x-position='center'] {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+  }
+
   [data-sonner-toast] {
     direction: rtl !important;
   }
