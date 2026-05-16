@@ -565,6 +565,28 @@ body {
   }
 }
 
+@media (min-width: 768px) {
+  .restaurant-vercel-row {
+    grid-template-columns: minmax(240px, 340px) minmax(128px, 164px) minmax(0, 1fr) minmax(84px, 112px) 36px !important;
+  }
+
+  .restaurant-row__footer {
+    display: none !important;
+  }
+
+  .restaurant-row__status {
+    grid-column: 2;
+  }
+
+  .restaurant-row__deliveries {
+    grid-column: 4;
+  }
+
+  .restaurant-row__actions {
+    grid-column: 5;
+  }
+}
+
 .status-filter-row,
 .status-filter-row * {
   transition-duration: 0s !important;

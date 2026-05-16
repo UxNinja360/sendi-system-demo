@@ -25,7 +25,7 @@ type CouriersVercelListProps = {
 };
 
 const rowGridClass =
-  'courier-vercel-row grid grid-cols-[minmax(0,1fr)_44px] md:grid-cols-[minmax(140px,220px)_minmax(112px,150px)_minmax(112px,150px)_minmax(96px,140px)_minmax(0,1fr)_52px_36px] xl:grid-cols-[minmax(160px,240px)_minmax(124px,164px)_minmax(124px,164px)_minmax(112px,150px)_minmax(0,1fr)_52px_36px] 2xl:grid-cols-[minmax(180px,260px)_minmax(132px,176px)_minmax(132px,176px)_minmax(124px,164px)_minmax(0,1fr)_56px_36px]';
+  'courier-vercel-row grid grid-cols-[minmax(0,1fr)_44px] md:grid-cols-[minmax(180px,260px)_minmax(104px,136px)_minmax(112px,150px)_minmax(96px,140px)_minmax(0,1fr)_52px_52px_36px] xl:grid-cols-[minmax(200px,280px)_minmax(112px,144px)_minmax(124px,164px)_minmax(112px,150px)_minmax(0,1fr)_52px_52px_36px] 2xl:grid-cols-[minmax(220px,300px)_minmax(120px,152px)_minmax(132px,176px)_minmax(124px,164px)_minmax(0,1fr)_56px_56px_36px]';
 
 const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(' ');
@@ -104,8 +104,9 @@ const CourierConnectionBadge: React.FC<{
   label: string;
   dotClassName: string;
   textClassName: string;
-}> = ({ label, dotClassName, textClassName }) => (
-  <span className={joinClassNames('inline-flex shrink-0 items-center gap-1.5 text-xs font-medium', textClassName)}>
+  className?: string;
+}> = ({ label, dotClassName, textClassName, className }) => (
+  <span className={joinClassNames('inline-flex shrink-0 items-center gap-1.5 text-sm font-normal', textClassName, className)}>
     <span className={joinClassNames('h-2 w-2 rounded-full', dotClassName)} />
     <span>{label}</span>
   </span>
@@ -157,18 +158,20 @@ const CourierVercelRow: React.FC<{
       <div className="courier-row__identity col-start-1 row-start-1 flex min-h-0 min-w-0 items-center gap-3 px-2 py-3 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
         <CourierAvatarMark name={courier.name} avatarUrl={courier.avatarUrl} size="sm" />
         <div className="min-w-0">
-          <div className="flex min-w-0 items-center gap-2">
-            <div className="min-w-0 truncate text-sm font-semibold text-app-text">{courier.name}</div>
-            <CourierConnectionBadge
-              label={connectionMeta.label}
-              dotClassName={connectionMeta.dot}
-              textClassName={connectionMeta.text}
-            />
-          </div>
+          <div className="min-w-0 truncate text-sm font-semibold text-app-text">{courier.name}</div>
           <div className="mt-1 truncate text-right text-sm font-normal text-app-text-secondary" dir="ltr">
             {courier.phone || '-'}
           </div>
         </div>
+      </div>
+
+      <div className="courier-row__connection hidden min-h-0 min-w-0 items-center px-2 py-1 md:col-auto md:row-auto md:flex md:min-h-[72px] md:py-2">
+        <CourierConnectionBadge
+          label={connectionMeta.label}
+          dotClassName={connectionMeta.dot}
+          textClassName={connectionMeta.text}
+          className="min-w-0"
+        />
       </div>
 
       <div className="courier-row__deliveries hidden min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:flex md:min-h-[72px] md:py-2">
@@ -193,8 +196,14 @@ const CourierVercelRow: React.FC<{
 
       <div className="hidden min-h-0 min-w-0 md:block" aria-hidden="true" />
 
-      <div className="courier-row__footer col-start-1 row-start-5 flex min-h-0 items-center justify-start px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:justify-center md:px-3 md:py-2">
-        <div className="flex items-center gap-1.5 text-sm font-normal text-app-text-secondary">
+      <div className="courier-row__footer col-start-1 row-start-5 flex min-h-0 items-center justify-between px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:justify-center md:px-3 md:py-2">
+        <CourierConnectionBadge
+          label={connectionMeta.label}
+          dotClassName={connectionMeta.dot}
+          textClassName={connectionMeta.text}
+          className="md:hidden"
+        />
+        <div className="hidden items-center gap-1.5 text-sm font-normal text-app-text-secondary md:flex">
           <Star className="h-3.5 w-3.5 shrink-0" />
           <span className="tabular-nums">{courier.rating.toFixed(1)}</span>
         </div>

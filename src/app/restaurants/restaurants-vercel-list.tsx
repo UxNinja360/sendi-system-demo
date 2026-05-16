@@ -38,7 +38,7 @@ type RestaurantsVercelListProps = {
 };
 
 const rowGridClass =
-  'restaurant-vercel-row grid grid-cols-[minmax(0,1fr)_44px] md:grid-cols-[minmax(0,1fr)_minmax(84px,124px)_36px] xl:grid-cols-[minmax(0,1fr)_minmax(88px,132px)_36px] 2xl:grid-cols-[minmax(0,1fr)_minmax(96px,140px)_36px]';
+  'restaurant-vercel-row grid grid-cols-[minmax(0,1fr)_44px] md:grid-cols-[minmax(240px,320px)_minmax(128px,156px)_minmax(0,1fr)_minmax(74px,96px)_36px] xl:grid-cols-[minmax(260px,340px)_minmax(132px,164px)_minmax(0,1fr)_minmax(80px,104px)_36px] 2xl:grid-cols-[minmax(280px,360px)_minmax(140px,176px)_minmax(0,1fr)_minmax(84px,112px)_36px]';
 
 const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(' ');
@@ -59,7 +59,8 @@ const RestaurantVercelRow: React.FC<{
 }) => {
   const navigate = useNavigate();
   const address = [restaurant.street, restaurant.city].filter(Boolean).join(', ') || '-';
-  const statusMeta = getRestaurantStatusMeta(restaurant);
+  const footerStatusText = restaurant.isActive ? 'מסעדה פעילה' : 'מסעדה לא פעילה';
+  const footerStatusDotClassName = restaurant.isActive ? 'bg-app-success-text' : 'bg-app-text-secondary';
 
   const navigateToRestaurant = () => {
     navigate(`/restaurant/${restaurant.restaurantId}`);
@@ -85,19 +86,22 @@ const RestaurantVercelRow: React.FC<{
       <div className="restaurant-row__identity col-start-1 row-start-1 flex min-h-0 min-w-0 items-center gap-3 px-2 py-3 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
         <RestaurantLogoMark name={restaurant.name} logoUrl={restaurant.logoUrl} size="sm" />
         <div className="min-w-0 flex-1">
-          <div className="flex min-w-0 items-center justify-between gap-2">
-            <div className="truncate text-sm font-semibold text-app-text">{restaurant.name}</div>
-            <span className={joinClassNames('shrink-0 text-sm font-semibold md:hidden', statusMeta.text)}>
-              {statusMeta.label}
-            </span>
-          </div>
+          <div className="truncate text-sm font-semibold text-app-text">{restaurant.name}</div>
           <div className="mt-1 truncate text-sm font-normal text-app-text-secondary">{address}</div>
         </div>
       </div>
 
-      <div className="restaurant-row__status col-start-1 row-start-2 hidden min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:flex md:min-h-[72px] md:py-2">
-        <span className={joinClassNames('truncate text-sm font-semibold', statusMeta.text)}>
-          {statusMeta.label}
+      <div className="restaurant-row__status col-start-1 row-start-2 hidden min-h-0 min-w-0 items-center px-2 py-1 text-sm font-normal text-app-text-secondary md:col-start-2 md:row-auto md:flex md:min-h-[72px] md:py-2">
+        <span className="inline-flex min-w-0 items-center gap-1.5">
+          <span className={joinClassNames('h-2 w-2 shrink-0 rounded-full', footerStatusDotClassName)} />
+          <span className="truncate">{footerStatusText}</span>
+        </span>
+      </div>
+
+      <div className="restaurant-row__deliveries hidden min-h-0 min-w-0 items-center px-2 text-sm font-normal text-app-text-secondary md:col-start-4 md:flex md:min-h-[72px]">
+        <span className="inline-flex shrink-0 items-center gap-1.5">
+          <Package className="h-3.5 w-3.5" />
+          <span className="tabular-nums">{restaurant.totalDeliveries}</span>
         </span>
       </div>
 
@@ -108,8 +112,12 @@ const RestaurantVercelRow: React.FC<{
         />
       </div>
 
-      <div className="restaurant-row__footer hidden min-h-0 items-center gap-3 text-sm font-normal text-app-text-secondary md:hidden">
-        <span className="ms-auto inline-flex shrink-0 items-center gap-1.5">
+      <div className="restaurant-row__footer hidden min-h-0 items-center justify-between gap-3 text-sm font-normal text-app-text-secondary md:hidden">
+        <span className="inline-flex min-w-0 items-center gap-1.5">
+          <span className={joinClassNames('h-2 w-2 shrink-0 rounded-full', footerStatusDotClassName)} />
+          <span className="truncate">{footerStatusText}</span>
+        </span>
+        <span className="inline-flex shrink-0 items-center gap-1.5">
           <Package className="h-3.5 w-3.5" />
           <span className="tabular-nums">{restaurant.totalDeliveries}</span>
         </span>

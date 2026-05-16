@@ -21,7 +21,6 @@ type PageToolbarProps = {
   actionsClassName?: string;
   pairControlsOnMobile?: boolean;
   actionsHidden?: boolean;
-  controlsHiddenOnMobile?: boolean;
 };
 
 const toDateInputValue = (date: Date) =>
@@ -42,7 +41,6 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
   actionsClassName = '',
   pairControlsOnMobile = false,
   actionsHidden = false,
-  controlsHiddenOnMobile = false,
 }) => {
   const primaryActionMenuRef = React.useRef<HTMLDivElement | null>(null);
   const [primaryActionMenuOpen, setPrimaryActionMenuOpen] = React.useState(false);
@@ -119,9 +117,6 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
   const actionsVisibilityClassName = actionsHidden
     ? 'mb-0 max-h-0 -translate-y-1 overflow-hidden opacity-0 pointer-events-none md:mb-0 md:max-h-none md:translate-y-0 md:overflow-visible md:opacity-100 md:pointer-events-auto'
     : 'max-h-20 translate-y-0 overflow-visible opacity-100';
-  const mobileControlsVisibilityClassName = controlsHiddenOnMobile
-    ? 'hidden min-[900px]:flex'
-    : '';
 
   return (
     <>
@@ -134,7 +129,7 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
           <div className="app-toolbar-row overflow-visible px-3 py-2.5">
             <div className="flex w-full min-w-0 flex-wrap items-center gap-1.5 min-[900px]:flex-nowrap">
               {renderedPeriodControl ? (
-                <div className={`${periodControlClassName} ${mobileControlsVisibilityClassName}`.trim()}>
+                <div className={periodControlClassName}>
                   {renderedPeriodControl}
                 </div>
               ) : null}
@@ -147,7 +142,7 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
               ) : null}
               {controls ? (
                 <div
-                  className={`${controlsWrapperClassName} ${mobileControlsVisibilityClassName} ${controlsClassName}`.trim()}
+                  className={`${controlsWrapperClassName} ${controlsClassName}`.trim()}
                 >
                   {controls}
                 </div>

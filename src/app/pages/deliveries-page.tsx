@@ -436,7 +436,6 @@ export const DeliveriesPage: React.FC = () => {
 
   const [drawerDeliveryId, setDrawerDeliveryId] = useState<string | null>(null);
   const [searchRowHidden, setSearchRowHidden] = useState(false);
-  const [commandSearchOpen, setCommandSearchOpen] = useState(false);
 
   const [editDeliveryId, setEditDeliveryId] = useState<string | null>(null);
 
@@ -728,7 +727,8 @@ export const DeliveriesPage: React.FC = () => {
             showBottomBorder={false}
             pairControlsOnMobile
             actionsHidden={searchRowHidden}
-            controlsHiddenOnMobile={commandSearchOpen}
+            actionsClassName="relative z-[80]"
+            controlsClassName="relative z-10"
             periodControl={
               <ToolbarDayPicker
                 selectedDate={selectedDay}
@@ -764,7 +764,6 @@ export const DeliveriesPage: React.FC = () => {
                   setSelectedCouriers={setSelectedCouriers}
                   toggleCourier={toggleCourier}
                   setCurrentPage={setCurrentPage}
-                  onOpenChange={setCommandSearchOpen}
                 />
               </div>
             }
