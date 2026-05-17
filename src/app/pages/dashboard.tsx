@@ -15,6 +15,7 @@ import { PageToolbar } from '../components/common/page-toolbar';
 import { ToolbarDayPicker } from '../components/common/toolbar-date-picker';
 import { ToolbarSearchControl } from '../components/common/toolbar-search-control';
 import { useDelivery } from '../context/delivery-context-value';
+import { useDeliveriesMapSplit } from '../deliveries/use-deliveries-map-split';
 import type { Courier, Delivery, DeliveryStatus } from '../types/delivery.types';
 
 const ACTIVE_DELIVERY_STATUSES: DeliveryStatus[] = ['pending', 'assigned', 'delivering'];
@@ -223,9 +224,17 @@ export const Dashboard: React.FC = () => {
     visibleRestaurantIds.has(restaurant.id),
   ).length;
   const totalStatusCount = Math.max(filteredDeliveries.length, 1);
+  const { mapSplitPortal } = useDeliveriesMapSplit({
+    deliveries: filteredDeliveries,
+    couriers: state.couriers,
+    restaurants: state.restaurants,
+    routeStopOrders: state.courierRoutePlans,
+  });
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-app-background text-app-text" dir="rtl">
+    <>
+      {mapSplitPortal}
+      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-app-background text-app-text" dir="rtl">
       <PageToolbar
         showBottomBorder={false}
         pairControlsOnMobile
@@ -320,6 +329,7 @@ export const Dashboard: React.FC = () => {
           </section>
         </div>
       </main>
-    </div>
+      </div>
+    </>
   );
 };

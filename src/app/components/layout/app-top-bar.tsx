@@ -59,8 +59,18 @@ const getPageMenuAction = (pathname: string): PageMenuAction | null => {
   return null;
 };
 
+const getMapMenuAction = (): PageMenuAction => ({
+  action: 'toggle-deliveries-map',
+  label: '\u05e4\u05ea\u05d7 \u05de\u05e4\u05d4',
+  icon: <MapIcon className="h-4 w-4 text-app-text-secondary" />,
+});
+
 const getPageMenuActions = (pathname: string): PageMenuAction[] => {
   const primaryAction = getPageMenuAction(pathname);
+
+  if (pathname === '/dashboard') {
+    return [getMapMenuAction()];
+  }
 
   if (pathname === '/deliveries') {
     return [
@@ -81,6 +91,7 @@ const getPageMenuActions = (pathname: string): PageMenuAction[] => {
   if (pathname === '/couriers') {
     return [
       ...(primaryAction ? [primaryAction] : []),
+      getMapMenuAction(),
       {
         action: 'export-couriers',
         label: 'ייצוא',
@@ -92,6 +103,7 @@ const getPageMenuActions = (pathname: string): PageMenuAction[] => {
   if (pathname === '/restaurants') {
     return [
       ...(primaryAction ? [primaryAction] : []),
+      getMapMenuAction(),
       {
         action: 'export-restaurants',
         label: 'ייצוא',

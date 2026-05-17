@@ -71,7 +71,7 @@ const getShiftMeta = (courier: Courier) => {
   const isOnShift = courier.isOnShift;
 
   return {
-    label: isOnShift ? '\u05e4\u05e2\u05d9\u05dc' : '\u05dc\u05d0 \u05e4\u05e2\u05d9\u05dc',
+    label: isOnShift ? '\u05d1\u05de\u05e9\u05de\u05e8\u05ea' : '\u05dc\u05d0 \u05d1\u05de\u05e9\u05de\u05e8\u05ea',
     isActive: isOnShift,
     startedAt: isOnShift ? courier.shiftStartedAt : null,
     dot: isOnShift ? 'bg-[#50e3c2]' : 'bg-app-text-muted',

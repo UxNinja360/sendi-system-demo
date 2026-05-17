@@ -182,6 +182,23 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     };
   }, []);
 
+  useEffect(() => {
+    if (!mapContainerRef.current || !mapRef.current || typeof ResizeObserver === 'undefined') {
+      return undefined;
+    }
+
+    const map = mapRef.current;
+    const observer = new ResizeObserver(() => {
+      window.requestAnimationFrame(() => {
+        map.invalidateSize({ animate: false });
+      });
+    });
+
+    observer.observe(mapContainerRef.current);
+
+    return () => observer.disconnect();
+  }, []);
+
   // Update tile layer when theme changes
   useEffect(() => {
     if (tileLayerRef.current && mapRef.current) {

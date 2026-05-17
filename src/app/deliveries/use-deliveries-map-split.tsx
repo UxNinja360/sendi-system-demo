@@ -1,0 +1,175 @@
+import { useCallback, useEffect, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
+import { createPortal } from 'react-dom';
+import { X } from 'lucide-react';
+
+import { addAppTopBarActionListener } from '../components/layout/app-top-bar-actions';
+import type { Courier, Delivery, Restaurant } from '../types/delivery.types';
+import { DeliveriesLiveMapPanel } from './deliveries-live-map-panel';
+
+type UseDeliveriesMapSplitArgs = {
+  deliveries: Delivery[];
+  couriers: Courier[];
+  restaurants: Restaurant[];
+  routeStopOrders?: Record<string, string[]>;
+  selectedDeliveryIds?: Set<string>;
+  onOpenDelivery?: (deliveryId: string) => void;
+};
+
+const MAP_SPLIT_WIDTH_STORAGE_KEY = 'sendi:deliveries-map-split-width';
+const DEFAULT_MAP_WIDTH = 50;
+const MIN_MAP_WIDTH = 32;
+const MAX_MAP_WIDTH = 74;
+
+const clampMapWidth = (value: number) =>
+  Math.min(MAX_MAP_WIDTH, Math.max(MIN_MAP_WIDTH, value));
+
+const getSavedMapWidth = () => {
+  if (typeof localStorage === 'undefined') return DEFAULT_MAP_WIDTH;
+
+  const saved = Number(localStorage.getItem(MAP_SPLIT_WIDTH_STORAGE_KEY));
+  return Number.isFinite(saved) ? clampMapWidth(saved) : DEFAULT_MAP_WIDTH;
+};
+
+export const useDeliveriesMapSplit = ({
+  deliveries,
+  couriers,
+  restaurants,
+  routeStopOrders,
+  selectedDeliveryIds,
+  onOpenDelivery,
+}: UseDeliveriesMapSplitArgs) => {
+  const [mapOpen, setMapOpen] = useState(false);
+  const [mapWidth, setMapWidth] = useState(getSavedMapWidth);
+  const [isResizing, setIsResizing] = useState(false);
+
+  useEffect(
+    () =>
+      addAppTopBarActionListener('toggle-deliveries-map', () => {
+        setMapOpen((current) => !current);
+      }),
+    [],
+  );
+
+  const updateMapWidthFromClientX = useCallback((clientX: number) => {
+    if (typeof window === 'undefined' || window.innerWidth <= 0) return;
+
+    setMapWidth(clampMapWidth((clientX / window.innerWidth) * 100));
+  }, []);
+
+  const handleResizePointerDown = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (typeof window === 'undefined' || window.innerWidth < 1024) return;
+
+    event.preventDefault();
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    updateMapWidthFromClientX(event.clientX);
+    setIsResizing(true);
+  }, [updateMapWidthFromClientX]);
+
+  const handleResizeKeyDown = useCallback((event: KeyboardEvent<HTMLButtonElement>) => {
+    const step = event.shiftKey ? 5 : 2;
+    let nextWidth: number | null = null;
+
+    if (event.key === 'ArrowLeft') nextWidth = mapWidth - step;
+    if (event.key === 'ArrowRight') nextWidth = mapWidth + step;
+    if (event.key === 'Home') nextWidth = MIN_MAP_WIDTH;
+    if (event.key === 'End') nextWidth = MAX_MAP_WIDTH;
+    if (event.key === 'Enter' || event.key === ' ') nextWidth = DEFAULT_MAP_WIDTH;
+
+    if (nextWidth === null) return;
+
+    event.preventDefault();
+    setMapWidth(clampMapWidth(nextWidth));
+  }, [mapWidth]);
+
+  useEffect(() => {
+    if (!isResizing) return undefined;
+
+    const handlePointerMove = (event: PointerEvent) => {
+      event.preventDefault();
+      updateMapWidthFromClientX(event.clientX);
+    };
+    const handlePointerUp = () => setIsResizing(false);
+
+    window.addEventListener('pointermove', handlePointerMove, { passive: false });
+    window.addEventListener('pointerup', handlePointerUp);
+    window.addEventListener('pointercancel', handlePointerUp);
+
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener('pointercancel', handlePointerUp);
+    };
+  }, [isResizing, updateMapWidthFromClientX]);
+
+  useEffect(() => {
+    if (typeof localStorage === 'undefined') return;
+
+    localStorage.setItem(MAP_SPLIT_WIDTH_STORAGE_KEY, mapWidth.toFixed(2));
+  }, [mapWidth]);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+
+    const splitClassName = 'deliveries-map-split-open';
+    const resizingClassName = 'deliveries-map-split-resizing';
+    if (mapOpen) {
+      document.body.classList.add(splitClassName);
+      document.body.style.setProperty('--deliveries-map-split-width', `${mapWidth}vw`);
+    } else {
+      document.body.classList.remove(splitClassName);
+      document.body.style.removeProperty('--deliveries-map-split-width');
+    }
+
+    document.body.classList.toggle(resizingClassName, isResizing);
+
+    return () => {
+      document.body.classList.remove(splitClassName);
+      document.body.classList.remove(resizingClassName);
+      document.body.style.removeProperty('--deliveries-map-split-width');
+    };
+  }, [isResizing, mapOpen, mapWidth]);
+
+  const mapSplitPortal =
+    mapOpen && typeof document !== 'undefined'
+      ? createPortal(
+          <div className="deliveries-map-split-portal" dir="rtl" aria-label="מפת משלוחים">
+            <DeliveriesLiveMapPanel
+              deliveries={deliveries}
+              couriers={couriers}
+              restaurants={restaurants}
+              routeStopOrders={routeStopOrders}
+              selectedDeliveryIds={selectedDeliveryIds}
+              onOpenDelivery={onOpenDelivery}
+            />
+            <button
+              type="button"
+              className="deliveries-map-split-close"
+              data-haptic="off"
+              onClick={() => setMapOpen(false)}
+              aria-label="סגור מפה"
+              title="סגור מפה"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              className="deliveries-map-split-resizer"
+              aria-label="שינוי רוחב המפה"
+              aria-orientation="vertical"
+              aria-valuemin={MIN_MAP_WIDTH}
+              aria-valuemax={MAX_MAP_WIDTH}
+              aria-valuenow={Math.round(mapWidth)}
+              data-haptic="off"
+              onPointerDown={handleResizePointerDown}
+              onKeyDown={handleResizeKeyDown}
+              onDoubleClick={() => setMapWidth(DEFAULT_MAP_WIDTH)}
+              role="separator"
+              title="גרור לשינוי רוחב המפה. דאבל קליק מאפס."
+            />
+          </div>,
+          document.body,
+        )
+      : null;
+
+  return { mapOpen, setMapOpen, mapSplitPortal };
+};

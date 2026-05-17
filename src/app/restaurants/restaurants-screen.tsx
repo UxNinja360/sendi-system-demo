@@ -67,6 +67,7 @@ import {
 import { getDefaultRestaurantOwnerName, getDefaultRestaurantOwnerPhone } from '../context/delivery-bootstrap';
 import { DELIVERY_STORAGE_KEYS } from '../context/delivery-storage';
 import { RestaurantsVercelList } from './restaurants-vercel-list';
+import { useDeliveriesMapSplit } from '../deliveries/use-deliveries-map-split';
 import { DELIVERY_HUBS, TLV_RUNNERS_HUB_ID } from '../constants/delivery-hubs';
 
 // ═══════════════════════════════════════
@@ -814,11 +815,44 @@ export const RestaurantsScreen: React.FC = () => {
     toast.success(`יוצאו ${restaurantsToExport.length} מסעדות ל-Excel`);
   }, [filteredRestaurants, getRestaurantExportCellValue, selectedRestaurantIds, visibleOrderedCols]);
 
+  const visibleRestaurantIdSet = useMemo(
+    () => new Set(filteredRestaurants.map((restaurant) => restaurant.restaurantId)),
+    [filteredRestaurants],
+  );
+  const visibleRestaurantNameSet = useMemo(
+    () => new Set(filteredRestaurants.map((restaurant) => restaurant.name)),
+    [filteredRestaurants],
+  );
+  const mapRestaurants = useMemo(
+    () => state.restaurants.filter((restaurant) => visibleRestaurantIdSet.has(restaurant.id)),
+    [state.restaurants, visibleRestaurantIdSet],
+  );
+  const mapDeliveries = useMemo(
+    () =>
+      periodDeliveries.filter((delivery) => {
+        const restaurantId = delivery.restaurantId ?? delivery.rest_id;
+        const restaurantName = delivery.restaurantName ?? delivery.rest_name;
+        return (
+          (restaurantId && visibleRestaurantIdSet.has(restaurantId)) ||
+          (restaurantName && visibleRestaurantNameSet.has(restaurantName))
+        );
+      }),
+    [periodDeliveries, visibleRestaurantIdSet, visibleRestaurantNameSet],
+  );
+  const { mapSplitPortal } = useDeliveriesMapSplit({
+    deliveries: mapDeliveries,
+    couriers: state.couriers,
+    restaurants: mapRestaurants,
+    routeStopOrders: state.courierRoutePlans,
+  });
+
   // ═══════════════════════════════════════
   // Render
   // ═══════════════════════════════════════
   return (
     <>
+      {mapSplitPortal}
+
       <EntityListShell
         mainClassName="mx-auto w-full max-w-[1280px]"
         sidePanel={

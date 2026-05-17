@@ -45,6 +45,7 @@ import { Courier } from '../types/delivery.types';
 import { getPeriodDateRange, isDeliveryInPeriod, toDateInputValue } from '../utils/date-period';
 import { exportRowsToExcel } from '../utils/export-utils';
 import { CouriersVercelList } from './couriers-vercel-list';
+import { useDeliveriesMapSplit } from '../deliveries/use-deliveries-map-split';
 
 const TEXT = {
   searchPlaceholder: '\u05d7\u05e4\u05e9\u0020\u05e9\u05dc\u05d9\u05d7\u0020\u05d0\u05d5\u0020\u05de\u05e1\u05e4\u05e8\u0020\u05d8\u05dc\u05e4\u05d5\u05df...',
@@ -814,8 +815,33 @@ export const CouriersListScreen: React.FC = () => {
     }
   };
 
+  const visibleCourierIdSet = useMemo(
+    () => new Set(filteredCouriers.map((courier) => courier.id)),
+    [filteredCouriers],
+  );
+  const mapDeliveries = useMemo(
+    () =>
+      state.deliveries.filter((delivery) => {
+        if (delivery.status === 'delivered' || delivery.status === 'cancelled' || delivery.status === 'expired') {
+          return false;
+        }
+
+        const courierId = delivery.courierId ?? delivery.runner_id;
+        return !courierId || visibleCourierIdSet.has(courierId);
+      }),
+    [state.deliveries, visibleCourierIdSet],
+  );
+  const { mapSplitPortal } = useDeliveriesMapSplit({
+    deliveries: mapDeliveries,
+    couriers: filteredCouriers,
+    restaurants: state.restaurants,
+    routeStopOrders: state.courierRoutePlans,
+  });
+
   return (
     <>
+      {mapSplitPortal}
+
       <EntityListShell
         mainClassName="mx-auto w-full max-w-[1280px]"
         sidePanel={

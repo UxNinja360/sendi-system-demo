@@ -5,9 +5,9 @@ import { Delivery, DeliveryStatus } from '../types/delivery.types';
 import { DeliveriesSidePanel } from '../deliveries/deliveries-side-panel';
 import type { ExportScopeItem } from '../deliveries/export-drawer';
 import { DeliveriesVercelList } from '../deliveries/deliveries-vercel-list';
-import { DeliveriesLiveMapPanel } from '../deliveries/deliveries-live-map-panel';
 import { DeliveriesOverlays } from '../deliveries/deliveries-overlays';
 import { DeliveriesCommandSearch } from '../deliveries/deliveries-command-search';
+import { useDeliveriesMapSplit } from '../deliveries/use-deliveries-map-split';
 import { ALL_COLUMNS, COLUMN_MAP } from '../deliveries/column-defs';
 import type { ColumnDef } from '../deliveries/column-defs';
 import { toast } from 'sonner';
@@ -288,25 +288,9 @@ export const DeliveriesPage: React.FC = () => {
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState(new Date());
   const [dateSelectionMode, setDateSelectionMode] = useState<'day' | 'range'>('day');
-  const [mapOpen, setMapOpen] = useState(false);
 
   useEffect(() => (
     addAppTopBarActionListener('create-delivery', () => setNewDeliveryOpen(true))
-  ), []);
-
-  useEffect(() => (
-    addAppTopBarActionListener('toggle-deliveries-map', () => {
-      setExportOpen(false);
-      setMapOpen((current) => !current);
-    })
-  ), []);
-
-  useEffect(() => (
-    addAppTopBarActionListener('export-deliveries', () => {
-      setColumnsOpen(false);
-      setMapOpen(false);
-      setExportOpen(true);
-    })
   ), []);
 
   useEffect(() => {
@@ -699,8 +683,31 @@ export const DeliveriesPage: React.FC = () => {
     visibleColumns.size,
   ]);
 
+  const { mapOpen, setMapOpen, mapSplitPortal } = useDeliveriesMapSplit({
+    deliveries: filteredDeliveries,
+    couriers: state.couriers,
+    restaurants: state.restaurants,
+    routeStopOrders: state.courierRoutePlans,
+    selectedDeliveryIds: selectedIds,
+    onOpenDelivery: handleOpenDrawer,
+  });
+
+  useEffect(() => {
+    if (mapOpen) setExportOpen(false);
+  }, [mapOpen]);
+
+  useEffect(() => (
+    addAppTopBarActionListener('export-deliveries', () => {
+      setColumnsOpen(false);
+      setMapOpen(false);
+      setExportOpen(true);
+    })
+  ), [setMapOpen]);
+
   return (
     <>
+      {mapSplitPortal}
+
       <EntityListShell
         sidePanel={
           <DeliveriesSidePanel
@@ -770,27 +777,8 @@ export const DeliveriesPage: React.FC = () => {
           />
         }
       >
-        <div
-          className={
-            mapOpen
-              ? 'grid min-h-0 flex-1 grid-cols-1 overflow-hidden xl:grid-cols-[minmax(420px,0.95fr)_minmax(0,1fr)] xl:[direction:ltr]'
-              : 'flex min-h-0 flex-1 flex-col overflow-hidden'
-          }
-        >
-          {mapOpen ? (
-            <div className="min-h-[42vh] min-w-0 overflow-hidden border-b border-app-border bg-app-background xl:min-h-0 xl:border-b-0 xl:border-r xl:border-app-border" dir="rtl">
-              <DeliveriesLiveMapPanel
-                deliveries={filteredDeliveries}
-                couriers={state.couriers}
-                restaurants={state.restaurants}
-                routeStopOrders={state.courierRoutePlans}
-                selectedDeliveryIds={selectedIds}
-                onOpenDelivery={handleOpenDrawer}
-              />
-            </div>
-          ) : null}
-
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden xl:[direction:rtl]">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
             <DeliveriesVercelList
               filteredDeliveries={filteredDeliveries}
               showDateForToday={dateSelectionMode !== 'day'}
