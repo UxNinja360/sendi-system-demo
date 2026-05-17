@@ -18,6 +18,13 @@ import { useDelivery } from '../context/delivery-context-value';
 import type { Courier, Delivery, DeliveryStatus } from '../types/delivery.types';
 
 const ACTIVE_DELIVERY_STATUSES: DeliveryStatus[] = ['pending', 'assigned', 'delivering'];
+const DASHBOARD_DELIVERY_STATUSES: DeliveryStatus[] = [
+  'pending',
+  'assigned',
+  'delivering',
+  'delivered',
+  'cancelled',
+];
 
 const STATUS_META: Array<{
   id: DeliveryStatus;
@@ -103,14 +110,7 @@ const isSameInputDate = (value: unknown, inputDate: string) => {
 };
 
 const getDeliveryPrimaryDate = (delivery: Delivery) =>
-  delivery.createdAt ?? delivery.creation_time ?? delivery.delivery_date;
-
-const getDeliveryCompletionDate = (delivery: Delivery) =>
-  delivery.deliveredAt ??
-  delivery.delivered_time ??
-  delivery.cancelledAt ??
-  delivery.expiredAt ??
-  getDeliveryPrimaryDate(delivery);
+  delivery.createdAt ?? delivery.creation_time;
 
 const getDeliverySearchText = (delivery: Delivery, courier?: Courier) =>
   normalizeText(
@@ -169,13 +169,9 @@ export const Dashboard: React.FC = () => {
 
   const deliveryCountsByDay = React.useMemo(() => {
     return state.deliveries.reduce<Record<string, number>>((counts, delivery) => {
-      const date = toDate(
-        delivery.status === 'delivered' ||
-          delivery.status === 'cancelled' ||
-          delivery.status === 'expired'
-          ? getDeliveryCompletionDate(delivery)
-          : getDeliveryPrimaryDate(delivery),
-      );
+      if (!DASHBOARD_DELIVERY_STATUSES.includes(delivery.status)) return counts;
+
+      const date = toDate(getDeliveryPrimaryDate(delivery));
       if (!date) return counts;
       const key = toDateInputValue(date);
       counts[key] = (counts[key] ?? 0) + 1;
@@ -186,14 +182,7 @@ export const Dashboard: React.FC = () => {
   const dateDeliveries = React.useMemo(
     () =>
       state.deliveries.filter((delivery) => {
-        if (
-          delivery.status === 'delivered' ||
-          delivery.status === 'cancelled' ||
-          delivery.status === 'expired'
-        ) {
-          return isSameInputDate(getDeliveryCompletionDate(delivery), selectedDateKey);
-        }
-
+        if (!DASHBOARD_DELIVERY_STATUSES.includes(delivery.status)) return false;
         return isSameInputDate(getDeliveryPrimaryDate(delivery), selectedDateKey);
       }),
     [selectedDateKey, state.deliveries],
@@ -293,8 +282,8 @@ export const Dashboard: React.FC = () => {
 
           <section className="space-y-2">
             <SectionHeader title="סטטוסים" />
-            <div className="grid grid-cols-2 gap-2 lg:grid-cols-6">
-              {STATUS_META.map((status) => {
+            <div className="grid grid-cols-2 gap-2 lg:grid-cols-5">
+              {STATUS_META.filter((status) => DASHBOARD_DELIVERY_STATUSES.includes(status.id)).map((status) => {
                 const Icon = status.icon;
                 const count = statusCounts.get(status.id) ?? 0;
                 const percent = Math.round((count / totalStatusCount) * 100);
