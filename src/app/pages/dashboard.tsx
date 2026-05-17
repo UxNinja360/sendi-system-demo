@@ -4,19 +4,32 @@ import {
   Bike,
   CheckCircle2,
   Clock3,
-  PackageCheck,
+  Map as MapIcon,
   PackageOpen,
-  Store,
+  Power,
+  Plus,
   Truck,
-  Users,
+  UserCheck,
+  UsersRound,
   XCircle,
 } from 'lucide-react';
 import { PageToolbar } from '../components/common/page-toolbar';
 import { ToolbarDayPicker } from '../components/common/toolbar-date-picker';
-import { ToolbarSearchControl } from '../components/common/toolbar-search-control';
+import { ToolbarIconButton } from '../components/common/toolbar-icon-button';
 import { useDelivery } from '../context/delivery-context-value';
 import { useDeliveriesMapSplit } from '../deliveries/use-deliveries-map-split';
-import type { Courier, Delivery, DeliveryStatus } from '../types/delivery.types';
+import type { Delivery, DeliveryStatus } from '../types/delivery.types';
+import { canCourierAcceptDelivery } from '../utils/courier-assignment';
+import {
+  MAX_SENDI_PLUS_RADIUS_KM,
+  SENDI_PLUS_LABEL,
+  canReceiveSendiPlusDeliveries,
+  clampSendiPlusRadius,
+  formatSendiPlusRadiusKm,
+  isSendiPlusRestaurant,
+  readStoredSendiPlusRadius,
+  writeStoredSendiPlusRadius,
+} from '../utils/sendi-plus';
 
 const ACTIVE_DELIVERY_STATUSES: DeliveryStatus[] = ['pending', 'assigned', 'delivering'];
 const DASHBOARD_DELIVERY_STATUSES: DeliveryStatus[] = [
@@ -26,6 +39,7 @@ const DASHBOARD_DELIVERY_STATUSES: DeliveryStatus[] = [
   'delivered',
   'cancelled',
 ];
+const formatRadiusKm = formatSendiPlusRadiusKm;
 
 const STATUS_META: Array<{
   id: DeliveryStatus;
@@ -40,32 +54,32 @@ const STATUS_META: Array<{
     label: 'ממתין לשיבוץ',
     hint: 'משלוחים שצריכים שליח',
     icon: Clock3,
-    accentClassName: 'text-amber-300',
-    barClassName: 'bg-amber-400',
+    accentClassName: 'text-orange-400',
+    barClassName: 'bg-orange-500',
   },
   {
     id: 'assigned',
     label: 'משובץ',
     hint: 'שליח בדרך למסעדה',
     icon: Truck,
-    accentClassName: 'text-sky-300',
-    barClassName: 'bg-sky-400',
+    accentClassName: 'text-yellow-400',
+    barClassName: 'bg-yellow-500',
   },
   {
     id: 'delivering',
     label: 'במסירה',
-    hint: 'בדרך ללקוח',
+    hint: 'שליח בדרך ללקוח',
     icon: Bike,
-    accentClassName: 'text-blue-300',
-    barClassName: 'bg-blue-400',
+    accentClassName: 'text-green-400',
+    barClassName: 'bg-green-500',
   },
   {
     id: 'delivered',
     label: 'נמסר',
     hint: 'הושלם בתאריך',
     icon: CheckCircle2,
-    accentClassName: 'text-emerald-300',
-    barClassName: 'bg-emerald-400',
+    accentClassName: 'text-blue-400',
+    barClassName: 'bg-blue-500',
   },
   {
     id: 'cancelled',
@@ -113,59 +127,252 @@ const isSameInputDate = (value: unknown, inputDate: string) => {
 const getDeliveryPrimaryDate = (delivery: Delivery) =>
   delivery.createdAt ?? delivery.creation_time;
 
-const getDeliverySearchText = (delivery: Delivery, courier?: Courier) =>
-  normalizeText(
-    [
-      delivery.orderNumber,
-      delivery.restaurantName,
-      delivery.customerName,
-      delivery.address,
-      delivery.customerPhone,
-      delivery.courierName,
-      courier?.name,
-    ].join(' '),
-  );
-
-const SummaryTile: React.FC<{
-  label: string;
-  value: React.ReactNode;
-  detail: React.ReactNode;
+const InlineMetric: React.FC<{
   icon: React.ReactNode;
-}> = ({ label, value, detail, icon }) => (
-  <div className="min-w-0 rounded-[8px] border border-app-border bg-app-surface px-3 py-3 dark:border-app-nav-border dark:bg-[#080808]">
-    <div className="flex items-center justify-between gap-2">
-      <span className="min-w-0 truncate text-xs font-semibold text-app-text-secondary">
-        {label}
-      </span>
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] bg-app-surface-raised text-app-text-secondary">
+  text: React.ReactNode;
+}> = ({ icon, text }) => (
+  <span className="inline-flex min-w-0 items-center gap-1.5 whitespace-nowrap">
+    {icon}
+    <span className="min-w-0 truncate">{text}</span>
+  </span>
+);
+
+const DashboardToolbarToggle: React.FC<{
+  active: boolean;
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}> = ({ active, icon, label, onClick }) => (
+  <div className="relative flex h-10 shrink-0 items-center justify-center">
+    <ToolbarIconButton
+      active={active}
+      aria-pressed={active}
+      label={label}
+      title={label}
+      onClick={onClick}
+      className={
+        active
+          ? 'border-app-border-strong bg-app-nav-active-bg text-app-nav-active-text shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--app-border-strong)_35%,transparent)]'
+          : 'border-app-border text-app-text-secondary'
+      }
+    >
+      <span
+        className={`flex items-center justify-center transition-transform ${
+          active ? '-translate-y-1' : 'translate-y-0'
+        }`}
+      >
         {icon}
       </span>
-    </div>
-    <div className="mt-2 text-2xl font-bold leading-none text-app-text">{value}</div>
-    <div className="mt-1 min-h-4 truncate text-xs text-app-text-secondary">{detail}</div>
+    </ToolbarIconButton>
+    <span
+      className={`pointer-events-none absolute bottom-1.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-app-nav-indicator transition-opacity ${
+        active ? 'opacity-100' : 'opacity-0'
+      }`}
+    />
   </div>
 );
 
-const SectionHeader: React.FC<{ title: string }> = ({ title }) => (
-  <div className="flex items-center justify-between gap-3">
-    <h2 className="text-sm font-bold text-app-text">{title}</h2>
-  </div>
-);
+const SendiPlusCard: React.FC<{
+  deliveriesCount: number;
+  activeDeliveriesCount: number;
+  restaurantsCount: number;
+  activeAreaCount: number;
+  radiusKm: number;
+  onRadiusKmChange: (value: number) => void;
+  onManageZones: () => void;
+}> = ({
+  deliveriesCount,
+  activeDeliveriesCount,
+  restaurantsCount,
+  activeAreaCount,
+  radiusKm,
+  onRadiusKmChange,
+  onManageZones,
+}) => {
+  const receivesDeliveries = canReceiveSendiPlusDeliveries(radiusKm);
+  const [isRadiusBubbleVisible, setIsRadiusBubbleVisible] = React.useState(false);
+  const radiusBubbleHideTimeoutRef = React.useRef<number | null>(null);
+  const radiusPercent = (radiusKm / MAX_SENDI_PLUS_RADIUS_KM) * 100;
+  const radiusDisplay = `${formatRadiusKm(radiusKm)} ק״מ`;
+  const sliderStyle = {
+    '--sendi-plus-fill': `${radiusPercent}%`,
+  } as React.CSSProperties & { '--sendi-plus-fill': string };
+  const clearRadiusBubbleHideTimeout = React.useCallback(() => {
+    if (radiusBubbleHideTimeoutRef.current === null) return;
+
+    window.clearTimeout(radiusBubbleHideTimeoutRef.current);
+    radiusBubbleHideTimeoutRef.current = null;
+  }, []);
+  const showRadiusBubble = React.useCallback(() => {
+    clearRadiusBubbleHideTimeout();
+    setIsRadiusBubbleVisible(true);
+  }, [clearRadiusBubbleHideTimeout]);
+  const hideRadiusBubble = React.useCallback(
+    (delayMs = 0) => {
+      clearRadiusBubbleHideTimeout();
+
+      if (delayMs <= 0) {
+        setIsRadiusBubbleVisible(false);
+        return;
+      }
+
+      radiusBubbleHideTimeoutRef.current = window.setTimeout(() => {
+        setIsRadiusBubbleVisible(false);
+        radiusBubbleHideTimeoutRef.current = null;
+      }, delayMs);
+    },
+    [clearRadiusBubbleHideTimeout],
+  );
+  const handleRadiusInput = (event: React.FormEvent<HTMLInputElement>) => {
+    onRadiusKmChange(Number(event.currentTarget.value));
+    showRadiusBubble();
+    hideRadiusBubble(900);
+  };
+
+  React.useEffect(() => clearRadiusBubbleHideTimeout, [clearRadiusBubbleHideTimeout]);
+
+  return (
+    <section className="rounded-[8px] border border-app-border bg-app-surface p-2.5 sm:p-3 dark:border-app-nav-border dark:bg-[#080808]">
+      <div className="flex items-start gap-3" dir="ltr">
+        <button
+          type="button"
+          onClick={onManageZones}
+          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[6px] px-2 text-xs font-semibold text-[#0a84ff] transition-colors hover:bg-app-surface-raised"
+          dir="rtl"
+        >
+          <MapIcon className="h-3.5 w-3.5" />
+          ניהול אזורים
+        </button>
+
+        <div className="ml-auto min-w-0 text-right" dir="rtl">
+          <div
+            className="ml-auto flex w-fit max-w-full items-center gap-2"
+            aria-label={receivesDeliveries ? 'סנדי פלוס פעיל' : 'סנדי פלוס כבוי'}
+          >
+            <span className="truncate text-sm font-bold text-app-text">{SENDI_PLUS_LABEL}</span>
+            <span
+              className={`sendi-plus-mark ${
+                receivesDeliveries ? 'sendi-plus-mark--active' : 'sendi-plus-mark--off'
+              }`}
+              aria-hidden="true"
+            >
+              <span className="sendi-plus-mark__inner">
+                <Plus
+                  className={
+                    receivesDeliveries
+                      ? 'h-3 w-3 text-white'
+                      : 'h-3 w-3 text-app-text-muted'
+                  }
+                  strokeWidth={2.75}
+                />
+              </span>
+            </span>
+          </div>
+          <div className="mt-1 truncate text-xs text-app-text-secondary">
+            {receivesDeliveries
+              ? `זמין למשלוחים עד ${radiusDisplay}`
+              : `לא מקבל משלוחים מ${SENDI_PLUS_LABEL}`}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-2.5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="min-w-0 rounded-[6px] bg-app-surface-raised px-2 py-1.5 text-right">
+          <div className="text-[11px] text-app-text-secondary">משלוחים</div>
+          <div className="mt-1 text-lg font-bold text-app-text">{deliveriesCount.toLocaleString('he-IL')}</div>
+        </div>
+        <div className="min-w-0 rounded-[6px] bg-app-surface-raised px-2 py-1.5 text-right">
+          <div className="text-[11px] text-app-text-secondary">פעילים</div>
+          <div className="mt-1 text-lg font-bold text-app-text">{activeDeliveriesCount.toLocaleString('he-IL')}</div>
+        </div>
+        <div className="min-w-0 rounded-[6px] bg-app-surface-raised px-2 py-1.5 text-right">
+          <div className="text-[11px] text-app-text-secondary">מסעדות</div>
+          <div className="mt-1 text-lg font-bold text-app-text">{restaurantsCount.toLocaleString('he-IL')}</div>
+        </div>
+        <div className="min-w-0 rounded-[6px] bg-app-surface-raised px-2 py-1.5 text-right">
+          <div className="text-[11px] text-app-text-secondary">אזורי פעילות</div>
+          <div className="mt-1 text-lg font-bold text-app-text">{activeAreaCount.toLocaleString('he-IL')}</div>
+        </div>
+      </div>
+
+      <div className="mt-3 border-t border-app-border pt-3 dark:border-app-nav-border">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-app-text-secondary">
+          <span>{receivesDeliveries ? `טווח קבלה: ${radiusDisplay}` : 'קבלת משלוחים כבויה'}</span>
+          <span>{receivesDeliveries ? `${activeAreaCount.toLocaleString('he-IL')} אזורים פעילים` : '0 ק״מ'}</span>
+        </div>
+
+        <div className="relative mt-5 px-1 pb-4">
+          {isRadiusBubbleVisible ? (
+            <div
+              data-sendi-plus-radius-bubble
+              className="pointer-events-none absolute -top-7 z-10 flex h-7 min-w-9 items-center justify-center rounded-[6px] bg-app-text px-2 text-xs font-bold text-app-background shadow-lg"
+              style={{ right: `clamp(0px, calc(${radiusPercent}% - 18px), calc(100% - 36px))` }}
+            >
+              {formatRadiusKm(radiusKm)}
+            </div>
+          ) : null}
+          <input
+            type="range"
+            min={0}
+            max={MAX_SENDI_PLUS_RADIUS_KM}
+            step={0.5}
+            value={radiusKm}
+            onChange={handleRadiusInput}
+            onInput={handleRadiusInput}
+            onPointerDown={showRadiusBubble}
+            onPointerUp={() => hideRadiusBubble(700)}
+            onPointerCancel={() => hideRadiusBubble()}
+            onPointerLeave={() => hideRadiusBubble(700)}
+            onKeyDown={showRadiusBubble}
+            onKeyUp={() => hideRadiusBubble(900)}
+            onBlur={() => hideRadiusBubble()}
+            aria-label={`טווח משלוחים ${SENDI_PLUS_LABEL}`}
+            className={`sendi-plus-radius-slider h-8 w-full cursor-pointer ${
+              receivesDeliveries ? 'sendi-plus-radius-slider--active' : 'sendi-plus-radius-slider--off'
+            }`}
+            dir="rtl"
+            style={sliderStyle}
+          />
+          <div className="mt-1 flex items-center justify-between text-[11px] text-app-text-secondary" dir="rtl">
+            <span>0 ק״מ</span>
+            <span>5 ק״מ</span>
+            <span>10 ק״מ</span>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-app-text-secondary">
+          <span>{receivesDeliveries ? `זמין למשלוחים עד ${radiusDisplay}` : 'על 0 לא נכנסים משלוחים חדשים'}</span>
+          <span>דומינוס ומקדונלדס בלבד כרגע</span>
+        </div>
+      </div>
+    </section>
+  );
+};
 
 export const Dashboard: React.FC = () => {
-  const { state } = useDelivery();
+  const { state, dispatch, toggleSystem } = useDelivery();
   const navigate = useNavigate();
   const todayDate = React.useMemo(() => new Date(), []);
   const [selectedDate, setSelectedDate] = React.useState(todayDate);
-  const [searchOpen, setSearchOpen] = React.useState(true);
-  const [searchQuery, setSearchQuery] = React.useState('');
+  const [sendiPlusRadiusKm, setSendiPlusRadiusKm] = React.useState(readStoredSendiPlusRadius);
 
-  const courierById = React.useMemo(
-    () => new Map(state.couriers.map((courier) => [courier.id, courier])),
-    [state.couriers],
+  React.useEffect(() => {
+    writeStoredSendiPlusRadius(sendiPlusRadiusKm);
+  }, [sendiPlusRadiusKm]);
+
+  const handleSendiPlusRadiusChange = React.useCallback((value: number) => {
+    setSendiPlusRadiusKm(clampSendiPlusRadius(value));
+  }, []);
+
+  const restaurantById = React.useMemo(
+    () => new Map(state.restaurants.map((restaurant) => [restaurant.id, restaurant])),
+    [state.restaurants],
+  );
+  const restaurantByName = React.useMemo(
+    () => new Map(state.restaurants.map((restaurant) => [normalizeText(restaurant.name), restaurant])),
+    [state.restaurants],
   );
 
-  const query = normalizeText(searchQuery);
   const selectedDateKey = toDateInputValue(selectedDate);
 
   const deliveryCountsByDay = React.useMemo(() => {
@@ -189,14 +396,17 @@ export const Dashboard: React.FC = () => {
     [selectedDateKey, state.deliveries],
   );
 
-  const filteredDeliveries = React.useMemo(
-    () =>
-      dateDeliveries.filter((delivery) => {
-        if (!query) return true;
-        const courier = delivery.courierId ? courierById.get(delivery.courierId) : undefined;
-        return getDeliverySearchText(delivery, courier).includes(query);
-      }),
-    [courierById, dateDeliveries, query],
+  const filteredDeliveries = dateDeliveries;
+  const isSendiPlusDelivery = React.useCallback(
+    (delivery: Delivery) => {
+      const restaurant =
+        (delivery.restaurantId ? restaurantById.get(delivery.restaurantId) : undefined) ??
+        restaurantByName.get(normalizeText(delivery.restaurantName ?? delivery.rest_name));
+      const restaurantName = restaurant?.name ?? delivery.restaurantName ?? delivery.rest_name;
+
+      return isSendiPlusRestaurant(restaurantName, restaurant?.chainId);
+    },
+    [restaurantById, restaurantByName],
   );
 
   const statusCounts = React.useMemo(() => {
@@ -208,21 +418,51 @@ export const Dashboard: React.FC = () => {
     return counts;
   }, [filteredDeliveries]);
 
-  const activeDeliveries = filteredDeliveries.filter((delivery) =>
+  const sendiPlusRestaurants = React.useMemo(
+    () =>
+      state.restaurants.filter((restaurant) =>
+        isSendiPlusRestaurant(restaurant.name, restaurant.chainId),
+      ),
+    [state.restaurants],
+  );
+  const sendiPlusDeliveries = React.useMemo(
+    () => filteredDeliveries.filter(isSendiPlusDelivery),
+    [filteredDeliveries, isSendiPlusDelivery],
+  );
+  const activeSendiPlusDeliveries = sendiPlusDeliveries.filter((delivery) =>
     ACTIVE_DELIVERY_STATUSES.includes(delivery.status),
   );
-  const completedDeliveries = filteredDeliveries.filter(
-    (delivery) => delivery.status === 'delivered',
+  const sendiPlusActiveAreaCount = React.useMemo(() => {
+    const areas = new Set(
+      sendiPlusDeliveries
+        .map((delivery) => delivery.area?.trim())
+        .filter((area): area is string => Boolean(area)),
+    );
+
+    return areas.size;
+  }, [sendiPlusDeliveries]);
+  const connectedCouriersCount = React.useMemo(
+    () => state.couriers.filter((courier) => courier.status !== 'offline').length,
+    [state.couriers],
   );
-  const connectedCouriers = state.couriers.filter((courier) => courier.status !== 'offline');
-  const onShiftCouriers = state.couriers.filter((courier) => courier.isOnShift);
-  const activeRestaurants = state.restaurants.filter((restaurant) => restaurant.isActive);
-  const visibleRestaurantIds = new Set(
-    filteredDeliveries.map((delivery) => delivery.restaurantId).filter(Boolean),
-  );
-  const busiestRestaurantCount = activeRestaurants.filter((restaurant) =>
-    visibleRestaurantIds.has(restaurant.id),
-  ).length;
+  const freeCouriersCount = React.useMemo(() => {
+    const busyCourierIds = new Set(
+      state.deliveries
+        .filter(
+          (delivery) =>
+            delivery.courierId &&
+            (delivery.status === 'assigned' || delivery.status === 'delivering'),
+        )
+        .map((delivery) => delivery.courierId as string),
+    );
+
+    return state.couriers.filter(
+      (courier) =>
+        courier.status === 'available' &&
+        canCourierAcceptDelivery(courier) &&
+        !busyCourierIds.has(courier.id),
+    ).length;
+  }, [state.couriers, state.deliveries]);
   const totalStatusCount = Math.max(filteredDeliveries.length, 1);
   const { mapSplitPortal } = useDeliveriesMapSplit({
     deliveries: filteredDeliveries,
@@ -239,94 +479,100 @@ export const Dashboard: React.FC = () => {
         showBottomBorder={false}
         pairControlsOnMobile
         periodControl={
-          <ToolbarDayPicker
-            selectedDate={selectedDate}
-            onDateChange={setSelectedDate}
-            dayCounts={deliveryCountsByDay}
-          />
-        }
-        actions={
-          <div className="flex min-w-0 flex-1 items-center gap-1.5">
-            <ToolbarSearchControl
-              searchOpen={searchOpen}
-              onSearchOpenChange={setSearchOpen}
-              searchQuery={searchQuery}
-              onSearchQueryChange={setSearchQuery}
-              placeholder="חיפוש משלוח, מסעדה, שליח או לקוח"
-              widthClass="w-full"
-              alwaysOpen
+          <>
+            <ToolbarDayPicker
+              selectedDate={selectedDate}
+              onDateChange={setSelectedDate}
+              dayCounts={deliveryCountsByDay}
             />
-          </div>
+            <div className="flex shrink-0 items-center gap-1">
+              <DashboardToolbarToggle
+                active={state.isSystemOpen}
+                label={state.isSystemOpen ? 'מערכת פתוחה' : 'מערכת סגורה'}
+                onClick={toggleSystem}
+                icon={<Power className="h-3.5 w-3.5" />}
+              />
+              <DashboardToolbarToggle
+                active={state.autoAssignEnabled}
+                label="שיבוץ אוטומטי"
+                onClick={() => dispatch({ type: 'TOGGLE_AUTO_ASSIGN' })}
+                icon={<UserCheck className="h-3.5 w-3.5" />}
+              />
+            </div>
+          </>
         }
       />
 
-      <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4 pb-[calc(2rem+env(safe-area-inset-bottom))] md:px-6 md:pb-8">
-        <div className="mx-auto w-full max-w-[92rem] space-y-4">
-          <section className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-            <SummaryTile
-              label="משלוחים"
-              value={formatNumber(filteredDeliveries.length)}
-              detail={`${formatNumber(activeDeliveries.length)} פתוחים עכשיו`}
-              icon={<PackageCheck className="h-4 w-4" />}
-            />
-            <SummaryTile
-              label="נמסרו"
-              value={formatNumber(completedDeliveries.length)}
-              detail={`${formatNumber(statusCounts.get('cancelled') ?? 0)} בוטלו`}
-              icon={<CheckCircle2 className="h-4 w-4" />}
-            />
-            <SummaryTile
-              label="מסעדות"
-              value={formatNumber(busiestRestaurantCount)}
-              detail={`${formatNumber(activeRestaurants.length)} פעילות במערכת`}
-              icon={<Store className="h-4 w-4" />}
-            />
-            <SummaryTile
-              label="שליחים"
-              value={formatNumber(connectedCouriers.length)}
-              detail={`${formatNumber(onShiftCouriers.length)} במשמרת`}
-              icon={<Users className="h-4 w-4" />}
-            />
-          </section>
-
-          <section className="space-y-2">
-            <SectionHeader title="סטטוסים" />
-            <div className="grid grid-cols-2 gap-2 lg:grid-cols-5">
+      <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-2 pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:px-6 md:pt-2 md:pb-6">
+        <div className="mx-auto flex w-full max-w-[92rem] flex-col gap-2">
+          <section>
+            <div className="grid grid-cols-6 gap-2">
               {STATUS_META.filter((status) => DASHBOARD_DELIVERY_STATUSES.includes(status.id)).map((status) => {
                 const Icon = status.icon;
                 const count = statusCounts.get(status.id) ?? 0;
                 const percent = Math.round((count / totalStatusCount) * 100);
+                const showStatusProgress =
+                  status.id !== 'delivered' && status.id !== 'cancelled';
+                const statusSpanClassName =
+                  status.id === 'delivered' || status.id === 'cancelled'
+                    ? 'col-span-3'
+                    : 'col-span-2';
 
                 return (
                   <button
                     key={status.id}
                     type="button"
                     onClick={() => navigate('/deliveries')}
-                    className="min-w-0 rounded-[8px] border border-app-border bg-app-surface p-3 text-right transition-colors hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#080808]"
+                    className={`min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised sm:p-3 dark:border-app-nav-border dark:bg-[#080808] ${statusSpanClassName}`}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <Icon className={`h-4 w-4 shrink-0 ${status.accentClassName}`} />
-                      <span className="truncate text-xs font-semibold text-app-text-secondary">
+                      <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
                         {status.label}
                       </span>
+                      <Icon className={`h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4 ${status.accentClassName}`} />
                     </div>
-                    <div className="mt-3 text-2xl font-bold leading-none text-app-text">
+                    <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
                       {formatNumber(count)}
                     </div>
-                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-app-surface-raised">
-                      <div
-                        className={`h-full rounded-full ${status.barClassName}`}
-                        style={{ width: `${percent}%` }}
-                      />
-                    </div>
-                    <div className="mt-2 truncate text-[11px] text-app-text-secondary">
-                      {status.hint}
-                    </div>
+                    {showStatusProgress ? (
+                      <>
+                        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-app-surface-raised">
+                          <div
+                            className={`h-full rounded-full ${status.barClassName}`}
+                            style={{ width: `${percent}%` }}
+                          />
+                        </div>
+                        <div className="mt-1.5 truncate text-[10px] text-app-text-secondary sm:text-[11px]">
+                          {status.hint}
+                        </div>
+                      </>
+                    ) : null}
                   </button>
                 );
               })}
             </div>
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center text-sm font-medium text-[#0a84ff]">
+              <InlineMetric
+                icon={<UsersRound className="h-4 w-4 shrink-0" />}
+                text={`${formatNumber(connectedCouriersCount)} שליחים מחוברים`}
+              />
+              <span className="text-app-text-muted">,</span>
+              <InlineMetric
+                icon={<UserCheck className="h-4 w-4 shrink-0" />}
+                text={`${formatNumber(freeCouriersCount)} שליחים פנויים`}
+              />
+            </div>
           </section>
+
+          <SendiPlusCard
+            deliveriesCount={sendiPlusDeliveries.length}
+            activeDeliveriesCount={activeSendiPlusDeliveries.length}
+            restaurantsCount={sendiPlusRestaurants.length}
+            activeAreaCount={sendiPlusActiveAreaCount}
+            radiusKm={sendiPlusRadiusKm}
+            onRadiusKmChange={handleSendiPlusRadiusChange}
+            onManageZones={() => navigate('/zones?source=sendi-plus')}
+          />
         </div>
       </main>
       </div>

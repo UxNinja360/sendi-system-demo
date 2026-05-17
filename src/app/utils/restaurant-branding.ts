@@ -10,6 +10,19 @@ export const isDominosRestaurant = (name?: string | null) => {
   return normalized.includes('דומינו') || normalized.includes('domino');
 };
 
+export const isSendiGoRestaurant = (name?: string | null, chainId?: string | null) => {
+  const normalizedChainId = chainId?.toLowerCase() ?? '';
+
+  return (
+    isMcDonaldsRestaurant(name) ||
+    isDominosRestaurant(name) ||
+    normalizedChainId.includes('מקדונלד') ||
+    normalizedChainId.includes('mcdonald') ||
+    normalizedChainId.includes('דומינו') ||
+    normalizedChainId.includes('domino')
+  );
+};
+
 export const getRestaurantChainId = (name?: string | null) => {
   if (isMcDonaldsRestaurant(name)) {
     return 'מקדונלדס';

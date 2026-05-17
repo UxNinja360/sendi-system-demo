@@ -417,6 +417,7 @@ export const DeliveriesPage: React.FC = () => {
   }, []);
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [focusedDeliveryId, setFocusedDeliveryId] = useState<string | null>(null);
 
   const [drawerDeliveryId, setDrawerDeliveryId] = useState<string | null>(null);
   const [searchRowHidden, setSearchRowHidden] = useState(false);
@@ -457,6 +458,13 @@ export const DeliveriesPage: React.FC = () => {
       return next;
     });
   }, [filteredDeliveries]);
+
+  useEffect(() => {
+    if (!focusedDeliveryId) return;
+    if (filteredDeliveries.some((delivery) => delivery.id === focusedDeliveryId)) return;
+
+    setFocusedDeliveryId(null);
+  }, [filteredDeliveries, focusedDeliveryId]);
 
   const handleOpenDrawer = useCallback((id: string) => {
     setDrawerDeliveryId(id);
@@ -689,6 +697,8 @@ export const DeliveriesPage: React.FC = () => {
     restaurants: state.restaurants,
     routeStopOrders: state.courierRoutePlans,
     selectedDeliveryIds: selectedIds,
+    focusedDeliveryId,
+    onFocusedDeliveryChange: setFocusedDeliveryId,
     onOpenDelivery: handleOpenDrawer,
   });
 
@@ -796,6 +806,8 @@ export const DeliveriesPage: React.FC = () => {
               onUnassignCourier={handleUnassignCourier}
               onEditDelivery={handleOpenEdit}
               drawerDeliveryId={drawerDeliveryId}
+              focusedDeliveryId={focusedDeliveryId}
+              onFocusDeliveryOnMap={setFocusedDeliveryId}
               onSearchRowHiddenChange={handleSearchRowHiddenChange}
               selectionBar={
                 <SelectionActionBar

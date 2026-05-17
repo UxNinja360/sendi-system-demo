@@ -188,15 +188,43 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     }
 
     const map = mapRef.current;
+    const container = mapContainerRef.current;
+    let frameId: number | null = null;
+    let disposed = false;
+
     const observer = new ResizeObserver(() => {
-      window.requestAnimationFrame(() => {
-        map.invalidateSize({ animate: false });
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+      }
+
+      frameId = window.requestAnimationFrame(() => {
+        frameId = null;
+        if (
+          disposed ||
+          mapRef.current !== map ||
+          !container.isConnected ||
+          !map.getPane('mapPane')
+        ) {
+          return;
+        }
+
+        try {
+          map.invalidateSize({ animate: false });
+        } catch {
+          // Leaflet can throw if a resize frame runs after the map was removed.
+        }
       });
     });
 
-    observer.observe(mapContainerRef.current);
+    observer.observe(container);
 
-    return () => observer.disconnect();
+    return () => {
+      disposed = true;
+      observer.disconnect();
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+      }
+    };
   }, []);
 
   // Update tile layer when theme changes

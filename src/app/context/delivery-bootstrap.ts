@@ -11,6 +11,7 @@
 } from '../types/delivery.types';
 import { TLV_RUNNERS_HUB_ID } from '../constants/delivery-hubs';
 import { getRestaurantChainId } from '../utils/restaurant-branding';
+import { isSendiPlusRestaurant } from '../utils/sendi-plus';
 
 export const ISRAELI_NAMES = [
   'דוד כהן', 'משה לוי', 'יוסף מזרחי', 'אברהם אוחיון', 'שרה ביטון',
@@ -622,10 +623,11 @@ const generateRestaurants = (): Restaurant[] => {
 
   return restaurantData.map((r, i) => {
     const config = getRestaurantConfig(r.type);
+    const chainId = getRestaurantChainId(r.name);
     return {
       id: `r${i + 1}`,
       name: r.name,
-      chainId: getRestaurantChainId(r.name),
+      chainId,
       type: r.type,
       linkedHubIds: [TLV_RUNNERS_HUB_ID],
       phone: r.phone,
@@ -635,7 +637,7 @@ const generateRestaurants = (): Restaurant[] => {
       lat: r.lat,
       lng: r.lng,
       rating: r.rating,
-      isActive: false,
+      isActive: isSendiPlusRestaurant(r.name, chainId),
       totalOrders: r.totalOrders,
       averageDeliveryTime: r.avgTime,
       defaultPreparationTime: getDefaultPreparationTimeByType(r.type),
@@ -646,6 +648,21 @@ const generateRestaurants = (): Restaurant[] => {
     };
   });
 };
+
+export const activateSendiPlusRestaurants = (restaurants: Restaurant[]): Restaurant[] =>
+  restaurants.map((restaurant) => {
+    const chainId = restaurant.chainId || getRestaurantChainId(restaurant.name);
+
+    if (!isSendiPlusRestaurant(restaurant.name, chainId) || restaurant.isActive) {
+      return restaurant;
+    }
+
+    return {
+      ...restaurant,
+      chainId,
+      isActive: true,
+    };
+  });
 
 export const RESTAURANTS_DATA: Restaurant[] = normalizeRestaurants(generateRestaurants());
 

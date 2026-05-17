@@ -23,6 +23,8 @@ type DeliveriesLiveMapPanelProps = {
   restaurants: Restaurant[];
   routeStopOrders?: Record<string, string[]>;
   selectedDeliveryIds?: Set<string>;
+  focusedDeliveryId?: string | null;
+  onFocusedDeliveryChange?: (deliveryId: string | null) => void;
   onOpenDelivery?: (deliveryId: string) => void;
 };
 
@@ -64,6 +66,8 @@ export const DeliveriesLiveMapPanel: React.FC<DeliveriesLiveMapPanelProps> = ({
   restaurants,
   routeStopOrders,
   selectedDeliveryIds,
+  focusedDeliveryId,
+  onFocusedDeliveryChange,
   onOpenDelivery,
 }) => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -163,7 +167,17 @@ export const DeliveriesLiveMapPanel: React.FC<DeliveriesLiveMapPanelProps> = ({
   const handleOrderClick = (deliveryId: string) => {
     const order = mapOrders.find((item) => item.deliveryId === deliveryId);
     setSelectedOrderId(order?.id ?? deliveryId);
-    onOpenDelivery?.(deliveryId);
+    onFocusedDeliveryChange?.(deliveryId);
+  };
+
+  const focusedOrderId = useMemo(() => {
+    if (!focusedDeliveryId) return selectedOrderId;
+    return mapOrders.find((item) => item.deliveryId === focusedDeliveryId)?.id ?? focusedDeliveryId;
+  }, [focusedDeliveryId, mapOrders, selectedOrderId]);
+
+  const handleMapClick = () => {
+    setSelectedOrderId(null);
+    onFocusedDeliveryChange?.(null);
   };
 
   return (
@@ -171,11 +185,11 @@ export const DeliveriesLiveMapPanel: React.FC<DeliveriesLiveMapPanelProps> = ({
       <LeafletMap
         orders={mapOrders}
         routeOrders={mapOrders}
-        selectedId={selectedOrderId}
         couriers={visibleCouriers}
         restaurants={visibleRestaurants}
         routeStopOrders={routeStopOrders}
         selectedDeliveryIds={selectedDeliveryIds}
+        selectedId={focusedOrderId}
         hoveredOrderId={hoveredOrderId}
         hoveredCourierId={hoveredCourierId}
         hoveredRestaurantName={hoveredRestaurantName}
@@ -184,7 +198,7 @@ export const DeliveriesLiveMapPanel: React.FC<DeliveriesLiveMapPanelProps> = ({
         onRestaurantHover={setHoveredRestaurantName}
         onOrderClick={handleOrderClick}
         onOrderShowDetails={onOpenDelivery}
-        onMapClick={() => setSelectedOrderId(null)}
+        onMapClick={handleMapClick}
       />
 
       <div className="pointer-events-none absolute right-3 top-3 z-[450] flex items-center gap-2 rounded-lg border border-app-border bg-white/95 px-3 py-2 text-xs shadow-sm backdrop-blur dark:border-app-nav-border dark:bg-[#090909]/90">

@@ -39,7 +39,7 @@ export type AppNavItem = {
   managedScroll?: boolean;
   exact?: boolean;
   activePathPrefixes?: string[];
-  badge?: 'activeDeliveries' | 'deliveryBalance' | 'walletRevenue';
+  badge?: 'activeDeliveries' | 'activeRestaurants' | 'activeCouriers' | 'deliveryBalance' | 'walletRevenue';
   tag?: 'beta';
 };
 
@@ -55,12 +55,11 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
     path: '/live',
     routePath: 'live',
     label: '\u05de\u05e0\u05d2\u05f3\u05e8 \u05dc\u05d9\u05d9\u05d1',
-    section: 'core',
+    section: 'legacy',
     icon: 'activity',
     showInSidebar: true,
     managedScroll: true,
     exact: true,
-    badge: 'activeDeliveries',
   },
   {
     id: 'dashboard',
@@ -128,6 +127,7 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
     managedScroll: true,
     exact: true,
     activePathPrefixes: ['/delivery/'],
+    badge: 'activeDeliveries',
   },
   {
     id: 'reports',
@@ -195,6 +195,7 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
     managedScroll: true,
     exact: true,
     activePathPrefixes: ['/restaurant/'],
+    badge: 'activeRestaurants',
   },
   {
     id: 'couriers',
@@ -207,6 +208,7 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
     managedScroll: true,
     exact: true,
     activePathPrefixes: ['/courier/'],
+    badge: 'activeCouriers',
   },
   {
     id: 'courier-shifts',

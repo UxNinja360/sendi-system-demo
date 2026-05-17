@@ -71,6 +71,8 @@ type DeliveriesVercelListProps = {
   onUnassignCourier: (deliveryId: string) => void;
   onEditDelivery: (deliveryId: string) => void;
   drawerDeliveryId: string | null;
+  focusedDeliveryId?: string | null;
+  onFocusDeliveryOnMap?: (deliveryId: string) => void;
   selectionBar?: React.ReactNode;
   onSearchRowHiddenChange?: (hidden: boolean) => void;
 };
@@ -83,6 +85,8 @@ type DeliveryVercelRowProps = {
   deliveryBalance: number;
   showDateForToday: boolean;
   isDrawerTarget: boolean;
+  isMapTarget?: boolean;
+  onFocusDeliveryOnMap?: (deliveryId: string) => void;
   onOpenDrawer: (id: string) => void;
   onStatusChange: (deliveryId: string, status: DeliveryStatus) => void;
   onAssignCourier: (deliveryId: string, courierId: string) => void;
@@ -431,6 +435,8 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
   deliveryBalance,
   showDateForToday,
   isDrawerTarget,
+  isMapTarget,
+  onFocusDeliveryOnMap,
   onOpenDrawer,
   onStatusChange,
   onAssignCourier,
@@ -496,14 +502,15 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
 
   return (
     <div
+      onClick={() => onFocusDeliveryOnMap?.(delivery.id)}
       onContextMenu={(event) => {
         event.preventDefault();
         setContextMenuPos({ x: event.clientX, y: event.clientY });
       }}
       className={joinClassNames(
         rowGridClass,
-        'group relative w-full min-w-0 cursor-default border-b border-app-nav-border bg-app-surface text-app-text outline-none transition-colors last:border-b-0 hover:bg-app-surface-raised',
-        isDrawerTarget && 'shadow-[inset_2px_0_0_var(--app-brand)]',
+        'group relative w-full min-w-0 cursor-pointer border-b border-app-nav-border bg-app-surface text-app-text outline-none transition-colors last:border-b-0 hover:bg-app-surface-raised',
+        (isDrawerTarget || isMapTarget) && 'shadow-[inset_2px_0_0_var(--app-brand)]',
       )}
     >
       <div
@@ -764,6 +771,8 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
   deliveryBalance,
   showDateForToday,
   isDrawerTarget,
+  isMapTarget,
+  onFocusDeliveryOnMap,
   onOpenDrawer,
   onStatusChange,
   onAssignCourier,
@@ -828,13 +837,14 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
 
   return (
     <div
+      onClick={() => onFocusDeliveryOnMap?.(delivery.id)}
       onContextMenu={(event) => {
         event.preventDefault();
         setContextMenuPos({ x: event.clientX, y: event.clientY });
       }}
       className={joinClassNames(
-        'group min-w-0 cursor-default rounded-lg border border-app-nav-border bg-app-surface p-3 text-app-text outline-none transition-colors hover:bg-app-surface-raised',
-        isDrawerTarget && 'shadow-[inset_2px_0_0_var(--app-brand)]',
+        'group min-w-0 cursor-pointer rounded-lg border border-app-nav-border bg-app-surface p-3 text-app-text outline-none transition-colors hover:bg-app-surface-raised',
+        (isDrawerTarget || isMapTarget) && 'shadow-[inset_2px_0_0_var(--app-brand)]',
       )}
     >
       <div className="flex min-w-0 items-start justify-between gap-3">
@@ -1070,6 +1080,8 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
   onUnassignCourier,
   onEditDelivery,
   drawerDeliveryId,
+  focusedDeliveryId,
+  onFocusDeliveryOnMap,
   selectionBar,
   onSearchRowHiddenChange,
 }) => {
@@ -1235,6 +1247,8 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
                   deliveryBalance={deliveryBalance}
                   showDateForToday={showDateForToday}
                   isDrawerTarget={drawerDeliveryId === delivery.id}
+                  isMapTarget={focusedDeliveryId === delivery.id}
+                  onFocusDeliveryOnMap={onFocusDeliveryOnMap}
                   onOpenDrawer={onOpenDrawer}
                   onStatusChange={onStatusChange}
                   onAssignCourier={onAssignCourier}
@@ -1273,6 +1287,8 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
                 deliveryBalance={deliveryBalance}
                 showDateForToday={showDateForToday}
                 isDrawerTarget={drawerDeliveryId === delivery.id}
+                isMapTarget={focusedDeliveryId === delivery.id}
+                onFocusDeliveryOnMap={onFocusDeliveryOnMap}
                 onOpenDrawer={onOpenDrawer}
                 onStatusChange={onStatusChange}
                 onAssignCourier={onAssignCourier}

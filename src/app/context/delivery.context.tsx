@@ -25,6 +25,7 @@ import {
   DEFAULT_RESTAURANT_PREPARATION_TIME,
   ISRAELI_NAMES,
   RESTAURANTS_DATA,
+  activateSendiPlusRestaurants,
   createInitialDeliveryState,
   initialState,
   mergeSeededRestaurants,
@@ -39,6 +40,11 @@ import {
   ensureStorageEpoch,
 } from './delivery-storage';
 import { hasActiveLinkedDeliveryHub } from '../constants/delivery-hubs';
+import {
+  isRestaurantEligibleForDeliveryIntake,
+  isSendiPlusRestaurant,
+  readStoredSendiPlusRadius,
+} from '../utils/sendi-plus';
 
 const STORAGE_KEY = DELIVERY_STORAGE_KEYS.state;
 const STATE_EPOCH_KEY = DELIVERY_STORAGE_KEYS.stateEpoch;
@@ -54,6 +60,7 @@ const ACTIVE_DELIVERIES_PER_ON_SHIFT_COURIER = 4;
 const INITIAL_RESTAURANT_STAGGER_MIN_MS = 2500;
 const INITIAL_RESTAURANT_STAGGER_RANGE_MS = 27500;
 const MAX_PROGRESS_CATCH_UP_PASSES = 12;
+const DELIVERY_DISTANCE_ROUTE_FACTOR = 1.28;
 
 type CompleteDeliveryPayload = Extract<DeliveryAction, { type: 'COMPLETE_DELIVERY' }>['payload'];
 
@@ -690,8 +697,13 @@ const getDeliveryCreatedAtMs = (delivery: Delivery) => {
 const isLiveActiveDelivery = (delivery: Delivery) =>
   delivery.status === 'pending' || delivery.status === 'assigned' || delivery.status === 'delivering';
 
-const getActiveSimulatedDeliveryLimit = (state: DeliveryState) => {
-  const activeRestaurantCount = state.restaurants.filter((restaurant) => restaurant.isActive).length;
+const getActiveSimulatedDeliveryLimit = (
+  state: DeliveryState,
+  sendiPlusRadiusKm = readStoredSendiPlusRadius(),
+) => {
+  const activeRestaurantCount = state.restaurants.filter((restaurant) =>
+    isRestaurantEligibleForDeliveryIntake(restaurant, sendiPlusRadiusKm)
+  ).length;
   const activeCourierCount = state.couriers.filter((courier) =>
     canCourierAcceptDelivery(courier)
   ).length;
@@ -787,6 +799,15 @@ const loadInitialState = (baseState: DeliveryState): DeliveryState => {
     const restaurants = mergeSeededRestaurants(
       (parsed.restaurants as Restaurant[] | undefined) ?? baseState.restaurants
     );
+    const sendiGoDefaultsAlreadyApplied = window.localStorage.getItem(
+      DELIVERY_STORAGE_KEYS.sendiGoDefaultActiveMigration
+    );
+    const migratedRestaurants = sendiGoDefaultsAlreadyApplied
+      ? restaurants
+      : activateSendiPlusRestaurants(restaurants);
+    if (!sendiGoDefaultsAlreadyApplied) {
+      window.localStorage.setItem(DELIVERY_STORAGE_KEYS.sendiGoDefaultActiveMigration, '1');
+    }
     const couriers = normalizeCouriers(
       (parsed.couriers as Courier[] | undefined) ?? baseState.couriers
     );
@@ -799,10 +820,10 @@ const loadInitialState = (baseState: DeliveryState): DeliveryState => {
       ...baseState,
       ...parsed,
       couriers,
-      restaurants,
+      restaurants: migratedRestaurants,
       courierRoutePlans,
       deliveries: ((parsed.deliveries as Delivery[] | undefined) ?? baseState.deliveries).map(delivery =>
-        normalizeDeliveryPreparationTime(delivery, restaurants)
+        normalizeDeliveryPreparationTime(delivery, migratedRestaurants)
       ),
       stats: {
         ...baseState.stats,
@@ -1090,29 +1111,58 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const pickCustomerAddressForRestaurant = (
     restaurant: Restaurant,
-    pickup: { lat: number; lng: number }
+    pickup: { lat: number; lng: number },
+    maxDeliveryDistanceKm?: number | null
   ) => {
     const maxRadiusKm = Math.min(
       5.5,
       Math.max(2.4, (restaurant.maxDeliveryTime ?? DEFAULT_RESTAURANT_MAX_DELIVERY_TIME) / 8)
     );
+    const hasSendiPlusDistanceLimit =
+      typeof maxDeliveryDistanceKm === 'number' &&
+      Number.isFinite(maxDeliveryDistanceKm) &&
+      maxDeliveryDistanceKm > 0;
+    const maxDirectDistanceKm = hasSendiPlusDistanceLimit
+      ? maxDeliveryDistanceKm / DELIVERY_DISTANCE_ROUTE_FACTOR
+      : null;
 
     const rankedAddresses = REAL_ADDRESSES
-      .map((address) => ({
-        address,
-        distanceKm: getCoordinateDistanceKm(pickup, { lat: address.lat, lng: address.lng }),
-      }))
+      .map((address) => {
+        const distanceKm = getCoordinateDistanceKm(pickup, { lat: address.lat, lng: address.lng });
+        const estimatedDeliveryDistanceKm = Math.max(
+          0.8,
+          Math.round(distanceKm * DELIVERY_DISTANCE_ROUTE_FACTOR * 10) / 10
+        );
+
+        return {
+          address,
+          distanceKm,
+          estimatedDeliveryDistanceKm,
+        };
+      })
       .sort((left, right) => left.distanceKm - right.distanceKm);
 
-    const sameCityAddresses = rankedAddresses.filter((item) => item.address.city === restaurant.city);
-    const nearbyAddresses = rankedAddresses.filter((item) => item.distanceKm <= maxRadiusKm);
+    const eligibleAddresses = maxDirectDistanceKm === null
+      ? rankedAddresses
+      : rankedAddresses.filter(
+        (item) =>
+          item.distanceKm <= maxDirectDistanceKm &&
+          item.estimatedDeliveryDistanceKm <= maxDeliveryDistanceKm
+      );
+
+    if (eligibleAddresses.length === 0) {
+      return null;
+    }
+
+    const sameCityAddresses = eligibleAddresses.filter((item) => item.address.city === restaurant.city);
+    const nearbyAddresses = eligibleAddresses.filter((item) => item.distanceKm <= maxRadiusKm);
     const candidatePool = sameCityAddresses.length > 0
       ? sameCityAddresses.slice(0, 8)
       : nearbyAddresses.length > 0
         ? nearbyAddresses
-        : rankedAddresses.slice(0, 8);
+        : eligibleAddresses.slice(0, 8);
 
-    return candidatePool[Math.floor(Math.random() * candidatePool.length)].address;
+    return candidatePool[Math.floor(Math.random() * candidatePool.length)]?.address ?? null;
   };
 
   const generateDelivery = useCallback((restaurant: Restaurant, generatedAt: Date = new Date()): Delivery | null => {
@@ -1131,13 +1181,30 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const restStreet = restaurant.street ?? restaurantName;
     const restCity = restaurant.city ?? 'תל אביב';
     const restAddress = restaurant.address ?? `${restStreet}, ${restCity}`;
-    const customerAddr = pickCustomerAddressForRestaurant(restaurant, { lat: pickupLat, lng: pickupLng });
+    const isSendiPlus = isSendiPlusRestaurant(restaurant.name, restaurant.chainId);
+    const sendiPlusRadiusKm = isSendiPlus ? readStoredSendiPlusRadius() : null;
+    const customerAddr = pickCustomerAddressForRestaurant(
+      restaurant,
+      { lat: pickupLat, lng: pickupLng },
+      sendiPlusRadiusKm
+    );
+    if (!customerAddr) {
+      return null;
+    }
+
     const area = customerAddr.area;
     const directDistanceKm = getCoordinateDistanceKm(
       { lat: pickupLat, lng: pickupLng },
       { lat: customerAddr.lat, lng: customerAddr.lng }
     );
-    const deliveryDistanceKm = Math.max(0.8, Math.round(directDistanceKm * 1.28 * 10) / 10);
+    const deliveryDistanceKm = Math.max(
+      0.8,
+      Math.round(directDistanceKm * DELIVERY_DISTANCE_ROUTE_FACTOR * 10) / 10
+    );
+    if (isSendiPlus && sendiPlusRadiusKm !== null && deliveryDistanceKm > sendiPlusRadiusKm) {
+      return null;
+    }
+
     const etaAfterPickupMinutes = Math.max(8, Math.round((deliveryDistanceKm / 18) * 60) + 3);
 
     const now = generatedAt;
@@ -1358,9 +1425,10 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (!stateNow.isSystemOpen) return;
 
       const speed = Math.max(stateNow.timeMultiplier || 1, 0.1);
+      const sendiPlusRadiusKm = readStoredSendiPlusRadius();
       const nowMs = now.getTime();
       const activeDeliveryCount = stateNow.deliveries.filter(isLiveActiveDelivery).length;
-      const activeDeliveryLimit = getActiveSimulatedDeliveryLimit(stateNow);
+      const activeDeliveryLimit = getActiveSimulatedDeliveryLimit(stateNow, sendiPlusRadiusKm);
       const activeCapacity = activeDeliveryLimit - activeDeliveryCount;
       if (activeCapacity <= 0) return;
 
@@ -1371,7 +1439,9 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       const openedAtMs = simulationOpenedAtRef.current ?? nowMs;
       const activeRestaurants = stateNow.restaurants.filter(
-        (restaurant) => restaurant.isActive && hasActiveLinkedDeliveryHub(restaurant.linkedHubIds)
+        (restaurant) =>
+          isRestaurantEligibleForDeliveryIntake(restaurant, sendiPlusRadiusKm) &&
+          hasActiveLinkedDeliveryHub(restaurant.linkedHubIds)
       );
       const eligibleRestaurants = activeRestaurants
         .map((restaurant) => {
@@ -1397,18 +1467,23 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           left.restaurant.name.localeCompare(right.restaurant.name, 'he')
         ));
 
-      const nextRestaurant = eligibleRestaurants[0]?.restaurant;
-      if (!nextRestaurant) return;
+      for (const { restaurant } of eligibleRestaurants) {
+        const deliveryCount = Math.min(
+          Math.max(1, restaurant.deliveryRate || 1),
+          activeCapacity
+        );
+        let createdForRestaurant = 0;
 
-      const deliveryCount = Math.min(
-        Math.max(1, nextRestaurant.deliveryRate || 1),
-        activeCapacity
-      );
+        for (let i = 0; i < deliveryCount; i++) {
+          const newDelivery = generateDelivery(restaurant, now);
+          if (newDelivery) {
+            createdForRestaurant += 1;
+            rawDispatch({ type: 'ADD_DELIVERY', payload: newDelivery });
+          }
+        }
 
-      for (let i = 0; i < deliveryCount; i++) {
-        const newDelivery = generateDelivery(nextRestaurant, now);
-        if (newDelivery) {
-          rawDispatch({ type: 'ADD_DELIVERY', payload: newDelivery });
+        if (createdForRestaurant > 0) {
+          return;
         }
       }
     };

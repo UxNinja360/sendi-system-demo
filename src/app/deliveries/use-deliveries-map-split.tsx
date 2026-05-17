@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useState,
+  useSyncExternalStore,
+  type KeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+  type SetStateAction,
+} from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
@@ -12,6 +20,8 @@ type UseDeliveriesMapSplitArgs = {
   restaurants: Restaurant[];
   routeStopOrders?: Record<string, string[]>;
   selectedDeliveryIds?: Set<string>;
+  focusedDeliveryId?: string | null;
+  onFocusedDeliveryChange?: (deliveryId: string | null) => void;
   onOpenDelivery?: (deliveryId: string) => void;
 };
 
@@ -23,6 +33,66 @@ const MAX_MAP_WIDTH = 74;
 const DEFAULT_MAP_SHEET_HEIGHT = 38;
 const MIN_MAP_SHEET_HEIGHT = 26;
 const MAX_MAP_SHEET_HEIGHT = 82;
+
+let sharedMapOpen = false;
+const mapOpenListeners = new Set<() => void>();
+let activeMapSplitInstances = 0;
+let pendingBodyCleanupId: number | null = null;
+
+const removeMapSplitBodyState = () => {
+  if (typeof document === 'undefined') return;
+
+  document.body.classList.remove(
+    'deliveries-map-split-open',
+    'deliveries-map-split-resizing',
+    'deliveries-map-sheet-resizing',
+  );
+  document.body.style.removeProperty('--deliveries-map-split-width');
+  document.body.style.removeProperty('--deliveries-map-mobile-height');
+};
+
+const clearPendingBodyCleanup = () => {
+  if (pendingBodyCleanupId === null || typeof window === 'undefined') return;
+
+  window.clearTimeout(pendingBodyCleanupId);
+  pendingBodyCleanupId = null;
+};
+
+const scheduleBodyCleanupIfUnused = () => {
+  if (typeof window === 'undefined') {
+    if (activeMapSplitInstances === 0) removeMapSplitBodyState();
+    return;
+  }
+
+  clearPendingBodyCleanup();
+  pendingBodyCleanupId = window.setTimeout(() => {
+    pendingBodyCleanupId = null;
+    if (activeMapSplitInstances === 0) {
+      removeMapSplitBodyState();
+    }
+  }, 80);
+};
+
+const subscribeToMapOpen = (listener: () => void) => {
+  mapOpenListeners.add(listener);
+  return () => {
+    mapOpenListeners.delete(listener);
+  };
+};
+
+const getMapOpenSnapshot = () => sharedMapOpen;
+
+const setSharedMapOpen = (nextOpen: SetStateAction<boolean>) => {
+  const resolvedOpen =
+    typeof nextOpen === 'function'
+      ? (nextOpen as (current: boolean) => boolean)(sharedMapOpen)
+      : nextOpen;
+
+  if (resolvedOpen === sharedMapOpen) return;
+
+  sharedMapOpen = resolvedOpen;
+  mapOpenListeners.forEach((listener) => listener());
+};
 
 const clampMapWidth = (value: number) =>
   Math.min(MAX_MAP_WIDTH, Math.max(MIN_MAP_WIDTH, value));
@@ -50,13 +120,32 @@ export const useDeliveriesMapSplit = ({
   restaurants,
   routeStopOrders,
   selectedDeliveryIds,
+  focusedDeliveryId,
+  onFocusedDeliveryChange,
   onOpenDelivery,
 }: UseDeliveriesMapSplitArgs) => {
-  const [mapOpen, setMapOpen] = useState(false);
+  const mapOpen = useSyncExternalStore(
+    subscribeToMapOpen,
+    getMapOpenSnapshot,
+    getMapOpenSnapshot,
+  );
+  const setMapOpen = useCallback((nextOpen: SetStateAction<boolean>) => {
+    setSharedMapOpen(nextOpen);
+  }, []);
   const [mapWidth, setMapWidth] = useState(getSavedMapWidth);
   const [mapSheetHeight, setMapSheetHeight] = useState(getSavedMapSheetHeight);
   const [isResizing, setIsResizing] = useState(false);
   const [isSheetResizing, setIsSheetResizing] = useState(false);
+
+  useEffect(() => {
+    activeMapSplitInstances += 1;
+    clearPendingBodyCleanup();
+
+    return () => {
+      activeMapSplitInstances = Math.max(0, activeMapSplitInstances - 1);
+      scheduleBodyCleanupIfUnused();
+    };
+  }, []);
 
   useEffect(
     () =>
@@ -191,20 +280,15 @@ export const useDeliveriesMapSplit = ({
       document.body.style.setProperty('--deliveries-map-split-width', `${mapWidth}vw`);
       document.body.style.setProperty('--deliveries-map-mobile-height', `${mapSheetHeight}svh`);
     } else {
-      document.body.classList.remove(splitClassName);
-      document.body.style.removeProperty('--deliveries-map-split-width');
-      document.body.style.removeProperty('--deliveries-map-mobile-height');
+      removeMapSplitBodyState();
     }
 
     document.body.classList.toggle(resizingClassName, isResizing);
     document.body.classList.toggle(sheetResizingClassName, isSheetResizing);
 
     return () => {
-      document.body.classList.remove(splitClassName);
       document.body.classList.remove(resizingClassName);
       document.body.classList.remove(sheetResizingClassName);
-      document.body.style.removeProperty('--deliveries-map-split-width');
-      document.body.style.removeProperty('--deliveries-map-mobile-height');
     };
   }, [isResizing, isSheetResizing, mapOpen, mapSheetHeight, mapWidth]);
 
@@ -218,6 +302,8 @@ export const useDeliveriesMapSplit = ({
               restaurants={restaurants}
               routeStopOrders={routeStopOrders}
               selectedDeliveryIds={selectedDeliveryIds}
+              focusedDeliveryId={focusedDeliveryId}
+              onFocusedDeliveryChange={onFocusedDeliveryChange}
               onOpenDelivery={onOpenDelivery}
             />
             <button

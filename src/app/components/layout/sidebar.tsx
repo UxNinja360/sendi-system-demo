@@ -31,6 +31,11 @@ import type { AppNavIconKey, AppNavItem } from '../../app-navigation';
 import { useDelivery } from '../../context/delivery-context-value';
 import { getDeliveryCustomerCharge } from '../../utils/delivery-finance';
 import { isOperationalDelivery } from '../../utils/delivery-status';
+import {
+  SENDI_PLUS_RADIUS_CHANGE_EVENT,
+  isRestaurantEligibleForDeliveryIntake,
+  readStoredSendiPlusRadius,
+} from '../../utils/sendi-plus';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 interface SidebarProps {
@@ -51,6 +56,7 @@ const LABELS = {
   noBusinesses: '\u05dc\u05d0 \u05e0\u05de\u05e6\u05d0\u05d5 \u05d7\u05d1\u05e8\u05d5\u05ea',
   acceptDeliveries: '\u05e7\u05d1\u05dc\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
   autoAssign: '\u05e9\u05d9\u05d1\u05d5\u05e5 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9',
+  intakeBlocked: '\u05e7\u05d1\u05dc\u05d4 \u05d7\u05e1\u05d5\u05de\u05d4',
   systemClosed: '\u05de\u05e2\u05e8\u05db\u05ea \u05e1\u05d2\u05d5\u05e8\u05d4',
   settings: '\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea',
   wallet: '\u05d0\u05e8\u05e0\u05e7',
@@ -156,6 +162,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
   const [isBusinessPopupOpen, setIsBusinessPopupOpen] = useState(false);
   const [businessSearch, setBusinessSearch] = useState('');
   const [selectedBusiness, setSelectedBusiness] = useState(BUSINESSES[0]);
+  const [sendiPlusRadiusKm, setSendiPlusRadiusKm] = useState(readStoredSendiPlusRadius);
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= DESKTOP_SIDEBAR_BREAKPOINT);
   const [isCollapsed, setIsCollapsed] = useState(() => {
     try {
@@ -203,6 +210,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
   const isExpanded = !isCollapsed || !isDesktop;
   const activeDeliveriesCount = state.deliveries.filter(isOperationalDelivery).length;
+  const activeRestaurantsCount = state.restaurants.filter((restaurant) => restaurant.isActive).length;
+  const activeCouriersCount = state.couriers.filter((courier) => courier.status !== 'offline').length;
+  const hasDeliveryIntakeRestaurants = useMemo(
+    () => state.restaurants.some((restaurant) =>
+      isRestaurantEligibleForDeliveryIntake(restaurant, sendiPlusRadiusKm)
+    ),
+    [sendiPlusRadiusKm, state.restaurants],
+  );
+  const isDeliveryIntakeBlocked = state.isSystemOpen && !hasDeliveryIntakeRestaurants;
+  const systemStatusLabel = isDeliveryIntakeBlocked
+    ? LABELS.intakeBlocked
+    : state.isSystemOpen
+      ? LABELS.acceptDeliveries
+      : LABELS.systemClosed;
   const walletRevenue = state.deliveries
     .filter((delivery) => delivery.status === 'delivered')
     .reduce((sum, delivery) => sum + getDeliveryCustomerCharge(delivery), 0);
@@ -234,6 +255,28 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isBusinessPopupOpen]);
+
+  useEffect(() => {
+    const syncSendiPlusRadius = () => {
+      setSendiPlusRadiusKm(readStoredSendiPlusRadius());
+    };
+
+    const handleStorageChange = (event: StorageEvent) => {
+      if (
+        event.key === 'sendi-plus-radius-km' ||
+        event.key === 'sendi-go-radius-km'
+      ) {
+        syncSendiPlusRadius();
+      }
+    };
+
+    window.addEventListener(SENDI_PLUS_RADIUS_CHANGE_EVENT, syncSendiPlusRadius);
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener(SENDI_PLUS_RADIUS_CHANGE_EVENT, syncSendiPlusRadius);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   useEffect(() => {
     if (!isBusinessPopupOpen) return;
@@ -444,6 +487,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
   const getNavBadge = (item: AppNavItem) => {
     if (item.badge === 'activeDeliveries') return activeDeliveriesCount.toLocaleString('he-IL');
+    if (item.badge === 'activeRestaurants') return activeRestaurantsCount.toLocaleString('he-IL');
+    if (item.badge === 'activeCouriers') return activeCouriersCount.toLocaleString('he-IL');
     if (item.badge === 'deliveryBalance') return state.deliveryBalance.toLocaleString('he-IL');
     if (item.badge === 'walletRevenue') return `₪${Math.round(walletRevenue).toLocaleString('he-IL')}`;
     return null;
@@ -717,10 +762,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
               {sectionIndex > 0 &&
                 section.id !== 'legacy' &&
                 !(
-                  SIDEBAR_NAV_SECTIONS[sectionIndex - 1]?.id === 'core' &&
-                  section.id === 'operations'
-                ) &&
-                !(
                   SIDEBAR_NAV_SECTIONS[sectionIndex - 1]?.id === 'operationsTools' &&
                   section.id === 'experiments'
                 ) && (
@@ -827,7 +868,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
               <div className="space-y-3">
                 <div data-onboarding="system-toggle" className="flex items-center justify-between gap-3">
                   <span className="text-xs text-app-text-secondary">
-                    {LABELS.acceptDeliveries}
+                    {systemStatusLabel}
                   </span>
                   <button
                     type="button"
@@ -835,7 +876,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                     onClick={toggleSystem}
                     className={`relative h-5 w-10 rounded-full transition-colors ${
                       state.isSystemOpen
-                        ? 'bg-app-success-text'
+                        ? isDeliveryIntakeBlocked
+                          ? 'bg-[#f59e0b]'
+                          : 'bg-app-success-text'
                         : 'bg-[#e5e5e5] dark:bg-[#404040]'
                     }`}
                   >
@@ -872,7 +915,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
               </div>
             ) : (
               <SidebarIconTooltip
-                label={state.isSystemOpen ? LABELS.acceptDeliveries : LABELS.systemClosed}
+                label={systemStatusLabel}
                 className="hidden justify-center md:flex"
               >
                 <button
@@ -881,7 +924,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                   onClick={toggleSystem}
                   className="flex items-center justify-center"
                 >
-                  <Power className={`h-4 w-4 transition-colors ${state.isSystemOpen ? 'text-app-success-text' : 'text-[#dc2626]'}`} />
+                  <Power
+                    className={`h-4 w-4 transition-colors ${
+                      state.isSystemOpen
+                        ? isDeliveryIntakeBlocked
+                          ? 'text-[#f59e0b]'
+                          : 'text-app-success-text'
+                        : 'text-[#dc2626]'
+                    }`}
+                  />
                 </button>
               </SidebarIconTooltip>
             )}

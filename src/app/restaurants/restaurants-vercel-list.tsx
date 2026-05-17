@@ -1,9 +1,10 @@
 import React, { useLayoutEffect, useRef } from 'react';
-import { Package, UserRound } from 'lucide-react';
+import { Package, SquarePlus, Store, UserRound } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
 import { EntityRowActionTrigger } from '../components/common/entity-row-action-trigger';
 import type { EntityViewMode } from '../components/common/view-mode-toggle';
+import { SENDI_PLUS_LABEL, isSendiPlusRestaurant } from '../utils/sendi-plus';
 import { RestaurantLogoMark } from './restaurant-logo-mark';
 
 export type RestaurantVercelListItem = {
@@ -48,6 +49,23 @@ const getRestaurantStatusMeta = (restaurant: RestaurantVercelListItem) => ({
   text: restaurant.isActive ? 'text-app-success-text' : 'text-app-text-secondary',
 });
 
+const RestaurantSourceBadge: React.FC<{ isSendiGo: boolean }> = ({ isSendiGo }) => {
+  const SourceIcon = isSendiGo ? SquarePlus : Store;
+
+  return (
+    <span
+      className={joinClassNames(
+        'inline-flex min-w-0 items-center gap-1.5 text-sm font-normal',
+        isSendiGo ? 'text-[#0a84ff] dark:text-[#38bdf8]' : 'text-app-text-secondary',
+      )}
+      dir="rtl"
+    >
+      <span className="truncate">{isSendiGo ? SENDI_PLUS_LABEL : 'מסעדה רגילה'}</span>
+      <SourceIcon className="h-3.5 w-3.5 shrink-0" />
+    </span>
+  );
+};
+
 const RestaurantVercelRow: React.FC<{
   restaurant: RestaurantVercelListItem;
   onOpenActionsMenu: RestaurantsVercelListProps['onOpenActionsMenu'];
@@ -61,6 +79,7 @@ const RestaurantVercelRow: React.FC<{
   const address = [restaurant.street, restaurant.city].filter(Boolean).join(', ') || '-';
   const footerStatusText = restaurant.isActive ? 'מסעדה פעילה' : 'מסעדה לא פעילה';
   const footerStatusDotClassName = restaurant.isActive ? 'bg-app-success-text' : 'bg-app-text-secondary';
+  const isSendiGo = isSendiPlusRestaurant(restaurant.name, restaurant.chainId);
 
   const navigateToRestaurant = () => {
     navigate(`/restaurant/${restaurant.restaurantId}`);
@@ -98,6 +117,10 @@ const RestaurantVercelRow: React.FC<{
         </span>
       </div>
 
+      <div className="restaurant-row__source hidden min-h-0 min-w-0 items-center px-2 text-sm font-normal md:col-start-3 md:flex md:min-h-[72px]">
+        <RestaurantSourceBadge isSendiGo={isSendiGo} />
+      </div>
+
       <div className="restaurant-row__deliveries hidden min-h-0 min-w-0 items-center px-2 text-sm font-normal text-app-text-secondary md:col-start-4 md:flex md:min-h-[72px]">
         <span className="inline-flex shrink-0 items-center gap-1.5">
           <Package className="h-3.5 w-3.5" />
@@ -116,6 +139,9 @@ const RestaurantVercelRow: React.FC<{
         <span className="inline-flex min-w-0 items-center gap-1.5">
           <span className={joinClassNames('h-2 w-2 shrink-0 rounded-full', footerStatusDotClassName)} />
           <span className="truncate">{footerStatusText}</span>
+        </span>
+        <span className="min-w-0 flex-1 text-center">
+          <RestaurantSourceBadge isSendiGo={isSendiGo} />
         </span>
         <span className="inline-flex shrink-0 items-center gap-1.5">
           <Package className="h-3.5 w-3.5" />
@@ -138,6 +164,7 @@ const RestaurantVercelCard: React.FC<{
   const navigate = useNavigate();
   const address = [restaurant.street, restaurant.city].filter(Boolean).join(', ') || '-';
   const statusMeta = getRestaurantStatusMeta(restaurant);
+  const isSendiGo = isSendiPlusRestaurant(restaurant.name, restaurant.chainId);
 
   const navigateToRestaurant = () => {
     navigate(`/restaurant/${restaurant.restaurantId}`);
@@ -199,7 +226,7 @@ const RestaurantVercelCard: React.FC<{
       </div>
 
       <div className="mt-4 flex items-center justify-between border-t border-app-nav-border pt-3 text-xs text-app-text-secondary">
-        <span>{restaurant.chainId && restaurant.chainId !== '-' ? restaurant.chainId : restaurant.type || '-'}</span>
+        <RestaurantSourceBadge isSendiGo={isSendiGo} />
         <span className="inline-flex items-center gap-1.5">
           <Package className="h-3.5 w-3.5" />
           <span className="tabular-nums">{restaurant.totalDeliveries}</span>

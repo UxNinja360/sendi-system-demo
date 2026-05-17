@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Power, Download, Search, Store as StoreIcon, Trash2, X, FileText, FileSpreadsheet } from 'lucide-react';
+import { Power, Download, Search, Store as StoreIcon, SquarePlus, Trash2, X, FileText, FileSpreadsheet } from 'lucide-react';
 import { useDelivery } from '../context/delivery-context-value';
 import { useNavigate } from 'react-router';
 import { Delivery, Restaurant } from '../types/delivery.types';
@@ -23,6 +23,7 @@ import { ListToolbarActions } from '../components/common/list-toolbar-actions';
 import { ToolbarIconButton } from '../components/common/toolbar-icon-button';
 import { ViewModeToggle, type EntityViewMode } from '../components/common/view-mode-toggle';
 import { getRestaurantChainId } from '../utils/restaurant-branding';
+import { SENDI_PLUS_LABEL, isSendiPlusRestaurant } from '../utils/sendi-plus';
 import {
   formatCurrency,
   getDeliveryCashAmount,
@@ -277,6 +278,10 @@ export const RestaurantsScreen: React.FC = () => {
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [restaurantConnectionFilter, setRestaurantConnectionFilter] = useState<'connected' | 'disconnected' | null>(null);
+  const [restaurantSourceVisibility, setRestaurantSourceVisibility] = useState({
+    regular: true,
+    sendiGo: true,
+  });
   const [sortColumn, setSortColumn] = useState<RestaurantSortableColumnId>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [isExportOpen, setIsExportOpen] = useState(false);
@@ -433,12 +438,23 @@ export const RestaurantsScreen: React.FC = () => {
       const matchesConnection =
         !restaurantConnectionFilter ||
         (restaurantConnectionFilter === 'connected' ? r.isActive : !r.isActive);
-      return matchesSearch && matchesConnection;
+      const isSendiGo = isSendiPlusRestaurant(r.name, r.chainId);
+      const matchesSource = isSendiGo
+        ? restaurantSourceVisibility.sendiGo
+        : restaurantSourceVisibility.regular;
+      return matchesSearch && matchesConnection && matchesSource;
     });
 
     const direction = sortDirection === 'asc' ? 1 : -1;
 
     return [...filtered].sort((a, b) => {
+      const aIsSendiGo = isSendiPlusRestaurant(a.name, a.chainId);
+      const bIsSendiGo = isSendiPlusRestaurant(b.name, b.chainId);
+
+      if (aIsSendiGo !== bIsSendiGo) {
+        return aIsSendiGo ? -1 : 1;
+      }
+
       switch (sortColumn) {
         case 'name':
           return a.name.localeCompare(b.name, 'he') * direction;
@@ -460,7 +476,7 @@ export const RestaurantsScreen: React.FC = () => {
           return 0;
       }
     });
-  }, [restaurants, restaurantConnectionFilter, searchQuery, sortColumn, sortDirection]);
+  }, [restaurants, restaurantConnectionFilter, restaurantSourceVisibility, searchQuery, sortColumn, sortDirection]);
 
   // Stats
   const stats = useMemo(() => ({
@@ -476,6 +492,7 @@ export const RestaurantsScreen: React.FC = () => {
   const handleClearAll = () => {
     setSearchQuery('');
     setRestaurantConnectionFilter(null);
+    setRestaurantSourceVisibility({ regular: true, sendiGo: true });
   };
 
   const handleToggleSelectRestaurant = (restaurantId: string) => {
@@ -906,6 +923,28 @@ export const RestaurantsScreen: React.FC = () => {
                 <div className="flex min-w-0 flex-1 items-center gap-1.5">
                   <div className="flex shrink-0 items-center gap-1">
                     <RestaurantToolbarToggle
+                      active={restaurantSourceVisibility.regular}
+                      label={'\u05d4\u05e6\u05d2 \u05de\u05e1\u05e2\u05d3\u05d5\u05ea \u05e8\u05d2\u05d9\u05dc\u05d5\u05ea'}
+                      onClick={() =>
+                        setRestaurantSourceVisibility((value) => ({
+                          ...value,
+                          regular: !value.regular,
+                        }))
+                      }
+                      icon={<StoreIcon className="h-3.5 w-3.5" />}
+                    />
+                    <RestaurantToolbarToggle
+                      active={restaurantSourceVisibility.sendiGo}
+                      label={`\u05d4\u05e6\u05d2 \u05de\u05e1\u05e2\u05d3\u05d5\u05ea ${SENDI_PLUS_LABEL}`}
+                      onClick={() =>
+                        setRestaurantSourceVisibility((value) => ({
+                          ...value,
+                          sendiGo: !value.sendiGo,
+                        }))
+                      }
+                      icon={<SquarePlus className="h-3.5 w-3.5" />}
+                    />
+                    <RestaurantToolbarToggle
                       active={restaurantConnectionFilter === 'connected'}
                       label={'\u05d4\u05e6\u05d2 \u05de\u05e1\u05e2\u05d3\u05d5\u05ea \u05e4\u05e2\u05d9\u05dc\u05d5\u05ea'}
                       onClick={() =>
@@ -913,7 +952,7 @@ export const RestaurantsScreen: React.FC = () => {
                           value === 'connected' ? null : 'connected',
                         )
                       }
-                      icon={<StoreIcon className="h-3.5 w-3.5" />}
+                      icon={<Power className="h-3.5 w-3.5" />}
                     />
                   </div>
                   <ListToolbarActions
