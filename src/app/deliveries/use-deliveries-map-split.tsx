@@ -16,18 +16,32 @@ type UseDeliveriesMapSplitArgs = {
 };
 
 const MAP_SPLIT_WIDTH_STORAGE_KEY = 'sendi:deliveries-map-split-width';
+const MAP_SHEET_HEIGHT_STORAGE_KEY = 'sendi:deliveries-map-sheet-height';
 const DEFAULT_MAP_WIDTH = 50;
 const MIN_MAP_WIDTH = 32;
 const MAX_MAP_WIDTH = 74;
+const DEFAULT_MAP_SHEET_HEIGHT = 38;
+const MIN_MAP_SHEET_HEIGHT = 26;
+const MAX_MAP_SHEET_HEIGHT = 82;
 
 const clampMapWidth = (value: number) =>
   Math.min(MAX_MAP_WIDTH, Math.max(MIN_MAP_WIDTH, value));
+
+const clampMapSheetHeight = (value: number) =>
+  Math.min(MAX_MAP_SHEET_HEIGHT, Math.max(MIN_MAP_SHEET_HEIGHT, value));
 
 const getSavedMapWidth = () => {
   if (typeof localStorage === 'undefined') return DEFAULT_MAP_WIDTH;
 
   const saved = Number(localStorage.getItem(MAP_SPLIT_WIDTH_STORAGE_KEY));
   return Number.isFinite(saved) ? clampMapWidth(saved) : DEFAULT_MAP_WIDTH;
+};
+
+const getSavedMapSheetHeight = () => {
+  if (typeof localStorage === 'undefined') return DEFAULT_MAP_SHEET_HEIGHT;
+
+  const saved = Number(localStorage.getItem(MAP_SHEET_HEIGHT_STORAGE_KEY));
+  return Number.isFinite(saved) ? clampMapSheetHeight(saved) : DEFAULT_MAP_SHEET_HEIGHT;
 };
 
 export const useDeliveriesMapSplit = ({
@@ -40,7 +54,9 @@ export const useDeliveriesMapSplit = ({
 }: UseDeliveriesMapSplitArgs) => {
   const [mapOpen, setMapOpen] = useState(false);
   const [mapWidth, setMapWidth] = useState(getSavedMapWidth);
+  const [mapSheetHeight, setMapSheetHeight] = useState(getSavedMapSheetHeight);
   const [isResizing, setIsResizing] = useState(false);
+  const [isSheetResizing, setIsSheetResizing] = useState(false);
 
   useEffect(
     () =>
@@ -56,6 +72,12 @@ export const useDeliveriesMapSplit = ({
     setMapWidth(clampMapWidth((clientX / window.innerWidth) * 100));
   }, []);
 
+  const updateMapSheetHeightFromClientY = useCallback((clientY: number) => {
+    if (typeof window === 'undefined' || window.innerHeight <= 0) return;
+
+    setMapSheetHeight(clampMapSheetHeight(((window.innerHeight - clientY) / window.innerHeight) * 100));
+  }, []);
+
   const handleResizePointerDown = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
     if (typeof window === 'undefined' || window.innerWidth < 1024) return;
 
@@ -64,6 +86,15 @@ export const useDeliveriesMapSplit = ({
     updateMapWidthFromClientX(event.clientX);
     setIsResizing(true);
   }, [updateMapWidthFromClientX]);
+
+  const handleSheetResizePointerDown = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (typeof window === 'undefined' || window.innerWidth >= 1024) return;
+
+    event.preventDefault();
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    updateMapSheetHeightFromClientY(event.clientY);
+    setIsSheetResizing(true);
+  }, [updateMapSheetHeightFromClientY]);
 
   const handleResizeKeyDown = useCallback((event: KeyboardEvent<HTMLButtonElement>) => {
     const step = event.shiftKey ? 5 : 2;
@@ -80,6 +111,22 @@ export const useDeliveriesMapSplit = ({
     event.preventDefault();
     setMapWidth(clampMapWidth(nextWidth));
   }, [mapWidth]);
+
+  const handleSheetResizeKeyDown = useCallback((event: KeyboardEvent<HTMLButtonElement>) => {
+    const step = event.shiftKey ? 6 : 3;
+    let nextHeight: number | null = null;
+
+    if (event.key === 'ArrowUp') nextHeight = mapSheetHeight + step;
+    if (event.key === 'ArrowDown') nextHeight = mapSheetHeight - step;
+    if (event.key === 'Home') nextHeight = MIN_MAP_SHEET_HEIGHT;
+    if (event.key === 'End') nextHeight = MAX_MAP_SHEET_HEIGHT;
+    if (event.key === 'Enter' || event.key === ' ') nextHeight = DEFAULT_MAP_SHEET_HEIGHT;
+
+    if (nextHeight === null) return;
+
+    event.preventDefault();
+    setMapSheetHeight(clampMapSheetHeight(nextHeight));
+  }, [mapSheetHeight]);
 
   useEffect(() => {
     if (!isResizing) return undefined;
@@ -102,32 +149,64 @@ export const useDeliveriesMapSplit = ({
   }, [isResizing, updateMapWidthFromClientX]);
 
   useEffect(() => {
+    if (!isSheetResizing) return undefined;
+
+    const handlePointerMove = (event: PointerEvent) => {
+      event.preventDefault();
+      updateMapSheetHeightFromClientY(event.clientY);
+    };
+    const handlePointerUp = () => setIsSheetResizing(false);
+
+    window.addEventListener('pointermove', handlePointerMove, { passive: false });
+    window.addEventListener('pointerup', handlePointerUp);
+    window.addEventListener('pointercancel', handlePointerUp);
+
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener('pointercancel', handlePointerUp);
+    };
+  }, [isSheetResizing, updateMapSheetHeightFromClientY]);
+
+  useEffect(() => {
     if (typeof localStorage === 'undefined') return;
 
     localStorage.setItem(MAP_SPLIT_WIDTH_STORAGE_KEY, mapWidth.toFixed(2));
   }, [mapWidth]);
 
   useEffect(() => {
+    if (typeof localStorage === 'undefined') return;
+
+    localStorage.setItem(MAP_SHEET_HEIGHT_STORAGE_KEY, mapSheetHeight.toFixed(2));
+  }, [mapSheetHeight]);
+
+  useEffect(() => {
     if (typeof document === 'undefined') return undefined;
 
     const splitClassName = 'deliveries-map-split-open';
     const resizingClassName = 'deliveries-map-split-resizing';
+    const sheetResizingClassName = 'deliveries-map-sheet-resizing';
     if (mapOpen) {
       document.body.classList.add(splitClassName);
       document.body.style.setProperty('--deliveries-map-split-width', `${mapWidth}vw`);
+      document.body.style.setProperty('--deliveries-map-mobile-height', `${mapSheetHeight}svh`);
     } else {
       document.body.classList.remove(splitClassName);
       document.body.style.removeProperty('--deliveries-map-split-width');
+      document.body.style.removeProperty('--deliveries-map-mobile-height');
     }
 
     document.body.classList.toggle(resizingClassName, isResizing);
+    document.body.classList.toggle(sheetResizingClassName, isSheetResizing);
 
     return () => {
       document.body.classList.remove(splitClassName);
       document.body.classList.remove(resizingClassName);
+      document.body.classList.remove(sheetResizingClassName);
       document.body.style.removeProperty('--deliveries-map-split-width');
+      document.body.style.removeProperty('--deliveries-map-mobile-height');
     };
-  }, [isResizing, mapOpen, mapWidth]);
+  }, [isResizing, isSheetResizing, mapOpen, mapSheetHeight, mapWidth]);
 
   const mapSplitPortal =
     mapOpen && typeof document !== 'undefined'
@@ -140,6 +219,21 @@ export const useDeliveriesMapSplit = ({
               routeStopOrders={routeStopOrders}
               selectedDeliveryIds={selectedDeliveryIds}
               onOpenDelivery={onOpenDelivery}
+            />
+            <button
+              type="button"
+              className="deliveries-map-sheet-resizer"
+              aria-label="שינוי גובה המפה"
+              aria-orientation="horizontal"
+              aria-valuemin={MIN_MAP_SHEET_HEIGHT}
+              aria-valuemax={MAX_MAP_SHEET_HEIGHT}
+              aria-valuenow={Math.round(mapSheetHeight)}
+              data-haptic="off"
+              onPointerDown={handleSheetResizePointerDown}
+              onKeyDown={handleSheetResizeKeyDown}
+              onDoubleClick={() => setMapSheetHeight(DEFAULT_MAP_SHEET_HEIGHT)}
+              role="separator"
+              title="גרור למעלה או למטה לשינוי גובה המפה. דאבל קליק מאפס."
             />
             <button
               type="button"

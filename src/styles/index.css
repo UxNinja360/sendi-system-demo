@@ -10,6 +10,7 @@
   --app-header-height: 56px;
   --app-topbar-offset: calc(var(--app-header-height) + var(--app-safe-top));
   --deliveries-map-split-width: 50vw;
+  --deliveries-map-mobile-height: 38svh;
 }
 
 html,
@@ -50,7 +51,7 @@ body {
   border-radius: 12px 12px 0 0;
   bottom: var(--app-safe-bottom);
   box-shadow: 0 -18px 40px rgba(0, 0, 0, 0.38);
-  height: clamp(220px, 38svh, 380px);
+  height: var(--deliveries-map-mobile-height, 38svh);
   left: 8px;
   overflow: hidden;
   position: fixed;
@@ -64,7 +65,25 @@ body {
   min-height: 100%;
 }
 
-.deliveries-map-split-portal::before {
+.deliveries-map-split-resizer {
+  display: none;
+}
+
+.deliveries-map-sheet-resizer {
+  background: transparent;
+  border: 0;
+  cursor: row-resize;
+  height: 32px;
+  left: 50%;
+  padding: 0;
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  width: 112px;
+  z-index: 970;
+}
+
+.deliveries-map-sheet-resizer::before {
   background: color-mix(in srgb, var(--app-text-secondary) 52%, transparent);
   border-radius: 999px;
   content: '';
@@ -73,12 +92,21 @@ body {
   position: absolute;
   top: 8px;
   transform: translateX(-50%);
+  transition:
+    background 120ms ease,
+    width 120ms ease;
   width: 36px;
-  z-index: 960;
 }
 
-.deliveries-map-split-resizer {
-  display: none;
+.deliveries-map-sheet-resizer:hover::before,
+.deliveries-map-sheet-resizer:focus-visible::before,
+body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
+  background: #38bdf8;
+  width: 48px;
+}
+
+.deliveries-map-sheet-resizer:focus-visible {
+  outline: none;
 }
 
 .deliveries-map-split-close {
@@ -534,6 +562,11 @@ body {
     user-select: none;
   }
 
+  body.deliveries-map-sheet-resizing {
+    cursor: row-resize;
+    user-select: none;
+  }
+
   .deliveries-map-split-portal {
     border-right: 1px solid var(--app-nav-border);
     border-left: 0;
@@ -552,10 +585,6 @@ body {
 
   .deliveries-map-split-portal > section {
     min-height: 100vh;
-  }
-
-  .deliveries-map-split-portal::before {
-    display: none;
   }
 
   .deliveries-map-split-resizer {
@@ -637,13 +666,17 @@ body {
   .deliveries-map-split-close {
     display: none;
   }
+
+  .deliveries-map-sheet-resizer {
+    display: none;
+  }
 }
 
 @media (max-width: 1023.98px) {
   body.deliveries-map-split-open .deliveries-vercel-scroll,
   body.deliveries-map-split-open .resource-list-scroll,
   body.deliveries-map-split-open main {
-    padding-bottom: calc(clamp(220px, 38svh, 380px) + 16px + var(--app-safe-bottom));
+    padding-bottom: calc(var(--deliveries-map-mobile-height, 38svh) + 16px + var(--app-safe-bottom));
   }
 }
 
