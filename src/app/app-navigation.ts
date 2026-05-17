@@ -39,7 +39,13 @@ export type AppNavItem = {
   managedScroll?: boolean;
   exact?: boolean;
   activePathPrefixes?: string[];
-  badge?: 'activeDeliveries' | 'activeRestaurants' | 'activeCouriers' | 'deliveryBalance' | 'walletRevenue';
+  badge?:
+    | 'activeDeliveries'
+    | 'deliveredDeliveries'
+    | 'activeRestaurants'
+    | 'activeCouriers'
+    | 'deliveryBalance'
+    | 'walletRevenue';
   tag?: 'beta';
 };
 
@@ -71,6 +77,7 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
     showInSidebar: true,
     managedScroll: true,
     exact: true,
+    badge: 'activeDeliveries',
   },
   {
     id: 'legacy-dashboard',
@@ -127,7 +134,7 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
     managedScroll: true,
     exact: true,
     activePathPrefixes: ['/delivery/'],
-    badge: 'activeDeliveries',
+    badge: 'deliveredDeliveries',
   },
   {
     id: 'reports',

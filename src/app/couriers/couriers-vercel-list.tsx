@@ -1,6 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Package, Star } from 'lucide-react';
-import { useNavigate } from 'react-router';
 
 import { EntityRowActionTrigger } from '../components/common/entity-row-action-trigger';
 import type { EntityViewMode } from '../components/common/view-mode-toggle';
@@ -130,29 +129,15 @@ const CourierVercelRow: React.FC<{
   onOpenActionsMenu,
   onOpenContextMenu,
 }) => {
-  const navigate = useNavigate();
   const connectionMeta = getConnectionMeta(courier);
   const shiftMeta = getShiftMeta(courier);
 
-  const navigateToCourier = () => {
-    navigate(`/courier/${courier.id}`);
-  };
-
   return (
     <div
-      role="button"
-      tabIndex={0}
-      onClick={navigateToCourier}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          navigateToCourier();
-        }
-      }}
       onContextMenu={(event) => onOpenContextMenu(courier, event)}
       className={joinClassNames(
         rowGridClass,
-        'group relative w-full min-w-0 cursor-pointer border-b border-app-nav-border bg-app-surface text-app-text outline-none transition-colors hover:bg-app-surface-raised focus-visible:bg-app-surface-raised',
+        'group relative w-full min-w-0 border-b border-app-nav-border bg-app-surface text-app-text outline-none transition-colors hover:bg-app-surface-raised',
       )}
     >
       <div className="courier-row__identity col-start-1 row-start-1 flex min-h-0 min-w-0 items-center gap-3 px-2 py-3 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
@@ -233,30 +218,16 @@ const CourierVercelCard: React.FC<{
   onOpenActionsMenu,
   onOpenContextMenu,
 }) => {
-  const navigate = useNavigate();
   const connectionMeta = getConnectionMeta(courier);
   const shiftMeta = getShiftMeta(courier);
   const deliveryLabel = currentDelivery ? formatOrderNumber(currentDelivery.orderNumber) : '-';
   const deliveryMeta = currentDelivery ? currentDelivery.rest_name || currentDelivery.restaurantName : 'ללא משלוח פעיל';
 
-  const navigateToCourier = () => {
-    navigate(`/courier/${courier.id}`);
-  };
-
   return (
     <div
-      role="button"
-      tabIndex={0}
-      onClick={navigateToCourier}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          navigateToCourier();
-        }
-      }}
       onContextMenu={(event) => onOpenContextMenu(courier, event)}
       className={joinClassNames(
-        'group min-w-0 cursor-pointer rounded-lg border border-app-nav-border bg-app-surface p-3 text-app-text outline-none transition-colors hover:bg-app-surface-raised focus-visible:bg-app-surface-raised',
+        'group min-w-0 rounded-lg border border-app-nav-border bg-app-surface p-3 text-app-text outline-none transition-colors hover:bg-app-surface-raised',
       )}
     >
       <div className="flex min-w-0 items-start justify-between gap-3">

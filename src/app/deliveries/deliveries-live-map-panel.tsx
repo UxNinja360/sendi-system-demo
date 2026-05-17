@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Bike, LocateFixed, Store } from 'lucide-react';
 
 import { LeafletMap } from '../live/leaflet-map';
@@ -163,6 +163,12 @@ export const DeliveriesLiveMapPanel: React.FC<DeliveriesLiveMapPanelProps> = ({
     () => (showCouriers ? mapCouriers : []),
     [mapCouriers, showCouriers],
   );
+
+  useEffect(() => {
+    if (!focusedDeliveryId) {
+      setSelectedOrderId(null);
+    }
+  }, [focusedDeliveryId]);
 
   const handleOrderClick = (deliveryId: string) => {
     const order = mapOrders.find((item) => item.deliveryId === deliveryId);

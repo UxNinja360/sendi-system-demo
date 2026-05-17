@@ -5,7 +5,7 @@ export const SENDI_PLUS_LABEL = '\u05e1\u05e0\u05d3\u05d9 \u05e4\u05dc\u05d5\u05
 export const SENDI_PLUS_RADIUS_STORAGE_KEY = 'sendi-plus-radius-km';
 export const SENDI_PLUS_RADIUS_CHANGE_EVENT = 'sendi-plus-radius-change';
 export const LEGACY_SENDI_GO_RADIUS_STORAGE_KEY = 'sendi-go-radius-km';
-export const DEFAULT_SENDI_PLUS_RADIUS_KM = 5;
+export const DEFAULT_SENDI_PLUS_RADIUS_KM = 0;
 export const MAX_SENDI_PLUS_RADIUS_KM = 10;
 
 type RadiusStorageReader = Pick<Storage, 'getItem'>;

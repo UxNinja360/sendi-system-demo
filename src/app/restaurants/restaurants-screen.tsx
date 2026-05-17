@@ -237,11 +237,6 @@ const RestaurantToolbarToggle: React.FC<{
       label={label}
       title={label}
       onClick={onClick}
-      className={
-        active
-          ? 'border-app-border-strong bg-app-nav-active-bg text-app-nav-active-text shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--app-border-strong)_35%,transparent)]'
-          : 'border-app-border text-app-text-secondary'
-      }
     >
       <span
         className={`

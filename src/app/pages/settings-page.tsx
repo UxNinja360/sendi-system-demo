@@ -15,6 +15,7 @@ import {
 import { useNavigate } from 'react-router';
 import { useTheme } from '../context/theme.context';
 import { useDelivery } from '../context/delivery-context-value';
+import { Toggle } from '../components/common/toggle';
 import {
   ALERT_PREFERENCES_EVENT,
   getAlertPreferences,
@@ -159,18 +160,6 @@ const SettingRow: React.FC<{
     </div>
     <div className="shrink-0">{control}</div>
   </div>
-);
-
-const Toggle: React.FC<{ checked: boolean; onChange: () => void }> = ({ checked, onChange }) => (
-  <button
-    type="button"
-    data-haptic="selection"
-    onClick={onChange}
-    className={`relative h-7 w-12 rounded-full transition-colors ${checked ? 'bg-app-brand' : 'bg-[#d4d4d4] dark:bg-[#404040]'}`}
-    aria-pressed={checked}
-  >
-    <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all ${checked ? 'left-1' : 'left-6'}`} />
-  </button>
 );
 
 const SoundPicker: React.FC<{

@@ -10,11 +10,13 @@ interface Zone {
   color: string;
   latlngs: [number, number][];
   polygon?: L.Polygon;
+  label?: L.Marker;
 }
 
 type StoredZone = Omit<Zone, 'polygon' | 'label'>;
 
 const STORAGE_KEY = DELIVERY_STORAGE_KEYS.deliveryZones;
+const SENDI_PLUS_SOURCE = 'sendi-plus';
 
 function loadStoredZones(): StoredZone[] {
   try {
@@ -30,11 +32,44 @@ function saveZones(zones: Zone[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
+const escapeHtml = (value: string) =>
+  value.replace(/[&<>"']/g, (char) => {
+    const entities: Record<string, string> = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    };
+    return entities[char] ?? char;
+  });
+
+const getZoneCenter = (latlngs: [number, number][]): [number, number] => {
+  const total = latlngs.reduce(
+    (acc, [lat, lng]) => ({ lat: acc.lat + lat, lng: acc.lng + lng }),
+    { lat: 0, lng: 0 },
+  );
+
+  return [total.lat / latlngs.length, total.lng / latlngs.length];
+};
+
+const createZoneLabelIcon = (name: string, color: string) =>
+  L.divIcon({
+    className: 'delivery-zone-label',
+    html: `<span style="--zone-color:${color}">${escapeHtml(name)}</span>`,
+  });
+
 function addZoneToMap(map: L.Map, stored: StoredZone): Zone {
   const polygon = L.polygon(stored.latlngs, {
-    color: stored.color, weight: 2, fillColor: stored.color, fillOpacity: 0.2,
+    color: stored.color, weight: 2, fillColor: stored.color, fillOpacity: 0.18,
   }).addTo(map);
-  return { ...stored, polygon };
+  const label = L.marker(getZoneCenter(stored.latlngs), {
+    icon: createZoneLabelIcon(stored.name, stored.color),
+    interactive: false,
+    keyboard: false,
+  }).addTo(map);
+
+  return { ...stored, polygon, label };
 }
 
 const ZONE_COLORS = [
@@ -44,6 +79,133 @@ const ZONE_COLORS = [
 
 const TEL_AVIV_CENTER: [number, number] = [32.0853, 34.7818];
 
+const PRESET_DELIVERY_ZONES: StoredZone[] = [
+  {
+    id: 'preset-central-tel-aviv',
+    name: 'מרכז תל אביב',
+    color: '#0a84ff',
+    latlngs: [
+      [32.058, 34.762],
+      [32.058, 34.79],
+      [32.081, 34.79],
+      [32.083, 34.764],
+    ],
+  },
+  {
+    id: 'preset-tel-aviv-beach',
+    name: 'חוף תל אביב',
+    color: '#06b6d4',
+    latlngs: [
+      [32.067, 34.753],
+      [32.067, 34.766],
+      [32.083, 34.766],
+      [32.083, 34.756],
+    ],
+  },
+  {
+    id: 'preset-florentin',
+    name: 'פלורנטין',
+    color: '#f97316',
+    latlngs: [
+      [32.052, 34.759],
+      [32.052, 34.781],
+      [32.066, 34.781],
+      [32.066, 34.759],
+    ],
+  },
+  {
+    id: 'preset-nahalat-binyamin',
+    name: 'נחלת בנימין',
+    color: '#a855f7',
+    latlngs: [
+      [32.059, 34.763],
+      [32.059, 34.773],
+      [32.069, 34.773],
+      [32.069, 34.763],
+    ],
+  },
+  {
+    id: 'preset-tel-aviv-port',
+    name: 'נמל תל אביב',
+    color: '#14b8a6',
+    latlngs: [
+      [32.087, 34.763],
+      [32.087, 34.789],
+      [32.099, 34.789],
+      [32.099, 34.763],
+    ],
+  },
+  {
+    id: 'preset-ramat-gan',
+    name: 'מרכז רמת גן',
+    color: '#22c55e',
+    latlngs: [
+      [32.072, 34.785],
+      [32.072, 34.815],
+      [32.091, 34.815],
+      [32.091, 34.785],
+    ],
+  },
+  {
+    id: 'preset-givatayim',
+    name: 'מרכז גבעתיים',
+    color: '#84cc16',
+    latlngs: [
+      [32.064, 34.803],
+      [32.064, 34.826],
+      [32.078, 34.826],
+      [32.078, 34.803],
+    ],
+  },
+  {
+    id: 'preset-bnei-brak',
+    name: 'מרכז בני ברק',
+    color: '#eab308',
+    latlngs: [
+      [32.075, 34.821],
+      [32.075, 34.846],
+      [32.092, 34.846],
+      [32.092, 34.821],
+    ],
+  },
+  {
+    id: 'preset-jaffa',
+    name: 'יפו',
+    color: '#ef4444',
+    latlngs: [
+      [32.002, 34.753],
+      [32.002, 34.788],
+      [32.033, 34.788],
+      [32.033, 34.753],
+    ],
+  },
+  {
+    id: 'preset-bat-yam',
+    name: 'בת ים',
+    color: '#ec4899',
+    latlngs: [
+      [32.011, 34.733],
+      [32.011, 34.768],
+      [32.039, 34.768],
+      [32.039, 34.733],
+    ],
+  },
+];
+
+const fitMapToZones = (map: L.Map, zones: Array<Pick<Zone, 'latlngs'>>) => {
+  const latlngs = zones.flatMap((zone) => zone.latlngs);
+  if (latlngs.length === 0) return;
+
+  map.fitBounds(L.latLngBounds(latlngs), {
+    maxZoom: 13,
+    padding: [28, 28],
+  });
+};
+
+const shouldSeedSendiPlusZones = () => {
+  if (typeof window === 'undefined') return false;
+  return new URLSearchParams(window.location.search).get('source') === SENDI_PLUS_SOURCE;
+};
 
 export const DeliveryZonesPage: React.FC = () => {
   const mapRef = useRef<L.Map | null>(null);
@@ -98,11 +260,19 @@ export const DeliveryZonesPage: React.FC = () => {
     tileLayerRef.current = tileLayer;
     mapRef.current = map;
 
-    // draw polygons for zones already in state (loaded from localStorage)
-    setZones(prev => {
-      if (prev.length === 0) return prev;
-      return prev.map(z => addZoneToMap(map, z));
-    });
+    const storedZones = loadStoredZones();
+    const zonesToDraw =
+      storedZones.length > 0
+        ? storedZones
+        : shouldSeedSendiPlusZones()
+          ? PRESET_DELIVERY_ZONES
+          : [];
+
+    if (zonesToDraw.length > 0) {
+      const mappedZones = zonesToDraw.map(z => addZoneToMap(map, z));
+      setZones(mappedZones);
+      window.requestAnimationFrame(() => fitMapToZones(map, mappedZones));
+    }
     zonesLoadedRef.current = true;
 
     // watch dark mode toggling
@@ -210,14 +380,7 @@ export const DeliveryZonesPage: React.FC = () => {
       latlngs: pendingLatlngs,
     };
 
-    // draw polygon on map
-    const polygon = L.polygon(pendingLatlngs, {
-      color, weight: 2, fillColor: color, fillOpacity: 0.2,
-    }).addTo(map);
-
-    zone.polygon = polygon;
-
-    setZones(prev => [...prev, zone]);
+    setZones(prev => [...prev, addZoneToMap(map, zone)]);
     setPendingLatlngs(null);
   }, [pendingLatlngs, newName, zones.length]);
 
@@ -226,6 +389,7 @@ export const DeliveryZonesPage: React.FC = () => {
       const zone = prev.find(z => z.id === id);
       if (zone) {
         zone.polygon?.remove();
+        zone.label?.remove();
       }
       return prev.filter(z => z.id !== id);
     });
@@ -238,12 +402,34 @@ export const DeliveryZonesPage: React.FC = () => {
 
   const confirmEdit = useCallback(() => {
     if (!editingId) return;
+    const nextName = editName.trim();
+    if (!nextName) return;
+
     setZones(prev => prev.map(z => {
       if (z.id !== editingId) return z;
-      return { ...z, name: editName.trim() };
+      z.label?.setIcon(createZoneLabelIcon(nextName, z.color));
+      return { ...z, name: nextName };
     }));
     setEditingId(null);
   }, [editingId, editName]);
+
+  const addPresetZones = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const existingIds = new Set(zones.map(zone => zone.id));
+    const missingZones = PRESET_DELIVERY_ZONES.filter(zone => !existingIds.has(zone.id));
+
+    if (missingZones.length === 0) {
+      fitMapToZones(map, zones);
+      return;
+    }
+
+    const addedZones = missingZones.map(zone => addZoneToMap(map, zone));
+    const nextZones = [...zones, ...addedZones];
+    setZones(nextZones);
+    fitMapToZones(map, nextZones);
+  }, [zones]);
 
   return (
     <div className="flex min-h-screen flex-col bg-app-background" dir="rtl">
@@ -254,22 +440,55 @@ export const DeliveryZonesPage: React.FC = () => {
         .dark .leaflet-bar { border-color: #404040 !important; }
         .dark .leaflet-control-attribution { background: rgba(23,23,23,0.8) !important; color: #a3a3a3 !important; }
         .dark .leaflet-control-attribution a { color: #9fe870 !important; }
+        .delivery-zone-label {
+          background: transparent !important;
+          border: 0 !important;
+          pointer-events: none;
+        }
+        .delivery-zone-label span {
+          align-items: center;
+          background: color-mix(in srgb, var(--zone-color) 22%, rgba(8, 8, 8, 0.88));
+          border: 1px solid color-mix(in srgb, var(--zone-color) 72%, white 16%);
+          border-radius: 999px;
+          box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+          color: #fff;
+          display: inline-flex;
+          font-size: 12px;
+          font-weight: 700;
+          line-height: 1;
+          max-width: 128px;
+          padding: 6px 9px;
+          position: absolute;
+          right: 0;
+          top: 0;
+          transform: translate(50%, -50%);
+          white-space: nowrap;
+        }
       `}</style>
       {/* header */}
       <div className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-[#e5e5e5] bg-white px-5 dark:border-app-border dark:bg-app-surface">
         <div className="flex items-center gap-2.5">
           <span className="text-[15px] font-semibold text-[#0d0d12] dark:text-app-text">אזורי משלוח</span>
         </div>
-        <button
-          onClick={isDrawing ? cancelDrawing : startDrawingMode}
-          className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
-            isDrawing
-              ? 'bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400'
-              : 'bg-[#9fe870] text-[#0d0d12] hover:bg-[#8ed75f]'
-          }`}
-        >
-          {isDrawing ? <><X className="h-4 w-4" />ביטול ציור</> : <><Plus className="h-4 w-4" />צייר אזור</>}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={addPresetZones}
+            className="flex items-center gap-2 rounded-xl border border-[#d8d8d8] bg-white px-4 py-2 text-sm font-medium text-[#0d0d12] transition-colors hover:bg-[#f5f5f5] dark:border-app-border dark:bg-app-surface dark:text-app-text dark:hover:bg-[#262626]"
+          >
+            <MapPin className="h-4 w-4" />
+            פרוס אזורי חלוקה
+          </button>
+          <button
+            onClick={isDrawing ? cancelDrawing : startDrawingMode}
+            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
+              isDrawing
+                ? 'bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400'
+                : 'bg-[#9fe870] text-[#0d0d12] hover:bg-[#8ed75f]'
+            }`}
+          >
+            {isDrawing ? <><X className="h-4 w-4" />ביטול ציור</> : <><Plus className="h-4 w-4" />צייר אזור</>}
+          </button>
+        </div>
       </div>
 
       {/* body */}

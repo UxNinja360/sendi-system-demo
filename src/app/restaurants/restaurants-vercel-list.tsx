@@ -1,6 +1,5 @@
 import React, { useLayoutEffect, useRef } from 'react';
-import { Package, SquarePlus, Store, UserRound } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { Package, Plus, Store, UserRound } from 'lucide-react';
 
 import { EntityRowActionTrigger } from '../components/common/entity-row-action-trigger';
 import type { EntityViewMode } from '../components/common/view-mode-toggle';
@@ -39,7 +38,7 @@ type RestaurantsVercelListProps = {
 };
 
 const rowGridClass =
-  'restaurant-vercel-row grid grid-cols-[minmax(0,1fr)_44px] md:grid-cols-[minmax(240px,320px)_minmax(128px,156px)_minmax(0,1fr)_minmax(74px,96px)_36px] xl:grid-cols-[minmax(260px,340px)_minmax(132px,164px)_minmax(0,1fr)_minmax(80px,104px)_36px] 2xl:grid-cols-[minmax(280px,360px)_minmax(140px,176px)_minmax(0,1fr)_minmax(84px,112px)_36px]';
+  'restaurant-vercel-row grid grid-cols-[minmax(0,1fr)_44px] md:grid-cols-[minmax(280px,420px)_minmax(128px,156px)_minmax(74px,96px)_36px] xl:grid-cols-[minmax(300px,460px)_minmax(132px,164px)_minmax(80px,104px)_36px] 2xl:grid-cols-[minmax(320px,500px)_minmax(140px,176px)_minmax(84px,112px)_36px]';
 
 const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(' ');
@@ -49,9 +48,15 @@ const getRestaurantStatusMeta = (restaurant: RestaurantVercelListItem) => ({
   text: restaurant.isActive ? 'text-app-success-text' : 'text-app-text-secondary',
 });
 
-const RestaurantSourceBadge: React.FC<{ isSendiGo: boolean }> = ({ isSendiGo }) => {
-  const SourceIcon = isSendiGo ? SquarePlus : Store;
+const SendiPlusTag: React.FC = () => (
+  <span className="sendi-plus-mark sendi-plus-mark--active" aria-hidden="true">
+    <span className="sendi-plus-mark__inner">
+      <Plus className="h-2.5 w-2.5 text-white" strokeWidth={2.65} />
+    </span>
+  </span>
+);
 
+const RestaurantSourceBadge: React.FC<{ isSendiGo: boolean }> = ({ isSendiGo }) => {
   return (
     <span
       className={joinClassNames(
@@ -61,7 +66,9 @@ const RestaurantSourceBadge: React.FC<{ isSendiGo: boolean }> = ({ isSendiGo }) 
       dir="rtl"
     >
       <span className="truncate">{isSendiGo ? SENDI_PLUS_LABEL : 'מסעדה רגילה'}</span>
-      <SourceIcon className="h-3.5 w-3.5 shrink-0" />
+      {!isSendiGo ? (
+        <Store className="h-3.5 w-3.5 shrink-0" />
+      ) : null}
     </span>
   );
 };
@@ -75,37 +82,26 @@ const RestaurantVercelRow: React.FC<{
   onOpenActionsMenu,
   onOpenContextMenu,
 }) => {
-  const navigate = useNavigate();
   const address = [restaurant.street, restaurant.city].filter(Boolean).join(', ') || '-';
   const footerStatusText = restaurant.isActive ? 'מסעדה פעילה' : 'מסעדה לא פעילה';
   const footerStatusDotClassName = restaurant.isActive ? 'bg-app-success-text' : 'bg-app-text-secondary';
   const isSendiGo = isSendiPlusRestaurant(restaurant.name, restaurant.chainId);
 
-  const navigateToRestaurant = () => {
-    navigate(`/restaurant/${restaurant.restaurantId}`);
-  };
-
   return (
     <div
-      role="button"
-      tabIndex={0}
-      onClick={navigateToRestaurant}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          navigateToRestaurant();
-        }
-      }}
       onContextMenu={(event) => onOpenContextMenu(restaurant, event)}
       className={joinClassNames(
         rowGridClass,
-        'group relative w-full min-w-0 cursor-pointer border-b border-app-nav-border bg-app-surface text-app-text outline-none transition-colors hover:bg-app-surface-raised focus-visible:bg-app-surface-raised',
+        'group relative w-full min-w-0 border-b border-app-nav-border bg-app-surface text-app-text outline-none transition-colors hover:bg-app-surface-raised',
       )}
     >
       <div className="restaurant-row__identity col-start-1 row-start-1 flex min-h-0 min-w-0 items-center gap-3 px-2 py-3 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
         <RestaurantLogoMark name={restaurant.name} logoUrl={restaurant.logoUrl} size="sm" />
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-semibold text-app-text">{restaurant.name}</div>
+          <div className="flex min-w-0 items-center gap-1.5">
+            <div className="truncate text-sm font-semibold text-app-text">{restaurant.name}</div>
+            {isSendiGo ? <SendiPlusTag /> : null}
+          </div>
           <div className="mt-1 truncate text-sm font-normal text-app-text-secondary">{address}</div>
         </div>
       </div>
@@ -117,11 +113,7 @@ const RestaurantVercelRow: React.FC<{
         </span>
       </div>
 
-      <div className="restaurant-row__source hidden min-h-0 min-w-0 items-center px-2 text-sm font-normal md:col-start-3 md:flex md:min-h-[72px]">
-        <RestaurantSourceBadge isSendiGo={isSendiGo} />
-      </div>
-
-      <div className="restaurant-row__deliveries hidden min-h-0 min-w-0 items-center px-2 text-sm font-normal text-app-text-secondary md:col-start-4 md:flex md:min-h-[72px]">
+      <div className="restaurant-row__deliveries hidden min-h-0 min-w-0 items-center px-2 text-sm font-normal text-app-text-secondary md:col-start-3 md:flex md:min-h-[72px]">
         <span className="inline-flex shrink-0 items-center gap-1.5">
           <Package className="h-3.5 w-3.5" />
           <span className="tabular-nums">{restaurant.totalDeliveries}</span>
@@ -139,9 +131,6 @@ const RestaurantVercelRow: React.FC<{
         <span className="inline-flex min-w-0 items-center gap-1.5">
           <span className={joinClassNames('h-2 w-2 shrink-0 rounded-full', footerStatusDotClassName)} />
           <span className="truncate">{footerStatusText}</span>
-        </span>
-        <span className="min-w-0 flex-1 text-center">
-          <RestaurantSourceBadge isSendiGo={isSendiGo} />
         </span>
         <span className="inline-flex shrink-0 items-center gap-1.5">
           <Package className="h-3.5 w-3.5" />
@@ -161,29 +150,15 @@ const RestaurantVercelCard: React.FC<{
   onOpenActionsMenu,
   onOpenContextMenu,
 }) => {
-  const navigate = useNavigate();
   const address = [restaurant.street, restaurant.city].filter(Boolean).join(', ') || '-';
   const statusMeta = getRestaurantStatusMeta(restaurant);
   const isSendiGo = isSendiPlusRestaurant(restaurant.name, restaurant.chainId);
 
-  const navigateToRestaurant = () => {
-    navigate(`/restaurant/${restaurant.restaurantId}`);
-  };
-
   return (
     <div
-      role="button"
-      tabIndex={0}
-      onClick={navigateToRestaurant}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          navigateToRestaurant();
-        }
-      }}
       onContextMenu={(event) => onOpenContextMenu(restaurant, event)}
       className={joinClassNames(
-        'group min-w-0 cursor-pointer rounded-lg border border-app-nav-border bg-app-surface p-3 text-app-text outline-none transition-colors hover:bg-app-surface-raised focus-visible:bg-app-surface-raised',
+        'group min-w-0 rounded-lg border border-app-nav-border bg-app-surface p-3 text-app-text outline-none transition-colors hover:bg-app-surface-raised',
       )}
     >
       <div className="flex min-w-0 items-start justify-between gap-3">
@@ -191,7 +166,10 @@ const RestaurantVercelCard: React.FC<{
           <RestaurantLogoMark name={restaurant.name} logoUrl={restaurant.logoUrl} size="md" />
           <div className="min-w-0">
             <div className="flex min-w-0 items-baseline gap-2">
-              <div className="truncate text-sm font-semibold text-app-text">{restaurant.name}</div>
+              <div className="flex min-w-0 items-center gap-1.5">
+                <div className="truncate text-sm font-semibold text-app-text">{restaurant.name}</div>
+                {isSendiGo ? <SendiPlusTag /> : null}
+              </div>
               <span className={joinClassNames('shrink-0 text-sm font-semibold', statusMeta.text)}>
                 {statusMeta.label}
               </span>
@@ -226,7 +204,7 @@ const RestaurantVercelCard: React.FC<{
       </div>
 
       <div className="mt-4 flex items-center justify-between border-t border-app-nav-border pt-3 text-xs text-app-text-secondary">
-        <RestaurantSourceBadge isSendiGo={isSendiGo} />
+        <span />
         <span className="inline-flex items-center gap-1.5">
           <Package className="h-3.5 w-3.5" />
           <span className="tabular-nums">{restaurant.totalDeliveries}</span>

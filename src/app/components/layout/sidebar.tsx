@@ -36,6 +36,7 @@ import {
   isRestaurantEligibleForDeliveryIntake,
   readStoredSendiPlusRadius,
 } from '../../utils/sendi-plus';
+import { Toggle } from '../common/toggle';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 interface SidebarProps {
@@ -210,6 +211,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
   const isExpanded = !isCollapsed || !isDesktop;
   const activeDeliveriesCount = state.deliveries.filter(isOperationalDelivery).length;
+  const deliveredDeliveriesCount = state.deliveries.filter((delivery) => delivery.status === 'delivered').length;
   const activeRestaurantsCount = state.restaurants.filter((restaurant) => restaurant.isActive).length;
   const activeCouriersCount = state.couriers.filter((courier) => courier.status !== 'offline').length;
   const hasDeliveryIntakeRestaurants = useMemo(
@@ -487,6 +489,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
   const getNavBadge = (item: AppNavItem) => {
     if (item.badge === 'activeDeliveries') return activeDeliveriesCount.toLocaleString('he-IL');
+    if (item.badge === 'deliveredDeliveries') return deliveredDeliveriesCount.toLocaleString('he-IL');
     if (item.badge === 'activeRestaurants') return activeRestaurantsCount.toLocaleString('he-IL');
     if (item.badge === 'activeCouriers') return activeCouriersCount.toLocaleString('he-IL');
     if (item.badge === 'deliveryBalance') return state.deliveryBalance.toLocaleString('he-IL');
@@ -494,8 +497,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
     return null;
   };
 
-  const toggleSystem = (event: React.MouseEvent) => {
-    event.stopPropagation();
+  const toggleSystem = (event?: React.MouseEvent) => {
+    event?.stopPropagation();
     dispatch({ type: 'TOGGLE_SYSTEM' });
   };
 
@@ -870,47 +873,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                   <span className="text-xs text-app-text-secondary">
                     {systemStatusLabel}
                   </span>
-                  <button
-                    type="button"
-                    data-haptic={state.isSystemOpen ? 'warning' : 'success'}
-                    onClick={toggleSystem}
-                    className={`relative h-5 w-10 rounded-full transition-colors ${
-                      state.isSystemOpen
-                        ? isDeliveryIntakeBlocked
-                          ? 'bg-[#f59e0b]'
-                          : 'bg-app-success-text'
-                        : 'bg-[#e5e5e5] dark:bg-[#404040]'
-                    }`}
-                  >
-                    <span
-                      className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
-                        state.isSystemOpen ? 'right-0.5' : 'left-0.5'
-                      }`}
-                    />
-                  </button>
+                  <Toggle
+                    checked={state.isSystemOpen}
+                    onChange={() => toggleSystem()}
+                    ariaLabel={systemStatusLabel}
+                  />
                 </div>
 
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-xs text-app-text-secondary">
                     {LABELS.autoAssign}
                   </span>
-                  <button
-                    type="button"
-                    data-haptic={state.autoAssignEnabled ? 'warning' : 'success'}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      dispatch({ type: 'TOGGLE_AUTO_ASSIGN' });
-                    }}
-                    className={`relative h-5 w-10 rounded-full transition-colors ${
-                      state.autoAssignEnabled ? 'bg-app-success-text' : 'bg-[#e5e5e5] dark:bg-[#404040]'
-                    }`}
-                  >
-                    <span
-                      className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
-                        state.autoAssignEnabled ? 'right-0.5' : 'left-0.5'
-                      }`}
-                    />
-                  </button>
+                  <Toggle
+                    checked={state.autoAssignEnabled}
+                    onChange={() => dispatch({ type: 'TOGGLE_AUTO_ASSIGN' })}
+                    ariaLabel={LABELS.autoAssign}
+                  />
                 </div>
               </div>
             ) : (

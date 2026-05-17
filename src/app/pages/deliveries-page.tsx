@@ -466,6 +466,10 @@ export const DeliveriesPage: React.FC = () => {
     setFocusedDeliveryId(null);
   }, [filteredDeliveries, focusedDeliveryId]);
 
+  const handleFocusDeliveryOnMap = useCallback((deliveryId: string) => {
+    setFocusedDeliveryId((currentId) => (currentId === deliveryId ? null : deliveryId));
+  }, []);
+
   const handleOpenDrawer = useCallback((id: string) => {
     setDrawerDeliveryId(id);
   }, []);
@@ -807,7 +811,7 @@ export const DeliveriesPage: React.FC = () => {
               onEditDelivery={handleOpenEdit}
               drawerDeliveryId={drawerDeliveryId}
               focusedDeliveryId={focusedDeliveryId}
-              onFocusDeliveryOnMap={setFocusedDeliveryId}
+              onFocusDeliveryOnMap={handleFocusDeliveryOnMap}
               onSearchRowHiddenChange={handleSearchRowHiddenChange}
               selectionBar={
                 <SelectionActionBar

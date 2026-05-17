@@ -14,6 +14,8 @@ export const DELIVERY_STORAGE_KEYS = {
   restaurantsColumnOrder: 'restaurants-column-order-v3',
   restaurantsVisibleColumns: 'restaurants-visible-columns-v1',
   sendiGoDefaultActiveMigration: 'sendi-go-restaurants-default-active-v1',
+  sendiPlusRadius: 'sendi-plus-radius-km',
+  legacySendiGoRadius: 'sendi-go-radius-km',
   deliveryZones: 'delivery_zones_v1',
 } as const;
 
@@ -32,6 +34,8 @@ const RESET_STORAGE_KEYS = [
   DELIVERY_STORAGE_KEYS.restaurantsColumnOrder,
   DELIVERY_STORAGE_KEYS.restaurantsVisibleColumns,
   DELIVERY_STORAGE_KEYS.sendiGoDefaultActiveMigration,
+  DELIVERY_STORAGE_KEYS.sendiPlusRadius,
+  DELIVERY_STORAGE_KEYS.legacySendiGoRadius,
   DELIVERY_STORAGE_KEYS.deliveryZones,
 ] as const;
 

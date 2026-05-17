@@ -24,9 +24,17 @@ const MOBILE_NAV_ICONS: Record<
   couriers: Bike,
 };
 
-const getBadge = (item: AppNavItem, activeDeliveriesCount: number) => {
-  if (item.id === 'live' || item.id === 'deliveries') {
+const getBadge = (
+  item: AppNavItem,
+  activeDeliveriesCount: number,
+  deliveredDeliveriesCount: number,
+) => {
+  if (item.badge === 'activeDeliveries') {
     return activeDeliveriesCount > 0 ? activeDeliveriesCount.toLocaleString('he-IL') : null;
+  }
+
+  if (item.badge === 'deliveredDeliveries') {
+    return deliveredDeliveriesCount > 0 ? deliveredDeliveriesCount.toLocaleString('he-IL') : null;
   }
 
   return null;
@@ -41,6 +49,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ onOpenMenu }
   const location = useLocation();
   const { state } = useDelivery();
   const activeDeliveriesCount = state.deliveries.filter(isOperationalDelivery).length;
+  const deliveredDeliveriesCount = state.deliveries.filter((delivery) => delivery.status === 'delivered').length;
   const items = MOBILE_NAV_IDS
     .map((id) => getNavItemById(id))
     .filter((item): item is AppNavItem => Boolean(item));
@@ -57,7 +66,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ onOpenMenu }
         {items.map((item) => {
           const Icon = MOBILE_NAV_ICONS[item.id as (typeof MOBILE_NAV_IDS)[number]];
           const isActive = isNavItemActive(item, location.pathname);
-          const badge = getBadge(item, activeDeliveriesCount);
+          const badge = getBadge(item, activeDeliveriesCount, deliveredDeliveriesCount);
 
           return (
             <button

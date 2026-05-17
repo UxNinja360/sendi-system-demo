@@ -8,9 +8,9 @@ import {
   PackageOpen,
   Power,
   Plus,
+  Timer,
   Truck,
   UserCheck,
-  UsersRound,
   XCircle,
 } from 'lucide-react';
 import { PageToolbar } from '../components/common/page-toolbar';
@@ -31,7 +31,6 @@ import {
   writeStoredSendiPlusRadius,
 } from '../utils/sendi-plus';
 
-const ACTIVE_DELIVERY_STATUSES: DeliveryStatus[] = ['pending', 'assigned', 'delivering'];
 const DASHBOARD_DELIVERY_STATUSES: DeliveryStatus[] = [
   'pending',
   'assigned',
@@ -119,6 +118,9 @@ const toDateInputValue = (date: Date) => {
 
 const formatNumber = (value: number) => value.toLocaleString('he-IL');
 
+const formatAverageDeliveryTime = (minutes: number | null) =>
+  minutes === null ? '—' : `${formatNumber(minutes)} דק׳`;
+
 const isSameInputDate = (value: unknown, inputDate: string) => {
   const date = toDate(value);
   return Boolean(date && toDateInputValue(date) === inputDate);
@@ -126,16 +128,6 @@ const isSameInputDate = (value: unknown, inputDate: string) => {
 
 const getDeliveryPrimaryDate = (delivery: Delivery) =>
   delivery.createdAt ?? delivery.creation_time;
-
-const InlineMetric: React.FC<{
-  icon: React.ReactNode;
-  text: React.ReactNode;
-}> = ({ icon, text }) => (
-  <span className="inline-flex min-w-0 items-center gap-1.5 whitespace-nowrap">
-    {icon}
-    <span className="min-w-0 truncate">{text}</span>
-  </span>
-);
 
 const DashboardToolbarToggle: React.FC<{
   active: boolean;
@@ -150,11 +142,6 @@ const DashboardToolbarToggle: React.FC<{
       label={label}
       title={label}
       onClick={onClick}
-      className={
-        active
-          ? 'border-app-border-strong bg-app-nav-active-bg text-app-nav-active-text shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--app-border-strong)_35%,transparent)]'
-          : 'border-app-border text-app-text-secondary'
-      }
     >
       <span
         className={`flex items-center justify-center transition-transform ${
@@ -173,17 +160,11 @@ const DashboardToolbarToggle: React.FC<{
 );
 
 const SendiPlusCard: React.FC<{
-  deliveriesCount: number;
-  activeDeliveriesCount: number;
-  restaurantsCount: number;
   activeAreaCount: number;
   radiusKm: number;
   onRadiusKmChange: (value: number) => void;
   onManageZones: () => void;
 }> = ({
-  deliveriesCount,
-  activeDeliveriesCount,
-  restaurantsCount,
   activeAreaCount,
   radiusKm,
   onRadiusKmChange,
@@ -246,7 +227,7 @@ const SendiPlusCard: React.FC<{
 
         <div className="ml-auto min-w-0 text-right" dir="rtl">
           <div
-            className="ml-auto flex w-fit max-w-full items-center gap-2"
+            className="ml-auto flex w-fit max-w-full items-center gap-1.5"
             aria-label={receivesDeliveries ? 'סנדי פלוס פעיל' : 'סנדי פלוס כבוי'}
           >
             <span className="truncate text-sm font-bold text-app-text">{SENDI_PLUS_LABEL}</span>
@@ -260,10 +241,10 @@ const SendiPlusCard: React.FC<{
                 <Plus
                   className={
                     receivesDeliveries
-                      ? 'h-3 w-3 text-white'
-                      : 'h-3 w-3 text-app-text-muted'
+                      ? 'h-2.5 w-2.5 text-white'
+                      : 'h-2.5 w-2.5 text-app-text-muted'
                   }
-                  strokeWidth={2.75}
+                  strokeWidth={2.65}
                 />
               </span>
             </span>
@@ -276,31 +257,7 @@ const SendiPlusCard: React.FC<{
         </div>
       </div>
 
-      <div className="mt-2.5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <div className="min-w-0 rounded-[6px] bg-app-surface-raised px-2 py-1.5 text-right">
-          <div className="text-[11px] text-app-text-secondary">משלוחים</div>
-          <div className="mt-1 text-lg font-bold text-app-text">{deliveriesCount.toLocaleString('he-IL')}</div>
-        </div>
-        <div className="min-w-0 rounded-[6px] bg-app-surface-raised px-2 py-1.5 text-right">
-          <div className="text-[11px] text-app-text-secondary">פעילים</div>
-          <div className="mt-1 text-lg font-bold text-app-text">{activeDeliveriesCount.toLocaleString('he-IL')}</div>
-        </div>
-        <div className="min-w-0 rounded-[6px] bg-app-surface-raised px-2 py-1.5 text-right">
-          <div className="text-[11px] text-app-text-secondary">מסעדות</div>
-          <div className="mt-1 text-lg font-bold text-app-text">{restaurantsCount.toLocaleString('he-IL')}</div>
-        </div>
-        <div className="min-w-0 rounded-[6px] bg-app-surface-raised px-2 py-1.5 text-right">
-          <div className="text-[11px] text-app-text-secondary">אזורי פעילות</div>
-          <div className="mt-1 text-lg font-bold text-app-text">{activeAreaCount.toLocaleString('he-IL')}</div>
-        </div>
-      </div>
-
       <div className="mt-3 border-t border-app-border pt-3 dark:border-app-nav-border">
-        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-app-text-secondary">
-          <span>{receivesDeliveries ? `טווח קבלה: ${radiusDisplay}` : 'קבלת משלוחים כבויה'}</span>
-          <span>{receivesDeliveries ? `${activeAreaCount.toLocaleString('he-IL')} אזורים פעילים` : '0 ק״מ'}</span>
-        </div>
-
         <div className="relative mt-5 px-1 pb-4">
           {isRadiusBubbleVisible ? (
             <div
@@ -342,7 +299,7 @@ const SendiPlusCard: React.FC<{
 
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-app-text-secondary">
           <span>{receivesDeliveries ? `זמין למשלוחים עד ${radiusDisplay}` : 'על 0 לא נכנסים משלוחים חדשים'}</span>
-          <span>דומינוס ומקדונלדס בלבד כרגע</span>
+          <span>{`${activeAreaCount.toLocaleString('he-IL')} אזורים פעילים`}</span>
         </div>
       </div>
     </section>
@@ -418,19 +375,9 @@ export const Dashboard: React.FC = () => {
     return counts;
   }, [filteredDeliveries]);
 
-  const sendiPlusRestaurants = React.useMemo(
-    () =>
-      state.restaurants.filter((restaurant) =>
-        isSendiPlusRestaurant(restaurant.name, restaurant.chainId),
-      ),
-    [state.restaurants],
-  );
   const sendiPlusDeliveries = React.useMemo(
     () => filteredDeliveries.filter(isSendiPlusDelivery),
     [filteredDeliveries, isSendiPlusDelivery],
-  );
-  const activeSendiPlusDeliveries = sendiPlusDeliveries.filter((delivery) =>
-    ACTIVE_DELIVERY_STATUSES.includes(delivery.status),
   );
   const sendiPlusActiveAreaCount = React.useMemo(() => {
     const areas = new Set(
@@ -445,6 +392,7 @@ export const Dashboard: React.FC = () => {
     () => state.couriers.filter((courier) => courier.status !== 'offline').length,
     [state.couriers],
   );
+  const totalCouriersCount = state.couriers.length;
   const freeCouriersCount = React.useMemo(() => {
     const busyCourierIds = new Set(
       state.deliveries
@@ -463,6 +411,25 @@ export const Dashboard: React.FC = () => {
         !busyCourierIds.has(courier.id),
     ).length;
   }, [state.couriers, state.deliveries]);
+  const averageDeliveryMinutes = React.useMemo(() => {
+    const deliveryDurations = filteredDeliveries
+      .filter((delivery) => delivery.status === 'delivered')
+      .map((delivery) => {
+        const createdAt = toDate(delivery.createdAt ?? delivery.creation_time);
+        const deliveredAt = toDate(delivery.deliveredAt ?? delivery.delivered_time);
+
+        if (!createdAt || !deliveredAt) return null;
+
+        const durationMinutes = (deliveredAt.getTime() - createdAt.getTime()) / 60000;
+        return durationMinutes > 0 && Number.isFinite(durationMinutes) ? durationMinutes : null;
+      })
+      .filter((duration): duration is number => duration !== null);
+
+    if (deliveryDurations.length === 0) return null;
+
+    const totalMinutes = deliveryDurations.reduce((sum, duration) => sum + duration, 0);
+    return Math.round(totalMinutes / deliveryDurations.length);
+  }, [filteredDeliveries]);
   const totalStatusCount = Math.max(filteredDeliveries.length, 1);
   const { mapSplitPortal } = useDeliveriesMapSplit({
     deliveries: filteredDeliveries,
@@ -508,33 +475,59 @@ export const Dashboard: React.FC = () => {
           <section>
             <div className="grid grid-cols-6 gap-2">
               {STATUS_META.filter((status) => DASHBOARD_DELIVERY_STATUSES.includes(status.id)).map((status) => {
-                const Icon = status.icon;
+                const isCourierAvailabilityCard = status.id === 'delivered';
+                const isAverageDeliveryTimeCard = status.id === 'cancelled';
+                const Icon = isCourierAvailabilityCard ? UserCheck : isAverageDeliveryTimeCard ? Timer : status.icon;
                 const count = statusCounts.get(status.id) ?? 0;
                 const percent = Math.round((count / totalStatusCount) * 100);
                 const showStatusProgress =
-                  status.id !== 'delivered' && status.id !== 'cancelled';
+                  !isCourierAvailabilityCard && !isAverageDeliveryTimeCard;
                 const statusSpanClassName =
                   status.id === 'delivered' || status.id === 'cancelled'
                     ? 'col-span-3'
                     : 'col-span-2';
+                const label = isCourierAvailabilityCard
+                  ? 'שליחים פנויים'
+                  : isAverageDeliveryTimeCard
+                  ? 'זמן ממוצע למשלוח'
+                  : status.label;
+                const value = isCourierAvailabilityCard
+                  ? `${formatNumber(freeCouriersCount)} / ${formatNumber(connectedCouriersCount)}`
+                  : isAverageDeliveryTimeCard
+                  ? formatAverageDeliveryTime(averageDeliveryMinutes)
+                  : formatNumber(count);
+                const hint = isCourierAvailabilityCard
+                  ? `סה״כ במערכת ${formatNumber(totalCouriersCount)}`
+                  : isAverageDeliveryTimeCard
+                  ? 'משלוחים שנמסרו'
+                  : status.hint;
+                const iconClassName = isCourierAvailabilityCard
+                  ? 'text-[#0a84ff]'
+                  : isAverageDeliveryTimeCard
+                  ? 'text-cyan-400'
+                  : status.accentClassName;
 
                 return (
                   <button
                     key={status.id}
                     type="button"
-                    onClick={() => navigate('/deliveries')}
+                    onClick={() => navigate(isCourierAvailabilityCard ? '/couriers' : '/deliveries')}
                     className={`min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised sm:p-3 dark:border-app-nav-border dark:bg-[#080808] ${statusSpanClassName}`}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
-                        {status.label}
+                        {label}
                       </span>
-                      <Icon className={`h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4 ${status.accentClassName}`} />
+                      <Icon className={`h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4 ${iconClassName}`} />
                     </div>
                     <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
-                      {formatNumber(count)}
+                      {value}
                     </div>
-                    {showStatusProgress ? (
+                    {isCourierAvailabilityCard || isAverageDeliveryTimeCard ? (
+                      <div className="mt-1.5 truncate text-[10px] text-app-text-secondary sm:text-[11px]">
+                        {hint}
+                      </div>
+                    ) : showStatusProgress ? (
                       <>
                         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-app-surface-raised">
                           <div
@@ -543,7 +536,7 @@ export const Dashboard: React.FC = () => {
                           />
                         </div>
                         <div className="mt-1.5 truncate text-[10px] text-app-text-secondary sm:text-[11px]">
-                          {status.hint}
+                          {hint}
                         </div>
                       </>
                     ) : null}
@@ -551,23 +544,9 @@ export const Dashboard: React.FC = () => {
                 );
               })}
             </div>
-            <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center text-sm font-medium text-[#0a84ff]">
-              <InlineMetric
-                icon={<UsersRound className="h-4 w-4 shrink-0" />}
-                text={`${formatNumber(connectedCouriersCount)} שליחים מחוברים`}
-              />
-              <span className="text-app-text-muted">,</span>
-              <InlineMetric
-                icon={<UserCheck className="h-4 w-4 shrink-0" />}
-                text={`${formatNumber(freeCouriersCount)} שליחים פנויים`}
-              />
-            </div>
           </section>
 
           <SendiPlusCard
-            deliveriesCount={sendiPlusDeliveries.length}
-            activeDeliveriesCount={activeSendiPlusDeliveries.length}
-            restaurantsCount={sendiPlusRestaurants.length}
             activeAreaCount={sendiPlusActiveAreaCount}
             radiusKm={sendiPlusRadiusKm}
             onRadiusKmChange={handleSendiPlusRadiusChange}
