@@ -150,6 +150,19 @@ const getDashboardGreeting = (date = new Date()) => {
 const formatAverageDeliveryTime = (minutes: number | null) =>
   minutes === null ? '—' : `${formatNumber(minutes)} דק׳`;
 
+const RefreshingMetricValue: React.FC<{
+  refreshing: boolean;
+  value: React.ReactNode;
+}> = ({ refreshing, value }) => (
+  <span
+    className={`inline-flex min-w-[1ch] items-center justify-end transition-colors ${
+      refreshing ? 'animate-pulse text-app-text-muted' : ''
+    }`}
+  >
+    {refreshing ? '-' : value}
+  </span>
+);
+
 const isSameInputDate = (value: unknown, inputDate: string) => {
   const date = toDate(value);
   return Boolean(date && toDateInputValue(date) === inputDate);
@@ -193,6 +206,7 @@ const SendiPlusCard: React.FC<{
   activeRestaurantCount: number;
   radiusKm: number;
   termsAccepted: boolean;
+  isRefreshing: boolean;
   onRadiusKmChange: (value: number) => void;
   onTermsAcceptedChange: (value: boolean) => void;
   onManageZones: () => void;
@@ -202,6 +216,7 @@ const SendiPlusCard: React.FC<{
   activeRestaurantCount,
   radiusKm,
   termsAccepted,
+  isRefreshing,
   onRadiusKmChange,
   onTermsAcceptedChange,
   onManageZones,
@@ -448,7 +463,10 @@ const SendiPlusCard: React.FC<{
                 <div className="min-w-0">
                   <div className="truncate text-[11px] text-app-text-secondary">מסעדות בתחום</div>
                   <div className="mt-1 truncate text-sm font-semibold text-app-text">
-                    {activeRestaurantCount.toLocaleString('he-IL')}
+                    <RefreshingMetricValue
+                      refreshing={isRefreshing}
+                      value={activeRestaurantCount.toLocaleString('he-IL')}
+                    />
                   </div>
                 </div>
                 <div className="min-w-0 border-r border-app-border pr-4 dark:border-[#252525]">
@@ -456,7 +474,10 @@ const SendiPlusCard: React.FC<{
                     <div className="min-w-0">
                       <div className="truncate text-[11px] text-app-text-secondary">אזורי חלוקה</div>
                       <div className="mt-1 truncate text-sm font-semibold text-app-text">
-                        {deliveryZoneCount.toLocaleString('he-IL')}
+                        <RefreshingMetricValue
+                          refreshing={isRefreshing}
+                          value={deliveryZoneCount.toLocaleString('he-IL')}
+                        />
                       </div>
                     </div>
                     <button
@@ -913,7 +934,10 @@ export const Dashboard: React.FC = () => {
                   <PackageOpen className="h-3.5 w-3.5 shrink-0 text-app-brand sm:h-4 sm:w-4" />
                 </div>
                 <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
-                  {formatNumber(activeDeliveriesCount)}
+                  <RefreshingMetricValue
+                    refreshing={isDashboardRefreshing}
+                    value={formatNumber(activeDeliveriesCount)}
+                  />
                 </div>
               </button>
             </div>
@@ -959,7 +983,10 @@ export const Dashboard: React.FC = () => {
                       <Icon className={`h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4 ${iconClassName}`} />
                     </div>
                     <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
-                      {value}
+                      <RefreshingMetricValue
+                        refreshing={isDashboardRefreshing}
+                        value={value}
+                      />
                     </div>
                   </button>
                 );
@@ -972,6 +999,7 @@ export const Dashboard: React.FC = () => {
             activeRestaurantCount={sendiPlusActiveRestaurantCount}
             radiusKm={sendiPlusRadiusKm}
             termsAccepted={sendiPlusTermsAccepted}
+            isRefreshing={isDashboardRefreshing}
             onRadiusKmChange={handleSendiPlusRadiusChange}
             onTermsAcceptedChange={handleSendiPlusTermsAcceptedChange}
             onManageZones={() => navigate('/zones?source=sendi-plus')}
