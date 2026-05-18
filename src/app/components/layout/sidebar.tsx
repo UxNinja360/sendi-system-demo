@@ -1063,16 +1063,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
         </div>
 
-        <div
-          onClick={(event) => {
-            if (event.target === event.currentTarget) {
-              if (!isDesktop) {
-                setIsCollapsed(false);
-              }
-            }
-          }}
-          className="flex-1 overflow-y-auto bg-app-nav-bg py-2 scrollbar-thin scrollbar-thumb-[#d4d4d4] dark:scrollbar-thumb-[#404040]"
-        >
+        <div className="flex-1 overflow-y-auto bg-app-nav-bg py-2 scrollbar-thin scrollbar-thumb-[#d4d4d4] dark:scrollbar-thumb-[#404040]">
           {SIDEBAR_NAV_SECTIONS.map((section, sectionIndex) => (
             <React.Fragment key={section.id}>
               {sectionIndex > 0 &&

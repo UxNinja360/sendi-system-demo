@@ -147,9 +147,12 @@ const TEXT = {
   timeHintPrefix: '\u05e8\u05e5 \u05db\u05e8\u05d2\u05e2 \u05e2\u05dc x',
   pages: '\u05ea\u05e4\u05e2\u05d5\u05dc \u05d5\u05e2\u05de\u05d5\u05d3\u05d9\u05dd',
   pagesDescription: '\u05db\u05dc \u05de\u05d4 \u05e9\u05d4\u05d9\u05d4 \u05d1\u05ea\u05e4\u05e8\u05d9\u05d8 \u05d4\u05e6\u05d3 \u05ea\u05d7\u05ea \u05ea\u05e4\u05e2\u05d5\u05dc, \u05e2\u05de\u05d5\u05d3\u05d9 \u05e0\u05d9\u05e1\u05d9\u05d5\u05df \u05d5\u05e2\u05de\u05d5\u05d3\u05d9\u05dd \u05d9\u05e9\u05e0\u05d9\u05dd.',
-  operationsPages: '\u05ea\u05e4\u05e2\u05d5\u05dc',
+  operationsPages: '\u05e2\u05de\u05d5\u05d3\u05d9 \u05ea\u05e4\u05e2\u05d5\u05dc',
+  operationsPagesDescription: '\u05db\u05dc\u05d9 \u05e0\u05d9\u05d4\u05d5\u05dc \u05d9\u05d5\u05de\u05d9\u05d5\u05de\u05d9\u05d9\u05dd \u05dc\u05ea\u05e4\u05e2\u05d5\u05dc \u05d4\u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd, \u05d4\u05d0\u05d6\u05d5\u05e8\u05d9\u05dd \u05d5\u05d4\u05de\u05d7\u05d9\u05e8\u05d9\u05dd.',
   experimentPages: '\u05e2\u05de\u05d5\u05d3\u05d9 \u05e0\u05d9\u05e1\u05d9\u05d5\u05df',
+  experimentPagesDescription: '\u05de\u05e1\u05db\u05d9 \u05d1\u05d3\u05d9\u05e7\u05d4 \u05d5\u05e0\u05d9\u05e1\u05d5\u05d9\u05d9\u05dd \u05e9\u05e0\u05e9\u05de\u05e8\u05d9\u05dd \u05de\u05d7\u05d5\u05e5 \u05dc\u05ea\u05e4\u05e8\u05d9\u05d8 \u05d4\u05e6\u05d3.',
   legacyPages: '\u05e2\u05de\u05d5\u05d3\u05d9\u05dd \u05d9\u05e9\u05e0\u05d9\u05dd',
+  legacyPagesDescription: '\u05d2\u05e8\u05e1\u05d0\u05d5\u05ea \u05d9\u05e9\u05e0\u05d5\u05ea \u05dc\u05d4\u05e9\u05d5\u05d5\u05d0\u05d4 \u05d5\u05e9\u05d7\u05d6\u05d5\u05e8 \u05d4\u05ea\u05e0\u05d4\u05d2\u05d5\u05ea \u05e7\u05d5\u05d3\u05de\u05ea.',
 } as const;
 
 const SettingRow: React.FC<{
@@ -240,10 +243,30 @@ const settingsNavIconMap: Record<AppNavIconKey, LucideIcon> = {
   wallet: Wallet,
 };
 
-const settingsNavGroups: Array<{ section: AppNavSectionId; title: string }> = [
-  { section: 'operationsTools', title: TEXT.operationsPages },
-  { section: 'experiments', title: TEXT.experimentPages },
-  { section: 'legacy', title: TEXT.legacyPages },
+const settingsNavGroups: Array<{
+  section: AppNavSectionId;
+  title: string;
+  description: string;
+  icon: AppNavIconKey;
+}> = [
+  {
+    section: 'operationsTools',
+    title: TEXT.operationsPages,
+    description: TEXT.operationsPagesDescription,
+    icon: 'sliders',
+  },
+  {
+    section: 'experiments',
+    title: TEXT.experimentPages,
+    description: TEXT.experimentPagesDescription,
+    icon: 'palette',
+  },
+  {
+    section: 'legacy',
+    title: TEXT.legacyPages,
+    description: TEXT.legacyPagesDescription,
+    icon: 'layoutDashboard',
+  },
 ];
 
 const ThemeModePicker: React.FC<{
@@ -285,34 +308,51 @@ const SectionCard: React.FC<{
   description: string;
   children: React.ReactNode;
   danger?: boolean;
-}> = ({ icon, title, description, children, danger = false }) => (
-  <div
-    className={`overflow-hidden rounded-2xl border ${
-      danger
-        ? 'border-red-200 bg-red-50/50 dark:border-red-500/20 dark:bg-red-500/5'
-        : 'border-[#e5e5e5] bg-white dark:border-app-border dark:bg-app-surface'
-    }`}
-  >
+}> = ({ icon, title, description, children, danger = false }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const contentId = React.useId();
+
+  return (
     <div
-      className={`border-b px-4 py-3 ${
+      className={`overflow-hidden rounded-2xl border ${
         danger
-          ? 'border-red-200 bg-red-50 dark:border-red-500/20 dark:bg-red-500/10'
-          : 'border-[#e5e5e5] bg-[#fafafa] dark:border-app-border dark:bg-app-surface'
+          ? 'border-red-200 bg-red-50/50 dark:border-red-500/20 dark:bg-red-500/5'
+          : 'border-[#e5e5e5] bg-white dark:border-app-border dark:bg-app-surface'
       }`}
     >
-      <div className="flex items-center gap-2">
-        {icon}
-        <span className={`text-sm font-semibold ${danger ? 'text-red-700 dark:text-red-300' : 'text-[#0d0d12] dark:text-app-text'}`}>
-          {title}
-        </span>
-      </div>
-      <div className={`mt-1 text-xs ${danger ? 'text-red-600/80 dark:text-red-300/75' : 'text-[#666d80] dark:text-app-text-secondary'}`}>
-        {description}
-      </div>
+      <button
+        type="button"
+        data-haptic="selection"
+        aria-expanded={isOpen}
+        aria-controls={contentId}
+        onClick={() => setIsOpen((current) => !current)}
+        className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-right transition-colors ${
+          danger
+            ? 'bg-red-50 hover:bg-red-100/70 dark:bg-red-500/10 dark:hover:bg-red-500/15'
+            : 'bg-[#fafafa] hover:bg-[#f4f4f4] dark:bg-app-surface dark:hover:bg-app-surface-raised'
+        } ${isOpen ? 'border-b border-[#e5e5e5] dark:border-app-border' : ''}`}
+      >
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            {icon}
+            <span className={`truncate text-sm font-semibold ${danger ? 'text-red-700 dark:text-red-300' : 'text-[#0d0d12] dark:text-app-text'}`}>
+              {title}
+            </span>
+          </div>
+          <div className={`mt-1 text-xs ${danger ? 'text-red-600/80 dark:text-red-300/75' : 'text-[#666d80] dark:text-app-text-secondary'}`}>
+            {description}
+          </div>
+        </div>
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 transition-transform ${
+            isOpen ? 'rotate-180' : ''
+          } ${danger ? 'text-red-600 dark:text-red-300' : 'text-[#666d80] dark:text-app-text-secondary'}`}
+        />
+      </button>
+      {isOpen ? <div id={contentId}>{children}</div> : null}
     </div>
-    {children}
-  </div>
-);
+  );
+};
 
 const OpenButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
   <button
@@ -582,35 +622,32 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
               />
           </SectionCard>
 
-          <SectionCard
-              icon={<SlidersHorizontal className="h-4 w-4 text-app-brand" />}
-              title={TEXT.pages}
-              description={TEXT.pagesDescription}
-            >
-              {settingsNavGroups.map((group) => {
-                const groupItems = APP_NAV_ITEMS.filter((item) => item.section === group.section);
+          {settingsNavGroups.map((group) => {
+            const GroupIcon = settingsNavIconMap[group.icon];
+            const groupItems = APP_NAV_ITEMS.filter((item) => item.section === group.section);
 
-                return (
-                  <React.Fragment key={group.section}>
-                    <div className="border-b border-[#f1f1f1] bg-[#fafafa] px-4 py-2 text-xs font-bold text-[#666d80] dark:border-app-border dark:bg-app-surface dark:text-app-text-secondary">
-                      {group.title}
-                    </div>
-                    {groupItems.map((item) => {
-                      const Icon = settingsNavIconMap[item.icon];
+            return (
+              <SectionCard
+                key={group.section}
+                icon={<GroupIcon className="h-4 w-4 text-app-brand" />}
+                title={group.title}
+                description={group.description}
+              >
+                {groupItems.map((item) => {
+                  const Icon = settingsNavIconMap[item.icon];
 
-                      return (
-                        <SettingRow
-                          key={item.id}
-                          icon={<Icon className="h-4 w-4" />}
-                          title={item.label}
-                          control={<OpenButton onClick={() => navigate(item.path)} />}
-                        />
-                      );
-                    })}
-                  </React.Fragment>
-                );
-              })}
-          </SectionCard>
+                  return (
+                    <SettingRow
+                      key={item.id}
+                      icon={<Icon className="h-4 w-4" />}
+                      title={item.label}
+                      control={<OpenButton onClick={() => navigate(item.path)} />}
+                    />
+                  );
+                })}
+              </SectionCard>
+            );
+          })}
 
           <SectionCard
               icon={<BellRing className="h-4 w-4 text-app-brand" />}
