@@ -107,6 +107,16 @@ const SIDEBAR_OPERATIONS_TOOLS_OPEN_KEY = 'sidebar-operations-tools-open-v2';
 const clampSidebarWidth = (width: number) =>
   Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, width));
 
+const isMobileMenuOpenSwipeIgnoredTarget = (target: EventTarget | null) => {
+  if (!(target instanceof Element)) return false;
+
+  return Boolean(
+    target.closest(
+      'input[type="range"], [role="slider"], [data-sidebar-swipe-ignore="true"], .sendi-plus-radius-slider',
+    ),
+  );
+};
+
 const getBusinessInitials = (name: string) =>
   name
     .split(/[\s-]+/)
@@ -673,7 +683,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
         return;
       }
 
-      if (touch.clientX >= window.innerWidth - MOBILE_MENU_EDGE_SWIPE_WIDTH) {
+      if (
+        touch.clientX >= window.innerWidth - MOBILE_MENU_EDGE_SWIPE_WIDTH &&
+        !isMobileMenuOpenSwipeIgnoredTarget(event.target)
+      ) {
         startMobileMenuSwipeAt(touch.clientX, touch.clientY, 'open');
       }
     };
@@ -702,7 +715,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
         return;
       }
 
-      if (event.clientX >= window.innerWidth - MOBILE_MENU_EDGE_SWIPE_WIDTH) {
+      if (
+        event.clientX >= window.innerWidth - MOBILE_MENU_EDGE_SWIPE_WIDTH &&
+        !isMobileMenuOpenSwipeIgnoredTarget(event.target)
+      ) {
         mobileMenuPointerIdRef.current = event.pointerId;
         startMobileMenuSwipeAt(event.clientX, event.clientY, 'open');
       }
@@ -883,17 +899,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
             }
 
             closeMobileMenu();
-          }}
-        />
-      )}
-
-      {!isDesktop && !isMobileMenuOpen && (
-        <div
-          aria-hidden="true"
-          className="fixed bottom-0 right-0 top-12 z-[95] lg:hidden"
-          style={{
-            width: MOBILE_MENU_EDGE_SWIPE_WIDTH,
-            touchAction: 'pan-y',
           }}
         />
       )}

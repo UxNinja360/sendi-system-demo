@@ -150,6 +150,16 @@ const getDashboardGreeting = (date = new Date()) => {
 const formatAverageDeliveryTime = (minutes: number | null) =>
   minutes === null ? '—' : `${formatNumber(minutes)} דק׳`;
 
+const isDashboardPullRefreshIgnoredTarget = (target: EventTarget | null) => {
+  if (!(target instanceof Element)) return false;
+
+  return Boolean(
+    target.closest(
+      'input[type="range"], [role="slider"], [data-pull-refresh-ignore="true"], .sendi-plus-radius-slider',
+    ),
+  );
+};
+
 const RefreshingMetricValue: React.FC<{
   refreshing: boolean;
   value: React.ReactNode;
@@ -416,6 +426,8 @@ const SendiPlusCard: React.FC<{
               ) : null}
               <input
                 type="range"
+                data-pull-refresh-ignore="true"
+                data-sidebar-swipe-ignore="true"
                 min={0}
                 max={MAX_SENDI_PLUS_RADIUS_KM}
                 step={SENDI_PLUS_RADIUS_STEP_KM}
@@ -612,6 +624,7 @@ export const Dashboard: React.FC = () => {
 
   const handlePullRefreshTouchStart = React.useCallback((event: React.TouchEvent<HTMLElement>) => {
     if (isDashboardRefreshingRef.current || !isMobilePullRefreshPointer()) return;
+    if (isDashboardPullRefreshIgnoredTarget(event.target)) return;
     if ((event.currentTarget as HTMLElement).scrollTop > 0) return;
 
     if (pullRefreshResetTimeoutRef.current !== null) {

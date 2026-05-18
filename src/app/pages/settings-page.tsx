@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
   Activity,
@@ -6,6 +6,7 @@ import {
   BellRing,
   Bike,
   Bot,
+  Check,
   FileText,
   ChevronDown,
   ChevronLeft,
@@ -194,27 +195,169 @@ const SettingRow: React.FC<{
   </div>
 );
 
+const SOUND_PICKER_SHEET_BREAKPOINT = 640;
+const SOUND_PICKER_PANEL_WIDTH = 280;
+const SOUND_PICKER_PANEL_MARGIN = 12;
+const SOUND_PICKER_PANEL_MAX_HEIGHT = 430;
+const SOUND_PICKER_PANEL_MIN_ANCHORED_HEIGHT = 220;
+
 const SoundPicker: React.FC<{
   selectedSoundId: AlertSoundId;
   onSelect: (soundId: AlertSoundId) => void;
-}> = ({ selectedSoundId, onSelect }) => (
-  <div className="relative w-[180px] max-w-[48vw]" dir="rtl">
-    <select
-      value={selectedSoundId}
-      data-haptic="selection"
-      onChange={(event) => onSelect(event.currentTarget.value as AlertSoundId)}
-      className="h-10 w-full appearance-none rounded-xl border border-app-border bg-[#f5f5f5] pl-9 pr-3 text-right text-xs font-semibold text-[#0d0d12] outline-none transition-colors hover:bg-[#ececec] focus:border-app-brand focus:bg-white focus:ring-2 focus:ring-app-brand/20 dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised dark:focus:bg-app-surface"
-      aria-label="בחירת צליל למשלוח חדש"
-    >
-      {ALERT_SOUND_PRESETS.map((sound) => (
-        <option key={sound.id} value={sound.id}>
-          {sound.label}
-        </option>
-      ))}
-    </select>
-    <ChevronDown className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#666d80] dark:text-app-text-secondary" />
-  </div>
-);
+}> = ({ selectedSoundId, onSelect }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [panelStyle, setPanelStyle] = useState<React.CSSProperties>({});
+  const [isSheetMode, setIsSheetMode] = useState(true);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const selectedSound =
+    ALERT_SOUND_PRESETS.find((sound) => sound.id === selectedSoundId) ??
+    ALERT_SOUND_PRESETS[0];
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const updatePanelPosition = () => {
+      const trigger = triggerRef.current;
+      if (!trigger || window.innerWidth < SOUND_PICKER_SHEET_BREAKPOINT) {
+        setIsSheetMode(true);
+        setPanelStyle({});
+        return;
+      }
+
+      const rect = trigger.getBoundingClientRect();
+      const width = Math.min(SOUND_PICKER_PANEL_WIDTH, window.innerWidth - SOUND_PICKER_PANEL_MARGIN * 2);
+      const maxLeft = window.innerWidth - width - SOUND_PICKER_PANEL_MARGIN;
+      const left = Math.min(
+        maxLeft,
+        Math.max(SOUND_PICKER_PANEL_MARGIN, rect.right - width),
+      );
+      const preferredTop = rect.bottom + 8;
+      const belowSpace = window.innerHeight - preferredTop - SOUND_PICKER_PANEL_MARGIN;
+      const aboveSpace = rect.top - SOUND_PICKER_PANEL_MARGIN - 8;
+      const shouldOpenBelow =
+        belowSpace >= SOUND_PICKER_PANEL_MIN_ANCHORED_HEIGHT || belowSpace >= aboveSpace;
+      const panelHeight = Math.max(
+        SOUND_PICKER_PANEL_MIN_ANCHORED_HEIGHT,
+        Math.min(SOUND_PICKER_PANEL_MAX_HEIGHT, shouldOpenBelow ? belowSpace : aboveSpace),
+      );
+      const top = shouldOpenBelow
+        ? preferredTop
+        : Math.max(SOUND_PICKER_PANEL_MARGIN, rect.top - panelHeight - 8);
+
+      setIsSheetMode(false);
+      setPanelStyle({
+        bottom: 'auto',
+        left,
+        maxHeight: panelHeight,
+        right: 'auto',
+        top,
+        width,
+      });
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsOpen(false);
+    };
+
+    updatePanelPosition();
+    document.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('resize', updatePanelPosition);
+    window.addEventListener('scroll', updatePanelPosition, true);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('resize', updatePanelPosition);
+      window.removeEventListener('scroll', updatePanelPosition, true);
+    };
+  }, [isOpen]);
+
+  const handleSelect = (soundId: AlertSoundId) => {
+    onSelect(soundId);
+    setIsOpen(false);
+    window.setTimeout(() => triggerRef.current?.focus(), 0);
+  };
+
+  return (
+    <div className="relative w-[180px] max-w-[48vw]" dir="rtl">
+      <button
+        ref={triggerRef}
+        type="button"
+        data-haptic="selection"
+        onClick={() => setIsOpen((value) => !value)}
+        className="inline-flex h-10 w-full items-center justify-between gap-2 rounded-xl border border-app-border bg-[#f5f5f5] pl-3 pr-3 text-right text-xs font-semibold text-[#0d0d12] outline-none transition-colors hover:bg-[#ececec] focus:border-app-brand focus:bg-white focus:ring-2 focus:ring-app-brand/20 dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised dark:focus:bg-app-surface"
+        aria-label="בחירת צליל למשלוח חדש"
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+      >
+        <span className="min-w-0 truncate">{selectedSound.label}</span>
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-[#666d80] transition-transform dark:text-app-text-secondary ${
+            isOpen ? 'rotate-180' : ''
+          }`}
+        />
+      </button>
+
+      {isOpen ? (
+        <div className="fixed inset-0 z-[180]" dir="rtl">
+          <button
+            type="button"
+            data-haptic="off"
+            aria-label="סגור בחירת צליל"
+            onClick={() => setIsOpen(false)}
+            className={`absolute inset-0 ${
+              isSheetMode ? 'bg-black/35 backdrop-blur-[2px]' : 'bg-transparent'
+            }`}
+          />
+          <div
+            role="listbox"
+            aria-label="בחירת צליל למשלוח חדש"
+            style={panelStyle}
+            className={`absolute overflow-hidden rounded-2xl border border-app-border bg-white text-right shadow-2xl dark:border-app-border dark:bg-app-surface ${
+              isSheetMode
+                ? 'inset-x-3 bottom-3 max-h-[min(70vh,430px)]'
+                : ''
+            }`}
+          >
+            <div className="border-b border-[#f1f1f1] px-4 py-3 dark:border-app-border">
+              <div className="text-sm font-bold text-[#0d0d12] dark:text-app-text">בחירת צליל</div>
+              <div className="mt-0.5 text-xs text-[#666d80] dark:text-app-text-secondary">
+                בחירה מפעילה תצוגת צליל קצרה.
+              </div>
+            </div>
+            <div className="max-h-[calc(min(70vh,430px)-66px)] overflow-y-auto p-1.5">
+              {ALERT_SOUND_PRESETS.map((sound) => {
+                const isSelected = sound.id === selectedSoundId;
+
+                return (
+                  <button
+                    key={sound.id}
+                    type="button"
+                    role="option"
+                    data-haptic={isSelected ? 'selection' : 'light'}
+                    aria-selected={isSelected}
+                    onClick={() => handleSelect(sound.id)}
+                    className={`mb-1 flex h-11 w-full items-center justify-between gap-3 rounded-xl px-3 text-right text-sm transition-colors ${
+                      isSelected
+                        ? 'bg-app-brand-solid text-app-background'
+                        : 'text-[#0d0d12] hover:bg-[#f5f5f5] dark:text-app-text dark:hover:bg-app-surface-raised'
+                    }`}
+                  >
+                    <span className="min-w-0 truncate font-semibold">{sound.label}</span>
+                    {isSelected ? (
+                      <Check className="h-4 w-4 shrink-0" />
+                    ) : (
+                      <Volume2 className="h-4 w-4 shrink-0 text-[#8a8f98] dark:text-app-text-secondary" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+};
 
 const themeModeOptions: Array<{ id: ThemeMode; label: string; icon: LucideIcon }> = [
   { id: 'light', label: TEXT.themeLight, icon: Sun },
