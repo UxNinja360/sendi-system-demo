@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { useDelivery } from '../context/delivery-context-value';
 import type { Delivery } from '../types/delivery.types';
 import { playHaptic } from '../utils/haptics';
+import { SENDI_PLUS_LABEL, isSendiPlusRestaurant } from '../utils/sendi-plus';
 import { setPendingDeliveriesBadge } from './app-badge';
 import { getAlertSoundPreset, type AlertSoundPreset } from './alert-sounds';
 import { ALERT_PREFERENCES_EVENT, getAlertPreferences } from './alert-preferences';
@@ -219,17 +220,37 @@ const formatOrderNumber = (orderNumber: Delivery['orderNumber']) => {
   return value.startsWith('#') ? value : `#${value}`;
 };
 
-const getDeliveryTitle = (delivery: Delivery) =>
-  `משלוח חדש ${formatOrderNumber(delivery.orderNumber)}`.trim();
+const firstText = (...values: unknown[]) => {
+  for (const value of values) {
+    const text = String(value ?? '').trim();
+    if (text) return text;
+  }
 
-const getDeliveryBody = (delivery: Delivery) =>
-  [
-    delivery.restaurantName ?? delivery.rest_name,
-    delivery.customerName ?? delivery.client_name,
-    delivery.address ?? delivery.client_full_address,
+  return '';
+};
+
+const isSendiPlusAlertDelivery = (delivery: Delivery) =>
+  isSendiPlusRestaurant(delivery.restaurantName) ||
+  isSendiPlusRestaurant(delivery.rest_name);
+
+const getDeliveryTitle = (delivery: Delivery) => {
+  const orderNumber = formatOrderNumber(delivery.orderNumber);
+  const prefix = isSendiPlusAlertDelivery(delivery) ? SENDI_PLUS_LABEL : 'משלוח רגיל';
+
+  return `${prefix} ${orderNumber}`.trim();
+};
+
+const getDeliveryBody = (delivery: Delivery) => {
+  const restaurantName = firstText(delivery.restaurantName, delivery.rest_name);
+  const customerAddress = firstText(delivery.address, delivery.client_full_address);
+
+  return [
+    restaurantName ? `מ- ${restaurantName}` : '',
+    customerAddress ? `ל- ${customerAddress}` : '',
   ]
     .filter(Boolean)
-    .join(' \u00b7 ');
+    .join(' ');
+};
 
 const getDeliveryTimestamp = (delivery: Delivery) => {
   const value = delivery.createdAt ?? delivery.creation_time;
@@ -273,6 +294,7 @@ const getNotificationOptions = (delivery: Delivery, pendingCount: number): Notif
   data: {
     url: '/deliveries',
     deliveryId: delivery.id,
+    deliveryKind: isSendiPlusAlertDelivery(delivery) ? 'sendi-plus' : 'regular',
     pendingCount,
   },
 });
@@ -303,10 +325,12 @@ const showDeliveryNotification = async (
 
 const showInAppDeliveryAlert = (delivery: Delivery) => {
   const body = getDeliveryBody(delivery);
+  const variant = isSendiPlusAlertDelivery(delivery) ? 'sendi-plus' : 'regular';
 
   showDeliveryAlertToast(getDeliveryTitle(delivery), {
     description: body || undefined,
     id: `new-delivery-${delivery.id}`,
+    variant,
   });
 };
 

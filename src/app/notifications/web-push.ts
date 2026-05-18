@@ -1,4 +1,5 @@
 import type { Delivery } from '../types/delivery.types';
+import { isSendiPlusRestaurant } from '../utils/sendi-plus';
 
 export type DeliveryPushStatus =
   | 'unsupported'
@@ -22,6 +23,21 @@ type PublicKeyResponse = {
 };
 
 const BUSINESS_ID = 'default';
+
+const getDeliveryPushPayload = (delivery: Delivery) => ({
+  id: delivery.id,
+  orderNumber: delivery.orderNumber,
+  api_short_order_id: delivery.api_short_order_id,
+  isSendiPlus:
+    isSendiPlusRestaurant(delivery.restaurantName) ||
+    isSendiPlusRestaurant(delivery.rest_name),
+  restaurantName: delivery.restaurantName,
+  rest_name: delivery.rest_name,
+  address: delivery.address,
+  client_full_address: delivery.client_full_address,
+  createdAt: delivery.createdAt,
+  creation_time: delivery.creation_time,
+});
 
 const canUseDeliveryPushApis = () =>
   typeof window !== 'undefined' &&
@@ -155,7 +171,7 @@ export const sendDeliveryPushNotification = async (
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
       businessId: BUSINESS_ID,
-      delivery,
+      delivery: getDeliveryPushPayload(delivery),
       pendingCount,
     }),
   });

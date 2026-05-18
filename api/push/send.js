@@ -5,20 +5,53 @@ import { hasVapidConfig, sendPushPayload } from '../_lib/push-web.js';
 const getOrderNumber = (delivery) =>
   delivery?.orderNumber || delivery?.api_short_order_id || delivery?.apiShortOrderId || '';
 
+const firstText = (...values) => {
+  for (const value of values) {
+    const text = String(value ?? '').trim();
+    if (text) return text;
+  }
+
+  return '';
+};
+
+const isSendiPlusRestaurant = (name, chainId) => {
+  const text = `${name ?? ''} ${chainId ?? ''}`.toLowerCase();
+  return (
+    text.includes('מקדונלד') ||
+    text.includes('mcdonald') ||
+    text.includes('דומינו') ||
+    text.includes('domino')
+  );
+};
+
 const normalizeDeliveryPayload = (delivery = {}) => {
   const orderNumber = String(getOrderNumber(delivery) || '').replace(/^#/, '');
+  const restaurantName = firstText(delivery.restaurantName, delivery.rest_name);
+  const customerAddress = firstText(delivery.address, delivery.client_full_address);
+  const isSendiPlus =
+    delivery.isSendiPlus === true ||
+    isSendiPlusRestaurant(restaurantName, delivery.chainId || delivery.chain_id);
+  const displayOrderNumber = orderNumber ? `#${orderNumber}` : '';
+  const notificationTitle = `${isSendiPlus ? 'סנדי פלוס' : 'משלוח רגיל'} ${displayOrderNumber}`.trim();
+  const body = [
+    restaurantName ? `מ- ${restaurantName}` : '',
+    customerAddress ? `ל- ${customerAddress}` : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return {
     type: 'delivery.new',
     deliveryId: delivery.id || null,
     orderNumber,
     api_short_order_id: delivery.api_short_order_id || delivery.apiShortOrderId || orderNumber,
-    restaurantName: delivery.restaurantName || delivery.rest_name || '',
-    rest_name: delivery.rest_name || delivery.restaurantName || '',
-    customerName: delivery.customerName || delivery.client_name || '',
-    client_name: delivery.client_name || delivery.customerName || '',
-    address: delivery.address || delivery.client_full_address || '',
-    client_full_address: delivery.client_full_address || delivery.address || '',
+    isSendiPlus,
+    title: notificationTitle,
+    restaurantName,
+    rest_name: restaurantName,
+    address: customerAddress,
+    client_full_address: customerAddress,
+    body,
     createdAt: delivery.createdAt || delivery.creation_time || new Date().toISOString(),
     url: '/deliveries',
   };

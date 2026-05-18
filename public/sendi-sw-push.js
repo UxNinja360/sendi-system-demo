@@ -11,13 +11,40 @@ const formatOrderNumber = (orderNumber) => {
   return value.startsWith('#') ? value : `#${value}`;
 };
 
+const firstText = (...values) => {
+  for (const value of values) {
+    const text = String(value ?? '').trim();
+    if (text) return text;
+  }
+
+  return '';
+};
+
+const isSendiPlusRestaurant = (name, chainId) => {
+  const text = `${name ?? ''} ${chainId ?? ''}`.toLowerCase();
+  return (
+    text.includes('מקדונלד') ||
+    text.includes('mcdonald') ||
+    text.includes('דומינו') ||
+    text.includes('domino')
+  );
+};
+
+const isSendiPlusPayload = (payload) =>
+  payload.isSendiPlus === true ||
+  isSendiPlusRestaurant(
+    payload.restaurantName || payload.rest_name,
+    payload.chainId || payload.chain_id,
+  );
+
 const getNotificationTitle = (payload) => {
   if (payload.title || payload.notificationTitle) {
     return payload.title || payload.notificationTitle;
   }
 
   const orderNumber = formatOrderNumber(payload.orderNumber || payload.api_short_order_id);
-  return orderNumber ? `משלוח חדש ${orderNumber}` : 'משלוח חדש';
+  const prefix = isSendiPlusPayload(payload) ? 'סנדי פלוס' : 'משלוח רגיל';
+  return `${prefix} ${orderNumber}`.trim();
 };
 
 const readPushPayload = (event) => {
@@ -58,13 +85,14 @@ const buildNotificationOptions = (payload) => {
   const pendingCount = toPositiveBadgeCount(
     payload.pendingCount ?? payload.badgeCount ?? payload.unreadCount ?? payload.badge,
   );
+  const restaurantName = firstText(payload.restaurantName, payload.rest_name);
+  const customerAddress = firstText(payload.address, payload.client_full_address);
   const body =
     payload.body ||
     [
-      payload.restaurantName || payload.rest_name,
-      payload.customerName || payload.client_name,
-      payload.address || payload.client_full_address,
-    ].filter(Boolean).join(' · ');
+      restaurantName ? `מ- ${restaurantName}` : '',
+      customerAddress ? `ל- ${customerAddress}` : '',
+    ].filter(Boolean).join(' ');
 
   return {
     body,
@@ -79,6 +107,7 @@ const buildNotificationOptions = (payload) => {
     data: {
       url: payload.url || SENDI_DELIVERIES_URL,
       deliveryId,
+      deliveryKind: isSendiPlusPayload(payload) ? 'sendi-plus' : 'regular',
       pendingCount,
     },
   };

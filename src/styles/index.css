@@ -65,6 +65,27 @@ body {
   border-color: var(--app-border);
 }
 
+@media (hover: none), (pointer: coarse) {
+  [data-toolbar-icon-button] {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  [data-toolbar-icon-button][data-active='false'] {
+    background-color: #ffffff !important;
+    border-color: #e5e5e5 !important;
+  }
+
+  .dark [data-toolbar-icon-button][data-active='false'] {
+    background-color: #0a0a0a !important;
+    border-color: var(--app-nav-border) !important;
+  }
+
+  .twilight.dark [data-toolbar-icon-button][data-active='false'] {
+    background-color: var(--app-surface) !important;
+    border-color: var(--app-border) !important;
+  }
+}
+
 .twilight :is(
   .dark\:bg-\[\#050505\],
   .dark\:bg-\[\#080808\],

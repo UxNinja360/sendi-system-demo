@@ -26,7 +26,7 @@ export const Toaster = () => {
         style: {
           fontFamily: 'system-ui, -apple-system, sans-serif',
         },
-        className: 'sonner-toast sonner-toast--action',
+        className: 'sonner-toast sonner-toast--system sonner-toast--action',
       }}
     />
   );

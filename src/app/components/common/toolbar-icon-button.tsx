@@ -34,6 +34,7 @@ export const ToolbarIconButton = React.forwardRef<
       children,
       className,
       label,
+      onClick,
       title,
       type = 'button',
       ...buttonProps
@@ -43,6 +44,17 @@ export const ToolbarIconButton = React.forwardRef<
     const ariaLabel = buttonProps['aria-label'] ?? label;
     const haptic =
       (buttonProps as { 'data-haptic'?: string })['data-haptic'] ?? 'light';
+    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+      onClick?.(event);
+
+      const isTouchLikeDevice =
+        typeof window !== 'undefined' &&
+        window.matchMedia('(hover: none), (pointer: coarse)').matches;
+
+      if (isTouchLikeDevice) {
+        event.currentTarget.blur();
+      }
+    };
 
     return (
       <button
@@ -52,6 +64,9 @@ export const ToolbarIconButton = React.forwardRef<
         title={title ?? label}
         aria-label={ariaLabel}
         data-haptic={haptic}
+        data-toolbar-icon-button
+        data-active={active ? 'true' : 'false'}
+        onClick={handleClick}
         className={getToolbarIconButtonClassName(active, className)}
       >
         {children}
