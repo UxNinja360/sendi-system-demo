@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import {
   AlertTriangle,
   BellRing,
+  ChevronDown,
   ChevronLeft,
   LogOut,
   Moon,
@@ -166,27 +167,21 @@ const SoundPicker: React.FC<{
   selectedSoundId: AlertSoundId;
   onSelect: (soundId: AlertSoundId) => void;
 }> = ({ selectedSoundId, onSelect }) => (
-  <div className="grid w-full grid-cols-2 gap-1.5 sm:grid-cols-5" dir="rtl">
-    {ALERT_SOUND_PRESETS.map((sound) => {
-      const selected = sound.id === selectedSoundId;
-
-      return (
-        <button
-          key={sound.id}
-          type="button"
-          data-haptic={selected ? 'selection' : 'light'}
-          onClick={() => onSelect(sound.id)}
-          className={`min-h-9 rounded-xl border px-2.5 py-2 text-xs font-semibold transition-colors ${
-            selected
-              ? 'border-app-brand bg-app-brand/15 text-app-brand-text'
-              : 'border-app-border bg-[#f5f5f5] text-[#0d0d12] hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised'
-          }`}
-          aria-pressed={selected}
-        >
+  <div className="relative w-[180px] max-w-[48vw]" dir="rtl">
+    <select
+      value={selectedSoundId}
+      data-haptic="selection"
+      onChange={(event) => onSelect(event.currentTarget.value as AlertSoundId)}
+      className="h-10 w-full appearance-none rounded-xl border border-app-border bg-[#f5f5f5] pl-9 pr-3 text-right text-xs font-semibold text-[#0d0d12] outline-none transition-colors hover:bg-[#ececec] focus:border-app-brand focus:bg-white focus:ring-2 focus:ring-app-brand/20 dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised dark:focus:bg-app-surface"
+      aria-label="בחירת צליל למשלוח חדש"
+    >
+      {ALERT_SOUND_PRESETS.map((sound) => (
+        <option key={sound.id} value={sound.id}>
           {sound.label}
-        </button>
-      );
-    })}
+        </option>
+      ))}
+    </select>
+    <ChevronDown className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#666d80] dark:text-app-text-secondary" />
   </div>
 );
 
