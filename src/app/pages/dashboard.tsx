@@ -591,8 +591,8 @@ export const Dashboard: React.FC = () => {
 
     pullRefreshTriggeredRef.current = true;
     isDashboardRefreshingRef.current = true;
-    setPullDistance((distance) => Math.max(distance, DASHBOARD_PULL_REFRESH_THRESHOLD));
-    setIsPullRefreshReady(true);
+    setPullDistance(0);
+    setIsPullRefreshReady(false);
     setIsDashboardRefreshing(true);
     setDashboardRefreshVersion((version) => version + 1);
     setDeliveryZoneConfigVersion((version) => version + 1);
@@ -652,8 +652,8 @@ export const Dashboard: React.FC = () => {
     const rawDistance = currentY - startY;
     if (rawDistance <= 0) {
       if (pullRefreshTriggeredRef.current) {
-        setPullDistance(DASHBOARD_PULL_REFRESH_THRESHOLD);
-        setIsPullRefreshReady(true);
+        setPullDistance(0);
+        setIsPullRefreshReady(false);
         event.preventDefault();
         return;
       }
@@ -664,13 +664,17 @@ export const Dashboard: React.FC = () => {
 
     event.preventDefault();
 
+    if (pullRefreshTriggeredRef.current) {
+      setPullDistance(0);
+      setIsPullRefreshReady(false);
+      return;
+    }
+
     const easedDistance = Math.min(
       DASHBOARD_PULL_REFRESH_MAX,
       Math.round(rawDistance * 0.58),
     );
-    const nextDistance = pullRefreshTriggeredRef.current
-      ? Math.max(DASHBOARD_PULL_REFRESH_THRESHOLD, easedDistance)
-      : easedDistance;
+    const nextDistance = easedDistance;
     const nextReady = nextDistance >= DASHBOARD_PULL_REFRESH_THRESHOLD;
 
     setPullDistance(nextDistance);
@@ -687,11 +691,11 @@ export const Dashboard: React.FC = () => {
     pullRefreshTouchActiveRef.current = false;
 
     if (pullRefreshTriggeredRef.current || isDashboardRefreshingRef.current) {
-      setPullDistance(DASHBOARD_PULL_REFRESH_THRESHOLD);
-      setIsPullRefreshReady(true);
+      setPullDistance(0);
+      setIsPullRefreshReady(false);
 
       if (!isDashboardRefreshingRef.current && dashboardRefreshTimeoutRef.current === null) {
-        resetPullRefresh(140);
+        resetPullRefresh();
       }
 
       return;
@@ -862,11 +866,9 @@ export const Dashboard: React.FC = () => {
     routeStopOrders: state.courierRoutePlans,
   });
   const pullRefreshProgress = Math.min(1, pullDistance / DASHBOARD_PULL_REFRESH_THRESHOLD);
-  const pullRefreshVisible = pullDistance > 0 || isDashboardRefreshing;
+  const pullRefreshVisible = pullDistance > 0;
   const pullRefreshArmed = isDashboardRefreshing || isPullRefreshReady;
-  const pullRefreshRevealHeight = isDashboardRefreshing
-    ? 44
-    : Math.min(54, Math.round(pullDistance * 0.58));
+  const pullRefreshRevealHeight = Math.min(54, Math.round(pullDistance * 0.58));
   const pullRefreshLabel = pullRefreshArmed
     ? 'מרענן'
     : 'משוך לרענון';
@@ -907,7 +909,7 @@ export const Dashboard: React.FC = () => {
           <section className="flex w-full items-center justify-between gap-3">
             <div className="min-w-0 text-right">
               <h1 className="truncate text-lg font-bold leading-tight text-app-text sm:text-xl">
-                {dashboardGreeting}, אלכס
+                {isDashboardRefreshing ? '-' : `${dashboardGreeting}, אלכס`}
               </h1>
             </div>
             <div className="flex max-w-full min-w-0 items-center gap-2 overflow-x-auto no-scrollbar" dir="ltr">
@@ -927,8 +929,18 @@ export const Dashboard: React.FC = () => {
                 <DashboardToolbarToggle
                   active={state.autoAssignEnabled}
                   label="שיבוץ אוטומטי"
-                  onClick={() => dispatch({ type: 'TOGGLE_AUTO_ASSIGN' })}
-                  icon={<Bot className="h-3.5 w-3.5" />}
+                  onClick={
+                    isDashboardRefreshing
+                      ? () => undefined
+                      : () => dispatch({ type: 'TOGGLE_AUTO_ASSIGN' })
+                  }
+                  icon={
+                    pullRefreshArmed ? (
+                      <span className="text-sm font-bold leading-none">-</span>
+                    ) : (
+                      <Bot className="h-3.5 w-3.5" />
+                    )
+                  }
                 />
               </div>
             </div>
