@@ -136,6 +136,14 @@ export const AppTopBar: React.FC<AppTopBarProps> = ({ onOpenMobileMenu }) => {
   const hasSecondaryTabs = Boolean(restaurantId);
 
   const topBarBreadcrumb: TopBarBreadcrumb | null = (() => {
+    if (['/deliveries', '/restaurants', '/couriers'].includes(location.pathname)) {
+      return {
+        parentLabel: 'דשבורד',
+        parentPath: '/dashboard',
+        currentLabel: pageTitle,
+      };
+    }
+
     if (location.pathname === '/zones') {
       return {
         parentLabel: 'דשבורד',

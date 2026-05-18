@@ -383,6 +383,7 @@ export const ToolbarPeriodControl: React.FC<ToolbarPeriodControlProps> = ({
 type ToolbarDayPickerProps = {
   selectedDate: Date;
   onDateChange: (date: Date) => void;
+  fixedWidth?: boolean;
   rangeStartDate?: string;
   rangeEndDate?: string;
   rangeStartTime?: string;
@@ -394,6 +395,7 @@ type ToolbarDayPickerProps = {
 export const ToolbarDayPicker: React.FC<ToolbarDayPickerProps> = ({
   selectedDate,
   onDateChange,
+  fixedWidth = false,
   rangeStartDate = '',
   rangeEndDate = '',
   rangeStartTime = DEFAULT_RANGE_START_TIME,
@@ -669,13 +671,20 @@ export const ToolbarDayPicker: React.FC<ToolbarDayPickerProps> = ({
     )
   ) : null;
 
+  const wrapperClassName = fixedWidth
+    ? 'relative flex w-auto shrink-0 items-center gap-1'
+    : 'relative flex w-full min-w-0 items-center gap-1 min-[540px]:w-auto';
+  const buttonClassName = fixedWidth
+    ? 'flex h-10 min-w-[176px] shrink-0 items-center justify-center gap-2 rounded-[4px] border border-app-border bg-app-surface px-3 text-sm font-semibold text-app-text transition-colors hover:bg-app-surface-raised dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#EDEDED] dark:hover:bg-[#111111]'
+    : 'flex h-10 w-full min-w-0 shrink items-center justify-center gap-1.5 rounded-[4px] border border-app-border bg-app-surface px-2 text-sm font-semibold text-app-text transition-colors hover:bg-app-surface-raised min-[540px]:min-w-[176px] min-[540px]:gap-2 min-[540px]:px-3 dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#EDEDED] dark:hover:bg-[#111111]';
+
   return (
-    <div ref={popoverRef} className="relative flex w-full min-w-0 items-center gap-1 min-[540px]:w-auto" dir="rtl">
+    <div ref={popoverRef} className={wrapperClassName} dir="rtl">
       <button
         type="button"
         data-haptic="medium"
         onClick={() => setCalendarOpen((value) => !value)}
-        className="flex h-10 w-full min-w-0 shrink items-center justify-center gap-1.5 rounded-[4px] border border-app-border bg-app-surface px-2 text-sm font-semibold text-app-text transition-colors hover:bg-app-surface-raised min-[540px]:min-w-[176px] min-[540px]:gap-2 min-[540px]:px-3 dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#EDEDED] dark:hover:bg-[#111111]"
+        className={buttonClassName}
       >
         <CalendarDays className="h-4 w-4 shrink-0 text-app-text-secondary dark:text-app-text" />
         <span className="min-w-0 truncate">{displayLabel}</span>

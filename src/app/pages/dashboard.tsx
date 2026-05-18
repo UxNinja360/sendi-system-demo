@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router';
 import {
   Bike,
+  Bot,
   CheckCircle2,
   Clock3,
   Map as MapIcon,
@@ -15,7 +16,6 @@ import {
   UserCheck,
   XCircle,
 } from 'lucide-react';
-import { PageToolbar } from '../components/common/page-toolbar';
 import { ToolbarDayPicker } from '../components/common/toolbar-date-picker';
 import { ToolbarIconButton } from '../components/common/toolbar-icon-button';
 import { Toggle } from '../components/common/toggle';
@@ -578,6 +578,7 @@ export const Dashboard: React.FC = () => {
   );
 
   const filteredDeliveries = dateDeliveries;
+
   const statusCounts = React.useMemo(() => {
     const counts = new Map<DeliveryStatus, number>();
     STATUS_META.forEach((status) => counts.set(status.id, 0));
@@ -663,39 +664,34 @@ export const Dashboard: React.FC = () => {
     <>
       {mapSplitPortal}
       <div className="flex h-full min-h-0 flex-col overflow-hidden bg-app-background text-app-text" dir="rtl">
-      <PageToolbar
-        showBottomBorder={false}
-        pairControlsOnMobile
-        periodControl={
-          <ToolbarDayPicker
-            selectedDate={selectedDate}
-            onDateChange={setSelectedDate}
-            dayCounts={deliveryCountsByDay}
-          />
-        }
-        controlsClassName="relative z-10"
-        controls={
-          <div className="flex max-w-full shrink-0 flex-nowrap items-center gap-1 overflow-x-auto no-scrollbar">
-            <DashboardToolbarToggle
-              active={state.isSystemOpen}
-              label={state.isSystemOpen ? 'מערכת פתוחה' : 'מערכת סגורה'}
-              onClick={toggleSystem}
-              icon={<Power className="h-3.5 w-3.5" />}
-            />
-            <DashboardToolbarToggle
-              active={state.autoAssignEnabled}
-              label="שיבוץ אוטומטי"
-              onClick={() => dispatch({ type: 'TOGGLE_AUTO_ASSIGN' })}
-              icon={<UserCheck className="h-3.5 w-3.5" />}
-            />
-          </div>
-        }
-      />
-
       <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-2 pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:px-6 md:pt-2 md:pb-6">
-        <div className="mx-auto flex w-full max-w-[92rem] flex-col gap-2">
+        <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-2">
+          <section className="flex w-full items-center justify-start gap-2">
+            <div className="flex max-w-full min-w-0 items-center gap-2 overflow-x-auto no-scrollbar">
+              <ToolbarDayPicker
+                selectedDate={selectedDate}
+                onDateChange={setSelectedDate}
+                dayCounts={deliveryCountsByDay}
+                fixedWidth
+              />
+              <div className="flex shrink-0 items-center gap-1">
+                <DashboardToolbarToggle
+                  active={state.isSystemOpen}
+                  label={state.isSystemOpen ? 'מערכת פתוחה' : 'מערכת סגורה'}
+                  onClick={toggleSystem}
+                  icon={<Power className="h-3.5 w-3.5" />}
+                />
+                <DashboardToolbarToggle
+                  active={state.autoAssignEnabled}
+                  label="שיבוץ אוטומטי"
+                  onClick={() => dispatch({ type: 'TOGGLE_AUTO_ASSIGN' })}
+                  icon={<Bot className="h-3.5 w-3.5" />}
+                />
+              </div>
+            </div>
+          </section>
           <section>
-            <div className="grid grid-cols-6 gap-2">
+            <div className="grid grid-cols-2 gap-2 min-[520px]:grid-cols-6">
               {STATUS_META.filter((status) => DASHBOARD_DELIVERY_STATUSES.includes(status.id)).map((status) => {
                 const isCourierAvailabilityCard = status.id === 'delivered';
                 const isAverageDeliveryTimeCard = status.id === 'cancelled';
@@ -705,9 +701,11 @@ export const Dashboard: React.FC = () => {
                 const showStatusProgress =
                   !isCourierAvailabilityCard && !isAverageDeliveryTimeCard;
                 const statusSpanClassName =
-                  status.id === 'delivered' || status.id === 'cancelled'
-                    ? 'col-span-3'
-                    : 'col-span-2';
+                  status.id === 'cancelled'
+                    ? 'col-span-2 min-[520px]:col-span-3'
+                    : status.id === 'delivered'
+                    ? 'col-span-1 min-[520px]:col-span-3'
+                    : 'col-span-1 min-[520px]:col-span-2';
                 const label = isCourierAvailabilityCard
                   ? 'שליחים פנויים'
                   : isAverageDeliveryTimeCard
