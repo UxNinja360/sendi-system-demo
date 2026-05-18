@@ -503,12 +503,16 @@ export const Dashboard: React.FC = () => {
   const [sendiPlusRadiusKm, setSendiPlusRadiusKm] = React.useState(readStoredSendiPlusRadius);
   const [sendiPlusTermsAccepted, setSendiPlusTermsAccepted] = React.useState(readStoredSendiPlusTermsAccepted);
   const [deliveryZoneConfigVersion, setDeliveryZoneConfigVersion] = React.useState(0);
+  const [dashboardRefreshVersion, setDashboardRefreshVersion] = React.useState(0);
   const [pullDistance, setPullDistance] = React.useState(0);
   const [isPullRefreshReady, setIsPullRefreshReady] = React.useState(false);
   const [isDashboardRefreshing, setIsDashboardRefreshing] = React.useState(false);
   const mainScrollRef = React.useRef<HTMLElement | null>(null);
   const pullStartYRef = React.useRef<number | null>(null);
   const pullThresholdHapticPlayedRef = React.useRef(false);
+  const pullRefreshTriggeredRef = React.useRef(false);
+  const pullRefreshTouchActiveRef = React.useRef(false);
+  const isDashboardRefreshingRef = React.useRef(false);
   const pullRefreshResetTimeoutRef = React.useRef<number | null>(null);
   const dashboardRefreshTimeoutRef = React.useRef<number | null>(null);
 
@@ -518,31 +522,46 @@ export const Dashboard: React.FC = () => {
     return window.matchMedia('(pointer: coarse), (hover: none), (max-width: 767px)').matches;
   }, []);
 
-  const resetPullRefresh = React.useCallback((delay = 0) => {
-    if (typeof window === 'undefined') {
-      setPullDistance(0);
-      setIsPullRefreshReady(false);
-      return;
-    }
+  const completePullRefreshReset = React.useCallback(() => {
+    setPullDistance(0);
+    setIsPullRefreshReady(false);
+    pullStartYRef.current = null;
+    pullThresholdHapticPlayedRef.current = false;
+    pullRefreshTriggeredRef.current = false;
+    pullRefreshTouchActiveRef.current = false;
+  }, []);
 
-    if (pullRefreshResetTimeoutRef.current !== null) {
+  const resetPullRefresh = React.useCallback((delay = 0) => {
+    if (typeof window !== 'undefined' && pullRefreshResetTimeoutRef.current !== null) {
       window.clearTimeout(pullRefreshResetTimeoutRef.current);
       pullRefreshResetTimeoutRef.current = null;
     }
 
+    if (typeof window === 'undefined' || delay <= 0) {
+      completePullRefreshReset();
+      return;
+    }
+
     pullRefreshResetTimeoutRef.current = window.setTimeout(() => {
-      setPullDistance(0);
-      setIsPullRefreshReady(false);
-      pullStartYRef.current = null;
-      pullThresholdHapticPlayedRef.current = false;
+      completePullRefreshReset();
       pullRefreshResetTimeoutRef.current = null;
     }, delay);
+  }, [completePullRefreshReset]);
+
+  const playPullRefreshThresholdHaptic = React.useCallback(() => {
+    playHaptic('selection', { force: true });
+    window.setTimeout(() => playHaptic('medium', { force: true }), 24);
   }, []);
 
   const runDashboardRefresh = React.useCallback(() => {
-    if (isDashboardRefreshing) return;
+    if (isDashboardRefreshingRef.current || pullRefreshTriggeredRef.current) return;
 
+    pullRefreshTriggeredRef.current = true;
+    isDashboardRefreshingRef.current = true;
+    setPullDistance((distance) => Math.max(distance, DASHBOARD_PULL_REFRESH_THRESHOLD));
+    setIsPullRefreshReady(true);
     setIsDashboardRefreshing(true);
+    setDashboardRefreshVersion((version) => version + 1);
     setDeliveryZoneConfigVersion((version) => version + 1);
     setSendiPlusRadiusKm(readStoredSendiPlusRadius());
     setSendiPlusTermsAccepted(readStoredSendiPlusTermsAccepted());
@@ -552,11 +571,14 @@ export const Dashboard: React.FC = () => {
     }
 
     dashboardRefreshTimeoutRef.current = window.setTimeout(() => {
+      isDashboardRefreshingRef.current = false;
       setIsDashboardRefreshing(false);
-      resetPullRefresh(140);
+      if (!pullRefreshTouchActiveRef.current) {
+        resetPullRefresh(140);
+      }
       dashboardRefreshTimeoutRef.current = null;
     }, 650);
-  }, [isDashboardRefreshing, resetPullRefresh]);
+  }, [resetPullRefresh]);
 
   React.useEffect(() => () => {
     if (pullRefreshResetTimeoutRef.current !== null) {
@@ -568,19 +590,26 @@ export const Dashboard: React.FC = () => {
   }, []);
 
   const handlePullRefreshTouchStart = React.useCallback((event: React.TouchEvent<HTMLElement>) => {
-    if (isDashboardRefreshing || !isMobilePullRefreshPointer()) return;
+    if (isDashboardRefreshingRef.current || !isMobilePullRefreshPointer()) return;
     if ((event.currentTarget as HTMLElement).scrollTop > 0) return;
 
+    if (pullRefreshResetTimeoutRef.current !== null) {
+      window.clearTimeout(pullRefreshResetTimeoutRef.current);
+      pullRefreshResetTimeoutRef.current = null;
+    }
+
+    pullRefreshTouchActiveRef.current = true;
+    pullRefreshTriggeredRef.current = false;
     pullStartYRef.current = event.touches[0]?.clientY ?? null;
     pullThresholdHapticPlayedRef.current = false;
-  }, [isDashboardRefreshing, isMobilePullRefreshPointer]);
+  }, [isMobilePullRefreshPointer]);
 
   const handlePullRefreshTouchMove = React.useCallback((event: React.TouchEvent<HTMLElement>) => {
     const startY = pullStartYRef.current;
-    if (startY === null || isDashboardRefreshing) return;
+    if (startY === null) return;
 
     const scrollTarget = event.currentTarget as HTMLElement;
-    if (scrollTarget.scrollTop > 0) {
+    if (scrollTarget.scrollTop > 0 && !pullRefreshTriggeredRef.current) {
       resetPullRefresh();
       return;
     }
@@ -588,8 +617,14 @@ export const Dashboard: React.FC = () => {
     const currentY = event.touches[0]?.clientY ?? startY;
     const rawDistance = currentY - startY;
     if (rawDistance <= 0) {
-      setPullDistance(0);
-      setIsPullRefreshReady(false);
+      if (pullRefreshTriggeredRef.current) {
+        setPullDistance(DASHBOARD_PULL_REFRESH_THRESHOLD);
+        setIsPullRefreshReady(true);
+        event.preventDefault();
+        return;
+      }
+
+      resetPullRefresh();
       return;
     }
 
@@ -599,28 +634,37 @@ export const Dashboard: React.FC = () => {
       DASHBOARD_PULL_REFRESH_MAX,
       Math.round(rawDistance * 0.58),
     );
-    const nextReady = easedDistance >= DASHBOARD_PULL_REFRESH_THRESHOLD;
+    const nextDistance = pullRefreshTriggeredRef.current
+      ? Math.max(DASHBOARD_PULL_REFRESH_THRESHOLD, easedDistance)
+      : easedDistance;
+    const nextReady = nextDistance >= DASHBOARD_PULL_REFRESH_THRESHOLD;
 
-    setPullDistance(easedDistance);
+    setPullDistance(nextDistance);
     setIsPullRefreshReady(nextReady);
 
     if (nextReady && !pullThresholdHapticPlayedRef.current) {
       pullThresholdHapticPlayedRef.current = true;
-      playHaptic('medium', { force: true });
+      playPullRefreshThresholdHaptic();
+      runDashboardRefresh();
     }
-  }, [isDashboardRefreshing, resetPullRefresh]);
+  }, [playPullRefreshThresholdHaptic, resetPullRefresh, runDashboardRefresh]);
 
   const handlePullRefreshTouchEnd = React.useCallback(() => {
-    if (isDashboardRefreshing) return;
+    pullRefreshTouchActiveRef.current = false;
 
-    if (isPullRefreshReady) {
+    if (pullRefreshTriggeredRef.current || isDashboardRefreshingRef.current) {
       setPullDistance(DASHBOARD_PULL_REFRESH_THRESHOLD);
-      runDashboardRefresh();
+      setIsPullRefreshReady(true);
+
+      if (!isDashboardRefreshingRef.current && dashboardRefreshTimeoutRef.current === null) {
+        resetPullRefresh(140);
+      }
+
       return;
     }
 
     resetPullRefresh();
-  }, [isDashboardRefreshing, isPullRefreshReady, resetPullRefresh, runDashboardRefresh]);
+  }, [resetPullRefresh]);
 
   React.useEffect(() => {
     if (!sendiPlusTermsAccepted) return;
@@ -694,7 +738,7 @@ export const Dashboard: React.FC = () => {
         if (!DASHBOARD_DELIVERY_STATUSES.includes(delivery.status)) return false;
         return isSameInputDate(getDeliveryPrimaryDate(delivery), todayDateKey);
       }),
-    [todayDateKey, state.deliveries],
+    [dashboardRefreshVersion, todayDateKey, state.deliveries],
   );
 
   const filteredDeliveries = dateDeliveries;
@@ -706,15 +750,15 @@ export const Dashboard: React.FC = () => {
       counts.set(delivery.status, (counts.get(delivery.status) ?? 0) + 1);
     });
     return counts;
-  }, [filteredDeliveries]);
+  }, [dashboardRefreshVersion, filteredDeliveries]);
 
   const sendiPlusDeliveryZones = React.useMemo(
     () => loadStoredDeliveryServiceAreas(),
-    [deliveryZoneConfigVersion],
+    [dashboardRefreshVersion, deliveryZoneConfigVersion],
   );
   const sendiPlusDeliveryZoneCount = React.useMemo(
     () => sendiPlusDeliveryZones.filter(isDeliveryZoneActive).length,
-    [sendiPlusDeliveryZones],
+    [dashboardRefreshVersion, sendiPlusDeliveryZones],
   );
   const sendiPlusActiveRestaurantCount = React.useMemo(
     () =>
@@ -729,11 +773,11 @@ export const Dashboard: React.FC = () => {
             sendiPlusDeliveryZones,
           ),
       ).length,
-    [sendiPlusDeliveryZones, sendiPlusTermsAccepted, state.restaurants],
+    [dashboardRefreshVersion, sendiPlusDeliveryZones, sendiPlusTermsAccepted, state.restaurants],
   );
   const connectedCouriersCount = React.useMemo(
     () => state.couriers.filter((courier) => courier.status !== 'offline').length,
-    [state.couriers],
+    [dashboardRefreshVersion, state.couriers],
   );
   const freeCouriersCount = React.useMemo(() => {
     const busyCourierIds = new Set(
@@ -752,7 +796,7 @@ export const Dashboard: React.FC = () => {
         canCourierAcceptDelivery(courier) &&
         !busyCourierIds.has(courier.id),
     ).length;
-  }, [state.couriers, state.deliveries]);
+  }, [dashboardRefreshVersion, state.couriers, state.deliveries]);
   const averageDeliveryMinutes = React.useMemo(() => {
     const deliveryDurations = filteredDeliveries
       .filter((delivery) => delivery.status === 'delivered')
@@ -771,10 +815,10 @@ export const Dashboard: React.FC = () => {
 
     const totalMinutes = deliveryDurations.reduce((sum, duration) => sum + duration, 0);
     return Math.round(totalMinutes / deliveryDurations.length);
-  }, [filteredDeliveries]);
+  }, [dashboardRefreshVersion, filteredDeliveries]);
   const activeDeliveriesCount = React.useMemo(
     () => filteredDeliveries.filter((delivery) => ACTIVE_DELIVERY_STATUSES.includes(delivery.status)).length,
-    [filteredDeliveries],
+    [dashboardRefreshVersion, filteredDeliveries],
   );
   const dashboardGreeting = getDashboardGreeting();
   const { mapSplitPortal } = useDeliveriesMapSplit({
@@ -789,10 +833,8 @@ export const Dashboard: React.FC = () => {
   const pullRefreshRevealHeight = isDashboardRefreshing
     ? 44
     : Math.min(54, Math.round(pullDistance * 0.58));
-  const pullRefreshLabel = isDashboardRefreshing
+  const pullRefreshLabel = pullRefreshArmed
     ? 'מרענן'
-    : isPullRefreshReady
-    ? 'שחרר לרענון'
     : 'משוך לרענון';
 
   return (
