@@ -1168,9 +1168,9 @@
     transform: translateY(-50%) !important;
     border: 0 !important;
     border-radius: 8px !important;
-    background: color-mix(in srgb, var(--sendi-toast-fg) 14%, transparent) !important;
+    background: transparent !important;
     color: var(--sendi-toast-fg) !important;
-    opacity: 0.95 !important;
+    opacity: 0.9 !important;
     transition:
       background 0.18s ease,
       opacity 0.18s ease,
