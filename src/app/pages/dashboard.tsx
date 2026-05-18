@@ -72,7 +72,7 @@ const STATUS_META: Array<{
 }> = [
   {
     id: 'pending',
-    label: 'ממתין',
+    label: 'ממתינים',
     hint: 'משלוחים שצריכים שליח',
     icon: Clock3,
     accentClassName: 'text-orange-400',
@@ -80,7 +80,7 @@ const STATUS_META: Array<{
   },
   {
     id: 'assigned',
-    label: 'שובץ',
+    label: 'שובצו',
     hint: 'שליח בדרך למסעדה',
     icon: Truck,
     accentClassName: 'text-yellow-400',
@@ -661,7 +661,6 @@ export const Dashboard: React.FC = () => {
     () => filteredDeliveries.filter((delivery) => ACTIVE_DELIVERY_STATUSES.includes(delivery.status)).length,
     [filteredDeliveries],
   );
-  const totalStatusCount = Math.max(filteredDeliveries.length, 1);
   const { mapSplitPortal } = useDeliveriesMapSplit({
     deliveries: filteredDeliveries,
     couriers: state.couriers,
@@ -723,9 +722,6 @@ export const Dashboard: React.FC = () => {
                 const isAverageDeliveryTimeCard = status.id === 'cancelled';
                 const Icon = isCourierAvailabilityCard ? UserCheck : isAverageDeliveryTimeCard ? Timer : status.icon;
                 const count = statusCounts.get(status.id) ?? 0;
-                const percent = Math.round((count / totalStatusCount) * 100);
-                const showStatusProgress =
-                  !isCourierAvailabilityCard && !isAverageDeliveryTimeCard;
                 const statusSpanClassName =
                   status.id === 'cancelled'
                     ? 'col-span-2 min-[520px]:col-span-3'
@@ -742,7 +738,6 @@ export const Dashboard: React.FC = () => {
                   : isAverageDeliveryTimeCard
                   ? formatAverageDeliveryTime(averageDeliveryMinutes)
                   : formatNumber(count);
-                const hint = status.hint;
                 const iconClassName = isCourierAvailabilityCard
                   ? 'text-[#0a84ff]'
                   : isAverageDeliveryTimeCard
@@ -765,19 +760,6 @@ export const Dashboard: React.FC = () => {
                     <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
                       {value}
                     </div>
-                    {showStatusProgress ? (
-                      <>
-                        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-app-surface-raised">
-                          <div
-                            className={`h-full rounded-full ${status.barClassName}`}
-                            style={{ width: `${percent}%` }}
-                          />
-                        </div>
-                        <div className="mt-1.5 truncate text-[10px] text-app-text-secondary sm:text-[11px]">
-                          {hint}
-                        </div>
-                      </>
-                    ) : null}
                   </button>
                 );
               })}
