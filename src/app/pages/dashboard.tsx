@@ -864,8 +864,10 @@ export const Dashboard: React.FC = () => {
   const pullRefreshVisible = pullDistance > 0;
   const pullRefreshArmed = isDashboardRefreshing || isPullRefreshReady;
   const pullRefreshRevealHeight = Math.min(54, Math.round(pullDistance * 0.58));
-  const pullRefreshLabel = pullRefreshArmed
+  const pullRefreshLabel = isDashboardRefreshing
     ? 'מרענן'
+    : isPullRefreshReady
+    ? ''
     : 'משוך לרענון';
 
   return (
@@ -903,7 +905,7 @@ export const Dashboard: React.FC = () => {
                 transform: `rotate(${pullRefreshArmed ? 0 : 180}deg) scale(${0.82 + pullRefreshProgress * 0.18})`,
               }}
             />
-            <span>{pullRefreshLabel}</span>
+            {pullRefreshLabel ? <span>{pullRefreshLabel}</span> : null}
           </div>
         </div>
         <div
