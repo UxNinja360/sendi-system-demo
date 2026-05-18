@@ -45,6 +45,7 @@ import {
   isPointCoveredByActiveDeliveryZones,
   loadStoredDeliveryServiceAreas,
 } from '../../utils/delivery-zones';
+import { playHaptic } from '../../utils/haptics';
 import { Toggle } from '../common/toggle';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
@@ -93,6 +94,8 @@ const BUSINESSES = [
 const SIDEBAR_MIN_WIDTH = 250;
 const SIDEBAR_MAX_WIDTH = 400;
 const SIDEBAR_COLLAPSED_WIDTH = 60;
+const MOBILE_SIDEBAR_WIDTH = 260;
+const MOBILE_MENU_SWIPE_CLOSE_THRESHOLD = 92;
 const DESKTOP_SIDEBAR_BREAKPOINT = 1024;
 const SIDEBAR_LEGACY_OPEN_KEY = 'sidebar-legacy-open-v2';
 const SIDEBAR_EXPERIMENTS_OPEN_KEY = 'sidebar-experiments-open-v2';
@@ -194,6 +197,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
   });
   const [isResizingSidebar, setIsResizingSidebar] = useState(false);
   const sidebarResizeRef = useRef<{ startX: number; startWidth: number; didMove: boolean } | null>(null);
+  const [mobileMenuDragX, setMobileMenuDragX] = useState(0);
+  const [isMobileMenuDragging, setIsMobileMenuDragging] = useState(false);
+  const mobileMenuSwipeRef = useRef<{
+    startX: number;
+    startY: number;
+    started: boolean;
+  } | null>(null);
   const [isLegacySectionOpen, setIsLegacySectionOpen] = useState(() => {
     try {
       const saved = localStorage.getItem(SIDEBAR_LEGACY_OPEN_KEY);
@@ -220,6 +230,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
   });
 
   const isExpanded = !isCollapsed || !isDesktop;
+  const isMobileMenuOpen = !isDesktop && isCollapsed;
+  const mobileMenuOpenProgress = isMobileMenuOpen
+    ? 1 - mobileMenuDragX / MOBILE_SIDEBAR_WIDTH
+    : 0;
+  const mobileMenuTranslateX = !isDesktop
+    ? isMobileMenuOpen
+      ? mobileMenuDragX
+      : MOBILE_SIDEBAR_WIDTH
+    : undefined;
   const activeDeliveriesCount = state.deliveries.filter(isOperationalDelivery).length;
   const deliveredDeliveriesCount = state.deliveries.filter((delivery) => delivery.status === 'delivered').length;
   const activeRestaurantsCount = state.restaurants.filter((restaurant) =>
@@ -371,6 +390,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
   }, [isResizingSidebar]);
 
   useEffect(() => {
+    if (isDesktop || !isCollapsed) {
+      setMobileMenuDragX(0);
+      setIsMobileMenuDragging(false);
+      mobileMenuSwipeRef.current = null;
+    }
+  }, [isCollapsed, isDesktop]);
+
+  useEffect(() => {
     try {
       localStorage.setItem(SIDEBAR_LEGACY_OPEN_KEY, JSON.stringify(isLegacySectionOpen));
     } catch {
@@ -440,6 +467,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
   );
 
   const toggleMobileMenu = useCallback(() => {
+    setMobileMenuDragX(0);
+    setIsMobileMenuDragging(false);
+    mobileMenuSwipeRef.current = null;
     setIsCollapsed((prev) => !prev);
   }, []);
 
@@ -515,13 +545,74 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
     setIsResizingSidebar(false);
   }, []);
 
+  const handleMobileMenuTouchStart = useCallback(
+    (event: React.TouchEvent<HTMLDivElement>) => {
+      if (isDesktop || !isCollapsed || event.touches.length !== 1) return;
+
+      const touch = event.touches[0];
+      mobileMenuSwipeRef.current = {
+        startX: touch.clientX,
+        startY: touch.clientY,
+        started: false,
+      };
+    },
+    [isCollapsed, isDesktop],
+  );
+
+  const handleMobileMenuTouchMove = useCallback(
+    (event: React.TouchEvent<HTMLDivElement>) => {
+      const swipe = mobileMenuSwipeRef.current;
+      if (!swipe || isDesktop || !isCollapsed || event.touches.length !== 1) return;
+
+      const touch = event.touches[0];
+      const deltaX = touch.clientX - swipe.startX;
+      const deltaY = touch.clientY - swipe.startY;
+      const absX = Math.abs(deltaX);
+      const absY = Math.abs(deltaY);
+
+      if (!swipe.started) {
+        if (deltaX <= 8 || absX < absY * 1.2) return;
+
+        swipe.started = true;
+        setIsMobileMenuDragging(true);
+        playHaptic('selection', { force: true });
+      }
+
+      event.preventDefault();
+      setMobileMenuDragX(Math.min(MOBILE_SIDEBAR_WIDTH, Math.max(0, deltaX)));
+    },
+    [isCollapsed, isDesktop],
+  );
+
+  const finishMobileMenuSwipe = useCallback(() => {
+    const swipe = mobileMenuSwipeRef.current;
+    if (!swipe) return;
+
+    const shouldClose = swipe.started && mobileMenuDragX >= MOBILE_MENU_SWIPE_CLOSE_THRESHOLD;
+    mobileMenuSwipeRef.current = null;
+    setIsMobileMenuDragging(false);
+
+    if (shouldClose) {
+      setIsCollapsed(false);
+      setMobileMenuDragX(0);
+      return;
+    }
+
+    setMobileMenuDragX(0);
+  }, [mobileMenuDragX]);
+
   useEffect(() => {
     onMobileMenuToggleReady?.(toggleMobileMenu);
     return () => onMobileMenuToggleReady?.(null);
   }, [onMobileMenuToggleReady, toggleMobileMenu]);
 
   const closeMobileMenu = () => {
-    if (!isDesktop) setIsCollapsed(false);
+    if (!isDesktop) {
+      setMobileMenuDragX(0);
+      setIsMobileMenuDragging(false);
+      mobileMenuSwipeRef.current = null;
+      setIsCollapsed(false);
+    }
   };
 
   const handleNav = (path: string) => {
@@ -626,25 +717,41 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
   return (
     <>
-      {!isDesktop && isCollapsed && (
+      {!isDesktop && (
         <div
-          className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm"
+          className={`fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm transition-[opacity,backdrop-filter] duration-300 ease-out lg:hidden ${
+            isMobileMenuOpen ? 'pointer-events-auto' : 'pointer-events-none'
+          }`}
+          style={{
+            opacity: mobileMenuOpenProgress * 0.95,
+            backdropFilter: `blur(${mobileMenuOpenProgress * 4}px)`,
+          }}
           onClick={closeMobileMenu}
         />
       )}
 
       <div
         dir="rtl"
-        className={`app-shell-height group/sidebar fixed inset-y-0 right-0 z-[110] flex flex-col border-l border-app-nav-border bg-app-nav-bg shadow-xl lg:static lg:z-50 lg:shadow-none ${
+        className={`app-shell-height group/sidebar fixed inset-y-0 right-0 z-[110] flex flex-col border-l border-app-nav-border bg-app-nav-bg shadow-xl will-change-transform lg:static lg:z-50 lg:shadow-none ${
           isCollapsed ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'
         }`}
+        onTouchStart={handleMobileMenuTouchStart}
+        onTouchMove={handleMobileMenuTouchMove}
+        onTouchEnd={finishMobileMenuSwipe}
+        onTouchCancel={finishMobileMenuSwipe}
         style={{
-          width: isDesktop ? (isCollapsed ? SIDEBAR_COLLAPSED_WIDTH : sidebarWidth) : '260px',
+          width: isDesktop ? (isCollapsed ? SIDEBAR_COLLAPSED_WIDTH : sidebarWidth) : `${MOBILE_SIDEBAR_WIDTH}px`,
+          transform: mobileMenuTranslateX === undefined ? undefined : `translateX(${mobileMenuTranslateX}px)`,
+          touchAction: isDesktop ? undefined : 'pan-y',
           transition: isDesktop
             ? isResizingSidebar
               ? 'none'
               : 'width 300ms cubic-bezier(0.4, 0, 0.2, 1)'
-            : 'transform 300ms cubic-bezier(0.4, 0, 0.2, 1)',
+            : isMobileMenuDragging
+            ? 'none'
+            : isCollapsed
+            ? 'transform 420ms cubic-bezier(0.16, 1, 0.3, 1)'
+            : 'transform 340ms cubic-bezier(0.32, 0.72, 0, 1)',
         }}
       >
         {isDesktop && (
