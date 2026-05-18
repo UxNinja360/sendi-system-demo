@@ -346,21 +346,6 @@ export const SIDEBAR_NAV_SECTIONS: AppNavSection[] = [
     label: '\u05e0\u05ea\u05d5\u05e0\u05d9\u05dd',
     items: visibleSidebarItems.filter((item) => item.section === 'data'),
   },
-  {
-    id: 'operationsTools',
-    label: '\u05ea\u05e4\u05e2\u05d5\u05dc',
-    items: visibleSidebarItems.filter((item) => item.section === 'operationsTools'),
-  },
-  {
-    id: 'experiments',
-    label: '\u05e2\u05de\u05d5\u05d3\u05d9 \u05e0\u05d9\u05e1\u05d9\u05d5\u05df',
-    items: visibleSidebarItems.filter((item) => item.section === 'experiments'),
-  },
-  {
-    id: 'legacy',
-    label: '\u05e2\u05de\u05d5\u05d3\u05d9\u05dd \u05d9\u05e9\u05e0\u05d9\u05dd',
-    items: visibleSidebarItems.filter((item) => item.section === 'legacy'),
-  },
 ];
 
 export const APP_MANAGED_SCROLL_PATHS = new Set(

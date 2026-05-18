@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import {
+  Activity,
   AlertTriangle,
   BellRing,
   Bike,
   Bot,
+  FileText,
   ChevronDown,
   ChevronLeft,
   Clock3,
+  LayoutDashboard,
   LogOut,
   Map as MapIcon,
   Moon,
@@ -19,12 +22,16 @@ import {
   Store,
   Sun,
   Sunset,
+  SlidersHorizontal,
+  TrendingUp,
   type LucideIcon,
+  Users,
   Volume2,
   Wallet,
   Zap,
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import { APP_NAV_ITEMS, type AppNavIconKey, type AppNavSectionId } from '../app-navigation';
 import { useTheme, type ThemeMode } from '../context/theme.context';
 import { useDelivery } from '../context/delivery-context-value';
 import { Toggle } from '../components/common/toggle';
@@ -138,6 +145,11 @@ const TEXT = {
   resetCancel: '\u05d1\u05d9\u05d8\u05d5\u05dc',
   resetConfirmAction: '\u05d0\u05e4\u05e1 \u05e2\u05db\u05e9\u05d9\u05d5',
   timeHintPrefix: '\u05e8\u05e5 \u05db\u05e8\u05d2\u05e2 \u05e2\u05dc x',
+  pages: '\u05ea\u05e4\u05e2\u05d5\u05dc \u05d5\u05e2\u05de\u05d5\u05d3\u05d9\u05dd',
+  pagesDescription: '\u05db\u05dc \u05de\u05d4 \u05e9\u05d4\u05d9\u05d4 \u05d1\u05ea\u05e4\u05e8\u05d9\u05d8 \u05d4\u05e6\u05d3 \u05ea\u05d7\u05ea \u05ea\u05e4\u05e2\u05d5\u05dc, \u05e2\u05de\u05d5\u05d3\u05d9 \u05e0\u05d9\u05e1\u05d9\u05d5\u05df \u05d5\u05e2\u05de\u05d5\u05d3\u05d9\u05dd \u05d9\u05e9\u05e0\u05d9\u05dd.',
+  operationsPages: '\u05ea\u05e4\u05e2\u05d5\u05dc',
+  experimentPages: '\u05e2\u05de\u05d5\u05d3\u05d9 \u05e0\u05d9\u05e1\u05d9\u05d5\u05df',
+  legacyPages: '\u05e2\u05de\u05d5\u05d3\u05d9\u05dd \u05d9\u05e9\u05e0\u05d9\u05dd',
 } as const;
 
 const SettingRow: React.FC<{
@@ -205,6 +217,33 @@ const themeModeOptions: Array<{ id: ThemeMode; label: string; icon: LucideIcon }
   { id: 'light', label: TEXT.themeLight, icon: Sun },
   { id: 'twilight', label: TEXT.themeTwilight, icon: Sunset },
   { id: 'dark', label: TEXT.themeDark, icon: Moon },
+];
+
+const settingsNavIconMap: Record<AppNavIconKey, LucideIcon> = {
+  activity: Activity,
+  alertTriangle: AlertTriangle,
+  barChart: TrendingUp,
+  bike: Bike,
+  calendar: Clock3,
+  clock: Clock3,
+  fileText: FileText,
+  layoutDashboard: LayoutDashboard,
+  map: MapIcon,
+  package: Package,
+  palette: Palette,
+  ruler: Ruler,
+  settings: Palette,
+  sliders: SlidersHorizontal,
+  store: Store,
+  trendingUp: TrendingUp,
+  users: Users,
+  wallet: Wallet,
+};
+
+const settingsNavGroups: Array<{ section: AppNavSectionId; title: string }> = [
+  { section: 'operationsTools', title: TEXT.operationsPages },
+  { section: 'experiments', title: TEXT.experimentPages },
+  { section: 'legacy', title: TEXT.legacyPages },
 ];
 
 const ThemeModePicker: React.FC<{
@@ -510,12 +549,6 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
                 </div>
               }
             />
-            <SettingRow
-              icon={<Clock3 className="h-4 w-4" />}
-              title={TEXT.operatingHours}
-              hint={TEXT.operatingHoursHint}
-              control={<OpenButton onClick={() => navigate('/hours')} />}
-            />
           </SectionCard>
 
           <SectionCard
@@ -550,22 +583,33 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
           </SectionCard>
 
           <SectionCard
-              icon={<MapIcon className="h-4 w-4 text-app-brand" />}
-              title={TEXT.pricing}
-              description={TEXT.pricingDescription}
+              icon={<SlidersHorizontal className="h-4 w-4 text-app-brand" />}
+              title={TEXT.pages}
+              description={TEXT.pagesDescription}
             >
-              <SettingRow
-                icon={<MapIcon className="h-4 w-4" />}
-                title={TEXT.zones}
-                hint={TEXT.zonesHint}
-                control={<OpenButton onClick={() => navigate('/zones')} />}
-              />
-              <SettingRow
-                icon={<Ruler className="h-4 w-4" />}
-                title={TEXT.distancePricing}
-                hint={TEXT.distancePricingHint}
-                control={<OpenButton onClick={() => navigate('/distance-pricing')} />}
-              />
+              {settingsNavGroups.map((group) => {
+                const groupItems = APP_NAV_ITEMS.filter((item) => item.section === group.section);
+
+                return (
+                  <React.Fragment key={group.section}>
+                    <div className="border-b border-[#f1f1f1] bg-[#fafafa] px-4 py-2 text-xs font-bold text-[#666d80] dark:border-app-border dark:bg-app-surface dark:text-app-text-secondary">
+                      {group.title}
+                    </div>
+                    {groupItems.map((item) => {
+                      const Icon = settingsNavIconMap[item.icon];
+
+                      return (
+                        <SettingRow
+                          key={item.id}
+                          icon={<Icon className="h-4 w-4" />}
+                          title={item.label}
+                          control={<OpenButton onClick={() => navigate(item.path)} />}
+                        />
+                      );
+                    })}
+                  </React.Fragment>
+                );
+              })}
           </SectionCard>
 
           <SectionCard
