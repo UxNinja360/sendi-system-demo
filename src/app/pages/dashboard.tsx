@@ -557,47 +557,6 @@ const SendiPlusCard: React.FC<{
             </div>
           </div>
 
-          <div className="px-3 sm:px-4">
-            <div className="border-t border-app-border py-2.5 sm:py-3 dark:border-[#252525]">
-              <div className="grid grid-cols-2 gap-4 text-right" dir="rtl">
-                <div className="min-w-0">
-                  <div className="truncate text-[11px] text-app-text-secondary">מסעדות בתחום</div>
-                  <div className="mt-1 truncate text-sm font-semibold text-app-text">
-                    <RefreshingMetricValue
-                      refreshing={isRefreshing}
-                      value={activeRestaurantCount.toLocaleString('he-IL')}
-                    />
-                  </div>
-                </div>
-                <div className="min-w-0 border-r border-app-border pr-4 dark:border-[#252525]">
-                  <div className="flex min-w-0 items-center justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="truncate text-[11px] text-app-text-secondary">אזורי חלוקה</div>
-                      <div className="mt-1 truncate text-sm font-semibold text-app-text">
-                        <RefreshingMetricValue
-                          refreshing={isRefreshing}
-                          value={deliveryZoneCount.toLocaleString('he-IL')}
-                        />
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      data-haptic="selection"
-                      onClick={onManageZones}
-                      disabled={!termsAccepted}
-                      tabIndex={termsAccepted ? 0 : -1}
-                      className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0a84ff]/30 dark:hover:bg-[#1f1f1f] ${
-                        termsAccepted ? 'text-app-text-secondary' : 'text-app-text-muted opacity-70'
-                      }`}
-                      aria-label="ניהול אזורי חלוקה"
-                    >
-                      <Settings className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -1047,8 +1006,8 @@ export const Dashboard: React.FC = () => {
             </div>
           </section>
           <section>
-            <div className="overflow-hidden rounded-[8px] border border-app-border bg-app-surface text-right dark:border-[#252525] dark:bg-[#0A0A0A]">
-              <div className="grid grid-cols-2 divide-x divide-app-border dark:divide-[#252525]" dir="rtl">
+            <div className="dashboard-delivery-summary overflow-hidden rounded-[8px] border border-app-border bg-app-surface text-right dark:border-[#252525] dark:bg-[#0A0A0A]">
+              <div className="dashboard-delivery-summary__row grid grid-cols-2" dir="rtl">
                 <button
                   type="button"
                   onClick={() => navigate('/deliveries')}
@@ -1086,7 +1045,7 @@ export const Dashboard: React.FC = () => {
                   </div>
                 </button>
               </div>
-              <div className="grid grid-cols-3 divide-x divide-app-border border-t border-app-border dark:divide-[#252525] dark:border-[#252525]" dir="rtl">
+              <div className="dashboard-delivery-summary__row dashboard-delivery-summary__status-row grid grid-cols-3" dir="rtl">
               {STATUS_META.filter(
                 (status) =>
                   DASHBOARD_DELIVERY_STATUSES.includes(status.id) &&

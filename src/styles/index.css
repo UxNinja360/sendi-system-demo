@@ -65,6 +65,42 @@ body {
   border-color: var(--app-border);
 }
 
+.dashboard-delivery-summary,
+.dashboard-delivery-summary__status-row,
+.dashboard-delivery-summary__row > * + * {
+  border-color: var(--app-border);
+}
+
+.dashboard-delivery-summary__status-row {
+  border-top-color: var(--app-border);
+  border-top-style: solid;
+  border-top-width: 1px;
+}
+
+.dashboard-delivery-summary__row > * + * {
+  border-inline-start-color: var(--app-border);
+  border-inline-start-style: solid;
+  border-inline-start-width: 1px;
+  border-right-color: var(--app-border);
+  border-right-style: solid;
+  border-right-width: 1px;
+}
+
+.twilight .dashboard-delivery-summary,
+.twilight .dashboard-delivery-summary__status-row,
+.twilight .dashboard-delivery-summary__row > * + * {
+  border-color: var(--app-border-strong);
+}
+
+.twilight .dashboard-delivery-summary__status-row {
+  border-top-color: var(--app-border-strong);
+}
+
+.twilight .dashboard-delivery-summary__row > * + * {
+  border-inline-start-color: var(--app-border-strong);
+  border-right-color: var(--app-border-strong);
+}
+
 @media (hover: none), (pointer: coarse) {
   [data-toolbar-icon-button] {
     -webkit-tap-highlight-color: transparent;
