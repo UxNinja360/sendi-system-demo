@@ -14,6 +14,7 @@ import {
   Power,
   Plus,
   Settings,
+  Store,
   Timer,
   Truck,
   UserCheck,
@@ -899,6 +900,13 @@ export const Dashboard: React.FC = () => {
     () => state.couriers.filter((courier) => courier.status !== 'offline').length,
     [dashboardRefreshVersion, state.couriers],
   );
+  const activeRestaurantsCount = React.useMemo(
+    () =>
+      state.restaurants.filter((restaurant) =>
+        isRestaurantActiveForDisplay(restaurant, sendiPlusTermsAccepted),
+      ).length,
+    [dashboardRefreshVersion, sendiPlusTermsAccepted, state.restaurants],
+  );
   const freeCouriersCount = React.useMemo(() => {
     const busyCourierIds = new Set(
       state.deliveries
@@ -1039,58 +1047,64 @@ export const Dashboard: React.FC = () => {
             </div>
           </section>
           <section>
-            <div className="mb-2 grid grid-cols-2 gap-2 min-[520px]:grid-cols-6">
-              <button
-                type="button"
-                onClick={() => navigate('/deliveries')}
-                className="dashboard-status-card col-span-2 min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:border-app-border hover:bg-app-surface-raised sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] min-[520px]:col-span-6"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
-                    משלוחים פעילים
-                  </span>
-                  <PackageOpen className="h-3.5 w-3.5 shrink-0 text-app-brand sm:h-4 sm:w-4" />
-                </div>
-                <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
-                  <RefreshingMetricValue
-                    refreshing={isDashboardRefreshing}
-                    value={formatNumber(activeDeliveriesCount)}
-                  />
-                </div>
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-2 min-[520px]:grid-cols-6">
-              {STATUS_META.filter((status) => DASHBOARD_DELIVERY_STATUSES.includes(status.id)).map((status) => {
-                const isCourierAvailabilityCard = status.id === 'delivered';
-                const isAverageDeliveryTimeCard = status.id === 'cancelled';
-                const Icon = isCourierAvailabilityCard ? UserCheck : isAverageDeliveryTimeCard ? Timer : status.icon;
+            <div className="overflow-hidden rounded-[8px] border border-app-border bg-app-surface text-right dark:border-[#252525] dark:bg-[#0A0A0A]">
+              <div className="grid grid-cols-2 divide-x divide-app-border dark:divide-[#252525]" dir="rtl">
+                <button
+                  type="button"
+                  onClick={() => navigate('/deliveries')}
+                  className="min-w-0 p-2.5 text-right transition-colors hover:bg-app-surface-raised sm:p-3 dark:hover:bg-[#111111]"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
+                      משלוחים פעילים
+                    </span>
+                    <PackageOpen className="h-3.5 w-3.5 shrink-0 text-app-brand sm:h-4 sm:w-4" />
+                  </div>
+                  <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
+                    <RefreshingMetricValue
+                      refreshing={isDashboardRefreshing}
+                      value={formatNumber(activeDeliveriesCount)}
+                    />
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/deliveries')}
+                  className="min-w-0 p-2.5 text-right transition-colors hover:bg-app-surface-raised sm:p-3 dark:hover:bg-[#111111]"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
+                      זמן ממוצע למשלוח
+                    </span>
+                    <Timer className="h-3.5 w-3.5 shrink-0 text-cyan-400 sm:h-4 sm:w-4" />
+                  </div>
+                  <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
+                    <RefreshingMetricValue
+                      refreshing={isDashboardRefreshing}
+                      value={formatAverageDeliveryTime(averageDeliveryMinutes)}
+                    />
+                  </div>
+                </button>
+              </div>
+              <div className="grid grid-cols-3 divide-x divide-app-border border-t border-app-border dark:divide-[#252525] dark:border-[#252525]" dir="rtl">
+              {STATUS_META.filter(
+                (status) =>
+                  DASHBOARD_DELIVERY_STATUSES.includes(status.id) &&
+                  status.id !== 'delivered' &&
+                  status.id !== 'cancelled',
+              ).map((status) => {
+                const Icon = status.icon;
                 const count = statusCounts.get(status.id) ?? 0;
-                const statusSpanClassName =
-                  status.id === 'cancelled'
-                    ? 'col-span-2 min-[520px]:col-span-3'
-                    : status.id === 'delivered'
-                    ? 'col-span-1 min-[520px]:col-span-3'
-                    : 'col-span-1 min-[520px]:col-span-2';
-                const label = isCourierAvailabilityCard
-                  ? 'שליחים פנויים'
-                  : isAverageDeliveryTimeCard
-                  ? 'זמן ממוצע למשלוח'
-                  : status.label;
-                const value = isAverageDeliveryTimeCard
-                  ? formatAverageDeliveryTime(averageDeliveryMinutes)
-                  : formatNumber(count);
-                const iconClassName = isCourierAvailabilityCard
-                  ? 'text-[#0a84ff]'
-                  : isAverageDeliveryTimeCard
-                  ? 'text-cyan-400'
-                  : status.accentClassName;
+                const label = status.label;
+                const value = formatNumber(count);
+                const iconClassName = status.accentClassName;
 
                 return (
                   <button
                     key={status.id}
                     type="button"
-                    onClick={() => navigate(isCourierAvailabilityCard ? '/couriers' : '/deliveries')}
-                    className={`dashboard-status-card min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:border-app-border hover:bg-app-surface-raised sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] ${statusSpanClassName}`}
+                    onClick={() => navigate('/deliveries')}
+                    className="min-w-0 p-2.5 text-right transition-colors hover:bg-app-surface-raised sm:p-3 dark:hover:bg-[#111111]"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
@@ -1099,22 +1113,54 @@ export const Dashboard: React.FC = () => {
                       <Icon className={`h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4 ${iconClassName}`} />
                     </div>
                     <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
-                      {isCourierAvailabilityCard ? (
-                        <CourierAvailabilityValue
-                          connected={connectedCouriersCount}
-                          free={freeCouriersCount}
-                          refreshing={isDashboardRefreshing}
-                        />
-                      ) : (
-                        <RefreshingMetricValue
-                          refreshing={isDashboardRefreshing}
-                          value={value}
-                        />
-                      )}
+                      <RefreshingMetricValue
+                        refreshing={isDashboardRefreshing}
+                        value={value}
+                      />
                     </div>
                   </button>
                 );
               })}
+              </div>
+            </div>
+            <div className="mt-2 grid grid-cols-2 gap-2 min-[520px]:grid-cols-6">
+              <button
+                type="button"
+                onClick={() => navigate('/couriers')}
+                className="dashboard-status-card col-span-1 min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:border-app-border hover:bg-app-surface-raised sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] min-[520px]:col-span-3"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
+                    שליחים פנויים
+                  </span>
+                  <UserCheck className="h-3.5 w-3.5 shrink-0 text-[#0a84ff] sm:h-4 sm:w-4" />
+                </div>
+                <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
+                  <CourierAvailabilityValue
+                    connected={connectedCouriersCount}
+                    free={freeCouriersCount}
+                    refreshing={isDashboardRefreshing}
+                  />
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/restaurants')}
+                className="dashboard-status-card col-span-1 min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:border-app-border hover:bg-app-surface-raised sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] min-[520px]:col-span-3"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
+                    מסעדות פעילות
+                  </span>
+                  <Store className="h-3.5 w-3.5 shrink-0 text-purple-400 sm:h-4 sm:w-4" />
+                </div>
+                <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
+                  <RefreshingMetricValue
+                    refreshing={isDashboardRefreshing}
+                    value={formatNumber(activeRestaurantsCount)}
+                  />
+                </div>
+              </button>
             </div>
           </section>
 
