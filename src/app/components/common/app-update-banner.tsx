@@ -1,5 +1,5 @@
 import React from 'react';
-import { RefreshCw, X } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import {
   activateWaitingAppUpdate,
   APP_UPDATE_ACTIVATING_EVENT,
@@ -10,6 +10,7 @@ import {
 export const AppUpdateBanner: React.FC = () => {
   const [visible, setVisible] = React.useState(false);
   const [updating, setUpdating] = React.useState(false);
+  const updateButtonRef = React.useRef<HTMLButtonElement | null>(null);
 
   React.useEffect(() => {
     const showBanner = () => {
@@ -34,6 +35,11 @@ export const AppUpdateBanner: React.FC = () => {
     };
   }, []);
 
+  React.useEffect(() => {
+    if (!visible) return;
+    updateButtonRef.current?.focus();
+  }, [visible]);
+
   const handleUpdate = () => {
     setUpdating(true);
 
@@ -52,44 +58,40 @@ export const AppUpdateBanner: React.FC = () => {
 
   return (
     <div
-      className="fixed inset-x-3 bottom-[calc(var(--app-safe-bottom)+12px)] z-[9998] mx-auto max-w-xl md:inset-x-auto md:left-1/2 md:w-[520px] md:-translate-x-1/2"
+      className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/65 px-4 backdrop-blur-sm"
       dir="rtl"
-      role="status"
-      aria-live="polite"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="app-update-title"
+      aria-describedby="app-update-description"
     >
-      <div className="flex items-center gap-3 rounded-[8px] border border-app-border bg-app-surface px-3.5 py-3 text-app-text shadow-[0_18px_50px_rgba(0,0,0,0.35)] dark:border-[#2E2E2E] dark:bg-[#0A0A0A]">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[6px] bg-app-surface-raised text-app-brand-text">
-          <RefreshCw className={`h-4.5 w-4.5 ${updating ? 'animate-spin' : ''}`} aria-hidden="true" />
-        </div>
-
-        <div className="min-w-0 flex-1 text-right">
-          <div className="text-sm font-bold text-app-text">
-            {updating ? 'מעדכן גרסה...' : 'עדכון גרסה זמין'}
+      <div className="w-full max-w-[420px] rounded-[10px] border border-app-border bg-app-surface p-4 text-app-text shadow-[0_24px_80px_rgba(0,0,0,0.55)] dark:border-[#2E2E2E] dark:bg-[#0A0A0A]">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] bg-app-surface-raised text-app-brand-text">
+            <RefreshCw className={`h-5 w-5 ${updating ? 'animate-spin' : ''}`} aria-hidden="true" />
           </div>
-          <div className="mt-0.5 text-xs leading-5 text-app-text-secondary">
-            {updating ? 'מרענן לגרסה החדשה.' : 'אפשר לרענן עכשיו בלי להתקין מחדש את האפליקציה.'}
+
+          <div className="min-w-0 flex-1 text-right">
+            <div id="app-update-title" className="text-base font-bold text-app-text">
+              {updating ? 'מעדכן גרסה...' : 'עדכון גרסה נדרש'}
+            </div>
+            <div id="app-update-description" className="mt-1 text-sm leading-6 text-app-text-secondary">
+              {updating
+                ? 'מרענן לגרסה החדשה. האפליקציה תחזור מיד.'
+                : 'יש גרסה חדשה זמינה. כדי להמשיך להשתמש באפליקציה צריך לעדכן עכשיו.'}
+            </div>
           </div>
         </div>
 
         <button
+          ref={updateButtonRef}
           type="button"
           onClick={handleUpdate}
           disabled={updating}
-          className="inline-flex h-9 shrink-0 items-center justify-center rounded-[6px] bg-app-brand-solid px-3 text-xs font-bold text-app-background transition-colors hover:bg-app-brand-hover disabled:cursor-wait disabled:opacity-70"
+          className="mt-4 inline-flex h-10 w-full shrink-0 items-center justify-center rounded-[7px] bg-app-brand-solid px-4 text-sm font-bold text-app-background transition-colors hover:bg-app-brand-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/40 disabled:cursor-wait disabled:opacity-70"
           data-haptic="success"
         >
-          {updating ? 'מעדכן' : 'עדכן'}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setVisible(false)}
-          disabled={updating}
-          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[6px] text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text disabled:cursor-wait disabled:opacity-50"
-          aria-label="סגור"
-          data-haptic="light"
-        >
-          <X className="h-4 w-4" aria-hidden="true" />
+          {updating ? 'מעדכן' : 'עדכן עכשיו'}
         </button>
       </div>
     </div>
