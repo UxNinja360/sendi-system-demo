@@ -327,7 +327,7 @@ export const useDeliveriesMapSplit = ({
             <button
               type="button"
               className="deliveries-map-split-close"
-              data-haptic="off"
+              data-haptic="light"
               onClick={() => setMapOpen(false)}
               aria-label="סגור מפה"
               title="סגור מפה"

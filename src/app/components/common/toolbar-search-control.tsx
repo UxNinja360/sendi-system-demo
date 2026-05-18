@@ -81,7 +81,7 @@ export const ToolbarSearchControl: React.FC<ToolbarSearchControlProps> = ({
           {alwaysOpen ? null : (
             <button
               type="button"
-              data-haptic="off"
+              data-haptic="light"
               onClick={() => {
                 onSearchOpenChange(false);
                 onSearchQueryChange('');

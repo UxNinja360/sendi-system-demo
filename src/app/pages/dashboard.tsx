@@ -275,6 +275,7 @@ const SendiPlusCard: React.FC<{
         <div ref={menuRef} className="relative shrink-0">
           <button
             type="button"
+            data-haptic="medium"
             onClick={() => setIsMenuOpen((value) => !value)}
             className={`inline-flex h-7 w-7 items-center justify-center rounded-[6px] transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0a84ff]/30 dark:hover:bg-[#1f1f1f] ${
               isSendiPlusEnabled ? 'text-app-text-secondary' : 'text-app-text-muted opacity-70'
@@ -295,6 +296,7 @@ const SendiPlusCard: React.FC<{
               <button
                 type="button"
                 role="menuitem"
+                data-haptic="selection"
                 onClick={() => {
                   setIsMenuOpen(false);
                   onManageZones();
@@ -307,6 +309,7 @@ const SendiPlusCard: React.FC<{
               <button
                 type="button"
                 role="menuitem"
+                data-haptic="selection"
                 onClick={() => {
                   setIsMenuOpen(false);
                   onInspectRestaurantCoverage();
@@ -445,6 +448,7 @@ const SendiPlusCard: React.FC<{
                     </div>
                     <button
                       type="button"
+                      data-haptic="selection"
                       onClick={onManageZones}
                       disabled={!termsAccepted}
                       tabIndex={termsAccepted ? 0 : -1}

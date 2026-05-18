@@ -1162,6 +1162,7 @@ export function RestaurantDetailsScreen() {
               <h2 className="truncate text-sm font-semibold text-app-text">פרטי מסעדה</h2>
               <button
                 type="button"
+                data-haptic="medium"
                 className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[4px] text-app-text-secondary transition-colors hover:bg-app-nav-hover-bg hover:text-app-text"
                 aria-label="עוד פעולות"
               >

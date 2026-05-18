@@ -161,6 +161,7 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
                           <button
                             type="button"
                             role="menuitem"
+                            data-haptic="selection"
                             onClick={() => {
                               setPrimaryActionMenuOpen(false);
                               onPrimaryAction();
