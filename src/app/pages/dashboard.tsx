@@ -139,6 +139,14 @@ const toDateInputValue = (date: Date) => {
 
 const formatNumber = (value: number) => value.toLocaleString('he-IL');
 
+const getDashboardGreeting = (date = new Date()) => {
+  const hour = date.getHours();
+
+  if (hour >= 5 && hour < 12) return 'בוקר טוב';
+  if (hour >= 12 && hour < 18) return 'צהריים טובים';
+  return 'ערב טוב';
+};
+
 const formatAverageDeliveryTime = (minutes: number | null) =>
   minutes === null ? '—' : `${formatNumber(minutes)} דק׳`;
 
@@ -769,6 +777,7 @@ export const Dashboard: React.FC = () => {
     () => filteredDeliveries.filter((delivery) => ACTIVE_DELIVERY_STATUSES.includes(delivery.status)).length,
     [filteredDeliveries],
   );
+  const dashboardGreeting = getDashboardGreeting();
   const { mapSplitPortal } = useDeliveriesMapSplit({
     deliveries: filteredDeliveries,
     couriers: state.couriers,
@@ -820,7 +829,12 @@ export const Dashboard: React.FC = () => {
         <div
           className="mx-auto flex w-full max-w-[1280px] flex-col gap-2 transition-transform duration-200"
         >
-          <section className="flex w-full items-center justify-end gap-2">
+          <section className="flex w-full items-center justify-between gap-3">
+            <div className="min-w-0 text-right">
+              <h1 className="truncate text-lg font-bold leading-tight text-app-text sm:text-xl">
+                {dashboardGreeting}, אלכס
+              </h1>
+            </div>
             <div className="flex max-w-full min-w-0 items-center gap-2 overflow-x-auto no-scrollbar" dir="ltr">
               <div className="flex shrink-0 items-center gap-1">
                 <DashboardToolbarToggle
