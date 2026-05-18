@@ -5,6 +5,7 @@ import {
   Bot,
   CheckCircle2,
   Clock3,
+  Loader2,
   Map as MapIcon,
   MoreHorizontal,
   PackageOpen,
@@ -22,6 +23,7 @@ import { useDelivery } from '../context/delivery-context-value';
 import { useDeliveriesMapSplit } from '../deliveries/use-deliveries-map-split';
 import type { Delivery, DeliveryStatus } from '../types/delivery.types';
 import { canCourierAcceptDelivery } from '../utils/courier-assignment';
+import { playHaptic } from '../utils/haptics';
 import {
   DEFAULT_SENDI_PLUS_RADIUS_KM,
   LEGACY_SENDI_GO_RADIUS_STORAGE_KEY,
@@ -60,6 +62,8 @@ const ACTIVE_DELIVERY_STATUSES: DeliveryStatus[] = ['pending', 'assigned', 'deli
 const formatRadiusKm = formatSendiPlusRadiusKm;
 const SENDI_PLUS_TERMS_TEXT =
   'הפעלת המתג מחייבת עמידה בזמני משלוח של עד 60 דקות מסירה';
+const DASHBOARD_PULL_REFRESH_THRESHOLD = 74;
+const DASHBOARD_PULL_REFRESH_MAX = 112;
 
 const STATUS_META: Array<{
   id: DeliveryStatus;
@@ -490,6 +494,125 @@ export const Dashboard: React.FC = () => {
   const [sendiPlusRadiusKm, setSendiPlusRadiusKm] = React.useState(readStoredSendiPlusRadius);
   const [sendiPlusTermsAccepted, setSendiPlusTermsAccepted] = React.useState(readStoredSendiPlusTermsAccepted);
   const [deliveryZoneConfigVersion, setDeliveryZoneConfigVersion] = React.useState(0);
+  const [pullDistance, setPullDistance] = React.useState(0);
+  const [isPullRefreshReady, setIsPullRefreshReady] = React.useState(false);
+  const [isDashboardRefreshing, setIsDashboardRefreshing] = React.useState(false);
+  const mainScrollRef = React.useRef<HTMLElement | null>(null);
+  const pullStartYRef = React.useRef<number | null>(null);
+  const pullThresholdHapticPlayedRef = React.useRef(false);
+  const pullRefreshResetTimeoutRef = React.useRef<number | null>(null);
+  const dashboardRefreshTimeoutRef = React.useRef<number | null>(null);
+
+  const isMobilePullRefreshPointer = React.useCallback(() => {
+    if (typeof window === 'undefined') return false;
+
+    return window.matchMedia('(pointer: coarse), (hover: none), (max-width: 767px)').matches;
+  }, []);
+
+  const resetPullRefresh = React.useCallback((delay = 0) => {
+    if (typeof window === 'undefined') {
+      setPullDistance(0);
+      setIsPullRefreshReady(false);
+      return;
+    }
+
+    if (pullRefreshResetTimeoutRef.current !== null) {
+      window.clearTimeout(pullRefreshResetTimeoutRef.current);
+      pullRefreshResetTimeoutRef.current = null;
+    }
+
+    pullRefreshResetTimeoutRef.current = window.setTimeout(() => {
+      setPullDistance(0);
+      setIsPullRefreshReady(false);
+      pullStartYRef.current = null;
+      pullThresholdHapticPlayedRef.current = false;
+      pullRefreshResetTimeoutRef.current = null;
+    }, delay);
+  }, []);
+
+  const runDashboardRefresh = React.useCallback(() => {
+    if (isDashboardRefreshing) return;
+
+    setIsDashboardRefreshing(true);
+    playHaptic('success', { force: true });
+    setDeliveryZoneConfigVersion((version) => version + 1);
+    setSendiPlusRadiusKm(readStoredSendiPlusRadius());
+    setSendiPlusTermsAccepted(readStoredSendiPlusTermsAccepted());
+
+    if (dashboardRefreshTimeoutRef.current !== null) {
+      window.clearTimeout(dashboardRefreshTimeoutRef.current);
+    }
+
+    dashboardRefreshTimeoutRef.current = window.setTimeout(() => {
+      setIsDashboardRefreshing(false);
+      resetPullRefresh(140);
+      dashboardRefreshTimeoutRef.current = null;
+    }, 650);
+  }, [isDashboardRefreshing, resetPullRefresh]);
+
+  React.useEffect(() => () => {
+    if (pullRefreshResetTimeoutRef.current !== null) {
+      window.clearTimeout(pullRefreshResetTimeoutRef.current);
+    }
+    if (dashboardRefreshTimeoutRef.current !== null) {
+      window.clearTimeout(dashboardRefreshTimeoutRef.current);
+    }
+  }, []);
+
+  const handlePullRefreshTouchStart = React.useCallback((event: React.TouchEvent<HTMLElement>) => {
+    if (isDashboardRefreshing || !isMobilePullRefreshPointer()) return;
+    if ((event.currentTarget as HTMLElement).scrollTop > 0) return;
+
+    pullStartYRef.current = event.touches[0]?.clientY ?? null;
+    pullThresholdHapticPlayedRef.current = false;
+  }, [isDashboardRefreshing, isMobilePullRefreshPointer]);
+
+  const handlePullRefreshTouchMove = React.useCallback((event: React.TouchEvent<HTMLElement>) => {
+    const startY = pullStartYRef.current;
+    if (startY === null || isDashboardRefreshing) return;
+
+    const scrollTarget = event.currentTarget as HTMLElement;
+    if (scrollTarget.scrollTop > 0) {
+      resetPullRefresh();
+      return;
+    }
+
+    const currentY = event.touches[0]?.clientY ?? startY;
+    const rawDistance = currentY - startY;
+    if (rawDistance <= 0) {
+      setPullDistance(0);
+      setIsPullRefreshReady(false);
+      return;
+    }
+
+    event.preventDefault();
+
+    const easedDistance = Math.min(
+      DASHBOARD_PULL_REFRESH_MAX,
+      Math.round(rawDistance * 0.58),
+    );
+    const nextReady = easedDistance >= DASHBOARD_PULL_REFRESH_THRESHOLD;
+
+    setPullDistance(easedDistance);
+    setIsPullRefreshReady(nextReady);
+
+    if (nextReady && !pullThresholdHapticPlayedRef.current) {
+      pullThresholdHapticPlayedRef.current = true;
+      playHaptic('medium', { force: true });
+    }
+  }, [isDashboardRefreshing, resetPullRefresh]);
+
+  const handlePullRefreshTouchEnd = React.useCallback(() => {
+    if (isDashboardRefreshing) return;
+
+    if (isPullRefreshReady) {
+      setPullDistance(DASHBOARD_PULL_REFRESH_THRESHOLD);
+      runDashboardRefresh();
+      return;
+    }
+
+    resetPullRefresh();
+  }, [isDashboardRefreshing, isPullRefreshReady, resetPullRefresh, runDashboardRefresh]);
 
   React.useEffect(() => {
     if (!sendiPlusTermsAccepted) return;
@@ -651,15 +774,57 @@ export const Dashboard: React.FC = () => {
     restaurants: state.restaurants,
     routeStopOrders: state.courierRoutePlans,
   });
+  const pullRefreshProgress = Math.min(1, pullDistance / DASHBOARD_PULL_REFRESH_THRESHOLD);
+  const pullRefreshVisible = pullDistance > 0 || isDashboardRefreshing;
+  const pullRefreshLabel = isDashboardRefreshing
+    ? 'מרענן'
+    : isPullRefreshReady
+    ? 'שחרר לרענון'
+    : 'משוך לרענון';
 
   return (
     <>
       {mapSplitPortal}
       <div className="flex h-full min-h-0 flex-col overflow-hidden bg-app-background text-app-text" dir="rtl">
-      <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-2 pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:px-6 md:pt-2 md:pb-6">
-        <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-2">
-          <section className="flex w-full items-center justify-start gap-2">
-            <div className="flex max-w-full min-w-0 items-center gap-2 overflow-x-auto no-scrollbar">
+      <main
+        ref={mainScrollRef}
+        className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-2 pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:px-6 md:pt-2 md:pb-6"
+        onTouchStart={handlePullRefreshTouchStart}
+        onTouchMove={handlePullRefreshTouchMove}
+        onTouchEnd={handlePullRefreshTouchEnd}
+        onTouchCancel={handlePullRefreshTouchEnd}
+      >
+        <div
+          className="pointer-events-none sticky top-0 z-20 mx-auto flex h-0 w-full max-w-[1280px] justify-center overflow-visible md:hidden"
+          aria-hidden={!pullRefreshVisible}
+        >
+          <div
+            className={`mt-1 flex h-9 items-center gap-2 rounded-full border border-app-border bg-app-surface-raised px-3 text-[11px] font-semibold text-app-text shadow-lg shadow-black/10 transition-all duration-200 dark:border-[#2b2b2b] dark:bg-[#111111] ${
+              pullRefreshVisible ? 'opacity-100' : 'opacity-0'
+            }`}
+            style={{
+              transform: `translateY(${pullRefreshVisible ? Math.max(0, pullDistance - 38) : -28}px) scale(${0.86 + pullRefreshProgress * 0.14})`,
+            }}
+          >
+            <Loader2
+              className={`h-3.5 w-3.5 text-app-brand ${
+                isDashboardRefreshing ? 'animate-spin' : ''
+              }`}
+              style={{
+                transform: isDashboardRefreshing ? undefined : `rotate(${pullRefreshProgress * 220}deg)`,
+              }}
+            />
+            <span>{pullRefreshLabel}</span>
+          </div>
+        </div>
+        <div
+          className="mx-auto flex w-full max-w-[1280px] flex-col gap-2 transition-transform duration-200"
+          style={{
+            transform: pullDistance > 0 ? `translateY(${Math.min(24, pullDistance * 0.22)}px)` : undefined,
+          }}
+        >
+          <section className="flex w-full items-center justify-end gap-2">
+            <div className="flex max-w-full min-w-0 items-center gap-2 overflow-x-auto no-scrollbar" dir="ltr">
               <div className="flex shrink-0 items-center gap-1">
                 <DashboardToolbarToggle
                   active={state.isSystemOpen}
