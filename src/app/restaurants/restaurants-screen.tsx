@@ -686,8 +686,8 @@ export const RestaurantsScreen: React.FC = () => {
   };
 
   // ── Handlers ──
-  const handleToggleRestaurant = (restaurantId: string, event: React.MouseEvent) => {
-    event.stopPropagation();
+  const handleToggleRestaurant = (restaurantId: string, event?: React.MouseEvent) => {
+    event?.stopPropagation();
     dispatch({ type: 'TOGGLE_RESTAURANT', payload: restaurantId });
   };
 
@@ -1012,6 +1012,7 @@ export const RestaurantsScreen: React.FC = () => {
                 setContextMenuPos({ x: event.clientX, y: event.clientY });
                 setOpenActionsRestaurantId(restaurant.restaurantId);
               }}
+              onToggleActive={(restaurant) => handleToggleRestaurant(restaurant.restaurantId)}
               emptyState={
                 restaurants.length === 0 ? (
                   <VercelEmptyState

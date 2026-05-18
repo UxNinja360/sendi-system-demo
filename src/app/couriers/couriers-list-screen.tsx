@@ -954,6 +954,7 @@ export const CouriersListScreen: React.FC = () => {
                 event.preventDefault();
                 setContextMenu({ x: event.clientX, y: event.clientY, courier });
               }}
+              onTogglePower={(courier) => toggleCourierPower(courier)}
               emptyState={
                 state.couriers.length === 0 ? (
                   <VercelEmptyState

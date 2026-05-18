@@ -1028,7 +1028,7 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
 
 @media (min-width: 768px) {
   .restaurant-vercel-row {
-    grid-template-columns: minmax(240px, 340px) minmax(84px, 112px) minmax(0, 1fr) minmax(128px, 164px) 36px !important;
+    grid-template-columns: minmax(240px, 340px) minmax(84px, 112px) minmax(0, 1fr) minmax(72px, 92px) 36px !important;
     grid-template-rows: minmax(72px, auto) !important;
     min-height: 72px;
   }

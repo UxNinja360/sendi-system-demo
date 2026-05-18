@@ -2,6 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Package, Star } from 'lucide-react';
 
 import { EntityRowActionTrigger } from '../components/common/entity-row-action-trigger';
+import { Toggle } from '../components/common/toggle';
 import type { EntityViewMode } from '../components/common/view-mode-toggle';
 import type { Courier, Delivery } from '../types/delivery.types';
 import { formatOrderNumber } from '../utils/order-number';
@@ -19,12 +20,13 @@ type CouriersVercelListProps = {
     courier: Courier,
     event: React.MouseEvent<HTMLDivElement>,
   ) => void;
+  onTogglePower: (courier: Courier) => void;
   emptyState: React.ReactNode;
   selectionBar?: React.ReactNode;
 };
 
 const rowGridClass =
-  'courier-vercel-row grid grid-cols-[minmax(0,1fr)_44px] md:grid-cols-[minmax(180px,260px)_minmax(104px,136px)_minmax(112px,150px)_minmax(96px,140px)_minmax(84px,116px)_minmax(96px,132px)_minmax(0,1fr)_96px_36px] xl:grid-cols-[minmax(200px,280px)_minmax(112px,144px)_minmax(124px,164px)_minmax(112px,150px)_minmax(96px,124px)_minmax(104px,140px)_minmax(0,1fr)_96px_36px] 2xl:grid-cols-[minmax(220px,300px)_minmax(120px,152px)_minmax(132px,176px)_minmax(124px,164px)_minmax(104px,132px)_minmax(112px,148px)_minmax(0,1fr)_96px_36px]';
+  'courier-vercel-row grid grid-cols-[minmax(0,1fr)_44px] md:grid-cols-[minmax(180px,260px)_minmax(104px,136px)_minmax(112px,150px)_minmax(96px,140px)_minmax(84px,116px)_minmax(96px,132px)_minmax(0,1fr)_minmax(64px,84px)_36px] xl:grid-cols-[minmax(200px,280px)_minmax(112px,144px)_minmax(124px,164px)_minmax(112px,150px)_minmax(96px,124px)_minmax(104px,140px)_minmax(0,1fr)_minmax(68px,88px)_36px] 2xl:grid-cols-[minmax(220px,300px)_minmax(120px,152px)_minmax(132px,176px)_minmax(124px,164px)_minmax(104px,132px)_minmax(112px,148px)_minmax(0,1fr)_minmax(72px,92px)_36px]';
 
 const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(' ');
@@ -99,20 +101,8 @@ const CourierLiveStatus: React.FC<{
   );
 };
 
-const CourierConnectionBadge: React.FC<{
-  label: string;
-  dotClassName: string;
-  textClassName: string;
-  className?: string;
-}> = ({ label, dotClassName, textClassName, className }) => (
-  <span dir="ltr" className={joinClassNames('inline-flex shrink-0 items-center gap-1.5 text-sm font-normal', textClassName, className)}>
-    <span className={joinClassNames('h-2 w-2 rounded-full', dotClassName)} />
-    <span dir="rtl">{label}</span>
-  </span>
-);
-
 const CourierDeliveryCount: React.FC<{ count: number; className?: string }> = ({ count, className }) => (
-  <div className={joinClassNames('flex items-center gap-1.5 text-sm font-normal text-app-text-secondary', className)}>
+  <div className={joinClassNames('flex items-center gap-1.5 whitespace-nowrap text-sm font-normal text-app-text-secondary', className)}>
     <Package className="h-3.5 w-3.5 shrink-0" />
     <span className="tabular-nums">{count}</span>
   </div>
@@ -130,14 +120,17 @@ const CourierVercelRow: React.FC<{
   now: number;
   onOpenActionsMenu: CouriersVercelListProps['onOpenActionsMenu'];
   onOpenContextMenu: CouriersVercelListProps['onOpenContextMenu'];
+  onTogglePower: CouriersVercelListProps['onTogglePower'];
 }> = ({
   courier,
   now,
   onOpenActionsMenu,
   onOpenContextMenu,
+  onTogglePower,
 }) => {
   const connectionMeta = getConnectionMeta(courier);
   const shiftMeta = getShiftMeta(courier);
+  const isConnected = courier.status !== 'offline';
 
   return (
     <div
@@ -185,15 +178,16 @@ const CourierVercelRow: React.FC<{
 
       <div className="hidden min-h-0 min-w-0 md:block" aria-hidden="true" />
 
-      <div className="courier-row__footer col-start-1 row-start-6 flex min-h-0 items-center justify-between px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:justify-center md:px-3 md:py-2">
+      <div className="courier-row__footer col-start-1 row-start-6 flex min-h-0 items-center justify-between px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:justify-start md:py-2">
         <CourierRating rating={courier.rating} className="md:hidden" />
-        <CourierConnectionBadge
-          label={connectionMeta.label}
-          dotClassName={connectionMeta.dot}
-          textClassName={connectionMeta.text}
-          className="hidden w-full justify-start md:inline-flex"
-        />
-        <CourierDeliveryCount count={courier.totalDeliveries} className="courier-row__footer-total hidden" />
+        <span className="inline-flex md:hidden" onClick={(event) => event.stopPropagation()}>
+          <Toggle checked={isConnected} onChange={() => onTogglePower(courier)} ariaLabel={connectionMeta.label} />
+        </span>
+        <div className="hidden min-w-0 md:flex md:w-full md:justify-start">
+          <span className="inline-flex" onClick={(event) => event.stopPropagation()}>
+            <Toggle checked={isConnected} onChange={() => onTogglePower(courier)} ariaLabel={connectionMeta.label} />
+          </span>
+        </div>
       </div>
 
       <div className="courier-row__actions col-start-2 row-start-1 flex min-h-0 items-start justify-center px-1 py-3 md:col-auto md:row-auto md:min-h-[72px] md:items-center md:py-0" onClick={(event) => event.stopPropagation()}>
@@ -212,15 +206,18 @@ const CourierVercelCard: React.FC<{
   now: number;
   onOpenActionsMenu: CouriersVercelListProps['onOpenActionsMenu'];
   onOpenContextMenu: CouriersVercelListProps['onOpenContextMenu'];
+  onTogglePower: CouriersVercelListProps['onTogglePower'];
 }> = ({
   courier,
   currentDelivery,
   now,
   onOpenActionsMenu,
   onOpenContextMenu,
+  onTogglePower,
 }) => {
   const connectionMeta = getConnectionMeta(courier);
   const shiftMeta = getShiftMeta(courier);
+  const isConnected = courier.status !== 'offline';
   const deliveryLabel = currentDelivery ? formatOrderNumber(currentDelivery.orderNumber) : '-';
   const deliveryMeta = currentDelivery ? currentDelivery.rest_name || currentDelivery.restaurantName : 'ללא משלוח פעיל';
 
@@ -237,11 +234,9 @@ const CourierVercelCard: React.FC<{
           <div className="min-w-0">
             <div className="flex min-w-0 items-center gap-2">
               <div className="min-w-0 truncate text-sm font-semibold text-app-text">{courier.name}</div>
-              <CourierConnectionBadge
-                label={connectionMeta.label}
-                dotClassName={connectionMeta.dot}
-                textClassName={connectionMeta.text}
-              />
+              <span className="inline-flex" onClick={(event) => event.stopPropagation()}>
+                <Toggle checked={isConnected} onChange={() => onTogglePower(courier)} ariaLabel={connectionMeta.label} />
+              </span>
             </div>
             <div className="mt-1 truncate text-right text-xs text-app-text-secondary" dir="ltr">
               {courier.phone || '-'}
@@ -298,6 +293,7 @@ export const CouriersVercelList: React.FC<CouriersVercelListProps> = ({
   activeDeliveriesByCourier,
   onOpenActionsMenu,
   onOpenContextMenu,
+  onTogglePower,
   emptyState,
   selectionBar,
 }) => {
@@ -359,6 +355,7 @@ export const CouriersVercelList: React.FC<CouriersVercelListProps> = ({
                 now={now}
                 onOpenActionsMenu={onOpenActionsMenu}
                 onOpenContextMenu={onOpenContextMenu}
+                onTogglePower={onTogglePower}
               />
             ))}
           </div>
@@ -379,6 +376,7 @@ export const CouriersVercelList: React.FC<CouriersVercelListProps> = ({
               now={now}
               onOpenActionsMenu={onOpenActionsMenu}
               onOpenContextMenu={onOpenContextMenu}
+              onTogglePower={onTogglePower}
             />
           ))}
         </div>

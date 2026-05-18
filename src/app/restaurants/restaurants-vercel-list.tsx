@@ -2,6 +2,7 @@ import React, { useLayoutEffect, useRef } from 'react';
 import { Package, Plus, Store, UserRound } from 'lucide-react';
 
 import { EntityRowActionTrigger } from '../components/common/entity-row-action-trigger';
+import { Toggle } from '../components/common/toggle';
 import type { EntityViewMode } from '../components/common/view-mode-toggle';
 import { SENDI_PLUS_LABEL, isSendiPlusRestaurant } from '../utils/sendi-plus';
 import { RestaurantLogoMark } from './restaurant-logo-mark';
@@ -12,6 +13,7 @@ export type RestaurantVercelListItem = {
   logoUrl?: string;
   status: string;
   isActive: boolean;
+  baseIsActive?: boolean;
   totalDeliveries: number;
   contactPerson: string;
   ownerPhone: string;
@@ -33,19 +35,19 @@ type RestaurantsVercelListProps = {
     restaurant: RestaurantVercelListItem,
     event: React.MouseEvent<HTMLDivElement>,
   ) => void;
+  onToggleActive: (restaurant: RestaurantVercelListItem) => void;
   emptyState: React.ReactNode;
   selectionBar?: React.ReactNode;
 };
 
 const rowGridClass =
-  'restaurant-vercel-row grid grid-cols-[minmax(0,1fr)_44px] md:grid-cols-[minmax(280px,420px)_minmax(74px,96px)_minmax(0,1fr)_minmax(128px,156px)_36px] xl:grid-cols-[minmax(300px,460px)_minmax(80px,104px)_minmax(0,1fr)_minmax(132px,164px)_36px] 2xl:grid-cols-[minmax(320px,500px)_minmax(84px,112px)_minmax(0,1fr)_minmax(140px,176px)_36px]';
+  'restaurant-vercel-row grid grid-cols-[minmax(0,1fr)_44px] md:grid-cols-[minmax(280px,420px)_minmax(74px,96px)_minmax(0,1fr)_minmax(64px,84px)_36px] xl:grid-cols-[minmax(300px,460px)_minmax(80px,104px)_minmax(0,1fr)_minmax(68px,88px)_36px] 2xl:grid-cols-[minmax(320px,500px)_minmax(84px,112px)_minmax(0,1fr)_minmax(72px,92px)_36px]';
 
 const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(' ');
 
-const getRestaurantStatusMeta = (restaurant: RestaurantVercelListItem) => ({
-  label: restaurant.status,
-  text: restaurant.isActive ? 'text-app-success-text' : 'text-app-text-secondary',
+const getRestaurantStatusMeta = (isActive: boolean) => ({
+  label: isActive ? 'מסעדה פעילה' : 'מסעדה לא פעילה',
 });
 
 const SendiPlusTag: React.FC = () => (
@@ -77,14 +79,16 @@ const RestaurantVercelRow: React.FC<{
   restaurant: RestaurantVercelListItem;
   onOpenActionsMenu: RestaurantsVercelListProps['onOpenActionsMenu'];
   onOpenContextMenu: RestaurantsVercelListProps['onOpenContextMenu'];
+  onToggleActive: RestaurantsVercelListProps['onToggleActive'];
 }> = ({
   restaurant,
   onOpenActionsMenu,
   onOpenContextMenu,
+  onToggleActive,
 }) => {
   const address = [restaurant.street, restaurant.city].filter(Boolean).join(', ') || '-';
-  const footerStatusText = restaurant.isActive ? 'מסעדה פעילה' : 'מסעדה לא פעילה';
-  const footerStatusDotClassName = restaurant.isActive ? 'bg-app-success-text' : 'bg-app-text-secondary';
+  const isEnabled = restaurant.baseIsActive ?? restaurant.isActive;
+  const statusMeta = getRestaurantStatusMeta(isEnabled);
   const isSendiGo = isSendiPlusRestaurant(restaurant.name, restaurant.chainId);
 
   return (
@@ -106,10 +110,9 @@ const RestaurantVercelRow: React.FC<{
         </div>
       </div>
 
-      <div className="restaurant-row__status col-start-1 row-start-2 hidden min-h-0 min-w-0 items-center px-2 py-1 text-sm font-normal text-app-text-secondary md:col-start-4 md:row-auto md:flex md:min-h-[72px] md:py-2">
-        <span className="inline-flex min-w-0 items-center gap-1.5">
-          <span className={joinClassNames('h-2 w-2 shrink-0 rounded-full', footerStatusDotClassName)} />
-          <span className="truncate">{footerStatusText}</span>
+      <div className="restaurant-row__status col-start-1 row-start-2 hidden min-h-0 min-w-0 items-center px-2 py-1 md:col-start-4 md:row-auto md:flex md:min-h-[72px] md:py-2">
+        <span className="inline-flex" onClick={(event) => event.stopPropagation()}>
+          <Toggle checked={isEnabled} onChange={() => onToggleActive(restaurant)} ariaLabel={statusMeta.label} />
         </span>
       </div>
 
@@ -127,14 +130,13 @@ const RestaurantVercelRow: React.FC<{
         />
       </div>
 
-      <div className="restaurant-row__footer hidden min-h-0 items-center justify-between gap-3 text-sm font-normal text-app-text-secondary md:hidden">
-        <span className="inline-flex shrink-0 items-center gap-1.5">
+      <div className="restaurant-row__footer col-start-1 row-start-2 flex min-h-0 items-center justify-between gap-3 px-2 py-1 md:hidden">
+        <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap text-sm font-normal text-app-text-secondary">
           <Package className="h-3.5 w-3.5" />
           <span className="tabular-nums">{restaurant.totalDeliveries}</span>
         </span>
-        <span className="inline-flex min-w-0 items-center gap-1.5">
-          <span className={joinClassNames('h-2 w-2 shrink-0 rounded-full', footerStatusDotClassName)} />
-          <span className="truncate">{footerStatusText}</span>
+        <span className="inline-flex md:hidden" onClick={(event) => event.stopPropagation()}>
+          <Toggle checked={isEnabled} onChange={() => onToggleActive(restaurant)} ariaLabel={statusMeta.label} />
         </span>
       </div>
     </div>
@@ -145,13 +147,16 @@ const RestaurantVercelCard: React.FC<{
   restaurant: RestaurantVercelListItem;
   onOpenActionsMenu: RestaurantsVercelListProps['onOpenActionsMenu'];
   onOpenContextMenu: RestaurantsVercelListProps['onOpenContextMenu'];
+  onToggleActive: RestaurantsVercelListProps['onToggleActive'];
 }> = ({
   restaurant,
   onOpenActionsMenu,
   onOpenContextMenu,
+  onToggleActive,
 }) => {
   const address = [restaurant.street, restaurant.city].filter(Boolean).join(', ') || '-';
-  const statusMeta = getRestaurantStatusMeta(restaurant);
+  const isEnabled = restaurant.baseIsActive ?? restaurant.isActive;
+  const statusMeta = getRestaurantStatusMeta(isEnabled);
   const isSendiGo = isSendiPlusRestaurant(restaurant.name, restaurant.chainId);
 
   return (
@@ -170,8 +175,8 @@ const RestaurantVercelCard: React.FC<{
                 <div className="truncate text-sm font-semibold text-app-text">{restaurant.name}</div>
                 {isSendiGo ? <SendiPlusTag /> : null}
               </div>
-              <span className={joinClassNames('shrink-0 text-sm font-semibold', statusMeta.text)}>
-                {statusMeta.label}
+              <span className="inline-flex" onClick={(event) => event.stopPropagation()}>
+                <Toggle checked={isEnabled} onChange={() => onToggleActive(restaurant)} ariaLabel={statusMeta.label} />
               </span>
             </div>
             <div className="mt-1 truncate text-xs text-app-text-secondary">{address}</div>
@@ -219,6 +224,7 @@ export const RestaurantsVercelList: React.FC<RestaurantsVercelListProps> = ({
   viewMode = 'list',
   onOpenActionsMenu,
   onOpenContextMenu,
+  onToggleActive,
   emptyState,
   selectionBar,
 }) => {
@@ -272,6 +278,7 @@ export const RestaurantsVercelList: React.FC<RestaurantsVercelListProps> = ({
                 restaurant={restaurant}
                 onOpenActionsMenu={onOpenActionsMenu}
                 onOpenContextMenu={onOpenContextMenu}
+                onToggleActive={onToggleActive}
               />
             ))}
           </div>
@@ -291,6 +298,7 @@ export const RestaurantsVercelList: React.FC<RestaurantsVercelListProps> = ({
               restaurant={restaurant}
               onOpenActionsMenu={onOpenActionsMenu}
               onOpenContextMenu={onOpenContextMenu}
+              onToggleActive={onToggleActive}
             />
           ))}
         </div>
