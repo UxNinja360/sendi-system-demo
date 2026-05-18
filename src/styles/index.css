@@ -35,6 +35,25 @@ body {
   background: var(--app-background);
 }
 
+.sendi-plus-label {
+  align-items: baseline;
+  display: inline-flex;
+  gap: 0.25em;
+  min-width: 0;
+}
+
+.sendi-plus-label__plus {
+  font-family: 'Gveret Levin', 'Arimo', system-ui, sans-serif;
+  font-size: 1.08em;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.dark .dashboard-status-card:hover {
+  background: var(--app-surface-raised);
+  border-color: var(--app-border);
+}
+
 .sendi-plus-mark {
   align-items: center;
   border-radius: 4px;
@@ -97,19 +116,26 @@ body {
 .sendi-plus-radius-slider {
   --sendi-plus-fill: 50%;
   --sendi-plus-active-color: #0a84ff;
-  --sendi-plus-thumb-color: #0a84ff;
-  --sendi-plus-track-muted: color-mix(in srgb, var(--app-text-secondary) 24%, transparent);
+  --sendi-plus-thumb-color: var(--app-surface);
+  --sendi-plus-track-muted: color-mix(in srgb, var(--app-text-secondary) 22%, transparent);
+  --sendi-plus-track-dot: color-mix(in srgb, var(--app-text-secondary) 32%, var(--app-surface));
+  -webkit-appearance: none;
   appearance: none;
   background: transparent;
 }
 
 .sendi-plus-radius-slider--off {
   --sendi-plus-active-color: var(--sendi-plus-track-muted);
-  --sendi-plus-thumb-color: color-mix(in srgb, var(--app-text-secondary) 58%, transparent);
+  --sendi-plus-thumb-color: var(--app-surface);
 }
 
 .sendi-plus-radius-slider::-webkit-slider-runnable-track {
   background:
+    radial-gradient(circle at 0% 50%, var(--sendi-plus-track-dot) 0 3px, transparent 3.5px),
+    radial-gradient(circle at 25% 50%, var(--sendi-plus-track-dot) 0 3px, transparent 3.5px),
+    radial-gradient(circle at 50% 50%, var(--sendi-plus-track-dot) 0 3px, transparent 3.5px),
+    radial-gradient(circle at 75% 50%, var(--sendi-plus-track-dot) 0 3px, transparent 3.5px),
+    radial-gradient(circle at 100% 50%, var(--sendi-plus-track-dot) 0 3px, transparent 3.5px),
     linear-gradient(
       to left,
       var(--sendi-plus-active-color) 0%,
@@ -118,24 +144,35 @@ body {
       var(--sendi-plus-track-muted) 100%
     ) !important;
   border-radius: 999px;
+  box-shadow: none !important;
   height: 5px !important;
 }
 
 .sendi-plus-radius-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
   background: var(--sendi-plus-thumb-color) !important;
-  box-shadow: none !important;
-  height: 20px !important;
-  margin-top: -7.5px !important;
-  width: 20px !important;
+  border: 2px solid var(--sendi-plus-active-color) !important;
+  border-radius: 999px !important;
+  box-shadow: 0 0 0 2px var(--app-surface) !important;
+  height: 24px !important;
+  margin-top: -9.5px !important;
+  width: 24px !important;
 }
 
 .sendi-plus-radius-slider::-webkit-slider-thumb:hover {
-  box-shadow: none !important;
+  box-shadow:
+    0 0 0 2px var(--app-surface),
+    0 0 0 4px color-mix(in srgb, var(--sendi-plus-active-color) 18%, transparent) !important;
   transform: none !important;
 }
 
 .sendi-plus-radius-slider::-moz-range-track {
   background:
+    radial-gradient(circle at 0% 50%, var(--sendi-plus-track-dot) 0 3px, transparent 3.5px),
+    radial-gradient(circle at 25% 50%, var(--sendi-plus-track-dot) 0 3px, transparent 3.5px),
+    radial-gradient(circle at 50% 50%, var(--sendi-plus-track-dot) 0 3px, transparent 3.5px),
+    radial-gradient(circle at 75% 50%, var(--sendi-plus-track-dot) 0 3px, transparent 3.5px),
+    radial-gradient(circle at 100% 50%, var(--sendi-plus-track-dot) 0 3px, transparent 3.5px),
     linear-gradient(
       to left,
       var(--sendi-plus-active-color) 0%,
@@ -144,19 +181,23 @@ body {
       var(--sendi-plus-track-muted) 100%
     ) !important;
   border-radius: 999px;
+  box-shadow: none !important;
   height: 5px !important;
 }
 
 .sendi-plus-radius-slider::-moz-range-thumb {
   background: var(--sendi-plus-thumb-color) !important;
-  border: 0 !important;
-  box-shadow: none !important;
-  height: 20px !important;
-  width: 20px !important;
+  border: 2px solid var(--sendi-plus-active-color) !important;
+  border-radius: 999px !important;
+  box-shadow: 0 0 0 2px var(--app-surface) !important;
+  height: 24px !important;
+  width: 24px !important;
 }
 
 .sendi-plus-radius-slider::-moz-range-thumb:hover {
-  box-shadow: none !important;
+  box-shadow:
+    0 0 0 2px var(--app-surface),
+    0 0 0 4px color-mix(in srgb, var(--sendi-plus-active-color) 18%, transparent) !important;
   transform: none !important;
 }
 

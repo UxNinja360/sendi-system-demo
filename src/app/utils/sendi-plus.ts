@@ -6,21 +6,32 @@ export const SENDI_PLUS_RADIUS_STORAGE_KEY = 'sendi-plus-radius-km';
 export const SENDI_PLUS_RADIUS_CHANGE_EVENT = 'sendi-plus-radius-change';
 export const LEGACY_SENDI_GO_RADIUS_STORAGE_KEY = 'sendi-go-radius-km';
 export const DEFAULT_SENDI_PLUS_RADIUS_KM = 0;
-export const MAX_SENDI_PLUS_RADIUS_KM = 10;
+export const SENDI_PLUS_RADIUS_STEP_KM = 0.5;
+export const MAX_SENDI_PLUS_RADIUS_KM = 20;
 
 type RadiusStorageReader = Pick<Storage, 'getItem'>;
 type RadiusStorageWriter = Pick<Storage, 'getItem' | 'setItem'>;
 
 export const isSendiPlusRestaurant = isSendiGoRestaurant;
 
-export const clampSendiPlusRadius = (value: number) =>
-  Math.min(MAX_SENDI_PLUS_RADIUS_KM, Math.max(0, Math.round(value * 2) / 2));
+export const clampSendiPlusRadius = (value: number) => {
+  if (!Number.isFinite(value)) return DEFAULT_SENDI_PLUS_RADIUS_KM;
 
-export const formatSendiPlusRadiusKm = (value: number) =>
-  value.toLocaleString('he-IL', {
-    minimumFractionDigits: Number.isInteger(value) ? 0 : 1,
+  return Math.min(
+    MAX_SENDI_PLUS_RADIUS_KM,
+    Math.max(0, Math.round(value / SENDI_PLUS_RADIUS_STEP_KM) * SENDI_PLUS_RADIUS_STEP_KM),
+  );
+};
+
+export const formatSendiPlusRadiusKm = (value: number) => {
+  const radius = clampSendiPlusRadius(value);
+  if (radius >= MAX_SENDI_PLUS_RADIUS_KM) return `${MAX_SENDI_PLUS_RADIUS_KM}+`;
+
+  return radius.toLocaleString('he-IL', {
+    minimumFractionDigits: Number.isInteger(radius) ? 0 : 1,
     maximumFractionDigits: 1,
   });
+};
 
 const getRadiusStorage = <TStorage extends RadiusStorageReader | RadiusStorageWriter>(
   storage?: TStorage | null,

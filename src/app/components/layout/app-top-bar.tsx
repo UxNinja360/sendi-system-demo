@@ -12,6 +12,7 @@ import {
 import { useLocation, useNavigate } from 'react-router';
 import { getNavItemForPath } from '../../app-navigation';
 import { useDelivery } from '../../context/delivery-context-value';
+import { useDeliveriesMapOpen } from '../../deliveries/use-deliveries-map-split';
 import { formatOrderNumber } from '../../utils/order-number';
 import { emitAppTopBarAction, type AppTopBarAction } from './app-top-bar-actions';
 
@@ -59,27 +60,24 @@ const getPageMenuAction = (pathname: string): PageMenuAction | null => {
   return null;
 };
 
-const getMapMenuAction = (): PageMenuAction => ({
+const getMapMenuAction = (mapOpen: boolean): PageMenuAction => ({
   action: 'toggle-deliveries-map',
-  label: '\u05e4\u05ea\u05d7 \u05de\u05e4\u05d4',
+  label: mapOpen ? 'סגור מפה' : 'פתח מפה',
   icon: <MapIcon className="h-4 w-4 text-app-text-secondary" />,
 });
 
-const getPageMenuActions = (pathname: string): PageMenuAction[] => {
+const getPageMenuActions = (pathname: string, mapOpen: boolean): PageMenuAction[] => {
   const primaryAction = getPageMenuAction(pathname);
+  const mapAction = getMapMenuAction(mapOpen);
 
   if (pathname === '/dashboard') {
-    return [getMapMenuAction()];
+    return [mapAction];
   }
 
   if (pathname === '/deliveries') {
     return [
+      mapAction,
       ...(primaryAction ? [primaryAction] : []),
-      {
-        action: 'toggle-deliveries-map',
-        label: 'פתח מפה',
-        icon: <MapIcon className="h-4 w-4 text-app-text-secondary" />,
-      },
       {
         action: 'export-deliveries',
         label: 'ייצוא',
@@ -90,8 +88,8 @@ const getPageMenuActions = (pathname: string): PageMenuAction[] => {
 
   if (pathname === '/couriers') {
     return [
+      mapAction,
       ...(primaryAction ? [primaryAction] : []),
-      getMapMenuAction(),
       {
         action: 'export-couriers',
         label: 'ייצוא',
@@ -102,8 +100,8 @@ const getPageMenuActions = (pathname: string): PageMenuAction[] => {
 
   if (pathname === '/restaurants') {
     return [
+      mapAction,
       ...(primaryAction ? [primaryAction] : []),
-      getMapMenuAction(),
       {
         action: 'export-restaurants',
         label: 'ייצוא',
@@ -124,9 +122,10 @@ export const AppTopBar: React.FC<AppTopBarProps> = ({ onOpenMobileMenu }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { state } = useDelivery();
+  const mapOpen = useDeliveriesMapOpen();
   const currentItem = getNavItemForPath(location.pathname);
   const pageTitle = currentItem?.label ?? 'Sendi';
-  const pageMenuActions = getPageMenuActions(location.pathname);
+  const pageMenuActions = getPageMenuActions(location.pathname, mapOpen);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -137,6 +136,14 @@ export const AppTopBar: React.FC<AppTopBarProps> = ({ onOpenMobileMenu }) => {
   const hasSecondaryTabs = Boolean(restaurantId);
 
   const topBarBreadcrumb: TopBarBreadcrumb | null = (() => {
+    if (location.pathname === '/zones') {
+      return {
+        parentLabel: 'דשבורד',
+        parentPath: '/dashboard',
+        currentLabel: pageTitle,
+      };
+    }
+
     if (deliveryId) {
       const delivery = state.deliveries.find((item) => item.id === deliveryId);
 

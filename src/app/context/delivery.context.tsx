@@ -45,6 +45,12 @@ import {
   isSendiPlusRestaurant,
   readStoredSendiPlusRadius,
 } from '../utils/sendi-plus';
+import {
+  findDeliveryZoneForPoint,
+  isRestaurantAllowedForDeliveryZone,
+  loadStoredDeliveryZones,
+  readSendiPlusZonePermissions,
+} from '../utils/delivery-zones';
 
 const STORAGE_KEY = DELIVERY_STORAGE_KEYS.state;
 const STATE_EPOCH_KEY = DELIVERY_STORAGE_KEYS.stateEpoch;
@@ -1090,6 +1096,8 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     { address: 'בלפור 18, בת ים', city: 'בת ים', street: 'בלפור', building: '18', lat: 32.0230, lng: 34.7535, area: 'בת ים' },
   ];
 
+  type SimulatedCustomerAddress = (typeof REAL_ADDRESSES)[number];
+
   const toRadians = (value: number) => (value * Math.PI) / 180;
 
   const getCoordinateDistanceKm = (
@@ -1112,7 +1120,8 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const pickCustomerAddressForRestaurant = (
     restaurant: Restaurant,
     pickup: { lat: number; lng: number },
-    maxDeliveryDistanceKm?: number | null
+    maxDeliveryDistanceKm?: number | null,
+    isCustomerAddressAllowed?: (address: SimulatedCustomerAddress) => boolean
   ) => {
     const maxRadiusKm = Math.min(
       5.5,
@@ -1142,13 +1151,13 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       })
       .sort((left, right) => left.distanceKm - right.distanceKm);
 
-    const eligibleAddresses = maxDirectDistanceKm === null
-      ? rankedAddresses
-      : rankedAddresses.filter(
-        (item) =>
-          item.distanceKm <= maxDirectDistanceKm &&
-          item.estimatedDeliveryDistanceKm <= maxDeliveryDistanceKm
-      );
+    const eligibleAddresses = rankedAddresses.filter(
+      (item) =>
+        (maxDirectDistanceKm === null ||
+          (item.distanceKm <= maxDirectDistanceKm &&
+            item.estimatedDeliveryDistanceKm <= (maxDeliveryDistanceKm ?? Number.POSITIVE_INFINITY))) &&
+        (isCustomerAddressAllowed?.(item.address) ?? true)
+    );
 
     if (eligibleAddresses.length === 0) {
       return null;
@@ -1183,16 +1192,50 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const restAddress = restaurant.address ?? `${restStreet}, ${restCity}`;
     const isSendiPlus = isSendiPlusRestaurant(restaurant.name, restaurant.chainId);
     const sendiPlusRadiusKm = isSendiPlus ? readStoredSendiPlusRadius() : null;
+    const sendiPlusZones = isSendiPlus ? loadStoredDeliveryZones() : [];
+    const sendiPlusZonePermissions = isSendiPlus ? readSendiPlusZonePermissions() : {};
+    const findCustomerDeliveryZone = (address: SimulatedCustomerAddress) =>
+      findDeliveryZoneForPoint({ lat: address.lat, lng: address.lng }, sendiPlusZones);
     const customerAddr = pickCustomerAddressForRestaurant(
       restaurant,
       { lat: pickupLat, lng: pickupLng },
-      sendiPlusRadiusKm
+      sendiPlusRadiusKm,
+      isSendiPlus && sendiPlusZones.length > 0
+        ? (address) => {
+            const deliveryZone = findCustomerDeliveryZone(address);
+            return Boolean(
+              deliveryZone &&
+                isRestaurantAllowedForDeliveryZone(
+                  restaurant.id,
+                  deliveryZone.id,
+                  sendiPlusZones,
+                  sendiPlusZonePermissions,
+                ),
+            );
+          }
+        : undefined
     );
     if (!customerAddr) {
       return null;
     }
 
-    const area = customerAddr.area;
+    const customerDeliveryZone =
+      isSendiPlus && sendiPlusZones.length > 0 ? findCustomerDeliveryZone(customerAddr) : null;
+    if (
+      isSendiPlus &&
+      sendiPlusZones.length > 0 &&
+      (!customerDeliveryZone ||
+        !isRestaurantAllowedForDeliveryZone(
+          restaurant.id,
+          customerDeliveryZone.id,
+          sendiPlusZones,
+          sendiPlusZonePermissions,
+        ))
+    ) {
+      return null;
+    }
+
+    const area = customerDeliveryZone?.name ?? customerAddr.area;
     const directDistanceKm = getCoordinateDistanceKm(
       { lat: pickupLat, lng: pickupLng },
       { lat: customerAddr.lat, lng: customerAddr.lng }
@@ -1288,9 +1331,11 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       runner_at_assigning_longitude: undefined,
       is_orbit_start: Math.random() > 0.7,
       area,
-      area_id: `area${Math.floor(1 + Math.random() * 5)}`,
-      delivery_area_id: `da${Math.floor(1 + Math.random() * 10)}`,
-      main_polygon_name: ['מרכז', 'צפון', 'דרום', 'מזרח', 'מערב'][Math.floor(Math.random() * 5)],
+      area_id: customerDeliveryZone?.id ?? `area${Math.floor(1 + Math.random() * 5)}`,
+      delivery_area_id: customerDeliveryZone?.id ?? `da${Math.floor(1 + Math.random() * 10)}`,
+      main_polygon_name:
+        customerDeliveryZone?.name ??
+        ['מרכז', 'צפון', 'דרום', 'מזרח', 'מערב'][Math.floor(Math.random() * 5)],
       
       // Timeline / events
 

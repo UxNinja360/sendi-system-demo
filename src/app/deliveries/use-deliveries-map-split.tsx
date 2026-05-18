@@ -82,6 +82,13 @@ const subscribeToMapOpen = (listener: () => void) => {
 
 const getMapOpenSnapshot = () => sharedMapOpen;
 
+export const useDeliveriesMapOpen = () =>
+  useSyncExternalStore(
+    subscribeToMapOpen,
+    getMapOpenSnapshot,
+    getMapOpenSnapshot,
+  );
+
 const setSharedMapOpen = (nextOpen: SetStateAction<boolean>) => {
   const resolvedOpen =
     typeof nextOpen === 'function'
@@ -124,11 +131,7 @@ export const useDeliveriesMapSplit = ({
   onFocusedDeliveryChange,
   onOpenDelivery,
 }: UseDeliveriesMapSplitArgs) => {
-  const mapOpen = useSyncExternalStore(
-    subscribeToMapOpen,
-    getMapOpenSnapshot,
-    getMapOpenSnapshot,
-  );
+  const mapOpen = useDeliveriesMapOpen();
   const setMapOpen = useCallback((nextOpen: SetStateAction<boolean>) => {
     setSharedMapOpen(nextOpen);
   }, []);

@@ -23,13 +23,19 @@ import { canCourierAcceptDelivery } from '../utils/courier-assignment';
 import {
   MAX_SENDI_PLUS_RADIUS_KM,
   SENDI_PLUS_LABEL,
+  SENDI_PLUS_RADIUS_STEP_KM,
   canReceiveSendiPlusDeliveries,
   clampSendiPlusRadius,
   formatSendiPlusRadiusKm,
-  isSendiPlusRestaurant,
   readStoredSendiPlusRadius,
   writeStoredSendiPlusRadius,
 } from '../utils/sendi-plus';
+import {
+  DELIVERY_ZONES_CHANGE_EVENT,
+  SENDI_PLUS_ZONE_PERMISSIONS_CHANGE_EVENT,
+  isDeliveryZoneActive,
+  loadStoredDeliveryZones,
+} from '../utils/delivery-zones';
 
 const DASHBOARD_DELIVERY_STATUSES: DeliveryStatus[] = [
   'pending',
@@ -98,11 +104,6 @@ const STATUS_META: Array<{
   },
 ];
 
-const normalizeText = (value: unknown) =>
-  String(value ?? '')
-    .trim()
-    .toLocaleLowerCase('he-IL');
-
 const toDate = (value: unknown) => {
   if (!value) return null;
   const date = value instanceof Date ? value : new Date(String(value));
@@ -160,12 +161,12 @@ const DashboardToolbarToggle: React.FC<{
 );
 
 const SendiPlusCard: React.FC<{
-  activeAreaCount: number;
+  deliveryZoneCount: number;
   radiusKm: number;
   onRadiusKmChange: (value: number) => void;
   onManageZones: () => void;
 }> = ({
-  activeAreaCount,
+  deliveryZoneCount,
   radiusKm,
   onRadiusKmChange,
   onManageZones,
@@ -175,6 +176,7 @@ const SendiPlusCard: React.FC<{
   const radiusBubbleHideTimeoutRef = React.useRef<number | null>(null);
   const radiusPercent = (radiusKm / MAX_SENDI_PLUS_RADIUS_KM) * 100;
   const radiusDisplay = `${formatRadiusKm(radiusKm)} ק״מ`;
+  const intakeStatusText = receivesDeliveries ? `עד ${radiusDisplay}` : 'כבויה';
   const sliderStyle = {
     '--sendi-plus-fill': `${radiusPercent}%`,
   } as React.CSSProperties & { '--sendi-plus-fill': string };
@@ -213,12 +215,12 @@ const SendiPlusCard: React.FC<{
   React.useEffect(() => clearRadiusBubbleHideTimeout, [clearRadiusBubbleHideTimeout]);
 
   return (
-    <section className="rounded-[8px] border border-app-border bg-app-surface p-2.5 sm:p-3 dark:border-app-nav-border dark:bg-[#080808]">
-      <div className="flex items-start gap-3" dir="ltr">
+    <section className="overflow-hidden rounded-[8px] border border-app-border bg-app-surface dark:border-app-nav-border dark:bg-[#080808]">
+      <div className="flex items-center gap-3 px-3 py-3 sm:px-4 sm:py-3.5" dir="ltr">
         <button
           type="button"
           onClick={onManageZones}
-          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[6px] px-2 text-xs font-semibold text-[#0a84ff] transition-colors hover:bg-app-surface-raised"
+          className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-[6px] px-1.5 text-xs font-semibold text-[#0a84ff] transition-colors hover:bg-app-surface-raised"
           dir="rtl"
         >
           <MapIcon className="h-3.5 w-3.5" />
@@ -230,7 +232,10 @@ const SendiPlusCard: React.FC<{
             className="ml-auto flex w-fit max-w-full items-center gap-1.5"
             aria-label={receivesDeliveries ? 'סנדי פלוס פעיל' : 'סנדי פלוס כבוי'}
           >
-            <span className="truncate text-sm font-bold text-app-text">{SENDI_PLUS_LABEL}</span>
+            <span className="sendi-plus-label truncate text-sm font-semibold text-app-text">
+              <span>סנדי</span>
+              <span className="sendi-plus-label__plus">פלוס</span>
+            </span>
             <span
               className={`sendi-plus-mark ${
                 receivesDeliveries ? 'sendi-plus-mark--active' : 'sendi-plus-mark--off'
@@ -249,7 +254,7 @@ const SendiPlusCard: React.FC<{
               </span>
             </span>
           </div>
-          <div className="mt-1 truncate text-xs text-app-text-secondary">
+          <div className="mt-1 truncate text-sm font-normal text-app-text-secondary">
             {receivesDeliveries
               ? `זמין למשלוחים עד ${radiusDisplay}`
               : `לא מקבל משלוחים מ${SENDI_PLUS_LABEL}`}
@@ -257,8 +262,8 @@ const SendiPlusCard: React.FC<{
         </div>
       </div>
 
-      <div className="mt-3 border-t border-app-border pt-3 dark:border-app-nav-border">
-        <div className="relative mt-5 px-1 pb-4">
+      <div className="border-t border-app-border px-3 py-4 sm:px-4 dark:border-app-nav-border">
+        <div className="relative px-1.5">
           {isRadiusBubbleVisible ? (
             <div
               data-sendi-plus-radius-bubble
@@ -272,7 +277,7 @@ const SendiPlusCard: React.FC<{
             type="range"
             min={0}
             max={MAX_SENDI_PLUS_RADIUS_KM}
-            step={0.5}
+            step={SENDI_PLUS_RADIUS_STEP_KM}
             value={radiusKm}
             onChange={handleRadiusInput}
             onInput={handleRadiusInput}
@@ -284,22 +289,36 @@ const SendiPlusCard: React.FC<{
             onKeyUp={() => hideRadiusBubble(900)}
             onBlur={() => hideRadiusBubble()}
             aria-label={`טווח משלוחים ${SENDI_PLUS_LABEL}`}
-            className={`sendi-plus-radius-slider h-8 w-full cursor-pointer ${
+            className={`sendi-plus-radius-slider h-9 w-full cursor-pointer ${
               receivesDeliveries ? 'sendi-plus-radius-slider--active' : 'sendi-plus-radius-slider--off'
             }`}
             dir="rtl"
             style={sliderStyle}
           />
-          <div className="mt-1 flex items-center justify-between text-[11px] text-app-text-secondary" dir="rtl">
+          <div className="mt-2 flex items-center justify-between text-[11px] text-app-text-secondary" dir="rtl">
             <span>0 ק״מ</span>
             <span>5 ק״מ</span>
             <span>10 ק״מ</span>
+            <span>15 ק״מ</span>
+            <span>20+ ק״מ</span>
           </div>
         </div>
+      </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-app-text-secondary">
-          <span>{receivesDeliveries ? `זמין למשלוחים עד ${radiusDisplay}` : 'על 0 לא נכנסים משלוחים חדשים'}</span>
-          <span>{`${activeAreaCount.toLocaleString('he-IL')} אזורים פעילים`}</span>
+      <div className="px-3 sm:px-4">
+        <div className="border-t border-app-border py-2.5 sm:py-3 dark:border-app-nav-border">
+          <div className="grid grid-cols-2 gap-4 text-right" dir="rtl">
+            <div className="min-w-0">
+              <div className="truncate text-[11px] text-app-text-secondary">קבלת משלוחים</div>
+              <div className="mt-1 truncate text-sm font-semibold text-app-text">{intakeStatusText}</div>
+            </div>
+            <div className="min-w-0 border-r border-app-border pr-4 dark:border-app-nav-border">
+              <div className="truncate text-[11px] text-app-text-secondary">אזורי חלוקה</div>
+              <div className="mt-1 truncate text-sm font-semibold text-app-text">
+                {deliveryZoneCount.toLocaleString('he-IL')}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -312,23 +331,39 @@ export const Dashboard: React.FC = () => {
   const todayDate = React.useMemo(() => new Date(), []);
   const [selectedDate, setSelectedDate] = React.useState(todayDate);
   const [sendiPlusRadiusKm, setSendiPlusRadiusKm] = React.useState(readStoredSendiPlusRadius);
+  const [deliveryZoneConfigVersion, setDeliveryZoneConfigVersion] = React.useState(0);
 
   React.useEffect(() => {
     writeStoredSendiPlusRadius(sendiPlusRadiusKm);
   }, [sendiPlusRadiusKm]);
 
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const refreshDeliveryZones = () => setDeliveryZoneConfigVersion((version) => version + 1);
+    const handleStorage = (event: StorageEvent) => {
+      if (
+        event.key === 'delivery_zones_v1' ||
+        event.key === 'sendi-plus-zone-permissions-v1'
+      ) {
+        refreshDeliveryZones();
+      }
+    };
+
+    window.addEventListener(DELIVERY_ZONES_CHANGE_EVENT, refreshDeliveryZones);
+    window.addEventListener(SENDI_PLUS_ZONE_PERMISSIONS_CHANGE_EVENT, refreshDeliveryZones);
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      window.removeEventListener(DELIVERY_ZONES_CHANGE_EVENT, refreshDeliveryZones);
+      window.removeEventListener(SENDI_PLUS_ZONE_PERMISSIONS_CHANGE_EVENT, refreshDeliveryZones);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, []);
+
   const handleSendiPlusRadiusChange = React.useCallback((value: number) => {
     setSendiPlusRadiusKm(clampSendiPlusRadius(value));
   }, []);
-
-  const restaurantById = React.useMemo(
-    () => new Map(state.restaurants.map((restaurant) => [restaurant.id, restaurant])),
-    [state.restaurants],
-  );
-  const restaurantByName = React.useMemo(
-    () => new Map(state.restaurants.map((restaurant) => [normalizeText(restaurant.name), restaurant])),
-    [state.restaurants],
-  );
 
   const selectedDateKey = toDateInputValue(selectedDate);
 
@@ -354,18 +389,6 @@ export const Dashboard: React.FC = () => {
   );
 
   const filteredDeliveries = dateDeliveries;
-  const isSendiPlusDelivery = React.useCallback(
-    (delivery: Delivery) => {
-      const restaurant =
-        (delivery.restaurantId ? restaurantById.get(delivery.restaurantId) : undefined) ??
-        restaurantByName.get(normalizeText(delivery.restaurantName ?? delivery.rest_name));
-      const restaurantName = restaurant?.name ?? delivery.restaurantName ?? delivery.rest_name;
-
-      return isSendiPlusRestaurant(restaurantName, restaurant?.chainId);
-    },
-    [restaurantById, restaurantByName],
-  );
-
   const statusCounts = React.useMemo(() => {
     const counts = new Map<DeliveryStatus, number>();
     STATUS_META.forEach((status) => counts.set(status.id, 0));
@@ -375,24 +398,14 @@ export const Dashboard: React.FC = () => {
     return counts;
   }, [filteredDeliveries]);
 
-  const sendiPlusDeliveries = React.useMemo(
-    () => filteredDeliveries.filter(isSendiPlusDelivery),
-    [filteredDeliveries, isSendiPlusDelivery],
+  const sendiPlusDeliveryZoneCount = React.useMemo(
+    () => loadStoredDeliveryZones().filter(isDeliveryZoneActive).length,
+    [deliveryZoneConfigVersion],
   );
-  const sendiPlusActiveAreaCount = React.useMemo(() => {
-    const areas = new Set(
-      sendiPlusDeliveries
-        .map((delivery) => delivery.area?.trim())
-        .filter((area): area is string => Boolean(area)),
-    );
-
-    return areas.size;
-  }, [sendiPlusDeliveries]);
   const connectedCouriersCount = React.useMemo(
     () => state.couriers.filter((courier) => courier.status !== 'offline').length,
     [state.couriers],
   );
-  const totalCouriersCount = state.couriers.length;
   const freeCouriersCount = React.useMemo(() => {
     const busyCourierIds = new Set(
       state.deliveries
@@ -496,11 +509,7 @@ export const Dashboard: React.FC = () => {
                   : isAverageDeliveryTimeCard
                   ? formatAverageDeliveryTime(averageDeliveryMinutes)
                   : formatNumber(count);
-                const hint = isCourierAvailabilityCard
-                  ? `סה״כ במערכת ${formatNumber(totalCouriersCount)}`
-                  : isAverageDeliveryTimeCard
-                  ? 'משלוחים שנמסרו'
-                  : status.hint;
+                const hint = status.hint;
                 const iconClassName = isCourierAvailabilityCard
                   ? 'text-[#0a84ff]'
                   : isAverageDeliveryTimeCard
@@ -512,7 +521,7 @@ export const Dashboard: React.FC = () => {
                     key={status.id}
                     type="button"
                     onClick={() => navigate(isCourierAvailabilityCard ? '/couriers' : '/deliveries')}
-                    className={`min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised sm:p-3 dark:border-app-nav-border dark:bg-[#080808] ${statusSpanClassName}`}
+                    className={`dashboard-status-card min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:border-app-border hover:bg-app-surface-raised sm:p-3 dark:border-app-nav-border dark:bg-[#080808] ${statusSpanClassName}`}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
@@ -523,11 +532,7 @@ export const Dashboard: React.FC = () => {
                     <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
                       {value}
                     </div>
-                    {isCourierAvailabilityCard || isAverageDeliveryTimeCard ? (
-                      <div className="mt-1.5 truncate text-[10px] text-app-text-secondary sm:text-[11px]">
-                        {hint}
-                      </div>
-                    ) : showStatusProgress ? (
+                    {showStatusProgress ? (
                       <>
                         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-app-surface-raised">
                           <div
@@ -547,7 +552,7 @@ export const Dashboard: React.FC = () => {
           </section>
 
           <SendiPlusCard
-            activeAreaCount={sendiPlusActiveAreaCount}
+            deliveryZoneCount={sendiPlusDeliveryZoneCount}
             radiusKm={sendiPlusRadiusKm}
             onRadiusKmChange={handleSendiPlusRadiusChange}
             onManageZones={() => navigate('/zones?source=sendi-plus')}
