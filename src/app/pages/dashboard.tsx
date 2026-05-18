@@ -543,7 +543,6 @@ export const Dashboard: React.FC = () => {
     if (isDashboardRefreshing) return;
 
     setIsDashboardRefreshing(true);
-    playHaptic('success', { force: true });
     setDeliveryZoneConfigVersion((version) => version + 1);
     setSendiPlusRadiusKm(readStoredSendiPlusRadius());
     setSendiPlusTermsAccepted(readStoredSendiPlusTermsAccepted());
@@ -607,7 +606,7 @@ export const Dashboard: React.FC = () => {
 
     if (nextReady && !pullThresholdHapticPlayedRef.current) {
       pullThresholdHapticPlayedRef.current = true;
-      playHaptic('success', { force: true });
+      playHaptic('medium', { force: true });
     }
   }, [isDashboardRefreshing, resetPullRefresh]);
 

@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import { getAlertPreferences } from '../notifications/alert-preferences';
 
 export type HapticPatternName =
@@ -36,6 +37,14 @@ let iosSwitchInput: HTMLInputElement | null = null;
 let iosDecorateFrame = 0;
 
 const isCapacitorNativePlatform = () => {
+  if (typeof Capacitor.isNativePlatform === 'function') {
+    return Capacitor.isNativePlatform();
+  }
+
+  if (typeof Capacitor.getPlatform === 'function' && Capacitor.getPlatform() !== 'web') {
+    return true;
+  }
+
   if (typeof window === 'undefined') return false;
 
   const capacitor = (window as CapacitorWindow).Capacitor;

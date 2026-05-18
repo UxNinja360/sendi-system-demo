@@ -95,7 +95,8 @@ const SIDEBAR_MIN_WIDTH = 250;
 const SIDEBAR_MAX_WIDTH = 400;
 const SIDEBAR_COLLAPSED_WIDTH = 60;
 const MOBILE_SIDEBAR_WIDTH = 260;
-const MOBILE_MENU_SWIPE_CLOSE_THRESHOLD = 92;
+const MOBILE_MENU_SWIPE_START_THRESHOLD = 10;
+const MOBILE_MENU_SWIPE_CLOSE_THRESHOLD = 76;
 const DESKTOP_SIDEBAR_BREAKPOINT = 1024;
 const SIDEBAR_LEGACY_OPEN_KEY = 'sidebar-legacy-open-v2';
 const SIDEBAR_EXPERIMENTS_OPEN_KEY = 'sidebar-experiments-open-v2';
@@ -204,6 +205,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
     startY: number;
     started: boolean;
   } | null>(null);
+  const mobileMenuSwipeClickGuardRef = useRef(false);
   const [isLegacySectionOpen, setIsLegacySectionOpen] = useState(() => {
     try {
       const saved = localStorage.getItem(SIDEBAR_LEGACY_OPEN_KEY);
@@ -394,6 +396,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       setMobileMenuDragX(0);
       setIsMobileMenuDragging(false);
       mobileMenuSwipeRef.current = null;
+      mobileMenuSwipeClickGuardRef.current = false;
     }
   }, [isCollapsed, isDesktop]);
 
@@ -470,6 +473,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
     setMobileMenuDragX(0);
     setIsMobileMenuDragging(false);
     mobileMenuSwipeRef.current = null;
+    mobileMenuSwipeClickGuardRef.current = false;
     setIsCollapsed((prev) => !prev);
   }, []);
 
@@ -546,7 +550,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
   }, []);
 
   const handleMobileMenuTouchStart = useCallback(
-    (event: React.TouchEvent<HTMLDivElement>) => {
+    (event: React.TouchEvent<HTMLElement>) => {
       if (isDesktop || !isCollapsed || event.touches.length !== 1) return;
 
       const touch = event.touches[0];
@@ -555,12 +559,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
         startY: touch.clientY,
         started: false,
       };
+      mobileMenuSwipeClickGuardRef.current = false;
     },
     [isCollapsed, isDesktop],
   );
 
   const handleMobileMenuTouchMove = useCallback(
-    (event: React.TouchEvent<HTMLDivElement>) => {
+    (event: React.TouchEvent<HTMLElement>) => {
       const swipe = mobileMenuSwipeRef.current;
       if (!swipe || isDesktop || !isCollapsed || event.touches.length !== 1) return;
 
@@ -571,11 +576,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       const absY = Math.abs(deltaY);
 
       if (!swipe.started) {
-        if (deltaX <= 8 || absX < absY * 1.2) return;
+        if (deltaX <= MOBILE_MENU_SWIPE_START_THRESHOLD || absX < absY * 1.2) return;
 
         swipe.started = true;
         setIsMobileMenuDragging(true);
-        playHaptic('selection', { force: true });
+        playHaptic('medium', { force: true });
       }
 
       event.preventDefault();
@@ -590,6 +595,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
     const shouldClose = swipe.started && mobileMenuDragX >= MOBILE_MENU_SWIPE_CLOSE_THRESHOLD;
     mobileMenuSwipeRef.current = null;
+    mobileMenuSwipeClickGuardRef.current = swipe.started;
     setIsMobileMenuDragging(false);
 
     if (shouldClose) {
@@ -611,6 +617,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       setMobileMenuDragX(0);
       setIsMobileMenuDragging(false);
       mobileMenuSwipeRef.current = null;
+      mobileMenuSwipeClickGuardRef.current = false;
       setIsCollapsed(false);
     }
   };
@@ -725,8 +732,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
           style={{
             opacity: mobileMenuOpenProgress * 0.95,
             backdropFilter: `blur(${mobileMenuOpenProgress * 4}px)`,
+            touchAction: 'pan-y',
           }}
-          onClick={closeMobileMenu}
+          onClick={() => {
+            if (mobileMenuSwipeClickGuardRef.current) {
+              mobileMenuSwipeClickGuardRef.current = false;
+              return;
+            }
+
+            closeMobileMenu();
+          }}
+          onTouchStart={handleMobileMenuTouchStart}
+          onTouchMove={handleMobileMenuTouchMove}
+          onTouchEnd={finishMobileMenuSwipe}
+          onTouchCancel={finishMobileMenuSwipe}
         />
       )}
 
