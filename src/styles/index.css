@@ -234,6 +234,44 @@ body {
   transform: translateY(0);
 }
 
+.dashboard-pull-refresh-label {
+  display: inline-flex;
+  max-width: 7rem;
+  overflow: hidden;
+  transform-origin: center;
+  white-space: nowrap;
+  will-change: max-width, opacity, transform;
+  transition:
+    max-width 190ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 160ms ease-out,
+    transform 190ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dashboard-pull-refresh-label--visible {
+  animation: dashboard-pull-refresh-label-in 210ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  max-width: 7rem;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.dashboard-pull-refresh-label--hidden {
+  max-width: 0;
+  opacity: 0;
+  transform: translateY(-4px) scale(0.96);
+}
+
+@keyframes dashboard-pull-refresh-label-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .sendi-plus-radius-slider {
   --sendi-plus-fill: 50%;
   --sendi-plus-active-color: #0a84ff;
@@ -328,6 +366,12 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .sendi-plus-accordion {
+    transition: none;
+    transform: none;
+  }
+
+  .dashboard-pull-refresh-label {
+    animation: none;
     transition: none;
     transform: none;
   }

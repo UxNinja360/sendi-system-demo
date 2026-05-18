@@ -5,6 +5,7 @@ import {
   Bike,
   Bot,
   CheckCircle2,
+  ChevronDown,
   Clock3,
   Loader2,
   Map as MapIcon,
@@ -63,8 +64,8 @@ const ACTIVE_DELIVERY_STATUSES: DeliveryStatus[] = ['pending', 'assigned', 'deli
 const formatRadiusKm = formatSendiPlusRadiusKm;
 const SENDI_PLUS_TERMS_TEXT =
   'הפעלת המתג מחייבת עמידה בזמני משלוח של עד 60 דקות מסירה';
-const DASHBOARD_PULL_REFRESH_THRESHOLD = 48;
-const DASHBOARD_PULL_REFRESH_MAX = 92;
+const DASHBOARD_PULL_REFRESH_THRESHOLD = 72;
+const DASHBOARD_PULL_REFRESH_MAX = 124;
 
 const STATUS_META: Array<{
   id: DeliveryStatus;
@@ -148,7 +149,9 @@ const getDashboardGreeting = (date = new Date()) => {
 };
 
 const formatAverageDeliveryTime = (minutes: number | null) =>
-  minutes === null ? '—' : `${formatNumber(minutes)} דק׳`;
+  typeof minutes === 'number' && Number.isFinite(minutes) && minutes > 0
+    ? `${formatNumber(minutes)} דק׳`
+    : '—';
 
 const isDashboardPullRefreshIgnoredTarget = (target: EventTarget | null) => {
   if (!(target instanceof Element)) return false;
@@ -172,6 +175,62 @@ const RefreshingMetricValue: React.FC<{
     {refreshing ? '-' : value}
   </span>
 );
+
+const CourierAvailabilityValue: React.FC<{
+  connected: number;
+  free: number;
+  refreshing: boolean;
+}> = ({ connected, free, refreshing }) => (
+  <RefreshingMetricValue
+    refreshing={refreshing}
+    value={
+      <span className="inline-flex items-baseline justify-end gap-1.5 leading-none">
+        <span>{formatNumber(free)}</span>
+        <span className="text-sm font-semibold text-app-text-muted sm:text-base">
+          / {formatNumber(connected)}
+        </span>
+      </span>
+    }
+  />
+);
+
+const DashboardPullRefreshLabel: React.FC<{ label: string }> = ({ label }) => {
+  const [visibleLabel, setVisibleLabel] = React.useState(label);
+  const [isVisible, setIsVisible] = React.useState(Boolean(label));
+
+  React.useEffect(() => {
+    if (label) {
+      setVisibleLabel(label);
+      setIsVisible(true);
+      return undefined;
+    }
+
+    setIsVisible(false);
+
+    if (typeof window === 'undefined') {
+      setVisibleLabel('');
+      return undefined;
+    }
+
+    const timeout = window.setTimeout(() => setVisibleLabel(''), 190);
+    return () => window.clearTimeout(timeout);
+  }, [label]);
+
+  if (!visibleLabel) return null;
+
+  return (
+    <span
+      key={visibleLabel}
+      className={`dashboard-pull-refresh-label ${
+        isVisible
+          ? 'dashboard-pull-refresh-label--visible'
+          : 'dashboard-pull-refresh-label--hidden'
+      }`}
+    >
+      {visibleLabel}
+    </span>
+  );
+};
 
 const isSameInputDate = (value: unknown, inputDate: string) => {
   const date = toDate(value);
@@ -236,10 +295,12 @@ const SendiPlusCard: React.FC<{
   const receivesDeliveries = canReceiveSendiPlusDeliveries(radiusKm, termsAccepted);
   const menuRef = React.useRef<HTMLDivElement | null>(null);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = React.useState(termsAccepted);
   const [isRadiusBubbleVisible, setIsRadiusBubbleVisible] = React.useState(false);
   const radiusBubbleHideTimeoutRef = React.useRef<number | null>(null);
   const radiusPercent = (radiusKm / MAX_SENDI_PLUS_RADIUS_KM) * 100;
   const radiusDisplay = `${formatRadiusKm(radiusKm)} ק״מ`;
+  const isAccordionOpen = termsAccepted && isDetailsOpen;
   const secondaryTextClassName = isSendiPlusEnabled
     ? 'text-app-text-secondary'
     : 'text-app-text-muted opacity-70';
@@ -281,6 +342,10 @@ const SendiPlusCard: React.FC<{
   };
 
   React.useEffect(() => clearRadiusBubbleHideTimeout, [clearRadiusBubbleHideTimeout]);
+
+  React.useEffect(() => {
+    setIsDetailsOpen(termsAccepted);
+  }, [termsAccepted]);
 
   React.useEffect(() => {
     if (!isMenuOpen) return;
@@ -361,38 +426,59 @@ const SendiPlusCard: React.FC<{
           ) : null}
         </div>
 
+        <button
+          type="button"
+          data-haptic={termsAccepted ? 'selection' : 'off'}
+          onClick={() => setIsDetailsOpen((value) => !value)}
+          disabled={!termsAccepted}
+          className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0a84ff]/30 disabled:cursor-default dark:hover:bg-[#1f1f1f] ${
+            termsAccepted ? 'text-app-text-secondary' : 'text-app-text-muted opacity-45'
+          }`}
+          aria-label={isAccordionOpen ? 'סגור פרטי סנדי פלוס' : 'פתח פרטי סנדי פלוס'}
+          aria-controls="sendi-plus-details"
+          aria-expanded={isAccordionOpen}
+        >
+          <ChevronDown
+            className={`h-4 w-4 transition-transform duration-200 ${
+              isAccordionOpen ? 'rotate-180' : ''
+            }`}
+          />
+        </button>
+
         <div className="ml-auto min-w-0 text-right" dir="rtl">
           <div
-            className="ml-auto flex w-fit max-w-full items-center gap-1.5"
+            className="ml-auto flex w-fit max-w-full items-center gap-2"
             aria-label={isSendiPlusEnabled ? 'סנדי פלוס פעיל' : 'סנדי פלוס כבוי'}
           >
-            <span className="sendi-plus-label truncate text-sm font-semibold text-app-text">
-              <span className={isSendiPlusEnabled ? '' : 'sendi-plus-label__word--off'}>
-                סנדי
+            <span className="flex min-w-0 items-center gap-1.5">
+              <span className="sendi-plus-label truncate text-sm font-semibold text-app-text">
+                <span className={isSendiPlusEnabled ? '' : 'sendi-plus-label__word--off'}>
+                  סנדי
+                </span>
+                <span
+                  className={`sendi-plus-label__plus ${
+                    isSendiPlusEnabled ? '' : 'sendi-plus-label__plus--off'
+                  }`}
+                >
+                  פלוס
+                </span>
               </span>
               <span
-                className={`sendi-plus-label__plus ${
-                  isSendiPlusEnabled ? '' : 'sendi-plus-label__plus--off'
+                className={`sendi-plus-mark ${
+                  isSendiPlusEnabled ? 'sendi-plus-mark--active' : 'sendi-plus-mark--off'
                 }`}
+                aria-hidden="true"
               >
-                פלוס
-              </span>
-            </span>
-            <span
-              className={`sendi-plus-mark ${
-                isSendiPlusEnabled ? 'sendi-plus-mark--active' : 'sendi-plus-mark--off'
-              }`}
-              aria-hidden="true"
-            >
-              <span className="sendi-plus-mark__inner">
-                <Plus
-                  className={
-                    isSendiPlusEnabled
-                      ? 'h-2.5 w-2.5 text-white'
-                      : 'h-2.5 w-2.5 text-app-text-muted'
-                  }
-                  strokeWidth={2.65}
-                />
+                <span className="sendi-plus-mark__inner">
+                  <Plus
+                    className={
+                      isSendiPlusEnabled
+                        ? 'h-2.5 w-2.5 text-white'
+                        : 'h-2.5 w-2.5 text-app-text-muted'
+                    }
+                    strokeWidth={2.65}
+                  />
+                </span>
               </span>
             </span>
           </div>
@@ -400,17 +486,18 @@ const SendiPlusCard: React.FC<{
             {receivesDeliveries
               ? `בתוך אזורי החלוקה עד ${radiusDisplay}`
               : isSendiPlusEnabled
-                ? 'כרגע לא מקבל משלוחים'
+                ? 'לא מקבל משלוחים כרגע'
                 : 'משלוחים לפי טווח במחיר מובטח'}
           </div>
         </div>
       </div>
 
       <div
+        id="sendi-plus-details"
         className={`sendi-plus-accordion ${
-          termsAccepted ? 'sendi-plus-accordion--open' : ''
+          isAccordionOpen ? 'sendi-plus-accordion--open' : ''
         }`}
-        aria-hidden={!termsAccepted}
+        aria-hidden={!isAccordionOpen}
       >
         <div className="sendi-plus-accordion__inner">
           <div className="border-t border-app-border px-3 pb-4 pt-8 sm:px-4 dark:border-[#252525]">
@@ -847,7 +934,8 @@ export const Dashboard: React.FC = () => {
     if (deliveryDurations.length === 0) return null;
 
     const totalMinutes = deliveryDurations.reduce((sum, duration) => sum + duration, 0);
-    return Math.round(totalMinutes / deliveryDurations.length);
+    const averageMinutes = Math.round(totalMinutes / deliveryDurations.length);
+    return Number.isFinite(averageMinutes) && averageMinutes > 0 ? averageMinutes : null;
   }, [dashboardRefreshVersion, filteredDeliveries]);
   const activeDeliveriesCount = React.useMemo(
     () => filteredDeliveries.filter((delivery) => ACTIVE_DELIVERY_STATUSES.includes(delivery.status)).length,
@@ -863,7 +951,7 @@ export const Dashboard: React.FC = () => {
   const pullRefreshProgress = Math.min(1, pullDistance / DASHBOARD_PULL_REFRESH_THRESHOLD);
   const pullRefreshVisible = pullDistance > 0;
   const pullRefreshArmed = isDashboardRefreshing || isPullRefreshReady;
-  const pullRefreshRevealHeight = Math.min(54, Math.round(pullDistance * 0.58));
+  const pullRefreshRevealHeight = Math.min(64, Math.round(pullDistance * 0.58));
   const pullRefreshLabel = isDashboardRefreshing
     ? 'מרענן'
     : isPullRefreshReady
@@ -900,12 +988,12 @@ export const Dashboard: React.FC = () => {
         >
           <div className="flex h-full items-center justify-center gap-2 text-[11px] font-semibold text-app-text-secondary">
             <ArrowUp
-              className="h-3.5 w-3.5 text-app-brand transition-transform duration-200"
+              className="h-3.5 w-3.5 text-app-brand transition-transform duration-300 ease-out"
               style={{
                 transform: `rotate(${pullRefreshArmed ? 0 : 180}deg) scale(${0.82 + pullRefreshProgress * 0.18})`,
               }}
             />
-            {pullRefreshLabel ? <span>{pullRefreshLabel}</span> : null}
+            <DashboardPullRefreshLabel label={pullRefreshLabel} />
           </div>
         </div>
         <div
@@ -988,9 +1076,7 @@ export const Dashboard: React.FC = () => {
                   : isAverageDeliveryTimeCard
                   ? 'זמן ממוצע למשלוח'
                   : status.label;
-                const value = isCourierAvailabilityCard
-                  ? `${formatNumber(freeCouriersCount)} / ${formatNumber(connectedCouriersCount)}`
-                  : isAverageDeliveryTimeCard
+                const value = isAverageDeliveryTimeCard
                   ? formatAverageDeliveryTime(averageDeliveryMinutes)
                   : formatNumber(count);
                 const iconClassName = isCourierAvailabilityCard
@@ -1013,10 +1099,18 @@ export const Dashboard: React.FC = () => {
                       <Icon className={`h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4 ${iconClassName}`} />
                     </div>
                     <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
-                      <RefreshingMetricValue
-                        refreshing={isDashboardRefreshing}
-                        value={value}
-                      />
+                      {isCourierAvailabilityCard ? (
+                        <CourierAvailabilityValue
+                          connected={connectedCouriersCount}
+                          free={freeCouriersCount}
+                          refreshing={isDashboardRefreshing}
+                        />
+                      ) : (
+                        <RefreshingMetricValue
+                          refreshing={isDashboardRefreshing}
+                          value={value}
+                        />
+                      )}
                     </div>
                   </button>
                 );
