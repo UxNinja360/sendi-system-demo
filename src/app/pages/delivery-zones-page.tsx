@@ -9,13 +9,11 @@ import { ToolbarIconButton } from '../components/common/toolbar-icon-button';
 import { useDelivery } from '../context/delivery-context-value';
 import { createRestaurantIcon } from '../live/leaflet-map-icons';
 import {
-  getAllowedZoneIdsForRestaurant,
+  DEFAULT_SENDI_PLUS_SERVICE_AREAS,
   isDeliveryZoneActive,
+  isPointInDeliveryZone,
   loadStoredDeliveryZones,
-  readSendiPlusZonePermissions,
   saveStoredDeliveryZones,
-  writeSendiPlusZonePermissions,
-  type SendiPlusZonePermissions,
   type StoredDeliveryZone,
 } from '../utils/delivery-zones';
 import { isSendiPlusRestaurant } from '../utils/sendi-plus';
@@ -84,6 +82,30 @@ const setZoneLabelDisabled = (zone: Zone, isDisabled: boolean) => {
   zone.label?.getElement()?.classList.toggle('delivery-zone-label--disabled', isDisabled);
 };
 
+const setZoneLabelHidden = (zone: Zone, isHidden: boolean) => {
+  zone.label?.getElement()?.classList.toggle('delivery-zone-label--hidden', isHidden);
+};
+
+const getZoneCoordinateSpan = (zone: Pick<StoredZone, 'latlngs'>) => {
+  const latitudes = zone.latlngs.map(([lat]) => lat);
+  const longitudes = zone.latlngs.map(([, lng]) => lng);
+
+  return Math.max(
+    Math.max(...latitudes) - Math.min(...latitudes),
+    Math.max(...longitudes) - Math.min(...longitudes),
+  );
+};
+
+const getZoneLabelMinZoom = (zone: Pick<StoredZone, 'latlngs'>) => {
+  const span = getZoneCoordinateSpan(zone);
+  if (span < 0.055) return 12;
+  if (span < 0.1) return 11;
+  if (span < 0.18) return 10;
+  if (span < 0.35) return 9;
+  if (span < 0.7) return 8;
+  return 6;
+};
+
 function addZoneToMap(map: L.Map, stored: StoredZone): Zone {
   const polygon = L.polygon(stored.latlngs, getZoneDisplayStyle(stored, false)).addTo(map);
   const label = L.marker(getZoneCenter(stored.latlngs), {
@@ -102,118 +124,7 @@ const ZONE_COLORS = [
 
 const TEL_AVIV_CENTER: [number, number] = [32.0853, 34.7818];
 
-const PRESET_DELIVERY_ZONES: StoredZone[] = [
-  {
-    id: 'preset-central-tel-aviv',
-    name: 'מרכז תל אביב',
-    color: '#0a84ff',
-    latlngs: [
-      [32.058, 34.762],
-      [32.058, 34.79],
-      [32.081, 34.79],
-      [32.083, 34.764],
-    ],
-  },
-  {
-    id: 'preset-tel-aviv-beach',
-    name: 'חוף תל אביב',
-    color: '#06b6d4',
-    latlngs: [
-      [32.067, 34.753],
-      [32.067, 34.766],
-      [32.083, 34.766],
-      [32.083, 34.756],
-    ],
-  },
-  {
-    id: 'preset-florentin',
-    name: 'פלורנטין',
-    color: '#f97316',
-    latlngs: [
-      [32.052, 34.759],
-      [32.052, 34.781],
-      [32.066, 34.781],
-      [32.066, 34.759],
-    ],
-  },
-  {
-    id: 'preset-nahalat-binyamin',
-    name: 'נחלת בנימין',
-    color: '#a855f7',
-    latlngs: [
-      [32.059, 34.763],
-      [32.059, 34.773],
-      [32.069, 34.773],
-      [32.069, 34.763],
-    ],
-  },
-  {
-    id: 'preset-tel-aviv-port',
-    name: 'נמל תל אביב',
-    color: '#14b8a6',
-    latlngs: [
-      [32.087, 34.763],
-      [32.087, 34.789],
-      [32.099, 34.789],
-      [32.099, 34.763],
-    ],
-  },
-  {
-    id: 'preset-ramat-gan',
-    name: 'מרכז רמת גן',
-    color: '#22c55e',
-    latlngs: [
-      [32.072, 34.785],
-      [32.072, 34.815],
-      [32.091, 34.815],
-      [32.091, 34.785],
-    ],
-  },
-  {
-    id: 'preset-givatayim',
-    name: 'מרכז גבעתיים',
-    color: '#84cc16',
-    latlngs: [
-      [32.064, 34.803],
-      [32.064, 34.826],
-      [32.078, 34.826],
-      [32.078, 34.803],
-    ],
-  },
-  {
-    id: 'preset-bnei-brak',
-    name: 'מרכז בני ברק',
-    color: '#eab308',
-    latlngs: [
-      [32.075, 34.821],
-      [32.075, 34.846],
-      [32.092, 34.846],
-      [32.092, 34.821],
-    ],
-  },
-  {
-    id: 'preset-jaffa',
-    name: 'יפו',
-    color: '#ef4444',
-    latlngs: [
-      [32.002, 34.753],
-      [32.002, 34.788],
-      [32.033, 34.788],
-      [32.033, 34.753],
-    ],
-  },
-  {
-    id: 'preset-bat-yam',
-    name: 'בת ים',
-    color: '#ec4899',
-    latlngs: [
-      [32.011, 34.733],
-      [32.011, 34.768],
-      [32.039, 34.768],
-      [32.039, 34.733],
-    ],
-  },
-];
+const PRESET_DELIVERY_ZONES: StoredZone[] = DEFAULT_SENDI_PLUS_SERVICE_AREAS;
 
 const fitMapToZones = (map: L.Map, zones: Array<Pick<Zone, 'latlngs'>>) => {
   const latlngs = zones.flatMap((zone) => zone.latlngs);
@@ -263,6 +174,7 @@ export const DeliveryZonesPage: React.FC = () => {
   const drawingLayerRef = useRef<L.Polyline | null>(null);
   const tempMarkersRef = useRef<L.CircleMarker[]>([]);
   const zonesLoadedRef = useRef(false);
+  const [mapZoom, setMapZoom] = useState(7);
 
   const [zones, setZones] = useState<Zone[]>(() => loadStoredZones() as Zone[]);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -271,14 +183,11 @@ export const DeliveryZonesPage: React.FC = () => {
 
   // modal state for naming new zone
   const [pendingLatlngs, setPendingLatlngs] = useState<[number, number][] | null>(null);
-  const [newName, setNewName] = useState('אזור חדש');
+  const [newName, setNewName] = useState('אזור חלוקה חדש');
 
   // edit state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
-  const [zonePermissions, setZonePermissions] = useState<SendiPlusZonePermissions>(() =>
-    readSendiPlusZonePermissions(),
-  );
   const restaurantMenuRef = useRef<HTMLDivElement | null>(null);
   const [restaurantMenuOpen, setRestaurantMenuOpen] = useState(false);
   const [sidePanelMode, setSidePanelMode] = useState<SidePanelMode>(() => getInitialSidePanelMode());
@@ -300,37 +209,51 @@ export const DeliveryZonesPage: React.FC = () => {
     () => sendiPlusRestaurants.find((restaurant) => restaurant.id === selectedRestaurantId) ?? null,
     [selectedRestaurantId, sendiPlusRestaurants],
   );
-  const selectedAllowedZoneIds = React.useMemo(
+  const selectedRestaurantPoint = React.useMemo(
     () =>
-      selectedRestaurant
-        ? getAllowedZoneIdsForRestaurant(selectedRestaurant.id, zones, zonePermissions)
-        : [],
-    [selectedRestaurant, zones, zonePermissions],
+      selectedRestaurant && hasValidLatLng(selectedRestaurant)
+        ? { lat: selectedRestaurant.lat, lng: selectedRestaurant.lng }
+        : null,
+    [selectedRestaurant],
   );
-  const selectedAllowedZoneIdSet = React.useMemo(
-    () => new Set(selectedAllowedZoneIds),
-    [selectedAllowedZoneIds],
+  const selectedCoveredZoneIds = React.useMemo(
+    () =>
+      selectedRestaurantPoint
+        ? zones
+            .filter((zone) => isDeliveryZoneActive(zone) && isPointInDeliveryZone(selectedRestaurantPoint, zone))
+            .map((zone) => zone.id)
+        : [],
+    [selectedRestaurantPoint, zones],
+  );
+  const selectedCoveredZoneIdSet = React.useMemo(
+    () => new Set(selectedCoveredZoneIds),
+    [selectedCoveredZoneIds],
   );
   const activeZonesCount = React.useMemo(
     () => zones.filter(isDeliveryZoneActive).length,
     [zones],
   );
+  const selectedRestaurantIsInsideServiceArea =
+    Boolean(selectedRestaurant) && (activeZonesCount === 0 || selectedCoveredZoneIds.length > 0);
   const activeSidePanelMode: SidePanelMode = isSendiPlusMode ? sidePanelMode : 'zones';
-  const shouldShowRestaurantPermissionsOnMap =
+  const shouldShowRestaurantCoverageOnMap =
     isSendiPlusMode && activeSidePanelMode === 'permissions' && selectedRestaurant !== null;
 
   useEffect(() => {
     zones.forEach((zone) => {
       const isGloballyDisabled = !isDeliveryZoneActive(zone);
-      const isPermissionDisabled =
-        shouldShowRestaurantPermissionsOnMap && !selectedAllowedZoneIdSet.has(zone.id);
+      const isCoverageDisabled =
+        shouldShowRestaurantCoverageOnMap &&
+        activeZonesCount > 0 &&
+        !selectedCoveredZoneIdSet.has(zone.id);
       const isDisabled =
-        isGloballyDisabled || isPermissionDisabled;
+        isGloballyDisabled || isCoverageDisabled;
 
       zone.polygon?.setStyle(getZoneDisplayStyle(zone, isDisabled));
       setZoneLabelDisabled(zone, isDisabled);
+      setZoneLabelHidden(zone, mapZoom < getZoneLabelMinZoom(zone));
     });
-  }, [selectedAllowedZoneIdSet, shouldShowRestaurantPermissionsOnMap, zones]);
+  }, [activeZonesCount, mapZoom, selectedCoveredZoneIdSet, shouldShowRestaurantCoverageOnMap, zones]);
 
   useEffect(() => {
     if (!isSendiPlusMode || selectedRestaurantId || sendiPlusRestaurants.length === 0) return;
@@ -345,7 +268,7 @@ export const DeliveryZonesPage: React.FC = () => {
 
     if (
       !map ||
-      !shouldShowRestaurantPermissionsOnMap ||
+      !shouldShowRestaurantCoverageOnMap ||
       !hasValidLatLng(selectedRestaurant)
     ) {
       return;
@@ -374,7 +297,7 @@ export const DeliveryZonesPage: React.FC = () => {
         restaurantMarkerRef.current = null;
       }
     };
-  }, [selectedRestaurant, shouldShowRestaurantPermissionsOnMap]);
+  }, [selectedRestaurant, shouldShowRestaurantCoverageOnMap]);
 
   useEffect(() => {
     if (!restaurantMenuOpen) return;
@@ -400,42 +323,6 @@ export const DeliveryZonesPage: React.FC = () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [restaurantMenuOpen]);
-
-  const commitZonePermissions = useCallback((nextPermissions: SendiPlusZonePermissions) => {
-    setZonePermissions(nextPermissions);
-    writeSendiPlusZonePermissions(nextPermissions);
-  }, []);
-
-  const toggleSelectedRestaurantZone = useCallback(
-    (zoneId: string) => {
-      if (!selectedRestaurant) return;
-
-      const nextAllowedZoneIds = new Set(
-        getAllowedZoneIdsForRestaurant(selectedRestaurant.id, zones, zonePermissions),
-      );
-
-      if (nextAllowedZoneIds.has(zoneId)) {
-        nextAllowedZoneIds.delete(zoneId);
-      } else {
-        nextAllowedZoneIds.add(zoneId);
-      }
-
-      commitZonePermissions({
-        ...zonePermissions,
-        [selectedRestaurant.id]: Array.from(nextAllowedZoneIds),
-      });
-    },
-    [commitZonePermissions, selectedRestaurant, zonePermissions, zones],
-  );
-
-  const allowAllZonesForSelectedRestaurant = useCallback(() => {
-    if (!selectedRestaurant) return;
-
-    commitZonePermissions({
-      ...zonePermissions,
-      [selectedRestaurant.id]: zones.filter(isDeliveryZoneActive).map((zone) => zone.id),
-    });
-  }, [commitZonePermissions, selectedRestaurant, zonePermissions, zones]);
 
   // keep ref in sync
   useEffect(() => {
@@ -463,6 +350,9 @@ export const DeliveryZonesPage: React.FC = () => {
       zoom: 13,
       zoomControl: true,
     });
+    const syncZoom = () => setMapZoom(map.getZoom());
+    syncZoom();
+    map.on('zoomend', syncZoom);
     const tileLayer = L.tileLayer(getTileUrl(), {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
       maxZoom: 19,
@@ -493,6 +383,7 @@ export const DeliveryZonesPage: React.FC = () => {
 
     return () => {
       observer.disconnect();
+      map.off('zoomend', syncZoom);
       map.remove();
       mapRef.current = null;
       tileLayerRef.current = null;
@@ -534,7 +425,7 @@ export const DeliveryZonesPage: React.FC = () => {
     if (pts.length < 3) return;
     stopDrawingMode();
     setPendingLatlngs(pts);
-    setNewName(`אזור ${zones.length + 1}`);
+    setNewName(`אזור חלוקה ${zones.length + 1}`);
   }, [zones.length]);
 
   const startDrawingMode = useCallback(() => {
@@ -690,6 +581,9 @@ export const DeliveryZonesPage: React.FC = () => {
           color: color-mix(in srgb, var(--app-text-secondary) 76%, transparent);
           opacity: 0.62;
         }
+        .delivery-zone-label--hidden {
+          display: none;
+        }
         .dark .delivery-zone-label--disabled span {
           background: rgba(18, 18, 18, 0.78);
           border-color: rgba(237, 237, 237, 0.14);
@@ -726,7 +620,7 @@ export const DeliveryZonesPage: React.FC = () => {
             <ToolbarIconButton
               active={isDrawing}
               onClick={isDrawing ? cancelDrawing : startDrawingMode}
-              label={isDrawing ? 'ביטול ציור' : 'צייר אזור'}
+              label={isDrawing ? 'ביטול ציור' : 'צייר אזור חלוקה'}
             >
               {isDrawing ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
             </ToolbarIconButton>
@@ -762,7 +656,7 @@ export const DeliveryZonesPage: React.FC = () => {
                         : 'text-app-text-secondary hover:text-app-text'
                     }`}
                   >
-                    הרשאות למסעדה
+                    מסעדות בתחום
                   </button>
                 </div>
               </div>
@@ -772,10 +666,10 @@ export const DeliveryZonesPage: React.FC = () => {
               <section className="p-4">
                 <div className="space-y-1.5">
                   <div className="text-sm font-semibold text-app-text">
-                    הרשאות אזורים למסעדה
+                    מסעדות בתחום הפעילות
                   </div>
                   <div className="text-xs leading-5 text-app-text-secondary">
-                    משלוח סנדי פלוס ייכנס רק אם הלקוח נמצא באזור מאושר למסעדה וגם בתוך הרדיוס.
+                    משלוח סנדי פלוס ייכנס רק אם המסעדה והלקוח בתוך אחד מאזורי החלוקה, ואז המרחק נבדק מול הסליידר.
                   </div>
                 </div>
 
@@ -828,17 +722,29 @@ export const DeliveryZonesPage: React.FC = () => {
 
                 <div className="mt-5 flex items-center justify-between gap-2">
                   <span className="text-xs text-app-text-secondary">
-                    {selectedAllowedZoneIds.length.toLocaleString('he-IL')} מתוך{' '}
-                    {activeZonesCount.toLocaleString('he-IL')} מאושרים
+                    {!selectedRestaurant
+                      ? 'בחר מסעדה'
+                      : activeZonesCount === 0
+                        ? 'לא הוגדרו אזורי חלוקה'
+                        : selectedRestaurantIsInsideServiceArea
+                          ? `${selectedCoveredZoneIds.length.toLocaleString('he-IL')} מתוך ${activeZonesCount.toLocaleString('he-IL')} אזורים מכילים את המסעדה`
+                          : 'המסעדה מחוץ לאזורי החלוקה'}
                   </span>
-                  <button
-                    type="button"
-                    onClick={allowAllZonesForSelectedRestaurant}
-                    disabled={!selectedRestaurant || activeZonesCount === 0}
-                    className="rounded-[5px] px-2.5 py-1.5 text-xs font-semibold text-app-brand transition-colors hover:bg-app-brand/10 disabled:opacity-40"
+                  <span
+                    className={`rounded-[5px] px-2.5 py-1.5 text-xs font-semibold ${
+                      activeZonesCount > 0 && selectedRestaurantIsInsideServiceArea
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                        : 'bg-app-surface-raised text-app-text-secondary'
+                    }`}
                   >
-                    אשר הכל
-                  </button>
+                    {!selectedRestaurant
+                      ? 'בחר מסעדה'
+                      : activeZonesCount === 0
+                        ? 'לא מוגדר'
+                        : selectedRestaurantIsInsideServiceArea
+                          ? 'בתחום'
+                          : 'מחוץ לתחום'}
+                  </span>
                 </div>
 
                 <div className="mt-4 max-h-[calc(100vh-360px)] min-h-48 overflow-hidden overflow-y-auto rounded-[7px] border border-app-border dark:border-app-nav-border">
@@ -849,19 +755,22 @@ export const DeliveryZonesPage: React.FC = () => {
                   ) : (
                     zones.map((zone) => {
                       const zoneIsActive = isDeliveryZoneActive(zone);
-                      const isAllowed = zoneIsActive && selectedAllowedZoneIdSet.has(zone.id);
-                      const statusLabel = !zoneIsActive ? 'כבוי' : isAllowed ? 'מאושר' : 'חסום';
+                      const isCovered = zoneIsActive && selectedCoveredZoneIdSet.has(zone.id);
+                      const statusLabel = !zoneIsActive
+                        ? 'כבוי'
+                        : !selectedRestaurant
+                          ? '-'
+                          : isCovered
+                            ? 'המסעדה בפנים'
+                            : 'לא בתחום';
 
                       return (
-                        <button
+                        <div
                           key={zone.id}
-                          type="button"
-                          onClick={() => toggleSelectedRestaurantZone(zone.id)}
-                          disabled={!selectedRestaurant || !zoneIsActive}
-                          className={`flex w-full items-center justify-between gap-2 border-b border-app-border px-3.5 py-3 text-right text-xs transition-colors last:border-b-0 disabled:opacity-40 dark:border-app-nav-border ${
-                            isAllowed
-                              ? 'text-app-text hover:bg-app-surface-raised'
-                              : 'text-app-text-secondary hover:bg-app-surface-raised'
+                          className={`flex w-full items-center justify-between gap-2 border-b border-app-border px-3.5 py-3 text-right text-xs last:border-b-0 dark:border-app-nav-border ${
+                            isCovered
+                              ? 'text-app-text'
+                              : 'text-app-text-secondary'
                           }`}
                         >
                           <span className="flex min-w-0 items-center gap-2">
@@ -871,10 +780,10 @@ export const DeliveryZonesPage: React.FC = () => {
                             />
                             <span className="truncate">{zone.name}</span>
                           </span>
-                          <span className={`text-[11px] font-semibold ${isAllowed ? 'text-app-text' : 'text-app-text-secondary'}`}>
+                          <span className={`text-[11px] font-semibold ${isCovered ? 'text-app-text' : 'text-app-text-secondary'}`}>
                             {statusLabel}
                           </span>
-                        </button>
+                        </div>
                       );
                     })
                   )}
@@ -893,7 +802,7 @@ export const DeliveryZonesPage: React.FC = () => {
 
                 {zones.length === 0 && (
                   <div className="px-4 py-10 text-center text-sm text-app-text-secondary">
-                    צייר אזור על המפה כדי להתחיל
+                    צייר אזור חלוקה על המפה כדי להתחיל
                   </div>
                 )}
                 {zones.map(zone => {
@@ -912,7 +821,7 @@ export const DeliveryZonesPage: React.FC = () => {
                           value={editName}
                           onChange={e => setEditName(e.target.value)}
                           className="w-full rounded-[6px] border border-app-border bg-app-background px-3 py-1.5 text-sm text-app-text outline-none focus:border-app-brand dark:border-app-nav-border dark:bg-[#050505]"
-                          placeholder="שם האזור"
+                          placeholder="שם אזור החלוקה"
                         />
                         <div className="flex gap-2">
                           <button onClick={confirmEdit} className="flex flex-1 items-center justify-center gap-1 rounded-[6px] border border-app-border bg-app-surface-raised px-3 py-1.5 text-xs font-medium text-app-text transition-colors hover:bg-app-surface dark:border-app-nav-border">
@@ -986,10 +895,10 @@ export const DeliveryZonesPage: React.FC = () => {
       {pendingLatlngs && (
         <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="w-80 rounded-[8px] border border-app-border bg-app-surface p-5 shadow-[var(--app-shadow-panel)] dark:border-app-nav-border" dir="rtl">
-            <h3 className="mb-4 text-base font-bold text-app-text">הגדרת אזור חדש</h3>
+            <h3 className="mb-4 text-base font-bold text-app-text">הגדרת אזור חלוקה חדש</h3>
             <div className="space-y-3">
               <div>
-                <label className="mb-1 block text-xs font-medium text-app-text-secondary">שם האזור</label>
+                <label className="mb-1 block text-xs font-medium text-app-text-secondary">שם אזור החלוקה</label>
                 <input
                   autoFocus
                   value={newName}

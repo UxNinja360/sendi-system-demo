@@ -24,8 +24,12 @@ import { useDeliveriesMapSplit } from '../deliveries/use-deliveries-map-split';
 import type { Delivery, DeliveryStatus } from '../types/delivery.types';
 import { canCourierAcceptDelivery } from '../utils/courier-assignment';
 import {
+  DEFAULT_SENDI_PLUS_RADIUS_KM,
+  LEGACY_SENDI_GO_RADIUS_STORAGE_KEY,
   MAX_SENDI_PLUS_RADIUS_KM,
   SENDI_PLUS_LABEL,
+  SENDI_PLUS_RADIUS_CHANGE_EVENT,
+  SENDI_PLUS_RADIUS_STORAGE_KEY,
   SENDI_PLUS_RADIUS_STEP_KM,
   SENDI_PLUS_TERMS_ACCEPTED_CHANGE_EVENT,
   SENDI_PLUS_TERMS_ACCEPTED_STORAGE_KEY,
@@ -41,9 +45,9 @@ import {
 } from '../utils/sendi-plus';
 import {
   DELIVERY_ZONES_CHANGE_EVENT,
-  SENDI_PLUS_ZONE_PERMISSIONS_CHANGE_EVENT,
   isDeliveryZoneActive,
-  loadStoredDeliveryZones,
+  isPointCoveredByActiveDeliveryZones,
+  loadStoredDeliveryServiceAreas,
 } from '../utils/delivery-zones';
 
 const DASHBOARD_DELIVERY_STATUSES: DeliveryStatus[] = [
@@ -179,7 +183,7 @@ const SendiPlusCard: React.FC<{
   onRadiusKmChange: (value: number) => void;
   onTermsAcceptedChange: (value: boolean) => void;
   onManageZones: () => void;
-  onManageRestaurantPermissions: () => void;
+  onInspectRestaurantCoverage: () => void;
 }> = ({
   deliveryZoneCount,
   activeRestaurantCount,
@@ -188,7 +192,7 @@ const SendiPlusCard: React.FC<{
   onRadiusKmChange,
   onTermsAcceptedChange,
   onManageZones,
-  onManageRestaurantPermissions,
+  onInspectRestaurantCoverage,
 }) => {
   const isSendiPlusEnabled = termsAccepted;
   const receivesDeliveries = canReceiveSendiPlusDeliveries(radiusKm, termsAccepted);
@@ -298,19 +302,19 @@ const SendiPlusCard: React.FC<{
                 className="flex w-full items-center gap-2 px-3 py-2.5 text-xs font-medium text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text"
               >
                 <MapIcon className="h-3.5 w-3.5 shrink-0" />
-                <span>ניהול אזורים</span>
+                <span>מפת אזורי חלוקה</span>
               </button>
               <button
                 type="button"
                 role="menuitem"
                 onClick={() => {
                   setIsMenuOpen(false);
-                  onManageRestaurantPermissions();
+                  onInspectRestaurantCoverage();
                 }}
                 className="flex w-full items-center gap-2 px-3 py-2.5 text-xs font-medium text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text"
               >
                 <Settings className="h-3.5 w-3.5 shrink-0" />
-                <span>הרשאות למסעדות</span>
+                <span>מסעדות בתחום</span>
               </button>
             </div>
           ) : null}
@@ -353,7 +357,7 @@ const SendiPlusCard: React.FC<{
           </div>
           <div className={`mt-1 truncate text-sm font-normal ${secondaryTextClassName}`}>
             {receivesDeliveries
-              ? `זמין למשלוחים עד ${radiusDisplay}`
+              ? `בתוך אזורי החלוקה עד ${radiusDisplay}`
               : isSendiPlusEnabled
                 ? 'כרגע לא מקבל משלוחים'
                 : 'משלוחים לפי טווח במחיר מובטח'}
@@ -426,7 +430,7 @@ const SendiPlusCard: React.FC<{
             <div className="border-t border-app-border py-2.5 sm:py-3 dark:border-[#252525]">
               <div className="grid grid-cols-2 gap-4 text-right" dir="rtl">
                 <div className="min-w-0">
-                  <div className="truncate text-[11px] text-app-text-secondary">מסעדות פעילות</div>
+                  <div className="truncate text-[11px] text-app-text-secondary">מסעדות בתחום</div>
                   <div className="mt-1 truncate text-sm font-semibold text-app-text">
                     {activeRestaurantCount.toLocaleString('he-IL')}
                   </div>
@@ -485,10 +489,16 @@ export const Dashboard: React.FC = () => {
   const [deliveryZoneConfigVersion, setDeliveryZoneConfigVersion] = React.useState(0);
 
   React.useEffect(() => {
+    if (!sendiPlusTermsAccepted) return;
+
     writeStoredSendiPlusRadius(sendiPlusRadiusKm);
-  }, [sendiPlusRadiusKm]);
+  }, [sendiPlusRadiusKm, sendiPlusTermsAccepted]);
 
   React.useEffect(() => {
+    if (!sendiPlusTermsAccepted) {
+      setSendiPlusRadiusKm(DEFAULT_SENDI_PLUS_RADIUS_KM);
+    }
+
     writeStoredSendiPlusTermsAccepted(sendiPlusTermsAccepted);
   }, [sendiPlusTermsAccepted]);
 
@@ -496,15 +506,22 @@ export const Dashboard: React.FC = () => {
     if (typeof window === 'undefined') return;
 
     const refreshDeliveryZones = () => setDeliveryZoneConfigVersion((version) => version + 1);
+    const syncSendiPlusRadius = () => {
+      setSendiPlusRadiusKm(readStoredSendiPlusRadius());
+    };
     const syncSendiPlusTermsAccepted = () => {
       setSendiPlusTermsAccepted(readStoredSendiPlusTermsAccepted());
     };
     const handleStorage = (event: StorageEvent) => {
-      if (
-        event.key === 'delivery_zones_v1' ||
-        event.key === 'sendi-plus-zone-permissions-v1'
-      ) {
+      if (event.key === 'delivery_zones_v1') {
         refreshDeliveryZones();
+      }
+
+      if (
+        event.key === SENDI_PLUS_RADIUS_STORAGE_KEY ||
+        event.key === LEGACY_SENDI_GO_RADIUS_STORAGE_KEY
+      ) {
+        syncSendiPlusRadius();
       }
 
       if (event.key === SENDI_PLUS_TERMS_ACCEPTED_STORAGE_KEY) {
@@ -513,13 +530,13 @@ export const Dashboard: React.FC = () => {
     };
 
     window.addEventListener(DELIVERY_ZONES_CHANGE_EVENT, refreshDeliveryZones);
-    window.addEventListener(SENDI_PLUS_ZONE_PERMISSIONS_CHANGE_EVENT, refreshDeliveryZones);
+    window.addEventListener(SENDI_PLUS_RADIUS_CHANGE_EVENT, syncSendiPlusRadius);
     window.addEventListener(SENDI_PLUS_TERMS_ACCEPTED_CHANGE_EVENT, syncSendiPlusTermsAccepted);
     window.addEventListener('storage', handleStorage);
 
     return () => {
       window.removeEventListener(DELIVERY_ZONES_CHANGE_EVENT, refreshDeliveryZones);
-      window.removeEventListener(SENDI_PLUS_ZONE_PERMISSIONS_CHANGE_EVENT, refreshDeliveryZones);
+      window.removeEventListener(SENDI_PLUS_RADIUS_CHANGE_EVENT, syncSendiPlusRadius);
       window.removeEventListener(SENDI_PLUS_TERMS_ACCEPTED_CHANGE_EVENT, syncSendiPlusTermsAccepted);
       window.removeEventListener('storage', handleStorage);
     };
@@ -527,6 +544,14 @@ export const Dashboard: React.FC = () => {
 
   const handleSendiPlusRadiusChange = React.useCallback((value: number) => {
     setSendiPlusRadiusKm(clampSendiPlusRadius(value));
+  }, []);
+
+  const handleSendiPlusTermsAcceptedChange = React.useCallback((value: boolean) => {
+    setSendiPlusTermsAccepted(value);
+
+    if (!value) {
+      setSendiPlusRadiusKm(DEFAULT_SENDI_PLUS_RADIUS_KM);
+    }
   }, []);
 
   const selectedDateKey = toDateInputValue(selectedDate);
@@ -562,18 +587,28 @@ export const Dashboard: React.FC = () => {
     return counts;
   }, [filteredDeliveries]);
 
-  const sendiPlusDeliveryZoneCount = React.useMemo(
-    () => loadStoredDeliveryZones().filter(isDeliveryZoneActive).length,
+  const sendiPlusDeliveryZones = React.useMemo(
+    () => loadStoredDeliveryServiceAreas(),
     [deliveryZoneConfigVersion],
+  );
+  const sendiPlusDeliveryZoneCount = React.useMemo(
+    () => sendiPlusDeliveryZones.filter(isDeliveryZoneActive).length,
+    [sendiPlusDeliveryZones],
   );
   const sendiPlusActiveRestaurantCount = React.useMemo(
     () =>
       state.restaurants.filter(
         (restaurant) =>
           isRestaurantActiveForDisplay(restaurant, sendiPlusTermsAccepted) &&
-          isSendiPlusRestaurant(restaurant.name, restaurant.chainId),
+          isSendiPlusRestaurant(restaurant.name, restaurant.chainId) &&
+          Number.isFinite(restaurant.lat) &&
+          Number.isFinite(restaurant.lng) &&
+          isPointCoveredByActiveDeliveryZones(
+            { lat: restaurant.lat, lng: restaurant.lng },
+            sendiPlusDeliveryZones,
+          ),
       ).length,
-    [sendiPlusTermsAccepted, state.restaurants],
+    [sendiPlusDeliveryZones, sendiPlusTermsAccepted, state.restaurants],
   );
   const connectedCouriersCount = React.useMemo(
     () => state.couriers.filter((courier) => courier.status !== 'offline').length,
@@ -632,27 +667,28 @@ export const Dashboard: React.FC = () => {
         showBottomBorder={false}
         pairControlsOnMobile
         periodControl={
-          <>
-            <ToolbarDayPicker
-              selectedDate={selectedDate}
-              onDateChange={setSelectedDate}
-              dayCounts={deliveryCountsByDay}
+          <ToolbarDayPicker
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+            dayCounts={deliveryCountsByDay}
+          />
+        }
+        controlsClassName="relative z-10"
+        controls={
+          <div className="flex max-w-full shrink-0 flex-nowrap items-center gap-1 overflow-x-auto no-scrollbar">
+            <DashboardToolbarToggle
+              active={state.isSystemOpen}
+              label={state.isSystemOpen ? 'מערכת פתוחה' : 'מערכת סגורה'}
+              onClick={toggleSystem}
+              icon={<Power className="h-3.5 w-3.5" />}
             />
-            <div className="flex shrink-0 items-center gap-1">
-              <DashboardToolbarToggle
-                active={state.isSystemOpen}
-                label={state.isSystemOpen ? 'מערכת פתוחה' : 'מערכת סגורה'}
-                onClick={toggleSystem}
-                icon={<Power className="h-3.5 w-3.5" />}
-              />
-              <DashboardToolbarToggle
-                active={state.autoAssignEnabled}
-                label="שיבוץ אוטומטי"
-                onClick={() => dispatch({ type: 'TOGGLE_AUTO_ASSIGN' })}
-                icon={<UserCheck className="h-3.5 w-3.5" />}
-              />
-            </div>
-          </>
+            <DashboardToolbarToggle
+              active={state.autoAssignEnabled}
+              label="שיבוץ אוטומטי"
+              onClick={() => dispatch({ type: 'TOGGLE_AUTO_ASSIGN' })}
+              icon={<UserCheck className="h-3.5 w-3.5" />}
+            />
+          </div>
         }
       />
 
@@ -730,9 +766,9 @@ export const Dashboard: React.FC = () => {
             radiusKm={sendiPlusRadiusKm}
             termsAccepted={sendiPlusTermsAccepted}
             onRadiusKmChange={handleSendiPlusRadiusChange}
-            onTermsAcceptedChange={setSendiPlusTermsAccepted}
+            onTermsAcceptedChange={handleSendiPlusTermsAcceptedChange}
             onManageZones={() => navigate('/zones?source=sendi-plus')}
-            onManageRestaurantPermissions={() => navigate('/zones?source=sendi-plus&tab=permissions')}
+            onInspectRestaurantCoverage={() => navigate('/zones?source=sendi-plus&tab=permissions')}
           />
         </div>
       </main>

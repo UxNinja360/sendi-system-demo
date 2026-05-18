@@ -1,4 +1,8 @@
-import type { Delivery } from '../types/delivery.types';
+import type { Delivery, Restaurant } from '../types/delivery.types';
+import { isSendiPlusRestaurant } from './sendi-plus';
+
+export const SENDI_PLUS_BASE_DELIVERY_CHARGE = 22;
+export const SENDI_PLUS_DISTANCE_STEP_CHARGE = 1;
 
 const asMoney = (value: number | null | undefined) =>
   typeof value === 'number' && Number.isFinite(value) ? value : null;
@@ -14,6 +18,50 @@ const firstMoney = (...values: Array<number | null | undefined>) => {
 
 export const getDeliveryCustomerCharge = (delivery: Delivery) =>
   firstMoney(delivery.price, delivery.sum_cash);
+
+export const findDeliveryRestaurant = (
+  delivery: Delivery,
+  restaurants: Restaurant[],
+) =>
+  restaurants.find(
+    (restaurant) =>
+      restaurant.id === delivery.restaurantId ||
+      restaurant.id === delivery.rest_id ||
+      restaurant.name === delivery.restaurantName ||
+      restaurant.name === delivery.rest_name,
+  ) ?? null;
+
+export const isSendiPlusDelivery = (
+  delivery: Delivery,
+  restaurant?: Pick<Restaurant, 'chainId' | 'name'> | null,
+) =>
+  isSendiPlusRestaurant(restaurant?.name, restaurant?.chainId) ||
+  isSendiPlusRestaurant(delivery.restaurantName) ||
+  isSendiPlusRestaurant(delivery.rest_name);
+
+export const getSendiPlusBillableDistanceKm = (delivery: Delivery) => {
+  const distance = delivery.delivery_distance;
+  if (typeof distance !== 'number' || !Number.isFinite(distance) || distance <= 0) return 0;
+
+  return Math.ceil(distance);
+};
+
+export const calculateSendiPlusDeliveryCharge = (distanceKm: number | null | undefined) => {
+  const billableDistanceKm =
+    typeof distanceKm === 'number' && Number.isFinite(distanceKm) && distanceKm > 0
+      ? Math.ceil(distanceKm)
+      : 0;
+
+  return SENDI_PLUS_BASE_DELIVERY_CHARGE + billableDistanceKm * SENDI_PLUS_DISTANCE_STEP_CHARGE;
+};
+
+export const getSendiPlusDeliveryCharge = (delivery: Delivery) =>
+  calculateSendiPlusDeliveryCharge(delivery.delivery_distance);
+
+export const getDeliveryWalletCharge = (
+  delivery: Delivery,
+  restaurant?: Pick<Restaurant, 'chainId' | 'name'> | null,
+) => (isSendiPlusDelivery(delivery, restaurant) ? getSendiPlusDeliveryCharge(delivery) : 0);
 
 export const getDeliveryRestaurantCharge = (delivery: Delivery) =>
   firstMoney(delivery.rest_price, delivery.restaurantPrice);

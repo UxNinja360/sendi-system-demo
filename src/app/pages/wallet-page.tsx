@@ -4,44 +4,47 @@ import { useNavigate } from 'react-router';
 import { PageToolbar } from '../components/common/page-toolbar';
 import { useDelivery } from '../context/delivery-context-value';
 import {
+  SENDI_PLUS_BASE_DELIVERY_CHARGE,
+  SENDI_PLUS_DISTANCE_STEP_CHARGE,
+  findDeliveryRestaurant,
   formatCurrency,
-  getDeliveryCommission,
-  getDeliveryCourierBasePay,
-  getDeliveryCourierTip,
-  getDeliveryCustomerCharge,
+  getDeliveryWalletCharge,
+  getSendiPlusBillableDistanceKm,
   sumDeliveryMoney,
 } from '../utils/delivery-finance';
 
 const TEXT = {
   title: '\u05d0\u05e8\u05e0\u05e7',
   summary:
-    '\u05e1\u05d9\u05db\u05d5\u05dd\u0020\u05db\u05e1\u05e4\u05d9\u0020\u05e9\u05dc\u0020\u05d4\u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd\u0020\u05e9\u05d4\u05d5\u05e9\u05dc\u05de\u05d5',
+    'סיכום חיובי סנדי פלוס שעוברים דרך האפליקציה',
   toDeliveries: '\u05dc\u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
-  totalRevenue: '\u05d4\u05db\u05e0\u05e1\u05d5\u05ea\u0020\u05de\u05e6\u05d8\u05d1\u05e8\u05d5\u05ea',
-  completedDeliveries: '\u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd\u0020\u05d4\u05d5\u05e9\u05dc\u05de\u05d5',
-  courierPayments: '\u05ea\u05e9\u05dc\u05d5\u05de\u05d9\u0020\u05e9\u05dc\u05d9\u05d7\u05d9\u05dd',
+  totalRevenue: 'חיובי סנדי פלוס',
+  completedDeliveries: 'משלוחי סנדי פלוס',
+  courierPayments: 'משלוחים לחיוב',
   courierPaymentsHint:
-    '\u05db\u05d5\u05dc\u05dc\u0020\u05ea\u05e9\u05dc\u05d5\u05dd\u0020\u05d1\u05e1\u05d9\u05e1\u05d9\u0020\u05dc\u05db\u05dc\u0020\u05de\u05e9\u05dc\u05d5\u05d7\u0020\u05e9\u05d4\u05d5\u05e9\u05dc\u05dd',
-  grossProfit: '\u05e8\u05d5\u05d5\u05d7\u0020\u05d2\u05d5\u05dc\u05de\u05d9',
+    'רק משלוחים דרך סנדי פלוס נכנסים לארנק',
+  grossProfit: 'ק״מ לחיוב',
   grossProfitHint:
-    '\u05d4\u05db\u05e0\u05e1\u05d5\u05ea\u0020\u05e4\u05d7\u05d5\u05ea\u0020\u05e9\u05dc\u05d9\u05d7\u05d9\u05dd\u0020\u05d5\u05e2\u05de\u05dc\u05d5\u05ea',
-  averageOrderValue: '\u05de\u05de\u05d5\u05e6\u05e2\u0020\u05dc\u05d4\u05d6\u05de\u05e0\u05d4',
-  tips: '\u05d8\u05d9\u05e4\u05d9\u05dd',
+    'כל ק״מ או חלק ממנו מעוגל כלפי מעלה',
+  averageOrderValue: 'ממוצע למשלוח',
+  tips: 'משלוחים רגילים שלא חויבו',
   latestDeliveries:
-    '\u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd\u0020\u05d0\u05d7\u05e8\u05d5\u05e0\u05d9\u05dd\u0020\u05e9\u05e0\u05db\u05e0\u05e1\u05d5\u0020\u05dc\u05d0\u05e8\u05e0\u05e7',
+    'משלוחי סנדי פלוס אחרונים שנכנסו לארנק',
   latestDeliveriesHint:
-    '\u0036\u0020\u05d4\u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd\u0020\u05d4\u05d0\u05d7\u05e8\u05d5\u05e0\u05d9\u05dd\u0020\u05e9\u05d4\u05d5\u05e9\u05dc\u05de\u05d5\u0020\u05d1\u05de\u05e2\u05e8\u05db\u05ea',
+    '6 משלוחי סנדי פלוס האחרונים שהושלמו וחויבו דרך האפליקציה',
   customer: '\u05dc\u05e7\u05d5\u05d7',
   restaurant: '\u05de\u05e1\u05e2\u05d3\u05d4',
   courier: '\u05e9\u05dc\u05d9\u05d7',
   emptyRecent:
-    '\u05e2\u05d3\u05d9\u05d9\u05df\u0020\u05d0\u05d9\u05df\u0020\u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd\u0020\u05e9\u05d4\u05d5\u05e9\u05dc\u05de\u05d5\u002c\u0020\u05d0\u05d6\u0020\u05d4\u05d0\u05e8\u05e0\u05e7\u0020\u05e2\u05d5\u05d3\u0020\u05e8\u05d9\u05e7\u002e',
-  financialBreakdown: '\u05e4\u05d9\u05e8\u05d5\u05e7\u0020\u05db\u05e1\u05e4\u05d9',
-  revenue: '\u05d4\u05db\u05e0\u05e1\u05d5\u05ea',
-  commissions: '\u05e2\u05de\u05dc\u05d5\u05ea',
+    'עדיין אין משלוחי סנדי פלוס שהושלמו, אז הארנק עוד ריק.',
+  financialBreakdown: 'פירוט חיוב סנדי פלוס',
+  revenue: 'סה״כ חיוב',
+  commissions: 'תוספת מרחק',
+  baseCharges: 'חיוב בסיס',
+  excludedRegularDeliveries: 'משלוחים רגילים מחוץ לארנק',
   whatIsShown: '\u05de\u05d4\u0020\u05de\u05d5\u05e6\u05d2\u0020\u05db\u05d0\u05df\u003f',
   whatIsShownDescription:
-    '\u05d4\u05d0\u05e8\u05e0\u05e7\u0020\u05de\u05e6\u05d9\u05d2\u0020\u05db\u05e8\u05d2\u05e2\u0020\u05d0\u05ea\u0020\u05d4\u05db\u05e1\u05e3\u0020\u05e9\u05e0\u05db\u05e0\u05e1\u0020\u05de\u05d4\u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd\u0020\u05e9\u05d4\u05d5\u05e9\u05dc\u05de\u05d5\u0020\u05d1\u05e4\u05d5\u05e2\u05dc\u002e\u0020\u05d1\u05e9\u05dc\u05d1\u0020\u05d4\u05d1\u05d0\u0020\u05d0\u05e4\u05e9\u05e8\u0020\u05dc\u05d4\u05d5\u05e1\u05d9\u05e3\u0020\u05d2\u05dd\u0020\u05de\u05e9\u05d9\u05db\u05d5\u05ea\u002c\u0020\u05d4\u05e2\u05d1\u05e8\u05d5\u05ea\u002c\u0020\u05d9\u05ea\u05e8\u05d4\u0020\u05d6\u05de\u05d9\u05e0\u05d4\u0020\u05d5\u05d4\u05d9\u05e1\u05d8\u05d5\u05e8\u05d9\u05d9\u05ea\u0020\u05ea\u05e0\u05d5\u05e2\u05d5\u05ea\u0020\u05de\u05dc\u05d0\u05d4\u002e',
+    'הארנק מציג רק משלוחים של סנדי פלוס. משלוחים רגילים לא נספרים כאן כי התשלום שלהם מתנהל ישירות בין חברת המשלוחים למסעדות שלה. חיוב סנדי פלוס מחושב לפי 22 ₪ בסיס ועוד 1 ₪ לכל ק״מ או חלק ממנו.',
 } as const;
 
 export const WalletPage: React.FC = () => {
@@ -53,37 +56,50 @@ export const WalletPage: React.FC = () => {
     [state.deliveries],
   );
 
+  const sendiPlusCompletedDeliveries = useMemo(
+    () =>
+      completedDeliveries.filter((delivery) =>
+        getDeliveryWalletCharge(delivery, findDeliveryRestaurant(delivery, state.restaurants)) > 0
+      ),
+    [completedDeliveries, state.restaurants],
+  );
+
   const walletStats = useMemo(() => {
-    const totalRevenue = sumDeliveryMoney(completedDeliveries, getDeliveryCustomerCharge);
-    const totalCourierPay = sumDeliveryMoney(completedDeliveries, getDeliveryCourierBasePay);
-    const totalTips = sumDeliveryMoney(completedDeliveries, getDeliveryCourierTip);
-    const totalCommission = sumDeliveryMoney(completedDeliveries, getDeliveryCommission);
-    const grossProfit = totalRevenue - totalCourierPay - totalCommission;
+    const totalRevenue = sumDeliveryMoney(sendiPlusCompletedDeliveries, (delivery) =>
+      getDeliveryWalletCharge(delivery, findDeliveryRestaurant(delivery, state.restaurants)),
+    );
+    const totalBillableDistanceKm = sumDeliveryMoney(
+      sendiPlusCompletedDeliveries,
+      getSendiPlusBillableDistanceKm,
+    );
+    const baseCharges = sendiPlusCompletedDeliveries.length * SENDI_PLUS_BASE_DELIVERY_CHARGE;
+    const distanceCharges = totalBillableDistanceKm * SENDI_PLUS_DISTANCE_STEP_CHARGE;
+    const excludedRegularDeliveries = completedDeliveries.length - sendiPlusCompletedDeliveries.length;
     const avgOrderValue =
-      completedDeliveries.length > 0
-        ? totalRevenue / completedDeliveries.length
+      sendiPlusCompletedDeliveries.length > 0
+        ? totalRevenue / sendiPlusCompletedDeliveries.length
         : 0;
 
     return {
       totalRevenue,
-      totalCourierPay,
-      totalTips,
-      totalCommission,
-      grossProfit,
+      totalBillableDistanceKm,
+      baseCharges,
+      distanceCharges,
+      excludedRegularDeliveries,
       avgOrderValue,
     };
-  }, [completedDeliveries]);
+  }, [completedDeliveries.length, sendiPlusCompletedDeliveries, state.restaurants]);
 
   const recentCompleted = useMemo(
     () =>
-      [...completedDeliveries]
+      [...sendiPlusCompletedDeliveries]
         .sort(
           (a, b) =>
             new Date(b.deliveredAt ?? b.createdAt ?? 0).getTime() -
             new Date(a.deliveredAt ?? a.createdAt ?? 0).getTime(),
         )
         .slice(0, 6),
-    [completedDeliveries],
+    [sendiPlusCompletedDeliveries],
   );
 
   return (
@@ -118,7 +134,7 @@ export const WalletPage: React.FC = () => {
                 {formatCurrency(walletStats.totalRevenue)}
               </div>
               <div className="mt-2 text-xs text-[#737373] dark:text-app-text-secondary">
-                {completedDeliveries.length.toLocaleString('he-IL')} {TEXT.completedDeliveries}
+                {sendiPlusCompletedDeliveries.length.toLocaleString('he-IL')} {TEXT.completedDeliveries}
               </div>
             </div>
 
@@ -130,7 +146,7 @@ export const WalletPage: React.FC = () => {
                 <Bike className="h-5 w-5 text-app-brand" />
               </div>
               <div className="mt-3 text-3xl font-semibold text-[#0d0d12] dark:text-app-text">
-                {formatCurrency(walletStats.totalCourierPay)}
+                {sendiPlusCompletedDeliveries.length.toLocaleString('he-IL')}
               </div>
               <div className="mt-2 text-xs text-[#737373] dark:text-app-text-secondary">
                 {TEXT.courierPaymentsHint}
@@ -145,7 +161,7 @@ export const WalletPage: React.FC = () => {
                 <TrendingUp className="h-5 w-5 text-app-brand" />
               </div>
               <div className="mt-3 text-3xl font-semibold text-[#166534] dark:text-[#4ade80]">
-                {formatCurrency(walletStats.grossProfit)}
+                {walletStats.totalBillableDistanceKm.toLocaleString('he-IL')} ק״מ
               </div>
               <div className="mt-2 text-xs text-[#737373] dark:text-app-text-secondary">
                 {TEXT.grossProfitHint}
@@ -163,7 +179,7 @@ export const WalletPage: React.FC = () => {
                 {formatCurrency(walletStats.avgOrderValue)}
               </div>
               <div className="mt-2 text-xs text-[#737373] dark:text-app-text-secondary">
-                {TEXT.tips}: {formatCurrency(walletStats.totalTips)}
+                {TEXT.tips}: {walletStats.excludedRegularDeliveries.toLocaleString('he-IL')}
               </div>
             </div>
           </div>
@@ -179,33 +195,40 @@ export const WalletPage: React.FC = () => {
                 </div>
               </div>
               <div className="divide-y divide-[#f1f1f1] dark:divide-[#1f1f1f]">
-                {recentCompleted.map((delivery) => (
-                  <div
-                    key={delivery.id}
-                    className="flex items-center justify-between gap-4 px-4 py-3"
-                  >
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-semibold text-[#0d0d12] dark:text-app-text">
-                        {delivery.client_name || TEXT.customer} •{' '}
-                        {delivery.rest_name || TEXT.restaurant}
+                {recentCompleted.map((delivery) => {
+                  const restaurant = findDeliveryRestaurant(delivery, state.restaurants);
+                  const billableDistanceKm = getSendiPlusBillableDistanceKm(delivery);
+                  const walletCharge = getDeliveryWalletCharge(delivery, restaurant);
+
+                  return (
+                    <div
+                      key={delivery.id}
+                      className="flex items-center justify-between gap-4 px-4 py-3"
+                    >
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-semibold text-[#0d0d12] dark:text-app-text">
+                          {delivery.client_name || TEXT.customer} •{' '}
+                          {delivery.rest_name || TEXT.restaurant}
+                        </div>
+                        <div className="mt-1 text-xs text-[#666d80] dark:text-app-text-secondary">
+                          #{delivery.api_short_order_id || delivery.id} •{' '}
+                          {new Date(
+                            delivery.deliveredAt ?? delivery.createdAt ?? new Date(),
+                          ).toLocaleString('he-IL')}
+                        </div>
                       </div>
-                      <div className="mt-1 text-xs text-[#666d80] dark:text-app-text-secondary">
-                        #{delivery.api_short_order_id || delivery.id} •{' '}
-                        {new Date(
-                          delivery.deliveredAt ?? delivery.createdAt ?? new Date(),
-                        ).toLocaleString('he-IL')}
+                      <div className="text-left">
+                        <div className="text-sm font-semibold text-[#166534] dark:text-[#4ade80]">
+                          {formatCurrency(walletCharge)}
+                        </div>
+                        <div className="mt-1 text-xs text-[#737373] dark:text-app-text-secondary">
+                          {formatCurrency(SENDI_PLUS_BASE_DELIVERY_CHARGE)} +{' '}
+                          {billableDistanceKm.toLocaleString('he-IL')} ק״מ
+                        </div>
                       </div>
                     </div>
-                    <div className="text-left">
-                      <div className="text-sm font-semibold text-[#166534] dark:text-[#4ade80]">
-                        {formatCurrency(getDeliveryCustomerCharge(delivery))}
-                      </div>
-                      <div className="mt-1 text-xs text-[#737373] dark:text-app-text-secondary">
-                        {TEXT.courier}: {formatCurrency(getDeliveryCourierBasePay(delivery))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
                 {recentCompleted.length === 0 ? (
                   <div className="px-4 py-8 text-center text-sm text-[#737373] dark:text-app-text-secondary">
                     {TEXT.emptyRecent}
@@ -222,18 +245,10 @@ export const WalletPage: React.FC = () => {
                 <div className="mt-4 space-y-3 text-sm">
                   <div className="flex items-center justify-between">
                     <span className="text-[#666d80] dark:text-app-text-secondary">
-                      {TEXT.revenue}
+                      {TEXT.baseCharges}
                     </span>
                     <span className="font-semibold text-[#0d0d12] dark:text-app-text">
-                      {formatCurrency(walletStats.totalRevenue)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[#666d80] dark:text-app-text-secondary">
-                      {TEXT.courierPayments}
-                    </span>
-                    <span className="font-semibold text-[#0d0d12] dark:text-app-text">
-                      {formatCurrency(walletStats.totalCourierPay)}
+                      {formatCurrency(walletStats.baseCharges)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -241,15 +256,23 @@ export const WalletPage: React.FC = () => {
                       {TEXT.commissions}
                     </span>
                     <span className="font-semibold text-[#0d0d12] dark:text-app-text">
-                      {formatCurrency(walletStats.totalCommission)}
+                      {formatCurrency(walletStats.distanceCharges)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-[#666d80] dark:text-app-text-secondary">
-                      {TEXT.tips}
+                      {TEXT.excludedRegularDeliveries}
                     </span>
                     <span className="font-semibold text-[#0d0d12] dark:text-app-text">
-                      {formatCurrency(walletStats.totalTips)}
+                      {walletStats.excludedRegularDeliveries.toLocaleString('he-IL')}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#666d80] dark:text-app-text-secondary">
+                      {TEXT.revenue}
+                    </span>
+                    <span className="font-semibold text-[#0d0d12] dark:text-app-text">
+                      {formatCurrency(walletStats.totalRevenue)}
                     </span>
                   </div>
                 </div>

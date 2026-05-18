@@ -18,6 +18,7 @@ import { canCourierAcceptDelivery, getAutoAssignableCourier } from '../utils/cou
 import {
   canAssignDeliveryWithCredits,
 } from '../utils/delivery-credits';
+import { calculateSendiPlusDeliveryCharge } from '../utils/delivery-finance';
 import { isDeliveryOfferExpired } from '../utils/delivery-offers';
 import { showActionInfoToast, showActionToast } from '../notifications/toast-helpers';
 import {
@@ -47,9 +48,9 @@ import {
 } from '../utils/sendi-plus';
 import {
   findDeliveryZoneForPoint,
-  isRestaurantAllowedForDeliveryZone,
-  loadStoredDeliveryZones,
-  readSendiPlusZonePermissions,
+  isPointCoveredByActiveDeliveryZones,
+  loadStoredDeliveryServiceAreas,
+  type StoredDeliveryZone,
 } from '../utils/delivery-zones';
 
 const STORAGE_KEY = DELIVERY_STORAGE_KEYS.state;
@@ -703,12 +704,29 @@ const getDeliveryCreatedAtMs = (delivery: Delivery) => {
 const isLiveActiveDelivery = (delivery: Delivery) =>
   delivery.status === 'pending' || delivery.status === 'assigned' || delivery.status === 'delivering';
 
+const getRestaurantServiceAreaPoint = (restaurant: Restaurant) => {
+  if (!Number.isFinite(restaurant.lat) || !Number.isFinite(restaurant.lng)) return null;
+  return { lat: restaurant.lat, lng: restaurant.lng };
+};
+
+const isRestaurantInsideSendiPlusServiceArea = (
+  restaurant: Restaurant,
+  zones: StoredDeliveryZone[],
+) => {
+  if (!isSendiPlusRestaurant(restaurant.name, restaurant.chainId)) return true;
+
+  const point = getRestaurantServiceAreaPoint(restaurant);
+  return Boolean(point && isPointCoveredByActiveDeliveryZones(point, zones));
+};
+
 const getActiveSimulatedDeliveryLimit = (
   state: DeliveryState,
   sendiPlusRadiusKm = readStoredSendiPlusRadius(),
+  sendiPlusZones = loadStoredDeliveryServiceAreas(),
 ) => {
   const activeRestaurantCount = state.restaurants.filter((restaurant) =>
-    isRestaurantEligibleForDeliveryIntake(restaurant, sendiPlusRadiusKm)
+    isRestaurantEligibleForDeliveryIntake(restaurant, sendiPlusRadiusKm) &&
+    isRestaurantInsideSendiPlusServiceArea(restaurant, sendiPlusZones)
   ).length;
   const activeCourierCount = state.couriers.filter((courier) =>
     canCourierAcceptDelivery(courier)
@@ -1181,7 +1199,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const apiShortOrderId = `${Math.floor(100000 + Math.random() * 900000)}`;
     
     const customerName = ISRAELI_NAMES[Math.floor(Math.random() * ISRAELI_NAMES.length)];
-    const price = Math.floor(15 + Math.random() * 35); // 15-50 ILS
+    let price = Math.floor(15 + Math.random() * 35); // 15-50 ILS
 
     // Reuse restaurant coordinates when available.
     const restaurantName = restaurant.name;
@@ -1192,45 +1210,37 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const restAddress = restaurant.address ?? `${restStreet}, ${restCity}`;
     const isSendiPlus = isSendiPlusRestaurant(restaurant.name, restaurant.chainId);
     const sendiPlusRadiusKm = isSendiPlus ? readStoredSendiPlusRadius() : null;
-    const sendiPlusZones = isSendiPlus ? loadStoredDeliveryZones() : [];
-    const sendiPlusZonePermissions = isSendiPlus ? readSendiPlusZonePermissions() : {};
+    const sendiPlusZones = isSendiPlus ? loadStoredDeliveryServiceAreas() : [];
+    const pickupPoint = { lat: pickupLat, lng: pickupLng };
+    if (isSendiPlus && !isPointCoveredByActiveDeliveryZones(pickupPoint, sendiPlusZones)) {
+      return null;
+    }
+
     const findCustomerDeliveryZone = (address: SimulatedCustomerAddress) =>
       findDeliveryZoneForPoint({ lat: address.lat, lng: address.lng }, sendiPlusZones);
     const customerAddr = pickCustomerAddressForRestaurant(
       restaurant,
-      { lat: pickupLat, lng: pickupLng },
+      pickupPoint,
       sendiPlusRadiusKm,
-      isSendiPlus && sendiPlusZones.length > 0
-        ? (address) => {
-            const deliveryZone = findCustomerDeliveryZone(address);
-            return Boolean(
-              deliveryZone &&
-                isRestaurantAllowedForDeliveryZone(
-                  restaurant.id,
-                  deliveryZone.id,
-                  sendiPlusZones,
-                  sendiPlusZonePermissions,
-                ),
-            );
-          }
+      isSendiPlus
+        ? (address) =>
+            isPointCoveredByActiveDeliveryZones(
+              { lat: address.lat, lng: address.lng },
+              sendiPlusZones,
+            )
         : undefined
     );
     if (!customerAddr) {
       return null;
     }
 
-    const customerDeliveryZone =
-      isSendiPlus && sendiPlusZones.length > 0 ? findCustomerDeliveryZone(customerAddr) : null;
+    const customerDeliveryZone = isSendiPlus ? findCustomerDeliveryZone(customerAddr) : null;
     if (
       isSendiPlus &&
-      sendiPlusZones.length > 0 &&
-      (!customerDeliveryZone ||
-        !isRestaurantAllowedForDeliveryZone(
-          restaurant.id,
-          customerDeliveryZone.id,
-          sendiPlusZones,
-          sendiPlusZonePermissions,
-        ))
+      !isPointCoveredByActiveDeliveryZones(
+        { lat: customerAddr.lat, lng: customerAddr.lng },
+        sendiPlusZones,
+      )
     ) {
       return null;
     }
@@ -1251,7 +1261,11 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const etaAfterPickupMinutes = Math.max(8, Math.round((deliveryDistanceKm / 18) * 60) + 3);
 
     const now = generatedAt;
-    const restPrice = Math.floor(price * 0.7); // 70% of customer price
+    if (isSendiPlus) {
+      price = calculateSendiPlusDeliveryCharge(deliveryDistanceKm);
+    }
+
+    const restPrice = isSendiPlus ? price : Math.floor(price * 0.7); // 70% of customer price
     const runnerPrice = Math.floor(price * 0.3); // 30% to courier
     const cookTime = restaurant.defaultPreparationTime ?? DEFAULT_RESTAURANT_PREPARATION_TIME;
     const maxDeliveryTime = restaurant.maxDeliveryTime ?? DEFAULT_RESTAURANT_MAX_DELIVERY_TIME;
@@ -1471,9 +1485,14 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       const speed = Math.max(stateNow.timeMultiplier || 1, 0.1);
       const sendiPlusRadiusKm = readStoredSendiPlusRadius();
+      const sendiPlusZones = loadStoredDeliveryServiceAreas();
       const nowMs = now.getTime();
       const activeDeliveryCount = stateNow.deliveries.filter(isLiveActiveDelivery).length;
-      const activeDeliveryLimit = getActiveSimulatedDeliveryLimit(stateNow, sendiPlusRadiusKm);
+      const activeDeliveryLimit = getActiveSimulatedDeliveryLimit(
+        stateNow,
+        sendiPlusRadiusKm,
+        sendiPlusZones,
+      );
       const activeCapacity = activeDeliveryLimit - activeDeliveryCount;
       if (activeCapacity <= 0) return;
 
@@ -1486,6 +1505,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const activeRestaurants = stateNow.restaurants.filter(
         (restaurant) =>
           isRestaurantEligibleForDeliveryIntake(restaurant, sendiPlusRadiusKm) &&
+          isRestaurantInsideSendiPlusServiceArea(restaurant, sendiPlusZones) &&
           hasActiveLinkedDeliveryHub(restaurant.linkedHubIds)
       );
       const eligibleRestaurants = activeRestaurants

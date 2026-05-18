@@ -16,6 +16,7 @@ export const DELIVERY_STORAGE_KEYS = {
   sendiGoDefaultActiveMigration: 'sendi-go-restaurants-default-active-v1',
   sendiPlusRadius: 'sendi-plus-radius-km',
   legacySendiGoRadius: 'sendi-go-radius-km',
+  sendiPlusTermsAccepted: 'sendi-plus-terms-accepted',
   deliveryZones: 'delivery_zones_v1',
   sendiPlusZonePermissions: 'sendi-plus-zone-permissions-v1',
 } as const;
@@ -37,6 +38,7 @@ const RESET_STORAGE_KEYS = [
   DELIVERY_STORAGE_KEYS.sendiGoDefaultActiveMigration,
   DELIVERY_STORAGE_KEYS.sendiPlusRadius,
   DELIVERY_STORAGE_KEYS.legacySendiGoRadius,
+  DELIVERY_STORAGE_KEYS.sendiPlusTermsAccepted,
   DELIVERY_STORAGE_KEYS.deliveryZones,
   DELIVERY_STORAGE_KEYS.sendiPlusZonePermissions,
 ] as const;

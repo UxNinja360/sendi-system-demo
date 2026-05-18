@@ -29,7 +29,7 @@ import {
 import { getNavItemById, isNavItemActive, SIDEBAR_NAV_SECTIONS } from '../../app-navigation';
 import type { AppNavIconKey, AppNavItem } from '../../app-navigation';
 import { useDelivery } from '../../context/delivery-context-value';
-import { getDeliveryCustomerCharge } from '../../utils/delivery-finance';
+import { findDeliveryRestaurant, getDeliveryWalletCharge } from '../../utils/delivery-finance';
 import { isOperationalDelivery } from '../../utils/delivery-status';
 import {
   SENDI_PLUS_RADIUS_CHANGE_EVENT,
@@ -37,8 +37,14 @@ import {
   SENDI_PLUS_TERMS_ACCEPTED_STORAGE_KEY,
   isRestaurantActiveForDisplay,
   isRestaurantEligibleForDeliveryIntake,
+  isSendiPlusRestaurant,
   readStoredSendiPlusRadius,
 } from '../../utils/sendi-plus';
+import {
+  DELIVERY_ZONES_CHANGE_EVENT,
+  isPointCoveredByActiveDeliveryZones,
+  loadStoredDeliveryServiceAreas,
+} from '../../utils/delivery-zones';
 import { Toggle } from '../common/toggle';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
@@ -220,11 +226,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
     isRestaurantActiveForDisplay(restaurant),
   ).length;
   const activeCouriersCount = state.couriers.filter((courier) => courier.status !== 'offline').length;
+  const sendiPlusDeliveryZones = useMemo(
+    () => loadStoredDeliveryServiceAreas(),
+    [sendiPlusAccessVersion],
+  );
   const hasDeliveryIntakeRestaurants = useMemo(
     () => state.restaurants.some((restaurant) =>
-      isRestaurantEligibleForDeliveryIntake(restaurant, sendiPlusRadiusKm)
+      isRestaurantEligibleForDeliveryIntake(restaurant, sendiPlusRadiusKm) &&
+      (!isSendiPlusRestaurant(restaurant.name, restaurant.chainId) ||
+        (Number.isFinite(restaurant.lat) &&
+          Number.isFinite(restaurant.lng) &&
+          isPointCoveredByActiveDeliveryZones(
+            { lat: restaurant.lat, lng: restaurant.lng },
+            sendiPlusDeliveryZones,
+          )))
     ),
-    [sendiPlusAccessVersion, sendiPlusRadiusKm, state.restaurants],
+    [sendiPlusDeliveryZones, sendiPlusRadiusKm, state.restaurants],
   );
   const isDeliveryIntakeBlocked = state.isSystemOpen && !hasDeliveryIntakeRestaurants;
   const systemStatusLabel = isDeliveryIntakeBlocked
@@ -234,7 +251,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       : LABELS.systemClosed;
   const walletRevenue = state.deliveries
     .filter((delivery) => delivery.status === 'delivered')
-    .reduce((sum, delivery) => sum + getDeliveryCustomerCharge(delivery), 0);
+    .reduce(
+      (sum, delivery) =>
+        sum + getDeliveryWalletCharge(delivery, findDeliveryRestaurant(delivery, state.restaurants)),
+      0,
+    );
   const walletItem = getNavItemById('wallet');
   const balanceItem = getNavItemById('delivery-balance');
   const settingsItem = getNavItemById('settings');
@@ -283,14 +304,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       if (event.key === SENDI_PLUS_TERMS_ACCEPTED_STORAGE_KEY) {
         syncSendiPlusAccess();
       }
+
+      if (event.key === 'delivery_zones_v1') {
+        syncSendiPlusAccess();
+      }
     };
 
     window.addEventListener(SENDI_PLUS_RADIUS_CHANGE_EVENT, syncSendiPlusRadius);
     window.addEventListener(SENDI_PLUS_TERMS_ACCEPTED_CHANGE_EVENT, syncSendiPlusAccess);
+    window.addEventListener(DELIVERY_ZONES_CHANGE_EVENT, syncSendiPlusAccess);
     window.addEventListener('storage', handleStorageChange);
     return () => {
       window.removeEventListener(SENDI_PLUS_RADIUS_CHANGE_EVENT, syncSendiPlusRadius);
       window.removeEventListener(SENDI_PLUS_TERMS_ACCEPTED_CHANGE_EVENT, syncSendiPlusAccess);
+      window.removeEventListener(DELIVERY_ZONES_CHANGE_EVENT, syncSendiPlusAccess);
       window.removeEventListener('storage', handleStorageChange);
     };
   }, []);

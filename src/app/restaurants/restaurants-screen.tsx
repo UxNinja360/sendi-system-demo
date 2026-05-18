@@ -936,8 +936,10 @@ export const RestaurantsScreen: React.FC = () => {
             <PageToolbar
               showBottomBorder={false}
               showPeriodControl={false}
-              actions={
-                <div className="flex min-w-0 flex-1 items-center gap-1.5">
+              actionsClassName="relative z-[80]"
+              controlsClassName="relative z-10"
+              controls={
+                <div className="flex max-w-full shrink-0 flex-nowrap items-center gap-1 overflow-x-auto no-scrollbar">
                   <div className="flex shrink-0 items-center gap-1">
                     <RestaurantToolbarToggle
                       active={restaurantSourceVisibility.regular}
@@ -962,14 +964,6 @@ export const RestaurantsScreen: React.FC = () => {
                       icon={<SquarePlus className="h-3.5 w-3.5" />}
                     />
                   </div>
-                  <ListToolbarActions
-                    searchQuery={searchQuery}
-                    onSearchQueryChange={setSearchQuery}
-                    searchPlaceholder="חפש מסעדה, עיר או איש קשר..."
-                    searchWidthClass="w-52"
-                    showColumnsToggle={false}
-                    showExportButton={false}
-                  />
                   <div className="flex shrink-0 items-center gap-1">
                     <RestaurantToolbarToggle
                       active={restaurantConnectionFilter === 'connected'}
@@ -982,6 +976,18 @@ export const RestaurantsScreen: React.FC = () => {
                       icon={<Power className="h-3.5 w-3.5" />}
                     />
                   </div>
+                </div>
+              }
+              actions={
+                <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                  <ListToolbarActions
+                    searchQuery={searchQuery}
+                    onSearchQueryChange={setSearchQuery}
+                    searchPlaceholder="חפש מסעדה, עיר או איש קשר..."
+                    searchWidthClass="w-52"
+                    showColumnsToggle={false}
+                    showExportButton={false}
+                  />
                 </div>
               }
             />

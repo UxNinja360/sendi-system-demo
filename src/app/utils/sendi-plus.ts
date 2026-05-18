@@ -12,7 +12,7 @@ export const SENDI_PLUS_RADIUS_STEP_KM = 0.5;
 export const MAX_SENDI_PLUS_RADIUS_KM = 20;
 
 type RadiusStorageReader = Pick<Storage, 'getItem'>;
-type RadiusStorageWriter = Pick<Storage, 'getItem' | 'setItem'>;
+type RadiusStorageWriter = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 
 let sendiPlusTermsAcceptedFallback = false;
 
@@ -79,6 +79,18 @@ export const writeStoredSendiPlusRadius = (
   }
 };
 
+export const clearStoredSendiPlusRadius = (storage?: RadiusStorageWriter | null) => {
+  const targetStorage = getRadiusStorage(storage);
+  if (!targetStorage || !('removeItem' in targetStorage)) return;
+
+  targetStorage.removeItem(SENDI_PLUS_RADIUS_STORAGE_KEY);
+  targetStorage.removeItem(LEGACY_SENDI_GO_RADIUS_STORAGE_KEY);
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(SENDI_PLUS_RADIUS_CHANGE_EVENT));
+  }
+};
+
 export const readStoredSendiPlusTermsAccepted = (storage?: RadiusStorageReader | null) => {
   const targetStorage = getRadiusStorage(storage);
   if (!targetStorage) return sendiPlusTermsAcceptedFallback;
@@ -98,6 +110,10 @@ export const writeStoredSendiPlusTermsAccepted = (
   const targetStorage = getRadiusStorage(storage);
   if (targetStorage && 'setItem' in targetStorage) {
     targetStorage.setItem(SENDI_PLUS_TERMS_ACCEPTED_STORAGE_KEY, value ? 'true' : 'false');
+  }
+
+  if (!value) {
+    clearStoredSendiPlusRadius(storage);
   }
 
   if (typeof window !== 'undefined') {
