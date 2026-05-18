@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router';
 import {
+  ArrowUp,
   Bike,
   Bot,
   CheckCircle2,
@@ -62,8 +63,8 @@ const ACTIVE_DELIVERY_STATUSES: DeliveryStatus[] = ['pending', 'assigned', 'deli
 const formatRadiusKm = formatSendiPlusRadiusKm;
 const SENDI_PLUS_TERMS_TEXT =
   'הפעלת המתג מחייבת עמידה בזמני משלוח של עד 60 דקות מסירה';
-const DASHBOARD_PULL_REFRESH_THRESHOLD = 74;
-const DASHBOARD_PULL_REFRESH_MAX = 112;
+const DASHBOARD_PULL_REFRESH_THRESHOLD = 48;
+const DASHBOARD_PULL_REFRESH_MAX = 92;
 
 const STATUS_META: Array<{
   id: DeliveryStatus;
@@ -598,7 +599,7 @@ export const Dashboard: React.FC = () => {
 
     if (nextReady && !pullThresholdHapticPlayedRef.current) {
       pullThresholdHapticPlayedRef.current = true;
-      playHaptic('medium', { force: true });
+      playHaptic('success', { force: true });
     }
   }, [isDashboardRefreshing, resetPullRefresh]);
 
@@ -776,6 +777,10 @@ export const Dashboard: React.FC = () => {
   });
   const pullRefreshProgress = Math.min(1, pullDistance / DASHBOARD_PULL_REFRESH_THRESHOLD);
   const pullRefreshVisible = pullDistance > 0 || isDashboardRefreshing;
+  const pullRefreshArmed = isDashboardRefreshing || isPullRefreshReady;
+  const pullRefreshRevealHeight = isDashboardRefreshing
+    ? 44
+    : Math.min(54, Math.round(pullDistance * 0.58));
   const pullRefreshLabel = isDashboardRefreshing
     ? 'מרענן'
     : isPullRefreshReady
@@ -795,23 +800,18 @@ export const Dashboard: React.FC = () => {
         onTouchCancel={handlePullRefreshTouchEnd}
       >
         <div
-          className="pointer-events-none sticky top-0 z-20 mx-auto flex h-0 w-full max-w-[1280px] justify-center overflow-visible md:hidden"
+          className="mx-auto w-full max-w-[1280px] overflow-hidden transition-[height,opacity] duration-200 md:hidden"
+          style={{
+            height: pullRefreshRevealHeight,
+            opacity: pullRefreshVisible ? 1 : 0,
+          }}
           aria-hidden={!pullRefreshVisible}
         >
-          <div
-            className={`mt-1 flex h-9 items-center gap-2 rounded-full border border-app-border bg-app-surface-raised px-3 text-[11px] font-semibold text-app-text shadow-lg shadow-black/10 transition-all duration-200 dark:border-[#2b2b2b] dark:bg-[#111111] ${
-              pullRefreshVisible ? 'opacity-100' : 'opacity-0'
-            }`}
-            style={{
-              transform: `translateY(${pullRefreshVisible ? Math.max(0, pullDistance - 38) : -28}px) scale(${0.86 + pullRefreshProgress * 0.14})`,
-            }}
-          >
-            <Loader2
-              className={`h-3.5 w-3.5 text-app-brand ${
-                isDashboardRefreshing ? 'animate-spin' : ''
-              }`}
+          <div className="flex h-full items-center justify-center gap-2 text-[11px] font-semibold text-app-text-secondary">
+            <ArrowUp
+              className="h-3.5 w-3.5 text-app-brand transition-transform duration-200"
               style={{
-                transform: isDashboardRefreshing ? undefined : `rotate(${pullRefreshProgress * 220}deg)`,
+                transform: `rotate(${pullRefreshArmed ? 0 : 180}deg) scale(${0.82 + pullRefreshProgress * 0.18})`,
               }}
             />
             <span>{pullRefreshLabel}</span>
@@ -819,9 +819,6 @@ export const Dashboard: React.FC = () => {
         </div>
         <div
           className="mx-auto flex w-full max-w-[1280px] flex-col gap-2 transition-transform duration-200"
-          style={{
-            transform: pullDistance > 0 ? `translateY(${Math.min(24, pullDistance * 0.22)}px)` : undefined,
-          }}
         >
           <section className="flex w-full items-center justify-end gap-2">
             <div className="flex max-w-full min-w-0 items-center gap-2 overflow-x-auto no-scrollbar" dir="ltr">
@@ -829,8 +826,14 @@ export const Dashboard: React.FC = () => {
                 <DashboardToolbarToggle
                   active={state.isSystemOpen}
                   label={state.isSystemOpen ? 'מערכת פתוחה' : 'מערכת סגורה'}
-                  onClick={toggleSystem}
-                  icon={<Power className="h-3.5 w-3.5" />}
+                  onClick={isDashboardRefreshing ? () => undefined : toggleSystem}
+                  icon={
+                    pullRefreshArmed ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Power className="h-3.5 w-3.5" />
+                    )
+                  }
                 />
                 <DashboardToolbarToggle
                   active={state.autoAssignEnabled}
