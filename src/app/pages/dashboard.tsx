@@ -548,6 +548,7 @@ export const Dashboard: React.FC = () => {
   const isDashboardRefreshingRef = React.useRef(false);
   const pullRefreshResetTimeoutRef = React.useRef<number | null>(null);
   const dashboardRefreshTimeoutRef = React.useRef<number | null>(null);
+  const pullRefreshHapticButtonRef = React.useRef<HTMLButtonElement | null>(null);
 
   const isMobilePullRefreshPointer = React.useCallback(() => {
     if (typeof window === 'undefined') return false;
@@ -582,7 +583,7 @@ export const Dashboard: React.FC = () => {
   }, [completePullRefreshReset]);
 
   const playPullRefreshThresholdHaptic = React.useCallback(() => {
-    playHaptic('selection', { force: true });
+    pullRefreshHapticButtonRef.current?.click();
     window.setTimeout(() => playHaptic('medium', { force: true }), 24);
   }, []);
 
@@ -591,8 +592,8 @@ export const Dashboard: React.FC = () => {
 
     pullRefreshTriggeredRef.current = true;
     isDashboardRefreshingRef.current = true;
-    setPullDistance(0);
-    setIsPullRefreshReady(false);
+    setPullDistance(DASHBOARD_PULL_REFRESH_THRESHOLD);
+    setIsPullRefreshReady(true);
     setIsDashboardRefreshing(true);
     setDashboardRefreshVersion((version) => version + 1);
     setDeliveryZoneConfigVersion((version) => version + 1);
@@ -652,8 +653,8 @@ export const Dashboard: React.FC = () => {
     const rawDistance = currentY - startY;
     if (rawDistance <= 0) {
       if (pullRefreshTriggeredRef.current) {
-        setPullDistance(0);
-        setIsPullRefreshReady(false);
+        setPullDistance(DASHBOARD_PULL_REFRESH_THRESHOLD);
+        setIsPullRefreshReady(true);
         event.preventDefault();
         return;
       }
@@ -665,8 +666,8 @@ export const Dashboard: React.FC = () => {
     event.preventDefault();
 
     if (pullRefreshTriggeredRef.current) {
-      setPullDistance(0);
-      setIsPullRefreshReady(false);
+      setPullDistance(DASHBOARD_PULL_REFRESH_THRESHOLD);
+      setIsPullRefreshReady(true);
       return;
     }
 
@@ -691,13 +692,7 @@ export const Dashboard: React.FC = () => {
     pullRefreshTouchActiveRef.current = false;
 
     if (pullRefreshTriggeredRef.current || isDashboardRefreshingRef.current) {
-      setPullDistance(0);
-      setIsPullRefreshReady(false);
-
-      if (!isDashboardRefreshingRef.current && dashboardRefreshTimeoutRef.current === null) {
-        resetPullRefresh();
-      }
-
+      resetPullRefresh();
       return;
     }
 
@@ -877,6 +872,14 @@ export const Dashboard: React.FC = () => {
     <>
       {mapSplitPortal}
       <div className="flex h-full min-h-0 flex-col overflow-hidden bg-app-background text-app-text" dir="rtl">
+      <button
+        ref={pullRefreshHapticButtonRef}
+        type="button"
+        aria-hidden="true"
+        tabIndex={-1}
+        data-haptic="selection"
+        className="pointer-events-none fixed -left-10 -top-10 h-px w-px opacity-0"
+      />
       <main
         ref={mainScrollRef}
         className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-2 pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:px-6 md:pt-2 md:pb-6"
