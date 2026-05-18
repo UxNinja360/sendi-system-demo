@@ -8,9 +8,8 @@ const mergeToastClassName = (baseClassName: string, className?: string) =>
 
 const getActionToastOptions = (options: ExternalToast = {}): ExternalToast => ({
   ...options,
-  id: options.id ?? 'sendi-action-toast',
-  duration: options.duration ?? 1600,
-  position: options.position ?? 'bottom-center',
+  duration: options.duration ?? 3200,
+  position: options.position ?? 'bottom-left',
   className: mergeToastClassName('sonner-toast sonner-toast--action', options.className),
 });
 
@@ -33,7 +32,7 @@ export const showDeliveryAlertToast = (
   toast.success(message, {
     ...options,
     duration: options?.duration ?? 3600,
-    position: 'top-center',
+    position: options?.position ?? 'bottom-left',
     className: mergeToastClassName(
       'sonner-toast sonner-toast--delivery-alert',
       options?.className,

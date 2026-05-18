@@ -912,7 +912,6 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       {
         description: pending.count > 1 ? undefined : pending.toast.description,
         duration: ACTION_TOAST_DURATION_MS,
-        id: 'sendi-action-toast',
       }
     );
   }, []);

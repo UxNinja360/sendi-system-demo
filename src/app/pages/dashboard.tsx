@@ -16,7 +16,6 @@ import {
   UserCheck,
   XCircle,
 } from 'lucide-react';
-import { ToolbarDayPicker } from '../components/common/toolbar-date-picker';
 import { ToolbarIconButton } from '../components/common/toolbar-icon-button';
 import { Toggle } from '../components/common/toggle';
 import { useDelivery } from '../context/delivery-context-value';
@@ -487,8 +486,7 @@ const SendiPlusCard: React.FC<{
 export const Dashboard: React.FC = () => {
   const { state, dispatch, toggleSystem } = useDelivery();
   const navigate = useNavigate();
-  const todayDate = React.useMemo(() => new Date(), []);
-  const [selectedDate, setSelectedDate] = React.useState(todayDate);
+  const todayDateKey = React.useMemo(() => toDateInputValue(new Date()), []);
   const [sendiPlusRadiusKm, setSendiPlusRadiusKm] = React.useState(readStoredSendiPlusRadius);
   const [sendiPlusTermsAccepted, setSendiPlusTermsAccepted] = React.useState(readStoredSendiPlusTermsAccepted);
   const [deliveryZoneConfigVersion, setDeliveryZoneConfigVersion] = React.useState(0);
@@ -559,27 +557,13 @@ export const Dashboard: React.FC = () => {
     }
   }, []);
 
-  const selectedDateKey = toDateInputValue(selectedDate);
-
-  const deliveryCountsByDay = React.useMemo(() => {
-    return state.deliveries.reduce<Record<string, number>>((counts, delivery) => {
-      if (!DASHBOARD_DELIVERY_STATUSES.includes(delivery.status)) return counts;
-
-      const date = toDate(getDeliveryPrimaryDate(delivery));
-      if (!date) return counts;
-      const key = toDateInputValue(date);
-      counts[key] = (counts[key] ?? 0) + 1;
-      return counts;
-    }, {});
-  }, [state.deliveries]);
-
   const dateDeliveries = React.useMemo(
     () =>
       state.deliveries.filter((delivery) => {
         if (!DASHBOARD_DELIVERY_STATUSES.includes(delivery.status)) return false;
-        return isSameInputDate(getDeliveryPrimaryDate(delivery), selectedDateKey);
+        return isSameInputDate(getDeliveryPrimaryDate(delivery), todayDateKey);
       }),
-    [selectedDateKey, state.deliveries],
+    [todayDateKey, state.deliveries],
   );
 
   const filteredDeliveries = dateDeliveries;
@@ -676,12 +660,6 @@ export const Dashboard: React.FC = () => {
         <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-2">
           <section className="flex w-full items-center justify-start gap-2">
             <div className="flex max-w-full min-w-0 items-center gap-2 overflow-x-auto no-scrollbar">
-              <ToolbarDayPicker
-                selectedDate={selectedDate}
-                onDateChange={setSelectedDate}
-                dayCounts={deliveryCountsByDay}
-                fixedWidth
-              />
               <div className="flex shrink-0 items-center gap-1">
                 <DashboardToolbarToggle
                   active={state.isSystemOpen}
