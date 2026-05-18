@@ -3,14 +3,23 @@ import { toast } from 'sonner';
 import {
   AlertTriangle,
   BellRing,
+  Bike,
+  Bot,
   ChevronDown,
   ChevronLeft,
+  Clock3,
   LogOut,
+  Map as MapIcon,
   Moon,
   Palette,
+  Package,
+  Power,
   RotateCcw,
+  Ruler,
+  Store,
   Sun,
   Volume2,
+  Wallet,
   Zap,
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
@@ -223,6 +232,7 @@ const SectionCard: React.FC<{
 const OpenButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
   <button
     type="button"
+    data-haptic="selection"
     onClick={onClick}
     className="inline-flex items-center gap-1 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
   >
@@ -259,7 +269,7 @@ const getDeliveryPushStatusLabel = (status: DeliveryPushStatus | null) => {
 export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
   const navigate = useNavigate();
   const { isDark, toggleDark } = useTheme();
-  const { resetSystem } = useDelivery();
+  const { state, dispatch, resetSystem, toggleSystem } = useDelivery();
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [alertPreferences, setAlertPreferencesState] = useState<AlertPreferences>(() =>
     getAlertPreferences(),
@@ -395,178 +405,297 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-app-background" dir="rtl">
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-3 py-3 md:px-5 md:py-5">
+        <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 px-3 py-3 md:px-5 md:py-5">
           <SectionCard
-            icon={<Palette className="h-4 w-4 text-app-brand" />}
-            title={TEXT.personal}
-            description={TEXT.personalDescription}
+            icon={<Power className="h-4 w-4 text-app-brand" />}
+            title={TEXT.system}
+            description={TEXT.systemDescription}
           >
             <SettingRow
-              icon={isDark ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-              title={TEXT.darkMode}
-              hint={TEXT.darkModeHint}
-              control={<Toggle checked={isDark} onChange={() => toggleDark()} />}
-            />
-          </SectionCard>
-
-          <SectionCard
-            icon={<BellRing className="h-4 w-4 text-app-brand" />}
-            title={TEXT.alerts}
-            description={TEXT.alertsDescription}
-          >
-            <SettingRow
-              icon={<Volume2 className="h-4 w-4" />}
-              title={TEXT.newDeliverySound}
-              hint={TEXT.newDeliverySoundHint}
+              icon={<Power className="h-4 w-4" />}
+              title={TEXT.systemOpen}
+              hint={TEXT.systemOpenHint}
               control={
                 <Toggle
-                  checked={alertPreferences.newDeliverySoundEnabled}
-                  onChange={() => {
-                    const nextValue = !alertPreferences.newDeliverySoundEnabled;
-                    updateAlertPreference('newDeliverySoundEnabled', nextValue);
-                    if (nextValue) handleTestSound();
-                  }}
+                  checked={state.isSystemOpen}
+                  onChange={toggleSystem}
+                  haptic={state.isSystemOpen ? 'warning' : 'success'}
+                  ariaLabel={TEXT.systemOpen}
                 />
               }
             />
             <SettingRow
-              icon={<Volume2 className="h-4 w-4" />}
-              title="בחירת צליל"
-              hint="בחר איזה צליל יופעל כשנכנס משלוח חדש."
-              control={
-                <SoundPicker
-                  selectedSoundId={alertPreferences.newDeliverySoundId}
-                  onSelect={handleSelectDeliverySound}
-                />
-              }
-            />
-            <SettingRow
-              icon={<Zap className="h-4 w-4" />}
-              title={TEXT.hapticFeedback}
-              hint={TEXT.hapticFeedbackHint}
+              icon={<Bot className="h-4 w-4" />}
+              title={TEXT.autoAssign}
+              hint={TEXT.autoAssignHint}
               control={
                 <Toggle
-                  checked={alertPreferences.hapticFeedbackEnabled}
-                  onChange={() => {
-                    const nextValue = !alertPreferences.hapticFeedbackEnabled;
-                    updateAlertPreference('hapticFeedbackEnabled', nextValue);
-                    if (nextValue) handleTestHaptic();
-                  }}
+                  checked={state.autoAssignEnabled}
+                  onChange={() => dispatch({ type: 'TOGGLE_AUTO_ASSIGN' })}
+                  ariaLabel={TEXT.autoAssign}
                 />
               }
             />
             <SettingRow
-              icon={<Zap className="h-4 w-4" />}
-              title={TEXT.newDeliveryHaptic}
-              hint={TEXT.newDeliveryHapticHint}
+              icon={<Clock3 className="h-4 w-4" />}
+              title={TEXT.timeMultiplier}
+              hint={`${TEXT.timeHintPrefix}${state.timeMultiplier.toLocaleString('he-IL')}`}
               control={
-                <Toggle
-                  checked={alertPreferences.newDeliveryHapticEnabled}
-                  onChange={() => {
-                    const nextValue = !alertPreferences.newDeliveryHapticEnabled;
-                    updateAlertPreference('newDeliveryHapticEnabled', nextValue);
-                    if (nextValue) handleTestHaptic();
-                  }}
-                />
-              }
-            />
-            <SettingRow
-              icon={<BellRing className="h-4 w-4" />}
-              title={TEXT.browserNotifications}
-              hint={TEXT.browserNotificationsHint}
-              control={
-                <Toggle
-                  checked={alertPreferences.browserNotificationsEnabled}
-                  onChange={handleBrowserNotificationsToggle}
-                />
-              }
-            />
-            <SettingRow
-              icon={<BellRing className="h-4 w-4" />}
-              title={TEXT.notificationPermission}
-              hint={TEXT.notificationPermissionHint}
-              control={
-                notificationPermission === 'default' ? (
-                  <button
-                    type="button"
-                    onClick={handleRequestNotificationPermission}
-                    className="inline-flex items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
+                <div className="relative w-[132px]">
+                  <select
+                    value={state.timeMultiplier}
+                    data-haptic="selection"
+                    onChange={(event) =>
+                      dispatch({
+                        type: 'SET_TIME_MULTIPLIER',
+                        payload: Number(event.currentTarget.value),
+                      })
+                    }
+                    className="h-10 w-full appearance-none rounded-xl border border-app-border bg-[#f5f5f5] pl-8 pr-3 text-right text-xs font-semibold text-[#0d0d12] outline-none transition-colors hover:bg-[#ececec] focus:border-app-brand focus:bg-white focus:ring-2 focus:ring-app-brand/20 dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised dark:focus:bg-app-surface"
+                    aria-label={TEXT.timeMultiplier}
                   >
-                    <BellRing className="h-4 w-4" />
-                    <span>{TEXT.enableNotifications}</span>
-                  </button>
-                ) : (
-                  <span className="rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#666d80] dark:bg-app-surface dark:text-app-text-secondary">
-                    {getNotificationPermissionLabel(notificationPermission)}
-                  </span>
-                )
-              }
-            />
-            <SettingRow
-              icon={<BellRing className="h-4 w-4" />}
-              title={TEXT.realPush}
-              hint={TEXT.realPushHint}
-              control={
-                <div className="flex items-center gap-2">
-                  <span className="hidden rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#666d80] dark:bg-app-surface dark:text-app-text-secondary sm:inline-flex">
-                    {getDeliveryPushStatusLabel(deliveryPushStatus)}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleEnableDeliveryPush}
-                    disabled={isDeliveryPushBusy}
-                    className="inline-flex items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] disabled:cursor-wait disabled:opacity-60 dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
-                  >
-                    <BellRing className="h-4 w-4" />
-                    <span>{TEXT.enableRealPush}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleTestDeliveryPush}
-                    disabled={isDeliveryPushBusy || deliveryPushStatus !== 'subscribed'}
-                    className="inline-flex items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
-                  >
-                    <span>{TEXT.testRealPush}</span>
-                  </button>
+                    {[0.5, 1, 2, 4, 8].map((speed) => (
+                      <option key={speed} value={speed}>
+                        x{speed.toLocaleString('he-IL')}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#666d80] dark:text-app-text-secondary" />
                 </div>
               }
             />
             <SettingRow
-              icon={<Volume2 className="h-4 w-4" />}
-              title={TEXT.testSound}
-              control={
-                <button
-                  type="button"
-                  data-haptic="light"
-                  onClick={handleTestSound}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
-                >
-                  <Volume2 className="h-4 w-4" />
-                  <span>{TEXT.playSound}</span>
-                </button>
-              }
-            />
-            <SettingRow
-              icon={<Zap className="h-4 w-4" />}
-              title={TEXT.testHaptic}
-              control={
-                <button
-                  type="button"
-                  data-haptic="success"
-                  onClick={handleTestHaptic}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
-                >
-                  <Zap className="h-4 w-4" />
-                  <span>{TEXT.playHaptic}</span>
-                </button>
-              }
+              icon={<Clock3 className="h-4 w-4" />}
+              title={TEXT.operatingHours}
+              hint={TEXT.operatingHoursHint}
+              control={<OpenButton onClick={() => navigate('/hours')} />}
             />
           </SectionCard>
 
           <SectionCard
+              icon={<Package className="h-4 w-4 text-app-brand" />}
+              title={TEXT.business}
+              description={TEXT.businessDescription}
+            >
+              <SettingRow
+                icon={<Package className="h-4 w-4" />}
+                title={TEXT.balance}
+                hint={`${TEXT.balanceHintPrefix}${state.deliveryBalance.toLocaleString('he-IL')}${TEXT.deliveriesSuffix}`}
+                control={<OpenButton onClick={() => navigate('/delivery-balance')} />}
+              />
+              <SettingRow
+                icon={<Wallet className="h-4 w-4" />}
+                title="ארנק"
+                hint="ניהול תשלומים והכנסות ממשלוחי סנדי פלוס."
+                control={<OpenButton onClick={() => navigate('/wallet')} />}
+              />
+              <SettingRow
+                icon={<Store className="h-4 w-4" />}
+                title={TEXT.restaurants}
+                hint={TEXT.restaurantsHint}
+                control={<OpenButton onClick={() => navigate('/restaurants')} />}
+              />
+              <SettingRow
+                icon={<Bike className="h-4 w-4" />}
+                title={TEXT.couriersList}
+                hint={TEXT.couriersListHint}
+                control={<OpenButton onClick={() => navigate('/couriers')} />}
+              />
+          </SectionCard>
+
+          <SectionCard
+              icon={<MapIcon className="h-4 w-4 text-app-brand" />}
+              title={TEXT.pricing}
+              description={TEXT.pricingDescription}
+            >
+              <SettingRow
+                icon={<MapIcon className="h-4 w-4" />}
+                title={TEXT.zones}
+                hint={TEXT.zonesHint}
+                control={<OpenButton onClick={() => navigate('/zones')} />}
+              />
+              <SettingRow
+                icon={<Ruler className="h-4 w-4" />}
+                title={TEXT.distancePricing}
+                hint={TEXT.distancePricingHint}
+                control={<OpenButton onClick={() => navigate('/distance-pricing')} />}
+              />
+          </SectionCard>
+
+          <SectionCard
+              icon={<BellRing className="h-4 w-4 text-app-brand" />}
+              title={TEXT.alerts}
+              description={TEXT.alertsDescription}
+            >
+              <SettingRow
+                icon={<Volume2 className="h-4 w-4" />}
+                title={TEXT.newDeliverySound}
+                hint={TEXT.newDeliverySoundHint}
+                control={
+                  <Toggle
+                    checked={alertPreferences.newDeliverySoundEnabled}
+                    onChange={() => {
+                      const nextValue = !alertPreferences.newDeliverySoundEnabled;
+                      updateAlertPreference('newDeliverySoundEnabled', nextValue);
+                      if (nextValue) handleTestSound();
+                    }}
+                  />
+                }
+              />
+              <SettingRow
+                icon={<Volume2 className="h-4 w-4" />}
+                title="בחירת צליל"
+                hint="בחר איזה צליל יופעל כשנכנס משלוח חדש."
+                control={
+                  <SoundPicker
+                    selectedSoundId={alertPreferences.newDeliverySoundId}
+                    onSelect={handleSelectDeliverySound}
+                  />
+                }
+              />
+              <SettingRow
+                icon={<BellRing className="h-4 w-4" />}
+                title={TEXT.browserNotifications}
+                hint={TEXT.browserNotificationsHint}
+                control={
+                  <Toggle
+                    checked={alertPreferences.browserNotificationsEnabled}
+                    onChange={handleBrowserNotificationsToggle}
+                  />
+                }
+              />
+              <SettingRow
+                icon={<BellRing className="h-4 w-4" />}
+                title={TEXT.notificationPermission}
+                hint={TEXT.notificationPermissionHint}
+                control={
+                  notificationPermission === 'default' ? (
+                    <button
+                      type="button"
+                      data-haptic="selection"
+                      onClick={handleRequestNotificationPermission}
+                      className="inline-flex items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
+                    >
+                      <BellRing className="h-4 w-4" />
+                      <span>{TEXT.enableNotifications}</span>
+                    </button>
+                  ) : (
+                    <span className="rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#666d80] dark:bg-app-surface dark:text-app-text-secondary">
+                      {getNotificationPermissionLabel(notificationPermission)}
+                    </span>
+                  )
+                }
+              />
+              <SettingRow
+                icon={<BellRing className="h-4 w-4" />}
+                title={TEXT.realPush}
+                hint={TEXT.realPushHint}
+                control={
+                  <div className="flex items-center gap-2">
+                    <span className="hidden rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#666d80] dark:bg-app-surface dark:text-app-text-secondary sm:inline-flex">
+                      {getDeliveryPushStatusLabel(deliveryPushStatus)}
+                    </span>
+                    <button
+                      type="button"
+                      data-haptic="selection"
+                      onClick={handleEnableDeliveryPush}
+                      disabled={isDeliveryPushBusy}
+                      className="inline-flex items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] disabled:cursor-wait disabled:opacity-60 dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
+                    >
+                      <BellRing className="h-4 w-4" />
+                      <span>{TEXT.enableRealPush}</span>
+                    </button>
+                    <button
+                      type="button"
+                      data-haptic="success"
+                      onClick={handleTestDeliveryPush}
+                      disabled={isDeliveryPushBusy || deliveryPushStatus !== 'subscribed'}
+                      className="inline-flex items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
+                    >
+                      <span>{TEXT.testRealPush}</span>
+                    </button>
+                  </div>
+                }
+              />
+              <SettingRow
+                icon={<Volume2 className="h-4 w-4" />}
+                title={TEXT.testSound}
+                control={
+                  <button
+                    type="button"
+                    data-haptic="light"
+                    onClick={handleTestSound}
+                    className="inline-flex items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
+                  >
+                    <Volume2 className="h-4 w-4" />
+                    <span>{TEXT.playSound}</span>
+                  </button>
+                }
+              />
+          </SectionCard>
+
+          <SectionCard
+              icon={<Palette className="h-4 w-4 text-app-brand" />}
+              title={TEXT.personal}
+              description={TEXT.personalDescription}
+            >
+              <SettingRow
+                icon={isDark ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+                title={TEXT.darkMode}
+                hint={TEXT.darkModeHint}
+                control={<Toggle checked={isDark} onChange={() => toggleDark()} />}
+              />
+              <SettingRow
+                icon={<Zap className="h-4 w-4" />}
+                title={TEXT.hapticFeedback}
+                hint={TEXT.hapticFeedbackHint}
+                control={
+                  <Toggle
+                    checked={alertPreferences.hapticFeedbackEnabled}
+                    onChange={() => {
+                      const nextValue = !alertPreferences.hapticFeedbackEnabled;
+                      updateAlertPreference('hapticFeedbackEnabled', nextValue);
+                      if (nextValue) handleTestHaptic();
+                    }}
+                  />
+                }
+              />
+              <SettingRow
+                icon={<Zap className="h-4 w-4" />}
+                title={TEXT.newDeliveryHaptic}
+                hint={TEXT.newDeliveryHapticHint}
+                control={
+                  <Toggle
+                    checked={alertPreferences.newDeliveryHapticEnabled}
+                    onChange={() => {
+                      const nextValue = !alertPreferences.newDeliveryHapticEnabled;
+                      updateAlertPreference('newDeliveryHapticEnabled', nextValue);
+                      if (nextValue) handleTestHaptic();
+                    }}
+                  />
+                }
+              />
+              <SettingRow
+                icon={<Zap className="h-4 w-4" />}
+                title={TEXT.testHaptic}
+                control={
+                  <button
+                    type="button"
+                    data-haptic="success"
+                    onClick={handleTestHaptic}
+                    className="inline-flex items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
+                  >
+                    <Zap className="h-4 w-4" />
+                    <span>{TEXT.playHaptic}</span>
+                  </button>
+                }
+              />
+          </SectionCard>
+
+          <SectionCard
             icon={<LogOut className="h-4 w-4 text-app-brand" />}
-            title={TEXT.logout}
-            description={TEXT.logoutHint}
+            title={TEXT.advanced}
+            description={TEXT.advancedDescription}
           >
             <SettingRow
               icon={<LogOut className="h-4 w-4" />}
@@ -575,6 +704,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
               control={
                 <button
                   type="button"
+                  data-haptic="selection"
                   onClick={handleLogout}
                   className="inline-flex items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
                 >
@@ -583,14 +713,6 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
                 </button>
               }
             />
-          </SectionCard>
-
-          <SectionCard
-            icon={<AlertTriangle className="h-4 w-4 text-red-500" />}
-            title={TEXT.reset}
-            description={TEXT.resetHint}
-            danger
-          >
             <SettingRow
               icon={<AlertTriangle className="h-4 w-4" />}
               title={TEXT.reset}
@@ -599,6 +721,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
               control={
                 <button
                   type="button"
+                  data-haptic="warning"
                   onClick={() => setIsResetDialogOpen(true)}
                   className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-red-700"
                 >
