@@ -151,7 +151,7 @@ const getDashboardGreeting = (date = new Date()) => {
 const formatAverageDeliveryTime = (minutes: number | null) =>
   typeof minutes === 'number' && Number.isFinite(minutes) && minutes > 0
     ? `${formatNumber(minutes)} דק׳`
-    : '—';
+    : 'NaN';
 
 const isDashboardPullRefreshIgnoredTarget = (target: EventTarget | null) => {
   if (!(target instanceof Element)) return false;
