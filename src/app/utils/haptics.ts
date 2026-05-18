@@ -1,4 +1,5 @@
 import { Capacitor } from '@capacitor/core';
+import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { getAlertPreferences } from '../notifications/alert-preferences';
 
 export type HapticPatternName =
@@ -23,7 +24,6 @@ const resolveHapticPattern = (name: string | undefined): number | number[] | nul
   return HAPTIC_PATTERNS[name as HapticPatternName] ?? HAPTIC_PATTERNS.light;
 };
 
-type CapacitorHapticsModule = typeof import('@capacitor/haptics');
 type CapacitorWindow = Window & {
   Capacitor?: {
     getPlatform?: () => string;
@@ -31,7 +31,6 @@ type CapacitorWindow = Window & {
   };
 };
 
-let capacitorHapticsPromise: Promise<CapacitorHapticsModule | null> | null = null;
 let iosSwitchLabel: HTMLLabelElement | null = null;
 let iosSwitchInput: HTMLInputElement | null = null;
 let iosDecorateFrame = 0;
@@ -56,27 +55,28 @@ const isCapacitorNativePlatform = () => {
   return typeof capacitor.getPlatform === 'function' && capacitor.getPlatform() !== 'web';
 };
 
-const loadCapacitorHaptics = () => {
-  capacitorHapticsPromise ??= import('@capacitor/haptics').catch(() => null);
-  return capacitorHapticsPromise;
-};
-
 const playCapacitorHaptic = (name: string | undefined) => {
   if (!isCapacitorNativePlatform()) return false;
 
-  void loadCapacitorHaptics().then((module) => {
-    if (!module) return;
-
-    const { Haptics, ImpactStyle, NotificationType } = module;
+  try {
+    if (name === 'selection') {
+      void Haptics.selectionStart()
+        .then(() => Haptics.selectionChanged())
+        .catch(() => undefined)
+        .finally(() => {
+          void Haptics.selectionEnd().catch(() => undefined);
+        });
+      return true;
+    }
 
     if (name === 'success') {
       void Haptics.notification({ type: NotificationType.Success }).catch(() => undefined);
-      return;
+      return true;
     }
 
     if (name === 'warning') {
       void Haptics.notification({ type: NotificationType.Warning }).catch(() => undefined);
-      return;
+      return true;
     }
 
     const style =
@@ -87,9 +87,10 @@ const playCapacitorHaptic = (name: string | undefined) => {
           : ImpactStyle.Light;
 
     void Haptics.impact({ style }).catch(() => undefined);
-  });
-
-  return true;
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 const isLikelyIOSTouchDevice = () => {
@@ -245,10 +246,6 @@ export const playHaptic = (
 export const installHapticFeedback = (root?: Document | HTMLElement) => {
   const targetRoot = root ?? (typeof document !== 'undefined' ? document : null);
   if (!targetRoot) return () => undefined;
-
-  if (isCapacitorNativePlatform()) {
-    void loadCapacitorHaptics();
-  }
 
   let lastFeedbackAt = 0;
 

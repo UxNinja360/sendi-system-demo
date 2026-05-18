@@ -95,8 +95,10 @@ const SIDEBAR_MIN_WIDTH = 250;
 const SIDEBAR_MAX_WIDTH = 400;
 const SIDEBAR_COLLAPSED_WIDTH = 60;
 const MOBILE_SIDEBAR_WIDTH = 260;
+const MOBILE_MENU_EDGE_SWIPE_WIDTH = 32;
 const MOBILE_MENU_SWIPE_START_THRESHOLD = 10;
 const MOBILE_MENU_SWIPE_CLOSE_THRESHOLD = 76;
+const MOBILE_MENU_SWIPE_OPEN_THRESHOLD = 76;
 const DESKTOP_SIDEBAR_BREAKPOINT = 1024;
 const SIDEBAR_LEGACY_OPEN_KEY = 'sidebar-legacy-open-v2';
 const SIDEBAR_EXPERIMENTS_OPEN_KEY = 'sidebar-experiments-open-v2';
@@ -201,9 +203,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
   const [mobileMenuDragX, setMobileMenuDragX] = useState(0);
   const [isMobileMenuDragging, setIsMobileMenuDragging] = useState(false);
   const mobileMenuSwipeRef = useRef<{
+    direction: 'open' | 'close';
     startX: number;
     startY: number;
     started: boolean;
+    thresholdReached: boolean;
   } | null>(null);
   const mobileMenuSwipeClickGuardRef = useRef(false);
   const [isLegacySectionOpen, setIsLegacySectionOpen] = useState(() => {
@@ -233,14 +237,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
   const isExpanded = !isCollapsed || !isDesktop;
   const isMobileMenuOpen = !isDesktop && isCollapsed;
-  const mobileMenuOpenProgress = isMobileMenuOpen
-    ? 1 - mobileMenuDragX / MOBILE_SIDEBAR_WIDTH
-    : 0;
   const mobileMenuTranslateX = !isDesktop
-    ? isMobileMenuOpen
+    ? isMobileMenuDragging
       ? mobileMenuDragX
-      : MOBILE_SIDEBAR_WIDTH
+      : isMobileMenuOpen
+        ? 0
+        : MOBILE_SIDEBAR_WIDTH
     : undefined;
+  const mobileMenuOpenProgress =
+    mobileMenuTranslateX === undefined
+      ? 0
+      : Math.max(0, Math.min(1, 1 - mobileMenuTranslateX / MOBILE_SIDEBAR_WIDTH));
   const activeDeliveriesCount = state.deliveries.filter(isOperationalDelivery).length;
   const deliveredDeliveriesCount = state.deliveries.filter((delivery) => delivery.status === 'delivered').length;
   const activeRestaurantsCount = state.restaurants.filter((restaurant) =>
@@ -549,28 +556,45 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
     setIsResizingSidebar(false);
   }, []);
 
-  const handleMobileMenuTouchStart = useCallback(
-    (event: React.TouchEvent<HTMLElement>) => {
-      if (isDesktop || !isCollapsed || event.touches.length !== 1) return;
+  const startMobileMenuSwipe = useCallback(
+    (event: React.TouchEvent<HTMLElement>, direction: 'open' | 'close') => {
+      const isOpenGestureAllowed = direction === 'open' && !isCollapsed;
+      const isCloseGestureAllowed = direction === 'close' && isCollapsed;
+      if (isDesktop || (!isOpenGestureAllowed && !isCloseGestureAllowed) || event.touches.length !== 1) return;
 
       const touch = event.touches[0];
       mobileMenuSwipeRef.current = {
+        direction,
         startX: touch.clientX,
         startY: touch.clientY,
         started: false,
+        thresholdReached: false,
       };
+      setMobileMenuDragX(direction === 'open' ? MOBILE_SIDEBAR_WIDTH : 0);
       mobileMenuSwipeClickGuardRef.current = false;
     },
     [isCollapsed, isDesktop],
   );
 
+  const handleMobileMenuOpenTouchStart = useCallback(
+    (event: React.TouchEvent<HTMLElement>) => startMobileMenuSwipe(event, 'open'),
+    [startMobileMenuSwipe],
+  );
+
+  const handleMobileMenuCloseTouchStart = useCallback(
+    (event: React.TouchEvent<HTMLElement>) => startMobileMenuSwipe(event, 'close'),
+    [startMobileMenuSwipe],
+  );
+
   const handleMobileMenuTouchMove = useCallback(
     (event: React.TouchEvent<HTMLElement>) => {
       const swipe = mobileMenuSwipeRef.current;
-      if (!swipe || isDesktop || !isCollapsed || event.touches.length !== 1) return;
+      if (!swipe || isDesktop || event.touches.length !== 1) return;
 
       const touch = event.touches[0];
-      const deltaX = touch.clientX - swipe.startX;
+      const deltaX = swipe.direction === 'open'
+        ? swipe.startX - touch.clientX
+        : touch.clientX - swipe.startX;
       const deltaY = touch.clientY - swipe.startY;
       const absX = Math.abs(deltaX);
       const absY = Math.abs(deltaY);
@@ -580,23 +604,53 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
         swipe.started = true;
         setIsMobileMenuDragging(true);
-        playHaptic('medium', { force: true });
+
+        if (swipe.direction === 'close') {
+          playHaptic('selection', { force: true });
+        }
       }
 
       event.preventDefault();
-      setMobileMenuDragX(Math.min(MOBILE_SIDEBAR_WIDTH, Math.max(0, deltaX)));
+      const clampedDelta = Math.min(MOBILE_SIDEBAR_WIDTH, Math.max(0, deltaX));
+      const nextTranslateX = swipe.direction === 'open'
+        ? MOBILE_SIDEBAR_WIDTH - clampedDelta
+        : clampedDelta;
+
+      setMobileMenuDragX(nextTranslateX);
+
+      if (
+        swipe.direction === 'open' &&
+        clampedDelta >= MOBILE_MENU_SWIPE_OPEN_THRESHOLD &&
+        !swipe.thresholdReached
+      ) {
+        swipe.thresholdReached = true;
+        playHaptic('selection', { force: true });
+      }
     },
-    [isCollapsed, isDesktop],
+    [isDesktop],
   );
 
   const finishMobileMenuSwipe = useCallback(() => {
     const swipe = mobileMenuSwipeRef.current;
     if (!swipe) return;
 
-    const shouldClose = swipe.started && mobileMenuDragX >= MOBILE_MENU_SWIPE_CLOSE_THRESHOLD;
+    const shouldOpen =
+      swipe.direction === 'open' &&
+      swipe.started &&
+      (swipe.thresholdReached || mobileMenuDragX <= MOBILE_SIDEBAR_WIDTH - MOBILE_MENU_SWIPE_OPEN_THRESHOLD);
+    const shouldClose =
+      swipe.direction === 'close' &&
+      swipe.started &&
+      mobileMenuDragX >= MOBILE_MENU_SWIPE_CLOSE_THRESHOLD;
     mobileMenuSwipeRef.current = null;
     mobileMenuSwipeClickGuardRef.current = swipe.started;
     setIsMobileMenuDragging(false);
+
+    if (shouldOpen) {
+      setIsCollapsed(true);
+      setMobileMenuDragX(0);
+      return;
+    }
 
     if (shouldClose) {
       setIsCollapsed(false);
@@ -742,7 +796,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
             closeMobileMenu();
           }}
-          onTouchStart={handleMobileMenuTouchStart}
+          onTouchStart={handleMobileMenuCloseTouchStart}
+          onTouchMove={handleMobileMenuTouchMove}
+          onTouchEnd={finishMobileMenuSwipe}
+          onTouchCancel={finishMobileMenuSwipe}
+        />
+      )}
+
+      {!isDesktop && !isMobileMenuOpen && (
+        <div
+          aria-hidden="true"
+          className="fixed bottom-0 right-0 top-12 z-[95] lg:hidden"
+          style={{
+            width: MOBILE_MENU_EDGE_SWIPE_WIDTH,
+            touchAction: 'pan-y',
+          }}
+          onTouchStart={handleMobileMenuOpenTouchStart}
           onTouchMove={handleMobileMenuTouchMove}
           onTouchEnd={finishMobileMenuSwipe}
           onTouchCancel={finishMobileMenuSwipe}
@@ -754,7 +823,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
         className={`app-shell-height group/sidebar fixed inset-y-0 right-0 z-[110] flex flex-col border-l border-app-nav-border bg-app-nav-bg shadow-xl will-change-transform lg:static lg:z-50 lg:shadow-none ${
           isCollapsed ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'
         }`}
-        onTouchStart={handleMobileMenuTouchStart}
+        onTouchStart={handleMobileMenuCloseTouchStart}
         onTouchMove={handleMobileMenuTouchMove}
         onTouchEnd={finishMobileMenuSwipe}
         onTouchCancel={finishMobileMenuSwipe}

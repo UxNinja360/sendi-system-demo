@@ -606,7 +606,7 @@ export const Dashboard: React.FC = () => {
 
     if (nextReady && !pullThresholdHapticPlayedRef.current) {
       pullThresholdHapticPlayedRef.current = true;
-      playHaptic('medium', { force: true });
+      playHaptic('selection', { force: true });
     }
   }, [isDashboardRefreshing, resetPullRefresh]);
 
