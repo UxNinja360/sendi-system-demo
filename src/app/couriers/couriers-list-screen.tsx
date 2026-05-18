@@ -4,9 +4,9 @@ import { format } from 'date-fns';
 import {
   Bike,
   Clock,
-  Clock3,
   FileSpreadsheet,
   FileText,
+  Hourglass,
   LogOut,
   Package,
   Power,
@@ -904,7 +904,7 @@ export const CouriersListScreen: React.FC = () => {
                           hourly: !value.hourly,
                         }))
                       }
-                      icon={<Clock3 className="h-3.5 w-3.5" />}
+                      icon={<Hourglass className="h-3.5 w-3.5" />}
                     />
                     <CourierToolbarToggle
                       active={courierEmploymentVisibility.perDelivery}
@@ -915,7 +915,7 @@ export const CouriersListScreen: React.FC = () => {
                           perDelivery: !value.perDelivery,
                         }))
                       }
-                      icon={<Package className="h-3.5 w-3.5" />}
+                      icon={<Bike className="h-3.5 w-3.5" />}
                     />
                   </div>
                   <div className="flex shrink-0 items-center gap-1">

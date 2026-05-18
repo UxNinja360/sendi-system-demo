@@ -1,5 +1,22 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Bike, LocateFixed, Store } from 'lucide-react';
+import {
+  Bike,
+  ChevronDown,
+  ChevronUp,
+  Clock3,
+  PackageCheck,
+  PackageSearch,
+  Power,
+  RefreshCcw,
+  Route,
+  Store,
+  Timer,
+  UserCheck,
+  UserX,
+  XCircle,
+  Zap,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 import { LeafletMap } from '../live/leaflet-map';
 import type {
@@ -14,8 +31,10 @@ import {
 import type {
   Courier as AppCourier,
   Delivery,
+  DeliveryStatus,
   Restaurant,
 } from '../types/delivery.types';
+import { SENDI_PLUS_LABEL, isSendiPlusRestaurant } from '../utils/sendi-plus';
 
 type DeliveriesLiveMapPanelProps = {
   deliveries: Delivery[];
@@ -26,7 +45,74 @@ type DeliveriesLiveMapPanelProps = {
   focusedDeliveryId?: string | null;
   onFocusedDeliveryChange?: (deliveryId: string | null) => void;
   onOpenDelivery?: (deliveryId: string) => void;
+  selectedStatusFilters?: Set<DeliveryStatus>;
+  statusCounts?: Partial<Record<DeliveryStatus, number>>;
+  onStatusFilterToggle?: (status: DeliveryStatus) => void;
 };
+
+type MapFilterKey =
+  | 'pendingOrders'
+  | 'assignedOrders'
+  | 'deliveringOrders'
+  | 'deliveredOrders'
+  | 'cancelledOrders'
+  | 'expiredOrders'
+  | 'activeRestaurants'
+  | 'inactiveRestaurants'
+  | 'sendiPlusRestaurants'
+  | 'availableCouriers'
+  | 'busyCouriers'
+  | 'offShiftCouriers'
+  | 'offlineCouriers';
+
+type MapFilters = Record<MapFilterKey, boolean>;
+
+const defaultMapFilters: MapFilters = {
+  pendingOrders: true,
+  assignedOrders: true,
+  deliveringOrders: true,
+  deliveredOrders: true,
+  cancelledOrders: true,
+  expiredOrders: true,
+  activeRestaurants: true,
+  inactiveRestaurants: false,
+  sendiPlusRestaurants: true,
+  availableCouriers: true,
+  busyCouriers: true,
+  offShiftCouriers: false,
+  offlineCouriers: false,
+};
+
+type OrderStatusFilterConfig = {
+  filterKey: MapFilterKey;
+  status: DeliveryStatus;
+  label: string;
+  icon: LucideIcon;
+};
+
+const orderStatusFilters: OrderStatusFilterConfig[] = [
+  { filterKey: 'pendingOrders', status: 'pending', label: 'ממתינים', icon: Clock3 },
+  { filterKey: 'assignedOrders', status: 'assigned', label: 'משובצים', icon: PackageSearch },
+  { filterKey: 'deliveringOrders', status: 'delivering', label: 'בדרך', icon: Route },
+  { filterKey: 'deliveredOrders', status: 'delivered', label: 'נמסרו', icon: PackageCheck },
+  { filterKey: 'cancelledOrders', status: 'cancelled', label: 'בוטלו', icon: XCircle },
+  { filterKey: 'expiredOrders', status: 'expired', label: 'פג תוקף', icon: Timer },
+];
+
+const orderFilterKeys: MapFilterKey[] = orderStatusFilters.map((item) => item.filterKey);
+
+const restaurantFilterKeys: MapFilterKey[] = [
+  'activeRestaurants',
+  'inactiveRestaurants',
+  'sendiPlusRestaurants',
+];
+
+const courierFilterKeys: MapFilterKey[] = [
+  'availableCouriers',
+  'busyCouriers',
+  'offShiftCouriers',
+  'offlineCouriers',
+];
 
 const getStableHash = (value: string) =>
   value.split('').reduce((total, char) => total + char.charCodeAt(0), 0);
@@ -54,11 +140,108 @@ const getFallbackDropoff = (delivery: Delivery) => {
 };
 
 const layerToggleClassName = (active: boolean) => [
-  'inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium transition-colors',
+  'inline-flex h-9 w-full min-w-0 items-center justify-between gap-2 rounded-md border px-2 text-[11px] font-medium transition-colors',
   active
-    ? 'border-app-border bg-app-surface text-app-text shadow-sm dark:border-app-nav-border'
-    : 'border-transparent bg-transparent text-app-text-secondary hover:bg-app-surface-raised hover:text-app-text',
+    ? 'border-app-brand/45 bg-app-brand/10 text-app-text shadow-sm dark:border-[#38bdf8]/35 dark:bg-[#0a84ff]/10'
+    : 'border-app-border/70 bg-app-surface/45 text-app-text-secondary opacity-70 hover:bg-app-surface-raised hover:text-app-text hover:opacity-100 dark:border-app-nav-border/70',
 ].join(' ');
+
+const resetButtonClassName = (enabled: boolean) => [
+  'inline-flex h-7 items-center gap-1.5 rounded-md border px-2 text-[11px] font-medium transition-colors',
+  enabled
+    ? 'border-app-border bg-app-surface text-app-text hover:bg-app-surface-raised dark:border-app-nav-border'
+    : 'cursor-default border-transparent bg-transparent text-app-text-muted',
+].join(' ');
+
+const getOrderFilterKey = (status: string): MapFilterKey => {
+  if (status === 'pending') return 'pendingOrders';
+  if (status === 'assigned') return 'assignedOrders';
+  if (status === 'delivering') return 'deliveringOrders';
+  if (status === 'delivered') return 'deliveredOrders';
+  if (status === 'cancelled') return 'cancelledOrders';
+  return 'expiredOrders';
+};
+
+const getCourierFilterKey = (courier: MapCourier): MapFilterKey => {
+  if (courier.status === 'offline') return 'offlineCouriers';
+  if (courier.status === 'busy') return 'busyCouriers';
+  if (courier.isOnShift === false) return 'offShiftCouriers';
+  return 'availableCouriers';
+};
+
+type MapFilterButtonProps = {
+  active: boolean;
+  count: number;
+  icon: LucideIcon;
+  label: string;
+  onClick: () => void;
+};
+
+const MapFilterButton: React.FC<MapFilterButtonProps> = ({
+  active,
+  count,
+  icon: Icon,
+  label,
+  onClick,
+}) => (
+  <button
+    type="button"
+    className={layerToggleClassName(active)}
+    aria-pressed={active}
+    data-haptic="selection"
+    data-map-filter={label}
+    onClick={onClick}
+  >
+    <span className="flex min-w-0 items-center gap-1.5">
+      <Icon className="h-3.5 w-3.5 shrink-0" />
+      <span className="truncate">{label}</span>
+    </span>
+    <span
+      className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] leading-none ${
+        active
+          ? 'bg-app-brand/15 text-app-text'
+          : 'bg-app-surface-raised text-app-text-muted'
+      }`}
+    >
+      {count.toLocaleString('he-IL')}
+    </span>
+  </button>
+);
+
+type MapFilterGroupProps = {
+  title: string;
+  icon: LucideIcon;
+  visibleCount: number;
+  totalCount: number;
+  children: React.ReactNode;
+  gridClassName?: string;
+};
+
+const MapFilterGroup: React.FC<MapFilterGroupProps> = ({
+  title,
+  icon: Icon,
+  visibleCount,
+  totalCount,
+  children,
+  gridClassName = 'grid grid-cols-2 gap-1.5 min-[460px]:grid-cols-3',
+}) => (
+  <section className="space-y-1.5 border-t border-app-border/70 pt-2 first:border-t-0 first:pt-0 dark:border-app-nav-border">
+    <div className="flex min-w-0 items-center justify-between gap-2 px-0.5">
+      <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-app-text">
+        <Icon className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
+        <span className="truncate">{title}</span>
+      </div>
+      <span className="shrink-0 rounded bg-app-surface-raised px-2 py-0.5 text-[10px] font-semibold text-app-text-secondary">
+        {visibleCount.toLocaleString('he-IL')}
+        {' / '}
+        {totalCount.toLocaleString('he-IL')}
+      </span>
+    </div>
+    <div className={gridClassName}>
+      {children}
+    </div>
+  </section>
+);
 
 export const DeliveriesLiveMapPanel: React.FC<DeliveriesLiveMapPanelProps> = ({
   deliveries,
@@ -69,13 +252,16 @@ export const DeliveriesLiveMapPanel: React.FC<DeliveriesLiveMapPanelProps> = ({
   focusedDeliveryId,
   onFocusedDeliveryChange,
   onOpenDelivery,
+  selectedStatusFilters,
+  statusCounts,
+  onStatusFilterToggle,
 }) => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [hoveredOrderId, setHoveredOrderId] = useState<string | null>(null);
   const [hoveredCourierId, setHoveredCourierId] = useState<string | null>(null);
   const [hoveredRestaurantName, setHoveredRestaurantName] = useState<string | null>(null);
-  const [showRestaurants, setShowRestaurants] = useState(true);
-  const [showCouriers, setShowCouriers] = useState(true);
+  const [mapFilters, setMapFilters] = useState<MapFilters>(defaultMapFilters);
+  const [isFilterPanelCollapsed, setIsFilterPanelCollapsed] = useState(false);
 
   const mapRestaurants = useMemo<MapMarker[]>(() => (
     restaurants
@@ -86,6 +272,7 @@ export const DeliveriesLiveMapPanel: React.FC<DeliveriesLiveMapPanelProps> = ({
         lat: restaurant.lat,
         lng: restaurant.lng,
         isActive: restaurant.isActive,
+        isSendiPlus: isSendiPlusRestaurant(restaurant.name, restaurant.chainId),
       }))
   ), [restaurants]);
 
@@ -140,7 +327,6 @@ export const DeliveriesLiveMapPanel: React.FC<DeliveriesLiveMapPanelProps> = ({
 
   const mapCouriers = useMemo<MapCourier[]>(() => (
     couriers
-      .filter((courier) => courier.status !== 'offline')
       .map((courier, index) => {
         const position = getInitialCourierPosition(courier, deliveries, index);
 
@@ -155,13 +341,70 @@ export const DeliveriesLiveMapPanel: React.FC<DeliveriesLiveMapPanelProps> = ({
       })
   ), [couriers, deliveries]);
 
-  const visibleRestaurants = useMemo(
-    () => (showRestaurants ? mapRestaurants : []),
-    [mapRestaurants, showRestaurants],
+  const filterCounts = useMemo(() => ({
+    pendingOrders: statusCounts?.pending ?? mapOrders.filter((order) => order.status === 'pending').length,
+    assignedOrders: statusCounts?.assigned ?? mapOrders.filter((order) => order.status === 'assigned').length,
+    deliveringOrders: statusCounts?.delivering ?? mapOrders.filter((order) => order.status === 'delivering').length,
+    deliveredOrders: statusCounts?.delivered ?? mapOrders.filter((order) => order.status === 'delivered').length,
+    cancelledOrders: statusCounts?.cancelled ?? mapOrders.filter((order) => order.status === 'cancelled').length,
+    expiredOrders: statusCounts?.expired ?? mapOrders.filter((order) => order.status === 'expired').length,
+    activeRestaurants: mapRestaurants.filter((restaurant) => restaurant.isActive !== false).length,
+    inactiveRestaurants: mapRestaurants.filter((restaurant) => restaurant.isActive === false).length,
+    sendiPlusRestaurants: mapRestaurants.filter((restaurant) => restaurant.isSendiPlus).length,
+    availableCouriers: mapCouriers.filter((courier) => getCourierFilterKey(courier) === 'availableCouriers').length,
+    busyCouriers: mapCouriers.filter((courier) => getCourierFilterKey(courier) === 'busyCouriers').length,
+    offShiftCouriers: mapCouriers.filter((courier) => getCourierFilterKey(courier) === 'offShiftCouriers').length,
+    offlineCouriers: mapCouriers.filter((courier) => getCourierFilterKey(courier) === 'offlineCouriers').length,
+  }), [mapCouriers, mapOrders, mapRestaurants, statusCounts]);
+
+  const isOrderStatusVisible = (status: DeliveryStatus) => (
+    selectedStatusFilters
+      ? selectedStatusFilters.has(status)
+      : mapFilters[getOrderFilterKey(status)]
   );
+
+  const visibleOrders = useMemo(
+    () => mapOrders.filter((order) => isOrderStatusVisible(order.status as DeliveryStatus)),
+    [mapFilters, mapOrders, selectedStatusFilters],
+  );
+
+  const visibleRestaurants = useMemo(
+    () => mapRestaurants.filter((restaurant) => {
+      const activityFilter = restaurant.isActive === false
+        ? mapFilters.inactiveRestaurants
+        : mapFilters.activeRestaurants;
+
+      return activityFilter && (!restaurant.isSendiPlus || mapFilters.sendiPlusRestaurants);
+    }),
+    [mapFilters, mapRestaurants],
+  );
+
   const visibleCouriers = useMemo(
-    () => (showCouriers ? mapCouriers : []),
-    [mapCouriers, showCouriers],
+    () => mapCouriers.filter((courier) => mapFilters[getCourierFilterKey(courier)]),
+    [mapCouriers, mapFilters],
+  );
+
+  const activeFilterCount = useMemo(
+    () => Object.entries(mapFilters).filter(([key, value]) =>
+      value !== defaultMapFilters[key as MapFilterKey]
+    ).length,
+    [mapFilters],
+  );
+
+  const orderStatusTotalCount = useMemo(
+    () => orderStatusFilters.reduce(
+      (total, item) => total + filterCounts[item.filterKey],
+      0,
+    ),
+    [filterCounts],
+  );
+
+  const visibleOrderStatusCount = useMemo(
+    () => orderStatusFilters.reduce(
+      (total, item) => total + (isOrderStatusVisible(item.status) ? filterCounts[item.filterKey] : 0),
+      0,
+    ),
+    [filterCounts, mapFilters, selectedStatusFilters],
   );
 
   useEffect(() => {
@@ -186,11 +429,46 @@ export const DeliveriesLiveMapPanel: React.FC<DeliveriesLiveMapPanelProps> = ({
     onFocusedDeliveryChange?.(null);
   };
 
+  const toggleMapFilter = (filterKey: MapFilterKey) => {
+    setMapFilters((current) => ({
+      ...current,
+      [filterKey]: !current[filterKey],
+    }));
+
+    if (orderFilterKeys.includes(filterKey)) {
+      setHoveredOrderId(null);
+    }
+    if (restaurantFilterKeys.includes(filterKey)) {
+      setHoveredRestaurantName(null);
+    }
+    if (courierFilterKeys.includes(filterKey)) {
+      setHoveredCourierId(null);
+    }
+  };
+
+  const handleOrderStatusFilterToggle = (status: DeliveryStatus) => {
+    if (onStatusFilterToggle) {
+      onStatusFilterToggle(status);
+    } else {
+      toggleMapFilter(getOrderFilterKey(status));
+    }
+    setHoveredOrderId(null);
+  };
+
+  const resetMapFilters = () => {
+    if (activeFilterCount === 0) return;
+
+    setMapFilters(defaultMapFilters);
+    setHoveredOrderId(null);
+    setHoveredRestaurantName(null);
+    setHoveredCourierId(null);
+  };
+
   return (
     <section className="relative h-full min-h-[320px] overflow-hidden bg-app-background">
       <LeafletMap
-        orders={mapOrders}
-        routeOrders={mapOrders}
+        orders={visibleOrders}
+        routeOrders={visibleOrders}
         couriers={visibleCouriers}
         restaurants={visibleRestaurants}
         routeStopOrders={routeStopOrders}
@@ -207,45 +485,142 @@ export const DeliveriesLiveMapPanel: React.FC<DeliveriesLiveMapPanelProps> = ({
         onMapClick={handleMapClick}
       />
 
-      <div className="pointer-events-none absolute right-3 top-3 z-[450] flex items-center gap-2 rounded-lg border border-app-border bg-white/95 px-3 py-2 text-xs shadow-sm backdrop-blur dark:border-app-nav-border dark:bg-[#090909]/90">
-        <LocateFixed className="h-3.5 w-3.5 text-app-text-secondary" />
-        <span className="font-medium text-app-text">מפת משלוחים</span>
-        <span className="text-app-text-secondary">
-          {deliveries.length.toLocaleString('he-IL')}
-        </span>
-      </div>
+      <div
+        className={`absolute left-3 top-3 z-[650] flex max-h-[calc(100%-1.5rem)] max-w-[calc(100%-1.5rem)] flex-col overflow-y-auto rounded-lg border border-app-border bg-white/95 text-xs shadow-sm backdrop-blur transition-[width] duration-150 dark:border-app-nav-border dark:bg-[#090909]/90 ${
+          isFilterPanelCollapsed ? 'w-[240px] gap-0 p-2' : 'w-[440px] gap-2 p-2.5'
+        }`}
+        dir="rtl"
+        aria-label="פילטרים למפה"
+        onPointerDown={(event) => event.stopPropagation()}
+      >
+        <div className="flex min-w-0 items-center justify-between gap-2">
+          <button
+            type="button"
+            className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-1.5 py-1 text-right transition-colors hover:bg-app-surface-raised"
+            data-haptic="selection"
+            aria-expanded={!isFilterPanelCollapsed}
+            aria-label={isFilterPanelCollapsed ? 'פתח פילטרים למפה' : 'קפל פילטרים למפה'}
+            onClick={() => setIsFilterPanelCollapsed((current) => !current)}
+          >
+            {isFilterPanelCollapsed ? (
+              <ChevronDown className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
+            ) : (
+              <ChevronUp className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
+            )}
+            <div className="min-w-0 flex-1">
+              <div className="flex min-w-0 items-center gap-2 text-xs font-semibold text-app-text">
+                <Route className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
+                <span className="truncate">שכבות מפה</span>
+              </div>
+              <div className="mt-0.5 truncate text-[10px] font-medium text-app-text-secondary">
+                {activeFilterCount === 0
+                  ? 'ברירת מחדל'
+                  : `${activeFilterCount.toLocaleString('he-IL')} שינויים`}
+              </div>
+            </div>
+          </button>
 
-      <div className="absolute right-3 top-14 z-[450] flex items-center gap-1.5 rounded-lg border border-app-border bg-white/95 p-1 shadow-sm backdrop-blur dark:border-app-nav-border dark:bg-[#090909]/90">
-        <button
-          type="button"
-          className={layerToggleClassName(showRestaurants)}
-          aria-pressed={showRestaurants}
-          onClick={() => {
-            setShowRestaurants((current) => !current);
-            setHoveredRestaurantName(null);
-          }}
-        >
-          <Store className="h-3.5 w-3.5" />
-          <span>מסעדות</span>
-          <span className="text-app-text-secondary">
-            {mapRestaurants.length.toLocaleString('he-IL')}
-          </span>
-        </button>
-        <button
-          type="button"
-          className={layerToggleClassName(showCouriers)}
-          aria-pressed={showCouriers}
-          onClick={() => {
-            setShowCouriers((current) => !current);
-            setHoveredCourierId(null);
-          }}
-        >
-          <Bike className="h-3.5 w-3.5" />
-          <span>שליחים</span>
-          <span className="text-app-text-secondary">
-            {mapCouriers.length.toLocaleString('he-IL')}
-          </span>
-        </button>
+          {!isFilterPanelCollapsed ? (
+            <button
+              type="button"
+              className={resetButtonClassName(activeFilterCount > 0)}
+              disabled={activeFilterCount === 0}
+              data-haptic={activeFilterCount > 0 ? 'selection' : undefined}
+              onClick={resetMapFilters}
+            >
+              <RefreshCcw className="h-3.5 w-3.5" />
+              <span>איפוס</span>
+            </button>
+          ) : null}
+        </div>
+
+        {!isFilterPanelCollapsed ? (
+          <>
+            <MapFilterGroup
+              title="משלוחים"
+              icon={PackageSearch}
+              visibleCount={visibleOrderStatusCount}
+              totalCount={orderStatusTotalCount}
+            >
+              {orderStatusFilters.map((item) => (
+                <MapFilterButton
+                  key={item.filterKey}
+                  active={isOrderStatusVisible(item.status)}
+                  count={filterCounts[item.filterKey]}
+                  icon={item.icon}
+                  label={item.label}
+                  onClick={() => handleOrderStatusFilterToggle(item.status)}
+                />
+              ))}
+            </MapFilterGroup>
+
+            <MapFilterGroup
+              title="מסעדות"
+              icon={Store}
+              visibleCount={visibleRestaurants.length}
+              totalCount={mapRestaurants.length}
+            >
+              <MapFilterButton
+                active={mapFilters.activeRestaurants}
+                count={filterCounts.activeRestaurants}
+                icon={Store}
+                label="מסעדות פעילות"
+                onClick={() => toggleMapFilter('activeRestaurants')}
+              />
+              <MapFilterButton
+                active={mapFilters.inactiveRestaurants}
+                count={filterCounts.inactiveRestaurants}
+                icon={Power}
+                label="מסעדות כבויות"
+                onClick={() => toggleMapFilter('inactiveRestaurants')}
+              />
+              <MapFilterButton
+                active={mapFilters.sendiPlusRestaurants}
+                count={filterCounts.sendiPlusRestaurants}
+                icon={Zap}
+                label={SENDI_PLUS_LABEL}
+                onClick={() => toggleMapFilter('sendiPlusRestaurants')}
+              />
+            </MapFilterGroup>
+
+            <MapFilterGroup
+              title="שליחים"
+              icon={Bike}
+              visibleCount={visibleCouriers.length}
+              totalCount={mapCouriers.length}
+              gridClassName="grid grid-cols-2 gap-1.5"
+            >
+              <MapFilterButton
+                active={mapFilters.availableCouriers}
+                count={filterCounts.availableCouriers}
+                icon={UserCheck}
+                label="שליחים פנויים"
+                onClick={() => toggleMapFilter('availableCouriers')}
+              />
+              <MapFilterButton
+                active={mapFilters.busyCouriers}
+                count={filterCounts.busyCouriers}
+                icon={Bike}
+                label="במשלוח"
+                onClick={() => toggleMapFilter('busyCouriers')}
+              />
+              <MapFilterButton
+                active={mapFilters.offShiftCouriers}
+                count={filterCounts.offShiftCouriers}
+                icon={Timer}
+                label="לא במשמרת"
+                onClick={() => toggleMapFilter('offShiftCouriers')}
+              />
+              <MapFilterButton
+                active={mapFilters.offlineCouriers}
+                count={filterCounts.offlineCouriers}
+                icon={UserX}
+                label="מנותקים"
+                onClick={() => toggleMapFilter('offlineCouriers')}
+              />
+            </MapFilterGroup>
+          </>
+        ) : null}
       </div>
     </section>
   );

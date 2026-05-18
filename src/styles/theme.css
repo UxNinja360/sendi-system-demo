@@ -1,4 +1,5 @@
 @custom-variant dark (&:is(.dark *));
+@custom-variant twilight (&:is(.twilight *));
 
 :root {
   /* ─── App Semantic Tokens ─────────────────────────────────────────────────
@@ -608,6 +609,124 @@
   --sidebar-accent: var(--app-nav-active-bg);
   --sidebar-accent-foreground: var(--app-nav-active-text);
   --sidebar-border: var(--app-nav-border);
+}
+
+.twilight {
+  /* Twilight mode rides on the dark layout classes, then softens the tokens. */
+  --app-background:         #121722;
+  --app-surface:            #1B2130;
+  --app-surface-raised:     #252C3D;
+  --app-surface-inset:      #0F141F;
+  --app-interactive:        #202638;
+  --app-interactive-hover:  #2D3548;
+  --app-border:             #3A4357;
+  --app-border-strong:      #586174;
+  --app-text:               #F5EFE6;
+  --app-text-secondary:     #CBC1B4;
+  --app-text-muted:         #968B7F;
+  --app-nav-bg:             #111722;
+  --app-nav-border:         #293244;
+  --app-nav-active-bg:      #273146;
+  --app-nav-active-text:    #FFF7ED;
+  --app-nav-indicator:      #F2B05E;
+  --app-nav-hover-bg:       #222A3B;
+  --app-nav-badge-bg:       #1B2130;
+  --app-nav-badge-text:     #F2C078;
+  --app-brand:              #F2B05E;
+  --app-brand-solid:        #F2B05E;
+  --app-brand-hover:        #FFD08A;
+  --app-brand-subtle:       #352817;
+  --app-brand-text:         #FFD08A;
+  --app-success-subtle:     #12362E;
+  --app-success-text:       #86E0B5;
+  --app-warning-subtle:     #3A2B17;
+  --app-warning-text:       #F8C55E;
+  --app-error-subtle:       #3A202B;
+  --app-error-text:         #FB7185;
+  --app-info-subtle:        #172D3A;
+  --app-info-text:          #67E8F9;
+  --app-shadow-panel:       0 18px 42px rgba(4, 8, 18, 0.34);
+
+  --background: var(--app-background);
+  --foreground: var(--app-text);
+  --card: var(--app-surface);
+  --card-foreground: var(--app-text);
+  --popover: var(--app-surface);
+  --popover-foreground: var(--app-text);
+  --primary: var(--app-brand-solid);
+  --primary-foreground: #121722;
+  --secondary: var(--app-interactive);
+  --secondary-foreground: var(--app-text);
+  --muted: var(--app-surface-raised);
+  --muted-foreground: var(--app-text-secondary);
+  --accent: var(--app-interactive);
+  --accent-foreground: var(--app-text);
+  --destructive: #FB7185;
+  --destructive-foreground: #FFF7ED;
+  --border: var(--app-border);
+  --input: var(--app-border);
+  --input-background: var(--app-surface-raised);
+  --switch-background: #586174;
+  --ring: var(--app-brand-solid);
+  --chart-1: #F2B05E;
+  --chart-2: #67E8F9;
+  --chart-3: #86E0B5;
+  --chart-4: #FB7185;
+  --chart-5: #A78BFA;
+  --sidebar: var(--app-nav-bg);
+  --sidebar-foreground: var(--app-text);
+  --sidebar-primary: var(--app-brand-solid);
+  --sidebar-primary-foreground: #121722;
+  --sidebar-accent: var(--app-nav-active-bg);
+  --sidebar-accent-foreground: var(--app-nav-active-text);
+  --sidebar-border: var(--app-nav-border);
+  --sidebar-ring: var(--app-brand-solid);
+
+  --geist-background: #1B2130;
+  --geist-foreground: #F5EFE6;
+  --accents-8: #FFF7ED;
+  --accents-7: #F5EFE6;
+  --accents-6: #CBC1B4;
+  --accents-5: #968B7F;
+  --accents-4: #6F788A;
+  --accents-3: #586174;
+  --accents-2: #3A4357;
+  --accents-1: #252C3D;
+  --ds-gray-100-value: 226, 24%, 16%;
+  --ds-gray-200-value: 226, 23%, 19%;
+  --ds-gray-300-value: 225, 21%, 24%;
+  --ds-gray-400-value: 224, 20%, 29%;
+  --ds-gray-500-value: 224, 18%, 40%;
+  --ds-gray-600-value: 34, 18%, 57%;
+  --ds-gray-700-value: 33, 24%, 66%;
+  --ds-gray-800-value: 34, 31%, 75%;
+  --ds-gray-900-value: 35, 39%, 83%;
+  --ds-gray-1000-value: 36, 56%, 93%;
+  --ds-blue-100-value: 207, 48%, 16%;
+  --ds-blue-200-value: 204, 48%, 20%;
+  --ds-blue-300-value: 200, 48%, 26%;
+  --ds-blue-400-value: 196, 55%, 32%;
+  --ds-blue-500-value: 192, 62%, 40%;
+  --ds-blue-600-value: 190, 72%, 52%;
+  --ds-blue-700-value: 188, 80%, 58%;
+  --ds-blue-800-value: 187, 82%, 64%;
+  --ds-blue-900-value: 186, 86%, 70%;
+  --ds-blue-1000-value: 185, 90%, 92%;
+  --ds-amber-100-value: 34, 52%, 16%;
+  --ds-amber-200-value: 35, 55%, 20%;
+  --ds-amber-300-value: 35, 60%, 26%;
+  --ds-amber-400-value: 35, 68%, 32%;
+  --ds-amber-500-value: 36, 76%, 42%;
+  --ds-amber-600-value: 37, 85%, 55%;
+  --ds-amber-700-value: 38, 90%, 63%;
+  --ds-amber-800-value: 39, 92%, 70%;
+  --ds-amber-900-value: 39, 95%, 75%;
+  --ds-amber-1000-value: 40, 94%, 93%;
+  --ds-background-100-value: 226, 26%, 13%;
+  --ds-background-200-value: 226, 31%, 10%;
+  --ds-focus-color: var(--app-brand-solid);
+  --ds-focus-border: 0 0 0 1px rgba(242, 176, 94, 0.62), 0 0 0 4px rgba(242, 176, 94, 0.22);
+  --ds-shadow-border-inset: inset 0 0 0 1px rgba(245, 239, 230, 0.12);
 }
 
 @theme inline {

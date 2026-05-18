@@ -11,7 +11,7 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 import { addAppTopBarActionListener } from '../components/layout/app-top-bar-actions';
-import type { Courier, Delivery, Restaurant } from '../types/delivery.types';
+import type { Courier, Delivery, DeliveryStatus, Restaurant } from '../types/delivery.types';
 import { DeliveriesLiveMapPanel } from './deliveries-live-map-panel';
 
 type UseDeliveriesMapSplitArgs = {
@@ -23,6 +23,9 @@ type UseDeliveriesMapSplitArgs = {
   focusedDeliveryId?: string | null;
   onFocusedDeliveryChange?: (deliveryId: string | null) => void;
   onOpenDelivery?: (deliveryId: string) => void;
+  selectedStatusFilters?: Set<DeliveryStatus>;
+  statusCounts?: Partial<Record<DeliveryStatus, number>>;
+  onStatusFilterToggle?: (status: DeliveryStatus) => void;
 };
 
 const MAP_SPLIT_WIDTH_STORAGE_KEY = 'sendi:deliveries-map-split-width';
@@ -130,6 +133,9 @@ export const useDeliveriesMapSplit = ({
   focusedDeliveryId,
   onFocusedDeliveryChange,
   onOpenDelivery,
+  selectedStatusFilters,
+  statusCounts,
+  onStatusFilterToggle,
 }: UseDeliveriesMapSplitArgs) => {
   const mapOpen = useDeliveriesMapOpen();
   const setMapOpen = useCallback((nextOpen: SetStateAction<boolean>) => {
@@ -308,6 +314,9 @@ export const useDeliveriesMapSplit = ({
               focusedDeliveryId={focusedDeliveryId}
               onFocusedDeliveryChange={onFocusedDeliveryChange}
               onOpenDelivery={onOpenDelivery}
+              selectedStatusFilters={selectedStatusFilters}
+              statusCounts={statusCounts}
+              onStatusFilterToggle={onStatusFilterToggle}
             />
             <button
               type="button"

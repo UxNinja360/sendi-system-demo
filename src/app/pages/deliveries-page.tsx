@@ -704,6 +704,9 @@ export const DeliveriesPage: React.FC = () => {
     focusedDeliveryId,
     onFocusedDeliveryChange: setFocusedDeliveryId,
     onOpenDelivery: handleOpenDrawer,
+    selectedStatusFilters: statusFilters,
+    statusCounts,
+    onStatusFilterToggle: toggleStatusFilter,
   });
 
   useEffect(() => {

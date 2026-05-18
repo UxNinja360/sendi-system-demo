@@ -6,6 +6,7 @@ export interface MapMarker {
   lng: number;
   name?: string;
   isActive?: boolean;
+  isSendiPlus?: boolean;
 }
 
 export interface Order {

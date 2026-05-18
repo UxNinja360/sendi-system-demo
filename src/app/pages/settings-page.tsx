@@ -18,12 +18,14 @@ import {
   Ruler,
   Store,
   Sun,
+  Sunset,
+  type LucideIcon,
   Volume2,
   Wallet,
   Zap,
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
-import { useTheme } from '../context/theme.context';
+import { useTheme, type ThemeMode } from '../context/theme.context';
 import { useDelivery } from '../context/delivery-context-value';
 import { Toggle } from '../components/common/toggle';
 import {
@@ -85,6 +87,11 @@ const TEXT = {
   personalDescription: '\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea \u05ea\u05e6\u05d5\u05d2\u05d4 \u05e9\u05de\u05e9\u05e4\u05d9\u05e2\u05d5\u05ea \u05e2\u05dc \u05e1\u05d1\u05d9\u05d1\u05ea \u05d4\u05e2\u05d1\u05d5\u05d3\u05d4 \u05d4\u05d0\u05d9\u05e9\u05d9\u05ea \u05e9\u05dc\u05da.',
   darkMode: '\u05de\u05e6\u05d1 \u05db\u05d4\u05d4',
   darkModeHint: '\u05de\u05e2\u05d1\u05e8 \u05d9\u05d3\u05e0\u05d9 \u05d1\u05d9\u05df \u05d1\u05d4\u05d9\u05e8 \u05dc\u05db\u05d4\u05d4.',
+  themeMode: '\u05e2\u05e8\u05db\u05ea \u05e0\u05d5\u05e9\u05d0',
+  themeModeHint: '\u05d1\u05d7\u05d9\u05e8\u05d4 \u05d1\u05d9\u05df \u05d1\u05d4\u05d9\u05e8, \u05d3\u05de\u05d3\u05d5\u05de\u05d9\u05dd \u05d0\u05d5 \u05db\u05d4\u05d4.',
+  themeLight: '\u05d1\u05d4\u05d9\u05e8',
+  themeTwilight: '\u05d3\u05de\u05d3\u05d5\u05de\u05d9\u05dd',
+  themeDark: '\u05db\u05d4\u05d4',
   autoTheme: '\u05ea\u05d1\u05e0\u05d9\u05ea \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9\u05ea',
   autoThemeHint: '\u05d4\u05ea\u05d0\u05de\u05d4 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9\u05ea \u05e9\u05dc \u05d4\u05de\u05de\u05e9\u05e7.',
   alerts: 'צלילים והתראות',
@@ -194,6 +201,45 @@ const SoundPicker: React.FC<{
   </div>
 );
 
+const themeModeOptions: Array<{ id: ThemeMode; label: string; icon: LucideIcon }> = [
+  { id: 'light', label: TEXT.themeLight, icon: Sun },
+  { id: 'twilight', label: TEXT.themeTwilight, icon: Sunset },
+  { id: 'dark', label: TEXT.themeDark, icon: Moon },
+];
+
+const ThemeModePicker: React.FC<{
+  value: ThemeMode;
+  onChange: (mode: ThemeMode) => void;
+}> = ({ value, onChange }) => (
+  <div
+    className="grid w-[282px] max-w-[62vw] grid-cols-3 gap-1 rounded-lg border border-app-border bg-app-interactive p-1"
+    dir="rtl"
+    role="group"
+    aria-label={TEXT.themeMode}
+  >
+    {themeModeOptions.map(({ id, label, icon: Icon }) => {
+      const isSelected = value === id;
+      return (
+        <button
+          key={id}
+          type="button"
+          data-haptic="selection"
+          aria-pressed={isSelected}
+          onClick={() => onChange(id)}
+          className={`inline-flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-md px-2 text-xs font-semibold transition-colors ${
+            isSelected
+              ? 'bg-app-brand-solid text-app-background shadow-sm'
+              : 'text-app-text-secondary hover:bg-app-interactive-hover hover:text-app-text'
+          }`}
+        >
+          <Icon className="h-4 w-4 shrink-0" />
+          <span className="truncate">{label}</span>
+        </button>
+      );
+    })}
+  </div>
+);
+
 const SectionCard: React.FC<{
   icon: React.ReactNode;
   title: string;
@@ -268,7 +314,7 @@ const getDeliveryPushStatusLabel = (status: DeliveryPushStatus | null) => {
 
 export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
   const navigate = useNavigate();
-  const { isDark, toggleDark } = useTheme();
+  const { themeMode, setThemeMode } = useTheme();
   const { state, dispatch, resetSystem, toggleSystem } = useDelivery();
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [alertPreferences, setAlertPreferencesState] = useState<AlertPreferences>(() =>
@@ -640,10 +686,18 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
               description={TEXT.personalDescription}
             >
               <SettingRow
-                icon={isDark ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-                title={TEXT.darkMode}
-                hint={TEXT.darkModeHint}
-                control={<Toggle checked={isDark} onChange={() => toggleDark()} />}
+                icon={
+                  themeMode === 'dark' ? (
+                    <Moon className="h-4 w-4" />
+                  ) : themeMode === 'twilight' ? (
+                    <Sunset className="h-4 w-4" />
+                  ) : (
+                    <Sun className="h-4 w-4" />
+                  )
+                }
+                title={TEXT.themeMode}
+                hint={TEXT.themeModeHint}
+                control={<ThemeModePicker value={themeMode} onChange={setThemeMode} />}
               />
               <SettingRow
                 icon={<Zap className="h-4 w-4" />}

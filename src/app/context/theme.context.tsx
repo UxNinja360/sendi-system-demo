@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 export type ThemeColor = 'green' | 'blue' | 'purple' | 'orange' | 'pink' | 'red';
+export type ThemeMode = 'light' | 'twilight' | 'dark';
 
 type ThemeClasses = {
   primary: string;
@@ -15,7 +16,10 @@ type ThemeClasses = {
 interface ThemeContextType {
   themeColor: ThemeColor;
   setThemeColor: (color: ThemeColor) => void;
+  themeMode: ThemeMode;
+  setThemeMode: (mode: ThemeMode) => void;
   isDark: boolean;
+  isTwilight: boolean;
   toggleDark: () => void;
   getThemeClasses: () => ThemeClasses;
 }
@@ -123,6 +127,12 @@ const readStoredDarkMode = (): boolean => {
   }
 };
 
+const readStoredThemeMode = (): ThemeMode => {
+  const stored = safeLocalStorageGet('theme');
+  if (stored === 'light' || stored === 'twilight' || stored === 'dark') return stored;
+  return readStoredDarkMode() ? 'dark' : 'light';
+};
+
 export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (!context) {
@@ -133,9 +143,11 @@ export const useTheme = () => {
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [themeColor, setThemeColor] = useState<ThemeColor>(readStoredThemeColor);
-  const [isDark, setIsDark] = useState<boolean>(readStoredDarkMode);
+  const [themeMode, setThemeMode] = useState<ThemeMode>(readStoredThemeMode);
 
   const themeClasses = useMemo(() => themeColors[themeColor], [themeColor]);
+  const isDark = themeMode !== 'light';
+  const isTwilight = themeMode === 'twilight';
 
   useEffect(() => {
     safeLocalStorageSet('themeColor', themeColor);
@@ -145,15 +157,16 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [themeColor, themeClasses]);
 
   useEffect(() => {
-    safeLocalStorageSet('theme', isDark ? 'dark' : 'light');
+    safeLocalStorageSet('theme', themeMode);
     safeLocalStorageRemove('themeManual');
     safeLocalStorageRemove('seasonalMode');
     document.documentElement.classList.toggle('dark', isDark);
+    document.documentElement.classList.toggle('twilight', isTwilight);
     document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
-  }, [isDark]);
+  }, [isDark, isTwilight, themeMode]);
 
   const toggleDark = () => {
-    setIsDark((prev) => !prev);
+    setThemeMode((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
 
   return (
@@ -161,7 +174,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       value={{
         themeColor,
         setThemeColor,
+        themeMode,
+        setThemeMode,
         isDark,
+        isTwilight,
         toggleDark,
         getThemeClasses: () => themeClasses,
       }}

@@ -60,6 +60,77 @@ body {
   border-color: #252525;
 }
 
+.twilight.dark .dashboard-status-card:hover {
+  background: var(--app-surface-raised);
+  border-color: var(--app-border);
+}
+
+.twilight :is(
+  .dark\:bg-\[\#050505\],
+  .dark\:bg-\[\#080808\],
+  .dark\:bg-\[\#090909\]\/90,
+  .dark\:bg-\[\#0A0A0A\],
+  .dark\:bg-\[\#0a0a0a\]
+) {
+  background-color: var(--app-surface) !important;
+}
+
+.twilight :is(
+  .dark\:bg-black,
+  .dark\:bg-\[\#000000\]
+) {
+  background-color: var(--app-background) !important;
+}
+
+.twilight :is(
+  .dark\:bg-\[\#101010\],
+  .dark\:bg-\[\#111111\],
+  .dark\:bg-\[\#171717\],
+  .dark\:bg-\[\#1F1F1F\],
+  .dark\:bg-\[\#1f1f1f\],
+  .dark\:bg-\[\#262626\],
+  .dark\:bg-\[\#333\]
+) {
+  background-color: var(--app-surface-raised) !important;
+}
+
+.twilight :is(
+  .dark\:hover\:bg-\[\#111111\]:hover,
+  .dark\:hover\:bg-\[\#171717\]:hover,
+  .dark\:hover\:bg-\[\#1F1F1F\]:hover,
+  .dark\:hover\:bg-\[\#1f1f1f\]:hover,
+  .dark\:hover\:bg-\[\#262626\]:hover,
+  .dark\:hover\:bg-\[\#333\]:hover
+) {
+  background-color: var(--app-interactive-hover) !important;
+}
+
+.twilight :is(
+  .dark\:border-\[\#1F1F1F\],
+  .dark\:border-\[\#252525\],
+  .dark\:border-\[\#2E2E2E\],
+  .dark\:border-\[\#3A3A3A\],
+  .dark\:border-\[\#404040\]
+) {
+  border-color: var(--app-border) !important;
+}
+
+.twilight :is(
+  .dark\:text-\[\#EDEDED\],
+  .dark\:text-\[\#FAFAFA\],
+  .dark\:text-\[\#fafafa\]
+) {
+  color: var(--app-text) !important;
+}
+
+.twilight :is(
+  .dark\:text-\[\#A1A1A1\],
+  .dark\:text-\[\#a3a3a3\],
+  .dark\:text-\[\#737373\]
+) {
+  color: var(--app-text-secondary) !important;
+}
+
 .sendi-plus-mark {
   align-items: center;
   border-radius: 4px;
