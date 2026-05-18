@@ -21,9 +21,15 @@ import {
 } from '../components/common/selection-action-bar';
 import { ListToolbarActions } from '../components/common/list-toolbar-actions';
 import { ToolbarIconButton } from '../components/common/toolbar-icon-button';
-import { ViewModeToggle, type EntityViewMode } from '../components/common/view-mode-toggle';
 import { getRestaurantChainId } from '../utils/restaurant-branding';
-import { SENDI_PLUS_LABEL, isSendiPlusRestaurant } from '../utils/sendi-plus';
+import {
+  SENDI_PLUS_LABEL,
+  SENDI_PLUS_TERMS_ACCEPTED_CHANGE_EVENT,
+  SENDI_PLUS_TERMS_ACCEPTED_STORAGE_KEY,
+  isRestaurantActiveForDisplay,
+  isSendiPlusRestaurant,
+  readStoredSendiPlusTermsAccepted,
+} from '../utils/sendi-plus';
 import {
   formatCurrency,
   getDeliveryCashAmount,
@@ -76,7 +82,7 @@ import { DELIVERY_HUBS, TLV_RUNNERS_HUB_ID } from '../constants/delivery-hubs';
 // ═══════════════════════════════════════
 type RestaurantRow = {
   id: number; restaurantId: string; name: string; status: 'פעיל' | 'לא פעיל';
-  isActive: boolean; totalDeliveries: number;
+  isActive: boolean; baseIsActive: boolean; totalDeliveries: number;
   contactPerson: string; ownerPhone: string; phone: string; city: string; street: string; username: string; type: string; chainId: string; logoUrl?: string;
 };
 
@@ -155,7 +161,6 @@ const DEFAULT_RESTAURANT_VISIBLE_COLUMNS: RestaurantColId[] = [
   'deliveries',
 ];
 const RESTAURANT_VISIBLE_COLUMNS_KEY = `${DELIVERY_STORAGE_KEYS.restaurantsVisibleColumns}:product-v3`;
-const RESTAURANT_VIEW_MODE_KEY = 'restaurants-view-mode-v1';
 const RESTAURANT_COLUMN_CATEGORIES = [
   {
     id: 'core',
@@ -273,6 +278,7 @@ export const RestaurantsScreen: React.FC = () => {
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [restaurantConnectionFilter, setRestaurantConnectionFilter] = useState<'connected' | 'disconnected' | null>(null);
+  const [sendiPlusTermsAccepted, setSendiPlusTermsAccepted] = useState(readStoredSendiPlusTermsAccepted);
   const [restaurantSourceVisibility, setRestaurantSourceVisibility] = useState({
     regular: true,
     sendiGo: true,
@@ -284,13 +290,6 @@ export const RestaurantsScreen: React.FC = () => {
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [selectedRestaurantIds, setSelectedRestaurantIds] = useState<Set<string>>(new Set());
   const [columnsOpen, setColumnsOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<EntityViewMode>(() => {
-    try {
-      const saved = localStorage.getItem(RESTAURANT_VIEW_MODE_KEY);
-      if (saved === 'list' || saved === 'cards') return saved;
-    } catch {}
-    return 'list';
-  });
   const [periodMode] = useState<PeriodMode>('current_month');
   const [monthAnchor] = useState(() => new Date());
   const [customStartDate] = useState(() => {
@@ -355,10 +354,24 @@ export const RestaurantsScreen: React.FC = () => {
   }, [visibleColumns]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(RESTAURANT_VIEW_MODE_KEY, viewMode);
-    } catch {}
-  }, [viewMode]);
+    const syncSendiPlusTermsAccepted = () => {
+      setSendiPlusTermsAccepted(readStoredSendiPlusTermsAccepted());
+    };
+
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === SENDI_PLUS_TERMS_ACCEPTED_STORAGE_KEY) {
+        syncSendiPlusTermsAccepted();
+      }
+    };
+
+    window.addEventListener(SENDI_PLUS_TERMS_ACCEPTED_CHANGE_EVENT, syncSendiPlusTermsAccepted);
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener(SENDI_PLUS_TERMS_ACCEPTED_CHANGE_EVENT, syncSendiPlusTermsAccepted);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   const handleColumnReorder = useCallback((fromId: string, toId: string) => {
     setColumnOrder(prev => {
@@ -394,23 +407,32 @@ export const RestaurantsScreen: React.FC = () => {
   }, [periodDeliveries]);
 
   // ── Data ──
-  const restaurants: RestaurantRow[] = useMemo(() => state.restaurants.map((r) => ({
-    id: parseInt(r.id.replace('r', '')),
-    restaurantId: r.id,
-    name: r.name,
-    logoUrl: r.logoUrl,
-    status: r.isActive ? 'פעיל' as const : 'לא פעיל' as const,
-    isActive: r.isActive,
-    totalDeliveries: deliveriesCountByRestaurant.get(r.id) ?? 0,
-    contactPerson: getDefaultRestaurantOwnerName(r),
-    ownerPhone: getDefaultRestaurantOwnerPhone(r),
-    phone: r.phone,
-    city: r.address.split(', ')[1] || 'תל אביב',
-    street: r.address.split(', ')[0] || r.address,
-    username: r.name.toLowerCase().replace(/\s+/g, '_').replace(/[^\w_]/g, ''),
-    type: r.type,
-    chainId: r.chainId || getRestaurantChainId(r.name),
-  })), [state.restaurants, deliveriesCountByRestaurant]);
+  const restaurants: RestaurantRow[] = useMemo(() => state.restaurants.map((r) => {
+    const chainId = r.chainId || getRestaurantChainId(r.name);
+    const isActiveForDisplay = isRestaurantActiveForDisplay(
+      { chainId, isActive: r.isActive, name: r.name },
+      sendiPlusTermsAccepted,
+    );
+
+    return {
+      id: parseInt(r.id.replace('r', '')),
+      restaurantId: r.id,
+      name: r.name,
+      logoUrl: r.logoUrl,
+      status: isActiveForDisplay ? 'פעיל' as const : 'לא פעיל' as const,
+      isActive: isActiveForDisplay,
+      baseIsActive: r.isActive,
+      totalDeliveries: deliveriesCountByRestaurant.get(r.id) ?? 0,
+      contactPerson: getDefaultRestaurantOwnerName(r),
+      ownerPhone: getDefaultRestaurantOwnerPhone(r),
+      phone: r.phone,
+      city: r.address.split(', ')[1] || 'תל אביב',
+      street: r.address.split(', ')[0] || r.address,
+      username: r.name.toLowerCase().replace(/\s+/g, '_').replace(/[^\w_]/g, ''),
+      type: r.type,
+      chainId,
+    };
+  }), [deliveriesCountByRestaurant, sendiPlusTermsAccepted, state.restaurants]);
 
   const handleRestaurantSort = useCallback((columnId: RestaurantSortableColumnId) => {
     if (sortColumn === columnId) {
@@ -521,7 +543,7 @@ export const RestaurantsScreen: React.FC = () => {
       return;
     }
 
-    const restaurantsToUpdate = selectedRestaurants.filter((restaurant) => restaurant.isActive !== isActive);
+    const restaurantsToUpdate = selectedRestaurants.filter((restaurant) => restaurant.baseIsActive !== isActive);
 
     restaurantsToUpdate.forEach((restaurant) => {
       dispatch({ type: 'TOGGLE_RESTAURANT', payload: restaurant.restaurantId });
@@ -939,6 +961,16 @@ export const RestaurantsScreen: React.FC = () => {
                       }
                       icon={<SquarePlus className="h-3.5 w-3.5" />}
                     />
+                  </div>
+                  <ListToolbarActions
+                    searchQuery={searchQuery}
+                    onSearchQueryChange={setSearchQuery}
+                    searchPlaceholder="חפש מסעדה, עיר או איש קשר..."
+                    searchWidthClass="w-52"
+                    showColumnsToggle={false}
+                    showExportButton={false}
+                  />
+                  <div className="flex shrink-0 items-center gap-1">
                     <RestaurantToolbarToggle
                       active={restaurantConnectionFilter === 'connected'}
                       label={'\u05d4\u05e6\u05d2 \u05de\u05e1\u05e2\u05d3\u05d5\u05ea \u05e4\u05e2\u05d9\u05dc\u05d5\u05ea'}
@@ -950,15 +982,6 @@ export const RestaurantsScreen: React.FC = () => {
                       icon={<Power className="h-3.5 w-3.5" />}
                     />
                   </div>
-                  <ListToolbarActions
-                    searchQuery={searchQuery}
-                    onSearchQueryChange={setSearchQuery}
-                    searchPlaceholder="חפש מסעדה, עיר או איש קשר..."
-                    searchWidthClass="w-52"
-                    showColumnsToggle={false}
-                    showExportButton={false}
-                  />
-                  <ViewModeToggle value={viewMode} onChange={setViewMode} />
                 </div>
               }
             />
@@ -971,7 +994,7 @@ export const RestaurantsScreen: React.FC = () => {
             {/* Table / Empty state */}
             <RestaurantsVercelList
               restaurants={filteredRestaurants}
-              viewMode={viewMode}
+              viewMode="list"
               onOpenActionsMenu={(restaurant, event) => {
                 event.stopPropagation();
                 const rect = event.currentTarget.getBoundingClientRect();
@@ -1225,6 +1248,11 @@ export const RestaurantsScreen: React.FC = () => {
         {contextMenuPos && openActionsRestaurantId && (() => {
           const restaurant = state.restaurants.find((r) => r.id === openActionsRestaurantId);
           if (!restaurant) return null;
+          const restaurantChainId = restaurant.chainId || getRestaurantChainId(restaurant.name);
+          const restaurantDisplayActive = isRestaurantActiveForDisplay(
+            { chainId: restaurantChainId, isActive: restaurant.isActive, name: restaurant.name },
+            sendiPlusTermsAccepted,
+          );
 
           return (
             <EntityActionMenu
@@ -1237,12 +1265,12 @@ export const RestaurantsScreen: React.FC = () => {
                 subtitle={
                   <span
                     className={`text-[11px] font-medium ${
-                      restaurant.isActive
+                      restaurantDisplayActive
                         ? 'text-app-success-text'
                         : 'text-[#737373] dark:text-app-text-secondary'
                     }`}
                   >
-                    {restaurant.isActive ? 'פעיל' : 'לא פעיל'}
+                    {restaurantDisplayActive ? 'פעיל' : 'לא פעיל'}
                   </span>
                 }
               />

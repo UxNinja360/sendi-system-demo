@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useLocation } from 'react-router';
 import { Plus, Trash2, Pencil, Check, X, MapPin, ChevronDown } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -229,6 +230,13 @@ const shouldSeedSendiPlusZones = () => {
   return new URLSearchParams(window.location.search).get('source') === SENDI_PLUS_SOURCE;
 };
 
+const getInitialSidePanelMode = (): SidePanelMode => {
+  if (typeof window === 'undefined') return 'zones';
+  return new URLSearchParams(window.location.search).get('tab') === 'permissions'
+    ? 'permissions'
+    : 'zones';
+};
+
 const hasValidLatLng = (value: { lat?: number | null; lng?: number | null } | null | undefined) =>
   typeof value?.lat === 'number' &&
   typeof value.lng === 'number' &&
@@ -237,7 +245,18 @@ const hasValidLatLng = (value: { lat?: number | null; lng?: number | null } | nu
 
 export const DeliveryZonesPage: React.FC = () => {
   const { state } = useDelivery();
-  const isSendiPlusMode = shouldSeedSendiPlusZones();
+  const location = useLocation();
+  const isSendiPlusMode = React.useMemo(
+    () => new URLSearchParams(location.search).get('source') === SENDI_PLUS_SOURCE,
+    [location.search],
+  );
+  const requestedSidePanelMode = React.useMemo<SidePanelMode>(
+    () =>
+      new URLSearchParams(location.search).get('tab') === 'permissions'
+        ? 'permissions'
+        : 'zones',
+    [location.search],
+  );
   const mapRef = useRef<L.Map | null>(null);
   const mapElRef = useRef<HTMLDivElement>(null);
   const restaurantMarkerRef = useRef<L.Marker | null>(null);
@@ -262,7 +281,12 @@ export const DeliveryZonesPage: React.FC = () => {
   );
   const restaurantMenuRef = useRef<HTMLDivElement | null>(null);
   const [restaurantMenuOpen, setRestaurantMenuOpen] = useState(false);
-  const [sidePanelMode, setSidePanelMode] = useState<SidePanelMode>('zones');
+  const [sidePanelMode, setSidePanelMode] = useState<SidePanelMode>(() => getInitialSidePanelMode());
+
+  useEffect(() => {
+    if (!isSendiPlusMode) return;
+    setSidePanelMode(requestedSidePanelMode);
+  }, [isSendiPlusMode, requestedSidePanelMode]);
 
   const sendiPlusRestaurants = React.useMemo(
     () =>

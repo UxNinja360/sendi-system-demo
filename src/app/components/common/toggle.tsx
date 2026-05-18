@@ -38,8 +38,8 @@ export const Toggle: React.FC<ToggleProps> = ({
     <span
       className={`absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full transition-all duration-200 ${
         checked
-          ? 'right-0.5 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.22)] dark:bg-[#D7E9FF]'
-          : 'left-0.5 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.14)] ring-1 ring-black/5 dark:bg-[#555555] dark:shadow-none dark:ring-0'
+          ? 'left-0.5 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.22)] dark:bg-[#D7E9FF]'
+          : 'right-0.5 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.14)] ring-1 ring-black/5 dark:bg-[#555555] dark:shadow-none dark:ring-0'
       }`}
     />
   </button>

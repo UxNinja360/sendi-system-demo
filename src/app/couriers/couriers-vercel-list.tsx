@@ -24,7 +24,7 @@ type CouriersVercelListProps = {
 };
 
 const rowGridClass =
-  'courier-vercel-row grid grid-cols-[minmax(0,1fr)_44px] md:grid-cols-[minmax(180px,260px)_minmax(104px,136px)_minmax(112px,150px)_minmax(96px,140px)_minmax(0,1fr)_52px_52px_36px] xl:grid-cols-[minmax(200px,280px)_minmax(112px,144px)_minmax(124px,164px)_minmax(112px,150px)_minmax(0,1fr)_52px_52px_36px] 2xl:grid-cols-[minmax(220px,300px)_minmax(120px,152px)_minmax(132px,176px)_minmax(124px,164px)_minmax(0,1fr)_56px_56px_36px]';
+  'courier-vercel-row grid grid-cols-[minmax(0,1fr)_44px] md:grid-cols-[minmax(180px,260px)_minmax(104px,136px)_minmax(112px,150px)_minmax(96px,140px)_minmax(84px,116px)_minmax(96px,132px)_minmax(0,1fr)_96px_36px] xl:grid-cols-[minmax(200px,280px)_minmax(112px,144px)_minmax(124px,164px)_minmax(112px,150px)_minmax(96px,124px)_minmax(104px,140px)_minmax(0,1fr)_96px_36px] 2xl:grid-cols-[minmax(220px,300px)_minmax(120px,152px)_minmax(132px,176px)_minmax(124px,164px)_minmax(104px,132px)_minmax(112px,148px)_minmax(0,1fr)_96px_36px]';
 
 const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(' ');
@@ -74,7 +74,7 @@ const getShiftMeta = (courier: Courier) => {
     isActive: isOnShift,
     startedAt: isOnShift ? courier.shiftStartedAt : null,
     dot: isOnShift ? 'bg-[#50e3c2]' : 'bg-app-text-muted',
-    text: isOnShift ? 'text-app-text' : 'text-app-text-secondary',
+    text: 'text-app-text-secondary',
   };
 };
 
@@ -82,22 +82,22 @@ const CourierLiveStatus: React.FC<{
   label: string;
   isActive: boolean;
   startedAt: DateValue;
-  dotClassName: string;
   textClassName: string;
   now: number;
-}> = ({ label, isActive, startedAt, dotClassName, textClassName, now }) => (
-  <div className="min-w-0 text-right">
-    <div className="flex min-w-0 items-center justify-start gap-2">
-      <span className={joinClassNames('h-2.5 w-2.5 shrink-0 rounded-full', dotClassName)} />
-      <span className={joinClassNames('min-w-0 truncate text-sm font-medium', textClassName)}>
-        {label}
-      </span>
+}> = ({ label, isActive, startedAt, textClassName, now }) => {
+  const elapsedLabel = isActive ? formatElapsedDuration(startedAt, now) : '';
+  const displayLabel = elapsedLabel && elapsedLabel !== '-' ? `${label} ${elapsedLabel}` : label;
+
+  return (
+    <div className="min-w-0 text-right">
+      <div className="flex min-w-0 items-center justify-start">
+        <span className={joinClassNames('min-w-0 truncate text-sm font-normal tabular-nums', textClassName)}>
+          {displayLabel}
+        </span>
+      </div>
     </div>
-    <div className="mt-1 truncate text-xs tabular-nums text-app-text-secondary" dir="rtl">
-      {isActive ? formatElapsedDuration(startedAt, now) : '-'}
-    </div>
-  </div>
-);
+  );
+};
 
 const CourierConnectionBadge: React.FC<{
   label: string;
@@ -105,9 +105,9 @@ const CourierConnectionBadge: React.FC<{
   textClassName: string;
   className?: string;
 }> = ({ label, dotClassName, textClassName, className }) => (
-  <span className={joinClassNames('inline-flex shrink-0 items-center gap-1.5 text-sm font-normal', textClassName, className)}>
+  <span dir="ltr" className={joinClassNames('inline-flex shrink-0 items-center gap-1.5 text-sm font-normal', textClassName, className)}>
     <span className={joinClassNames('h-2 w-2 rounded-full', dotClassName)} />
-    <span>{label}</span>
+    <span dir="rtl">{label}</span>
   </span>
 );
 
@@ -115,6 +115,13 @@ const CourierDeliveryCount: React.FC<{ count: number; className?: string }> = ({
   <div className={joinClassNames('flex items-center gap-1.5 text-sm font-normal text-app-text-secondary', className)}>
     <Package className="h-3.5 w-3.5 shrink-0" />
     <span className="tabular-nums">{count}</span>
+  </div>
+);
+
+const CourierRating: React.FC<{ rating: number; className?: string }> = ({ rating, className }) => (
+  <div className={joinClassNames('flex items-center gap-1.5 text-sm font-normal text-app-text-secondary', className)}>
+    <Star className="h-3.5 w-3.5 shrink-0" />
+    <span className="tabular-nums">{rating.toFixed(1)}</span>
   </div>
 );
 
@@ -150,17 +157,20 @@ const CourierVercelRow: React.FC<{
         </div>
       </div>
 
-      <div className="courier-row__connection hidden min-h-0 min-w-0 items-center px-2 py-1 md:col-auto md:row-auto md:flex md:min-h-[72px] md:py-2">
-        <CourierConnectionBadge
-          label={connectionMeta.label}
-          dotClassName={connectionMeta.dot}
-          textClassName={connectionMeta.text}
-          className="min-w-0"
-        />
+      <div className="courier-row__vehicle col-start-1 row-start-4 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
+        <div className="truncate text-sm font-normal text-app-text-secondary">{courier.vehicleType}</div>
+      </div>
+
+      <div className="courier-row__employment col-start-1 row-start-5 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
+        <div className="truncate text-sm font-normal text-app-text-secondary">{courier.employmentType}</div>
       </div>
 
       <div className="courier-row__deliveries hidden min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:flex md:min-h-[72px] md:py-2">
         <CourierDeliveryCount count={courier.totalDeliveries} />
+      </div>
+
+      <div className="courier-row__connection hidden min-h-0 min-w-0 items-center px-2 py-1 md:col-auto md:row-auto md:flex md:min-h-[72px] md:py-2">
+        <CourierRating rating={courier.rating} />
       </div>
 
       <div className="courier-row__shift col-start-1 row-start-3 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
@@ -168,30 +178,21 @@ const CourierVercelRow: React.FC<{
           label={shiftMeta.label}
           isActive={shiftMeta.isActive}
           startedAt={shiftMeta.startedAt}
-          dotClassName={shiftMeta.dot}
           textClassName={shiftMeta.text}
           now={now}
         />
       </div>
 
-      <div className="courier-row__vehicle col-start-1 row-start-4 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
-        <div className="truncate text-sm font-semibold text-app-text">{courier.vehicleType}</div>
-        <div className="mt-1 truncate text-xs font-normal text-app-text-secondary">{courier.employmentType}</div>
-      </div>
-
       <div className="hidden min-h-0 min-w-0 md:block" aria-hidden="true" />
 
-      <div className="courier-row__footer col-start-1 row-start-5 flex min-h-0 items-center justify-between px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:justify-center md:px-3 md:py-2">
+      <div className="courier-row__footer col-start-1 row-start-6 flex min-h-0 items-center justify-between px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:justify-center md:px-3 md:py-2">
+        <CourierRating rating={courier.rating} className="md:hidden" />
         <CourierConnectionBadge
           label={connectionMeta.label}
           dotClassName={connectionMeta.dot}
           textClassName={connectionMeta.text}
-          className="md:hidden"
+          className="hidden w-full justify-start md:inline-flex"
         />
-        <div className="hidden items-center gap-1.5 text-sm font-normal text-app-text-secondary md:flex">
-          <Star className="h-3.5 w-3.5 shrink-0" />
-          <span className="tabular-nums">{courier.rating.toFixed(1)}</span>
-        </div>
         <CourierDeliveryCount count={courier.totalDeliveries} className="courier-row__footer-total hidden" />
       </div>
 
@@ -261,7 +262,6 @@ const CourierVercelCard: React.FC<{
             label={shiftMeta.label}
             isActive={shiftMeta.isActive}
             startedAt={shiftMeta.startedAt}
-            dotClassName={shiftMeta.dot}
             textClassName={shiftMeta.text}
             now={now}
           />

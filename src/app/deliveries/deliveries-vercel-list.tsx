@@ -19,6 +19,7 @@ import {
   Route,
   Search,
   Star,
+  TimerOff,
   UserPlus,
   XCircle,
 } from 'lucide-react';
@@ -129,28 +130,45 @@ const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
 const CourierAssignmentLine: React.FC<{
   assigned: boolean;
   label: string;
+  delivery?: Delivery;
   vehicleType?: string;
   className?: string;
-}> = ({ assigned, label, vehicleType, className }) => {
-  const Icon = assigned ? (vehicleType === 'רכב' ? Car : Bike) : LoaderCircle;
+  closed?: boolean;
+}> = ({ assigned, label, delivery, vehicleType, className, closed = false }) => {
+  const Icon = assigned ? (vehicleType === 'רכב' ? Car : Bike) : closed ? TimerOff : LoaderCircle;
 
-  return (
-    <div className={joinClassNames('flex min-w-0 items-center gap-2 text-right', className)} dir="rtl">
+  const line = (
+    <span className={joinClassNames('flex min-w-0 items-center gap-2 text-right', className)} dir="rtl">
       <Icon
         className={joinClassNames(
           'h-3.5 w-3.5 shrink-0',
-          assigned ? 'text-app-text-secondary' : 'animate-spin text-app-warning-text',
+          assigned
+            ? 'text-app-text-secondary'
+            : closed
+              ? 'text-app-text-muted'
+              : 'animate-spin text-app-warning-text',
         )}
       />
       <span
         className={joinClassNames(
           'min-w-0 truncate text-sm font-normal',
-          assigned ? 'text-app-text' : 'text-app-text-secondary',
+          assigned ? 'text-app-text' : closed ? 'text-app-text-muted' : 'text-app-text-secondary',
         )}
       >
         {label}
       </span>
-    </div>
+    </span>
+  );
+
+  if (!delivery) return line;
+
+  return (
+    <DeliveryStageTimelineTooltip
+      delivery={delivery}
+      triggerClassName="inline-flex min-w-0 max-w-full focus:outline-none"
+    >
+      {line}
+    </DeliveryStageTimelineTooltip>
   );
 };
 
@@ -202,6 +220,26 @@ const getFloatingAssignmentPosition = (rect: DOMRect) => {
     : Math.max(8, rect.top - estimatedHeight - 8);
 
   return { x, y };
+};
+
+const getVisibleElementRect = (...elements: Array<HTMLElement | null>) => {
+  if (typeof window === 'undefined') return null;
+
+  for (const element of elements) {
+    if (!element) continue;
+    const rect = element.getBoundingClientRect();
+    const style = window.getComputedStyle(element);
+    if (
+      rect.width > 0 &&
+      rect.height > 0 &&
+      style.display !== 'none' &&
+      style.visibility !== 'hidden'
+    ) {
+      return rect;
+    }
+  }
+
+  return null;
 };
 
 const getCourierStatusLabel = (courier: Courier) => {
@@ -448,6 +486,8 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
   const navigate = useNavigate();
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [assignmentMenuPos, setAssignmentMenuPos] = useState<{ x: number; y: number } | null>(null);
+  const tableAssignmentAnchorRef = useRef<HTMLDivElement | null>(null);
+  const compactAssignmentAnchorRef = useRef<HTMLDivElement | null>(null);
   const config = STATUS_CONFIG[delivery.status];
   const StatusIcon = config.icon;
   const restaurantName = delivery.rest_name || delivery.restaurantName || restaurant?.name || '-';
@@ -456,7 +496,8 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
   const clientAddress = delivery.client_full_address || delivery.address;
   const hasAssignedCourier = Boolean(courier || delivery.courierId || delivery.runner_id || delivery.courierName);
   const courierName = courier?.name || delivery.courierName || (hasAssignedCourier ? 'לא ידוע' : UNASSIGNED_COURIER_LABEL);
-  const courierColumnText = hasAssignedCourier ? courierName : UNASSIGNED_COURIER_LABEL;
+  const isExpiredWithoutCourier = delivery.status === 'expired' && !hasAssignedCourier;
+  const courierColumnText = hasAssignedCourier ? courierName : isExpiredWithoutCourier ? 'פג תוקף' : UNASSIGNED_COURIER_LABEL;
   const courierVehicleType = hasAssignedCourier ? courier?.vehicleType || delivery.vehicle_type : undefined;
   const shouldShowCourierAssignment = delivery.status !== 'cancelled' || hasAssignedCourier;
   const distanceLabel = delivery.delivery_distance ? `${delivery.delivery_distance.toFixed(1)} ק״מ` : '-';
@@ -469,7 +510,9 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
   const openAssignmentMenu = (event: React.MouseEvent<HTMLElement>) => {
     event.preventDefault();
     event.stopPropagation();
-    const rect = event.currentTarget.getBoundingClientRect();
+    const rect =
+      getVisibleElementRect(tableAssignmentAnchorRef.current, compactAssignmentAnchorRef.current) ??
+      event.currentTarget.getBoundingClientRect();
     setContextMenuPos(null);
     setAssignmentMenuPos(getFloatingAssignmentPosition(rect));
   };
@@ -579,13 +622,11 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
 
           {shouldShowCourierAssignment ? (
             <div
-              className="delivery-row__route-table-courier flex rounded-md"
+              className="delivery-row__route-table-distance-wrap flex min-w-0"
             >
-              <CourierAssignmentLine
-                assigned={hasAssignedCourier}
-                label={courierColumnText}
-                vehicleType={courierVehicleType}
-                className="delivery-row__courier-line w-full px-1 py-1"
+              <DeliveryDistanceInline
+                label={distanceLabel}
+                className="delivery-row__route-table-distance"
               />
             </div>
           ) : null}
@@ -614,10 +655,13 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         <div className="delivery-row__route-compact-footer flex min-w-0 items-center justify-between gap-3" dir="rtl">
           {shouldShowCourierAssignment ? (
             <div
+              ref={compactAssignmentAnchorRef}
               className="delivery-row__route-compact-courier flex rounded-md"
             >
               <CourierAssignmentLine
                 assigned={hasAssignedCourier}
+                closed={isExpiredWithoutCourier}
+                delivery={delivery}
                 label={courierColumnText}
                 vehicleType={courierVehicleType}
                 className="w-full justify-start whitespace-nowrap px-1 py-1"
@@ -633,10 +677,21 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
       </div>
 
       <div className="delivery-row__courier-table min-h-0 min-w-0 items-center justify-start">
-        <DeliveryDistanceInline
-          label={distanceLabel}
-          className="delivery-row__route-table-distance"
-        />
+        {shouldShowCourierAssignment ? (
+          <div
+            ref={tableAssignmentAnchorRef}
+            className="delivery-row__route-table-courier flex rounded-md"
+          >
+            <CourierAssignmentLine
+              assigned={hasAssignedCourier}
+              closed={isExpiredWithoutCourier}
+              delivery={delivery}
+              label={courierColumnText}
+              vehicleType={courierVehicleType}
+              className="delivery-row__courier-line w-full px-1 py-1"
+            />
+          </div>
+        ) : null}
       </div>
 
       <DeliveryAssignmentMenu
@@ -743,7 +798,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
                 </>
               ) : null}
 
-              {!['delivered', 'cancelled'].includes(delivery.status) ? (
+              {!['delivered', 'cancelled', 'expired'].includes(delivery.status) ? (
                 <>
                   <EntityActionMenuDivider />
                   <EntityActionMenuItem
@@ -784,6 +839,7 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
   const navigate = useNavigate();
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [assignmentMenuPos, setAssignmentMenuPos] = useState<{ x: number; y: number } | null>(null);
+  const assignmentAnchorRef = useRef<HTMLDivElement | null>(null);
   const config = STATUS_CONFIG[delivery.status];
   const StatusIcon = config.icon;
   const restaurantName = delivery.rest_name || delivery.restaurantName || restaurant?.name || '-';
@@ -792,7 +848,8 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
   const clientAddress = delivery.client_full_address || delivery.address || '-';
   const hasAssignedCourier = Boolean(courier || delivery.courierId || delivery.runner_id || delivery.courierName);
   const courierName = courier?.name || delivery.courierName || (hasAssignedCourier ? 'לא ידוע' : UNASSIGNED_COURIER_LABEL);
-  const courierColumnText = hasAssignedCourier ? courierName : UNASSIGNED_COURIER_LABEL;
+  const isExpiredWithoutCourier = delivery.status === 'expired' && !hasAssignedCourier;
+  const courierColumnText = hasAssignedCourier ? courierName : isExpiredWithoutCourier ? 'פג תוקף' : UNASSIGNED_COURIER_LABEL;
   const courierVehicleType = hasAssignedCourier ? courier?.vehicleType || delivery.vehicle_type : undefined;
   const priceLabel = formatCurrency(getDeliveryCustomerCharge(delivery));
 
@@ -804,7 +861,9 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
   const openAssignmentMenu = (event: React.MouseEvent<HTMLElement>) => {
     event.preventDefault();
     event.stopPropagation();
-    const rect = event.currentTarget.getBoundingClientRect();
+    const rect =
+      getVisibleElementRect(assignmentAnchorRef.current) ??
+      event.currentTarget.getBoundingClientRect();
     setContextMenuPos(null);
     setAssignmentMenuPos(getFloatingAssignmentPosition(rect));
   };
@@ -912,10 +971,13 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
           <div className="min-w-0">
             <div className="text-[11px] text-app-text-secondary">שליח</div>
             <div
+              ref={assignmentAnchorRef}
               className="mt-1 max-w-full rounded-md"
             >
               <CourierAssignmentLine
                 assigned={hasAssignedCourier}
+                closed={isExpiredWithoutCourier}
+                delivery={delivery}
                 label={courierColumnText}
                 vehicleType={courierVehicleType}
                 className="px-1 py-1"
@@ -1031,7 +1093,7 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
               </>
             ) : null}
 
-            {!['delivered', 'cancelled'].includes(delivery.status) ? (
+            {!['delivered', 'cancelled', 'expired'].includes(delivery.status) ? (
               <>
                 <EntityActionMenuDivider />
                 <EntityActionMenuItem

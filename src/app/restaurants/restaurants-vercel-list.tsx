@@ -38,7 +38,7 @@ type RestaurantsVercelListProps = {
 };
 
 const rowGridClass =
-  'restaurant-vercel-row grid grid-cols-[minmax(0,1fr)_44px] md:grid-cols-[minmax(280px,420px)_minmax(128px,156px)_minmax(74px,96px)_36px] xl:grid-cols-[minmax(300px,460px)_minmax(132px,164px)_minmax(80px,104px)_36px] 2xl:grid-cols-[minmax(320px,500px)_minmax(140px,176px)_minmax(84px,112px)_36px]';
+  'restaurant-vercel-row grid grid-cols-[minmax(0,1fr)_44px] md:grid-cols-[minmax(280px,420px)_minmax(74px,96px)_minmax(0,1fr)_minmax(128px,156px)_36px] xl:grid-cols-[minmax(300px,460px)_minmax(80px,104px)_minmax(0,1fr)_minmax(132px,164px)_36px] 2xl:grid-cols-[minmax(320px,500px)_minmax(84px,112px)_minmax(0,1fr)_minmax(140px,176px)_36px]';
 
 const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(' ');
@@ -106,21 +106,21 @@ const RestaurantVercelRow: React.FC<{
         </div>
       </div>
 
-      <div className="restaurant-row__status col-start-1 row-start-2 hidden min-h-0 min-w-0 items-center px-2 py-1 text-sm font-normal text-app-text-secondary md:col-start-2 md:row-auto md:flex md:min-h-[72px] md:py-2">
+      <div className="restaurant-row__status col-start-1 row-start-2 hidden min-h-0 min-w-0 items-center px-2 py-1 text-sm font-normal text-app-text-secondary md:col-start-4 md:row-auto md:flex md:min-h-[72px] md:py-2">
         <span className="inline-flex min-w-0 items-center gap-1.5">
           <span className={joinClassNames('h-2 w-2 shrink-0 rounded-full', footerStatusDotClassName)} />
           <span className="truncate">{footerStatusText}</span>
         </span>
       </div>
 
-      <div className="restaurant-row__deliveries hidden min-h-0 min-w-0 items-center px-2 text-sm font-normal text-app-text-secondary md:col-start-3 md:flex md:min-h-[72px]">
+      <div className="restaurant-row__deliveries hidden min-h-0 min-w-0 items-center px-2 text-sm font-normal text-app-text-secondary md:col-start-2 md:flex md:min-h-[72px]">
         <span className="inline-flex shrink-0 items-center gap-1.5">
           <Package className="h-3.5 w-3.5" />
           <span className="tabular-nums">{restaurant.totalDeliveries}</span>
         </span>
       </div>
 
-      <div className="restaurant-row__actions col-start-2 row-start-1 flex min-h-0 items-start justify-center px-1 py-3 md:col-auto md:row-auto md:min-h-[72px] md:items-center md:py-0" onClick={(event) => event.stopPropagation()}>
+      <div className="restaurant-row__actions col-start-2 row-start-1 flex min-h-0 items-start justify-center px-1 py-3 md:col-start-5 md:row-auto md:min-h-[72px] md:items-center md:py-0" onClick={(event) => event.stopPropagation()}>
         <EntityRowActionTrigger
           onClick={(event) => onOpenActionsMenu(restaurant, event)}
           title={`פעולות מסעדה ${restaurant.name}`}
@@ -128,13 +128,13 @@ const RestaurantVercelRow: React.FC<{
       </div>
 
       <div className="restaurant-row__footer hidden min-h-0 items-center justify-between gap-3 text-sm font-normal text-app-text-secondary md:hidden">
-        <span className="inline-flex min-w-0 items-center gap-1.5">
-          <span className={joinClassNames('h-2 w-2 shrink-0 rounded-full', footerStatusDotClassName)} />
-          <span className="truncate">{footerStatusText}</span>
-        </span>
         <span className="inline-flex shrink-0 items-center gap-1.5">
           <Package className="h-3.5 w-3.5" />
           <span className="tabular-nums">{restaurant.totalDeliveries}</span>
+        </span>
+        <span className="inline-flex min-w-0 items-center gap-1.5">
+          <span className={joinClassNames('h-2 w-2 shrink-0 rounded-full', footerStatusDotClassName)} />
+          <span className="truncate">{footerStatusText}</span>
         </span>
       </div>
     </div>

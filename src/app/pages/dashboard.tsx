@@ -5,9 +5,11 @@ import {
   CheckCircle2,
   Clock3,
   Map as MapIcon,
+  MoreHorizontal,
   PackageOpen,
   Power,
   Plus,
+  Settings,
   Timer,
   Truck,
   UserCheck,
@@ -16,6 +18,7 @@ import {
 import { PageToolbar } from '../components/common/page-toolbar';
 import { ToolbarDayPicker } from '../components/common/toolbar-date-picker';
 import { ToolbarIconButton } from '../components/common/toolbar-icon-button';
+import { Toggle } from '../components/common/toggle';
 import { useDelivery } from '../context/delivery-context-value';
 import { useDeliveriesMapSplit } from '../deliveries/use-deliveries-map-split';
 import type { Delivery, DeliveryStatus } from '../types/delivery.types';
@@ -24,11 +27,17 @@ import {
   MAX_SENDI_PLUS_RADIUS_KM,
   SENDI_PLUS_LABEL,
   SENDI_PLUS_RADIUS_STEP_KM,
+  SENDI_PLUS_TERMS_ACCEPTED_CHANGE_EVENT,
+  SENDI_PLUS_TERMS_ACCEPTED_STORAGE_KEY,
   canReceiveSendiPlusDeliveries,
   clampSendiPlusRadius,
   formatSendiPlusRadiusKm,
+  isRestaurantActiveForDisplay,
+  isSendiPlusRestaurant,
   readStoredSendiPlusRadius,
+  readStoredSendiPlusTermsAccepted,
   writeStoredSendiPlusRadius,
+  writeStoredSendiPlusTermsAccepted,
 } from '../utils/sendi-plus';
 import {
   DELIVERY_ZONES_CHANGE_EVENT,
@@ -45,6 +54,8 @@ const DASHBOARD_DELIVERY_STATUSES: DeliveryStatus[] = [
   'cancelled',
 ];
 const formatRadiusKm = formatSendiPlusRadiusKm;
+const SENDI_PLUS_TERMS_TEXT =
+  'הפעלת המתג מחייבת עמידה בזמני משלוח של עד 60 דקות מסירה';
 
 const STATUS_META: Array<{
   id: DeliveryStatus;
@@ -56,7 +67,7 @@ const STATUS_META: Array<{
 }> = [
   {
     id: 'pending',
-    label: 'ממתין לשיבוץ',
+    label: 'ממתין',
     hint: 'משלוחים שצריכים שליח',
     icon: Clock3,
     accentClassName: 'text-orange-400',
@@ -64,7 +75,7 @@ const STATUS_META: Array<{
   },
   {
     id: 'assigned',
-    label: 'משובץ',
+    label: 'שובץ',
     hint: 'שליח בדרך למסעדה',
     icon: Truck,
     accentClassName: 'text-yellow-400',
@@ -162,21 +173,34 @@ const DashboardToolbarToggle: React.FC<{
 
 const SendiPlusCard: React.FC<{
   deliveryZoneCount: number;
+  activeRestaurantCount: number;
   radiusKm: number;
+  termsAccepted: boolean;
   onRadiusKmChange: (value: number) => void;
+  onTermsAcceptedChange: (value: boolean) => void;
   onManageZones: () => void;
+  onManageRestaurantPermissions: () => void;
 }> = ({
   deliveryZoneCount,
+  activeRestaurantCount,
   radiusKm,
+  termsAccepted,
   onRadiusKmChange,
+  onTermsAcceptedChange,
   onManageZones,
+  onManageRestaurantPermissions,
 }) => {
-  const receivesDeliveries = canReceiveSendiPlusDeliveries(radiusKm);
+  const isSendiPlusEnabled = termsAccepted;
+  const receivesDeliveries = canReceiveSendiPlusDeliveries(radiusKm, termsAccepted);
+  const menuRef = React.useRef<HTMLDivElement | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [isRadiusBubbleVisible, setIsRadiusBubbleVisible] = React.useState(false);
   const radiusBubbleHideTimeoutRef = React.useRef<number | null>(null);
   const radiusPercent = (radiusKm / MAX_SENDI_PLUS_RADIUS_KM) * 100;
   const radiusDisplay = `${formatRadiusKm(radiusKm)} ק״מ`;
-  const intakeStatusText = receivesDeliveries ? `עד ${radiusDisplay}` : 'כבויה';
+  const secondaryTextClassName = isSendiPlusEnabled
+    ? 'text-app-text-secondary'
+    : 'text-app-text-muted opacity-70';
   const sliderStyle = {
     '--sendi-plus-fill': `${radiusPercent}%`,
   } as React.CSSProperties & { '--sendi-plus-fill': string };
@@ -207,6 +231,8 @@ const SendiPlusCard: React.FC<{
     [clearRadiusBubbleHideTimeout],
   );
   const handleRadiusInput = (event: React.FormEvent<HTMLInputElement>) => {
+    if (!termsAccepted) return;
+
     onRadiusKmChange(Number(event.currentTarget.value));
     showRadiusBubble();
     hideRadiusBubble(900);
@@ -214,38 +240,109 @@ const SendiPlusCard: React.FC<{
 
   React.useEffect(() => clearRadiusBubbleHideTimeout, [clearRadiusBubbleHideTimeout]);
 
+  React.useEffect(() => {
+    if (!isMenuOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (menuRef.current?.contains(target)) return;
+      setIsMenuOpen(false);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isMenuOpen]);
+
   return (
-    <section className="overflow-hidden rounded-[8px] border border-app-border bg-app-surface dark:border-app-nav-border dark:bg-[#080808]">
+    <section className="rounded-[8px] border border-app-border bg-app-surface dark:border-[#252525] dark:bg-[#0A0A0A]">
       <div className="flex items-center gap-3 px-3 py-3 sm:px-4 sm:py-3.5" dir="ltr">
-        <button
-          type="button"
-          onClick={onManageZones}
-          className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-[6px] px-1.5 text-xs font-semibold text-[#0a84ff] transition-colors hover:bg-app-surface-raised"
-          dir="rtl"
-        >
-          <MapIcon className="h-3.5 w-3.5" />
-          ניהול אזורים
-        </button>
+        <div ref={menuRef} className="relative shrink-0">
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen((value) => !value)}
+            className={`inline-flex h-7 w-7 items-center justify-center rounded-[6px] transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0a84ff]/30 dark:hover:bg-[#1f1f1f] ${
+              isSendiPlusEnabled ? 'text-app-text-secondary' : 'text-app-text-muted opacity-70'
+            }`}
+            aria-label="אפשרויות סנדי פלוס"
+            aria-haspopup="menu"
+            aria-expanded={isMenuOpen}
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </button>
+
+          {isMenuOpen ? (
+            <div
+              role="menu"
+              className="absolute left-0 top-full z-30 mt-2 w-48 overflow-hidden rounded-[7px] border border-app-border bg-app-surface py-1 text-right shadow-[var(--app-shadow-panel)] dark:border-[#252525] dark:bg-[#0A0A0A]"
+              dir="rtl"
+            >
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  onManageZones();
+                }}
+                className="flex w-full items-center gap-2 px-3 py-2.5 text-xs font-medium text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text"
+              >
+                <MapIcon className="h-3.5 w-3.5 shrink-0" />
+                <span>ניהול אזורים</span>
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  onManageRestaurantPermissions();
+                }}
+                className="flex w-full items-center gap-2 px-3 py-2.5 text-xs font-medium text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text"
+              >
+                <Settings className="h-3.5 w-3.5 shrink-0" />
+                <span>הרשאות למסעדות</span>
+              </button>
+            </div>
+          ) : null}
+        </div>
 
         <div className="ml-auto min-w-0 text-right" dir="rtl">
           <div
             className="ml-auto flex w-fit max-w-full items-center gap-1.5"
-            aria-label={receivesDeliveries ? 'סנדי פלוס פעיל' : 'סנדי פלוס כבוי'}
+            aria-label={isSendiPlusEnabled ? 'סנדי פלוס פעיל' : 'סנדי פלוס כבוי'}
           >
             <span className="sendi-plus-label truncate text-sm font-semibold text-app-text">
-              <span>סנדי</span>
-              <span className="sendi-plus-label__plus">פלוס</span>
+              <span className={isSendiPlusEnabled ? '' : 'sendi-plus-label__word--off'}>
+                סנדי
+              </span>
+              <span
+                className={`sendi-plus-label__plus ${
+                  isSendiPlusEnabled ? '' : 'sendi-plus-label__plus--off'
+                }`}
+              >
+                פלוס
+              </span>
             </span>
             <span
               className={`sendi-plus-mark ${
-                receivesDeliveries ? 'sendi-plus-mark--active' : 'sendi-plus-mark--off'
+                isSendiPlusEnabled ? 'sendi-plus-mark--active' : 'sendi-plus-mark--off'
               }`}
               aria-hidden="true"
             >
               <span className="sendi-plus-mark__inner">
                 <Plus
                   className={
-                    receivesDeliveries
+                    isSendiPlusEnabled
                       ? 'h-2.5 w-2.5 text-white'
                       : 'h-2.5 w-2.5 text-app-text-muted'
                   }
@@ -254,71 +351,124 @@ const SendiPlusCard: React.FC<{
               </span>
             </span>
           </div>
-          <div className="mt-1 truncate text-sm font-normal text-app-text-secondary">
+          <div className={`mt-1 truncate text-sm font-normal ${secondaryTextClassName}`}>
             {receivesDeliveries
               ? `זמין למשלוחים עד ${radiusDisplay}`
-              : `לא מקבל משלוחים מ${SENDI_PLUS_LABEL}`}
+              : isSendiPlusEnabled
+                ? 'כרגע לא מקבל משלוחים'
+                : 'משלוחים לפי טווח במחיר מובטח'}
           </div>
         </div>
       </div>
 
-      <div className="border-t border-app-border px-3 py-4 sm:px-4 dark:border-app-nav-border">
-        <div className="relative px-1.5">
-          {isRadiusBubbleVisible ? (
-            <div
-              data-sendi-plus-radius-bubble
-              className="pointer-events-none absolute -top-7 z-10 flex h-7 min-w-9 items-center justify-center rounded-[6px] bg-app-text px-2 text-xs font-bold text-app-background shadow-lg"
-              style={{ right: `clamp(0px, calc(${radiusPercent}% - 18px), calc(100% - 36px))` }}
-            >
-              {formatRadiusKm(radiusKm)}
-            </div>
-          ) : null}
-          <input
-            type="range"
-            min={0}
-            max={MAX_SENDI_PLUS_RADIUS_KM}
-            step={SENDI_PLUS_RADIUS_STEP_KM}
-            value={radiusKm}
-            onChange={handleRadiusInput}
-            onInput={handleRadiusInput}
-            onPointerDown={showRadiusBubble}
-            onPointerUp={() => hideRadiusBubble(700)}
-            onPointerCancel={() => hideRadiusBubble()}
-            onPointerLeave={() => hideRadiusBubble(700)}
-            onKeyDown={showRadiusBubble}
-            onKeyUp={() => hideRadiusBubble(900)}
-            onBlur={() => hideRadiusBubble()}
-            aria-label={`טווח משלוחים ${SENDI_PLUS_LABEL}`}
-            className={`sendi-plus-radius-slider h-9 w-full cursor-pointer ${
-              receivesDeliveries ? 'sendi-plus-radius-slider--active' : 'sendi-plus-radius-slider--off'
-            }`}
-            dir="rtl"
-            style={sliderStyle}
-          />
-          <div className="mt-2 flex items-center justify-between text-[11px] text-app-text-secondary" dir="rtl">
-            <span>0 ק״מ</span>
-            <span>5 ק״מ</span>
-            <span>10 ק״מ</span>
-            <span>15 ק״מ</span>
-            <span>20+ ק״מ</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="px-3 sm:px-4">
-        <div className="border-t border-app-border py-2.5 sm:py-3 dark:border-app-nav-border">
-          <div className="grid grid-cols-2 gap-4 text-right" dir="rtl">
-            <div className="min-w-0">
-              <div className="truncate text-[11px] text-app-text-secondary">קבלת משלוחים</div>
-              <div className="mt-1 truncate text-sm font-semibold text-app-text">{intakeStatusText}</div>
-            </div>
-            <div className="min-w-0 border-r border-app-border pr-4 dark:border-app-nav-border">
-              <div className="truncate text-[11px] text-app-text-secondary">אזורי חלוקה</div>
-              <div className="mt-1 truncate text-sm font-semibold text-app-text">
-                {deliveryZoneCount.toLocaleString('he-IL')}
+      <div
+        className={`sendi-plus-accordion ${
+          termsAccepted ? 'sendi-plus-accordion--open' : ''
+        }`}
+        aria-hidden={!termsAccepted}
+      >
+        <div className="sendi-plus-accordion__inner">
+          <div className="border-t border-app-border px-3 pb-4 pt-8 sm:px-4 dark:border-[#252525]">
+            <div className="relative px-1.5">
+              {isRadiusBubbleVisible ? (
+                <div
+                  data-sendi-plus-radius-bubble
+                  className="pointer-events-none absolute -top-7 z-10 flex h-7 min-w-9 items-center justify-center rounded-[6px] bg-app-text px-2 text-xs font-bold text-app-background shadow-lg"
+                  style={{ right: `clamp(0px, calc(${radiusPercent}% - 18px), calc(100% - 36px))` }}
+                >
+                  {formatRadiusKm(radiusKm)}
+                </div>
+              ) : null}
+              <input
+                type="range"
+                min={0}
+                max={MAX_SENDI_PLUS_RADIUS_KM}
+                step={SENDI_PLUS_RADIUS_STEP_KM}
+                value={radiusKm}
+                disabled={!termsAccepted}
+                onChange={handleRadiusInput}
+                onInput={handleRadiusInput}
+                onPointerDown={showRadiusBubble}
+                onPointerUp={() => hideRadiusBubble(700)}
+                onPointerCancel={() => hideRadiusBubble()}
+                onPointerLeave={() => hideRadiusBubble(700)}
+                onKeyDown={showRadiusBubble}
+                onKeyUp={() => hideRadiusBubble(900)}
+                onBlur={() => hideRadiusBubble()}
+                aria-label={`טווח משלוחים ${SENDI_PLUS_LABEL}`}
+                className={`sendi-plus-radius-slider h-9 w-full cursor-pointer ${
+                  receivesDeliveries ? 'sendi-plus-radius-slider--active' : 'sendi-plus-radius-slider--off'
+                }`}
+                dir="rtl"
+                style={sliderStyle}
+              />
+              <div className="relative mt-2 h-4 text-[11px] text-app-text-secondary" dir="rtl">
+                <span className="absolute right-0 top-0 whitespace-nowrap text-right">
+                  {receivesDeliveries ? '0 ק״מ' : 'כבוי'}
+                </span>
+                <span className="absolute right-[25%] top-0 translate-x-1/2 whitespace-nowrap text-center">
+                  5 ק״מ
+                </span>
+                <span className="absolute right-1/2 top-0 translate-x-1/2 whitespace-nowrap text-center">
+                  10 ק״מ
+                </span>
+                <span className="absolute right-[75%] top-0 translate-x-1/2 whitespace-nowrap text-center">
+                  15 ק״מ
+                </span>
+                <span className="absolute left-0 top-0 whitespace-nowrap text-left">
+                  20+ ק״מ
+                </span>
               </div>
             </div>
           </div>
+
+          <div className="px-3 sm:px-4">
+            <div className="border-t border-app-border py-2.5 sm:py-3 dark:border-[#252525]">
+              <div className="grid grid-cols-2 gap-4 text-right" dir="rtl">
+                <div className="min-w-0">
+                  <div className="truncate text-[11px] text-app-text-secondary">מסעדות פעילות</div>
+                  <div className="mt-1 truncate text-sm font-semibold text-app-text">
+                    {activeRestaurantCount.toLocaleString('he-IL')}
+                  </div>
+                </div>
+                <div className="min-w-0 border-r border-app-border pr-4 dark:border-[#252525]">
+                  <div className="flex min-w-0 items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="truncate text-[11px] text-app-text-secondary">אזורי חלוקה</div>
+                      <div className="mt-1 truncate text-sm font-semibold text-app-text">
+                        {deliveryZoneCount.toLocaleString('he-IL')}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={onManageZones}
+                      disabled={!termsAccepted}
+                      tabIndex={termsAccepted ? 0 : -1}
+                      className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0a84ff]/30 dark:hover:bg-[#1f1f1f] ${
+                        termsAccepted ? 'text-app-text-secondary' : 'text-app-text-muted opacity-70'
+                      }`}
+                      aria-label="ניהול אזורי חלוקה"
+                    >
+                      <Settings className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="border-t border-app-border px-3 py-2.5 sm:px-4 dark:border-[#252525]" dir="rtl">
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <span className={`min-w-0 truncate text-xs font-normal ${secondaryTextClassName}`}>
+            {SENDI_PLUS_TERMS_TEXT}
+          </span>
+          <Toggle
+            checked={termsAccepted}
+            onChange={() => onTermsAcceptedChange(!termsAccepted)}
+            ariaLabel="אישור תנאי סנדי פלוס"
+          />
         </div>
       </div>
     </section>
@@ -331,6 +481,7 @@ export const Dashboard: React.FC = () => {
   const todayDate = React.useMemo(() => new Date(), []);
   const [selectedDate, setSelectedDate] = React.useState(todayDate);
   const [sendiPlusRadiusKm, setSendiPlusRadiusKm] = React.useState(readStoredSendiPlusRadius);
+  const [sendiPlusTermsAccepted, setSendiPlusTermsAccepted] = React.useState(readStoredSendiPlusTermsAccepted);
   const [deliveryZoneConfigVersion, setDeliveryZoneConfigVersion] = React.useState(0);
 
   React.useEffect(() => {
@@ -338,9 +489,16 @@ export const Dashboard: React.FC = () => {
   }, [sendiPlusRadiusKm]);
 
   React.useEffect(() => {
+    writeStoredSendiPlusTermsAccepted(sendiPlusTermsAccepted);
+  }, [sendiPlusTermsAccepted]);
+
+  React.useEffect(() => {
     if (typeof window === 'undefined') return;
 
     const refreshDeliveryZones = () => setDeliveryZoneConfigVersion((version) => version + 1);
+    const syncSendiPlusTermsAccepted = () => {
+      setSendiPlusTermsAccepted(readStoredSendiPlusTermsAccepted());
+    };
     const handleStorage = (event: StorageEvent) => {
       if (
         event.key === 'delivery_zones_v1' ||
@@ -348,15 +506,21 @@ export const Dashboard: React.FC = () => {
       ) {
         refreshDeliveryZones();
       }
+
+      if (event.key === SENDI_PLUS_TERMS_ACCEPTED_STORAGE_KEY) {
+        syncSendiPlusTermsAccepted();
+      }
     };
 
     window.addEventListener(DELIVERY_ZONES_CHANGE_EVENT, refreshDeliveryZones);
     window.addEventListener(SENDI_PLUS_ZONE_PERMISSIONS_CHANGE_EVENT, refreshDeliveryZones);
+    window.addEventListener(SENDI_PLUS_TERMS_ACCEPTED_CHANGE_EVENT, syncSendiPlusTermsAccepted);
     window.addEventListener('storage', handleStorage);
 
     return () => {
       window.removeEventListener(DELIVERY_ZONES_CHANGE_EVENT, refreshDeliveryZones);
       window.removeEventListener(SENDI_PLUS_ZONE_PERMISSIONS_CHANGE_EVENT, refreshDeliveryZones);
+      window.removeEventListener(SENDI_PLUS_TERMS_ACCEPTED_CHANGE_EVENT, syncSendiPlusTermsAccepted);
       window.removeEventListener('storage', handleStorage);
     };
   }, []);
@@ -401,6 +565,15 @@ export const Dashboard: React.FC = () => {
   const sendiPlusDeliveryZoneCount = React.useMemo(
     () => loadStoredDeliveryZones().filter(isDeliveryZoneActive).length,
     [deliveryZoneConfigVersion],
+  );
+  const sendiPlusActiveRestaurantCount = React.useMemo(
+    () =>
+      state.restaurants.filter(
+        (restaurant) =>
+          isRestaurantActiveForDisplay(restaurant, sendiPlusTermsAccepted) &&
+          isSendiPlusRestaurant(restaurant.name, restaurant.chainId),
+      ).length,
+    [sendiPlusTermsAccepted, state.restaurants],
   );
   const connectedCouriersCount = React.useMemo(
     () => state.couriers.filter((courier) => courier.status !== 'offline').length,
@@ -521,7 +694,7 @@ export const Dashboard: React.FC = () => {
                     key={status.id}
                     type="button"
                     onClick={() => navigate(isCourierAvailabilityCard ? '/couriers' : '/deliveries')}
-                    className={`dashboard-status-card min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:border-app-border hover:bg-app-surface-raised sm:p-3 dark:border-app-nav-border dark:bg-[#080808] ${statusSpanClassName}`}
+                    className={`dashboard-status-card min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:border-app-border hover:bg-app-surface-raised sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] ${statusSpanClassName}`}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
@@ -553,9 +726,13 @@ export const Dashboard: React.FC = () => {
 
           <SendiPlusCard
             deliveryZoneCount={sendiPlusDeliveryZoneCount}
+            activeRestaurantCount={sendiPlusActiveRestaurantCount}
             radiusKm={sendiPlusRadiusKm}
+            termsAccepted={sendiPlusTermsAccepted}
             onRadiusKmChange={handleSendiPlusRadiusChange}
+            onTermsAcceptedChange={setSendiPlusTermsAccepted}
             onManageZones={() => navigate('/zones?source=sendi-plus')}
+            onManageRestaurantPermissions={() => navigate('/zones?source=sendi-plus&tab=permissions')}
           />
         </div>
       </main>

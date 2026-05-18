@@ -31,7 +31,6 @@ import { ListTableSection } from '../components/common/list-table-section';
 import { ListToolbarActions } from '../components/common/list-toolbar-actions';
 import { PageToolbar } from '../components/common/page-toolbar';
 import { ToolbarIconButton } from '../components/common/toolbar-icon-button';
-import { ViewModeToggle, type EntityViewMode } from '../components/common/view-mode-toggle';
 import type { PeriodMode } from '../components/common/toolbar-date-picker';
 import { VercelEmptyState } from '../components/common/vercel-empty-state';
 import { InfoBar, type InfoBarItem } from '../components/common/info-bar';
@@ -109,7 +108,6 @@ type CourierStats = {
 const VEHICLE_TYPES: Courier['vehicleType'][] = ['אופנוע', 'רכב', 'קורקינט'];
 const COURIER_COLUMN_ORDER_KEY = `${DELIVERY_STORAGE_KEYS.couriersColumnOrder}:product-v1`;
 const COURIER_VISIBLE_COLUMNS_KEY = `${DELIVERY_STORAGE_KEYS.couriersVisibleColumns}:product-v3`;
-const COURIER_VIEW_MODE_KEY = 'couriers-view-mode-v1';
 const DEFAULT_COURIER_VISIBLE_COLUMNS: CourierColumnId[] = [
   'name',
   'connection',
@@ -263,8 +261,11 @@ export const CouriersListScreen: React.FC = () => {
   const { state, dispatch } = useDelivery();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [showConnectedOnly, setShowConnectedOnly] = useState(false);
-  const [showOnShiftOnly, setShowOnShiftOnly] = useState(false);
+  const [showActiveCouriersOnly, setShowActiveCouriersOnly] = useState(false);
+  const [courierEmploymentVisibility, setCourierEmploymentVisibility] = useState({
+    hourly: true,
+    perDelivery: true,
+  });
   const [sortColumn, setSortColumn] = useState<SortableCourierColumnId>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -272,13 +273,6 @@ export const CouriersListScreen: React.FC = () => {
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; courier: Courier } | null>(null);
   const [selectedCourierIds, setSelectedCourierIds] = useState<Set<string>>(new Set());
-  const [viewMode, setViewMode] = useState<EntityViewMode>(() => {
-    try {
-      const saved = localStorage.getItem(COURIER_VIEW_MODE_KEY);
-      if (saved === 'list' || saved === 'cards') return saved;
-    } catch {}
-    return 'list';
-  });
   const [newCourier, setNewCourier] = useState<{ name: string; phone: string; vehicleType: Courier['vehicleType'] }>({
     name: '',
     phone: '',
@@ -362,12 +356,6 @@ export const CouriersListScreen: React.FC = () => {
     } catch {}
   }, [visibleColumns]);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(COURIER_VIEW_MODE_KEY, viewMode);
-    } catch {}
-  }, [viewMode]);
-
   const orderedCourierColumns = useMemo(() => {
     const map = new Map(COURIER_DATA_COLUMNS.map((column) => [column.id, column]));
     return columnOrder.map((id) => map.get(id as CourierColumnId)!).filter(Boolean);
@@ -398,13 +386,15 @@ export const CouriersListScreen: React.FC = () => {
     const normalizedSearch = searchQuery.trim().toLowerCase();
     let couriers = state.couriers;
 
-    if (showConnectedOnly) {
+    if (showActiveCouriersOnly) {
       couriers = couriers.filter((courier) => courier.status !== 'offline');
     }
 
-    if (showOnShiftOnly) {
-      couriers = couriers.filter((courier) => courier.isOnShift);
-    }
+    couriers = couriers.filter((courier) =>
+      courier.employmentType === 'שעתי'
+        ? courierEmploymentVisibility.hourly
+        : courierEmploymentVisibility.perDelivery,
+    );
 
     if (normalizedSearch) {
       couriers = couriers.filter((courier) =>
@@ -420,47 +410,66 @@ export const CouriersListScreen: React.FC = () => {
       if (courier.status === 'offline' || !courier.isOnShift) return 2;
       return 1;
     };
+    const employmentGroupValue = (courier: Courier) => (courier.employmentType === 'שעתי' ? 0 : 1);
+    const compareByName = (a: Courier, b: Courier) => a.name.localeCompare(b.name, 'he');
 
     return [...couriers].sort((a, b) => {
+      const employmentGroupDiff = employmentGroupValue(a) - employmentGroupValue(b);
+      if (employmentGroupDiff !== 0) return employmentGroupDiff;
+
+      if (sortColumn === 'employmentType') {
+        return compareByName(a, b);
+      }
+
+      let result = 0;
       switch (sortColumn) {
         case 'name':
-          return a.name.localeCompare(b.name, 'he') * direction;
+          result = compareByName(a, b);
+          break;
         case 'connection':
-          return (connectionOrder[a.status] - connectionOrder[b.status]) * direction;
+          result = connectionOrder[a.status] - connectionOrder[b.status];
+          break;
         case 'shift':
-          return ((a.isOnShift ? 1 : 0) - (b.isOnShift ? 1 : 0)) * direction;
+          result = (a.isOnShift ? 1 : 0) - (b.isOnShift ? 1 : 0);
+          break;
         case 'availability':
-          return (availabilityValue(a) - availabilityValue(b)) * direction;
+          result = availabilityValue(a) - availabilityValue(b);
+          break;
         case 'vehicleType':
-          return a.vehicleType.localeCompare(b.vehicleType, 'he') * direction;
-        case 'employmentType':
-          return a.employmentType.localeCompare(b.employmentType, 'he') * direction;
+          result = a.vehicleType.localeCompare(b.vehicleType, 'he');
+          break;
         case 'phone':
-          return a.phone.localeCompare(b.phone, 'he') * direction;
+          result = a.phone.localeCompare(b.phone, 'he');
+          break;
         case 'rating':
-          return (a.rating - b.rating) * direction;
+          result = a.rating - b.rating;
+          break;
         case 'totalDeliveries':
-          return (
+          result = (
             (deliveriesCountByCourierInPeriod.get(a.id) ?? 0) -
             (deliveriesCountByCourierInPeriod.get(b.id) ?? 0)
-          ) * direction;
+          );
+          break;
         case 'currentDelivery': {
           const aDelivery = activeDeliveriesByCourier.get(a.id)?.orderNumber ?? '';
           const bDelivery = activeDeliveriesByCourier.get(b.id)?.orderNumber ?? '';
-          return aDelivery.localeCompare(bDelivery, 'he') * direction;
+          result = aDelivery.localeCompare(bDelivery, 'he');
+          break;
         }
         default:
-          return 0;
+          result = 0;
       }
+
+      return result === 0 ? compareByName(a, b) : result * direction;
     });
   }, [
     activeDeliveriesByCourier,
     deliveriesCountByCourierInPeriod,
     searchQuery,
-    showConnectedOnly,
-    showOnShiftOnly,
+    courierEmploymentVisibility,
     sortColumn,
     sortDirection,
+    showActiveCouriersOnly,
     state.couriers,
   ]);
 
@@ -472,15 +481,19 @@ export const CouriersListScreen: React.FC = () => {
     offline: state.couriers.filter((courier) => courier.status === 'offline').length,
   }), [filteredCouriers.length, state.couriers]);
 
-  const hasActiveFilters = Boolean(searchQuery.trim()) || showConnectedOnly || showOnShiftOnly;
+  const hasActiveFilters =
+    Boolean(searchQuery.trim()) ||
+    showActiveCouriersOnly ||
+    !courierEmploymentVisibility.hourly ||
+    !courierEmploymentVisibility.perDelivery;
   const allVisibleCouriersSelected =
     filteredCouriers.length > 0 && filteredCouriers.every((courier) => selectedCourierIds.has(courier.id));
   const someVisibleCouriersSelected = filteredCouriers.some((courier) => selectedCourierIds.has(courier.id));
 
   const handleClearAll = () => {
     setSearchQuery('');
-    setShowConnectedOnly(false);
-    setShowOnShiftOnly(false);
+    setShowActiveCouriersOnly(false);
+    setCourierEmploymentVisibility({ hourly: true, perDelivery: true });
   };
 
   const handleCourierSort = (columnId: SortableCourierColumnId) => {
@@ -881,16 +894,26 @@ export const CouriersListScreen: React.FC = () => {
                 <div className="flex min-w-0 flex-1 items-center gap-1.5">
                   <div className="flex shrink-0 items-center gap-1">
                     <CourierToolbarToggle
-                      active={showConnectedOnly}
-                      label="הצג רק שליחים מחוברים"
-                      onClick={() => setShowConnectedOnly((value) => !value)}
-                      icon={<Bike className="h-3.5 w-3.5" />}
+                      active={courierEmploymentVisibility.hourly}
+                      label="הצג שליחים שעתיים"
+                      onClick={() =>
+                        setCourierEmploymentVisibility((value) => ({
+                          ...value,
+                          hourly: !value.hourly,
+                        }))
+                      }
+                      icon={<Clock3 className="h-3.5 w-3.5" />}
                     />
                     <CourierToolbarToggle
-                      active={showOnShiftOnly}
-                      label="הצג שליחים במשמרת"
-                      onClick={() => setShowOnShiftOnly((value) => !value)}
-                      icon={<Clock3 className="h-3.5 w-3.5" />}
+                      active={courierEmploymentVisibility.perDelivery}
+                      label="הצג שליחים פר משלוח"
+                      onClick={() =>
+                        setCourierEmploymentVisibility((value) => ({
+                          ...value,
+                          perDelivery: !value.perDelivery,
+                        }))
+                      }
+                      icon={<Package className="h-3.5 w-3.5" />}
                     />
                   </div>
                   <ListToolbarActions
@@ -901,7 +924,14 @@ export const CouriersListScreen: React.FC = () => {
                     showColumnsToggle={false}
                     showExportButton={false}
                   />
-                  <ViewModeToggle value={viewMode} onChange={setViewMode} />
+                  <div className="flex shrink-0 items-center gap-1">
+                    <CourierToolbarToggle
+                      active={showActiveCouriersOnly}
+                      label="הצג שליחים פעילים"
+                      onClick={() => setShowActiveCouriersOnly((value) => !value)}
+                      icon={<Power className="h-3.5 w-3.5" />}
+                    />
+                  </div>
                 </div>
               }
             />
@@ -911,7 +941,7 @@ export const CouriersListScreen: React.FC = () => {
         <div className="flex min-h-0 w-full flex-1 flex-col">
             <CouriersVercelList
               couriers={filteredCouriers}
-              viewMode={viewMode}
+              viewMode="list"
               activeDeliveriesByCourier={activeDeliveriesByCourier}
               onOpenActionsMenu={openCourierActionsMenu}
               onOpenContextMenu={(courier, event) => {

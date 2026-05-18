@@ -33,6 +33,9 @@ import { getDeliveryCustomerCharge } from '../../utils/delivery-finance';
 import { isOperationalDelivery } from '../../utils/delivery-status';
 import {
   SENDI_PLUS_RADIUS_CHANGE_EVENT,
+  SENDI_PLUS_TERMS_ACCEPTED_CHANGE_EVENT,
+  SENDI_PLUS_TERMS_ACCEPTED_STORAGE_KEY,
+  isRestaurantActiveForDisplay,
   isRestaurantEligibleForDeliveryIntake,
   readStoredSendiPlusRadius,
 } from '../../utils/sendi-plus';
@@ -164,6 +167,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
   const [businessSearch, setBusinessSearch] = useState('');
   const [selectedBusiness, setSelectedBusiness] = useState(BUSINESSES[0]);
   const [sendiPlusRadiusKm, setSendiPlusRadiusKm] = useState(readStoredSendiPlusRadius);
+  const [sendiPlusAccessVersion, setSendiPlusAccessVersion] = useState(0);
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= DESKTOP_SIDEBAR_BREAKPOINT);
   const [isCollapsed, setIsCollapsed] = useState(() => {
     try {
@@ -212,13 +216,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
   const isExpanded = !isCollapsed || !isDesktop;
   const activeDeliveriesCount = state.deliveries.filter(isOperationalDelivery).length;
   const deliveredDeliveriesCount = state.deliveries.filter((delivery) => delivery.status === 'delivered').length;
-  const activeRestaurantsCount = state.restaurants.filter((restaurant) => restaurant.isActive).length;
+  const activeRestaurantsCount = state.restaurants.filter((restaurant) =>
+    isRestaurantActiveForDisplay(restaurant),
+  ).length;
   const activeCouriersCount = state.couriers.filter((courier) => courier.status !== 'offline').length;
   const hasDeliveryIntakeRestaurants = useMemo(
     () => state.restaurants.some((restaurant) =>
       isRestaurantEligibleForDeliveryIntake(restaurant, sendiPlusRadiusKm)
     ),
-    [sendiPlusRadiusKm, state.restaurants],
+    [sendiPlusAccessVersion, sendiPlusRadiusKm, state.restaurants],
   );
   const isDeliveryIntakeBlocked = state.isSystemOpen && !hasDeliveryIntakeRestaurants;
   const systemStatusLabel = isDeliveryIntakeBlocked
@@ -262,6 +268,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
     const syncSendiPlusRadius = () => {
       setSendiPlusRadiusKm(readStoredSendiPlusRadius());
     };
+    const syncSendiPlusAccess = () => {
+      setSendiPlusAccessVersion((version) => version + 1);
+    };
 
     const handleStorageChange = (event: StorageEvent) => {
       if (
@@ -270,12 +279,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       ) {
         syncSendiPlusRadius();
       }
+
+      if (event.key === SENDI_PLUS_TERMS_ACCEPTED_STORAGE_KEY) {
+        syncSendiPlusAccess();
+      }
     };
 
     window.addEventListener(SENDI_PLUS_RADIUS_CHANGE_EVENT, syncSendiPlusRadius);
+    window.addEventListener(SENDI_PLUS_TERMS_ACCEPTED_CHANGE_EVENT, syncSendiPlusAccess);
     window.addEventListener('storage', handleStorageChange);
     return () => {
       window.removeEventListener(SENDI_PLUS_RADIUS_CHANGE_EVENT, syncSendiPlusRadius);
+      window.removeEventListener(SENDI_PLUS_TERMS_ACCEPTED_CHANGE_EVENT, syncSendiPlusAccess);
       window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
