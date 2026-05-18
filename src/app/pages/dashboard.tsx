@@ -57,6 +57,7 @@ const DASHBOARD_DELIVERY_STATUSES: DeliveryStatus[] = [
   'delivered',
   'cancelled',
 ];
+const ACTIVE_DELIVERY_STATUSES: DeliveryStatus[] = ['pending', 'assigned', 'delivering'];
 const formatRadiusKm = formatSendiPlusRadiusKm;
 const SENDI_PLUS_TERMS_TEXT =
   'הפעלת המתג מחייבת עמידה בזמני משלוח של עד 60 דקות מסירה';
@@ -656,6 +657,10 @@ export const Dashboard: React.FC = () => {
     const totalMinutes = deliveryDurations.reduce((sum, duration) => sum + duration, 0);
     return Math.round(totalMinutes / deliveryDurations.length);
   }, [filteredDeliveries]);
+  const activeDeliveriesCount = React.useMemo(
+    () => filteredDeliveries.filter((delivery) => ACTIVE_DELIVERY_STATUSES.includes(delivery.status)).length,
+    [filteredDeliveries],
+  );
   const totalStatusCount = Math.max(filteredDeliveries.length, 1);
   const { mapSplitPortal } = useDeliveriesMapSplit({
     deliveries: filteredDeliveries,
@@ -695,6 +700,23 @@ export const Dashboard: React.FC = () => {
             </div>
           </section>
           <section>
+            <div className="mb-2 grid grid-cols-2 gap-2 min-[520px]:grid-cols-6">
+              <button
+                type="button"
+                onClick={() => navigate('/deliveries')}
+                className="dashboard-status-card col-span-2 min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:border-app-border hover:bg-app-surface-raised sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] min-[520px]:col-span-6"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
+                    משלוחים פעילים
+                  </span>
+                  <PackageOpen className="h-3.5 w-3.5 shrink-0 text-app-brand sm:h-4 sm:w-4" />
+                </div>
+                <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
+                  {formatNumber(activeDeliveriesCount)}
+                </div>
+              </button>
+            </div>
             <div className="grid grid-cols-2 gap-2 min-[520px]:grid-cols-6">
               {STATUS_META.filter((status) => DASHBOARD_DELIVERY_STATUSES.includes(status.id)).map((status) => {
                 const isCourierAvailabilityCard = status.id === 'delivered';
