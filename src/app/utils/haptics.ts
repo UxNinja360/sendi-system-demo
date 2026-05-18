@@ -66,6 +66,7 @@ const playCapacitorHaptic = (name: string | undefined) => {
         .finally(() => {
           void Haptics.selectionEnd().catch(() => undefined);
         });
+      void Haptics.impact({ style: ImpactStyle.Medium }).catch(() => undefined);
       return true;
     }
 

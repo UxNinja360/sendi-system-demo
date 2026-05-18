@@ -95,8 +95,8 @@ const SIDEBAR_MIN_WIDTH = 250;
 const SIDEBAR_MAX_WIDTH = 400;
 const SIDEBAR_COLLAPSED_WIDTH = 60;
 const MOBILE_SIDEBAR_WIDTH = 260;
-const MOBILE_MENU_EDGE_SWIPE_WIDTH = 32;
-const MOBILE_MENU_SWIPE_START_THRESHOLD = 10;
+const MOBILE_MENU_EDGE_SWIPE_WIDTH = 56;
+const MOBILE_MENU_SWIPE_START_THRESHOLD = 3;
 const MOBILE_MENU_SWIPE_CLOSE_THRESHOLD = 76;
 const MOBILE_MENU_SWIPE_OPEN_THRESHOLD = 76;
 const DESKTOP_SIDEBAR_BREAKPOINT = 1024;
@@ -201,6 +201,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
   const [isResizingSidebar, setIsResizingSidebar] = useState(false);
   const sidebarResizeRef = useRef<{ startX: number; startWidth: number; didMove: boolean } | null>(null);
   const [mobileMenuDragX, setMobileMenuDragX] = useState(0);
+  const mobileMenuDragXRef = useRef(0);
   const [isMobileMenuDragging, setIsMobileMenuDragging] = useState(false);
   const mobileMenuSwipeRef = useRef<{
     direction: 'open' | 'close';
@@ -209,6 +210,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
     started: boolean;
     thresholdReached: boolean;
   } | null>(null);
+  const mobileMenuPointerIdRef = useRef<number | null>(null);
   const mobileMenuSwipeClickGuardRef = useRef(false);
   const [isLegacySectionOpen, setIsLegacySectionOpen] = useState(() => {
     try {
@@ -237,6 +239,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
   const isExpanded = !isCollapsed || !isDesktop;
   const isMobileMenuOpen = !isDesktop && isCollapsed;
+  const updateMobileMenuDragX = useCallback((value: number) => {
+    mobileMenuDragXRef.current = value;
+    setMobileMenuDragX(value);
+  }, []);
   const mobileMenuTranslateX = !isDesktop
     ? isMobileMenuDragging
       ? mobileMenuDragX
@@ -400,12 +406,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
   useEffect(() => {
     if (isDesktop || !isCollapsed) {
-      setMobileMenuDragX(0);
+      updateMobileMenuDragX(0);
       setIsMobileMenuDragging(false);
       mobileMenuSwipeRef.current = null;
+      mobileMenuPointerIdRef.current = null;
       mobileMenuSwipeClickGuardRef.current = false;
     }
-  }, [isCollapsed, isDesktop]);
+  }, [isCollapsed, isDesktop, updateMobileMenuDragX]);
 
   useEffect(() => {
     try {
@@ -477,12 +484,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
   );
 
   const toggleMobileMenu = useCallback(() => {
-    setMobileMenuDragX(0);
+    updateMobileMenuDragX(0);
     setIsMobileMenuDragging(false);
     mobileMenuSwipeRef.current = null;
+    mobileMenuPointerIdRef.current = null;
     mobileMenuSwipeClickGuardRef.current = false;
     setIsCollapsed((prev) => !prev);
-  }, []);
+  }, [updateMobileMenuDragX]);
 
   const toggleDesktopSidebar = useCallback(() => {
     setIsCollapsed((value) => {
@@ -556,67 +564,54 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
     setIsResizingSidebar(false);
   }, []);
 
-  const startMobileMenuSwipe = useCallback(
-    (event: React.TouchEvent<HTMLElement>, direction: 'open' | 'close') => {
+  const startMobileMenuSwipeAt = useCallback(
+    (clientX: number, clientY: number, direction: 'open' | 'close') => {
       const isOpenGestureAllowed = direction === 'open' && !isCollapsed;
       const isCloseGestureAllowed = direction === 'close' && isCollapsed;
-      if (isDesktop || (!isOpenGestureAllowed && !isCloseGestureAllowed) || event.touches.length !== 1) return;
+      if (isDesktop || (!isOpenGestureAllowed && !isCloseGestureAllowed)) return;
 
-      const touch = event.touches[0];
       mobileMenuSwipeRef.current = {
         direction,
-        startX: touch.clientX,
-        startY: touch.clientY,
+        startX: clientX,
+        startY: clientY,
         started: false,
         thresholdReached: false,
       };
-      setMobileMenuDragX(direction === 'open' ? MOBILE_SIDEBAR_WIDTH : 0);
+      updateMobileMenuDragX(direction === 'open' ? MOBILE_SIDEBAR_WIDTH : 0);
       mobileMenuSwipeClickGuardRef.current = false;
     },
-    [isCollapsed, isDesktop],
+    [isCollapsed, isDesktop, updateMobileMenuDragX],
   );
 
-  const handleMobileMenuOpenTouchStart = useCallback(
-    (event: React.TouchEvent<HTMLElement>) => startMobileMenuSwipe(event, 'open'),
-    [startMobileMenuSwipe],
-  );
-
-  const handleMobileMenuCloseTouchStart = useCallback(
-    (event: React.TouchEvent<HTMLElement>) => startMobileMenuSwipe(event, 'close'),
-    [startMobileMenuSwipe],
-  );
-
-  const handleMobileMenuTouchMove = useCallback(
-    (event: React.TouchEvent<HTMLElement>) => {
+  const moveMobileMenuSwipeTo = useCallback(
+    (clientX: number, clientY: number) => {
       const swipe = mobileMenuSwipeRef.current;
-      if (!swipe || isDesktop || event.touches.length !== 1) return;
+      if (!swipe || isDesktop) return false;
 
-      const touch = event.touches[0];
       const deltaX = swipe.direction === 'open'
-        ? swipe.startX - touch.clientX
-        : touch.clientX - swipe.startX;
-      const deltaY = touch.clientY - swipe.startY;
+        ? swipe.startX - clientX
+        : clientX - swipe.startX;
+      const deltaY = clientY - swipe.startY;
       const absX = Math.abs(deltaX);
       const absY = Math.abs(deltaY);
 
       if (!swipe.started) {
-        if (deltaX <= MOBILE_MENU_SWIPE_START_THRESHOLD || absX < absY * 1.2) return;
+        if (deltaX <= MOBILE_MENU_SWIPE_START_THRESHOLD || absX < absY * 0.85) return false;
 
         swipe.started = true;
         setIsMobileMenuDragging(true);
 
         if (swipe.direction === 'close') {
-          playHaptic('selection', { force: true });
+          playHaptic('medium', { force: true });
         }
       }
 
-      event.preventDefault();
       const clampedDelta = Math.min(MOBILE_SIDEBAR_WIDTH, Math.max(0, deltaX));
       const nextTranslateX = swipe.direction === 'open'
         ? MOBILE_SIDEBAR_WIDTH - clampedDelta
         : clampedDelta;
 
-      setMobileMenuDragX(nextTranslateX);
+      updateMobileMenuDragX(nextTranslateX);
 
       if (
         swipe.direction === 'open' &&
@@ -624,42 +619,134 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
         !swipe.thresholdReached
       ) {
         swipe.thresholdReached = true;
-        playHaptic('selection', { force: true });
+        playHaptic('medium', { force: true });
       }
+
+      return true;
     },
-    [isDesktop],
+    [isDesktop, updateMobileMenuDragX],
   );
 
   const finishMobileMenuSwipe = useCallback(() => {
     const swipe = mobileMenuSwipeRef.current;
     if (!swipe) return;
 
+    const currentDragX = mobileMenuDragXRef.current;
     const shouldOpen =
       swipe.direction === 'open' &&
       swipe.started &&
-      (swipe.thresholdReached || mobileMenuDragX <= MOBILE_SIDEBAR_WIDTH - MOBILE_MENU_SWIPE_OPEN_THRESHOLD);
+      (swipe.thresholdReached || currentDragX <= MOBILE_SIDEBAR_WIDTH - MOBILE_MENU_SWIPE_OPEN_THRESHOLD);
     const shouldClose =
       swipe.direction === 'close' &&
       swipe.started &&
-      mobileMenuDragX >= MOBILE_MENU_SWIPE_CLOSE_THRESHOLD;
+      currentDragX >= MOBILE_MENU_SWIPE_CLOSE_THRESHOLD;
     mobileMenuSwipeRef.current = null;
+    mobileMenuPointerIdRef.current = null;
     mobileMenuSwipeClickGuardRef.current = swipe.started;
     setIsMobileMenuDragging(false);
 
     if (shouldOpen) {
       setIsCollapsed(true);
-      setMobileMenuDragX(0);
+      updateMobileMenuDragX(0);
       return;
     }
 
     if (shouldClose) {
       setIsCollapsed(false);
-      setMobileMenuDragX(0);
+      updateMobileMenuDragX(0);
       return;
     }
 
-    setMobileMenuDragX(0);
-  }, [mobileMenuDragX]);
+    updateMobileMenuDragX(0);
+  }, [updateMobileMenuDragX]);
+
+  useEffect(() => {
+    if (isDesktop || typeof document === 'undefined') return;
+
+    const handleNativeTouchStart = (event: TouchEvent) => {
+      if (event.touches.length !== 1) return;
+      if (mobileMenuPointerIdRef.current !== null) return;
+
+      const touch = event.touches[0];
+      if (isCollapsed) {
+        startMobileMenuSwipeAt(touch.clientX, touch.clientY, 'close');
+        return;
+      }
+
+      if (touch.clientX >= window.innerWidth - MOBILE_MENU_EDGE_SWIPE_WIDTH) {
+        startMobileMenuSwipeAt(touch.clientX, touch.clientY, 'open');
+      }
+    };
+
+    const handleNativeTouchMove = (event: TouchEvent) => {
+      if (event.touches.length !== 1) return;
+
+      const touch = event.touches[0];
+      if (moveMobileMenuSwipeTo(touch.clientX, touch.clientY)) {
+        event.preventDefault();
+      }
+    };
+
+    document.addEventListener('touchstart', handleNativeTouchStart, { passive: true });
+    document.addEventListener('touchmove', handleNativeTouchMove, { passive: false });
+    document.addEventListener('touchend', finishMobileMenuSwipe);
+    document.addEventListener('touchcancel', finishMobileMenuSwipe);
+
+    const handleNativePointerDown = (event: PointerEvent) => {
+      if (event.button > 0 || mobileMenuPointerIdRef.current !== null) return;
+      if (event.pointerType === 'mouse' && window.innerWidth >= DESKTOP_SIDEBAR_BREAKPOINT) return;
+
+      if (isCollapsed) {
+        mobileMenuPointerIdRef.current = event.pointerId;
+        startMobileMenuSwipeAt(event.clientX, event.clientY, 'close');
+        return;
+      }
+
+      if (event.clientX >= window.innerWidth - MOBILE_MENU_EDGE_SWIPE_WIDTH) {
+        mobileMenuPointerIdRef.current = event.pointerId;
+        startMobileMenuSwipeAt(event.clientX, event.clientY, 'open');
+      }
+    };
+
+    const handleNativePointerMove = (event: PointerEvent) => {
+      if (mobileMenuPointerIdRef.current !== event.pointerId) return;
+
+      if (moveMobileMenuSwipeTo(event.clientX, event.clientY)) {
+        event.preventDefault();
+      }
+    };
+
+    const handleNativePointerEnd = (event: PointerEvent) => {
+      if (mobileMenuPointerIdRef.current !== event.pointerId) return;
+      finishMobileMenuSwipe();
+    };
+
+    document.addEventListener('pointerdown', handleNativePointerDown);
+    document.addEventListener('pointermove', handleNativePointerMove, { passive: false });
+    document.addEventListener('pointerup', handleNativePointerEnd);
+    document.addEventListener('pointercancel', handleNativePointerEnd);
+    document.addEventListener('mouseup', finishMobileMenuSwipe);
+    window.addEventListener('blur', finishMobileMenuSwipe);
+
+    return () => {
+      document.removeEventListener('touchstart', handleNativeTouchStart);
+      document.removeEventListener('touchmove', handleNativeTouchMove);
+      document.removeEventListener('touchend', finishMobileMenuSwipe);
+      document.removeEventListener('touchcancel', finishMobileMenuSwipe);
+      document.removeEventListener('pointerdown', handleNativePointerDown);
+      document.removeEventListener('pointermove', handleNativePointerMove);
+      document.removeEventListener('pointerup', handleNativePointerEnd);
+      document.removeEventListener('pointercancel', handleNativePointerEnd);
+      document.removeEventListener('mouseup', finishMobileMenuSwipe);
+      window.removeEventListener('blur', finishMobileMenuSwipe);
+    };
+  }, [
+    finishMobileMenuSwipe,
+    isCollapsed,
+    isDesktop,
+    moveMobileMenuSwipeTo,
+    startMobileMenuSwipeAt,
+  ]);
 
   useEffect(() => {
     onMobileMenuToggleReady?.(toggleMobileMenu);
@@ -668,9 +755,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
   const closeMobileMenu = () => {
     if (!isDesktop) {
-      setMobileMenuDragX(0);
+      updateMobileMenuDragX(0);
       setIsMobileMenuDragging(false);
       mobileMenuSwipeRef.current = null;
+      mobileMenuPointerIdRef.current = null;
       mobileMenuSwipeClickGuardRef.current = false;
       setIsCollapsed(false);
     }
@@ -796,10 +884,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
             closeMobileMenu();
           }}
-          onTouchStart={handleMobileMenuCloseTouchStart}
-          onTouchMove={handleMobileMenuTouchMove}
-          onTouchEnd={finishMobileMenuSwipe}
-          onTouchCancel={finishMobileMenuSwipe}
         />
       )}
 
@@ -811,10 +895,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
             width: MOBILE_MENU_EDGE_SWIPE_WIDTH,
             touchAction: 'pan-y',
           }}
-          onTouchStart={handleMobileMenuOpenTouchStart}
-          onTouchMove={handleMobileMenuTouchMove}
-          onTouchEnd={finishMobileMenuSwipe}
-          onTouchCancel={finishMobileMenuSwipe}
         />
       )}
 
@@ -823,10 +903,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
         className={`app-shell-height group/sidebar fixed inset-y-0 right-0 z-[110] flex flex-col border-l border-app-nav-border bg-app-nav-bg shadow-xl will-change-transform lg:static lg:z-50 lg:shadow-none ${
           isCollapsed ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'
         }`}
-        onTouchStart={handleMobileMenuCloseTouchStart}
-        onTouchMove={handleMobileMenuTouchMove}
-        onTouchEnd={finishMobileMenuSwipe}
-        onTouchCancel={finishMobileMenuSwipe}
         style={{
           width: isDesktop ? (isCollapsed ? SIDEBAR_COLLAPSED_WIDTH : sidebarWidth) : `${MOBILE_SIDEBAR_WIDTH}px`,
           transform: mobileMenuTranslateX === undefined ? undefined : `translateX(${mobileMenuTranslateX}px)`,
