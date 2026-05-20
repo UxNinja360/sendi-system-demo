@@ -154,7 +154,7 @@ const getDashboardGreeting = (date = new Date()) => {
 const formatAverageDeliveryTime = (minutes: number | null) =>
   typeof minutes === 'number' && Number.isFinite(minutes) && minutes > 0
     ? `${formatNumber(minutes)} דק׳`
-    : 'NaN';
+    : '—';
 
 const isDashboardPullRefreshIgnoredTarget = (target: EventTarget | null) => {
   if (!(target instanceof Element)) return false;
@@ -1123,35 +1123,16 @@ export const Dashboard: React.FC = () => {
               })}
               </div>
             </div>
-            <button
-              type="button"
-              aria-label="זמן ממוצע למשלוח"
-              onClick={() => navigate('/deliveries')}
-              className="dashboard-status-card mt-[14px] w-full min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] dark:hover:bg-[#111111]"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
-                  זמן ממוצע למשלוח
-                </span>
-                <Timer className="h-3.5 w-3.5 shrink-0 text-cyan-400 sm:h-4 sm:w-4" />
-              </div>
-              <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
-                <RefreshingMetricValue
-                  refreshing={isDashboardRefreshing}
-                  value={formatAverageDeliveryTime(averageDeliveryMinutes)}
-                />
-              </div>
-            </button>
             <div className="mt-[14px] grid grid-cols-2 gap-[14px] min-[520px]:grid-cols-6">
               <button
                 type="button"
-                aria-label="שליחים פנויים"
+                aria-label="שליחים"
                 onClick={() => navigate('/couriers')}
-                className="dashboard-status-card col-span-1 min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] dark:hover:bg-[#111111] min-[520px]:col-span-3"
+                className="dashboard-status-card col-span-2 min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] dark:hover:bg-[#111111] min-[520px]:col-span-6"
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
-                    שליחים פנויים
+                    שליחים
                   </span>
                   <UserCheck className="h-3.5 w-3.5 shrink-0 text-[#0a84ff] sm:h-4 sm:w-4" />
                 </div>
@@ -1179,6 +1160,25 @@ export const Dashboard: React.FC = () => {
                   <AnimatedMetricNumber
                     refreshing={isDashboardRefreshing}
                     value={activeRestaurantsCount}
+                  />
+                </div>
+              </button>
+              <button
+                type="button"
+                aria-label="זמן ממוצע למשלוח"
+                onClick={() => navigate('/deliveries')}
+                className="dashboard-status-card col-span-1 min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] dark:hover:bg-[#111111] min-[520px]:col-span-3"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
+                    זמן ממוצע למשלוח
+                  </span>
+                  <Timer className="h-3.5 w-3.5 shrink-0 text-cyan-400 sm:h-4 sm:w-4" />
+                </div>
+                <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
+                  <RefreshingMetricValue
+                    refreshing={isDashboardRefreshing}
+                    value={formatAverageDeliveryTime(averageDeliveryMinutes)}
                   />
                 </div>
               </button>
