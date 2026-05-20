@@ -1093,6 +1093,41 @@ export const Dashboard: React.FC = () => {
                 );
               })}
               </div>
+              <div className="dashboard-delivery-summary__row dashboard-delivery-summary__status-row grid grid-cols-2" dir="rtl">
+              {(['delivered', 'cancelled'] as DeliveryStatus[]).map((statusId) => {
+                const status = STATUS_META.find((item) => item.id === statusId);
+                if (!status) return null;
+
+                const Icon = status.icon;
+                const count = statusCounts.get(statusId) ?? 0;
+                const label = statusId === 'delivered' ? 'נמסרו' : 'בוטלו';
+                const value = formatNumber(count);
+                const iconClassName = status.accentClassName;
+
+                return (
+                  <button
+                    key={statusId}
+                    type="button"
+                    aria-label={label}
+                    onClick={() => navigate(getDeliveriesStatusFilterPath([statusId]))}
+                    className="min-w-0 p-2.5 text-right transition-colors hover:bg-app-surface-raised sm:p-3 dark:hover:bg-[#111111]"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
+                        {label}
+                      </span>
+                      <Icon className={`h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4 ${iconClassName}`} />
+                    </div>
+                    <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
+                      <RefreshingMetricValue
+                        refreshing={isDashboardRefreshing}
+                        value={value}
+                      />
+                    </div>
+                  </button>
+                );
+              })}
+              </div>
             </div>
             <div className="mt-[14px] grid grid-cols-2 gap-[14px] min-[520px]:grid-cols-6">
               <button
@@ -1148,43 +1183,6 @@ export const Dashboard: React.FC = () => {
             onManageZones={() => navigate('/zones?source=sendi-plus')}
             onInspectRestaurantCoverage={() => navigate('/zones?source=sendi-plus&tab=permissions')}
           />
-          <div className="overflow-hidden rounded-[8px] border border-app-border bg-app-surface text-right dark:border-[#252525] dark:bg-[#0A0A0A]">
-            <div className="dashboard-delivery-summary__row grid grid-cols-2" dir="rtl">
-            {(['delivered', 'cancelled'] as DeliveryStatus[]).map((statusId) => {
-              const status = STATUS_META.find((item) => item.id === statusId);
-              if (!status) return null;
-
-              const Icon = status.icon;
-              const count = statusCounts.get(statusId) ?? 0;
-              const label = statusId === 'delivered' ? 'נמסרו' : 'בוטלו';
-              const value = formatNumber(count);
-              const iconClassName = status.accentClassName;
-
-              return (
-                <button
-                  key={statusId}
-                  type="button"
-                  aria-label={label}
-                  onClick={() => navigate(getDeliveriesStatusFilterPath([statusId]))}
-                  className="dashboard-status-card min-w-0 p-2.5 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:hover:bg-[#111111]"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
-                      {label}
-                    </span>
-                    <Icon className={`h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4 ${iconClassName}`} />
-                  </div>
-                  <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
-                    <RefreshingMetricValue
-                      refreshing={isDashboardRefreshing}
-                      value={value}
-                    />
-                  </div>
-                </button>
-              );
-            })}
-            </div>
-          </div>
         </div>
       </main>
       </div>
