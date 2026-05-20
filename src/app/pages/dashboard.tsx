@@ -1124,26 +1124,47 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
             <div className="mt-[14px] grid grid-cols-2 gap-[14px] min-[520px]:grid-cols-6">
-              <button
-                type="button"
+              <section
                 aria-label="שליחים"
-                onClick={() => navigate('/couriers')}
                 className="dashboard-status-card col-span-2 min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] dark:hover:bg-[#111111] min-[520px]:col-span-6"
               >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
-                    שליחים
-                  </span>
-                  <UserCheck className="h-3.5 w-3.5 shrink-0 text-[#0a84ff] sm:h-4 sm:w-4" />
+                <div className="flex items-start justify-between gap-3">
+                  <button
+                    type="button"
+                    onClick={() => navigate('/couriers')}
+                    className="min-w-0 flex-1 text-right focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
+                        שליחים
+                      </span>
+                      <UserCheck className="h-3.5 w-3.5 shrink-0 text-[#0a84ff] sm:h-4 sm:w-4" />
+                    </div>
+                    <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
+                      <CourierAvailabilityValue
+                        connected={connectedCouriersCount}
+                        free={freeCouriersCount}
+                        refreshing={isDashboardRefreshing}
+                      />
+                    </div>
+                  </button>
+                  <div className="flex shrink-0 items-center gap-2 pt-0.5">
+                    <span className="max-w-[7.5rem] truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
+                      שיבוץ אוטומטי
+                    </span>
+                    <Toggle
+                      checked={state.autoAssignEnabled}
+                      disabled={isDashboardRefreshing}
+                      ariaLabel="שיבוץ אוטומטי"
+                      onChange={
+                        isDashboardRefreshing
+                          ? () => undefined
+                          : () => dispatch({ type: 'TOGGLE_AUTO_ASSIGN' })
+                      }
+                    />
+                  </div>
                 </div>
-                <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
-                  <CourierAvailabilityValue
-                    connected={connectedCouriersCount}
-                    free={freeCouriersCount}
-                    refreshing={isDashboardRefreshing}
-                  />
-                </div>
-              </button>
+              </section>
               <button
                 type="button"
                 aria-label="מסעדות פעילות"
