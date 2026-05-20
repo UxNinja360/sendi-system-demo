@@ -261,7 +261,7 @@ export const DeliveriesLiveMapPanel: React.FC<DeliveriesLiveMapPanelProps> = ({
   const [hoveredCourierId, setHoveredCourierId] = useState<string | null>(null);
   const [hoveredRestaurantName, setHoveredRestaurantName] = useState<string | null>(null);
   const [mapFilters, setMapFilters] = useState<MapFilters>(defaultMapFilters);
-  const [isFilterPanelCollapsed, setIsFilterPanelCollapsed] = useState(false);
+  const [isFilterPanelCollapsed, setIsFilterPanelCollapsed] = useState(true);
 
   const mapRestaurants = useMemo<MapMarker[]>(() => (
     restaurants
