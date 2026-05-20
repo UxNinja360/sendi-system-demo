@@ -342,6 +342,12 @@ const SendiPlusCard: React.FC<{
     ? 'text-app-text-secondary'
     : 'text-app-text-muted opacity-70';
   const selectedRadiusText = `${formatRadiusKm(radiusKm)} ק״מ`;
+  const termsSummaryText =
+    termsAccepted && !isAccordionOpen
+      ? `${SENDI_PLUS_TERMS_TEXT} · ${
+          receivesDeliveries ? `רדיוס עד ${selectedRadiusText}` : 'רדיוס כבוי'
+        }`
+      : SENDI_PLUS_TERMS_TEXT;
   const radiusHelperText = !termsAccepted
     ? 'הפעל את המתג למטה כדי לפתוח קבלת משלוחי סנדי פלוס, ואז בחר רדיוס שירות.'
     : receivesDeliveries
@@ -518,7 +524,7 @@ const SendiPlusCard: React.FC<{
       <div className="border-t border-app-border px-3 py-2 sm:px-4 dark:border-[#252525]" dir="rtl">
         <div className="flex min-w-0 items-center justify-between gap-3">
           <span className={`min-w-0 truncate text-xs font-normal ${termsTextClassName}`}>
-            {SENDI_PLUS_TERMS_TEXT}
+            {termsSummaryText}
           </span>
           <Toggle
             checked={termsAccepted}
