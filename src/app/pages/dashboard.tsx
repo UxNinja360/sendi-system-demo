@@ -348,7 +348,7 @@ const SendiPlusCard: React.FC<{
   const radiusHelperText = !termsAccepted
     ? 'הפעל את המתג למטה כדי לפתוח קבלת משלוחי סנדי פלוס, ואז בחר רדיוס שירות.'
     : receivesDeliveries
-      ? `נבחר רדיוס ${selectedRadiusText}. משלוחי סנדי פלוס יתקבלו רק בתוך הטווח הזה.`
+      ? `רדיוס נבחר: ${selectedRadiusText}.`
       : 'בחר רדיוס בסליידר כדי להתחיל לקבל משלוחים.';
   const sliderStyle = {
     '--sendi-plus-fill': `${radiusPercent}%`,
