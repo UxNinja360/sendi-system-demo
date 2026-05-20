@@ -329,6 +329,19 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
 ];
 
 const visibleSidebarItems = APP_NAV_ITEMS.filter((item) => item.showInSidebar);
+const sidebarDataItemOrder: Record<string, number> = {
+  'courier-shifts': 0,
+  reports: 1,
+};
+
+const getSidebarDataItems = () =>
+  visibleSidebarItems
+    .filter((item) => item.section === 'data')
+    .sort(
+      (firstItem, secondItem) =>
+        (sidebarDataItemOrder[firstItem.id] ?? Number.MAX_SAFE_INTEGER) -
+        (sidebarDataItemOrder[secondItem.id] ?? Number.MAX_SAFE_INTEGER),
+    );
 
 export const SIDEBAR_NAV_SECTIONS: AppNavSection[] = [
   {
@@ -344,7 +357,7 @@ export const SIDEBAR_NAV_SECTIONS: AppNavSection[] = [
   {
     id: 'data',
     label: '\u05e0\u05ea\u05d5\u05e0\u05d9\u05dd',
-    items: visibleSidebarItems.filter((item) => item.section === 'data'),
+    items: getSidebarDataItems(),
   },
 ];
 

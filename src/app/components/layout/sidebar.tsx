@@ -848,7 +848,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       const shouldShowInlineDivider =
         (section.id === 'core' &&
           item.id === 'dashboard' &&
-          section.items[itemIndex - 1]?.id === 'live');
+          section.items[itemIndex - 1]?.id === 'live') ||
+        (section.id === 'data' &&
+          item.id === 'reports' &&
+          section.items[itemIndex - 1]?.id === 'courier-shifts');
 
       return (
         <React.Fragment key={item.id}>
