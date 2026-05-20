@@ -776,6 +776,12 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
     scrollbar-width: none;
   }
 
+  .app-toolbar-content--pair-controls .app-toolbar-period,
+  .app-toolbar-content--pair-controls .app-toolbar-controls {
+    flex: 1 1 calc(50% - 0.1875rem) !important;
+    max-width: calc(50% - 0.1875rem);
+  }
+
   .app-toolbar-controls::-webkit-scrollbar {
     display: none;
   }
@@ -794,8 +800,8 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
 }
 
 @container (max-width: 430px) {
-  .app-toolbar-period,
-  .app-toolbar-controls {
+  .app-toolbar-content:not(.app-toolbar-content--pair-controls) .app-toolbar-period,
+  .app-toolbar-content:not(.app-toolbar-content--pair-controls) .app-toolbar-controls {
     flex-basis: 100% !important;
   }
 }
@@ -1009,11 +1015,11 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   }
 
   .delivery-row__route-compact-footer {
+    align-items: center;
     border-top: 1px solid var(--app-nav-border);
+    column-gap: 10px;
     direction: ltr;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-    grid-template-rows: auto;
+    display: flex;
     margin-top: 4px;
     min-height: 34px;
     padding-top: 9px;
@@ -1021,31 +1027,32 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   }
 
   .delivery-row__route-compact-status {
-    grid-column: 1;
-    grid-row: 1;
-    justify-self: start;
+    flex: 0 0 auto;
     justify-content: flex-start;
     max-width: 100%;
     min-width: 0;
-    width: 100%;
+    width: auto;
   }
 
   .delivery-row__route-compact-distance {
-    grid-column: 3;
-    grid-row: 1;
-    justify-self: end;
+    flex: 0 0 auto;
     justify-content: flex-end;
+    margin-left: auto;
     max-width: 100%;
   }
 
   .delivery-row__route-compact-courier {
-    grid-column: 2;
-    grid-row: 1;
-    justify-self: start;
+    flex: 0 1 auto;
     justify-content: flex-start;
-    max-width: 100%;
+    max-width: min(42vw, 190px);
     min-width: 0;
-    width: 100%;
+    width: auto;
+  }
+
+  .delivery-row__route-compact-status .delivery-status-line,
+  .delivery-row__route-compact-courier .delivery-courier-line {
+    max-width: 100%;
+    width: auto !important;
   }
 
   .delivery-row__compact-meta {
@@ -1073,8 +1080,8 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
     grid-template-areas: "actions status courier route order";
     grid-template-columns:
       clamp(36px, 4%, 48px)
-      minmax(118px, clamp(126px, 11%, 158px))
-      minmax(92px, clamp(104px, 10%, 138px))
+      max-content
+      minmax(82px, clamp(90px, 8%, 118px))
       minmax(320px, 1fr)
       clamp(84px, 10%, 128px);
     grid-template-rows: minmax(70px, auto);
@@ -1101,20 +1108,23 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
     grid-area: route;
     justify-content: flex-end;
     min-height: 70px;
+    overflow: hidden;
     padding: 7px 6px;
   }
 
   .delivery-row__route-table-pair {
     justify-content: flex-start;
-    gap: 16px;
+    gap: clamp(8px, 1.1vw, 16px);
     max-width: min(100%, 820px);
+    min-width: 0;
+    overflow: hidden;
     width: min(100%, 820px);
   }
 
   .delivery-row__route-table-leg {
-    flex: 1 1 260px;
+    flex: 1 1 0;
     gap: 6px;
-    min-width: 190px;
+    min-width: 0;
   }
 
   .delivery-row__route-table-distance {
@@ -1124,10 +1134,10 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   }
 
   .delivery-row__route-table-distance-wrap {
-    flex: 0 0 clamp(104px, 9vw, 128px);
+    flex: 0 0 clamp(70px, 7vw, 96px);
     justify-content: flex-start;
-    max-width: 128px;
-    min-width: 104px;
+    max-width: 96px;
+    min-width: 70px;
   }
 
   .delivery-row__route-table-courier {

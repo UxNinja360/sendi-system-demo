@@ -20,6 +20,7 @@ import {
   Search,
   Star,
   TimerOff,
+  UserCheck,
   UserPlus,
   XCircle,
 } from 'lucide-react';
@@ -118,7 +119,7 @@ const formatDeliveryDate = (delivery: Delivery, showDateForToday: boolean) => {
   }
 };
 
-const PENDING_DELIVERY_STATUS_LABEL = 'ממתין לשיבוץ';
+const PENDING_DELIVERY_STATUS_LABEL = 'ממתין';
 const UNASSIGNED_COURIER_LABEL = '-';
 
 const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
@@ -138,8 +139,8 @@ const DELIVERY_STATUS_LINE_META: Record<
     iconClassName: 'animate-spin',
   },
   assigned: {
-    label: 'שובץ לשליח',
-    icon: Bike,
+    label: 'שובץ',
+    icon: UserCheck,
   },
   delivering: {
     label: 'במסירה',
@@ -177,6 +178,9 @@ const DeliveryStatusLine: React.FC<{
       )}
       dir="rtl"
     >
+      <span className="delivery-status-line__label min-w-0 truncate text-sm font-normal">
+        {meta.label}
+      </span>
       <Icon
         className={joinClassNames(
           'delivery-status-line__icon h-3.5 w-3.5 shrink-0',
@@ -184,9 +188,6 @@ const DeliveryStatusLine: React.FC<{
         )}
         aria-hidden="true"
       />
-      <span className="delivery-status-line__label min-w-0 truncate text-sm font-normal">
-        {meta.label}
-      </span>
     </span>
   );
 
@@ -219,9 +220,6 @@ const DeliveryCourierLine: React.FC<{
       )}
       dir="rtl"
     >
-      {assigned ? (
-        <Icon className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
-      ) : null}
       <span
         className={joinClassNames(
           'min-w-0 truncate text-sm font-normal',
@@ -230,6 +228,9 @@ const DeliveryCourierLine: React.FC<{
       >
         {assigned ? label : UNASSIGNED_COURIER_LABEL}
       </span>
+      {assigned ? (
+        <Icon className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
+      ) : null}
     </span>
   );
 };

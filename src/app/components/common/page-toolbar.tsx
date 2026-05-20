@@ -110,6 +110,9 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
     renderedPrimaryAction || renderedPeriodControl || controls || actions || headerControls,
   );
   const shouldPairControlsOnMobile = pairControlsOnMobile && Boolean(renderedPeriodControl && controls);
+  const toolbarContentPairClassName = shouldPairControlsOnMobile
+    ? 'app-toolbar-content--pair-controls'
+    : '';
   const periodControlClassName = shouldPairControlsOnMobile
     ? 'flex min-w-0 flex-1 basis-[calc(50%-0.1875rem)] flex-nowrap items-center gap-1 min-[540px]:max-w-full min-[540px]:shrink-0 min-[540px]:basis-auto min-[540px]:flex-none'
     : 'flex max-w-full shrink-0 flex-nowrap items-center gap-1';
@@ -133,7 +136,7 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
           }`.trim()}
         >
           <div className="app-toolbar-row overflow-visible px-3 py-2.5">
-            <div className="app-toolbar-content flex w-full min-w-0 flex-wrap items-center gap-1.5 min-[900px]:flex-nowrap">
+            <div className={`app-toolbar-content ${toolbarContentPairClassName} flex w-full min-w-0 flex-wrap items-center gap-1.5 min-[900px]:flex-nowrap`.trim()}>
               {renderedPeriodControl ? (
                 <div className={`app-toolbar-period ${periodControlClassName}`.trim()}>
                   {renderedPeriodControl}

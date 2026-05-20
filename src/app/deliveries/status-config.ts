@@ -1,12 +1,12 @@
 ﻿import { DeliveryStatus } from '../types/delivery.types';
 import {
   AlertCircle,
-  Bike,
   Package,
   Navigation,
   CheckCircle2,
   XCircle,
   ClockAlert,
+  UserCheck,
 } from 'lucide-react';
 
 export interface StatusConfig {
@@ -44,7 +44,7 @@ export const STATUS_CONFIG: Record<DeliveryStatus, StatusConfig> = {
     sidePanelColor: 'text-yellow-600 dark:text-yellow-400',
     sidePanelBg: 'bg-yellow-50 dark:bg-yellow-950/40',
     sidePanelBorder: 'border-yellow-200 dark:border-yellow-800',
-    icon: Bike,
+    icon: UserCheck,
     dotColor: 'bg-yellow-500',
   },
   delivering: {
@@ -101,7 +101,7 @@ export const STATUS_ORDER: DeliveryStatus[] = ['pending', 'assigned', 'deliverin
 
 export const ALL_STATUSES: { key: DeliveryStatus; label: string; icon: typeof AlertCircle; color: string }[] = [
   { key: 'pending', label: 'ממתין', icon: AlertCircle, color: 'text-orange-500' },
-  { key: 'assigned', label: 'שובץ', icon: Bike, color: 'text-yellow-500' },
+  { key: 'assigned', label: 'שובץ', icon: UserCheck, color: 'text-yellow-500' },
   { key: 'delivering', label: 'נאסף', icon: Navigation, color: 'text-green-500' },
   { key: 'delivered', label: 'נמסר', icon: CheckCircle2, color: 'text-blue-500' },
   { key: 'cancelled', label: 'בוטל', icon: XCircle, color: 'text-red-500' },
