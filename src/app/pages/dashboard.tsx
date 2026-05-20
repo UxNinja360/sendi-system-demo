@@ -336,7 +336,7 @@ const SendiPlusCard: React.FC<{
   const receivesDeliveries = canReceiveSendiPlusDeliveries(radiusKm, termsAccepted);
   const menuRef = React.useRef<HTMLDivElement | null>(null);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-  const [isDetailsOpen, setIsDetailsOpen] = React.useState(termsAccepted);
+  const [isDetailsOpen, setIsDetailsOpen] = React.useState(true);
   const [isRadiusBubbleVisible, setIsRadiusBubbleVisible] = React.useState(false);
   const radiusBubbleHideTimeoutRef = React.useRef<number | null>(null);
   const radiusPercent = (radiusKm / MAX_SENDI_PLUS_RADIUS_KM) * 100;
