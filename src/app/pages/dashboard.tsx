@@ -398,14 +398,15 @@ const SendiPlusCard: React.FC<{
     ? 'text-app-text-secondary'
     : 'text-app-text-muted opacity-70';
   const selectedRadiusText = `${formatRadiusKm(radiusKm)} ק״מ`;
-  const termsSummaryText =
-    termsAccepted && !isAccordionOpen
+  const termsSummaryText = !termsAccepted
+    ? 'כבוי'
+    : !isAccordionOpen
       ? `עד 60 דקות מסירה · ${
           receivesDeliveries ? `רדיוס עד ${selectedRadiusText}` : 'רדיוס כבוי'
         }`
       : SENDI_PLUS_TERMS_TEXT;
   const radiusHelperText = !termsAccepted
-    ? 'הפעל את המתג למטה כדי לפתוח קבלת משלוחי סנדי פלוס, ואז בחר רדיוס שירות.'
+    ? 'כבוי'
     : receivesDeliveries
       ? `רדיוס נבחר: ${selectedRadiusText}.`
       : 'בחר רדיוס בסליידר כדי להתחיל לקבל משלוחים.';
@@ -455,9 +456,11 @@ const SendiPlusCard: React.FC<{
     });
   }, []);
   const handleTermsAcceptedChange = React.useCallback(() => {
-    onTermsAcceptedChange(!termsAccepted);
+    const nextTermsAccepted = !termsAccepted;
 
-    if (!isAccordionOpen) {
+    onTermsAcceptedChange(nextTermsAccepted);
+
+    if (nextTermsAccepted && !isAccordionOpen) {
       writeStoredSendiPlusDetailsOpen(true);
       setIsDetailsOpen(true);
     }
@@ -1145,13 +1148,13 @@ export const Dashboard: React.FC = () => {
               </section>
               <button
                 type="button"
-                aria-label="מסעדות פעילות"
+                aria-label="מסעדות"
                 onClick={() => navigate('/restaurants')}
                 className="dashboard-status-card col-span-1 min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] dark:hover:bg-[#111111] min-[520px]:col-span-3"
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
-                    מסעדות פעילות
+                    מסעדות
                   </span>
                   <Store className="h-3.5 w-3.5 shrink-0 text-purple-400 sm:h-4 sm:w-4" />
                 </div>
