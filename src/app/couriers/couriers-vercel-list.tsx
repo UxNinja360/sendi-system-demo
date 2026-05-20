@@ -2,7 +2,6 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Package, Star } from 'lucide-react';
 
 import { EntityRowActionTrigger } from '../components/common/entity-row-action-trigger';
-import { AppTooltip } from '../components/common/app-tooltip';
 import { Toggle } from '../components/common/toggle';
 import type { EntityViewMode } from '../components/common/view-mode-toggle';
 import type { Courier, Delivery } from '../types/delivery.types';
@@ -182,15 +181,11 @@ const CourierVercelRow: React.FC<{
       <div className="courier-row__footer col-start-1 row-start-6 flex min-h-0 items-center justify-between px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:justify-start md:py-2">
         <CourierRating rating={courier.rating} className="md:hidden" />
         <span className="inline-flex md:hidden" onClick={(event) => event.stopPropagation()}>
-          <AppTooltip label={connectionMeta.label} side="top" className="inline-flex">
-            <Toggle checked={isConnected} onChange={() => onTogglePower(courier)} ariaLabel={connectionMeta.label} />
-          </AppTooltip>
+          <Toggle checked={isConnected} onChange={() => onTogglePower(courier)} ariaLabel={connectionMeta.label} />
         </span>
         <div className="hidden min-w-0 md:flex md:w-full md:justify-start">
           <span className="inline-flex" onClick={(event) => event.stopPropagation()}>
-            <AppTooltip label={connectionMeta.label} side="top" className="inline-flex">
-              <Toggle checked={isConnected} onChange={() => onTogglePower(courier)} ariaLabel={connectionMeta.label} />
-            </AppTooltip>
+            <Toggle checked={isConnected} onChange={() => onTogglePower(courier)} ariaLabel={connectionMeta.label} />
           </span>
         </div>
       </div>
@@ -240,9 +235,7 @@ const CourierVercelCard: React.FC<{
             <div className="flex min-w-0 items-center gap-2">
               <div className="min-w-0 truncate text-sm font-semibold text-app-text">{courier.name}</div>
               <span className="inline-flex" onClick={(event) => event.stopPropagation()}>
-                <AppTooltip label={connectionMeta.label} side="top" className="inline-flex">
-                  <Toggle checked={isConnected} onChange={() => onTogglePower(courier)} ariaLabel={connectionMeta.label} />
-                </AppTooltip>
+                <Toggle checked={isConnected} onChange={() => onTogglePower(courier)} ariaLabel={connectionMeta.label} />
               </span>
             </div>
             <div className="mt-1 truncate text-right text-xs text-app-text-secondary" dir="ltr">
