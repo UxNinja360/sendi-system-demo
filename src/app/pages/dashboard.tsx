@@ -822,12 +822,22 @@ export const Dashboard: React.FC = () => {
       pullThresholdHapticPlayedRef.current = true;
       playPullRefreshThresholdHaptic();
     }
-  }, [playPullRefreshThresholdHaptic, resetPullRefresh]);
+
+    if (nextReady) {
+      runDashboardRefresh();
+    }
+  }, [playPullRefreshThresholdHaptic, resetPullRefresh, runDashboardRefresh]);
 
   const handlePullRefreshTouchEnd = React.useCallback(() => {
     pullRefreshTouchActiveRef.current = false;
 
     if (pullRefreshTriggeredRef.current || isDashboardRefreshingRef.current) {
+      if (isDashboardRefreshingRef.current) {
+        setPullDistance(DASHBOARD_PULL_REFRESH_THRESHOLD);
+        setIsPullRefreshReady(true);
+        return;
+      }
+
       resetPullRefresh();
       return;
     }

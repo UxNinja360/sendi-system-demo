@@ -3,6 +3,7 @@ import { registerSW } from 'virtual:pwa-register';
 export const APP_UPDATE_AVAILABLE_EVENT = 'sendi-app-update-available';
 export const APP_UPDATE_ACTIVATING_EVENT = 'sendi-app-update-activating';
 
+const SW_UPDATE_AVAILABLE_MESSAGE = 'SENDI_APP_UPDATE_AVAILABLE';
 const UPDATE_CHECK_INTERVAL_MS = 15_000;
 const INITIAL_UPDATE_CHECK_DELAYS_MS = [0, 1_000, 5_000];
 
@@ -138,6 +139,16 @@ export const setupAppUpdateChecks = () => {
   if (!('serviceWorker' in navigator)) return;
   if (setupStarted) return;
   setupStarted = true;
+
+  const handleServiceWorkerMessage = (event: MessageEvent) => {
+    if (event.data?.type !== SW_UPDATE_AVAILABLE_MESSAGE) return;
+
+    void checkForAppUpdate().finally(() => {
+      emitUpdateAvailable(latestRegistration);
+    });
+  };
+
+  navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (!activationRequested || reloadStarted) return;

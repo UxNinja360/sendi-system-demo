@@ -27,6 +27,10 @@ export const AppUpdateBanner: React.FC = () => {
       showBanner();
     }
 
+    void checkForAppUpdate().then((foundUpdate) => {
+      if (foundUpdate) showBanner();
+    });
+
     window.addEventListener(APP_UPDATE_AVAILABLE_EVENT, showBanner);
     window.addEventListener(APP_UPDATE_ACTIVATING_EVENT, markUpdating);
 

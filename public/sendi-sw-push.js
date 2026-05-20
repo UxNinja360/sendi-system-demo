@@ -1,4 +1,24 @@
 const SENDI_DELIVERIES_URL = '/deliveries';
+const SENDI_APP_UPDATE_AVAILABLE_MESSAGE = 'SENDI_APP_UPDATE_AVAILABLE';
+
+const notifyAppUpdateAvailable = async () => {
+  try {
+    if (!self.registration.active) return;
+
+    const windowClients = await self.clients.matchAll({
+      type: 'window',
+      includeUncontrolled: true,
+    });
+
+    windowClients.forEach((client) => {
+      client.postMessage({
+        type: SENDI_APP_UPDATE_AVAILABLE_MESSAGE,
+      });
+    });
+  } catch {
+    // The update flow must never block service worker installation.
+  }
+};
 
 const toPositiveBadgeCount = (value) => {
   const count = Number(value);
@@ -148,6 +168,10 @@ self.addEventListener('push', (event) => {
       showSendiNotification(payload),
     ]),
   );
+});
+
+self.addEventListener('install', (event) => {
+  event.waitUntil?.(notifyAppUpdateAvailable());
 });
 
 self.addEventListener('message', (event) => {
