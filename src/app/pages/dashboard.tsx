@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router';
+import CountUp from 'react-countup';
 import {
   ArrowUp,
   Bike,
@@ -196,6 +197,39 @@ const CourierAvailabilityValue: React.FC<{
     }
   />
 );
+
+const AnimatedMetricNumber: React.FC<{
+  refreshing: boolean;
+  value: number;
+}> = ({ refreshing, value }) => {
+  const previousValueRef = React.useRef(value);
+  const previousValue = previousValueRef.current;
+  const shouldAnimate = !refreshing && previousValue !== value;
+
+  React.useEffect(() => {
+    if (!refreshing) {
+      previousValueRef.current = value;
+    }
+  }, [refreshing, value]);
+
+  return (
+    <RefreshingMetricValue
+      refreshing={refreshing}
+      value={
+        shouldAnimate ? (
+          <CountUp
+            duration={0.85}
+            end={value}
+            formattingFn={formatNumber}
+            start={previousValue}
+          />
+        ) : (
+          formatNumber(value)
+        )
+      }
+    />
+  );
+};
 
 const DashboardPullRefreshLabel: React.FC<{ label: string }> = ({ label }) => {
   const [visibleLabel, setVisibleLabel] = React.useState(label);
@@ -871,12 +905,26 @@ export const Dashboard: React.FC = () => {
     () => state.couriers.filter((courier) => courier.status !== 'offline').length,
     [dashboardRefreshVersion, state.couriers],
   );
-  const activeRestaurantsCount = React.useMemo(
+  const baseActiveRestaurantsCount = React.useMemo(
     () =>
-      state.restaurants.filter((restaurant) =>
-        isRestaurantActiveForDisplay(restaurant, sendiPlusTermsAccepted),
+      state.restaurants.filter(
+        (restaurant) =>
+          restaurant.isActive &&
+          !isSendiPlusRestaurant(restaurant.name, restaurant.chainId),
       ).length,
-    [dashboardRefreshVersion, sendiPlusTermsAccepted, state.restaurants],
+    [dashboardRefreshVersion, state.restaurants],
+  );
+  const sendiPlusRestaurantsForDashboardCount = React.useMemo(
+    () =>
+      state.restaurants.filter(
+        (restaurant) =>
+          restaurant.isActive &&
+          isSendiPlusRestaurant(restaurant.name, restaurant.chainId),
+      ).length,
+    [dashboardRefreshVersion, state.restaurants],
+  );
+  const activeRestaurantsCount = baseActiveRestaurantsCount + (
+    sendiPlusTermsAccepted ? sendiPlusRestaurantsForDashboardCount : 0
   );
   const freeCouriersCount = React.useMemo(() => {
     const busyCourierIds = new Set(
@@ -1154,9 +1202,9 @@ export const Dashboard: React.FC = () => {
                   <Store className="h-3.5 w-3.5 shrink-0 text-purple-400 sm:h-4 sm:w-4" />
                 </div>
                 <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
-                  <RefreshingMetricValue
+                  <AnimatedMetricNumber
                     refreshing={isDashboardRefreshing}
-                    value={formatNumber(activeRestaurantsCount)}
+                    value={activeRestaurantsCount}
                   />
                 </div>
               </button>
