@@ -62,6 +62,7 @@ const formatRadiusKm = formatSendiPlusRadiusKm;
 const SENDI_PLUS_TERMS_TEXT =
   'מתחייב בזמני משלוח של 60 דקות מסירה';
 const SENDI_PLUS_DETAILS_OPEN_STORAGE_KEY = 'dashboard-sendi-plus-details-open';
+const DASHBOARD_PULL_REFRESH_START_DISTANCE = 28;
 const DASHBOARD_PULL_REFRESH_THRESHOLD = 72;
 const DASHBOARD_PULL_REFRESH_MAX = 124;
 
@@ -636,7 +637,10 @@ export const Dashboard: React.FC = () => {
   const [isPullRefreshReady, setIsPullRefreshReady] = React.useState(false);
   const [isDashboardRefreshing, setIsDashboardRefreshing] = React.useState(false);
   const mainScrollRef = React.useRef<HTMLElement | null>(null);
+  const pullStartXRef = React.useRef<number | null>(null);
   const pullStartYRef = React.useRef<number | null>(null);
+  const pullRefreshGestureStateRef = React.useRef<'pending' | 'pull' | 'ignore'>('pending');
+  const pullRefreshReadyRef = React.useRef(false);
   const pullThresholdHapticPlayedRef = React.useRef(false);
   const pullRefreshTriggeredRef = React.useRef(false);
   const pullRefreshTouchActiveRef = React.useRef(false);
@@ -654,7 +658,10 @@ export const Dashboard: React.FC = () => {
   const completePullRefreshReset = React.useCallback(() => {
     setPullDistance(0);
     setIsPullRefreshReady(false);
+    pullStartXRef.current = null;
     pullStartYRef.current = null;
+    pullRefreshGestureStateRef.current = 'pending';
+    pullRefreshReadyRef.current = false;
     pullThresholdHapticPlayedRef.current = false;
     pullRefreshTriggeredRef.current = false;
     pullRefreshTouchActiveRef.current = false;
@@ -730,13 +737,17 @@ export const Dashboard: React.FC = () => {
 
     pullRefreshTouchActiveRef.current = true;
     pullRefreshTriggeredRef.current = false;
+    pullStartXRef.current = event.touches[0]?.clientX ?? null;
     pullStartYRef.current = event.touches[0]?.clientY ?? null;
+    pullRefreshGestureStateRef.current = 'pending';
+    pullRefreshReadyRef.current = false;
     pullThresholdHapticPlayedRef.current = false;
   }, [isMobilePullRefreshPointer]);
 
   const handlePullRefreshTouchMove = React.useCallback((event: React.TouchEvent<HTMLElement>) => {
+    const startX = pullStartXRef.current;
     const startY = pullStartYRef.current;
-    if (startY === null) return;
+    if (startX === null || startY === null) return;
 
     const scrollTarget = event.currentTarget as HTMLElement;
     if (scrollTarget.scrollTop > 0 && !pullRefreshTriggeredRef.current) {
@@ -744,8 +755,35 @@ export const Dashboard: React.FC = () => {
       return;
     }
 
+    const currentX = event.touches[0]?.clientX ?? startX;
     const currentY = event.touches[0]?.clientY ?? startY;
+    const horizontalDistance = Math.abs(currentX - startX);
     const rawDistance = currentY - startY;
+
+    if (pullRefreshGestureStateRef.current === 'pending') {
+      const verticalDistance = Math.abs(rawDistance);
+
+      if (
+        verticalDistance < DASHBOARD_PULL_REFRESH_START_DISTANCE &&
+        horizontalDistance < DASHBOARD_PULL_REFRESH_START_DISTANCE
+      ) {
+        return;
+      }
+
+      if (
+        rawDistance <= DASHBOARD_PULL_REFRESH_START_DISTANCE ||
+        horizontalDistance > rawDistance * 0.72
+      ) {
+        pullRefreshGestureStateRef.current = 'ignore';
+        resetPullRefresh();
+        return;
+      }
+
+      pullRefreshGestureStateRef.current = 'pull';
+    }
+
+    if (pullRefreshGestureStateRef.current === 'ignore') return;
+
     if (rawDistance <= 0) {
       if (pullRefreshTriggeredRef.current) {
         setPullDistance(DASHBOARD_PULL_REFRESH_THRESHOLD);
@@ -766,22 +804,25 @@ export const Dashboard: React.FC = () => {
       return;
     }
 
-    const easedDistance = Math.min(
-      DASHBOARD_PULL_REFRESH_MAX,
-      Math.round(rawDistance * 0.58),
+    const easedDistance = Math.max(
+      0,
+      Math.min(
+        DASHBOARD_PULL_REFRESH_MAX,
+        Math.round((rawDistance - DASHBOARD_PULL_REFRESH_START_DISTANCE) * 0.58),
+      ),
     );
     const nextDistance = easedDistance;
     const nextReady = nextDistance >= DASHBOARD_PULL_REFRESH_THRESHOLD;
 
     setPullDistance(nextDistance);
     setIsPullRefreshReady(nextReady);
+    pullRefreshReadyRef.current = nextReady;
 
     if (nextReady && !pullThresholdHapticPlayedRef.current) {
       pullThresholdHapticPlayedRef.current = true;
       playPullRefreshThresholdHaptic();
-      runDashboardRefresh();
     }
-  }, [playPullRefreshThresholdHaptic, resetPullRefresh, runDashboardRefresh]);
+  }, [playPullRefreshThresholdHaptic, resetPullRefresh]);
 
   const handlePullRefreshTouchEnd = React.useCallback(() => {
     pullRefreshTouchActiveRef.current = false;
@@ -791,8 +832,13 @@ export const Dashboard: React.FC = () => {
       return;
     }
 
+    if (pullRefreshGestureStateRef.current === 'pull' && pullRefreshReadyRef.current) {
+      runDashboardRefresh();
+      return;
+    }
+
     resetPullRefresh();
-  }, [resetPullRefresh]);
+  }, [resetPullRefresh, runDashboardRefresh]);
 
   React.useEffect(() => {
     if (!sendiPlusTermsAccepted) return;
