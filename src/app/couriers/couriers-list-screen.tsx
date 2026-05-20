@@ -6,7 +6,7 @@ import {
   Clock,
   FileSpreadsheet,
   FileText,
-  Hourglass,
+  Link2,
   LogOut,
   Package,
   Power,
@@ -47,7 +47,7 @@ import { CouriersVercelList } from './couriers-vercel-list';
 import { useDeliveriesMapSplit } from '../deliveries/use-deliveries-map-split';
 
 const TEXT = {
-  searchPlaceholder: '\u05d7\u05e4\u05e9\u0020\u05e9\u05dc\u05d9\u05d7\u0020\u05d0\u05d5\u0020\u05de\u05e1\u05e4\u05e8\u0020\u05d8\u05dc\u05e4\u05d5\u05df...',
+  searchPlaceholder: 'חיפוש שליחים',
   pageTitle: 'שליחים',
   addCourier: 'הוסף שליח',
   addNewCourier: 'הוסף שליח חדש',
@@ -956,7 +956,7 @@ export const CouriersListScreen: React.FC = () => {
                           hourly: !value.hourly,
                         }))
                       }
-                      icon={<Hourglass className="h-3.5 w-3.5" />}
+                      icon={<Clock className="h-3.5 w-3.5" />}
                     />
                     <CourierToolbarToggle
                       active={courierEmploymentVisibility.perDelivery}
@@ -967,15 +967,15 @@ export const CouriersListScreen: React.FC = () => {
                           perDelivery: !value.perDelivery,
                         }))
                       }
-                      icon={<Bike className="h-3.5 w-3.5" />}
+                      icon={<Package className="h-3.5 w-3.5" />}
                     />
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
                     <CourierToolbarToggle
                       active={showActiveCouriersOnly}
-                      label="הצג רק שליחים פעילים"
+                      label="הצג רק שליחים מחוברים"
                       onClick={() => setShowActiveCouriersOnly((value) => !value)}
-                      icon={<Power className="h-3.5 w-3.5" />}
+                      icon={<Link2 className="h-3.5 w-3.5" />}
                     />
                   </div>
                 </div>

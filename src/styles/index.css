@@ -318,7 +318,6 @@ body {
   --sendi-plus-active-color: #0a84ff;
   --sendi-plus-thumb-color: var(--sendi-plus-active-color);
   --sendi-plus-track-muted: color-mix(in srgb, var(--app-text-secondary) 22%, transparent);
-  --sendi-plus-track-dot: color-mix(in srgb, var(--app-text-secondary) 32%, var(--app-surface));
   -webkit-appearance: none;
   appearance: none;
   background: transparent;
@@ -330,13 +329,7 @@ body {
 }
 
 .sendi-plus-radius-slider::-webkit-slider-runnable-track {
-  background:
-    radial-gradient(circle at 0% 50%, var(--sendi-plus-track-dot) 0 3px, transparent 3.5px),
-    radial-gradient(circle at 25% 50%, var(--sendi-plus-track-dot) 0 3px, transparent 3.5px),
-    radial-gradient(circle at 50% 50%, var(--sendi-plus-track-dot) 0 3px, transparent 3.5px),
-    radial-gradient(circle at 75% 50%, var(--sendi-plus-track-dot) 0 3px, transparent 3.5px),
-    radial-gradient(circle at 100% 50%, var(--sendi-plus-track-dot) 0 3px, transparent 3.5px),
-    linear-gradient(
+  background: linear-gradient(
       to left,
       var(--sendi-plus-active-color) 0%,
       var(--sendi-plus-active-color) var(--sendi-plus-fill),
@@ -369,13 +362,7 @@ body {
 }
 
 .sendi-plus-radius-slider::-moz-range-track {
-  background:
-    radial-gradient(circle at 0% 50%, var(--sendi-plus-track-dot) 0 3px, transparent 3.5px),
-    radial-gradient(circle at 25% 50%, var(--sendi-plus-track-dot) 0 3px, transparent 3.5px),
-    radial-gradient(circle at 50% 50%, var(--sendi-plus-track-dot) 0 3px, transparent 3.5px),
-    radial-gradient(circle at 75% 50%, var(--sendi-plus-track-dot) 0 3px, transparent 3.5px),
-    radial-gradient(circle at 100% 50%, var(--sendi-plus-track-dot) 0 3px, transparent 3.5px),
-    linear-gradient(
+  background: linear-gradient(
       to left,
       var(--sendi-plus-active-color) 0%,
       var(--sendi-plus-active-color) var(--sendi-plus-fill),

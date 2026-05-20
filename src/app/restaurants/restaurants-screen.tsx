@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Power, Download, Link2, Search, Store as StoreIcon, SquarePlus, Trash2, X, FileText, FileSpreadsheet } from 'lucide-react';
+import { Power, Download, Link2, Plus, Search, Store as StoreIcon, Trash2, X, FileText, FileSpreadsheet, Utensils } from 'lucide-react';
 import { useDelivery } from '../context/delivery-context-value';
 import { useNavigate } from 'react-router';
 import { Delivery, Restaurant } from '../types/delivery.types';
@@ -1004,7 +1004,7 @@ export const RestaurantsScreen: React.FC = () => {
                           regular: !value.regular,
                         }))
                       }
-                      icon={<StoreIcon className="h-3.5 w-3.5" />}
+                      icon={<Utensils className="h-3.5 w-3.5" />}
                     />
                     <RestaurantToolbarToggle
                       active={restaurantSourceVisibility.sendiGo}
@@ -1015,7 +1015,13 @@ export const RestaurantsScreen: React.FC = () => {
                           sendiGo: !value.sendiGo,
                         }))
                       }
-                      icon={<SquarePlus className="h-3.5 w-3.5" />}
+                      icon={
+                        <span className="sendi-plus-mark sendi-plus-mark--active" aria-hidden="true">
+                          <span className="sendi-plus-mark__inner">
+                            <Plus className="h-2.5 w-2.5 text-white" strokeWidth={2.65} />
+                          </span>
+                        </span>
+                      }
                     />
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
@@ -1037,7 +1043,7 @@ export const RestaurantsScreen: React.FC = () => {
                   <ListToolbarActions
                     searchQuery={searchQuery}
                     onSearchQueryChange={setSearchQuery}
-                    searchPlaceholder="חפש מסעדה, עיר או איש קשר..."
+                    searchPlaceholder="חיפוש מסעדות"
                     searchWidthClass="w-52"
                     showColumnsToggle={false}
                     showExportButton={false}

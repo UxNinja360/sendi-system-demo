@@ -383,11 +383,13 @@ const SendiPlusCard: React.FC<{
 }) => {
   const isSendiPlusEnabled = termsAccepted;
   const receivesDeliveries = canReceiveSendiPlusDeliveries(radiusKm, termsAccepted);
-  const [isDetailsOpen, setIsDetailsOpen] = React.useState(readStoredSendiPlusDetailsOpen);
+  const [isDetailsOpen, setIsDetailsOpen] = React.useState(
+    () => termsAccepted && readStoredSendiPlusDetailsOpen(),
+  );
   const [isRadiusBubbleVisible, setIsRadiusBubbleVisible] = React.useState(false);
   const radiusBubbleHideTimeoutRef = React.useRef<number | null>(null);
   const radiusPercent = (radiusKm / MAX_SENDI_PLUS_RADIUS_KM) * 100;
-  const isAccordionOpen = isDetailsOpen;
+  const isAccordionOpen = termsAccepted && isDetailsOpen;
   const termsTextClassName = termsAccepted
     ? 'text-app-text-secondary'
     : 'text-app-text-muted opacity-70';
@@ -441,6 +443,12 @@ const SendiPlusCard: React.FC<{
     hideRadiusBubble(900);
   };
   const toggleDetailsOpen = React.useCallback(() => {
+    if (!termsAccepted) {
+      writeStoredSendiPlusDetailsOpen(false);
+      setIsDetailsOpen(false);
+      return;
+    }
+
     setIsDetailsOpen((value) => {
       const nextValue = !value;
 
@@ -448,17 +456,32 @@ const SendiPlusCard: React.FC<{
 
       return nextValue;
     });
-  }, []);
+  }, [termsAccepted]);
   const handleTermsAcceptedChange = React.useCallback(() => {
     const nextTermsAccepted = !termsAccepted;
 
     onTermsAcceptedChange(nextTermsAccepted);
 
-    if (nextTermsAccepted && !isAccordionOpen) {
+    if (!nextTermsAccepted) {
+      writeStoredSendiPlusDetailsOpen(false);
+      setIsDetailsOpen(false);
+      hideRadiusBubble();
+      return;
+    }
+
+    if (!isAccordionOpen) {
       writeStoredSendiPlusDetailsOpen(true);
       setIsDetailsOpen(true);
     }
-  }, [isAccordionOpen, onTermsAcceptedChange, termsAccepted]);
+  }, [hideRadiusBubble, isAccordionOpen, onTermsAcceptedChange, termsAccepted]);
+
+  React.useEffect(() => {
+    if (termsAccepted) return;
+
+    writeStoredSendiPlusDetailsOpen(false);
+    setIsDetailsOpen(false);
+    hideRadiusBubble();
+  }, [hideRadiusBubble, termsAccepted]);
 
   React.useEffect(() => clearRadiusBubbleHideTimeout, [clearRadiusBubbleHideTimeout]);
 
