@@ -24,7 +24,7 @@ import { DeliveryDetailsPage } from './pages/delivery-details-page';
 import { RestaurantDetailsPage } from './pages/restaurant-details-page';
 import { CourierDetailsPage } from './pages/courier-details-page';
 import { CustomerDetailsPage } from './pages/customer-details-page';
-import { SettingsPage } from './pages/settings-page';
+import { SettingsPage, SettingsPagesPage } from './pages/settings-page';
 import { OperatingHoursPage } from './pages/operating-hours-page';
 import { DeliveryZonesPage } from './pages/delivery-zones-page';
 import { DistancePricingPage } from './pages/distance-pricing-page';
@@ -164,6 +164,10 @@ export const router = createBrowserRouter([
       {
         path: routePath('settings'),
         element: <SettingsPage />,
+      },
+      {
+        path: 'settings/pages',
+        element: <SettingsPagesPage />,
       },
       {
         path: routePath('hours'),

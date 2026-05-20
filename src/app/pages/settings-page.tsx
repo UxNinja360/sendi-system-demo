@@ -158,6 +158,9 @@ const TEXT = {
   timeHintPrefix: '\u05e8\u05e5 \u05db\u05e8\u05d2\u05e2 \u05e2\u05dc x',
   pages: '\u05ea\u05e4\u05e2\u05d5\u05dc \u05d5\u05e2\u05de\u05d5\u05d3\u05d9\u05dd',
   pagesDescription: 'מעברים לעמודי ניהול, כלי תפעול, ניסויים וארכיון בלי לפתוח אקורדיונים.',
+  pagesHub: 'תפעול עמודים',
+  pagesHubHint: 'פתח מסך בחירה עם כל עמודי התפעול, הניסויים והעמודים הישנים.',
+  pagesHubDescription: 'בחר לאיזה עמוד לעבור מתוך רשימת כלי התפעול, הניסויים והארכיון.',
   operationsPages: '\u05e2\u05de\u05d5\u05d3\u05d9 \u05ea\u05e4\u05e2\u05d5\u05dc',
   operationsPagesDescription: '\u05db\u05dc\u05d9 \u05e0\u05d9\u05d4\u05d5\u05dc \u05d9\u05d5\u05de\u05d9\u05d5\u05de\u05d9\u05d9\u05dd \u05dc\u05ea\u05e4\u05e2\u05d5\u05dc \u05d4\u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd, \u05d4\u05d0\u05d6\u05d5\u05e8\u05d9\u05dd \u05d5\u05d4\u05de\u05d7\u05d9\u05e8\u05d9\u05dd.',
   experimentPages: '\u05e2\u05de\u05d5\u05d3\u05d9 \u05e0\u05d9\u05e1\u05d9\u05d5\u05df',
@@ -539,6 +542,33 @@ const SettingsLinkRow: React.FC<{
   </button>
 );
 
+const SettingsActionCard: React.FC<{
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  onClick: () => void;
+}> = ({ icon, title, description, onClick }) => (
+  <button
+    type="button"
+    data-haptic="selection"
+    onClick={onClick}
+    className="grid w-full grid-cols-[1fr_auto] items-center gap-3 rounded-lg border border-[#e5e5e5] bg-white px-3 py-3 text-right transition-colors hover:bg-[#f7f7f7] dark:border-app-border dark:bg-app-surface dark:hover:bg-app-surface-raised sm:px-4"
+  >
+    <div className="flex min-w-0 items-start gap-2.5">
+      <div className="mt-0.5 shrink-0">{icon}</div>
+      <div className="min-w-0">
+        <h2 className="truncate text-sm font-bold text-[#0d0d12] dark:text-app-text">
+          {title}
+        </h2>
+        <p className="mt-1 text-xs leading-5 text-[#666d80] dark:text-app-text-secondary">
+          {description}
+        </p>
+      </div>
+    </div>
+    <ChevronLeft className="h-4 w-4 shrink-0 text-[#666d80] dark:text-app-text-secondary" />
+  </button>
+);
+
 const SettingsLinkGroup: React.FC<{
   title: string;
   description: string;
@@ -578,6 +608,69 @@ const getDeliveryPushStatusLabel = (status: DeliveryPushStatus | null) => {
   if (status === 'unsupported') return TEXT.realPushUnsupported;
   if (status === 'error') return TEXT.realPushError;
   return TEXT.notificationsDefault;
+};
+
+export const SettingsPagesPage: React.FC = () => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="flex h-full flex-col overflow-hidden bg-app-background" dir="rtl">
+      <div className="flex-1 overflow-y-auto">
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-2.5 py-3 sm:px-3 md:px-5 md:py-5">
+          <section className="rounded-lg border border-[#e5e5e5] bg-white p-3 dark:border-app-border dark:bg-app-surface sm:p-4">
+            <button
+              type="button"
+              data-haptic="selection"
+              onClick={() => navigate('/settings')}
+              className="mb-3 inline-flex h-9 items-center gap-2 rounded-lg bg-[#f5f5f5] px-3 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface-raised dark:text-app-text dark:hover:bg-app-interactive-hover"
+            >
+              <ChevronLeft className="h-4 w-4 rotate-180" />
+              <span>חזרה להגדרות</span>
+            </button>
+            <div className="flex min-w-0 items-start gap-2.5">
+              <SlidersHorizontal className="mt-0.5 h-4 w-4 shrink-0 text-app-brand" />
+              <div className="min-w-0">
+                <h1 className="text-base font-bold text-[#0d0d12] dark:text-app-text">
+                  {TEXT.pagesHub}
+                </h1>
+                <p className="mt-1 text-xs leading-5 text-[#666d80] dark:text-app-text-secondary">
+                  {TEXT.pagesHubDescription}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {settingsNavGroups.map((group) => {
+            const GroupIcon = settingsNavIconMap[group.icon];
+            const groupItems = APP_NAV_ITEMS.filter((item) => item.section === group.section);
+
+            return (
+              <SectionCard
+                key={group.section}
+                icon={<GroupIcon className="h-4 w-4 text-app-brand" />}
+                title={group.title}
+                description={group.description}
+              >
+                {groupItems.map((item) => {
+                  const Icon = settingsNavIconMap[item.icon];
+
+                  return (
+                    <SettingsLinkRow
+                      key={item.id}
+                      icon={<Icon className="h-4 w-4" />}
+                      title={item.label}
+                      tag={item.tag === 'beta' ? 'בטא' : undefined}
+                      onClick={() => navigate(item.path)}
+                    />
+                  );
+                })}
+              </SectionCard>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
@@ -781,6 +874,27 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
           </SectionCard>
 
           <SectionCard
+            icon={<Palette className="h-4 w-4 text-app-brand" />}
+            title={TEXT.appearance}
+            description={TEXT.appearanceDescription}
+          >
+            <SettingRow
+              icon={
+                themeMode === 'dark' ? (
+                  <Moon className="h-4 w-4" />
+                ) : themeMode === 'twilight' ? (
+                  <Sunset className="h-4 w-4" />
+                ) : (
+                  <Sun className="h-4 w-4" />
+                )
+              }
+              title={TEXT.themeMode}
+              hint={TEXT.themeModeHint}
+              control={<ThemeModePicker value={themeMode} onChange={setThemeMode} />}
+            />
+          </SectionCard>
+
+          <SectionCard
             icon={<Volume2 className="h-4 w-4 text-app-brand" />}
             title={TEXT.sounds}
             description={TEXT.soundsDescription}
@@ -952,27 +1066,6 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
           </SectionCard>
 
           <SectionCard
-            icon={<Palette className="h-4 w-4 text-app-brand" />}
-            title={TEXT.appearance}
-            description={TEXT.appearanceDescription}
-          >
-            <SettingRow
-              icon={
-                themeMode === 'dark' ? (
-                  <Moon className="h-4 w-4" />
-                ) : themeMode === 'twilight' ? (
-                  <Sunset className="h-4 w-4" />
-                ) : (
-                  <Sun className="h-4 w-4" />
-                )
-              }
-              title={TEXT.themeMode}
-              hint={TEXT.themeModeHint}
-              control={<ThemeModePicker value={themeMode} onChange={setThemeMode} />}
-            />
-          </SectionCard>
-
-          <SectionCard
             icon={<Package className="h-4 w-4 text-app-brand" />}
             title={TEXT.business}
             description={TEXT.businessDescription}
@@ -1003,37 +1096,12 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
             />
           </SectionCard>
 
-          <SectionCard
+          <SettingsActionCard
             icon={<SlidersHorizontal className="h-4 w-4 text-app-brand" />}
-            title={TEXT.pages}
-            description={TEXT.pagesDescription}
-          >
-            {settingsNavGroups.map((group) => {
-              const groupItems = APP_NAV_ITEMS.filter((item) => item.section === group.section);
-
-              return (
-                <SettingsLinkGroup
-                  key={group.section}
-                  title={group.title}
-                  description={group.description}
-                >
-                  {groupItems.map((item) => {
-                    const Icon = settingsNavIconMap[item.icon];
-
-                    return (
-                      <SettingsLinkRow
-                        key={item.id}
-                        icon={<Icon className="h-4 w-4" />}
-                        title={item.label}
-                        tag={item.tag === 'beta' ? 'בטא' : undefined}
-                        onClick={() => navigate(item.path)}
-                      />
-                    );
-                  })}
-                </SettingsLinkGroup>
-              );
-            })}
-          </SectionCard>
+            title={TEXT.pagesHub}
+            description={TEXT.pagesHubHint}
+            onClick={() => navigate('/settings/pages')}
+          />
 
           <SectionCard
             icon={<LogOut className="h-4 w-4 text-app-brand" />}
