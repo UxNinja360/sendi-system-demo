@@ -428,7 +428,7 @@ const SendiPlusCard: React.FC<{
 
   return (
     <section className="rounded-[8px] border border-app-border bg-app-surface dark:border-[#252525] dark:bg-[#0A0A0A]">
-      <div className="flex items-center gap-3 px-3 py-3 sm:px-4 sm:py-3.5" dir="ltr">
+      <div className="flex items-center gap-3 px-3 py-2.5 sm:px-4 sm:py-3" dir="ltr">
         <div ref={menuRef} className="relative shrink-0">
           <button
             type="button"
@@ -544,8 +544,8 @@ const SendiPlusCard: React.FC<{
         aria-hidden={!isAccordionOpen}
       >
         <div className="sendi-plus-accordion__inner">
-          <div className="border-t border-app-border px-3 pb-4 pt-4 sm:px-4 dark:border-[#252525]">
-            <p className={`mb-4 text-right text-xs font-normal leading-5 ${helperTextClassName}`} dir="rtl">
+          <div className="border-t border-app-border px-3 pb-3 pt-3 sm:px-4 dark:border-[#252525]">
+            <p className={`mb-2.5 text-right text-xs font-normal leading-5 ${helperTextClassName}`} dir="rtl">
               {radiusHelperText}
             </p>
             <div className="relative px-1.5">
@@ -577,13 +577,13 @@ const SendiPlusCard: React.FC<{
                 onKeyUp={() => hideRadiusBubble(900)}
                 onBlur={() => hideRadiusBubble()}
                 aria-label={`טווח משלוחים ${SENDI_PLUS_LABEL}`}
-                className={`sendi-plus-radius-slider h-9 w-full cursor-pointer ${
+                className={`sendi-plus-radius-slider h-7 w-full cursor-pointer ${
                   receivesDeliveries ? 'sendi-plus-radius-slider--active' : 'sendi-plus-radius-slider--off'
                 }`}
                 dir="rtl"
                 style={sliderStyle}
               />
-              <div className={`relative mt-2 h-4 text-[11px] ${radiusLabelClassName}`} dir="rtl">
+              <div className={`relative mt-1 h-4 text-[11px] ${radiusLabelClassName}`} dir="rtl">
                 <span className="absolute right-0 top-0 whitespace-nowrap text-right">
                   {receivesDeliveries ? '0 ק״מ' : 'כבוי'}
                 </span>
@@ -606,7 +606,7 @@ const SendiPlusCard: React.FC<{
         </div>
       </div>
 
-      <div className="border-t border-app-border px-3 py-2.5 sm:px-4 dark:border-[#252525]" dir="rtl">
+      <div className="border-t border-app-border px-3 py-2 sm:px-4 dark:border-[#252525]" dir="rtl">
         <div className="flex min-w-0 items-center justify-between gap-3">
           <span className={`min-w-0 truncate text-xs font-normal ${termsTextClassName}`}>
             {SENDI_PLUS_TERMS_TEXT}
