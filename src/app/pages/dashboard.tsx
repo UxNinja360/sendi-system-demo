@@ -1129,8 +1129,8 @@ export const Dashboard: React.FC = () => {
                       />
                     </div>
                   </button>
-                  <div className="absolute left-2.5 top-1/2 flex h-[52px] min-w-[6.75rem] -translate-y-1/2 flex-col items-center justify-between py-0.5 sm:left-3">
-                    <span className="max-w-[7.5rem] truncate text-center text-[11px] font-semibold leading-none text-app-text-secondary sm:text-xs">
+                  <div dir="ltr" className="absolute left-2.5 top-1/2 flex h-[52px] min-w-[6.75rem] -translate-y-1/2 flex-col items-start justify-between py-0.5 sm:left-3">
+                    <span className="max-w-[7.5rem] truncate text-left text-[11px] font-semibold leading-none text-app-text-secondary sm:text-xs">
                       שיבוץ אוטומטי
                     </span>
                     <Toggle
