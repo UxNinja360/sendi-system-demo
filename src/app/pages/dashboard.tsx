@@ -62,7 +62,6 @@ const DASHBOARD_DELIVERY_STATUSES: DeliveryStatus[] = [
   'delivered',
   'cancelled',
 ];
-const ACTIVE_DELIVERY_STATUSES: DeliveryStatus[] = ['pending', 'assigned', 'delivering'];
 const getDeliveriesStatusFilterPath = (statuses: DeliveryStatus[]) =>
   `/deliveries?statuses=${statuses.join(',')}`;
 const formatRadiusKm = formatSendiPlusRadiusKm;
@@ -1052,21 +1051,7 @@ export const Dashboard: React.FC = () => {
           </section>
           <section>
             <div className="dashboard-delivery-summary overflow-hidden rounded-[8px] border border-app-border bg-app-surface text-right dark:border-[#252525] dark:bg-[#0A0A0A]">
-              <div className="dashboard-delivery-summary__row grid grid-cols-1" dir="rtl">
-                <button
-                  type="button"
-                  onClick={() => navigate(getDeliveriesStatusFilterPath(ACTIVE_DELIVERY_STATUSES))}
-                  className="min-w-0 p-2.5 text-right transition-colors hover:bg-app-surface-raised sm:p-3 dark:hover:bg-[#111111]"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="min-w-0 truncate text-sm font-semibold text-app-text">
-                      משלוחים פעילים
-                    </span>
-                    <PackageOpen className="h-3.5 w-3.5 shrink-0 text-app-brand sm:h-4 sm:w-4" />
-                  </div>
-                </button>
-              </div>
-              <div className="dashboard-delivery-summary__row dashboard-delivery-summary__status-row grid grid-cols-3" dir="rtl">
+              <div className="dashboard-delivery-summary__row grid grid-cols-3" dir="rtl">
               {STATUS_META.filter(
                 (status) =>
                   DASHBOARD_DELIVERY_STATUSES.includes(status.id) &&
