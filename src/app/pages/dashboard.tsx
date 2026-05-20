@@ -343,16 +343,10 @@ const SendiPlusCard: React.FC<{
   const [isRadiusBubbleVisible, setIsRadiusBubbleVisible] = React.useState(false);
   const radiusBubbleHideTimeoutRef = React.useRef<number | null>(null);
   const radiusPercent = (radiusKm / MAX_SENDI_PLUS_RADIUS_KM) * 100;
-  const radiusDisplay = `${formatRadiusKm(radiusKm)} ק״מ`;
   const isAccordionOpen = termsAccepted && isDetailsOpen;
   const secondaryTextClassName = isSendiPlusEnabled
     ? 'text-app-text-secondary'
     : 'text-app-text-muted opacity-70';
-  const subtitleText = receivesDeliveries
-    ? `בתוך אזורי החלוקה עד ${radiusDisplay}`
-    : isSendiPlusEnabled
-      ? null
-      : 'משלוחים לפי טווח במחיר מובטח';
   const sliderStyle = {
     '--sendi-plus-fill': `${radiusPercent}%`,
   } as React.CSSProperties & { '--sendi-plus-fill': string };
@@ -531,11 +525,6 @@ const SendiPlusCard: React.FC<{
               </span>
             </span>
           </div>
-          {subtitleText ? (
-            <div className={`mt-1 truncate text-sm font-normal ${secondaryTextClassName}`}>
-              {subtitleText}
-            </div>
-          ) : null}
         </div>
       </div>
 
