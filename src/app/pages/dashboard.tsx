@@ -77,6 +77,19 @@ const readStoredSendiPlusDetailsOpen = () => {
   }
 };
 
+const writeStoredSendiPlusDetailsOpen = (value: boolean) => {
+  if (typeof window === 'undefined') return;
+
+  try {
+    window.localStorage.setItem(
+      SENDI_PLUS_DETAILS_OPEN_STORAGE_KEY,
+      String(value),
+    );
+  } catch {
+    // If storage is unavailable, the in-memory state still reflects the choice.
+  }
+};
+
 const STATUS_META: Array<{
   id: DeliveryStatus;
   label: string;
@@ -405,18 +418,19 @@ const SendiPlusCard: React.FC<{
     setIsDetailsOpen((value) => {
       const nextValue = !value;
 
-      try {
-        window.localStorage.setItem(
-          SENDI_PLUS_DETAILS_OPEN_STORAGE_KEY,
-          String(nextValue),
-        );
-      } catch {
-        // If storage is unavailable, the in-memory state still reflects the choice.
-      }
+      writeStoredSendiPlusDetailsOpen(nextValue);
 
       return nextValue;
     });
   }, []);
+  const handleTermsAcceptedChange = React.useCallback(() => {
+    onTermsAcceptedChange(!termsAccepted);
+
+    if (!isAccordionOpen) {
+      writeStoredSendiPlusDetailsOpen(true);
+      setIsDetailsOpen(true);
+    }
+  }, [isAccordionOpen, onTermsAcceptedChange, termsAccepted]);
 
   React.useEffect(() => clearRadiusBubbleHideTimeout, [clearRadiusBubbleHideTimeout]);
 
@@ -550,7 +564,7 @@ const SendiPlusCard: React.FC<{
           </span>
           <Toggle
             checked={termsAccepted}
-            onChange={() => onTermsAcceptedChange(!termsAccepted)}
+            onChange={handleTermsAcceptedChange}
             ariaLabel="אישור תנאי סנדי פלוס"
           />
         </div>
