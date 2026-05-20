@@ -1110,7 +1110,7 @@ export const Dashboard: React.FC = () => {
                 aria-label="שליחים"
                 className="dashboard-status-card col-span-2 min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] dark:hover:bg-[#111111] min-[520px]:col-span-6"
               >
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex min-h-[52px] items-stretch justify-between gap-3">
                   <button
                     type="button"
                     onClick={() => navigate('/couriers')}
@@ -1129,14 +1129,15 @@ export const Dashboard: React.FC = () => {
                       />
                     </div>
                   </button>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <span className="max-w-[7.5rem] truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
+                  <div className="flex min-w-[6.75rem] shrink-0 flex-col items-center justify-between self-stretch py-0.5">
+                    <span className="max-w-[7.5rem] truncate text-center text-[11px] font-semibold leading-none text-app-text-secondary sm:text-xs">
                       שיבוץ אוטומטי
                     </span>
                     <Toggle
                       checked={state.autoAssignEnabled}
                       disabled={isDashboardRefreshing}
                       ariaLabel="שיבוץ אוטומטי"
+                      size="sm"
                       onChange={
                         isDashboardRefreshing
                           ? () => undefined
