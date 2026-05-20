@@ -61,7 +61,7 @@ const getDeliveriesStatusFilterPath = (statuses: DeliveryStatus[]) =>
   `/deliveries?statuses=${statuses.join(',')}`;
 const formatRadiusKm = formatSendiPlusRadiusKm;
 const SENDI_PLUS_TERMS_TEXT =
-  'הפעלת המתג מחייבת עמידה בזמני משלוח של עד 60 דקות מסירה';
+  'מחייב עמידה בזמני משלוח של עד 60 דקות מסירה';
 const DASHBOARD_PULL_REFRESH_THRESHOLD = 72;
 const DASHBOARD_PULL_REFRESH_MAX = 124;
 
