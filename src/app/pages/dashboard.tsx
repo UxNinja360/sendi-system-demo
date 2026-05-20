@@ -344,7 +344,7 @@ const SendiPlusCard: React.FC<{
   const selectedRadiusText = `${formatRadiusKm(radiusKm)} ק״מ`;
   const termsSummaryText =
     termsAccepted && !isAccordionOpen
-      ? `${SENDI_PLUS_TERMS_TEXT} · ${
+      ? `עד 60 דקות מסירה · ${
           receivesDeliveries ? `רדיוס עד ${selectedRadiusText}` : 'רדיוס כבוי'
         }`
       : SENDI_PLUS_TERMS_TEXT;
