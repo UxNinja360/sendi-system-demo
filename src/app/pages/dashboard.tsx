@@ -4,7 +4,6 @@ import CountUp from 'react-countup';
 import {
   ArrowUp,
   Bike,
-  Bot,
   CheckCircle2,
   ChevronDown,
   Clock3,
@@ -1026,22 +1025,6 @@ export const Dashboard: React.FC = () => {
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     ) : (
                       <Power className="h-3.5 w-3.5" />
-                    )
-                  }
-                />
-                <DashboardToolbarToggle
-                  active={state.autoAssignEnabled}
-                  label="שיבוץ אוטומטי"
-                  onClick={
-                    isDashboardRefreshing
-                      ? () => undefined
-                      : () => dispatch({ type: 'TOGGLE_AUTO_ASSIGN' })
-                  }
-                  icon={
-                    pullRefreshArmed ? (
-                      <span className="text-sm font-bold leading-none">-</span>
-                    ) : (
-                      <Bot className="h-3.5 w-3.5" />
                     )
                   }
                 />
