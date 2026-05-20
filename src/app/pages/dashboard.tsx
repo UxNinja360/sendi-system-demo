@@ -916,10 +916,6 @@ export const Dashboard: React.FC = () => {
     const averageMinutes = Math.round(totalMinutes / deliveryDurations.length);
     return Number.isFinite(averageMinutes) && averageMinutes > 0 ? averageMinutes : null;
   }, [dashboardRefreshVersion, filteredDeliveries]);
-  const activeDeliveriesCount = React.useMemo(
-    () => filteredDeliveries.filter((delivery) => ACTIVE_DELIVERY_STATUSES.includes(delivery.status)).length,
-    [dashboardRefreshVersion, filteredDeliveries],
-  );
   const dashboardGreeting = getDashboardGreeting();
   const { mapSplitPortal } = useDeliveriesMapSplit({
     deliveries: filteredDeliveries,
@@ -1030,12 +1026,6 @@ export const Dashboard: React.FC = () => {
                       משלוחים פעילים
                     </span>
                     <PackageOpen className="h-3.5 w-3.5 shrink-0 text-app-brand sm:h-4 sm:w-4" />
-                  </div>
-                  <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
-                    <RefreshingMetricValue
-                      refreshing={isDashboardRefreshing}
-                      value={formatNumber(activeDeliveriesCount)}
-                    />
                   </div>
                 </button>
               </div>
