@@ -533,7 +533,10 @@ const SendiPlusCard: React.FC<{
         aria-hidden={!isAccordionOpen}
       >
         <div className="sendi-plus-accordion__inner">
-          <div className="border-t border-app-border px-3 pb-4 pt-8 sm:px-4 dark:border-[#252525]">
+          <div className="border-t border-app-border px-3 pb-4 pt-4 sm:px-4 dark:border-[#252525]">
+            <p className="mb-4 text-right text-xs font-normal leading-5 text-app-text-secondary" dir="rtl">
+              הזז את המתג כדי לקבל משלוחים ולשלוח ברדיוס שנבחר בסליידר.
+            </p>
             <div className="relative px-1.5">
               {isRadiusBubbleVisible ? (
                 <div
