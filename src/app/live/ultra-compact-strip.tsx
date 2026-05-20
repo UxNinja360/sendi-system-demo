@@ -32,6 +32,8 @@ interface UltraCompactStripProps {
   isChecked: boolean;
   onClick: () => void;
   onCancel: (deliveryId: string) => void;
+  onComplete: (deliveryId: string) => void;
+  onRestore: (deliveryId: string) => void;
   onAssignCourier: (deliveryId: string) => void;
   onUnassign: (deliveryId: string) => void;
   onToggleCheck: (deliveryId: string) => void;
@@ -47,6 +49,8 @@ export const UltraCompactStrip: React.FC<UltraCompactStripProps> = ({
   isChecked,
   onClick,
   onCancel,
+  onComplete,
+  onRestore,
   onAssignCourier,
   onUnassign,
   onToggleCheck,
@@ -379,8 +383,7 @@ export const UltraCompactStrip: React.FC<UltraCompactStripProps> = ({
                           e.stopPropagation();
                           setShowMenu(false);
                           if (window.confirm('לסמן כנמסר?')) {
-                            // TODO: implement mark as delivered
-                            alert('סימון כנמסר - בפיתוח');
+                            onComplete(order.deliveryId);
                           }
                         }}
                         className="w-full text-right px-3 py-2 text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors flex items-center gap-2"
@@ -410,8 +413,7 @@ export const UltraCompactStrip: React.FC<UltraCompactStripProps> = ({
                         e.stopPropagation();
                         setShowMenu(false);
                         if (window.confirm('לשחזר את המשלוח?')) {
-                          // TODO: implement restore delivery
-                          alert('שחזור משלוח - בפיתוח');
+                          onRestore(order.deliveryId);
                         }
                       }}
                       className="w-full text-right px-3 py-2 text-xs font-medium text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors flex items-center gap-2"

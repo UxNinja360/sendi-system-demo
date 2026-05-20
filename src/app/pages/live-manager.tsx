@@ -382,6 +382,8 @@ export const LiveManager: React.FC = () => {
     onToggleDirection: handleToggleSortDirection,
     onOrderClick: handleDeliveryRowClick,
     onCancel: cancelDelivery,
+    onComplete: (deliveryId: string) => dispatch({ type: 'COMPLETE_DELIVERY', payload: deliveryId }),
+    onRestore: (deliveryId: string) => dispatch({ type: 'RESTORE_DELIVERY', payload: deliveryId }),
     onUnassign: unassignCourier,
     onAssignCourier: handleOpenAssignMode,
     onToggleSelection: handleToggleSelectedDelivery,

@@ -55,6 +55,11 @@ body {
   opacity: 0.72;
 }
 
+.dashboard-status-card:hover {
+  background: var(--app-surface-raised);
+  border-color: var(--app-border);
+}
+
 .dark .dashboard-status-card:hover {
   background: #111111;
   border-color: #252525;

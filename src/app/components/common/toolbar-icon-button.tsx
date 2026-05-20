@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { AppTooltip } from './app-tooltip';
+
 type ToolbarIconButtonProps = Omit<
   React.ButtonHTMLAttributes<HTMLButtonElement>,
   'children'
@@ -42,6 +44,7 @@ export const ToolbarIconButton = React.forwardRef<
     ref,
   ) => {
     const ariaLabel = buttonProps['aria-label'] ?? label;
+    const tooltipLabel = title ?? label;
     const haptic =
       (buttonProps as { 'data-haptic'?: string })['data-haptic'] ?? 'light';
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -57,20 +60,21 @@ export const ToolbarIconButton = React.forwardRef<
     };
 
     return (
-      <button
-        {...buttonProps}
-        ref={ref}
-        type={type}
-        title={title ?? label}
-        aria-label={ariaLabel}
-        data-haptic={haptic}
-        data-toolbar-icon-button
-        data-active={active ? 'true' : 'false'}
-        onClick={handleClick}
-        className={getToolbarIconButtonClassName(active, className)}
-      >
-        {children}
-      </button>
+      <AppTooltip label={tooltipLabel} side="bottom" sideOffset={8} className="inline-flex shrink-0">
+        <button
+          {...buttonProps}
+          ref={ref}
+          type={type}
+          aria-label={ariaLabel}
+          data-haptic={haptic}
+          data-toolbar-icon-button
+          data-active={active ? 'true' : 'false'}
+          onClick={handleClick}
+          className={getToolbarIconButtonClassName(active, className)}
+        >
+          {children}
+        </button>
+      </AppTooltip>
     );
   },
 );

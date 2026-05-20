@@ -921,7 +921,7 @@ export const CouriersListScreen: React.FC = () => {
                   <div className="flex shrink-0 items-center gap-1">
                     <CourierToolbarToggle
                       active={showActiveCouriersOnly}
-                      label="הצג שליחים פעילים"
+                      label="הצג רק שליחים פעילים"
                       onClick={() => setShowActiveCouriersOnly((value) => !value)}
                       icon={<Power className="h-3.5 w-3.5" />}
                     />

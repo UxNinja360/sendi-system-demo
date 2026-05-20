@@ -1,5 +1,6 @@
 ﻿import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { format as formatDate } from 'date-fns';
+import { useLocation } from 'react-router';
 import { useDelivery } from '../context/delivery-context-value';
 import { Delivery, DeliveryStatus } from '../types/delivery.types';
 import { DeliveriesSidePanel } from '../deliveries/deliveries-side-panel';
@@ -123,6 +124,10 @@ const STATUS_CHIP_CONFIG = [
   { status: 'cancelled'  as DeliveryStatus, label: 'בוטל',  dot: 'bg-red-500',    active: 'bg-red-500/10 text-red-600 dark:text-red-400' },
   { status: 'expired'    as DeliveryStatus, label: 'פג תוקף', dot: 'bg-zinc-500', active: 'bg-zinc-500/10 text-zinc-600 dark:text-zinc-300' },
 ];
+const DELIVERY_STATUS_QUERY_PARAM = 'statuses';
+const VALID_DELIVERY_STATUS_FILTERS = new Set<DeliveryStatus>(
+  STATUS_CHIP_CONFIG.map((item) => item.status),
+);
 const HEBREW_DAY_LABELS = ['יום א׳', 'יום ב׳', 'יום ג׳', 'יום ד׳', 'יום ה׳', 'יום ו׳', 'שבת'];
 const DEFAULT_DAY_START_TIME = '00:00';
 const DEFAULT_DAY_END_TIME = '23:59';
@@ -155,6 +160,20 @@ const describeSelectedOptions = (
 
   if (labels.length === 1) return labels[0];
   return `${labels.length.toLocaleString('he-IL')} ${pluralLabel}`;
+};
+
+const parseDeliveryStatusFiltersFromSearch = (search: string) => {
+  const rawStatuses = new URLSearchParams(search).get(DELIVERY_STATUS_QUERY_PARAM);
+  if (!rawStatuses) return null;
+
+  const parsedStatuses = rawStatuses
+    .split(',')
+    .map((status) => status.trim())
+    .filter((status): status is DeliveryStatus =>
+      VALID_DELIVERY_STATUS_FILTERS.has(status as DeliveryStatus),
+    );
+
+  return parsedStatuses.length > 0 ? new Set(parsedStatuses) : null;
 };
 
 type DeliveriesOverviewStats = {
@@ -221,6 +240,11 @@ const getDeliveryColumnWidth = (columnId: string) => {
 
 export const DeliveriesPage: React.FC = () => {
   const { state, updateDelivery, dispatch, unassignCourier, assignCourier } = useDelivery();
+  const location = useLocation();
+  const statusFiltersFromSearch = useMemo(
+    () => parseDeliveryStatusFiltersFromSearch(location.search),
+    [location.search],
+  );
   const {
     searchQuery,
     setSearchQuery,
@@ -288,6 +312,11 @@ export const DeliveriesPage: React.FC = () => {
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState(new Date());
   const [dateSelectionMode, setDateSelectionMode] = useState<'day' | 'range'>('day');
+
+  useEffect(() => {
+    if (!statusFiltersFromSearch) return;
+    setStatusFilters(statusFiltersFromSearch);
+  }, [setStatusFilters, statusFiltersFromSearch]);
 
   useEffect(() => (
     addAppTopBarActionListener('create-delivery', () => setNewDeliveryOpen(true))

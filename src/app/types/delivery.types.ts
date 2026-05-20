@@ -491,6 +491,7 @@ export type DeliveryAction =
   | { type: 'UPDATE_STATUS'; payload: { deliveryId: string; status: DeliveryStatus } }
   | { type: 'UPDATE_DELIVERY'; payload: { deliveryId: string; updates: Partial<Delivery> } } // עדכון משלוח כללי
   | { type: 'CANCEL_DELIVERY'; payload: string }
+  | { type: 'RESTORE_DELIVERY'; payload: string }
   | { type: 'EXPIRE_DELIVERY_OFFERS'; payload?: Date }
   | { type: 'UNASSIGN_COURIER'; payload: string }
   | { type: 'DELETE_DELIVERY'; payload: string } // deliveryId - מחיקה ללא ביטול

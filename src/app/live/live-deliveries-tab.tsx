@@ -23,6 +23,8 @@ interface LiveDeliveriesTabProps {
   onToggleDirection: () => void;
   onOrderClick: (order: UltraCompactStripOrder) => void;
   onCancel: (deliveryId: string) => void;
+  onComplete: (deliveryId: string) => void;
+  onRestore: (deliveryId: string) => void;
   onUnassign: (deliveryId: string) => void;
   onAssignCourier: (deliveryId: string) => void;
   onToggleSelection: (deliveryId: string) => void;
@@ -49,6 +51,8 @@ export const LiveDeliveriesTab: React.FC<LiveDeliveriesTabProps> = ({
   onToggleDirection,
   onOrderClick,
   onCancel,
+  onComplete,
+  onRestore,
   onUnassign,
   onAssignCourier,
   onToggleSelection,
@@ -86,6 +90,8 @@ export const LiveDeliveriesTab: React.FC<LiveDeliveriesTabProps> = ({
             isChecked={selectedDeliveryIds.has(order.deliveryId)}
             onClick={() => onOrderClick(order)}
             onCancel={onCancel}
+            onComplete={onComplete}
+            onRestore={onRestore}
             onUnassign={onUnassign}
             onAssignCourier={onAssignCourier}
             onToggleCheck={(deliveryId) => {

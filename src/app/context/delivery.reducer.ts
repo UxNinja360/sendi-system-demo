@@ -303,6 +303,52 @@ const unassignCourierState = (
   };
 };
 
+const restoreCancelledDeliveryState = (
+  state: DeliveryState,
+  delivery: Delivery
+) => {
+  const nextState = delivery.courierId
+    ? unassignCourierState(state, delivery)
+    : { deliveries: state.deliveries, couriers: state.couriers };
+
+  const nextDeliveries = nextState.deliveries.map((item) =>
+    item.id === delivery.id
+      ? {
+          ...item,
+          status: 'pending' as DeliveryStatus,
+          cancelledAt: null,
+          cancelledAfterPickup: false,
+          is_started: false,
+          is_approved: false,
+          is_requires_approval: false,
+          pending_runner_id: undefined,
+          shift_runner_id: undefined,
+          arrived_at_rest_runner_id: undefined,
+          assignedAt: null,
+          coupled_time: null,
+          started_pickup: null,
+          arrived_at_rest: null,
+          took_it_time: null,
+          started_dropoff: null,
+          arrived_at_client: null,
+          delivered_time: null,
+          pickedUpAt: null,
+          deliveredAt: null,
+          arrivedAtRestaurantAt: null,
+          arrivedAtCustomerAt: null,
+          estimatedArrivalAtRestaurant: null,
+          estimatedArrivalAtCustomer: null,
+          pickupBatchId: null,
+        }
+      : item
+  );
+
+  return {
+    deliveries: nextDeliveries,
+    couriers: nextState.couriers,
+  };
+};
+
 const updateDeliveryState = (
   deliveries: Delivery[],
   deliveryId: string,
@@ -2115,6 +2161,22 @@ const reduceDeliveryState = (state: DeliveryState, action: DeliveryAction): Deli
         deliveries: nextDeliveries,
         couriers: nextCouriers,
         stats: calculateStats(nextDeliveries),
+      };
+    }
+
+    case 'RESTORE_DELIVERY': {
+      const deliveryId = action.payload;
+      const delivery = state.deliveries.find(d => d.id === deliveryId);
+      if (!delivery || delivery.status !== 'cancelled') {
+        return state;
+      }
+
+      const nextState = restoreCancelledDeliveryState(state, delivery);
+
+      return {
+        ...state,
+        ...nextState,
+        stats: calculateStats(nextState.deliveries),
       };
     }
 

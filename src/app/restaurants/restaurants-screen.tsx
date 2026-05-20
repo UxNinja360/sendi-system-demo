@@ -967,7 +967,7 @@ export const RestaurantsScreen: React.FC = () => {
                   <div className="flex shrink-0 items-center gap-1">
                     <RestaurantToolbarToggle
                       active={restaurantConnectionFilter === 'connected'}
-                      label={'\u05d4\u05e6\u05d2 \u05de\u05e1\u05e2\u05d3\u05d5\u05ea \u05e4\u05e2\u05d9\u05dc\u05d5\u05ea'}
+                      label={'\u05d4\u05e6\u05d2 \u05e8\u05e7 \u05de\u05e1\u05e2\u05d3\u05d5\u05ea \u05e4\u05e2\u05d9\u05dc\u05d5\u05ea'}
                       onClick={() =>
                         setRestaurantConnectionFilter((value) =>
                           value === 'connected' ? null : 'connected',

@@ -45,19 +45,13 @@ import {
   isPointCoveredByActiveDeliveryZones,
   loadStoredDeliveryServiceAreas,
 } from '../../utils/delivery-zones';
+import { AppTooltip as SidebarIconTooltip } from '../common/app-tooltip';
 import { playHaptic } from '../../utils/haptics';
 import { Toggle } from '../common/toggle';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 interface SidebarProps {
   onLogout: () => void;
   onMobileMenuToggleReady?: (toggle: (() => void) | null) => void;
-}
-
-interface SidebarIconTooltipProps {
-  label: string;
-  children: React.ReactNode;
-  className?: string;
 }
 
 const LABELS = {
@@ -169,15 +163,6 @@ const NAV_ICON_MAP: Record<AppNavIconKey, React.FC<React.SVGProps<SVGSVGElement>
   users: Users,
   wallet: Wallet,
 };
-
-const SidebarIconTooltip: React.FC<SidebarIconTooltipProps> = ({ label, children, className }) => (
-  <Tooltip>
-    <TooltipTrigger asChild>
-      <div className={className}>{children}</div>
-    </TooltipTrigger>
-    <TooltipContent side="left">{label}</TooltipContent>
-  </Tooltip>
-);
 
 export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileMenuToggleReady }) => {
   const navigate = useNavigate();

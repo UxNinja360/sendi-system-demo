@@ -2,6 +2,7 @@ import React, { useLayoutEffect, useRef } from 'react';
 import { Package, Plus, Store, UserRound } from 'lucide-react';
 
 import { EntityRowActionTrigger } from '../components/common/entity-row-action-trigger';
+import { AppTooltip } from '../components/common/app-tooltip';
 import { Toggle } from '../components/common/toggle';
 import type { EntityViewMode } from '../components/common/view-mode-toggle';
 import { SENDI_PLUS_LABEL, isSendiPlusRestaurant } from '../utils/sendi-plus';
@@ -112,7 +113,9 @@ const RestaurantVercelRow: React.FC<{
 
       <div className="restaurant-row__status col-start-1 row-start-2 hidden min-h-0 min-w-0 items-center px-2 py-1 md:col-start-4 md:row-auto md:flex md:min-h-[72px] md:py-2">
         <span className="inline-flex" onClick={(event) => event.stopPropagation()}>
-          <Toggle checked={isEnabled} onChange={() => onToggleActive(restaurant)} ariaLabel={statusMeta.label} />
+          <AppTooltip label={statusMeta.label} side="top" className="inline-flex">
+            <Toggle checked={isEnabled} onChange={() => onToggleActive(restaurant)} ariaLabel={statusMeta.label} />
+          </AppTooltip>
         </span>
       </div>
 
@@ -136,7 +139,9 @@ const RestaurantVercelRow: React.FC<{
           <span className="tabular-nums">{restaurant.totalDeliveries}</span>
         </span>
         <span className="inline-flex md:hidden" onClick={(event) => event.stopPropagation()}>
-          <Toggle checked={isEnabled} onChange={() => onToggleActive(restaurant)} ariaLabel={statusMeta.label} />
+          <AppTooltip label={statusMeta.label} side="top" className="inline-flex">
+            <Toggle checked={isEnabled} onChange={() => onToggleActive(restaurant)} ariaLabel={statusMeta.label} />
+          </AppTooltip>
         </span>
       </div>
     </div>
@@ -176,7 +181,9 @@ const RestaurantVercelCard: React.FC<{
                 {isSendiGo ? <SendiPlusTag /> : null}
               </div>
               <span className="inline-flex" onClick={(event) => event.stopPropagation()}>
-                <Toggle checked={isEnabled} onChange={() => onToggleActive(restaurant)} ariaLabel={statusMeta.label} />
+                <AppTooltip label={statusMeta.label} side="top" className="inline-flex">
+                  <Toggle checked={isEnabled} onChange={() => onToggleActive(restaurant)} ariaLabel={statusMeta.label} />
+                </AppTooltip>
               </span>
             </div>
             <div className="mt-1 truncate text-xs text-app-text-secondary">{address}</div>

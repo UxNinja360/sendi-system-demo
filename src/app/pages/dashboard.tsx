@@ -20,7 +20,7 @@ import {
   UserCheck,
   XCircle,
 } from 'lucide-react';
-import { ToolbarIconButton } from '../components/common/toolbar-icon-button';
+import { AppTooltip } from '../components/common/app-tooltip';
 import { Toggle } from '../components/common/toggle';
 import { useDelivery } from '../context/delivery-context-value';
 import { useDeliveriesMapSplit } from '../deliveries/use-deliveries-map-split';
@@ -62,6 +62,8 @@ const DASHBOARD_DELIVERY_STATUSES: DeliveryStatus[] = [
   'cancelled',
 ];
 const ACTIVE_DELIVERY_STATUSES: DeliveryStatus[] = ['pending', 'assigned', 'delivering'];
+const getDeliveriesStatusFilterPath = (statuses: DeliveryStatus[]) =>
+  `/deliveries?statuses=${statuses.join(',')}`;
 const formatRadiusKm = formatSendiPlusRadiusKm;
 const SENDI_PLUS_TERMS_TEXT =
   'הפעלת המתג מחייבת עמידה בזמני משלוח של עד 60 דקות מסירה';
@@ -247,28 +249,35 @@ const DashboardToolbarToggle: React.FC<{
   label: string;
   onClick: () => void;
 }> = ({ active, icon, label, onClick }) => (
-  <div className="relative flex h-10 shrink-0 items-center justify-center">
-    <ToolbarIconButton
-      active={active}
+  <AppTooltip label={label} side="bottom" sideOffset={8} className="inline-flex shrink-0">
+    <button
+      type="button"
+      aria-label={label}
       aria-pressed={active}
-      label={label}
-      title={label}
+      data-haptic="light"
+      data-toolbar-icon-button
+      data-active={active ? 'true' : 'false'}
       onClick={onClick}
+      className={`relative inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-[var(--app-radius-xs)] border text-xs font-semibold leading-none transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 ${
+        active
+          ? 'border-[#0D0D12] bg-[#F5F5F5] text-[#0D0D12] dark:border-[#2E2E2E] dark:bg-[#1F1F1F] dark:text-[#EDEDED]'
+          : 'border-[#E5E5E5] bg-white text-[#0D0D12] hover:bg-[#F5F5F5] dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#EDEDED] dark:hover:bg-[#111111]'
+      }`}
     >
       <span
         className={`flex items-center justify-center transition-transform ${
-          active ? '-translate-y-1' : 'translate-y-0'
+          active ? '-translate-y-0.5' : 'translate-y-0'
         }`}
       >
         {icon}
       </span>
-    </ToolbarIconButton>
-    <span
-      className={`pointer-events-none absolute bottom-1.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-app-nav-indicator transition-opacity ${
-        active ? 'opacity-100' : 'opacity-0'
-      }`}
-    />
-  </div>
+      <span
+        className={`pointer-events-none absolute bottom-1.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-current transition-opacity ${
+          active ? 'opacity-100' : 'opacity-0'
+        }`}
+      />
+    </button>
+  </AppTooltip>
 );
 
 const SendiPlusCard: React.FC<{
@@ -305,6 +314,11 @@ const SendiPlusCard: React.FC<{
   const secondaryTextClassName = isSendiPlusEnabled
     ? 'text-app-text-secondary'
     : 'text-app-text-muted opacity-70';
+  const subtitleText = receivesDeliveries
+    ? `בתוך אזורי החלוקה עד ${radiusDisplay}`
+    : isSendiPlusEnabled
+      ? null
+      : 'משלוחים לפי טווח במחיר מובטח';
   const sliderStyle = {
     '--sendi-plus-fill': `${radiusPercent}%`,
   } as React.CSSProperties & { '--sendi-plus-fill': string };
@@ -483,13 +497,11 @@ const SendiPlusCard: React.FC<{
               </span>
             </span>
           </div>
-          <div className={`mt-1 truncate text-sm font-normal ${secondaryTextClassName}`}>
-            {receivesDeliveries
-              ? `בתוך אזורי החלוקה עד ${radiusDisplay}`
-              : isSendiPlusEnabled
-                ? 'לא מקבל משלוחים כרגע'
-                : 'משלוחים לפי טווח במחיר מובטח'}
-          </div>
+          {subtitleText ? (
+            <div className={`mt-1 truncate text-sm font-normal ${secondaryTextClassName}`}>
+              {subtitleText}
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -964,7 +976,7 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
         <div
-          className="mx-auto flex w-full max-w-[1280px] flex-col gap-2 transition-transform duration-200"
+          className="mx-auto flex w-full max-w-[1280px] flex-col gap-[14px] transition-transform duration-200"
         >
           <section className="flex w-full items-center justify-between gap-3">
             <div className="min-w-0 text-right">
@@ -1010,7 +1022,7 @@ export const Dashboard: React.FC = () => {
               <div className="dashboard-delivery-summary__row grid grid-cols-2" dir="rtl">
                 <button
                   type="button"
-                  onClick={() => navigate('/deliveries')}
+                  onClick={() => navigate(getDeliveriesStatusFilterPath(ACTIVE_DELIVERY_STATUSES))}
                   className="min-w-0 p-2.5 text-right transition-colors hover:bg-app-surface-raised sm:p-3 dark:hover:bg-[#111111]"
                 >
                   <div className="flex items-center justify-between gap-2">
@@ -1062,7 +1074,7 @@ export const Dashboard: React.FC = () => {
                   <button
                     key={status.id}
                     type="button"
-                    onClick={() => navigate('/deliveries')}
+                    onClick={() => navigate(getDeliveriesStatusFilterPath([status.id]))}
                     className="min-w-0 p-2.5 text-right transition-colors hover:bg-app-surface-raised sm:p-3 dark:hover:bg-[#111111]"
                   >
                     <div className="flex items-center justify-between gap-2">
@@ -1082,11 +1094,12 @@ export const Dashboard: React.FC = () => {
               })}
               </div>
             </div>
-            <div className="mt-2 grid grid-cols-2 gap-2 min-[520px]:grid-cols-6">
+            <div className="mt-[14px] grid grid-cols-2 gap-[14px] min-[520px]:grid-cols-6">
               <button
                 type="button"
+                aria-label="שליחים פנויים"
                 onClick={() => navigate('/couriers')}
-                className="dashboard-status-card col-span-1 min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:border-app-border hover:bg-app-surface-raised sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] min-[520px]:col-span-3"
+                className="dashboard-status-card col-span-1 min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] dark:hover:bg-[#111111] min-[520px]:col-span-3"
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
@@ -1104,8 +1117,9 @@ export const Dashboard: React.FC = () => {
               </button>
               <button
                 type="button"
+                aria-label="מסעדות פעילות"
                 onClick={() => navigate('/restaurants')}
-                className="dashboard-status-card col-span-1 min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:border-app-border hover:bg-app-surface-raised sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] min-[520px]:col-span-3"
+                className="dashboard-status-card col-span-1 min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] dark:hover:bg-[#111111] min-[520px]:col-span-3"
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
@@ -1134,6 +1148,43 @@ export const Dashboard: React.FC = () => {
             onManageZones={() => navigate('/zones?source=sendi-plus')}
             onInspectRestaurantCoverage={() => navigate('/zones?source=sendi-plus&tab=permissions')}
           />
+          <div className="overflow-hidden rounded-[8px] border border-app-border bg-app-surface text-right dark:border-[#252525] dark:bg-[#0A0A0A]">
+            <div className="dashboard-delivery-summary__row grid grid-cols-2" dir="rtl">
+            {(['delivered', 'cancelled'] as DeliveryStatus[]).map((statusId) => {
+              const status = STATUS_META.find((item) => item.id === statusId);
+              if (!status) return null;
+
+              const Icon = status.icon;
+              const count = statusCounts.get(statusId) ?? 0;
+              const label = statusId === 'delivered' ? 'נמסרו' : 'בוטלו';
+              const value = formatNumber(count);
+              const iconClassName = status.accentClassName;
+
+              return (
+                <button
+                  key={statusId}
+                  type="button"
+                  aria-label={label}
+                  onClick={() => navigate(getDeliveriesStatusFilterPath([statusId]))}
+                  className="dashboard-status-card min-w-0 p-2.5 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:hover:bg-[#111111]"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
+                      {label}
+                    </span>
+                    <Icon className={`h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4 ${iconClassName}`} />
+                  </div>
+                  <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
+                    <RefreshingMetricValue
+                      refreshing={isDashboardRefreshing}
+                      value={value}
+                    />
+                  </div>
+                </button>
+              );
+            })}
+            </div>
+          </div>
         </div>
       </main>
       </div>

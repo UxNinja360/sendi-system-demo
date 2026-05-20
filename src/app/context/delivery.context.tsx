@@ -137,6 +137,15 @@ const createActivityLogEntry = (action: DeliveryAction, state: DeliveryState): A
         actionType: action.type,
         category: 'delivery',
       };
+    case 'RESTORE_DELIVERY':
+      return {
+        id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: now,
+        title: 'משלוח שוחזר',
+        description: getDeliveryLabel(action.payload),
+        actionType: action.type,
+        category: 'delivery',
+      };
     case 'COMPLETE_DELIVERY':
       return {
         id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -413,6 +422,16 @@ const createActionToast = (action: DeliveryAction, state: DeliveryState): Action
         description: getActionDeliveryLabel(state, action.payload),
       };
     }
+    case 'RESTORE_DELIVERY': {
+      const delivery = state.deliveries.find((item) => item.id === action.payload);
+      if (!delivery || delivery.status !== 'cancelled') return null;
+
+      return {
+        actionType: action.type,
+        title: 'המשלוח שוחזר',
+        description: getActionDeliveryLabel(state, action.payload),
+      };
+    }
     case 'COMPLETE_DELIVERY': {
       const deliveryId = getCompleteDeliveryId(action.payload);
       const delivery = state.deliveries.find((item) => item.id === deliveryId);
@@ -624,6 +643,8 @@ const getAggregateActionToastTitle = (actionType: DeliveryAction['type'], count:
       return `${count} משלוחים צוותו`;
     case 'CANCEL_DELIVERY':
       return `${count} משלוחים בוטלו`;
+    case 'RESTORE_DELIVERY':
+      return `${count} משלוחים שוחזרו`;
     case 'COMPLETE_DELIVERY':
       return `${count} משלוחים סומנו כנמסרו`;
     case 'UNASSIGN_COURIER':
