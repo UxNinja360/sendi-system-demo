@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Power, Download, Search, Store as StoreIcon, SquarePlus, Trash2, X, FileText, FileSpreadsheet } from 'lucide-react';
+import { Power, Download, Link2, Search, Store as StoreIcon, SquarePlus, Trash2, X, FileText, FileSpreadsheet } from 'lucide-react';
 import { useDelivery } from '../context/delivery-context-value';
 import { useNavigate } from 'react-router';
 import { Delivery, Restaurant } from '../types/delivery.types';
@@ -82,7 +82,7 @@ import { DELIVERY_HUBS, TLV_RUNNERS_HUB_ID } from '../constants/delivery-hubs';
 // ═══════════════════════════════════════
 type RestaurantRow = {
   id: number; restaurantId: string; name: string; status: 'פעיל' | 'לא פעיל';
-  isActive: boolean; baseIsActive: boolean; totalDeliveries: number;
+  isActive: boolean; baseIsActive: boolean; isToggleDisabled: boolean; totalDeliveries: number;
   contactPerson: string; ownerPhone: string; phone: string; city: string; street: string; username: string; type: string; chainId: string; logoUrl?: string;
 };
 
@@ -261,6 +261,35 @@ const RestaurantToolbarToggle: React.FC<{
   </div>
 );
 
+type RestaurantListSessionState = {
+  restaurantConnectionFilter: 'connected' | 'disconnected' | null;
+  restaurantSourceVisibility: {
+    regular: boolean;
+    sendiGo: boolean;
+  };
+  searchQuery: string;
+  sortColumn: RestaurantSortableColumnId;
+  sortDirection: 'asc' | 'desc';
+};
+
+const DEFAULT_RESTAURANT_LIST_SESSION_STATE: RestaurantListSessionState = {
+  restaurantConnectionFilter: null,
+  restaurantSourceVisibility: {
+    regular: true,
+    sendiGo: true,
+  },
+  searchQuery: '',
+  sortColumn: 'name',
+  sortDirection: 'asc',
+};
+
+let restaurantListSessionState: RestaurantListSessionState = {
+  ...DEFAULT_RESTAURANT_LIST_SESSION_STATE,
+  restaurantSourceVisibility: {
+    ...DEFAULT_RESTAURANT_LIST_SESSION_STATE.restaurantSourceVisibility,
+  },
+};
+
 export const RestaurantsScreen: React.FC = () => {
   const { state, dispatch } = useDelivery();
   const navigate = useNavigate();
@@ -276,15 +305,20 @@ export const RestaurantsScreen: React.FC = () => {
     type: 'מסעדה',
     linkedHubIds: [TLV_RUNNERS_HUB_ID],
   });
-  const [searchQuery, setSearchQuery] = useState('');
-  const [restaurantConnectionFilter, setRestaurantConnectionFilter] = useState<'connected' | 'disconnected' | null>(null);
+  const [searchQuery, setSearchQuery] = useState(restaurantListSessionState.searchQuery);
+  const [restaurantConnectionFilter, setRestaurantConnectionFilter] = useState<'connected' | 'disconnected' | null>(
+    restaurantListSessionState.restaurantConnectionFilter,
+  );
   const [sendiPlusTermsAccepted, setSendiPlusTermsAccepted] = useState(readStoredSendiPlusTermsAccepted);
-  const [restaurantSourceVisibility, setRestaurantSourceVisibility] = useState({
-    regular: true,
-    sendiGo: true,
-  });
-  const [sortColumn, setSortColumn] = useState<RestaurantSortableColumnId>('name');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [restaurantSourceVisibility, setRestaurantSourceVisibility] = useState(() => (
+    { ...restaurantListSessionState.restaurantSourceVisibility }
+  ));
+  const [sortColumn, setSortColumn] = useState<RestaurantSortableColumnId>(
+    restaurantListSessionState.sortColumn,
+  );
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(
+    restaurantListSessionState.sortDirection,
+  );
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [openActionsRestaurantId, setOpenActionsRestaurantId] = useState<string | null>(null);
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
@@ -354,6 +388,24 @@ export const RestaurantsScreen: React.FC = () => {
   }, [visibleColumns]);
 
   useEffect(() => {
+    restaurantListSessionState = {
+      restaurantConnectionFilter,
+      restaurantSourceVisibility: {
+        ...restaurantSourceVisibility,
+      },
+      searchQuery,
+      sortColumn,
+      sortDirection,
+    };
+  }, [
+    restaurantConnectionFilter,
+    restaurantSourceVisibility,
+    searchQuery,
+    sortColumn,
+    sortDirection,
+  ]);
+
+  useEffect(() => {
     const syncSendiPlusTermsAccepted = () => {
       setSendiPlusTermsAccepted(readStoredSendiPlusTermsAccepted());
     };
@@ -409,6 +461,7 @@ export const RestaurantsScreen: React.FC = () => {
   // ── Data ──
   const restaurants: RestaurantRow[] = useMemo(() => state.restaurants.map((r) => {
     const chainId = r.chainId || getRestaurantChainId(r.name);
+    const isSendiPlus = isSendiPlusRestaurant(r.name, chainId);
     const isActiveForDisplay = isRestaurantActiveForDisplay(
       { chainId, isActive: r.isActive, name: r.name },
       sendiPlusTermsAccepted,
@@ -422,6 +475,7 @@ export const RestaurantsScreen: React.FC = () => {
       status: isActiveForDisplay ? 'פעיל' as const : 'לא פעיל' as const,
       isActive: isActiveForDisplay,
       baseIsActive: r.isActive,
+      isToggleDisabled: isSendiPlus && !sendiPlusTermsAccepted,
       totalDeliveries: deliveriesCountByRestaurant.get(r.id) ?? 0,
       contactPerson: getDefaultRestaurantOwnerName(r),
       ownerPhone: getDefaultRestaurantOwnerPhone(r),
@@ -469,7 +523,7 @@ export const RestaurantsScreen: React.FC = () => {
       const bIsSendiGo = isSendiPlusRestaurant(b.name, b.chainId);
 
       if (aIsSendiGo !== bIsSendiGo) {
-        return aIsSendiGo ? -1 : 1;
+        return aIsSendiGo ? 1 : -1;
       }
 
       switch (sortColumn) {
@@ -973,7 +1027,7 @@ export const RestaurantsScreen: React.FC = () => {
                           value === 'connected' ? null : 'connected',
                         )
                       }
-                      icon={<Power className="h-3.5 w-3.5" />}
+                      icon={<Link2 className="h-3.5 w-3.5" />}
                     />
                   </div>
                 </div>

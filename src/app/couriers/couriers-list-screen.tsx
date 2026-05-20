@@ -257,17 +257,51 @@ const CourierToolbarToggle: React.FC<{
   </div>
 );
 
+type CourierListSessionState = {
+  courierEmploymentVisibility: {
+    hourly: boolean;
+    perDelivery: boolean;
+  };
+  searchQuery: string;
+  showActiveCouriersOnly: boolean;
+  sortColumn: SortableCourierColumnId;
+  sortDirection: 'asc' | 'desc';
+};
+
+const DEFAULT_COURIER_LIST_SESSION_STATE: CourierListSessionState = {
+  courierEmploymentVisibility: {
+    hourly: true,
+    perDelivery: true,
+  },
+  searchQuery: '',
+  showActiveCouriersOnly: false,
+  sortColumn: 'name',
+  sortDirection: 'asc',
+};
+
+let courierListSessionState: CourierListSessionState = {
+  ...DEFAULT_COURIER_LIST_SESSION_STATE,
+  courierEmploymentVisibility: {
+    ...DEFAULT_COURIER_LIST_SESSION_STATE.courierEmploymentVisibility,
+  },
+};
+
 export const CouriersListScreen: React.FC = () => {
   const { state, dispatch } = useDelivery();
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showActiveCouriersOnly, setShowActiveCouriersOnly] = useState(false);
-  const [courierEmploymentVisibility, setCourierEmploymentVisibility] = useState({
-    hourly: true,
-    perDelivery: true,
-  });
-  const [sortColumn, setSortColumn] = useState<SortableCourierColumnId>('name');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [searchQuery, setSearchQuery] = useState(courierListSessionState.searchQuery);
+  const [showActiveCouriersOnly, setShowActiveCouriersOnly] = useState(
+    courierListSessionState.showActiveCouriersOnly,
+  );
+  const [courierEmploymentVisibility, setCourierEmploymentVisibility] = useState(() => (
+    { ...courierListSessionState.courierEmploymentVisibility }
+  ));
+  const [sortColumn, setSortColumn] = useState<SortableCourierColumnId>(
+    courierListSessionState.sortColumn,
+  );
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(
+    courierListSessionState.sortDirection,
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [columnsOpen, setColumnsOpen] = useState(false);
@@ -355,6 +389,24 @@ export const CouriersListScreen: React.FC = () => {
       localStorage.setItem(COURIER_VISIBLE_COLUMNS_KEY, JSON.stringify(Array.from(visibleColumns)));
     } catch {}
   }, [visibleColumns]);
+
+  useEffect(() => {
+    courierListSessionState = {
+      courierEmploymentVisibility: {
+        ...courierEmploymentVisibility,
+      },
+      searchQuery,
+      showActiveCouriersOnly,
+      sortColumn,
+      sortDirection,
+    };
+  }, [
+    courierEmploymentVisibility,
+    searchQuery,
+    showActiveCouriersOnly,
+    sortColumn,
+    sortDirection,
+  ]);
 
   const orderedCourierColumns = useMemo(() => {
     const map = new Map(COURIER_DATA_COLUMNS.map((column) => [column.id, column]));

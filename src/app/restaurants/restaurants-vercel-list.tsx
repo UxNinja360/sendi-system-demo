@@ -14,6 +14,7 @@ export type RestaurantVercelListItem = {
   status: string;
   isActive: boolean;
   baseIsActive?: boolean;
+  isToggleDisabled?: boolean;
   totalDeliveries: number;
   contactPerson: string;
   ownerPhone: string;
@@ -87,9 +88,10 @@ const RestaurantVercelRow: React.FC<{
   onToggleActive,
 }) => {
   const address = [restaurant.street, restaurant.city].filter(Boolean).join(', ') || '-';
-  const isEnabled = restaurant.baseIsActive ?? restaurant.isActive;
+  const isEnabled = restaurant.isActive;
   const statusMeta = getRestaurantStatusMeta(isEnabled);
   const isSendiGo = isSendiPlusRestaurant(restaurant.name, restaurant.chainId);
+  const isToggleDisabled = Boolean(restaurant.isToggleDisabled);
 
   return (
     <div
@@ -112,7 +114,12 @@ const RestaurantVercelRow: React.FC<{
 
       <div className="restaurant-row__status col-start-1 row-start-2 hidden min-h-0 min-w-0 items-center px-2 py-1 md:col-start-4 md:row-auto md:flex md:min-h-[72px] md:py-2">
         <span className="inline-flex" onClick={(event) => event.stopPropagation()}>
-          <Toggle checked={isEnabled} onChange={() => onToggleActive(restaurant)} ariaLabel={statusMeta.label} />
+          <Toggle
+            checked={isEnabled}
+            disabled={isToggleDisabled}
+            onChange={() => onToggleActive(restaurant)}
+            ariaLabel={statusMeta.label}
+          />
         </span>
       </div>
 
@@ -136,7 +143,12 @@ const RestaurantVercelRow: React.FC<{
           <span className="tabular-nums">{restaurant.totalDeliveries}</span>
         </span>
         <span className="inline-flex md:hidden" onClick={(event) => event.stopPropagation()}>
-          <Toggle checked={isEnabled} onChange={() => onToggleActive(restaurant)} ariaLabel={statusMeta.label} />
+          <Toggle
+            checked={isEnabled}
+            disabled={isToggleDisabled}
+            onChange={() => onToggleActive(restaurant)}
+            ariaLabel={statusMeta.label}
+          />
         </span>
       </div>
     </div>
@@ -155,9 +167,10 @@ const RestaurantVercelCard: React.FC<{
   onToggleActive,
 }) => {
   const address = [restaurant.street, restaurant.city].filter(Boolean).join(', ') || '-';
-  const isEnabled = restaurant.baseIsActive ?? restaurant.isActive;
+  const isEnabled = restaurant.isActive;
   const statusMeta = getRestaurantStatusMeta(isEnabled);
   const isSendiGo = isSendiPlusRestaurant(restaurant.name, restaurant.chainId);
+  const isToggleDisabled = Boolean(restaurant.isToggleDisabled);
 
   return (
     <div
@@ -176,7 +189,12 @@ const RestaurantVercelCard: React.FC<{
                 {isSendiGo ? <SendiPlusTag /> : null}
               </div>
               <span className="inline-flex" onClick={(event) => event.stopPropagation()}>
-                <Toggle checked={isEnabled} onChange={() => onToggleActive(restaurant)} ariaLabel={statusMeta.label} />
+                <Toggle
+                  checked={isEnabled}
+                  disabled={isToggleDisabled}
+                  onChange={() => onToggleActive(restaurant)}
+                  ariaLabel={statusMeta.label}
+                />
               </span>
             </div>
             <div className="mt-1 truncate text-xs text-app-text-secondary">{address}</div>

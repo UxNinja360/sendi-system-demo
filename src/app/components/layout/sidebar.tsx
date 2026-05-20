@@ -99,6 +99,101 @@ const SIDEBAR_OPERATIONS_TOOLS_OPEN_KEY = 'sidebar-operations-tools-open-v2';
 const clampSidebarWidth = (width: number) =>
   Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, width));
 
+type SidebarNavBadgeValue =
+  | { kind: 'number'; value: number; prefix?: string }
+  | { kind: 'text'; value: string };
+
+const formatSidebarBadgeNumber = (value: number) =>
+  Math.round(value).toLocaleString('he-IL');
+
+const getSidebarBadgeText = (badge: SidebarNavBadgeValue | null) => {
+  if (!badge) return null;
+  if (badge.kind === 'text') return badge.value;
+
+  return `${badge.prefix ?? ''}${formatSidebarBadgeNumber(badge.value)}`;
+};
+
+const SidebarNavBadgeNumber: React.FC<{
+  className: string;
+  prefix?: string;
+  value: number;
+}> = ({ className, prefix = '', value }) => {
+  const [displayValue, setDisplayValue] = useState(value);
+  const displayValueRef = useRef(value);
+  const animationFrameRef = useRef<number | null>(null);
+
+  const cancelAnimation = useCallback(() => {
+    if (typeof window === 'undefined' || animationFrameRef.current === null) return;
+
+    window.cancelAnimationFrame(animationFrameRef.current);
+    animationFrameRef.current = null;
+  }, []);
+
+  useEffect(() => () => cancelAnimation(), [cancelAnimation]);
+
+  useEffect(() => {
+    cancelAnimation();
+
+    const startValue = displayValueRef.current;
+    const endValue = value;
+
+    if (startValue === endValue || typeof window === 'undefined') {
+      displayValueRef.current = endValue;
+      setDisplayValue(endValue);
+      return undefined;
+    }
+
+    const durationMs = 720;
+    const startedAt = window.performance.now();
+
+    const step = (now: number) => {
+      const progress = Math.min((now - startedAt) / durationMs, 1);
+      const easedProgress = 1 - Math.pow(1 - progress, 3);
+      const nextValue = Math.round(startValue + (endValue - startValue) * easedProgress);
+
+      displayValueRef.current = nextValue;
+      setDisplayValue(nextValue);
+
+      if (progress < 1) {
+        animationFrameRef.current = window.requestAnimationFrame(step);
+        return;
+      }
+
+      displayValueRef.current = endValue;
+      setDisplayValue(endValue);
+      animationFrameRef.current = null;
+    };
+
+    animationFrameRef.current = window.requestAnimationFrame(step);
+
+    return cancelAnimation;
+  }, [cancelAnimation, value]);
+
+  return (
+    <span className={className}>
+      {prefix}
+      {formatSidebarBadgeNumber(displayValue)}
+    </span>
+  );
+};
+
+const SidebarNavBadge: React.FC<{
+  badge: SidebarNavBadgeValue;
+  className: string;
+}> = ({ badge, className }) => {
+  if (badge.kind === 'number') {
+    return (
+      <SidebarNavBadgeNumber
+        className={className}
+        prefix={badge.prefix}
+        value={badge.value}
+      />
+    );
+  }
+
+  return <span className={className}>{badge.value}</span>;
+};
+
 const getBusinessInitials = (name: string) =>
   name
     .split(/[\s-]+/)
@@ -707,13 +802,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
     closeMobileMenu();
   };
 
-  const getNavBadge = (item: AppNavItem) => {
-    if (item.badge === 'activeDeliveries') return activeDeliveriesCount.toLocaleString('he-IL');
-    if (item.badge === 'deliveredDeliveries') return deliveredDeliveriesCount.toLocaleString('he-IL');
-    if (item.badge === 'activeRestaurants') return activeRestaurantsCount.toLocaleString('he-IL');
-    if (item.badge === 'activeCouriers') return activeCouriersCount.toLocaleString('he-IL');
-    if (item.badge === 'deliveryBalance') return state.deliveryBalance.toLocaleString('he-IL');
-    if (item.badge === 'walletRevenue') return `₪${Math.round(walletRevenue).toLocaleString('he-IL')}`;
+  const getNavBadge = (item: AppNavItem): SidebarNavBadgeValue | null => {
+    if (item.badge === 'activeDeliveries') return { kind: 'number', value: activeDeliveriesCount };
+    if (item.badge === 'deliveredDeliveries') return { kind: 'number', value: deliveredDeliveriesCount };
+    if (item.badge === 'activeRestaurants') return { kind: 'number', value: activeRestaurantsCount };
+    if (item.badge === 'activeCouriers') return { kind: 'number', value: activeCouriersCount };
+    if (item.badge === 'deliveryBalance') return { kind: 'number', value: state.deliveryBalance };
+    if (item.badge === 'walletRevenue') return { kind: 'number', prefix: '₪', value: walletRevenue };
     return null;
   };
 
@@ -726,7 +821,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
     const Icon = NAV_ICON_MAP[item.icon];
     const isActive = isNavItemActive(item, location.pathname);
     const badge = getNavBadge(item);
+    const badgeText = getSidebarBadgeText(badge);
     const tagLabel = item.tag === 'beta' ? LABELS.beta : null;
+    const badgeClassName = `shrink-0 rounded-[4px] px-1.5 text-[11px] font-medium tabular-nums ${
+      isActive
+        ? 'text-app-text-secondary'
+        : 'text-app-text-muted'
+    }`;
 
     return (
       <button
@@ -757,20 +858,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
               )}
             </span>
             {badge && (
-              <span
-                className={`shrink-0 rounded-[4px] px-1.5 text-[11px] font-medium tabular-nums ${
-                  isActive
-                    ? 'text-app-text-secondary'
-                    : 'text-app-text-muted'
-                }`}
-              >
-                {badge}
-              </span>
+              <SidebarNavBadge badge={badge} className={badgeClassName} />
             )}
           </span>
         ) : (
           <SidebarIconTooltip
-            label={[item.label, tagLabel, badge].filter(Boolean).join(' • ')}
+            label={[item.label, tagLabel, badgeText].filter(Boolean).join(' • ')}
             className="flex h-9 items-center justify-center"
           >
             <Icon size={19} className="stroke-[1.8px]" />

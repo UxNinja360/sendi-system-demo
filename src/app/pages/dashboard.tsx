@@ -60,7 +60,7 @@ const getDeliveriesStatusFilterPath = (statuses: DeliveryStatus[]) =>
   `/deliveries?statuses=${statuses.join(',')}`;
 const formatRadiusKm = formatSendiPlusRadiusKm;
 const SENDI_PLUS_TERMS_TEXT =
-  'מחייב עמידה בזמני משלוח של עד 60 דקות מסירה';
+  'מתחייב בזמני משלוח של 60 דקות מסירה';
 const SENDI_PLUS_DETAILS_OPEN_STORAGE_KEY = 'dashboard-sendi-plus-details-open';
 const DASHBOARD_PULL_REFRESH_THRESHOLD = 72;
 const DASHBOARD_PULL_REFRESH_MAX = 124;
@@ -398,13 +398,7 @@ const SendiPlusCard: React.FC<{
     ? 'text-app-text-secondary'
     : 'text-app-text-muted opacity-70';
   const selectedRadiusText = `${formatRadiusKm(radiusKm)} ק״מ`;
-  const termsSummaryText = !termsAccepted
-    ? 'כבוי'
-    : !isAccordionOpen
-      ? `עד 60 דקות מסירה · ${
-          receivesDeliveries ? `רדיוס עד ${selectedRadiusText}` : 'רדיוס כבוי'
-        }`
-      : SENDI_PLUS_TERMS_TEXT;
+  const termsSummaryText = SENDI_PLUS_TERMS_TEXT;
   const radiusHelperText = !termsAccepted
     ? 'כבוי'
     : receivesDeliveries
