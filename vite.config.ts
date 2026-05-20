@@ -60,7 +60,7 @@ export default defineConfig({
       workbox: {
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         cleanupOutdatedCaches: true,
-        clientsClaim: true,
+        clientsClaim: false,
         skipWaiting: false,
         importScripts: ['/sendi-sw-push.js'],
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff,woff2}'],

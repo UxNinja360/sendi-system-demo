@@ -22,7 +22,7 @@ const watchRegistration = (registration: ServiceWorkerRegistration) => {
     if (!worker) return;
 
     worker.addEventListener('statechange', () => {
-      if (worker.state === 'installed' && (navigator.serviceWorker.controller || registration.active)) {
+      if (worker.state === 'installed' && navigator.serviceWorker.controller) {
         emitUpdateAvailable(registration);
       }
     });
@@ -32,7 +32,7 @@ const watchRegistration = (registration: ServiceWorkerRegistration) => {
 const checkRegistrationForUpdate = (registration: ServiceWorkerRegistration) => {
   watchRegistration(registration);
 
-  if (registration.waiting && (navigator.serviceWorker.controller || registration.active)) {
+  if (registration.waiting && navigator.serviceWorker.controller) {
     emitUpdateAvailable(registration);
   }
 };
