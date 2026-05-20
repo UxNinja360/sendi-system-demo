@@ -360,11 +360,14 @@ export const CouriersListScreen: React.FC = () => {
   ), []);
 
   const activeDeliveriesByCourier = useMemo(() => {
-    const map = new Map<string, typeof state.deliveries[number]>();
+    const map = new Map<string, Array<typeof state.deliveries[number]>>();
     state.deliveries.forEach((delivery) => {
-      if (!delivery.courierId) return;
+      const courierId = delivery.courierId ?? delivery.runner_id;
+      if (!courierId) return;
       if (delivery.status === 'delivered' || delivery.status === 'cancelled' || delivery.status === 'expired') return;
-      if (!map.has(delivery.courierId)) map.set(delivery.courierId, delivery);
+      const deliveries = map.get(courierId) ?? [];
+      deliveries.push(delivery);
+      map.set(courierId, deliveries);
     });
     return map;
   }, [state.deliveries]);
@@ -503,8 +506,8 @@ export const CouriersListScreen: React.FC = () => {
           );
           break;
         case 'currentDelivery': {
-          const aDelivery = activeDeliveriesByCourier.get(a.id)?.orderNumber ?? '';
-          const bDelivery = activeDeliveriesByCourier.get(b.id)?.orderNumber ?? '';
+          const aDelivery = activeDeliveriesByCourier.get(a.id)?.[0]?.orderNumber ?? '';
+          const bDelivery = activeDeliveriesByCourier.get(b.id)?.[0]?.orderNumber ?? '';
           result = aDelivery.localeCompare(bDelivery, 'he');
           break;
         }
@@ -557,7 +560,7 @@ export const CouriersListScreen: React.FC = () => {
     setSortDirection('asc');
   };
 
-  const getCurrentDelivery = (courierId: string) => activeDeliveriesByCourier.get(courierId) ?? null;
+  const getCurrentDelivery = (courierId: string) => activeDeliveriesByCourier.get(courierId)?.[0] ?? null;
 
   const handleToggleSelectCourier = (courierId: string) => {
     setSelectedCourierIds((prev) => {
@@ -588,7 +591,7 @@ export const CouriersListScreen: React.FC = () => {
       case 'connection':
         return courier.status === 'offline' ? TEXT.notConnected : TEXT.connected;
       case 'shift':
-        return courier.isOnShift ? TEXT.onShift : TEXT.offShift;
+        return courier.isOnShift ? TEXT.onShift : '';
       case 'availability':
         return courier.status === 'busy' ? TEXT.inDelivery : courier.status === 'offline' || !courier.isOnShift ? '-' : TEXT.free;
       case 'vehicleType':
@@ -795,9 +798,11 @@ export const CouriersListScreen: React.FC = () => {
       case 'shift':
         return (
           <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
-            <span className={`whitespace-nowrap text-xs font-medium ${courier.isOnShift ? 'text-[#a78bfa] dark:text-[#c4b5fd]' : 'text-[#737373] dark:text-[#525252]'}`}>
-              {courier.isOnShift ? TEXT.onShift : TEXT.offShift}
-            </span>
+            {courier.isOnShift ? (
+              <span className="whitespace-nowrap text-xs font-medium text-[#a78bfa] dark:text-[#c4b5fd]">
+                {TEXT.onShift}
+              </span>
+            ) : null}
           </td>
         );
       case 'availability':
@@ -1285,10 +1290,14 @@ export const CouriersListScreen: React.FC = () => {
                   <span className={`text-[11px] font-medium ${getStatusColor(contextMenu.courier.status)}`}>
                     {getStatusLabel(contextMenu.courier.status)}
                   </span>
-                  <span className="text-[10px] text-[#525252] dark:text-[#737373]">·</span>
-                  <span className={`text-[11px] font-medium ${contextMenu.courier.isOnShift ? 'text-[#a78bfa] dark:text-[#c4b5fd]' : 'text-[#737373] dark:text-[#525252]'}`}>
-                    {contextMenu.courier.isOnShift ? TEXT.onShift : TEXT.offShift}
-                  </span>
+                  {contextMenu.courier.isOnShift ? (
+                    <>
+                      <span className="text-[10px] text-[#525252] dark:text-[#737373]">·</span>
+                      <span className="text-[11px] font-medium text-[#a78bfa] dark:text-[#c4b5fd]">
+                        {TEXT.onShift}
+                      </span>
+                    </>
+                  ) : null}
                 </div>
               }
             />

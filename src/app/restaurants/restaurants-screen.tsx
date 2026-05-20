@@ -918,6 +918,8 @@ export const RestaurantsScreen: React.FC = () => {
   const mapDeliveries = useMemo(
     () =>
       periodDeliveries.filter((delivery) => {
+        if (delivery.status === 'expired') return false;
+
         const restaurantId = delivery.restaurantId ?? delivery.rest_id;
         const restaurantName = delivery.restaurantName ?? delivery.rest_name;
         return (

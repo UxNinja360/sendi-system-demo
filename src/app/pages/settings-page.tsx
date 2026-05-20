@@ -1065,37 +1065,6 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
             />
           </SectionCard>
 
-          <SectionCard
-            icon={<Package className="h-4 w-4 text-app-brand" />}
-            title={TEXT.business}
-            description={TEXT.businessDescription}
-          >
-            <SettingsLinkRow
-              icon={<Package className="h-4 w-4" />}
-              title={TEXT.balance}
-              hint={`${TEXT.balanceHintPrefix}${state.deliveryBalance.toLocaleString('he-IL')}${TEXT.deliveriesSuffix}`}
-              onClick={() => navigate('/delivery-balance')}
-            />
-            <SettingsLinkRow
-              icon={<Wallet className="h-4 w-4" />}
-              title="ארנק"
-              hint="ניהול תשלומים והכנסות ממשלוחי סנדי פלוס."
-              onClick={() => navigate('/wallet')}
-            />
-            <SettingsLinkRow
-              icon={<Store className="h-4 w-4" />}
-              title={TEXT.restaurants}
-              hint={TEXT.restaurantsHint}
-              onClick={() => navigate('/restaurants')}
-            />
-            <SettingsLinkRow
-              icon={<Bike className="h-4 w-4" />}
-              title={TEXT.couriersList}
-              hint={TEXT.couriersListHint}
-              onClick={() => navigate('/couriers')}
-            />
-          </SectionCard>
-
           <SettingsActionCard
             icon={<SlidersHorizontal className="h-4 w-4 text-app-brand" />}
             title={TEXT.pagesHub}

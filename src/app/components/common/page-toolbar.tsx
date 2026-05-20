@@ -127,34 +127,34 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
           className={`app-toolbar-shell sticky top-0 z-20 shrink-0 bg-app-background transition-[max-height,opacity,transform] duration-200 ease-out dark:bg-[#000000] ${
             toolbarHidden
               ? 'pointer-events-none max-h-0 -translate-y-full overflow-hidden opacity-0'
-              : 'max-h-[9.5rem] translate-y-0 overflow-visible opacity-100'
+              : 'max-h-[13rem] translate-y-0 overflow-visible opacity-100'
           } ${
             showBottomBorder ? 'border-b border-app-border dark:border-app-nav-border' : ''
           }`.trim()}
         >
           <div className="app-toolbar-row overflow-visible px-3 py-2.5">
-            <div className="flex w-full min-w-0 flex-wrap items-center gap-1.5 min-[900px]:flex-nowrap">
+            <div className="app-toolbar-content flex w-full min-w-0 flex-wrap items-center gap-1.5 min-[900px]:flex-nowrap">
               {renderedPeriodControl ? (
-                <div className={periodControlClassName}>
+                <div className={`app-toolbar-period ${periodControlClassName}`.trim()}>
                   {renderedPeriodControl}
                 </div>
               ) : null}
               {actions ? (
                 <div
-                  className={`order-first mb-1 flex min-w-0 flex-1 basis-full flex-nowrap items-center gap-1 transition-[max-height,opacity,transform,margin] duration-200 ease-out min-[900px]:order-none min-[900px]:mb-0 min-[900px]:basis-0 ${actionsVisibilityClassName} ${actionsClassName}`.trim()}
+                  className={`app-toolbar-actions order-first mb-1 flex min-w-0 flex-1 basis-full flex-nowrap items-center gap-1 transition-[max-height,opacity,transform,margin] duration-200 ease-out min-[900px]:order-none min-[900px]:mb-0 min-[900px]:basis-0 ${actionsVisibilityClassName} ${actionsClassName}`.trim()}
                 >
                   {actions}
                 </div>
               ) : null}
               {controls ? (
                 <div
-                  className={`${controlsWrapperClassName} ${controlsClassName}`.trim()}
+                  className={`app-toolbar-controls ${controlsWrapperClassName} ${controlsClassName}`.trim()}
                 >
                   {controls}
                 </div>
               ) : null}
               {headerControls || renderedPrimaryAction ? (
-                <div className="flex max-w-full shrink-0 flex-nowrap items-center gap-1">
+                <div className="app-toolbar-header flex max-w-full shrink-0 flex-nowrap items-center gap-1">
                   {headerControls}
                   {renderedPrimaryAction ? (
                     <div ref={primaryActionMenuRef} className="relative flex shrink-0 items-center">

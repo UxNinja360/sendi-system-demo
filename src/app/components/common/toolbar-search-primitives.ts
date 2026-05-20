@@ -20,6 +20,7 @@ export const getToolbarSearchShellClassName = ({
 }: ToolbarSearchShellOptions) =>
   [
     'flex h-10 items-center gap-1.5 overflow-hidden rounded-[4px] border pr-9 pl-8 text-sm transition-[background-color,border-color,box-shadow,color]',
+    'toolbar-search-shell',
     widthClass,
     'text-app-text',
     active

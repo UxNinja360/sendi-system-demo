@@ -33,6 +33,10 @@ const MAP_SHEET_HEIGHT_STORAGE_KEY = 'sendi:deliveries-map-sheet-height';
 const DEFAULT_MAP_WIDTH = 50;
 const MIN_MAP_WIDTH = 32;
 const MAX_MAP_WIDTH = 74;
+const DESKTOP_MAP_SPLIT_BREAKPOINT = 1024;
+const MIN_DESKTOP_LIST_CONTENT_WIDTH = 340;
+const DEFAULT_EXPANDED_SIDEBAR_WIDTH = 250;
+const COLLAPSED_SIDEBAR_WIDTH = 60;
 const DEFAULT_MAP_SHEET_HEIGHT = 38;
 const MIN_MAP_SHEET_HEIGHT = 26;
 const MAX_MAP_SHEET_HEIGHT = 82;
@@ -104,8 +108,45 @@ const setSharedMapOpen = (nextOpen: SetStateAction<boolean>) => {
   mapOpenListeners.forEach((listener) => listener());
 };
 
+const getStoredSidebarWidth = () => {
+  if (typeof localStorage === 'undefined') return DEFAULT_EXPANDED_SIDEBAR_WIDTH;
+
+  try {
+    const isCollapsed = JSON.parse(localStorage.getItem('sidebar-collapsed') ?? 'false');
+    if (isCollapsed) return COLLAPSED_SIDEBAR_WIDTH;
+
+    const savedWidth = Number(localStorage.getItem('sidebar-width'));
+    return Number.isFinite(savedWidth) ? savedWidth : DEFAULT_EXPANDED_SIDEBAR_WIDTH;
+  } catch {
+    return DEFAULT_EXPANDED_SIDEBAR_WIDTH;
+  }
+};
+
+const getCurrentSidebarWidth = () => {
+  if (typeof window === 'undefined' || window.innerWidth < DESKTOP_MAP_SPLIT_BREAKPOINT) return 0;
+
+  const sidebar = typeof document === 'undefined'
+    ? null
+    : document.querySelector<HTMLElement>('.group\\/sidebar');
+  const measuredWidth = sidebar?.getBoundingClientRect().width ?? 0;
+
+  return measuredWidth > 0 ? measuredWidth : getStoredSidebarWidth();
+};
+
+const getMaxMapWidthForViewport = () => {
+  if (typeof window === 'undefined' || window.innerWidth < DESKTOP_MAP_SPLIT_BREAKPOINT) {
+    return MAX_MAP_WIDTH;
+  }
+
+  const viewportWidth = window.innerWidth;
+  const minAppWidth = getCurrentSidebarWidth() + MIN_DESKTOP_LIST_CONTENT_WIDTH;
+  const maxByAvailableListWidth = ((viewportWidth - minAppWidth) / viewportWidth) * 100;
+
+  return Math.max(MIN_MAP_WIDTH, Math.min(MAX_MAP_WIDTH, maxByAvailableListWidth));
+};
+
 const clampMapWidth = (value: number) =>
-  Math.min(MAX_MAP_WIDTH, Math.max(MIN_MAP_WIDTH, value));
+  Math.min(getMaxMapWidthForViewport(), Math.max(MIN_MAP_WIDTH, value));
 
 const clampMapSheetHeight = (value: number) =>
   Math.min(MAX_MAP_SHEET_HEIGHT, Math.max(MIN_MAP_SHEET_HEIGHT, value));
@@ -145,6 +186,32 @@ export const useDeliveriesMapSplit = ({
   const [mapSheetHeight, setMapSheetHeight] = useState(getSavedMapSheetHeight);
   const [isResizing, setIsResizing] = useState(false);
   const [isSheetResizing, setIsSheetResizing] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const syncMapWidthToAvailableSpace = () => {
+      setMapWidth((currentWidth) => clampMapWidth(currentWidth));
+    };
+
+    syncMapWidthToAvailableSpace();
+    window.addEventListener('resize', syncMapWidthToAvailableSpace);
+
+    const sidebar = typeof document === 'undefined'
+      ? null
+      : document.querySelector<HTMLElement>('.group\\/sidebar');
+    const sidebarResizeObserver =
+      sidebar && typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(syncMapWidthToAvailableSpace)
+        : null;
+
+    if (sidebar) sidebarResizeObserver?.observe(sidebar);
+
+    return () => {
+      window.removeEventListener('resize', syncMapWidthToAvailableSpace);
+      sidebarResizeObserver?.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     activeMapSplitInstances += 1;

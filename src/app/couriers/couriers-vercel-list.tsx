@@ -1,9 +1,10 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Package, Star } from 'lucide-react';
+import { Activity, Bike, Car, Clock, Package, Star } from 'lucide-react';
 
 import { EntityRowActionTrigger } from '../components/common/entity-row-action-trigger';
 import { Toggle } from '../components/common/toggle';
 import type { EntityViewMode } from '../components/common/view-mode-toggle';
+import { STATUS_CONFIG } from '../deliveries/status-config';
 import type { Courier, Delivery } from '../types/delivery.types';
 import { formatOrderNumber } from '../utils/order-number';
 import { CourierAvatarMark } from './courier-avatar-mark';
@@ -11,7 +12,7 @@ import { CourierAvatarMark } from './courier-avatar-mark';
 type CouriersVercelListProps = {
   couriers: Courier[];
   viewMode?: EntityViewMode;
-  activeDeliveriesByCourier: Map<string, Delivery>;
+  activeDeliveriesByCourier: Map<string, Delivery[]>;
   onOpenActionsMenu: (
     courier: Courier,
     event: React.MouseEvent<HTMLButtonElement>,
@@ -72,7 +73,7 @@ const getShiftMeta = (courier: Courier) => {
   const isOnShift = courier.isOnShift;
 
   return {
-    label: isOnShift ? '\u05d1\u05de\u05e9\u05de\u05e8\u05ea' : '\u05dc\u05d0 \u05d1\u05de\u05e9\u05de\u05e8\u05ea',
+    label: isOnShift ? '\u05d1\u05de\u05e9\u05de\u05e8\u05ea' : '',
     isActive: isOnShift,
     startedAt: isOnShift ? courier.shiftStartedAt : null,
     dot: isOnShift ? 'bg-[#50e3c2]' : 'bg-app-text-muted',
@@ -89,6 +90,8 @@ const CourierLiveStatus: React.FC<{
 }> = ({ label, isActive, startedAt, textClassName, now }) => {
   const elapsedLabel = isActive ? formatElapsedDuration(startedAt, now) : '';
   const displayLabel = elapsedLabel && elapsedLabel !== '-' ? `${label} ${elapsedLabel}` : label;
+
+  if (!displayLabel) return null;
 
   return (
     <div className="min-w-0 text-right">
@@ -115,14 +118,111 @@ const CourierRating: React.FC<{ rating: number; className?: string }> = ({ ratin
   </div>
 );
 
+const getVehicleIcon = (vehicleType: Courier['vehicleType']) =>
+  vehicleType === 'רכב' ? Car : Bike;
+
+const getEmploymentIcon = (employmentType: Courier['employmentType']) =>
+  employmentType === 'שעתי' ? Clock : Package;
+
+const CourierMetaChip: React.FC<{
+  icon: React.ElementType;
+  label: string;
+  className?: string;
+}> = ({ icon: Icon, label, className }) => (
+  <span
+    className={joinClassNames(
+      'inline-flex min-w-0 items-center gap-1.5 whitespace-nowrap text-xs font-medium text-app-text-secondary',
+      className,
+    )}
+    title={label}
+  >
+    <Icon className="h-3.5 w-3.5 shrink-0" />
+    <span className="min-w-0 truncate">{label}</span>
+  </span>
+);
+
+const getDeliveryRestaurantName = (delivery: Delivery) =>
+  delivery.rest_name || delivery.restaurantName || '-';
+
+const getDeliveryCustomerName = (delivery: Delivery) =>
+  delivery.client_name || delivery.customerName || '-';
+
+const CourierActiveDeliveries: React.FC<{ deliveries: Delivery[] }> = ({ deliveries }) => {
+  if (deliveries.length === 0) return null;
+
+  const visibleDeliveries = deliveries.slice(0, 2);
+  const hiddenCount = deliveries.length - visibleDeliveries.length;
+
+  return (
+    <div className="flex min-w-0 flex-col gap-2">
+      {visibleDeliveries.map((delivery) => {
+        const config = STATUS_CONFIG[delivery.status] ?? STATUS_CONFIG.pending;
+        const restaurantName = getDeliveryRestaurantName(delivery);
+        const customerName = getDeliveryCustomerName(delivery);
+
+        return (
+          <div
+            key={delivery.id}
+            className="min-w-0 rounded-md border border-app-nav-border bg-app-background/55 px-2.5 py-2"
+          >
+            <div className="flex min-w-0 items-center gap-2">
+              <Package className="h-3.5 w-3.5 shrink-0 text-app-brand" />
+              <span className="min-w-0 truncate text-sm font-semibold text-app-text">
+                {formatOrderNumber(delivery.orderNumber)}
+              </span>
+              <span className={joinClassNames('shrink-0 text-[11px] font-medium', config.tableColor)}>
+                {config.label}
+              </span>
+            </div>
+            <div className="mt-1 min-w-0 truncate text-xs text-app-text-secondary">
+              {restaurantName} · {customerName}
+            </div>
+          </div>
+        );
+      })}
+      {hiddenCount > 0 ? (
+        <div className="text-xs font-medium text-app-text-secondary">
+          +{hiddenCount.toLocaleString('he-IL')} משלוחים נוספים
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+const CourierCompactFooterMeta: React.FC<{
+  courier: Courier;
+  shiftMeta: ReturnType<typeof getShiftMeta>;
+  now: number;
+}> = ({ courier, shiftMeta, now }) => {
+  const VehicleIcon = getVehicleIcon(courier.vehicleType);
+  const EmploymentIcon = getEmploymentIcon(courier.employmentType);
+  const shiftElapsed = shiftMeta.isActive ? formatElapsedDuration(shiftMeta.startedAt, now) : '';
+  const shiftLabel =
+    shiftMeta.isActive && shiftElapsed && shiftElapsed !== '-'
+      ? `${shiftMeta.label} ${shiftElapsed}`
+      : shiftMeta.label;
+
+  return (
+    <div className="courier-row__compact-meta hidden min-w-0 items-center gap-3">
+      <CourierMetaChip icon={VehicleIcon} label={courier.vehicleType} />
+      <CourierMetaChip icon={EmploymentIcon} label={courier.employmentType} />
+      {shiftLabel ? (
+        <CourierMetaChip icon={Activity} label={shiftLabel} className="text-app-success-text" />
+      ) : null}
+    </div>
+  );
+};
+
 const CourierVercelRow: React.FC<{
   courier: Courier;
+  activeDeliveries: Delivery[];
   now: number;
   onOpenActionsMenu: CouriersVercelListProps['onOpenActionsMenu'];
   onOpenContextMenu: CouriersVercelListProps['onOpenContextMenu'];
   onTogglePower: CouriersVercelListProps['onTogglePower'];
 }> = ({
   courier,
+  activeDeliveries,
   now,
   onOpenActionsMenu,
   onOpenContextMenu,
@@ -158,6 +258,15 @@ const CourierVercelRow: React.FC<{
         <div className="truncate text-sm font-normal text-app-text-secondary">{courier.employmentType}</div>
       </div>
 
+      <div
+        className={joinClassNames(
+          'courier-row__active-deliveries hidden min-h-0 min-w-0 px-2 py-2',
+          activeDeliveries.length === 0 && 'courier-row__active-deliveries--empty',
+        )}
+      >
+        <CourierActiveDeliveries deliveries={activeDeliveries} />
+      </div>
+
       <div className="courier-row__deliveries hidden min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:flex md:min-h-[72px] md:py-2">
         <CourierDeliveryCount count={courier.totalDeliveries} />
       </div>
@@ -179,11 +288,15 @@ const CourierVercelRow: React.FC<{
       <div className="hidden min-h-0 min-w-0 md:block" aria-hidden="true" />
 
       <div className="courier-row__footer col-start-1 row-start-6 flex min-h-0 items-center justify-between px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:justify-start md:py-2">
-        <CourierRating rating={courier.rating} className="md:hidden" />
-        <span className="inline-flex md:hidden" onClick={(event) => event.stopPropagation()}>
+        <div className="courier-row__compact-stats flex min-w-0 items-center gap-3 md:hidden">
+          <CourierRating rating={courier.rating} />
+          <CourierDeliveryCount count={courier.totalDeliveries} className="courier-row__footer-total" />
+        </div>
+        <CourierCompactFooterMeta courier={courier} shiftMeta={shiftMeta} now={now} />
+        <span className="courier-row__compact-toggle inline-flex md:hidden" onClick={(event) => event.stopPropagation()}>
           <Toggle checked={isConnected} onChange={() => onTogglePower(courier)} ariaLabel={connectionMeta.label} />
         </span>
-        <div className="hidden min-w-0 md:flex md:w-full md:justify-start">
+        <div className="courier-row__desktop-toggle hidden min-w-0 md:flex md:w-full md:justify-start">
           <span className="inline-flex" onClick={(event) => event.stopPropagation()}>
             <Toggle checked={isConnected} onChange={() => onTogglePower(courier)} ariaLabel={connectionMeta.label} />
           </span>
@@ -202,14 +315,14 @@ const CourierVercelRow: React.FC<{
 
 const CourierVercelCard: React.FC<{
   courier: Courier;
-  currentDelivery: Delivery | null;
+  activeDeliveries: Delivery[];
   now: number;
   onOpenActionsMenu: CouriersVercelListProps['onOpenActionsMenu'];
   onOpenContextMenu: CouriersVercelListProps['onOpenContextMenu'];
   onTogglePower: CouriersVercelListProps['onTogglePower'];
 }> = ({
   courier,
-  currentDelivery,
+  activeDeliveries,
   now,
   onOpenActionsMenu,
   onOpenContextMenu,
@@ -218,8 +331,6 @@ const CourierVercelCard: React.FC<{
   const connectionMeta = getConnectionMeta(courier);
   const shiftMeta = getShiftMeta(courier);
   const isConnected = courier.status !== 'offline';
-  const deliveryLabel = currentDelivery ? formatOrderNumber(currentDelivery.orderNumber) : '-';
-  const deliveryMeta = currentDelivery ? currentDelivery.rest_name || currentDelivery.restaurantName : 'ללא משלוח פעיל';
 
   return (
     <div
@@ -251,37 +362,32 @@ const CourierVercelCard: React.FC<{
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <div className="min-w-0">
-          <CourierLiveStatus
-            label={shiftMeta.label}
-            isActive={shiftMeta.isActive}
-            startedAt={shiftMeta.startedAt}
-            textClassName={shiftMeta.text}
-            now={now}
-          />
+      {activeDeliveries.length > 0 ? (
+        <div className="mt-4">
+          <CourierActiveDeliveries deliveries={activeDeliveries} />
         </div>
-        <div className="min-w-0">
-          <div className="text-[11px] text-app-text-secondary">משלוח נוכחי</div>
-          <div className="mt-1 truncate text-sm font-semibold text-app-text">{deliveryLabel}</div>
-          <div className="mt-1 truncate text-xs text-app-text-secondary">{deliveryMeta}</div>
-        </div>
-        <div className="min-w-0">
-          <div className="text-[11px] text-app-text-secondary">רכב</div>
-          <div className="mt-1 truncate text-sm font-semibold text-app-text">{courier.vehicleType}</div>
-          <div className="mt-1 truncate text-xs text-app-text-secondary">{courier.employmentType}</div>
-        </div>
-      </div>
+      ) : null}
 
-      <div className="mt-4 flex items-center justify-between border-t border-app-nav-border pt-3 text-xs text-app-text-secondary">
-        <span className="inline-flex items-center gap-1.5">
-          <Star className="h-3.5 w-3.5" />
-          <span className="tabular-nums">{courier.rating.toFixed(1)}</span>
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <Package className="h-3.5 w-3.5" />
-          <span className="tabular-nums">{courier.totalDeliveries}</span>
-        </span>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-app-nav-border pt-3 text-xs text-app-text-secondary">
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
+          <CourierMetaChip icon={getVehicleIcon(courier.vehicleType)} label={courier.vehicleType} />
+          <CourierMetaChip icon={getEmploymentIcon(courier.employmentType)} label={courier.employmentType} />
+          {shiftMeta.label ? (
+            <CourierMetaChip
+              icon={Activity}
+              label={
+                shiftMeta.startedAt
+                  ? `${shiftMeta.label} ${formatElapsedDuration(shiftMeta.startedAt, now)}`
+                  : shiftMeta.label
+              }
+              className="text-app-success-text"
+            />
+          ) : null}
+        </div>
+        <div className="flex shrink-0 items-center gap-3">
+          <CourierRating rating={courier.rating} />
+          <CourierDeliveryCount count={courier.totalDeliveries} />
+        </div>
       </div>
     </div>
   );
@@ -351,7 +457,7 @@ export const CouriersVercelList: React.FC<CouriersVercelListProps> = ({
               <CourierVercelCard
                 key={courier.id}
                 courier={courier}
-                currentDelivery={activeDeliveriesByCourier.get(courier.id) ?? null}
+                activeDeliveries={activeDeliveriesByCourier.get(courier.id) ?? []}
                 now={now}
                 onOpenActionsMenu={onOpenActionsMenu}
                 onOpenContextMenu={onOpenContextMenu}
@@ -373,6 +479,7 @@ export const CouriersVercelList: React.FC<CouriersVercelListProps> = ({
             <CourierVercelRow
               key={courier.id}
               courier={courier}
+              activeDeliveries={activeDeliveriesByCourier.get(courier.id) ?? []}
               now={now}
               onOpenActionsMenu={onOpenActionsMenu}
               onOpenContextMenu={onOpenContextMenu}

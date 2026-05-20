@@ -142,7 +142,7 @@ const RestaurantVercelRow: React.FC<{
           <Package className="h-3.5 w-3.5" />
           <span className="tabular-nums">{restaurant.totalDeliveries}</span>
         </span>
-        <span className="inline-flex md:hidden" onClick={(event) => event.stopPropagation()}>
+        <span className="restaurant-row__compact-toggle inline-flex md:hidden" onClick={(event) => event.stopPropagation()}>
           <Toggle
             checked={isEnabled}
             disabled={isToggleDisabled}

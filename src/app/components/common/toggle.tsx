@@ -52,7 +52,7 @@ export const Toggle: React.FC<ToggleProps> = ({
       disabled={disabled}
     >
       <span
-        className={`absolute top-1/2 ${sizeClasses.thumb} -translate-y-1/2 rounded-full transition-all duration-200 ${
+        className={`pointer-events-none absolute top-1/2 ${sizeClasses.thumb} -translate-y-1/2 rounded-full transition-all duration-200 ${
           checked
             ? 'left-0.5 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.22)] dark:bg-[#D7E9FF]'
             : 'right-0.5 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.14)] ring-1 ring-black/5 dark:bg-[#555555] dark:shadow-none dark:ring-0'

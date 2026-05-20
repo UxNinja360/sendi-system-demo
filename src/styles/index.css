@@ -55,6 +55,105 @@ body {
   opacity: 0.72;
 }
 
+.sendi-plus-card {
+  overflow: hidden;
+  position: relative;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    box-shadow 220ms ease,
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sendi-plus-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.sendi-plus-card::before,
+.sendi-plus-card::after {
+  content: '';
+  inset: -56px;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  transition: opacity 220ms ease;
+  z-index: 0;
+}
+
+.sendi-plus-card::before {
+  background:
+    radial-gradient(circle at 15% 35%, rgba(10, 132, 255, 0.2), transparent 34%),
+    radial-gradient(circle at 82% 20%, rgba(95, 178, 255, 0.16), transparent 32%),
+    radial-gradient(circle at 48% 82%, rgba(10, 132, 255, 0.12), transparent 38%);
+  filter: blur(18px);
+  transform: translate3d(-14px, 9px, 0) scale(1.03);
+}
+
+.sendi-plus-card::after {
+  background:
+    linear-gradient(115deg, transparent 18%, rgba(10, 132, 255, 0.11) 44%, transparent 68%),
+    radial-gradient(circle at 50% 50%, rgba(10, 132, 255, 0.16), transparent 44%);
+  filter: blur(10px);
+  transform: translate3d(18px, -8px, 0) rotate(5deg);
+}
+
+.sendi-plus-card--teaser:hover {
+  border-color: color-mix(in srgb, #0a84ff 42%, var(--app-border));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, #0a84ff 18%, transparent),
+    0 14px 34px color-mix(in srgb, #0a84ff 14%, transparent);
+  transform: translateY(-1px);
+}
+
+.sendi-plus-card--teaser:hover::before {
+  animation: sendi-plus-card-smoke 6s ease-in-out infinite alternate;
+  opacity: 0.72;
+}
+
+.sendi-plus-card--teaser:hover::after {
+  animation: sendi-plus-card-glow-drift 4.8s ease-in-out infinite alternate;
+  opacity: 0.46;
+}
+
+.sendi-plus-card--teaser:hover .sendi-plus-label__word--off,
+.sendi-plus-card--teaser:hover .sendi-plus-label__plus--off {
+  color: var(--app-text);
+  opacity: 0.95;
+}
+
+.sendi-plus-terms-text {
+  transition:
+    color 180ms ease,
+    opacity 180ms ease;
+}
+
+.sendi-plus-card--teaser:hover .sendi-plus-terms-text {
+  color: var(--app-text-secondary);
+  opacity: 0.86;
+}
+
+.sendi-plus-card--teaser:hover .sendi-plus-card__toggle {
+  background: color-mix(in srgb, var(--app-surface-raised) 78%, var(--app-text-secondary) 10%) !important;
+  border-color: color-mix(in srgb, #0a84ff 42%, transparent) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 0 1px color-mix(in srgb, #0a84ff 14%, transparent),
+    0 0 16px rgba(10, 132, 255, 0.12);
+}
+
+.sendi-plus-card--igniting {
+  animation: sendi-plus-card-ignite 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.sendi-plus-card--igniting::before {
+  opacity: 0.26;
+}
+
+.sendi-plus-card--igniting::after {
+  opacity: 0.18;
+}
+
 .dashboard-status-card:hover {
   background: var(--app-surface-raised);
   border-color: var(--app-border);
@@ -238,6 +337,22 @@ body {
   opacity: 0.72;
 }
 
+.sendi-plus-card--teaser:hover .sendi-plus-mark--off {
+  background:
+    radial-gradient(circle at 50% 35%, rgba(10, 132, 255, 0.2), transparent 65%),
+    color-mix(in srgb, var(--app-surface-raised) 82%, var(--app-text-secondary) 9%);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, #0a84ff 38%, var(--app-border)),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 12px rgba(10, 132, 255, 0.16);
+  opacity: 0.92;
+  transform: scale(1.03);
+}
+
+.sendi-plus-card--teaser:hover .sendi-plus-mark--off svg {
+  color: #8ec7ff !important;
+}
+
 .sendi-plus-mark__inner {
   align-items: center;
   display: inline-flex;
@@ -256,12 +371,9 @@ body {
   display: grid;
   grid-template-rows: 0fr;
   opacity: 0;
-  transform: translateY(-2px);
   transition:
     grid-template-rows 340ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 220ms ease-out,
-    transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: grid-template-rows, opacity, transform;
+    opacity 220ms ease-out;
 }
 
 .sendi-plus-accordion__inner {
@@ -272,7 +384,6 @@ body {
 .sendi-plus-accordion--open {
   grid-template-rows: 1fr;
   opacity: 1;
-  transform: translateY(0);
 }
 
 .dashboard-pull-refresh-label {
@@ -309,6 +420,56 @@ body {
 
   to {
     opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes sendi-plus-card-smoke {
+  0% {
+    transform: translate3d(-16px, 10px, 0) scale(1.02);
+  }
+
+  50% {
+    transform: translate3d(8px, -7px, 0) scale(1.08);
+  }
+
+  100% {
+    transform: translate3d(18px, 8px, 0) scale(1.05);
+  }
+}
+
+@keyframes sendi-plus-card-glow-drift {
+  0% {
+    transform: translate3d(18px, -8px, 0) rotate(5deg);
+  }
+
+  100% {
+    transform: translate3d(-18px, 10px, 0) rotate(-3deg);
+  }
+}
+
+@keyframes sendi-plus-card-ignite {
+  0% {
+    border-color: color-mix(in srgb, #0a84ff 38%, var(--app-border));
+    box-shadow:
+      0 0 0 0 rgba(10, 132, 255, 0),
+      0 0 0 rgba(10, 132, 255, 0);
+    transform: translateY(0) scale(1);
+  }
+
+  42% {
+    border-color: color-mix(in srgb, #0a84ff 48%, var(--app-border));
+    box-shadow:
+      0 0 0 1px rgba(10, 132, 255, 0.12),
+      0 8px 18px rgba(10, 132, 255, 0.08);
+    transform: translateY(0) scale(1);
+  }
+
+  100% {
+    border-color: var(--app-border);
+    box-shadow:
+      0 0 0 0 rgba(10, 132, 255, 0),
+      0 0 0 rgba(10, 132, 255, 0);
     transform: translateY(0) scale(1);
   }
 }
@@ -394,6 +555,14 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .sendi-plus-accordion {
+    transition: none;
+  }
+
+  .sendi-plus-card,
+  .sendi-plus-card::before,
+  .sendi-plus-card::after,
+  .sendi-plus-card--igniting {
+    animation: none;
     transition: none;
     transform: none;
   }
@@ -545,11 +714,90 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
 }
 
 .app-toolbar-row {
+  container-type: inline-size;
   width: 100%;
   max-width: 100%;
   overflow: visible;
   overscroll-behavior-x: contain;
   touch-action: pan-y;
+}
+
+.app-toolbar-content,
+.app-toolbar-actions,
+.app-toolbar-controls,
+.app-toolbar-period {
+  min-width: 0;
+}
+
+.app-toolbar-actions > * {
+  min-width: 0;
+}
+
+.toolbar-search-shell {
+  max-width: 100%;
+  min-width: 0;
+}
+
+@container (max-width: 1099px) {
+  .app-toolbar-content {
+    align-items: stretch;
+    flex-wrap: wrap !important;
+  }
+
+  .app-toolbar-actions {
+    flex: 1 0 100% !important;
+    margin-bottom: 6px !important;
+    order: -20 !important;
+    width: 100%;
+  }
+
+  .app-toolbar-actions > * {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+
+  .app-toolbar-actions .toolbar-search-shell {
+    width: 100% !important;
+  }
+
+  .app-toolbar-actions input {
+    min-width: 0;
+  }
+
+  .app-toolbar-period {
+    flex: 0 1 auto !important;
+    max-width: 100%;
+  }
+
+  .app-toolbar-controls {
+    flex: 0 1 auto !important;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .app-toolbar-controls::-webkit-scrollbar {
+    display: none;
+  }
+
+  .app-toolbar-content:not(:has(.app-toolbar-period)) .app-toolbar-controls {
+    flex-basis: 100% !important;
+  }
+
+  .app-toolbar-controls > * {
+    max-width: 100%;
+  }
+
+  .app-toolbar-header {
+    margin-inline-start: auto;
+  }
+}
+
+@container (max-width: 430px) {
+  .app-toolbar-period,
+  .app-toolbar-controls {
+    flex-basis: 100% !important;
+  }
 }
 
 .app-table-shell {
@@ -577,10 +825,10 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   direction: ltr;
   display: grid;
   grid-template-areas:
-    "actions progress order"
-    "actions progress route"
-    "actions progress courier";
-  grid-template-columns: 52px 48px minmax(0, 1fr);
+    "actions order"
+    "actions route"
+    "actions courier";
+  grid-template-columns: 52px minmax(0, 1fr);
   min-height: 92px;
 }
 
@@ -594,21 +842,46 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   z-index: 1;
 }
 
-.delivery-row__progress {
-  align-self: center;
-  grid-area: progress;
-  justify-self: center;
-  min-width: 44px;
-  position: static;
-  transform: none;
-  z-index: 1;
+.delivery-status-line {
+  color: var(--app-text-secondary);
 }
 
-.delivery-row__stage-cluster {
-  align-items: center;
-  display: inline-flex;
-  justify-content: center;
-  position: relative;
+.delivery-status-line__icon {
+  color: var(--app-text-secondary);
+}
+
+.delivery-status-line__label {
+  color: var(--app-text-secondary);
+}
+
+.delivery-status-line--pending .delivery-status-line__icon {
+  color: #f97316;
+  filter: drop-shadow(0 0 5px rgba(249, 115, 22, 0.32));
+  stroke-width: 2.75px;
+}
+
+.delivery-status-line--assigned .delivery-status-line__icon {
+  color: #eab308;
+}
+
+.delivery-status-line--delivering .delivery-status-line__icon {
+  color: #22c55e;
+}
+
+.delivery-status-line--delivered .delivery-status-line__icon {
+  color: #3b82f6;
+}
+
+.delivery-status-line--cancelled .delivery-status-line__icon {
+  color: #ef4444;
+}
+
+.delivery-status-line--expired .delivery-status-line__icon {
+  color: var(--app-text-muted);
+}
+
+.delivery-courier-line--empty {
+  justify-content: flex-start;
 }
 
 .delivery-row__order {
@@ -641,6 +914,7 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   white-space: nowrap;
 }
 
+.delivery-row__route-compact-status,
 .delivery-row__route-compact-courier {
   flex: 0 1 190px;
   max-width: 190px;
@@ -652,6 +926,7 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
 }
 
 .delivery-row__route-table,
+.delivery-row__status-table,
 .delivery-row__courier-table {
   display: none;
 }
@@ -667,9 +942,9 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   .delivery-vercel-row {
     border: 1px solid var(--app-nav-border);
     grid-template-areas:
-      "actions progress order"
-      "route route route";
-    grid-template-columns: 40px 44px minmax(0, 1fr);
+      "actions order"
+      "route route";
+    grid-template-columns: 40px minmax(0, 1fr);
     grid-template-rows: 54px auto;
     min-height: 0;
   }
@@ -678,8 +953,7 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
     border-bottom-width: 1px;
   }
 
-  .delivery-row__actions,
-  .delivery-row__progress {
+  .delivery-row__actions {
     align-self: stretch;
     box-shadow: inset 0 -1px 0 var(--app-nav-border);
     min-height: 54px;
@@ -738,15 +1012,26 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
     border-top: 1px solid var(--app-nav-border);
     direction: ltr;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+    grid-template-rows: auto;
     margin-top: 4px;
     min-height: 34px;
     padding-top: 9px;
     width: 100%;
   }
 
+  .delivery-row__route-compact-status {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
+    justify-content: flex-start;
+    max-width: 100%;
+    min-width: 0;
+    width: 100%;
+  }
+
   .delivery-row__route-compact-distance {
-    grid-column: 2;
+    grid-column: 3;
     grid-row: 1;
     justify-self: end;
     justify-content: flex-end;
@@ -754,12 +1039,13 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   }
 
   .delivery-row__route-compact-courier {
-    grid-column: 1;
+    grid-column: 2;
     grid-row: 1;
     justify-self: start;
     justify-content: flex-start;
     max-width: 100%;
     min-width: 0;
+    width: 100%;
   }
 
   .delivery-row__compact-meta {
@@ -784,12 +1070,12 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
 
 @container (min-width: 720px) {
   .delivery-vercel-row {
-    grid-template-areas: "actions progress courier route order";
+    grid-template-areas: "actions status courier route order";
     grid-template-columns:
       clamp(36px, 4%, 48px)
-      clamp(40px, 4%, 48px)
-      minmax(104px, clamp(112px, 12%, 150px))
-      minmax(360px, 1fr)
+      minmax(118px, clamp(126px, 11%, 158px))
+      minmax(92px, clamp(104px, 10%, 138px))
+      minmax(320px, 1fr)
       clamp(84px, 10%, 128px);
     grid-template-rows: minmax(70px, auto);
     min-height: 70px;
@@ -797,10 +1083,6 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
 
   .delivery-row__actions {
     min-width: 36px;
-  }
-
-  .delivery-row__progress {
-    min-width: 40px;
   }
 
   .delivery-row__order {
@@ -856,8 +1138,27 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
     width: 100%;
   }
 
-  .delivery-row__route-table-courier .delivery-row__courier-line {
+  .delivery-row__route-table-status {
+    flex: 1 1 auto;
     justify-content: flex-start;
+    max-width: 100%;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .delivery-row__route-table-courier .delivery-row__courier-line,
+  .delivery-row__route-table-status .delivery-row__status-line {
+    justify-content: flex-start;
+  }
+
+  .delivery-row__status-table {
+    align-items: center;
+    display: flex;
+    grid-area: status;
+    justify-content: flex-start;
+    min-height: 70px;
+    overflow: hidden;
+    padding: 7px 1px 7px 5px;
   }
 
   .delivery-row__courier-table {
@@ -877,12 +1178,11 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
 
 @container (max-width: 419px) {
   .delivery-vercel-row {
-    grid-template-columns: 36px 40px minmax(0, 1fr);
+    grid-template-columns: 36px minmax(0, 1fr);
     grid-template-rows: 52px auto;
   }
 
   .delivery-row__actions,
-  .delivery-row__progress,
   .delivery-row__order {
     min-height: 52px;
   }
@@ -1089,10 +1389,10 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
     border: 1px solid var(--app-nav-border);
     grid-template-areas:
       "identity identity identity actions"
-      "shift vehicle employment employment"
+      "active active active active"
       "footer footer footer footer";
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) 44px;
-    grid-template-rows: minmax(58px, auto) auto 38px;
+    grid-template-rows: minmax(58px, auto) auto minmax(42px, auto);
     min-height: 0;
   }
 
@@ -1117,26 +1417,41 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   }
 
   .courier-row__shift {
-    grid-area: shift;
-    padding: 12px 12px 10px;
+    display: none;
   }
 
   .courier-row__vehicle {
-    grid-area: vehicle;
-    padding: 12px 8px 10px 12px;
+    display: none;
   }
 
   .courier-row__employment {
-    grid-area: employment;
-    padding: 12px 8px 10px 12px;
+    display: none;
+  }
+
+  .courier-row__active-deliveries {
+    display: block;
+    grid-area: active;
+    padding: 10px 12px;
+  }
+
+  .courier-row__active-deliveries--empty {
+    display: none;
   }
 
   .courier-row__footer {
     border-top: 1px solid var(--app-nav-border);
+    flex-wrap: wrap;
+    gap: 8px 12px;
     grid-area: footer;
     justify-content: space-between;
-    min-height: 38px;
-    padding: 0 12px;
+    min-height: 42px;
+    padding: 8px 12px;
+  }
+
+  .courier-row__compact-meta {
+    display: flex;
+    flex: 1 1 180px;
+    flex-wrap: wrap;
   }
 
   .courier-row__footer-total {
@@ -1227,6 +1542,101 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
 }
 
 @container (max-width: 719px) {
+  .courier-vercel-list-frame {
+    border: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .courier-vercel-row {
+    border: 1px solid var(--app-nav-border);
+    grid-template-areas:
+      "identity identity identity actions"
+      "active active active active"
+      "footer footer footer footer";
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) 44px !important;
+    grid-template-rows: minmax(58px, auto) auto minmax(42px, auto) !important;
+    min-height: 0;
+  }
+
+  .courier-vercel-row:last-child {
+    border-bottom-width: 1px;
+  }
+
+  .courier-row__identity {
+    align-self: stretch;
+    box-shadow: inset 0 -1px 0 var(--app-nav-border);
+    grid-area: identity !important;
+    min-height: 58px;
+    padding: 10px 12px;
+  }
+
+  .courier-row__actions {
+    align-self: stretch;
+    box-shadow: inset 0 -1px 0 var(--app-nav-border);
+    grid-area: actions !important;
+    min-height: 58px;
+    padding: 0;
+  }
+
+  .courier-row__shift {
+    display: none !important;
+  }
+
+  .courier-row__vehicle {
+    display: none !important;
+  }
+
+  .courier-row__employment {
+    display: none !important;
+  }
+
+  .courier-row__active-deliveries {
+    display: block !important;
+    grid-area: active !important;
+    padding: 10px 12px;
+  }
+
+  .courier-row__active-deliveries--empty {
+    display: none !important;
+  }
+
+  .courier-row__deliveries,
+  .courier-row__connection {
+    display: none !important;
+  }
+
+  .courier-row__footer {
+    border-top: 1px solid var(--app-nav-border);
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    grid-area: footer !important;
+    justify-content: space-between;
+    min-height: 42px;
+    padding: 8px 12px;
+  }
+
+  .courier-row__compact-stats {
+    display: flex !important;
+  }
+
+  .courier-row__compact-meta {
+    display: flex !important;
+    flex: 1 1 180px;
+    flex-wrap: wrap;
+  }
+
+  .courier-row__compact-toggle {
+    display: inline-flex !important;
+  }
+
+  .courier-row__desktop-toggle {
+    display: none !important;
+  }
+}
+
+@container (max-width: 719px) {
   .restaurant-vercel-list-frame {
     border: 0;
     display: flex;
@@ -1251,7 +1661,7 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   .restaurant-row__identity {
     align-self: stretch;
     box-shadow: inset 0 -1px 0 var(--app-nav-border);
-    grid-area: identity;
+    grid-area: identity !important;
     min-height: 58px;
     padding: 10px 12px;
   }
@@ -1259,8 +1669,7 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   .restaurant-row__actions {
     align-self: stretch;
     box-shadow: inset 0 -1px 0 var(--app-nav-border);
-    grid-area: actions;
-    grid-column: auto;
+    grid-area: actions !important;
     min-height: 58px;
     padding: 0;
   }
@@ -1274,9 +1683,13 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   .restaurant-row__footer {
     border-top: 1px solid var(--app-nav-border);
     display: flex !important;
-    grid-area: footer;
+    grid-area: footer !important;
     min-height: 38px;
     padding: 0 12px;
+  }
+
+  .restaurant-row__compact-toggle {
+    display: inline-flex !important;
   }
 }
 

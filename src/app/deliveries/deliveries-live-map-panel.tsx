@@ -73,7 +73,7 @@ const defaultMapFilters: MapFilters = {
   deliveringOrders: true,
   deliveredOrders: true,
   cancelledOrders: true,
-  expiredOrders: true,
+  expiredOrders: false,
   activeRestaurants: true,
   inactiveRestaurants: false,
   sendiPlusRestaurants: true,

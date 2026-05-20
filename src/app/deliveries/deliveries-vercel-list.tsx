@@ -32,15 +32,11 @@ import {
   EntityActionMenuItem,
   EntityActionMenuOverlay,
 } from '../components/common/entity-action-menu';
-import {
-  DeliveryStageIndicator,
-  DeliveryStageTimelineTooltip,
-} from '../components/common/delivery-stage-timeline';
+import { DeliveryStageTimelineTooltip } from '../components/common/delivery-stage-timeline';
 import { DeliveryTimeDetailsTooltip } from '../components/common/delivery-time-details-tooltip';
 import { EntityRowActionTrigger } from '../components/common/entity-row-action-trigger';
 import { VercelEmptyState } from '../components/common/vercel-empty-state';
 import type { EntityViewMode } from '../components/common/view-mode-toggle';
-import { STATUS_CONFIG } from './status-config';
 import { formatOrderNumber } from '../utils/order-number';
 import { formatCurrency, getDeliveryCustomerCharge } from '../utils/delivery-finance';
 import { CourierAvatarMark } from '../couriers/courier-avatar-mark';
@@ -122,40 +118,74 @@ const formatDeliveryDate = (delivery: Delivery, showDateForToday: boolean) => {
   }
 };
 
-const UNASSIGNED_COURIER_LABEL = 'ממתין לשיבוץ';
+const PENDING_DELIVERY_STATUS_LABEL = 'ממתין לשיבוץ';
+const UNASSIGNED_COURIER_LABEL = '-';
 
 const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(' ');
 
-const CourierAssignmentLine: React.FC<{
-  assigned: boolean;
-  label: string;
+const DELIVERY_STATUS_LINE_META: Record<
+  DeliveryStatus,
+  {
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+    iconClassName?: string;
+  }
+> = {
+  pending: {
+    label: PENDING_DELIVERY_STATUS_LABEL,
+    icon: LoaderCircle,
+    iconClassName: 'animate-spin',
+  },
+  assigned: {
+    label: 'שובץ לשליח',
+    icon: Bike,
+  },
+  delivering: {
+    label: 'במסירה',
+    icon: Package,
+  },
+  delivered: {
+    label: 'נמסר',
+    icon: CheckCircle2,
+  },
+  cancelled: {
+    label: 'בוטל',
+    icon: XCircle,
+  },
+  expired: {
+    label: 'פג תוקף',
+    icon: TimerOff,
+  },
+};
+
+const DeliveryStatusLine: React.FC<{
+  status: DeliveryStatus;
   delivery?: Delivery;
-  vehicleType?: string;
   className?: string;
-  closed?: boolean;
-}> = ({ assigned, label, delivery, vehicleType, className, closed = false }) => {
-  const Icon = assigned ? (vehicleType === 'רכב' ? Car : Bike) : closed ? TimerOff : LoaderCircle;
+}> = ({ status, delivery, className }) => {
+  const meta = DELIVERY_STATUS_LINE_META[status];
+  const Icon = meta.icon;
 
   const line = (
-    <span className={joinClassNames('flex min-w-0 items-center gap-2 text-right', className)} dir="rtl">
+    <span
+      className={joinClassNames(
+        'delivery-status-line',
+        `delivery-status-line--${status}`,
+        'inline-flex min-w-0 items-center gap-2 text-right',
+        className,
+      )}
+      dir="rtl"
+    >
       <Icon
         className={joinClassNames(
-          'h-3.5 w-3.5 shrink-0',
-          assigned
-            ? 'text-app-text-secondary'
-            : closed
-              ? 'text-app-text-muted'
-              : 'animate-spin text-app-warning-text',
+          'delivery-status-line__icon h-3.5 w-3.5 shrink-0',
+          meta.iconClassName,
         )}
+        aria-hidden="true"
       />
-      <span
-        className={joinClassNames(
-          'min-w-0 truncate text-sm font-normal',
-          assigned ? 'text-app-text' : closed ? 'text-app-text-muted' : 'text-app-text-secondary',
-        )}
-      >
-        {label}
+      <span className="delivery-status-line__label min-w-0 truncate text-sm font-normal">
+        {meta.label}
       </span>
     </span>
   );
@@ -169,6 +199,38 @@ const CourierAssignmentLine: React.FC<{
     >
       {line}
     </DeliveryStageTimelineTooltip>
+  );
+};
+
+const DeliveryCourierLine: React.FC<{
+  assigned: boolean;
+  label: string;
+  vehicleType?: string;
+  className?: string;
+}> = ({ assigned, label, vehicleType, className }) => {
+  const Icon = vehicleType === 'רכב' ? Car : Bike;
+
+  return (
+    <span
+      className={joinClassNames(
+        'delivery-courier-line inline-flex min-w-0 items-center gap-2 text-right',
+        assigned ? 'delivery-courier-line--assigned' : 'delivery-courier-line--empty',
+        className,
+      )}
+      dir="rtl"
+    >
+      {assigned ? (
+        <Icon className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
+      ) : null}
+      <span
+        className={joinClassNames(
+          'min-w-0 truncate text-sm font-normal',
+          assigned ? 'text-app-text' : 'text-app-text-muted',
+        )}
+      >
+        {assigned ? label : UNASSIGNED_COURIER_LABEL}
+      </span>
+    </span>
   );
 };
 
@@ -488,16 +550,13 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
   const [assignmentMenuPos, setAssignmentMenuPos] = useState<{ x: number; y: number } | null>(null);
   const tableAssignmentAnchorRef = useRef<HTMLDivElement | null>(null);
   const compactAssignmentAnchorRef = useRef<HTMLDivElement | null>(null);
-  const config = STATUS_CONFIG[delivery.status];
-  const StatusIcon = config.icon;
   const restaurantName = delivery.rest_name || delivery.restaurantName || restaurant?.name || '-';
   const restaurantMeta = delivery.restaurantAddress || delivery.rest_city || delivery.restaurantCity || 'מסעדה';
   const clientName = delivery.client_name || delivery.customerName || '-';
   const clientAddress = delivery.client_full_address || delivery.address;
   const hasAssignedCourier = Boolean(courier || delivery.courierId || delivery.runner_id || delivery.courierName);
   const courierName = courier?.name || delivery.courierName || (hasAssignedCourier ? 'לא ידוע' : UNASSIGNED_COURIER_LABEL);
-  const isExpiredWithoutCourier = delivery.status === 'expired' && !hasAssignedCourier;
-  const courierColumnText = hasAssignedCourier ? courierName : isExpiredWithoutCourier ? 'פג תוקף' : UNASSIGNED_COURIER_LABEL;
+  const courierColumnText = hasAssignedCourier ? courierName : UNASSIGNED_COURIER_LABEL;
   const courierVehicleType = hasAssignedCourier ? courier?.vehicleType || delivery.vehicle_type : undefined;
   const shouldShowCourierAssignment = delivery.status !== 'cancelled' || hasAssignedCourier;
   const distanceLabel = delivery.delivery_distance ? `${delivery.delivery_distance.toFixed(1)} ק״מ` : '-';
@@ -568,17 +627,6 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
           }}
           title={`פעולות משלוח ${delivery.orderNumber}`}
         />
-      </div>
-
-      <div
-        className="delivery-row__progress flex min-h-0 items-center justify-center"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <span className="delivery-row__stage-cluster">
-          <DeliveryStageTimelineTooltip delivery={delivery}>
-            <DeliveryStageIndicator status={delivery.status} />
-          </DeliveryStageTimelineTooltip>
-        </span>
       </div>
 
       <div className="delivery-row__order flex min-h-0 min-w-0 flex-col justify-center" dir="rtl">
@@ -653,21 +701,25 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         </div>
 
         <div className="delivery-row__route-compact-footer flex min-w-0 items-center justify-between gap-3" dir="rtl">
-          {shouldShowCourierAssignment ? (
-            <div
-              ref={compactAssignmentAnchorRef}
-              className="delivery-row__route-compact-courier flex rounded-md"
-            >
-              <CourierAssignmentLine
-                assigned={hasAssignedCourier}
-                closed={isExpiredWithoutCourier}
-                delivery={delivery}
-                label={courierColumnText}
-                vehicleType={courierVehicleType}
-                className="w-full justify-start whitespace-nowrap px-1 py-1"
-              />
-            </div>
-          ) : null}
+          <div className="delivery-row__route-compact-status flex min-w-0 rounded-md">
+            <DeliveryStatusLine
+              status={delivery.status}
+              delivery={delivery}
+              className="w-full justify-start whitespace-nowrap px-1 py-1"
+            />
+          </div>
+
+          <div
+            ref={compactAssignmentAnchorRef}
+            className="delivery-row__route-compact-courier flex min-w-0 rounded-md"
+          >
+            <DeliveryCourierLine
+              assigned={hasAssignedCourier}
+              label={courierColumnText}
+              vehicleType={courierVehicleType}
+              className="w-full justify-start whitespace-nowrap px-1 py-1"
+            />
+          </div>
 
           <DeliveryDistanceInline
             label={distanceLabel}
@@ -676,22 +728,28 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         </div>
       </div>
 
+      <div className="delivery-row__status-table min-h-0 min-w-0 items-center justify-start">
+        <div className="delivery-row__route-table-status flex min-w-0 rounded-md">
+          <DeliveryStatusLine
+            status={delivery.status}
+            delivery={delivery}
+            className="delivery-row__status-line w-full px-1 py-1"
+          />
+        </div>
+      </div>
+
       <div className="delivery-row__courier-table min-h-0 min-w-0 items-center justify-start">
-        {shouldShowCourierAssignment ? (
-          <div
-            ref={tableAssignmentAnchorRef}
-            className="delivery-row__route-table-courier flex rounded-md"
-          >
-            <CourierAssignmentLine
-              assigned={hasAssignedCourier}
-              closed={isExpiredWithoutCourier}
-              delivery={delivery}
-              label={courierColumnText}
-              vehicleType={courierVehicleType}
-              className="delivery-row__courier-line w-full px-1 py-1"
-            />
-          </div>
-        ) : null}
+        <div
+          ref={tableAssignmentAnchorRef}
+          className="delivery-row__route-table-courier flex min-w-0 rounded-md"
+        >
+          <DeliveryCourierLine
+            assigned={hasAssignedCourier}
+            label={courierColumnText}
+            vehicleType={courierVehicleType}
+            className="delivery-row__courier-line w-full px-1 py-1"
+          />
+        </div>
       </div>
 
       <DeliveryAssignmentMenu
@@ -840,16 +898,13 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [assignmentMenuPos, setAssignmentMenuPos] = useState<{ x: number; y: number } | null>(null);
   const assignmentAnchorRef = useRef<HTMLDivElement | null>(null);
-  const config = STATUS_CONFIG[delivery.status];
-  const StatusIcon = config.icon;
   const restaurantName = delivery.rest_name || delivery.restaurantName || restaurant?.name || '-';
   const restaurantMeta = delivery.restaurantAddress || delivery.rest_city || delivery.restaurantCity || 'מסעדה';
   const clientName = delivery.client_name || delivery.customerName || '-';
   const clientAddress = delivery.client_full_address || delivery.address || '-';
   const hasAssignedCourier = Boolean(courier || delivery.courierId || delivery.runner_id || delivery.courierName);
   const courierName = courier?.name || delivery.courierName || (hasAssignedCourier ? 'לא ידוע' : UNASSIGNED_COURIER_LABEL);
-  const isExpiredWithoutCourier = delivery.status === 'expired' && !hasAssignedCourier;
-  const courierColumnText = hasAssignedCourier ? courierName : isExpiredWithoutCourier ? 'פג תוקף' : UNASSIGNED_COURIER_LABEL;
+  const courierColumnText = hasAssignedCourier ? courierName : UNASSIGNED_COURIER_LABEL;
   const courierVehicleType = hasAssignedCourier ? courier?.vehicleType || delivery.vehicle_type : undefined;
   const priceLabel = formatCurrency(getDeliveryCustomerCharge(delivery));
 
@@ -908,11 +963,6 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
     >
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="shrink-0" onClick={(event) => event.stopPropagation()}>
-            <DeliveryStageTimelineTooltip delivery={delivery}>
-              <DeliveryStageIndicator status={delivery.status} />
-            </DeliveryStageTimelineTooltip>
-          </span>
           <div className="min-w-0">
             <button
               type="button"
@@ -974,10 +1024,8 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
               ref={assignmentAnchorRef}
               className="mt-1 max-w-full rounded-md"
             >
-              <CourierAssignmentLine
+              <DeliveryCourierLine
                 assigned={hasAssignedCourier}
-                closed={isExpiredWithoutCourier}
-                delivery={delivery}
                 label={courierColumnText}
                 vehicleType={courierVehicleType}
                 className="px-1 py-1"
@@ -995,10 +1043,7 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
       </div>
 
       <div className="mt-4 flex items-center justify-between border-t border-app-nav-border pt-3 text-xs text-app-text-secondary">
-        <span className={joinClassNames('inline-flex items-center gap-1.5 font-medium', config.tableColor)}>
-          <StatusIcon className="h-3.5 w-3.5" />
-          <span>{config.label}</span>
-        </span>
+        <DeliveryStatusLine status={delivery.status} delivery={delivery} />
         <span>{delivery.delivery_distance ? `${delivery.delivery_distance.toFixed(1)} ק״מ` : '-'}</span>
       </div>
 
@@ -1189,15 +1234,34 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
     if (!element || !onSearchRowHiddenChange) return undefined;
 
     const scrollState = scrollDirectionRef.current;
+    const desktopViewportQuery =
+      typeof window.matchMedia === 'function'
+        ? window.matchMedia('(min-width: 1024px)')
+        : null;
+    const isDesktopViewport = () => desktopViewportQuery?.matches ?? false;
     const setHidden = (hidden: boolean) => {
       if (scrollState.hidden === hidden) return;
       scrollState.hidden = hidden;
       onSearchRowHiddenChange(hidden);
     };
+    const syncDesktopVisibility = () => {
+      if (isDesktopViewport()) {
+        scrollState.lastScrollTop = element.scrollTop;
+        setHidden(false);
+      }
+    };
     const handleScroll = () => {
       if (scrollState.animationFrame) return;
       scrollState.animationFrame = window.requestAnimationFrame(() => {
         const nextScrollTop = element.scrollTop;
+
+        if (isDesktopViewport()) {
+          setHidden(false);
+          scrollState.lastScrollTop = Math.max(0, nextScrollTop);
+          scrollState.animationFrame = 0;
+          return;
+        }
+
         const delta = nextScrollTop - scrollState.lastScrollTop;
 
         if (nextScrollTop < 12) {
@@ -1215,7 +1279,9 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
 
     scrollState.lastScrollTop = element.scrollTop;
     setHidden(false);
+    syncDesktopVisibility();
     element.addEventListener('scroll', handleScroll, { passive: true });
+    desktopViewportQuery?.addEventListener('change', syncDesktopVisibility);
 
     return () => {
       if (scrollState.animationFrame) {
@@ -1223,6 +1289,7 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
         scrollState.animationFrame = 0;
       }
       element.removeEventListener('scroll', handleScroll);
+      desktopViewportQuery?.removeEventListener('change', syncDesktopVisibility);
       setHidden(false);
     };
   }, [filteredDeliveries.length, onSearchRowHiddenChange]);

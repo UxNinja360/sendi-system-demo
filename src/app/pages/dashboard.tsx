@@ -405,11 +405,14 @@ const SendiPlusCard: React.FC<{
 }) => {
   const isSendiPlusEnabled = termsAccepted && isSystemOpen;
   const receivesDeliveries = canReceiveSendiPlusDeliveries(radiusKm, isSendiPlusEnabled);
+  const canActivateFromCard = isSystemOpen && !isRefreshing && !isSendiPlusEnabled;
   const [isDetailsOpen, setIsDetailsOpen] = React.useState(
     () => isSendiPlusEnabled && readStoredSendiPlusDetailsOpen(),
   );
   const [isRadiusBubbleVisible, setIsRadiusBubbleVisible] = React.useState(false);
+  const [isActivationPulseVisible, setIsActivationPulseVisible] = React.useState(false);
   const radiusBubbleHideTimeoutRef = React.useRef<number | null>(null);
+  const activationPulseTimeoutRef = React.useRef<number | null>(null);
   const radiusPercent = (radiusKm / MAX_SENDI_PLUS_RADIUS_KM) * 100;
   const isAccordionOpen = isSendiPlusEnabled && isDetailsOpen;
   const termsTextClassName = isSendiPlusEnabled
@@ -439,6 +442,23 @@ const SendiPlusCard: React.FC<{
     window.clearTimeout(radiusBubbleHideTimeoutRef.current);
     radiusBubbleHideTimeoutRef.current = null;
   }, []);
+  const clearActivationPulseTimeout = React.useCallback(() => {
+    if (activationPulseTimeoutRef.current === null) return;
+
+    window.clearTimeout(activationPulseTimeoutRef.current);
+    activationPulseTimeoutRef.current = null;
+  }, []);
+  const triggerActivationPulse = React.useCallback(() => {
+    if (typeof window === 'undefined') return;
+
+    clearActivationPulseTimeout();
+    setIsActivationPulseVisible(true);
+
+    activationPulseTimeoutRef.current = window.setTimeout(() => {
+      setIsActivationPulseVisible(false);
+      activationPulseTimeoutRef.current = null;
+    }, 880);
+  }, [clearActivationPulseTimeout]);
   const showRadiusBubble = React.useCallback(() => {
     clearRadiusBubbleHideTimeout();
     setIsRadiusBubbleVisible(true);
@@ -481,10 +501,12 @@ const SendiPlusCard: React.FC<{
       return nextValue;
     });
   }, [isSendiPlusEnabled]);
-  const handleTermsAcceptedChange = React.useCallback(() => {
+  const setTermsAcceptedFromControl = React.useCallback((nextTermsAccepted: boolean) => {
     if (!isSystemOpen || isRefreshing) return;
 
-    const nextTermsAccepted = !termsAccepted;
+    if (nextTermsAccepted && !isSendiPlusEnabled) {
+      triggerActivationPulse();
+    }
 
     onTermsAcceptedChange(nextTermsAccepted);
 
@@ -499,23 +521,84 @@ const SendiPlusCard: React.FC<{
       writeStoredSendiPlusDetailsOpen(true);
       setIsDetailsOpen(true);
     }
-  }, [hideRadiusBubble, isAccordionOpen, isRefreshing, isSystemOpen, onTermsAcceptedChange, termsAccepted]);
+  }, [
+    hideRadiusBubble,
+    isAccordionOpen,
+    isRefreshing,
+    isSendiPlusEnabled,
+    isSystemOpen,
+    onTermsAcceptedChange,
+    triggerActivationPulse,
+  ]);
+  const activateFromCard = React.useCallback(() => {
+    if (!canActivateFromCard) return;
+
+    setTermsAcceptedFromControl(true);
+  }, [canActivateFromCard, setTermsAcceptedFromControl]);
+  const handleCardClick = React.useCallback((event: React.MouseEvent<HTMLElement>) => {
+    if (!canActivateFromCard) return;
+
+    const target = event.target;
+    if (
+      target instanceof Element &&
+      target.closest('[data-sendi-plus-control="true"]')
+    ) {
+      return;
+    }
+
+    activateFromCard();
+  }, [activateFromCard, canActivateFromCard]);
+  const handleCardKeyDown = React.useCallback((event: React.KeyboardEvent<HTMLElement>) => {
+    if (!canActivateFromCard) return;
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+
+    const target = event.target;
+    if (
+      target instanceof Element &&
+      target.closest('[data-sendi-plus-control="true"]')
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    activateFromCard();
+  }, [activateFromCard, canActivateFromCard]);
 
   React.useEffect(() => {
-    if (isSendiPlusEnabled) return;
+    if (isSystemOpen) return;
 
     writeStoredSendiPlusDetailsOpen(false);
     setIsDetailsOpen(false);
     hideRadiusBubble();
-  }, [hideRadiusBubble, isSendiPlusEnabled]);
+  }, [hideRadiusBubble, isSystemOpen]);
+
+  React.useEffect(() => {
+    if (!isSystemOpen || !termsAccepted) return;
+    if (!readStoredSendiPlusDetailsOpen()) return;
+
+    setIsDetailsOpen(true);
+  }, [isSystemOpen, termsAccepted]);
 
   React.useEffect(() => clearRadiusBubbleHideTimeout, [clearRadiusBubbleHideTimeout]);
+  React.useEffect(() => clearActivationPulseTimeout, [clearActivationPulseTimeout]);
 
   return (
-    <section className="rounded-[8px] border border-app-border bg-app-surface dark:border-[#252525] dark:bg-[#0A0A0A]">
+    <section
+      className={`sendi-plus-card rounded-[8px] border border-app-border bg-app-surface dark:border-[#252525] dark:bg-[#0A0A0A] ${
+        isSendiPlusEnabled ? 'sendi-plus-card--active' : 'sendi-plus-card--off'
+      } ${canActivateFromCard ? 'sendi-plus-card--teaser cursor-pointer' : ''} ${
+        isActivationPulseVisible ? 'sendi-plus-card--igniting' : ''
+      }`}
+      onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
+      role={canActivateFromCard ? 'button' : undefined}
+      tabIndex={canActivateFromCard ? 0 : undefined}
+      aria-label={canActivateFromCard ? `הפעל ${SENDI_PLUS_LABEL}` : undefined}
+    >
       <div className="flex items-center gap-3 px-3 py-2.5 sm:px-4 sm:py-3" dir="ltr">
         <button
           type="button"
+          data-sendi-plus-control="true"
           data-haptic="selection"
           onClick={toggleDetailsOpen}
           disabled={!isSendiPlusEnabled}
@@ -646,14 +729,19 @@ const SendiPlusCard: React.FC<{
       </div>
 
       <div className="border-t border-app-border px-3 py-2 sm:px-4 dark:border-[#252525]" dir="rtl">
-        <div className="flex min-w-0 items-center justify-between gap-3">
-          <span className={`min-w-0 truncate text-xs font-normal ${termsTextClassName}`}>
+        <div
+          data-pull-refresh-ignore="true"
+          data-sidebar-swipe-ignore="true"
+          className="flex min-w-0 items-center justify-between gap-3"
+        >
+          <span className={`sendi-plus-terms-text min-w-0 truncate text-xs font-normal ${termsTextClassName}`}>
             {termsSummaryText}
           </span>
           <Toggle
             checked={isSendiPlusEnabled}
-            onChange={handleTermsAcceptedChange}
+            onChange={() => setTermsAcceptedFromControl(!isSendiPlusEnabled)}
             disabled={!isSystemOpen || isRefreshing}
+            className={canActivateFromCard ? 'sendi-plus-card__toggle' : undefined}
             ariaLabel="אישור תנאי סנדי פלוס"
           />
         </div>
@@ -897,8 +985,6 @@ export const Dashboard: React.FC = () => {
     if (!sendiPlusTermsAccepted) {
       setSendiPlusRadiusKm(DEFAULT_SENDI_PLUS_RADIUS_KM);
     }
-
-    writeStoredSendiPlusTermsAccepted(sendiPlusTermsAccepted);
   }, [sendiPlusTermsAccepted]);
 
   React.useEffect(() => {
@@ -946,14 +1032,13 @@ export const Dashboard: React.FC = () => {
   }, []);
 
   const handleSendiPlusTermsAcceptedChange = React.useCallback((value: boolean) => {
-    if (value && !state.isSystemOpen) return;
-
+    writeStoredSendiPlusTermsAccepted(value);
     setSendiPlusTermsAccepted(value);
 
     if (!value) {
       setSendiPlusRadiusKm(DEFAULT_SENDI_PLUS_RADIUS_KM);
     }
-  }, [state.isSystemOpen]);
+  }, []);
 
   React.useEffect(() => {
     if (state.isSystemOpen || !sendiPlusTermsAccepted) return;
