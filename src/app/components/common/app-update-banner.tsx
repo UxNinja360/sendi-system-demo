@@ -1,28 +1,33 @@
 import React from 'react';
 import { RefreshCw } from 'lucide-react';
 import {
+  acknowledgeCurrentBuildUpdate,
   activateWaitingAppUpdate,
   APP_UPDATE_ACTIVATING_EVENT,
   APP_UPDATE_AVAILABLE_EVENT,
+  getCurrentBuildUpdatePending,
   getWaitingAppUpdateRegistration,
 } from '../../pwa/app-update';
 
 export const AppUpdateBanner: React.FC = () => {
   const [visible, setVisible] = React.useState(false);
   const [updating, setUpdating] = React.useState(false);
+  const [hasWaitingWorker, setHasWaitingWorker] = React.useState(false);
   const updateButtonRef = React.useRef<HTMLButtonElement | null>(null);
 
   React.useEffect(() => {
     const showBanner = () => {
+      setHasWaitingWorker(Boolean(getWaitingAppUpdateRegistration()?.waiting));
       setUpdating(false);
       setVisible(true);
     };
     const markUpdating = () => {
+      setHasWaitingWorker(true);
       setUpdating(true);
       setVisible(true);
     };
 
-    if (getWaitingAppUpdateRegistration()) {
+    if (getWaitingAppUpdateRegistration()?.waiting || getCurrentBuildUpdatePending()) {
       showBanner();
     }
 
@@ -44,14 +49,16 @@ export const AppUpdateBanner: React.FC = () => {
     setUpdating(true);
 
     const didStartUpdate = activateWaitingAppUpdate();
-    if (!didStartUpdate) {
-      window.location.reload();
+    if (didStartUpdate) {
+      window.setTimeout(() => {
+        window.location.reload();
+      }, 4000);
       return;
     }
 
-    window.setTimeout(() => {
-      window.location.reload();
-    }, 4000);
+    acknowledgeCurrentBuildUpdate();
+    setUpdating(false);
+    setVisible(false);
   };
 
   if (!visible) return null;
@@ -78,7 +85,9 @@ export const AppUpdateBanner: React.FC = () => {
             <div id="app-update-description" className="mt-1 text-sm leading-6 text-app-text-secondary">
               {updating
                 ? 'מרענן לגרסה החדשה. האפליקציה תחזור מיד.'
-                : 'יש גרסה חדשה זמינה. כדי להמשיך להשתמש באפליקציה צריך לעדכן עכשיו.'}
+                : hasWaitingWorker
+                  ? 'יש גרסה חדשה זמינה. כדי להמשיך להשתמש באפליקציה צריך לעדכן עכשיו.'
+                  : 'הגרסה החדשה נטענה במכשיר. אשר כדי להמשיך לעבוד בגרסה המעודכנת.'}
             </div>
           </div>
         </div>
@@ -91,7 +100,7 @@ export const AppUpdateBanner: React.FC = () => {
           className="mt-4 inline-flex h-10 w-full shrink-0 items-center justify-center rounded-[7px] bg-app-brand-solid px-4 text-sm font-bold text-app-background transition-colors hover:bg-app-brand-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/40 disabled:cursor-wait disabled:opacity-70"
           data-haptic="success"
         >
-          {updating ? 'מעדכן' : 'עדכן עכשיו'}
+          {updating ? 'מעדכן' : hasWaitingWorker ? 'עדכן עכשיו' : 'אישור'}
         </button>
       </div>
     </div>
