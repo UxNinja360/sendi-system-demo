@@ -10,6 +10,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       disable: false,
+      injectRegister: false,
       registerType: 'prompt',
       devOptions: {
         enabled: false,

@@ -4,6 +4,7 @@ export const APP_UPDATE_ACTIVATING_EVENT = 'sendi-app-update-activating';
 let waitingRegistration: ServiceWorkerRegistration | null = null;
 let activationRequested = false;
 let reloadStarted = false;
+let setupStarted = false;
 
 const watchedRegistrations = new WeakSet<ServiceWorkerRegistration>();
 
@@ -21,7 +22,7 @@ const watchRegistration = (registration: ServiceWorkerRegistration) => {
     if (!worker) return;
 
     worker.addEventListener('statechange', () => {
-      if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+      if (worker.state === 'installed' && (navigator.serviceWorker.controller || registration.active)) {
         emitUpdateAvailable(registration);
       }
     });
@@ -31,7 +32,7 @@ const watchRegistration = (registration: ServiceWorkerRegistration) => {
 const checkRegistrationForUpdate = (registration: ServiceWorkerRegistration) => {
   watchRegistration(registration);
 
-  if (registration.waiting && navigator.serviceWorker.controller) {
+  if (registration.waiting && (navigator.serviceWorker.controller || registration.active)) {
     emitUpdateAvailable(registration);
   }
 };
@@ -50,6 +51,8 @@ export const activateWaitingAppUpdate = () => {
 
 export const setupAppUpdateChecks = () => {
   if (!('serviceWorker' in navigator)) return;
+  if (setupStarted) return;
+  setupStarted = true;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (!activationRequested || reloadStarted) return;
@@ -58,17 +61,32 @@ export const setupAppUpdateChecks = () => {
     window.location.reload();
   });
 
+  const checkAndUpdateRegistration = (registration: ServiceWorkerRegistration) => {
+    checkRegistrationForUpdate(registration);
+    void registration.update().catch(() => undefined);
+  };
+
   const updateRegistrations = () => {
     void navigator.serviceWorker
       .getRegistrations()
       .then((registrations) => {
-        registrations.forEach((registration) => {
-          checkRegistrationForUpdate(registration);
-          void registration.update().catch(() => undefined);
-        });
+        registrations.forEach(checkAndUpdateRegistration);
       })
       .catch(() => undefined);
   };
+
+  void navigator.serviceWorker
+    .register('/sw.js', { scope: '/', updateViaCache: 'none' })
+    .then(checkAndUpdateRegistration)
+    .catch(() => undefined);
+
+  void navigator.serviceWorker.ready
+    .then(checkAndUpdateRegistration)
+    .catch(() => undefined);
+
+  updateRegistrations();
+  window.setTimeout(updateRegistrations, 1_000);
+  window.setTimeout(updateRegistrations, 5_000);
 
   window.addEventListener(
     'load',
@@ -79,7 +97,9 @@ export const setupAppUpdateChecks = () => {
     { once: true },
   );
 
+  window.addEventListener('pageshow', updateRegistrations);
   window.addEventListener('focus', updateRegistrations);
+  window.addEventListener('online', updateRegistrations);
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) updateRegistrations();
   });
