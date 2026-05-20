@@ -1,6 +1,5 @@
 import React from 'react';
 import { useNavigate } from 'react-router';
-import CountUp from 'react-countup';
 import {
   ArrowUp,
   Bike,
@@ -221,31 +220,63 @@ const AnimatedMetricNumber: React.FC<{
   refreshing: boolean;
   value: number;
 }> = ({ refreshing, value }) => {
-  const previousValueRef = React.useRef(value);
-  const previousValue = previousValueRef.current;
-  const shouldAnimate = !refreshing && previousValue !== value;
+  const [displayValue, setDisplayValue] = React.useState(value);
+  const displayValueRef = React.useRef(value);
+  const animationFrameRef = React.useRef<number | null>(null);
+
+  const cancelAnimation = React.useCallback(() => {
+    if (typeof window === 'undefined' || animationFrameRef.current === null) return;
+
+    window.cancelAnimationFrame(animationFrameRef.current);
+    animationFrameRef.current = null;
+  }, []);
+
+  React.useEffect(() => () => cancelAnimation(), [cancelAnimation]);
 
   React.useEffect(() => {
-    if (!refreshing) {
-      previousValueRef.current = value;
+    if (refreshing) return undefined;
+
+    cancelAnimation();
+
+    const startValue = displayValueRef.current;
+    const endValue = value;
+
+    if (startValue === endValue || typeof window === 'undefined') {
+      displayValueRef.current = endValue;
+      setDisplayValue(endValue);
+      return undefined;
     }
-  }, [refreshing, value]);
+
+    const durationMs = 850;
+    const startedAt = window.performance.now();
+
+    const step = (now: number) => {
+      const progress = Math.min((now - startedAt) / durationMs, 1);
+      const easedProgress = 1 - Math.pow(1 - progress, 3);
+      const nextValue = Math.round(startValue + (endValue - startValue) * easedProgress);
+
+      displayValueRef.current = nextValue;
+      setDisplayValue(nextValue);
+
+      if (progress < 1) {
+        animationFrameRef.current = window.requestAnimationFrame(step);
+        return;
+      }
+
+      displayValueRef.current = endValue;
+      setDisplayValue(endValue);
+      animationFrameRef.current = null;
+    };
+
+    animationFrameRef.current = window.requestAnimationFrame(step);
+
+    return cancelAnimation;
+  }, [cancelAnimation, refreshing, value]);
 
   return (
     <RefreshingMetricValue
       refreshing={refreshing}
-      value={
-        shouldAnimate ? (
-          <CountUp
-            duration={0.85}
-            end={value}
-            formattingFn={formatNumber}
-            start={previousValue}
-          />
-        ) : (
-          formatNumber(value)
-        )
-      }
+      value={formatNumber(displayValue)}
     />
   );
 };
