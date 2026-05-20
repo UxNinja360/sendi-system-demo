@@ -89,16 +89,16 @@ body {
 .twilight .dashboard-delivery-summary,
 .twilight .dashboard-delivery-summary__status-row,
 .twilight .dashboard-delivery-summary__row > * + * {
-  border-color: var(--app-border-strong);
+  border-color: var(--app-border);
 }
 
 .twilight .dashboard-delivery-summary__status-row {
-  border-top-color: var(--app-border-strong);
+  border-top-color: var(--app-border);
 }
 
 .twilight .dashboard-delivery-summary__row > * + * {
-  border-inline-start-color: var(--app-border-strong);
-  border-right-color: var(--app-border-strong);
+  border-inline-start-color: var(--app-border);
+  border-right-color: var(--app-border);
 }
 
 @media (hover: none), (pointer: coarse) {
