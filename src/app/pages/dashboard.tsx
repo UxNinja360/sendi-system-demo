@@ -1006,7 +1006,7 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
         <div
-          className="mx-auto flex w-full max-w-[1280px] flex-col gap-[14px] transition-transform duration-200"
+          className="mx-auto flex w-full max-w-[1280px] flex-col gap-[10px] transition-transform duration-200"
         >
           <section className="flex w-full items-center justify-between gap-3">
             <div className="min-w-0 text-right">
@@ -1105,7 +1105,7 @@ export const Dashboard: React.FC = () => {
               })}
               </div>
             </div>
-            <div className="mt-[14px] grid grid-cols-2 gap-[14px] min-[520px]:grid-cols-6">
+            <div className="mt-[10px] grid grid-cols-2 gap-[10px] min-[520px]:grid-cols-6">
               <section
                 aria-label="שליחים"
                 className="dashboard-status-card col-span-2 min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] dark:hover:bg-[#111111] min-[520px]:col-span-6"
