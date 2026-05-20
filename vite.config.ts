@@ -4,16 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
-const appBuildId =
-  process.env.VERCEL_GIT_COMMIT_SHA ??
-  process.env.VERCEL_DEPLOYMENT_ID ??
-  process.env.SOURCE_VERSION ??
-  new Date().toISOString();
-
 export default defineConfig({
-  define: {
-    __SENDI_APP_BUILD_ID__: JSON.stringify(appBuildId),
-  },
   plugins: [
     react(),
     tailwindcss(),
