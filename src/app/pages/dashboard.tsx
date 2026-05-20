@@ -9,6 +9,7 @@ import {
   Loader2,
   PackageOpen,
   Power,
+  PowerOff,
   Plus,
   Store,
   Timer,
@@ -1147,8 +1148,10 @@ export const Dashboard: React.FC = () => {
                   icon={
                     pullRefreshArmed ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
+                    ) : state.isSystemOpen ? (
                       <Power className="h-3.5 w-3.5" />
+                    ) : (
+                      <PowerOff className="h-3.5 w-3.5" />
                     )
                   }
                 />

@@ -779,6 +779,7 @@ export const DeliveriesPage: React.FC = () => {
           <PageToolbar
             showBottomBorder={false}
             pairControlsOnMobile
+            toolbarHidden={searchRowHidden}
             actionsHidden={searchRowHidden}
             actionsClassName="relative z-[80]"
             controlsClassName="relative z-10"

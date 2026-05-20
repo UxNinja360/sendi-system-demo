@@ -21,6 +21,7 @@ type PageToolbarProps = {
   actionsClassName?: string;
   pairControlsOnMobile?: boolean;
   actionsHidden?: boolean;
+  toolbarHidden?: boolean;
 };
 
 const toDateInputValue = (date: Date) =>
@@ -41,6 +42,7 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
   actionsClassName = '',
   pairControlsOnMobile = false,
   actionsHidden = false,
+  toolbarHidden = false,
 }) => {
   const primaryActionMenuRef = React.useRef<HTMLDivElement | null>(null);
   const [primaryActionMenuOpen, setPrimaryActionMenuOpen] = React.useState(false);
@@ -122,7 +124,11 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
     <>
       {hasToolbarRow ? (
         <div
-          className={`app-toolbar-shell sticky top-0 z-20 shrink-0 bg-app-background dark:bg-[#000000] ${
+          className={`app-toolbar-shell sticky top-0 z-20 shrink-0 bg-app-background transition-[max-height,opacity,transform] duration-200 ease-out dark:bg-[#000000] ${
+            toolbarHidden
+              ? 'pointer-events-none max-h-0 -translate-y-full overflow-hidden opacity-0'
+              : 'max-h-[9.5rem] translate-y-0 overflow-visible opacity-100'
+          } ${
             showBottomBorder ? 'border-b border-app-border dark:border-app-nav-border' : ''
           }`.trim()}
         >
