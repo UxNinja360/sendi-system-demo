@@ -62,8 +62,20 @@ const getDeliveriesStatusFilterPath = (statuses: DeliveryStatus[]) =>
 const formatRadiusKm = formatSendiPlusRadiusKm;
 const SENDI_PLUS_TERMS_TEXT =
   'מחייב עמידה בזמני משלוח של עד 60 דקות מסירה';
+const SENDI_PLUS_DETAILS_OPEN_STORAGE_KEY = 'dashboard-sendi-plus-details-open';
 const DASHBOARD_PULL_REFRESH_THRESHOLD = 72;
 const DASHBOARD_PULL_REFRESH_MAX = 124;
+
+const readStoredSendiPlusDetailsOpen = () => {
+  if (typeof window === 'undefined') return true;
+
+  try {
+    const stored = window.localStorage.getItem(SENDI_PLUS_DETAILS_OPEN_STORAGE_KEY);
+    return stored === null ? true : stored === 'true';
+  } catch {
+    return true;
+  }
+};
 
 const STATUS_META: Array<{
   id: DeliveryStatus;
@@ -327,7 +339,7 @@ const SendiPlusCard: React.FC<{
 }) => {
   const isSendiPlusEnabled = termsAccepted;
   const receivesDeliveries = canReceiveSendiPlusDeliveries(radiusKm, termsAccepted);
-  const [isDetailsOpen, setIsDetailsOpen] = React.useState(true);
+  const [isDetailsOpen, setIsDetailsOpen] = React.useState(readStoredSendiPlusDetailsOpen);
   const [isRadiusBubbleVisible, setIsRadiusBubbleVisible] = React.useState(false);
   const radiusBubbleHideTimeoutRef = React.useRef<number | null>(null);
   const radiusPercent = (radiusKm / MAX_SENDI_PLUS_RADIUS_KM) * 100;
@@ -389,14 +401,24 @@ const SendiPlusCard: React.FC<{
     showRadiusBubble();
     hideRadiusBubble(900);
   };
+  const toggleDetailsOpen = React.useCallback(() => {
+    setIsDetailsOpen((value) => {
+      const nextValue = !value;
+
+      try {
+        window.localStorage.setItem(
+          SENDI_PLUS_DETAILS_OPEN_STORAGE_KEY,
+          String(nextValue),
+        );
+      } catch {
+        // If storage is unavailable, the in-memory state still reflects the choice.
+      }
+
+      return nextValue;
+    });
+  }, []);
 
   React.useEffect(() => clearRadiusBubbleHideTimeout, [clearRadiusBubbleHideTimeout]);
-
-  React.useEffect(() => {
-    if (termsAccepted) {
-      setIsDetailsOpen(true);
-    }
-  }, [termsAccepted]);
 
   return (
     <section className="rounded-[8px] border border-app-border bg-app-surface dark:border-[#252525] dark:bg-[#0A0A0A]">
@@ -404,7 +426,7 @@ const SendiPlusCard: React.FC<{
         <button
           type="button"
           data-haptic="selection"
-          onClick={() => setIsDetailsOpen((value) => !value)}
+          onClick={toggleDetailsOpen}
           className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0a84ff]/30 dark:hover:bg-[#1f1f1f]"
           aria-label={isAccordionOpen ? 'סגור פרטי סנדי פלוס' : 'פתח פרטי סנדי פלוס'}
           aria-controls="sendi-plus-details"
