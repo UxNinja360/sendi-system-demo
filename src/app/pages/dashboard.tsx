@@ -344,6 +344,9 @@ const SendiPlusCard: React.FC<{
   const termsTextClassName = termsAccepted
     ? 'text-app-text-secondary'
     : 'text-app-text-muted opacity-70';
+  const helperTextClassName = termsAccepted
+    ? 'text-app-text-secondary'
+    : 'text-app-text-muted opacity-70';
   const selectedRadiusText = `${formatRadiusKm(radiusKm)} ק״מ`;
   const radiusHelperText = !termsAccepted
     ? 'הפעל את המתג למטה כדי לפתוח קבלת משלוחי סנדי פלוס, ואז בחר רדיוס שירות.'
@@ -539,7 +542,7 @@ const SendiPlusCard: React.FC<{
       >
         <div className="sendi-plus-accordion__inner">
           <div className="border-t border-app-border px-3 pb-4 pt-4 sm:px-4 dark:border-[#252525]">
-            <p className="mb-4 text-right text-xs font-normal leading-5 text-app-text-secondary" dir="rtl">
+            <p className={`mb-4 text-right text-xs font-normal leading-5 ${helperTextClassName}`} dir="rtl">
               {radiusHelperText}
             </p>
             <div className="relative px-1.5">
