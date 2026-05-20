@@ -340,10 +340,7 @@ const SendiPlusCard: React.FC<{
   const [isRadiusBubbleVisible, setIsRadiusBubbleVisible] = React.useState(false);
   const radiusBubbleHideTimeoutRef = React.useRef<number | null>(null);
   const radiusPercent = (radiusKm / MAX_SENDI_PLUS_RADIUS_KM) * 100;
-  const isAccordionOpen = termsAccepted && isDetailsOpen;
-  const secondaryTextClassName = isSendiPlusEnabled
-    ? 'text-app-text-secondary'
-    : 'text-app-text-muted opacity-70';
+  const isAccordionOpen = isDetailsOpen;
   const selectedRadiusText = `${formatRadiusKm(radiusKm)} ק״מ`;
   const radiusHelperText = !termsAccepted
     ? 'הפעל את המתג למטה כדי לפתוח קבלת משלוחי סנדי פלוס, ואז בחר רדיוס שירות.'
@@ -390,7 +387,9 @@ const SendiPlusCard: React.FC<{
   React.useEffect(() => clearRadiusBubbleHideTimeout, [clearRadiusBubbleHideTimeout]);
 
   React.useEffect(() => {
-    setIsDetailsOpen(termsAccepted);
+    if (termsAccepted) {
+      setIsDetailsOpen(true);
+    }
   }, [termsAccepted]);
 
   React.useEffect(() => {
@@ -474,12 +473,9 @@ const SendiPlusCard: React.FC<{
 
         <button
           type="button"
-          data-haptic={termsAccepted ? 'selection' : 'off'}
+          data-haptic="selection"
           onClick={() => setIsDetailsOpen((value) => !value)}
-          disabled={!termsAccepted}
-          className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0a84ff]/30 disabled:cursor-default dark:hover:bg-[#1f1f1f] ${
-            termsAccepted ? 'text-app-text-secondary' : 'text-app-text-muted opacity-45'
-          }`}
+          className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0a84ff]/30 dark:hover:bg-[#1f1f1f]"
           aria-label={isAccordionOpen ? 'סגור פרטי סנדי פלוס' : 'פתח פרטי סנדי פלוס'}
           aria-controls="sendi-plus-details"
           aria-expanded={isAccordionOpen}
@@ -603,7 +599,7 @@ const SendiPlusCard: React.FC<{
 
       <div className="border-t border-app-border px-3 py-2.5 sm:px-4 dark:border-[#252525]" dir="rtl">
         <div className="flex min-w-0 items-center justify-between gap-3">
-          <span className={`min-w-0 truncate text-xs font-normal ${secondaryTextClassName}`}>
+          <span className="min-w-0 truncate text-xs font-normal text-app-text-secondary">
             {SENDI_PLUS_TERMS_TEXT}
           </span>
           <Toggle
