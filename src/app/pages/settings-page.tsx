@@ -104,6 +104,14 @@ const TEXT = {
   autoThemeHint: '\u05d4\u05ea\u05d0\u05de\u05d4 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9\u05ea \u05e9\u05dc \u05d4\u05de\u05de\u05e9\u05e7.',
   alerts: 'צלילים והתראות',
   alertsDescription: 'שליטה בצליל, רטט והתראות כשנכנס משלוח חדש.',
+  sounds: 'צלילים',
+  soundsDescription: 'הפעלת צליל, בחירת צליל ובדיקת שמע למשלוחים חדשים.',
+  soundChoice: 'בחירת צליל',
+  soundChoiceHint: 'בחר איזה צליל יופעל כשנכנס משלוח חדש.',
+  haptics: 'רטטים',
+  hapticsDescription: 'כל רטטי הממשק והרטטים של משלוח חדש במקום אחד.',
+  pushNotifications: 'התראות Push',
+  pushNotificationsDescription: 'הרשאות, התראות דפדפן ופוש אמיתי ברקע.',
   newDeliverySound: 'צליל משלוח חדש',
   newDeliverySoundHint: 'השמעת צליל קצר בכל משלוח חדש.',
   hapticFeedback: 'הפטיק בממשק',
@@ -133,6 +141,8 @@ const TEXT = {
   playSound: 'נגן',
   testHaptic: 'בדיקת רטט',
   playHaptic: 'רטט',
+  appearance: 'תצוגה',
+  appearanceDescription: 'העדפות תצוגה שמשפיעות על סביבת העבודה האישית.',
   advanced: '\u05de\u05ea\u05e7\u05d3\u05dd',
   advancedDescription: '\u05e4\u05e2\u05d5\u05dc\u05d5\u05ea \u05de\u05e2\u05e8\u05db\u05ea \u05e8\u05d2\u05d9\u05e9\u05d5\u05ea. \u05de\u05d5\u05de\u05dc\u05e5 \u05dc\u05d2\u05e2\u05ea \u05d1\u05d4\u05df \u05e8\u05e7 \u05db\u05e9\u05d1\u05d0\u05de\u05ea \u05e6\u05e8\u05d9\u05da.',
   logout: '\u05d4\u05ea\u05e0\u05ea\u05e7\u05d5\u05ea',
@@ -147,7 +157,7 @@ const TEXT = {
   resetConfirmAction: '\u05d0\u05e4\u05e1 \u05e2\u05db\u05e9\u05d9\u05d5',
   timeHintPrefix: '\u05e8\u05e5 \u05db\u05e8\u05d2\u05e2 \u05e2\u05dc x',
   pages: '\u05ea\u05e4\u05e2\u05d5\u05dc \u05d5\u05e2\u05de\u05d5\u05d3\u05d9\u05dd',
-  pagesDescription: '\u05db\u05dc \u05de\u05d4 \u05e9\u05d4\u05d9\u05d4 \u05d1\u05ea\u05e4\u05e8\u05d9\u05d8 \u05d4\u05e6\u05d3 \u05ea\u05d7\u05ea \u05ea\u05e4\u05e2\u05d5\u05dc, \u05e2\u05de\u05d5\u05d3\u05d9 \u05e0\u05d9\u05e1\u05d9\u05d5\u05df \u05d5\u05e2\u05de\u05d5\u05d3\u05d9\u05dd \u05d9\u05e9\u05e0\u05d9\u05dd.',
+  pagesDescription: 'מעברים לעמודי ניהול, כלי תפעול, ניסויים וארכיון בלי לפתוח אקורדיונים.',
   operationsPages: '\u05e2\u05de\u05d5\u05d3\u05d9 \u05ea\u05e4\u05e2\u05d5\u05dc',
   operationsPagesDescription: '\u05db\u05dc\u05d9 \u05e0\u05d9\u05d4\u05d5\u05dc \u05d9\u05d5\u05de\u05d9\u05d5\u05de\u05d9\u05d9\u05dd \u05dc\u05ea\u05e4\u05e2\u05d5\u05dc \u05d4\u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd, \u05d4\u05d0\u05d6\u05d5\u05e8\u05d9\u05dd \u05d5\u05d4\u05de\u05d7\u05d9\u05e8\u05d9\u05dd.',
   experimentPages: '\u05e2\u05de\u05d5\u05d3\u05d9 \u05e0\u05d9\u05e1\u05d9\u05d5\u05df',
@@ -164,15 +174,15 @@ const SettingRow: React.FC<{
   danger?: boolean;
 }> = ({ icon, title, hint, control, danger = false }) => (
   <div
-    className={`flex items-center justify-between gap-4 border-b px-4 py-3 last:border-b-0 ${
+    className={`grid gap-3 border-b px-3 py-3 last:border-b-0 sm:grid-cols-[1fr_auto] sm:items-center sm:px-4 ${
       danger
         ? 'border-red-100 bg-red-50/70 dark:border-red-500/10 dark:bg-red-500/5'
         : 'border-[#f1f1f1] dark:border-app-border'
     }`}
   >
-    <div className="min-w-0 flex items-center gap-3">
+    <div className="flex min-w-0 items-start gap-3">
       <div
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-9 sm:w-9 ${
           danger
             ? 'bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400'
             : 'bg-[#f5f5f5] text-app-brand dark:bg-app-surface dark:text-app-brand'
@@ -191,7 +201,7 @@ const SettingRow: React.FC<{
         ) : null}
       </div>
     </div>
-    <div className="shrink-0">{control}</div>
+    <div className="flex min-w-0 items-center justify-start sm:justify-end">{control}</div>
   </div>
 );
 
@@ -278,7 +288,7 @@ const SoundPicker: React.FC<{
   };
 
   return (
-    <div className="relative w-[180px] max-w-[48vw]" dir="rtl">
+    <div className="relative w-full sm:w-[180px] sm:max-w-[48vw]" dir="rtl">
       <button
         ref={triggerRef}
         type="button"
@@ -417,7 +427,7 @@ const ThemeModePicker: React.FC<{
   onChange: (mode: ThemeMode) => void;
 }> = ({ value, onChange }) => (
   <div
-    className="grid w-[282px] max-w-[62vw] grid-cols-3 gap-1 rounded-lg border border-app-border bg-app-interactive p-1"
+    className="grid w-full grid-cols-3 gap-1 rounded-lg border border-app-border bg-app-interactive p-1 sm:w-[282px] sm:max-w-[62vw]"
     dir="rtl"
     role="group"
     aria-label={TEXT.themeMode}
@@ -451,62 +461,98 @@ const SectionCard: React.FC<{
   description: string;
   children: React.ReactNode;
   danger?: boolean;
-}> = ({ icon, title, description, children, danger = false }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const contentId = React.useId();
-
-  return (
+}> = ({ icon, title, description, children, danger = false }) => (
+  <section
+    className={`overflow-hidden rounded-lg border ${
+      danger
+        ? 'border-red-200 bg-red-50/50 dark:border-red-500/20 dark:bg-red-500/5'
+        : 'border-[#e5e5e5] bg-white dark:border-app-border dark:bg-app-surface'
+    }`}
+  >
     <div
-      className={`overflow-hidden rounded-2xl border ${
+      className={`border-b px-3 py-3 sm:px-4 ${
         danger
-          ? 'border-red-200 bg-red-50/50 dark:border-red-500/20 dark:bg-red-500/5'
-          : 'border-[#e5e5e5] bg-white dark:border-app-border dark:bg-app-surface'
+          ? 'border-red-100 bg-red-50/80 dark:border-red-500/15 dark:bg-red-500/10'
+          : 'border-[#f1f1f1] bg-[#fafafa] dark:border-app-border dark:bg-app-surface'
       }`}
     >
-      <button
-        type="button"
-        data-haptic="selection"
-        aria-expanded={isOpen}
-        aria-controls={contentId}
-        onClick={() => setIsOpen((current) => !current)}
-        className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-right transition-colors ${
-          danger
-            ? 'bg-red-50 hover:bg-red-100/70 dark:bg-red-500/10 dark:hover:bg-red-500/15'
-            : 'bg-[#fafafa] hover:bg-[#f4f4f4] dark:bg-app-surface dark:hover:bg-app-surface-raised'
-        } ${isOpen ? 'border-b border-[#e5e5e5] dark:border-app-border' : ''}`}
-      >
+      <div className="flex min-w-0 items-start gap-2.5">
+        <div className="mt-0.5 shrink-0">{icon}</div>
         <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            {icon}
-            <span className={`truncate text-sm font-semibold ${danger ? 'text-red-700 dark:text-red-300' : 'text-[#0d0d12] dark:text-app-text'}`}>
-              {title}
-            </span>
-          </div>
-          <div className={`mt-1 text-xs ${danger ? 'text-red-600/80 dark:text-red-300/75' : 'text-[#666d80] dark:text-app-text-secondary'}`}>
+          <h2
+            className={`truncate text-sm font-bold ${
+              danger ? 'text-red-700 dark:text-red-300' : 'text-[#0d0d12] dark:text-app-text'
+            }`}
+          >
+            {title}
+          </h2>
+          <p
+            className={`mt-1 text-xs leading-5 ${
+              danger ? 'text-red-600/80 dark:text-red-300/75' : 'text-[#666d80] dark:text-app-text-secondary'
+            }`}
+          >
             {description}
-          </div>
+          </p>
         </div>
-        <ChevronDown
-          className={`h-4 w-4 shrink-0 transition-transform ${
-            isOpen ? 'rotate-180' : ''
-          } ${danger ? 'text-red-600 dark:text-red-300' : 'text-[#666d80] dark:text-app-text-secondary'}`}
-        />
-      </button>
-      {isOpen ? <div id={contentId}>{children}</div> : null}
+      </div>
     </div>
-  );
-};
+    <div>{children}</div>
+  </section>
+);
 
-const OpenButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
+const SettingsLinkRow: React.FC<{
+  icon: React.ReactNode;
+  title: string;
+  hint?: string;
+  tag?: string;
+  onClick: () => void;
+}> = ({ icon, title, hint, tag, onClick }) => (
   <button
     type="button"
     data-haptic="selection"
     onClick={onClick}
-    className="inline-flex items-center gap-1 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
+    className="grid w-full grid-cols-[1fr_auto] items-center gap-3 border-b border-[#f1f1f1] px-3 py-3 text-right transition-colors last:border-b-0 hover:bg-[#f7f7f7] dark:border-app-border dark:hover:bg-app-surface-raised sm:px-4"
   >
-    <span>{TEXT.open}</span>
-    <ChevronLeft className="h-4 w-4" />
+    <div className="flex min-w-0 items-start gap-3">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#f5f5f5] text-app-brand dark:bg-app-surface dark:text-app-brand sm:h-9 sm:w-9">
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="min-w-0 truncate text-sm font-semibold text-[#0d0d12] dark:text-app-text">
+            {title}
+          </span>
+          {tag ? (
+            <span className="shrink-0 rounded bg-app-brand/10 px-1.5 py-0.5 text-[10px] font-bold text-app-brand">
+              {tag}
+            </span>
+          ) : null}
+        </div>
+        {hint ? (
+          <div className="mt-0.5 max-h-10 overflow-hidden text-xs leading-5 text-[#666d80] dark:text-app-text-secondary">
+            {hint}
+          </div>
+        ) : null}
+      </div>
+    </div>
+    <ChevronLeft className="h-4 w-4 shrink-0 text-[#666d80] dark:text-app-text-secondary" />
   </button>
+);
+
+const SettingsLinkGroup: React.FC<{
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}> = ({ title, description, children }) => (
+  <div className="border-b border-[#f1f1f1] last:border-b-0 dark:border-app-border">
+    <div className="px-3 pb-2 pt-3 sm:px-4">
+      <h3 className="text-xs font-bold text-[#0d0d12] dark:text-app-text">{title}</h3>
+      <p className="mt-1 text-xs leading-5 text-[#666d80] dark:text-app-text-secondary">
+        {description}
+      </p>
+    </div>
+    <div>{children}</div>
+  </div>
 );
 
 type NotificationPermissionState = NotificationPermission | 'unsupported';
@@ -673,7 +719,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-app-background" dir="rtl">
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 px-3 py-3 md:px-5 md:py-5">
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-2.5 py-3 sm:px-3 md:px-5 md:py-5">
           <SectionCard
             icon={<Power className="h-4 w-4 text-app-brand" />}
             title={TEXT.system}
@@ -735,239 +781,258 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
           </SectionCard>
 
           <SectionCard
-              icon={<Package className="h-4 w-4 text-app-brand" />}
-              title={TEXT.business}
-              description={TEXT.businessDescription}
-            >
-              <SettingRow
-                icon={<Package className="h-4 w-4" />}
-                title={TEXT.balance}
-                hint={`${TEXT.balanceHintPrefix}${state.deliveryBalance.toLocaleString('he-IL')}${TEXT.deliveriesSuffix}`}
-                control={<OpenButton onClick={() => navigate('/delivery-balance')} />}
-              />
-              <SettingRow
-                icon={<Wallet className="h-4 w-4" />}
-                title="ארנק"
-                hint="ניהול תשלומים והכנסות ממשלוחי סנדי פלוס."
-                control={<OpenButton onClick={() => navigate('/wallet')} />}
-              />
-              <SettingRow
-                icon={<Store className="h-4 w-4" />}
-                title={TEXT.restaurants}
-                hint={TEXT.restaurantsHint}
-                control={<OpenButton onClick={() => navigate('/restaurants')} />}
-              />
-              <SettingRow
-                icon={<Bike className="h-4 w-4" />}
-                title={TEXT.couriersList}
-                hint={TEXT.couriersListHint}
-                control={<OpenButton onClick={() => navigate('/couriers')} />}
-              />
+            icon={<Volume2 className="h-4 w-4 text-app-brand" />}
+            title={TEXT.sounds}
+            description={TEXT.soundsDescription}
+          >
+            <SettingRow
+              icon={<Volume2 className="h-4 w-4" />}
+              title={TEXT.newDeliverySound}
+              hint={TEXT.newDeliverySoundHint}
+              control={
+                <Toggle
+                  checked={alertPreferences.newDeliverySoundEnabled}
+                  onChange={() => {
+                    const nextValue = !alertPreferences.newDeliverySoundEnabled;
+                    updateAlertPreference('newDeliverySoundEnabled', nextValue);
+                    if (nextValue) handleTestSound();
+                  }}
+                />
+              }
+            />
+            <SettingRow
+              icon={<Volume2 className="h-4 w-4" />}
+              title={TEXT.soundChoice}
+              hint={TEXT.soundChoiceHint}
+              control={
+                <SoundPicker
+                  selectedSoundId={alertPreferences.newDeliverySoundId}
+                  onSelect={handleSelectDeliverySound}
+                />
+              }
+            />
+            <SettingRow
+              icon={<Volume2 className="h-4 w-4" />}
+              title={TEXT.testSound}
+              control={
+                <button
+                  type="button"
+                  data-haptic="light"
+                  onClick={handleTestSound}
+                  className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#f5f5f5] px-3 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
+                >
+                  <Volume2 className="h-4 w-4" />
+                  <span>{TEXT.playSound}</span>
+                </button>
+              }
+            />
           </SectionCard>
 
-          {settingsNavGroups.map((group) => {
-            const GroupIcon = settingsNavIconMap[group.icon];
-            const groupItems = APP_NAV_ITEMS.filter((item) => item.section === group.section);
-
-            return (
-              <SectionCard
-                key={group.section}
-                icon={<GroupIcon className="h-4 w-4 text-app-brand" />}
-                title={group.title}
-                description={group.description}
-              >
-                {groupItems.map((item) => {
-                  const Icon = settingsNavIconMap[item.icon];
-
-                  return (
-                    <SettingRow
-                      key={item.id}
-                      icon={<Icon className="h-4 w-4" />}
-                      title={item.label}
-                      control={<OpenButton onClick={() => navigate(item.path)} />}
-                    />
-                  );
-                })}
-              </SectionCard>
-            );
-          })}
+          <SectionCard
+            icon={<Zap className="h-4 w-4 text-app-brand" />}
+            title={TEXT.haptics}
+            description={TEXT.hapticsDescription}
+          >
+            <SettingRow
+              icon={<Zap className="h-4 w-4" />}
+              title={TEXT.hapticFeedback}
+              hint={TEXT.hapticFeedbackHint}
+              control={
+                <Toggle
+                  checked={alertPreferences.hapticFeedbackEnabled}
+                  onChange={() => {
+                    const nextValue = !alertPreferences.hapticFeedbackEnabled;
+                    updateAlertPreference('hapticFeedbackEnabled', nextValue);
+                    if (nextValue) handleTestHaptic();
+                  }}
+                />
+              }
+            />
+            <SettingRow
+              icon={<Zap className="h-4 w-4" />}
+              title={TEXT.newDeliveryHaptic}
+              hint={TEXT.newDeliveryHapticHint}
+              control={
+                <Toggle
+                  checked={alertPreferences.newDeliveryHapticEnabled}
+                  onChange={() => {
+                    const nextValue = !alertPreferences.newDeliveryHapticEnabled;
+                    updateAlertPreference('newDeliveryHapticEnabled', nextValue);
+                    if (nextValue) handleTestHaptic();
+                  }}
+                />
+              }
+            />
+            <SettingRow
+              icon={<Zap className="h-4 w-4" />}
+              title={TEXT.testHaptic}
+              control={
+                <button
+                  type="button"
+                  data-haptic="success"
+                  onClick={handleTestHaptic}
+                  className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#f5f5f5] px-3 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
+                >
+                  <Zap className="h-4 w-4" />
+                  <span>{TEXT.playHaptic}</span>
+                </button>
+              }
+            />
+          </SectionCard>
 
           <SectionCard
-              icon={<BellRing className="h-4 w-4 text-app-brand" />}
-              title={TEXT.alerts}
-              description={TEXT.alertsDescription}
-            >
-              <SettingRow
-                icon={<Volume2 className="h-4 w-4" />}
-                title={TEXT.newDeliverySound}
-                hint={TEXT.newDeliverySoundHint}
-                control={
-                  <Toggle
-                    checked={alertPreferences.newDeliverySoundEnabled}
-                    onChange={() => {
-                      const nextValue = !alertPreferences.newDeliverySoundEnabled;
-                      updateAlertPreference('newDeliverySoundEnabled', nextValue);
-                      if (nextValue) handleTestSound();
-                    }}
-                  />
-                }
-              />
-              <SettingRow
-                icon={<Volume2 className="h-4 w-4" />}
-                title="בחירת צליל"
-                hint="בחר איזה צליל יופעל כשנכנס משלוח חדש."
-                control={
-                  <SoundPicker
-                    selectedSoundId={alertPreferences.newDeliverySoundId}
-                    onSelect={handleSelectDeliverySound}
-                  />
-                }
-              />
-              <SettingRow
-                icon={<BellRing className="h-4 w-4" />}
-                title={TEXT.browserNotifications}
-                hint={TEXT.browserNotificationsHint}
-                control={
-                  <Toggle
-                    checked={alertPreferences.browserNotificationsEnabled}
-                    onChange={handleBrowserNotificationsToggle}
-                  />
-                }
-              />
-              <SettingRow
-                icon={<BellRing className="h-4 w-4" />}
-                title={TEXT.notificationPermission}
-                hint={TEXT.notificationPermissionHint}
-                control={
-                  notificationPermission === 'default' ? (
-                    <button
-                      type="button"
-                      data-haptic="selection"
-                      onClick={handleRequestNotificationPermission}
-                      className="inline-flex items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
-                    >
-                      <BellRing className="h-4 w-4" />
-                      <span>{TEXT.enableNotifications}</span>
-                    </button>
-                  ) : (
-                    <span className="rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#666d80] dark:bg-app-surface dark:text-app-text-secondary">
-                      {getNotificationPermissionLabel(notificationPermission)}
-                    </span>
-                  )
-                }
-              />
-              <SettingRow
-                icon={<BellRing className="h-4 w-4" />}
-                title={TEXT.realPush}
-                hint={TEXT.realPushHint}
-                control={
-                  <div className="flex items-center gap-2">
-                    <span className="hidden rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#666d80] dark:bg-app-surface dark:text-app-text-secondary sm:inline-flex">
-                      {getDeliveryPushStatusLabel(deliveryPushStatus)}
-                    </span>
-                    <button
-                      type="button"
-                      data-haptic="selection"
-                      onClick={handleEnableDeliveryPush}
-                      disabled={isDeliveryPushBusy}
-                      className="inline-flex items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] disabled:cursor-wait disabled:opacity-60 dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
-                    >
-                      <BellRing className="h-4 w-4" />
-                      <span>{TEXT.enableRealPush}</span>
-                    </button>
-                    <button
-                      type="button"
-                      data-haptic="success"
-                      onClick={handleTestDeliveryPush}
-                      disabled={isDeliveryPushBusy || deliveryPushStatus !== 'subscribed'}
-                      className="inline-flex items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
-                    >
-                      <span>{TEXT.testRealPush}</span>
-                    </button>
-                  </div>
-                }
-              />
-              <SettingRow
-                icon={<Volume2 className="h-4 w-4" />}
-                title={TEXT.testSound}
-                control={
+            icon={<BellRing className="h-4 w-4 text-app-brand" />}
+            title={TEXT.pushNotifications}
+            description={TEXT.pushNotificationsDescription}
+          >
+            <SettingRow
+              icon={<BellRing className="h-4 w-4" />}
+              title={TEXT.browserNotifications}
+              hint={TEXT.browserNotificationsHint}
+              control={
+                <Toggle
+                  checked={alertPreferences.browserNotificationsEnabled}
+                  onChange={handleBrowserNotificationsToggle}
+                />
+              }
+            />
+            <SettingRow
+              icon={<BellRing className="h-4 w-4" />}
+              title={TEXT.notificationPermission}
+              hint={TEXT.notificationPermissionHint}
+              control={
+                notificationPermission === 'default' ? (
                   <button
                     type="button"
-                    data-haptic="light"
-                    onClick={handleTestSound}
-                    className="inline-flex items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
+                    data-haptic="selection"
+                    onClick={handleRequestNotificationPermission}
+                    className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#f5f5f5] px-3 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
                   >
-                    <Volume2 className="h-4 w-4" />
-                    <span>{TEXT.playSound}</span>
+                    <BellRing className="h-4 w-4" />
+                    <span>{TEXT.enableNotifications}</span>
                   </button>
-                }
-              />
-          </SectionCard>
-
-          <SectionCard
-              icon={<Palette className="h-4 w-4 text-app-brand" />}
-              title={TEXT.personal}
-              description={TEXT.personalDescription}
-            >
-              <SettingRow
-                icon={
-                  themeMode === 'dark' ? (
-                    <Moon className="h-4 w-4" />
-                  ) : themeMode === 'twilight' ? (
-                    <Sunset className="h-4 w-4" />
-                  ) : (
-                    <Sun className="h-4 w-4" />
-                  )
-                }
-                title={TEXT.themeMode}
-                hint={TEXT.themeModeHint}
-                control={<ThemeModePicker value={themeMode} onChange={setThemeMode} />}
-              />
-              <SettingRow
-                icon={<Zap className="h-4 w-4" />}
-                title={TEXT.hapticFeedback}
-                hint={TEXT.hapticFeedbackHint}
-                control={
-                  <Toggle
-                    checked={alertPreferences.hapticFeedbackEnabled}
-                    onChange={() => {
-                      const nextValue = !alertPreferences.hapticFeedbackEnabled;
-                      updateAlertPreference('hapticFeedbackEnabled', nextValue);
-                      if (nextValue) handleTestHaptic();
-                    }}
-                  />
-                }
-              />
-              <SettingRow
-                icon={<Zap className="h-4 w-4" />}
-                title={TEXT.newDeliveryHaptic}
-                hint={TEXT.newDeliveryHapticHint}
-                control={
-                  <Toggle
-                    checked={alertPreferences.newDeliveryHapticEnabled}
-                    onChange={() => {
-                      const nextValue = !alertPreferences.newDeliveryHapticEnabled;
-                      updateAlertPreference('newDeliveryHapticEnabled', nextValue);
-                      if (nextValue) handleTestHaptic();
-                    }}
-                  />
-                }
-              />
-              <SettingRow
-                icon={<Zap className="h-4 w-4" />}
-                title={TEXT.testHaptic}
-                control={
+                ) : (
+                  <span className="rounded-lg bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#666d80] dark:bg-app-surface dark:text-app-text-secondary">
+                    {getNotificationPermissionLabel(notificationPermission)}
+                  </span>
+                )
+              }
+            />
+            <SettingRow
+              icon={<BellRing className="h-4 w-4" />}
+              title={TEXT.realPush}
+              hint={TEXT.realPushHint}
+              control={
+                <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+                  <span className="rounded-lg bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#666d80] dark:bg-app-surface dark:text-app-text-secondary">
+                    {getDeliveryPushStatusLabel(deliveryPushStatus)}
+                  </span>
+                  <button
+                    type="button"
+                    data-haptic="selection"
+                    onClick={handleEnableDeliveryPush}
+                    disabled={isDeliveryPushBusy}
+                    className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#f5f5f5] px-3 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] disabled:cursor-wait disabled:opacity-60 dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
+                  >
+                    <BellRing className="h-4 w-4" />
+                    <span>{TEXT.enableRealPush}</span>
+                  </button>
                   <button
                     type="button"
                     data-haptic="success"
-                    onClick={handleTestHaptic}
-                    className="inline-flex items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
+                    onClick={handleTestDeliveryPush}
+                    disabled={isDeliveryPushBusy || deliveryPushStatus !== 'subscribed'}
+                    className="inline-flex h-9 items-center rounded-lg bg-[#f5f5f5] px-3 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
                   >
-                    <Zap className="h-4 w-4" />
-                    <span>{TEXT.playHaptic}</span>
+                    <span>{TEXT.testRealPush}</span>
                   </button>
-                }
-              />
+                </div>
+              }
+            />
+          </SectionCard>
+
+          <SectionCard
+            icon={<Palette className="h-4 w-4 text-app-brand" />}
+            title={TEXT.appearance}
+            description={TEXT.appearanceDescription}
+          >
+            <SettingRow
+              icon={
+                themeMode === 'dark' ? (
+                  <Moon className="h-4 w-4" />
+                ) : themeMode === 'twilight' ? (
+                  <Sunset className="h-4 w-4" />
+                ) : (
+                  <Sun className="h-4 w-4" />
+                )
+              }
+              title={TEXT.themeMode}
+              hint={TEXT.themeModeHint}
+              control={<ThemeModePicker value={themeMode} onChange={setThemeMode} />}
+            />
+          </SectionCard>
+
+          <SectionCard
+            icon={<Package className="h-4 w-4 text-app-brand" />}
+            title={TEXT.business}
+            description={TEXT.businessDescription}
+          >
+            <SettingsLinkRow
+              icon={<Package className="h-4 w-4" />}
+              title={TEXT.balance}
+              hint={`${TEXT.balanceHintPrefix}${state.deliveryBalance.toLocaleString('he-IL')}${TEXT.deliveriesSuffix}`}
+              onClick={() => navigate('/delivery-balance')}
+            />
+            <SettingsLinkRow
+              icon={<Wallet className="h-4 w-4" />}
+              title="ארנק"
+              hint="ניהול תשלומים והכנסות ממשלוחי סנדי פלוס."
+              onClick={() => navigate('/wallet')}
+            />
+            <SettingsLinkRow
+              icon={<Store className="h-4 w-4" />}
+              title={TEXT.restaurants}
+              hint={TEXT.restaurantsHint}
+              onClick={() => navigate('/restaurants')}
+            />
+            <SettingsLinkRow
+              icon={<Bike className="h-4 w-4" />}
+              title={TEXT.couriersList}
+              hint={TEXT.couriersListHint}
+              onClick={() => navigate('/couriers')}
+            />
+          </SectionCard>
+
+          <SectionCard
+            icon={<SlidersHorizontal className="h-4 w-4 text-app-brand" />}
+            title={TEXT.pages}
+            description={TEXT.pagesDescription}
+          >
+            {settingsNavGroups.map((group) => {
+              const groupItems = APP_NAV_ITEMS.filter((item) => item.section === group.section);
+
+              return (
+                <SettingsLinkGroup
+                  key={group.section}
+                  title={group.title}
+                  description={group.description}
+                >
+                  {groupItems.map((item) => {
+                    const Icon = settingsNavIconMap[item.icon];
+
+                    return (
+                      <SettingsLinkRow
+                        key={item.id}
+                        icon={<Icon className="h-4 w-4" />}
+                        title={item.label}
+                        tag={item.tag === 'beta' ? 'בטא' : undefined}
+                        onClick={() => navigate(item.path)}
+                      />
+                    );
+                  })}
+                </SettingsLinkGroup>
+              );
+            })}
           </SectionCard>
 
           <SectionCard
