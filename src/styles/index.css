@@ -1201,6 +1201,28 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   }
 }
 
+@container (min-width: 940px) {
+  .delivery-vercel-row {
+    grid-template-columns:
+      clamp(36px, 4%, 48px)
+      max-content
+      minmax(180px, clamp(188px, 19%, 220px))
+      minmax(300px, 1fr)
+      clamp(84px, 10%, 128px);
+  }
+
+  .delivery-row__route-table-pair {
+    max-width: min(100%, 680px);
+    width: min(100%, 680px);
+  }
+
+  .delivery-row__route-table-distance-wrap {
+    flex-basis: 92px;
+    max-width: 104px;
+    min-width: 92px;
+  }
+}
+
 @container (max-width: 419px) {
   .delivery-vercel-row {
     grid-template-columns: 36px minmax(0, 1fr);
