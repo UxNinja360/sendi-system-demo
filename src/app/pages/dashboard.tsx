@@ -388,6 +388,7 @@ const SendiPlusCard: React.FC<{
   activeRestaurantCount: number;
   radiusKm: number;
   termsAccepted: boolean;
+  isSystemOpen: boolean;
   isRefreshing: boolean;
   onRadiusKmChange: (value: number) => void;
   onTermsAcceptedChange: (value: boolean) => void;
@@ -396,31 +397,34 @@ const SendiPlusCard: React.FC<{
   activeRestaurantCount,
   radiusKm,
   termsAccepted,
+  isSystemOpen,
   isRefreshing,
   onRadiusKmChange,
   onTermsAcceptedChange,
 }) => {
-  const isSendiPlusEnabled = termsAccepted;
-  const receivesDeliveries = canReceiveSendiPlusDeliveries(radiusKm, termsAccepted);
+  const isSendiPlusEnabled = termsAccepted && isSystemOpen;
+  const receivesDeliveries = canReceiveSendiPlusDeliveries(radiusKm, isSendiPlusEnabled);
   const [isDetailsOpen, setIsDetailsOpen] = React.useState(
-    () => termsAccepted && readStoredSendiPlusDetailsOpen(),
+    () => isSendiPlusEnabled && readStoredSendiPlusDetailsOpen(),
   );
   const [isRadiusBubbleVisible, setIsRadiusBubbleVisible] = React.useState(false);
   const radiusBubbleHideTimeoutRef = React.useRef<number | null>(null);
   const radiusPercent = (radiusKm / MAX_SENDI_PLUS_RADIUS_KM) * 100;
-  const isAccordionOpen = termsAccepted && isDetailsOpen;
-  const termsTextClassName = termsAccepted
+  const isAccordionOpen = isSendiPlusEnabled && isDetailsOpen;
+  const termsTextClassName = isSendiPlusEnabled
     ? 'text-app-text-secondary'
     : 'text-app-text-muted opacity-70';
-  const helperTextClassName = termsAccepted
+  const helperTextClassName = isSendiPlusEnabled
     ? 'text-app-text-secondary'
     : 'text-app-text-muted opacity-70';
-  const radiusLabelClassName = termsAccepted
+  const radiusLabelClassName = isSendiPlusEnabled
     ? 'text-app-text-secondary'
     : 'text-app-text-muted opacity-70';
   const selectedRadiusText = `${formatRadiusKm(radiusKm)} ק״מ`;
   const termsSummaryText = SENDI_PLUS_TERMS_TEXT;
-  const radiusHelperText = !termsAccepted
+  const radiusHelperText = !isSystemOpen
+    ? 'כבוי'
+    : !isSendiPlusEnabled
     ? 'כבוי'
     : receivesDeliveries
       ? `רדיוס נבחר: ${selectedRadiusText}.`
@@ -455,14 +459,14 @@ const SendiPlusCard: React.FC<{
     [clearRadiusBubbleHideTimeout],
   );
   const handleRadiusInput = (event: React.FormEvent<HTMLInputElement>) => {
-    if (!termsAccepted) return;
+    if (!isSendiPlusEnabled) return;
 
     onRadiusKmChange(Number(event.currentTarget.value));
     showRadiusBubble();
     hideRadiusBubble(900);
   };
   const toggleDetailsOpen = React.useCallback(() => {
-    if (!termsAccepted) {
+    if (!isSendiPlusEnabled) {
       writeStoredSendiPlusDetailsOpen(false);
       setIsDetailsOpen(false);
       return;
@@ -475,8 +479,10 @@ const SendiPlusCard: React.FC<{
 
       return nextValue;
     });
-  }, [termsAccepted]);
+  }, [isSendiPlusEnabled]);
   const handleTermsAcceptedChange = React.useCallback(() => {
+    if (!isSystemOpen || isRefreshing) return;
+
     const nextTermsAccepted = !termsAccepted;
 
     onTermsAcceptedChange(nextTermsAccepted);
@@ -492,15 +498,15 @@ const SendiPlusCard: React.FC<{
       writeStoredSendiPlusDetailsOpen(true);
       setIsDetailsOpen(true);
     }
-  }, [hideRadiusBubble, isAccordionOpen, onTermsAcceptedChange, termsAccepted]);
+  }, [hideRadiusBubble, isAccordionOpen, isRefreshing, isSystemOpen, onTermsAcceptedChange, termsAccepted]);
 
   React.useEffect(() => {
-    if (termsAccepted) return;
+    if (isSendiPlusEnabled) return;
 
     writeStoredSendiPlusDetailsOpen(false);
     setIsDetailsOpen(false);
     hideRadiusBubble();
-  }, [hideRadiusBubble, termsAccepted]);
+  }, [hideRadiusBubble, isSendiPlusEnabled]);
 
   React.useEffect(() => clearRadiusBubbleHideTimeout, [clearRadiusBubbleHideTimeout]);
 
@@ -511,8 +517,19 @@ const SendiPlusCard: React.FC<{
           type="button"
           data-haptic="selection"
           onClick={toggleDetailsOpen}
-          className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0a84ff]/30 dark:hover:bg-[#1f1f1f]"
-          aria-label={isAccordionOpen ? 'סגור פרטי סנדי פלוס' : 'פתח פרטי סנדי פלוס'}
+          disabled={!isSendiPlusEnabled}
+          className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] text-app-text-secondary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0a84ff]/30 ${
+            isSendiPlusEnabled
+              ? 'hover:bg-app-surface-raised hover:text-app-text dark:hover:bg-[#1f1f1f]'
+              : 'cursor-not-allowed opacity-45'
+          }`}
+          aria-label={
+            isSendiPlusEnabled
+              ? isAccordionOpen
+                ? 'סגור פרטי סנדי פלוס'
+                : 'פתח פרטי סנדי פלוס'
+              : 'סנדי פלוס כבוי'
+          }
           aria-controls="sendi-plus-details"
           aria-expanded={isAccordionOpen}
         >
@@ -593,7 +610,7 @@ const SendiPlusCard: React.FC<{
                 max={MAX_SENDI_PLUS_RADIUS_KM}
                 step={SENDI_PLUS_RADIUS_STEP_KM}
                 value={radiusKm}
-                disabled={!termsAccepted}
+                disabled={!isSendiPlusEnabled}
                 onChange={handleRadiusInput}
                 onInput={handleRadiusInput}
                 onPointerDown={showRadiusBubble}
@@ -633,8 +650,9 @@ const SendiPlusCard: React.FC<{
             {termsSummaryText}
           </span>
           <Toggle
-            checked={termsAccepted}
+            checked={isSendiPlusEnabled}
             onChange={handleTermsAcceptedChange}
+            disabled={!isSystemOpen || isRefreshing}
             ariaLabel="אישור תנאי סנדי פלוס"
           />
         </div>
@@ -927,12 +945,21 @@ export const Dashboard: React.FC = () => {
   }, []);
 
   const handleSendiPlusTermsAcceptedChange = React.useCallback((value: boolean) => {
+    if (value && !state.isSystemOpen) return;
+
     setSendiPlusTermsAccepted(value);
 
     if (!value) {
       setSendiPlusRadiusKm(DEFAULT_SENDI_PLUS_RADIUS_KM);
     }
-  }, []);
+  }, [state.isSystemOpen]);
+
+  React.useEffect(() => {
+    if (state.isSystemOpen || !sendiPlusTermsAccepted) return;
+
+    setSendiPlusTermsAccepted(false);
+    setSendiPlusRadiusKm(DEFAULT_SENDI_PLUS_RADIUS_KM);
+  }, [sendiPlusTermsAccepted, state.isSystemOpen]);
 
   const dateDeliveries = React.useMemo(
     () =>
@@ -962,11 +989,12 @@ export const Dashboard: React.FC = () => {
     () => sendiPlusDeliveryZones.filter(isDeliveryZoneActive).length,
     [dashboardRefreshVersion, sendiPlusDeliveryZones],
   );
+  const isSendiPlusOperational = state.isSystemOpen && sendiPlusTermsAccepted;
   const sendiPlusActiveRestaurantCount = React.useMemo(
     () =>
       state.restaurants.filter(
         (restaurant) =>
-          isRestaurantActiveForDisplay(restaurant, sendiPlusTermsAccepted) &&
+          isRestaurantActiveForDisplay(restaurant, isSendiPlusOperational) &&
           isSendiPlusRestaurant(restaurant.name, restaurant.chainId) &&
           Number.isFinite(restaurant.lat) &&
           Number.isFinite(restaurant.lng) &&
@@ -975,7 +1003,7 @@ export const Dashboard: React.FC = () => {
             sendiPlusDeliveryZones,
           ),
       ).length,
-    [dashboardRefreshVersion, sendiPlusDeliveryZones, sendiPlusTermsAccepted, state.restaurants],
+    [dashboardRefreshVersion, isSendiPlusOperational, sendiPlusDeliveryZones, state.restaurants],
   );
   const connectedCouriersCount = React.useMemo(
     () => state.couriers.filter((courier) => courier.status !== 'offline').length,
@@ -1000,7 +1028,7 @@ export const Dashboard: React.FC = () => {
     [dashboardRefreshVersion, state.restaurants],
   );
   const activeRestaurantsCount = baseActiveRestaurantsCount + (
-    sendiPlusTermsAccepted ? sendiPlusRestaurantsForDashboardCount : 0
+    isSendiPlusOperational ? sendiPlusRestaurantsForDashboardCount : 0
   );
   const freeCouriersCount = React.useMemo(() => {
     const busyCourierIds = new Set(
@@ -1289,6 +1317,7 @@ export const Dashboard: React.FC = () => {
             activeRestaurantCount={sendiPlusActiveRestaurantCount}
             radiusKm={sendiPlusRadiusKm}
             termsAccepted={sendiPlusTermsAccepted}
+            isSystemOpen={state.isSystemOpen}
             isRefreshing={isDashboardRefreshing}
             onRadiusKmChange={handleSendiPlusRadiusChange}
             onTermsAcceptedChange={handleSendiPlusTermsAcceptedChange}

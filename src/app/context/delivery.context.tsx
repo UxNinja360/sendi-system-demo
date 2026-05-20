@@ -48,6 +48,7 @@ import {
   isSendiPlusRestaurant,
   readStoredSendiPlusRadius,
   readStoredSendiPlusTermsAccepted,
+  writeStoredSendiPlusTermsAccepted,
 } from '../utils/sendi-plus';
 import {
   findDeliveryZoneForPoint,
@@ -1967,6 +1968,10 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   const toggleSystem = () => {
+    if (stateRef.current.isSystemOpen) {
+      writeStoredSendiPlusTermsAccepted(false);
+    }
+
     dispatch({ type: 'TOGGLE_SYSTEM' });
   };
 
