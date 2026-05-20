@@ -503,16 +503,16 @@ const SendiPlusCard: React.FC<{
                   {receivesDeliveries ? '0 ק״מ' : 'כבוי'}
                 </span>
                 <span className="absolute right-[25%] top-0 translate-x-1/2 whitespace-nowrap text-center">
-                  5 ק״מ
+                  2.5 ק״מ
                 </span>
                 <span className="absolute right-1/2 top-0 translate-x-1/2 whitespace-nowrap text-center">
-                  10 ק״מ
+                  5 ק״מ
                 </span>
                 <span className="absolute right-[75%] top-0 translate-x-1/2 whitespace-nowrap text-center">
-                  15 ק״מ
+                  7.5 ק״מ
                 </span>
                 <span className="absolute left-0 top-0 whitespace-nowrap text-left">
-                  20+ ק״מ
+                  10+ ק״מ
                 </span>
               </div>
             </div>

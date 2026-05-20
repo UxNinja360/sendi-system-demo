@@ -9,7 +9,7 @@ export const SENDI_PLUS_TERMS_ACCEPTED_CHANGE_EVENT = 'sendi-plus-terms-accepted
 export const LEGACY_SENDI_GO_RADIUS_STORAGE_KEY = 'sendi-go-radius-km';
 export const DEFAULT_SENDI_PLUS_RADIUS_KM = 0;
 export const SENDI_PLUS_RADIUS_STEP_KM = 0.5;
-export const MAX_SENDI_PLUS_RADIUS_KM = 20;
+export const MAX_SENDI_PLUS_RADIUS_KM = 10;
 
 type RadiusStorageReader = Pick<Storage, 'getItem'>;
 type RadiusStorageWriter = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
