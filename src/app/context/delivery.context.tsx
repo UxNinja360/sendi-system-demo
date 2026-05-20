@@ -61,6 +61,8 @@ const STATE_EPOCH_KEY = DELIVERY_STORAGE_KEYS.stateEpoch;
 const LIVE_MANAGER_ROUTE_STOP_ORDERS_STORAGE_KEY = DELIVERY_STORAGE_KEYS.liveRouteStopOrders;
 const LIVE_MANAGER_COURIER_POSITIONS_STORAGE_KEY = DELIVERY_STORAGE_KEYS.liveCourierPositions;
 const LIVE_MANAGER_COURIER_POSITIONS_TS_STORAGE_KEY = DELIVERY_STORAGE_KEYS.liveCourierPositionTimestamps;
+const SENDI_PLUS_DISABLED_RESTAURANT_IDS_STORAGE_KEY =
+  DELIVERY_STORAGE_KEYS.sendiPlusDisabledRestaurantIds;
 const SIMULATION_TICK_MS = 5000;
 const MIN_GLOBAL_DELIVERY_GAP_MS = 12000;
 const MIN_ACTIVE_SIMULATED_DELIVERIES = 8;
@@ -833,9 +835,51 @@ const readStoredRouteStopOrders = (): Record<string, string[]> => {
   }
 };
 
+const readStoredSendiPlusDisabledRestaurantIds = () => {
+  if (typeof window === 'undefined') return new Set<string>();
+
+  try {
+    const raw = window.localStorage.getItem(SENDI_PLUS_DISABLED_RESTAURANT_IDS_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return new Set(
+      Array.isArray(parsed)
+        ? parsed.filter((restaurantId): restaurantId is string => typeof restaurantId === 'string')
+        : [],
+    );
+  } catch {
+    return new Set<string>();
+  }
+};
+
+const writeStoredSendiPlusDisabledRestaurantIds = (restaurantIds: Set<string>) => {
+  if (typeof window === 'undefined') return;
+
+  try {
+    window.localStorage.setItem(
+      SENDI_PLUS_DISABLED_RESTAURANT_IDS_STORAGE_KEY,
+      JSON.stringify([...restaurantIds]),
+    );
+  } catch {
+    // The restaurant state itself still reflects the current manual choice.
+  }
+};
+
+const setStoredSendiPlusRestaurantDisabled = (restaurantId: string, disabled: boolean) => {
+  const restaurantIds = readStoredSendiPlusDisabledRestaurantIds();
+
+  if (disabled) {
+    restaurantIds.add(restaurantId);
+  } else {
+    restaurantIds.delete(restaurantId);
+  }
+
+  writeStoredSendiPlusDisabledRestaurantIds(restaurantIds);
+};
+
 const syncSendiPlusRestaurantActivity = (
   restaurants: Restaurant[],
   isSendiPlusActive: boolean,
+  disabledRestaurantIds = readStoredSendiPlusDisabledRestaurantIds(),
 ) => {
   let changed = false;
   const nextRestaurants = restaurants.map((restaurant) => {
@@ -843,14 +887,16 @@ const syncSendiPlusRestaurantActivity = (
       return restaurant;
     }
 
-    if (restaurant.isActive === isSendiPlusActive) {
+    const shouldBeActive = isSendiPlusActive && !disabledRestaurantIds.has(restaurant.id);
+
+    if (restaurant.isActive === shouldBeActive) {
       return restaurant;
     }
 
     changed = true;
     return {
       ...restaurant,
-      isActive: isSendiPlusActive,
+      isActive: shouldBeActive,
     };
   });
 
@@ -1045,6 +1091,15 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const dispatch = useCallback((action: DeliveryAction) => {
     const previousState = stateRef.current;
+
+    if (action.type === 'TOGGLE_RESTAURANT' && readStoredSendiPlusTermsAccepted()) {
+      const restaurant = previousState.restaurants.find((item) => item.id === action.payload);
+
+      if (restaurant && isSendiPlusRestaurant(restaurant.name, restaurant.chainId)) {
+        setStoredSendiPlusRestaurantDisabled(restaurant.id, restaurant.isActive);
+      }
+    }
+
     rawDispatch(action);
 
     if (action.type === 'ADD_ACTIVITY_LOG' || action.type === 'RESET_SYSTEM') {

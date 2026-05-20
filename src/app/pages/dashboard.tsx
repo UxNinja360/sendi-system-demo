@@ -62,9 +62,27 @@ const formatRadiusKm = formatSendiPlusRadiusKm;
 const SENDI_PLUS_TERMS_TEXT =
   'מתחייב בזמני משלוח של 60 דקות מסירה';
 const SENDI_PLUS_DETAILS_OPEN_STORAGE_KEY = 'dashboard-sendi-plus-details-open';
-const DASHBOARD_PULL_REFRESH_START_DISTANCE = 28;
-const DASHBOARD_PULL_REFRESH_THRESHOLD = 72;
-const DASHBOARD_PULL_REFRESH_MAX = 124;
+const DASHBOARD_PULL_REFRESH_START_DISTANCE = 22;
+const DASHBOARD_PULL_REFRESH_THRESHOLD = 64;
+const DASHBOARD_PULL_REFRESH_MAX = 132;
+const DASHBOARD_REFRESH_DURATION_MS = 520;
+
+const getDashboardPullRefreshDistance = (rawDistance: number) => {
+  const activeDistance = Math.max(0, rawDistance - DASHBOARD_PULL_REFRESH_START_DISTANCE);
+  const easedDistance = activeDistance * 0.72;
+
+  if (easedDistance <= DASHBOARD_PULL_REFRESH_THRESHOLD) {
+    return Math.round(easedDistance);
+  }
+
+  const resistedOverflow = (easedDistance - DASHBOARD_PULL_REFRESH_THRESHOLD) * 0.38;
+  return Math.round(
+    Math.min(
+      DASHBOARD_PULL_REFRESH_MAX,
+      DASHBOARD_PULL_REFRESH_THRESHOLD + resistedOverflow,
+    ),
+  );
+};
 
 const readStoredSendiPlusDetailsOpen = () => {
   if (typeof window === 'undefined') return true;
@@ -689,12 +707,17 @@ export const Dashboard: React.FC = () => {
     window.setTimeout(() => playHaptic('medium', { force: true }), 24);
   }, []);
 
-  const runDashboardRefresh = React.useCallback(() => {
+  const runDashboardRefresh = React.useCallback((revealDistance = DASHBOARD_PULL_REFRESH_THRESHOLD) => {
     if (isDashboardRefreshingRef.current || pullRefreshTriggeredRef.current) return;
+
+    const settledDistance = Math.max(
+      DASHBOARD_PULL_REFRESH_THRESHOLD,
+      Math.min(DASHBOARD_PULL_REFRESH_MAX, revealDistance),
+    );
 
     pullRefreshTriggeredRef.current = true;
     isDashboardRefreshingRef.current = true;
-    setPullDistance(DASHBOARD_PULL_REFRESH_THRESHOLD);
+    setPullDistance(settledDistance);
     setIsPullRefreshReady(true);
     setIsDashboardRefreshing(true);
     setDashboardRefreshVersion((version) => version + 1);
@@ -713,7 +736,7 @@ export const Dashboard: React.FC = () => {
         resetPullRefresh(140);
       }
       dashboardRefreshTimeoutRef.current = null;
-    }, 650);
+    }, DASHBOARD_REFRESH_DURATION_MS);
   }, [resetPullRefresh]);
 
   React.useEffect(() => () => {
@@ -798,20 +821,15 @@ export const Dashboard: React.FC = () => {
 
     event.preventDefault();
 
+    const nextDistance = getDashboardPullRefreshDistance(rawDistance);
+
     if (pullRefreshTriggeredRef.current) {
-      setPullDistance(DASHBOARD_PULL_REFRESH_THRESHOLD);
+      setPullDistance(Math.max(DASHBOARD_PULL_REFRESH_THRESHOLD, nextDistance));
       setIsPullRefreshReady(true);
+      pullRefreshReadyRef.current = true;
       return;
     }
 
-    const easedDistance = Math.max(
-      0,
-      Math.min(
-        DASHBOARD_PULL_REFRESH_MAX,
-        Math.round((rawDistance - DASHBOARD_PULL_REFRESH_START_DISTANCE) * 0.58),
-      ),
-    );
-    const nextDistance = easedDistance;
     const nextReady = nextDistance >= DASHBOARD_PULL_REFRESH_THRESHOLD;
 
     setPullDistance(nextDistance);
@@ -824,7 +842,7 @@ export const Dashboard: React.FC = () => {
     }
 
     if (nextReady) {
-      runDashboardRefresh();
+      runDashboardRefresh(nextDistance);
     }
   }, [playPullRefreshThresholdHaptic, resetPullRefresh, runDashboardRefresh]);
 
@@ -1032,11 +1050,9 @@ export const Dashboard: React.FC = () => {
   const pullRefreshProgress = Math.min(1, pullDistance / DASHBOARD_PULL_REFRESH_THRESHOLD);
   const pullRefreshVisible = pullDistance > 0;
   const pullRefreshArmed = isDashboardRefreshing || isPullRefreshReady;
-  const pullRefreshRevealHeight = Math.min(64, Math.round(pullDistance * 0.58));
-  const pullRefreshLabel = isDashboardRefreshing
+  const pullRefreshRevealHeight = Math.min(68, Math.round(pullDistance * 0.7));
+  const pullRefreshLabel = isDashboardRefreshing || isPullRefreshReady
     ? 'מרענן'
-    : isPullRefreshReady
-    ? ''
     : 'משוך לרענון';
 
   return (
@@ -1060,7 +1076,11 @@ export const Dashboard: React.FC = () => {
         onTouchCancel={handlePullRefreshTouchEnd}
       >
         <div
-          className="mx-auto w-full max-w-[1280px] overflow-hidden transition-[height,opacity] duration-200 md:hidden"
+          className={`mx-auto w-full max-w-[1280px] overflow-hidden md:hidden ${
+            pullRefreshVisible
+              ? 'transition-opacity duration-100'
+              : 'transition-[height,opacity] duration-200'
+          }`}
           style={{
             height: pullRefreshRevealHeight,
             opacity: pullRefreshVisible ? 1 : 0,
@@ -1068,12 +1088,16 @@ export const Dashboard: React.FC = () => {
           aria-hidden={!pullRefreshVisible}
         >
           <div className="flex h-full items-center justify-center gap-2 text-[11px] font-semibold text-app-text-secondary">
-            <ArrowUp
-              className="h-3.5 w-3.5 text-app-brand transition-transform duration-300 ease-out"
-              style={{
-                transform: `rotate(${pullRefreshArmed ? 0 : 180}deg) scale(${0.82 + pullRefreshProgress * 0.18})`,
-              }}
-            />
+            {pullRefreshArmed ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-app-brand" />
+            ) : (
+              <ArrowUp
+                className="h-3.5 w-3.5 text-app-brand transition-transform duration-150 ease-out"
+                style={{
+                  transform: `rotate(180deg) scale(${0.82 + pullRefreshProgress * 0.18})`,
+                }}
+              />
+            )}
             <DashboardPullRefreshLabel label={pullRefreshLabel} />
           </div>
         </div>
