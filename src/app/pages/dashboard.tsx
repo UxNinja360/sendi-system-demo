@@ -347,6 +347,9 @@ const SendiPlusCard: React.FC<{
   const helperTextClassName = termsAccepted
     ? 'text-app-text-secondary'
     : 'text-app-text-muted opacity-70';
+  const radiusLabelClassName = termsAccepted
+    ? 'text-app-text-secondary'
+    : 'text-app-text-muted opacity-70';
   const selectedRadiusText = `${formatRadiusKm(radiusKm)} ק״מ`;
   const radiusHelperText = !termsAccepted
     ? 'הפעל את המתג למטה כדי לפתוח קבלת משלוחי סנדי פלוס, ואז בחר רדיוס שירות.'
@@ -580,7 +583,7 @@ const SendiPlusCard: React.FC<{
                 dir="rtl"
                 style={sliderStyle}
               />
-              <div className="relative mt-2 h-4 text-[11px] text-app-text-secondary" dir="rtl">
+              <div className={`relative mt-2 h-4 text-[11px] ${radiusLabelClassName}`} dir="rtl">
                 <span className="absolute right-0 top-0 whitespace-nowrap text-right">
                   {receivesDeliveries ? '0 ק״מ' : 'כבוי'}
                 </span>
