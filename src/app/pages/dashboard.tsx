@@ -1070,7 +1070,7 @@ export const Dashboard: React.FC = () => {
                   className="min-w-0 p-2.5 text-right transition-colors hover:bg-app-surface-raised sm:p-3 dark:hover:bg-[#111111]"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="min-w-0 truncate text-sm font-bold leading-none text-app-text">
+                    <span className="min-w-0 truncate text-sm font-semibold text-app-text">
                       משלוחים פעילים
                     </span>
                     <PackageOpen className="h-3.5 w-3.5 shrink-0 text-app-brand sm:h-4 sm:w-4" />
