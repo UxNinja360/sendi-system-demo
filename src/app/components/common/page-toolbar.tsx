@@ -114,10 +114,10 @@ export const PageToolbar: React.FC<PageToolbarProps> = ({
     ? 'app-toolbar-content--pair-controls'
     : '';
   const periodControlClassName = shouldPairControlsOnMobile
-    ? 'flex min-w-0 flex-1 basis-[calc(50%-0.1875rem)] flex-nowrap items-center gap-1 min-[540px]:max-w-full min-[540px]:shrink-0 min-[540px]:basis-auto min-[540px]:flex-none'
+    ? 'flex max-w-full shrink-0 basis-auto flex-nowrap items-center gap-1'
     : 'flex max-w-full shrink-0 flex-nowrap items-center gap-1';
   const controlsWrapperClassName = shouldPairControlsOnMobile
-    ? 'flex min-w-0 flex-1 basis-[calc(50%-0.1875rem)] flex-nowrap items-center gap-1 min-[540px]:max-w-full min-[540px]:shrink-0 min-[540px]:basis-auto min-[540px]:flex-none'
+    ? 'flex max-w-full shrink-0 basis-auto flex-nowrap items-center gap-1'
     : 'flex max-w-full shrink-0 basis-auto flex-nowrap items-center gap-1';
   const actionsVisibilityClassName = actionsHidden
     ? 'mb-0 max-h-0 -translate-y-1 overflow-hidden opacity-0 pointer-events-none md:mb-0 md:max-h-none md:translate-y-0 md:overflow-visible md:opacity-100 md:pointer-events-auto'

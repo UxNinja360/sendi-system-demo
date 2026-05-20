@@ -778,8 +778,8 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
 
   .app-toolbar-content--pair-controls .app-toolbar-period,
   .app-toolbar-content--pair-controls .app-toolbar-controls {
-    flex: 1 1 calc(50% - 0.1875rem) !important;
-    max-width: calc(50% - 0.1875rem);
+    flex: 0 0 auto !important;
+    max-width: 100%;
   }
 
   .app-toolbar-controls::-webkit-scrollbar {
@@ -803,6 +803,21 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   .app-toolbar-content:not(.app-toolbar-content--pair-controls) .app-toolbar-period,
   .app-toolbar-content:not(.app-toolbar-content--pair-controls) .app-toolbar-controls {
     flex-basis: 100% !important;
+  }
+}
+
+@container (max-width: 360px) {
+  .app-toolbar-content--pair-controls .app-toolbar-period,
+  .app-toolbar-content--pair-controls .app-toolbar-controls {
+    flex: 1 1 calc(50% - 0.1875rem) !important;
+    max-width: calc(50% - 0.1875rem);
+    min-width: 0;
+  }
+
+  .app-toolbar-content--pair-controls .app-toolbar-period > *,
+  .app-toolbar-content--pair-controls .app-toolbar-controls > * {
+    min-width: 0;
+    width: 100%;
   }
 }
 
