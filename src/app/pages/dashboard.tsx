@@ -8,12 +8,9 @@ import {
   ChevronDown,
   Clock3,
   Loader2,
-  Map as MapIcon,
-  MoreHorizontal,
   PackageOpen,
   Power,
   Plus,
-  Settings,
   Store,
   Timer,
   Truck,
@@ -319,8 +316,6 @@ const SendiPlusCard: React.FC<{
   isRefreshing: boolean;
   onRadiusKmChange: (value: number) => void;
   onTermsAcceptedChange: (value: boolean) => void;
-  onManageZones: () => void;
-  onInspectRestaurantCoverage: () => void;
 }> = ({
   deliveryZoneCount,
   activeRestaurantCount,
@@ -329,13 +324,9 @@ const SendiPlusCard: React.FC<{
   isRefreshing,
   onRadiusKmChange,
   onTermsAcceptedChange,
-  onManageZones,
-  onInspectRestaurantCoverage,
 }) => {
   const isSendiPlusEnabled = termsAccepted;
   const receivesDeliveries = canReceiveSendiPlusDeliveries(radiusKm, termsAccepted);
-  const menuRef = React.useRef<HTMLDivElement | null>(null);
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = React.useState(true);
   const [isRadiusBubbleVisible, setIsRadiusBubbleVisible] = React.useState(false);
   const radiusBubbleHideTimeoutRef = React.useRef<number | null>(null);
@@ -401,85 +392,9 @@ const SendiPlusCard: React.FC<{
     }
   }, [termsAccepted]);
 
-  React.useEffect(() => {
-    if (!isMenuOpen) return;
-
-    const handlePointerDown = (event: PointerEvent) => {
-      const target = event.target;
-      if (!(target instanceof Node)) return;
-      if (menuRef.current?.contains(target)) return;
-      setIsMenuOpen(false);
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsMenuOpen(false);
-      }
-    };
-
-    document.addEventListener('pointerdown', handlePointerDown);
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('pointerdown', handlePointerDown);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isMenuOpen]);
-
   return (
     <section className="rounded-[8px] border border-app-border bg-app-surface dark:border-[#252525] dark:bg-[#0A0A0A]">
       <div className="flex items-center gap-3 px-3 py-2.5 sm:px-4 sm:py-3" dir="ltr">
-        <div ref={menuRef} className="relative shrink-0">
-          <button
-            type="button"
-            data-haptic="medium"
-            onClick={() => setIsMenuOpen((value) => !value)}
-            className={`inline-flex h-7 w-7 items-center justify-center rounded-[6px] transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0a84ff]/30 dark:hover:bg-[#1f1f1f] ${
-              isSendiPlusEnabled ? 'text-app-text-secondary' : 'text-app-text-muted opacity-70'
-            }`}
-            aria-label="אפשרויות סנדי פלוס"
-            aria-haspopup="menu"
-            aria-expanded={isMenuOpen}
-          >
-            <MoreHorizontal className="h-4 w-4" />
-          </button>
-
-          {isMenuOpen ? (
-            <div
-              role="menu"
-              className="absolute left-0 top-full z-30 mt-2 w-48 overflow-hidden rounded-[7px] border border-app-border bg-app-surface py-1 text-right shadow-[var(--app-shadow-panel)] dark:border-[#252525] dark:bg-[#0A0A0A]"
-              dir="rtl"
-            >
-              <button
-                type="button"
-                role="menuitem"
-                data-haptic="selection"
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  onManageZones();
-                }}
-                className="flex w-full items-center gap-2 px-3 py-2.5 text-xs font-medium text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text"
-              >
-                <MapIcon className="h-3.5 w-3.5 shrink-0" />
-                <span>מפת אזורי חלוקה</span>
-              </button>
-              <button
-                type="button"
-                role="menuitem"
-                data-haptic="selection"
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  onInspectRestaurantCoverage();
-                }}
-                className="flex w-full items-center gap-2 px-3 py-2.5 text-xs font-medium text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text"
-              >
-                <Settings className="h-3.5 w-3.5 shrink-0" />
-                <span>מסעדות בתחום</span>
-              </button>
-            </div>
-          ) : null}
-        </div>
-
         <button
           type="button"
           data-haptic="selection"
@@ -1210,8 +1125,6 @@ export const Dashboard: React.FC = () => {
             isRefreshing={isDashboardRefreshing}
             onRadiusKmChange={handleSendiPlusRadiusChange}
             onTermsAcceptedChange={handleSendiPlusTermsAcceptedChange}
-            onManageZones={() => navigate('/zones?source=sendi-plus')}
-            onInspectRestaurantCoverage={() => navigate('/zones?source=sendi-plus&tab=permissions')}
           />
         </div>
       </main>
