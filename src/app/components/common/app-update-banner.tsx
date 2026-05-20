@@ -6,6 +6,7 @@ import {
   APP_UPDATE_ACTIVATING_EVENT,
   APP_UPDATE_AVAILABLE_EVENT,
   getCurrentBuildUpdatePending,
+  getWaitingAppUpdateAvailable,
   getWaitingAppUpdateRegistration,
 } from '../../pwa/app-update';
 
@@ -17,7 +18,7 @@ export const AppUpdateBanner: React.FC = () => {
 
   React.useEffect(() => {
     const showBanner = () => {
-      setHasWaitingWorker(Boolean(getWaitingAppUpdateRegistration()?.waiting));
+      setHasWaitingWorker(getWaitingAppUpdateAvailable());
       setUpdating(false);
       setVisible(true);
     };
@@ -27,7 +28,7 @@ export const AppUpdateBanner: React.FC = () => {
       setVisible(true);
     };
 
-    if (getWaitingAppUpdateRegistration()?.waiting || getCurrentBuildUpdatePending()) {
+    if (getWaitingAppUpdateAvailable() || getCurrentBuildUpdatePending()) {
       showBanner();
     }
 
@@ -48,8 +49,13 @@ export const AppUpdateBanner: React.FC = () => {
   const handleUpdate = () => {
     setUpdating(true);
 
-    const didStartUpdate = activateWaitingAppUpdate();
-    if (didStartUpdate) {
+    if (getWaitingAppUpdateAvailable() || getWaitingAppUpdateRegistration()?.waiting) {
+      const didStartUpdate = activateWaitingAppUpdate();
+      if (!didStartUpdate) {
+        setUpdating(false);
+        return;
+      }
+
       window.setTimeout(() => {
         window.location.reload();
       }, 4000);

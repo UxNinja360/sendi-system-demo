@@ -1,17 +1,25 @@
+import { registerSW } from 'virtual:pwa-register';
+
 export const APP_UPDATE_AVAILABLE_EVENT = 'sendi-app-update-available';
 export const APP_UPDATE_ACTIVATING_EVENT = 'sendi-app-update-activating';
 
 declare const __SENDI_APP_BUILD_ID__: string;
 
 const APP_BUILD_ACK_STORAGE_KEY = 'sendi-app-build-acknowledged';
+const APP_UPDATE_APPROVED_STORAGE_KEY = 'sendi-app-update-approved';
+const UPDATE_CHECK_INTERVAL_MS = 30_000;
 
 let waitingRegistration: ServiceWorkerRegistration | null = null;
+let latestRegistration: ServiceWorkerRegistration | null = null;
+let waitingUpdateAvailable = false;
 let activationRequested = false;
 let reloadStarted = false;
 let setupStarted = false;
 let currentBuildUpdatePending = false;
+let updateServiceWorker: ReturnType<typeof registerSW> | null = null;
 
 const watchedRegistrations = new WeakSet<ServiceWorkerRegistration>();
+const watchedWorkers = new WeakSet<ServiceWorker>();
 const currentAppBuildId =
   typeof __SENDI_APP_BUILD_ID__ === 'string' && __SENDI_APP_BUILD_ID__
     ? __SENDI_APP_BUILD_ID__
@@ -33,17 +41,51 @@ const safelyWriteAcknowledgedBuildId = () => {
   }
 };
 
-const emitUpdateAvailable = (registration: ServiceWorkerRegistration) => {
-  waitingRegistration = registration;
+const safelyRememberApprovedUpdate = () => {
+  try {
+    window.localStorage.setItem(APP_UPDATE_APPROVED_STORAGE_KEY, 'true');
+  } catch {
+    // If storage is blocked, the waiting-worker update flow still works.
+  }
+};
+
+const safelyConsumeApprovedUpdate = () => {
+  try {
+    const wasApproved = window.localStorage.getItem(APP_UPDATE_APPROVED_STORAGE_KEY) === 'true';
+    window.localStorage.removeItem(APP_UPDATE_APPROVED_STORAGE_KEY);
+    return wasApproved;
+  } catch {
+    return false;
+  }
+};
+
+const emitUpdateAvailable = (registration?: ServiceWorkerRegistration | null) => {
+  if (registration) {
+    latestRegistration = registration;
+    waitingRegistration = registration;
+  } else if (latestRegistration) {
+    waitingRegistration = latestRegistration;
+  }
+
+  waitingUpdateAvailable = true;
+  currentBuildUpdatePending = false;
   window.dispatchEvent(new CustomEvent(APP_UPDATE_AVAILABLE_EVENT));
 };
 
 const emitCurrentBuildUpdateAvailable = () => {
+  if (waitingUpdateAvailable) return;
+
   currentBuildUpdatePending = true;
   window.dispatchEvent(new CustomEvent(APP_UPDATE_AVAILABLE_EVENT));
 };
 
 const checkCurrentBuildAcknowledgement = () => {
+  if (safelyConsumeApprovedUpdate()) {
+    safelyWriteAcknowledgedBuildId();
+    currentBuildUpdatePending = false;
+    return;
+  }
+
   const acknowledgedBuildId = safelyReadAcknowledgedBuildId();
 
   if (!acknowledgedBuildId) {
@@ -59,24 +101,37 @@ const checkCurrentBuildAcknowledgement = () => {
   currentBuildUpdatePending = false;
 };
 
+const watchWorkerForUpdate = (registration: ServiceWorkerRegistration, worker: ServiceWorker | null) => {
+  if (!worker || watchedWorkers.has(worker)) return;
+  watchedWorkers.add(worker);
+
+  const checkWorkerState = () => {
+    if (worker.state !== 'installed' || !navigator.serviceWorker.controller) return;
+
+    window.setTimeout(() => {
+      if (registration.waiting || worker.state === 'installed') {
+        emitUpdateAvailable(registration);
+      }
+    }, 0);
+  };
+
+  worker.addEventListener('statechange', checkWorkerState);
+  checkWorkerState();
+};
+
 const watchRegistration = (registration: ServiceWorkerRegistration) => {
   if (watchedRegistrations.has(registration)) return;
   watchedRegistrations.add(registration);
 
   registration.addEventListener('updatefound', () => {
-    const worker = registration.installing;
-    if (!worker) return;
-
-    worker.addEventListener('statechange', () => {
-      if (worker.state === 'installed' && navigator.serviceWorker.controller) {
-        emitUpdateAvailable(registration);
-      }
-    });
+    watchWorkerForUpdate(registration, registration.installing);
   });
 };
 
 const checkRegistrationForUpdate = (registration: ServiceWorkerRegistration) => {
+  latestRegistration = registration;
   watchRegistration(registration);
+  watchWorkerForUpdate(registration, registration.installing);
 
   if (registration.waiting && navigator.serviceWorker.controller) {
     emitUpdateAvailable(registration);
@@ -84,6 +139,9 @@ const checkRegistrationForUpdate = (registration: ServiceWorkerRegistration) => 
 };
 
 export const getWaitingAppUpdateRegistration = () => waitingRegistration;
+
+export const getWaitingAppUpdateAvailable = () =>
+  waitingUpdateAvailable || Boolean(waitingRegistration?.waiting || latestRegistration?.waiting);
 
 export const getCurrentBuildUpdatePending = () => currentBuildUpdatePending;
 
@@ -93,12 +151,19 @@ export const acknowledgeCurrentBuildUpdate = () => {
 };
 
 export const activateWaitingAppUpdate = () => {
-  const waitingWorker = waitingRegistration?.waiting;
-  if (!waitingWorker) return false;
+  const waitingWorker = waitingRegistration?.waiting || latestRegistration?.waiting;
+  if (!waitingWorker && !updateServiceWorker) return false;
 
   activationRequested = true;
+  safelyRememberApprovedUpdate();
   window.dispatchEvent(new CustomEvent(APP_UPDATE_ACTIVATING_EVENT));
-  waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+
+  if (waitingWorker) {
+    waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+  } else {
+    void updateServiceWorker?.().catch(() => undefined);
+  }
+
   return true;
 };
 
@@ -118,7 +183,10 @@ export const setupAppUpdateChecks = () => {
 
   const checkAndUpdateRegistration = (registration: ServiceWorkerRegistration) => {
     checkRegistrationForUpdate(registration);
-    void registration.update().catch(() => undefined);
+    void registration
+      .update()
+      .then(() => checkRegistrationForUpdate(registration))
+      .catch(() => undefined);
   };
 
   const updateRegistrations = () => {
@@ -130,10 +198,20 @@ export const setupAppUpdateChecks = () => {
       .catch(() => undefined);
   };
 
-  void navigator.serviceWorker
-    .register('/sw.js', { scope: '/', updateViaCache: 'none' })
-    .then(checkAndUpdateRegistration)
-    .catch(() => undefined);
+  updateServiceWorker = registerSW({
+    immediate: true,
+    onNeedRefresh() {
+      emitUpdateAvailable(latestRegistration);
+    },
+    onRegisteredSW(_swScriptUrl, registration) {
+      if (registration) {
+        checkAndUpdateRegistration(registration);
+      }
+    },
+    onRegisterError() {
+      // Keep the app usable when service workers are blocked by the browser.
+    },
+  });
 
   void navigator.serviceWorker.ready
     .then(checkAndUpdateRegistration)
@@ -158,5 +236,5 @@ export const setupAppUpdateChecks = () => {
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) updateRegistrations();
   });
-  window.setInterval(updateRegistrations, 60_000);
+  window.setInterval(updateRegistrations, UPDATE_CHECK_INTERVAL_MS);
 };
