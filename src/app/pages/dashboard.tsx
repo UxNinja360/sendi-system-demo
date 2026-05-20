@@ -1108,13 +1108,13 @@ export const Dashboard: React.FC = () => {
             <div className="mt-[10px] grid grid-cols-2 gap-[10px] min-[520px]:grid-cols-6">
               <section
                 aria-label="שליחים"
-                className="dashboard-status-card col-span-2 min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] dark:hover:bg-[#111111] min-[520px]:col-span-6"
+                className="dashboard-status-card relative col-span-2 min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] dark:hover:bg-[#111111] min-[520px]:col-span-6"
               >
-                <div className="flex min-h-[52px] items-stretch justify-between gap-3">
+                <div className="flex min-h-[52px] items-stretch">
                   <button
                     type="button"
                     onClick={() => navigate('/couriers')}
-                    className="min-w-0 flex-1 text-right focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+                    className="min-w-0 flex-1 pl-[7.5rem] text-right focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
                   >
                     <div className="flex items-center gap-2">
                       <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
@@ -1129,7 +1129,7 @@ export const Dashboard: React.FC = () => {
                       />
                     </div>
                   </button>
-                  <div className="flex min-w-[6.75rem] shrink-0 flex-col items-center justify-between self-stretch py-0.5">
+                  <div className="absolute left-2.5 top-1/2 flex h-[52px] min-w-[6.75rem] -translate-y-1/2 flex-col items-center justify-between py-0.5 sm:left-3">
                     <span className="max-w-[7.5rem] truncate text-center text-[11px] font-semibold leading-none text-app-text-secondary sm:text-xs">
                       שיבוץ אוטומטי
                     </span>
