@@ -1096,8 +1096,8 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
     grid-template-columns:
       clamp(36px, 4%, 48px)
       max-content
-      minmax(82px, clamp(90px, 8%, 118px))
-      minmax(320px, 1fr)
+      minmax(140px, clamp(150px, 16%, 190px))
+      minmax(300px, 1fr)
       clamp(84px, 10%, 128px);
     grid-template-rows: minmax(70px, auto);
     min-height: 70px;
@@ -1130,10 +1130,10 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   .delivery-row__route-table-pair {
     justify-content: flex-start;
     gap: clamp(8px, 1.1vw, 16px);
-    max-width: min(100%, 820px);
+    max-width: min(100%, 740px);
     min-width: 0;
     overflow: hidden;
-    width: min(100%, 820px);
+    width: min(100%, 740px);
   }
 
   .delivery-row__route-table-leg {
