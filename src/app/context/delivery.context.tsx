@@ -42,9 +42,12 @@ import {
 } from './delivery-storage';
 import { hasActiveLinkedDeliveryHub } from '../constants/delivery-hubs';
 import {
+  SENDI_PLUS_TERMS_ACCEPTED_CHANGE_EVENT,
+  SENDI_PLUS_TERMS_ACCEPTED_STORAGE_KEY,
   isRestaurantEligibleForDeliveryIntake,
   isSendiPlusRestaurant,
   readStoredSendiPlusRadius,
+  readStoredSendiPlusTermsAccepted,
 } from '../utils/sendi-plus';
 import {
   findDeliveryZoneForPoint,
@@ -830,6 +833,30 @@ const readStoredRouteStopOrders = (): Record<string, string[]> => {
   }
 };
 
+const syncSendiPlusRestaurantActivity = (
+  restaurants: Restaurant[],
+  isSendiPlusActive: boolean,
+) => {
+  let changed = false;
+  const nextRestaurants = restaurants.map((restaurant) => {
+    if (!isSendiPlusRestaurant(restaurant.name, restaurant.chainId)) {
+      return restaurant;
+    }
+
+    if (restaurant.isActive === isSendiPlusActive) {
+      return restaurant;
+    }
+
+    changed = true;
+    return {
+      ...restaurant,
+      isActive: isSendiPlusActive,
+    };
+  });
+
+  return changed ? nextRestaurants : restaurants;
+};
+
 const loadInitialState = (baseState: DeliveryState): DeliveryState => {
   if (typeof window === 'undefined') return baseState;
 
@@ -837,7 +864,19 @@ const loadInitialState = (baseState: DeliveryState): DeliveryState => {
     ensureStorageEpoch(window.localStorage);
 
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return baseState;
+    if (!raw) {
+      const restaurants = syncSendiPlusRestaurantActivity(
+        baseState.restaurants,
+        readStoredSendiPlusTermsAccepted(),
+      );
+
+      return restaurants === baseState.restaurants
+        ? baseState
+        : {
+            ...baseState,
+            restaurants,
+          };
+    }
 
     const parsed = reviveDates(JSON.parse(raw)) as Partial<DeliveryState>;
 
@@ -860,15 +899,20 @@ const loadInitialState = (baseState: DeliveryState): DeliveryState => {
       'courierRoutePlans' in parsed
         ? normalizeStoredRoutePlans(parsed.courierRoutePlans)
         : readStoredRouteStopOrders();
+    const sendiPlusTermsAccepted = readStoredSendiPlusTermsAccepted();
+    const syncedRestaurants = syncSendiPlusRestaurantActivity(
+      migratedRestaurants,
+      sendiPlusTermsAccepted,
+    );
 
     const loadedState = {
       ...baseState,
       ...parsed,
       couriers,
-      restaurants: migratedRestaurants,
+      restaurants: syncedRestaurants,
       courierRoutePlans,
-      deliveries: ((parsed.deliveries as Delivery[] | undefined) ?? baseState.deliveries).map(delivery =>
-        normalizeDeliveryPreparationTime(delivery, migratedRestaurants)
+      deliveries: ((parsed.deliveries as Delivery[] | undefined) ?? baseState.deliveries).map((delivery) =>
+        normalizeDeliveryPreparationTime(delivery, syncedRestaurants)
       ),
       stats: {
         ...baseState.stats,
@@ -901,6 +945,45 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     stateRef.current = state;
   }, [state]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const syncRestaurants = () => {
+      const nextRestaurants = syncSendiPlusRestaurantActivity(
+        stateRef.current.restaurants,
+        readStoredSendiPlusTermsAccepted(),
+      );
+
+      if (nextRestaurants === stateRef.current.restaurants) return;
+
+      rawDispatch({ type: 'SET_RESTAURANTS', payload: nextRestaurants });
+    };
+
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === SENDI_PLUS_TERMS_ACCEPTED_STORAGE_KEY) {
+        syncRestaurants();
+      }
+    };
+
+    syncRestaurants();
+    window.addEventListener(SENDI_PLUS_TERMS_ACCEPTED_CHANGE_EVENT, syncRestaurants);
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener(SENDI_PLUS_TERMS_ACCEPTED_CHANGE_EVENT, syncRestaurants);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (readStoredSendiPlusTermsAccepted()) return;
+
+    const nextRestaurants = syncSendiPlusRestaurantActivity(state.restaurants, false);
+    if (nextRestaurants === state.restaurants) return;
+
+    rawDispatch({ type: 'SET_RESTAURANTS', payload: nextRestaurants });
+  }, [state.restaurants]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
