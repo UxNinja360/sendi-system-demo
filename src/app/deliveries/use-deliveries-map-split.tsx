@@ -185,8 +185,6 @@ export const useDeliveriesMapSplit = ({
   onFocusedDeliveryChange,
   onOpenDelivery,
   selectedStatusFilters,
-  statusCounts,
-  onStatusFilterToggle,
 }: UseDeliveriesMapSplitArgs) => {
   const mapOpen = useDeliveriesMapOpen();
   const setMapOpen = useCallback((nextOpen: SetStateAction<boolean>) => {
@@ -428,8 +426,6 @@ export const useDeliveriesMapSplit = ({
               onFocusedDeliveryChange={onFocusedDeliveryChange}
               onOpenDelivery={onOpenDelivery}
               selectedStatusFilters={selectedStatusFilters}
-              statusCounts={statusCounts}
-              onStatusFilterToggle={onStatusFilterToggle}
             />
             <button
               type="button"
