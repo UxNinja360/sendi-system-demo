@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { useDelivery } from '../context/delivery-context-value';
 import { LeafletMap } from '../live/leaflet-map';
 import type {
@@ -71,7 +72,8 @@ export const DeliveriesLiveMapPanel: React.FC<DeliveriesLiveMapPanelProps> = ({
   onOpenDelivery,
   selectedStatusFilters,
 }) => {
-  const { state } = useDelivery();
+  const { state, dispatch } = useDelivery();
+  const navigate = useNavigate();
   const [sendiPlusTermsAccepted, setSendiPlusTermsAccepted] = useState(readStoredSendiPlusTermsAccepted);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [hoveredOrderId, setHoveredOrderId] = useState<string | null>(null);
@@ -219,6 +221,14 @@ export const DeliveriesLiveMapPanel: React.FC<DeliveriesLiveMapPanelProps> = ({
     onFocusedDeliveryChange?.(null);
   };
 
+  const handleRestaurantShowDetails = (restaurantId: string) => {
+    navigate(`/restaurant/${restaurantId}`);
+  };
+
+  const handleRestaurantToggleActive = (restaurantId: string) => {
+    dispatch({ type: 'TOGGLE_RESTAURANT', payload: restaurantId });
+  };
+
   return (
     <section className="relative h-full min-h-[320px] overflow-hidden bg-app-background">
       <LeafletMap
@@ -237,6 +247,8 @@ export const DeliveriesLiveMapPanel: React.FC<DeliveriesLiveMapPanelProps> = ({
         onRestaurantHover={setHoveredRestaurantName}
         onOrderClick={handleOrderClick}
         onOrderShowDetails={onOpenDelivery}
+        onRestaurantShowDetails={handleRestaurantShowDetails}
+        onRestaurantToggleActive={handleRestaurantToggleActive}
         onMapClick={handleMapClick}
       />
     </section>
