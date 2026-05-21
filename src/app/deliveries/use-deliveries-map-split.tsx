@@ -151,6 +151,16 @@ const clampMapWidth = (value: number) =>
 const clampMapSheetHeight = (value: number) =>
   Math.min(MAX_MAP_SHEET_HEIGHT, Math.max(MIN_MAP_SHEET_HEIGHT, value));
 
+const shouldIgnoreSheetDragTarget = (target: EventTarget | null) => {
+  if (!(target instanceof Element)) return true;
+
+  return Boolean(
+    target.closest(
+      'button, a, input, textarea, select, [role="button"], [role="menuitem"], [data-no-sheet-drag]',
+    ),
+  );
+};
+
 const getSavedMapWidth = () => {
   if (typeof localStorage === 'undefined') return DEFAULT_MAP_WIDTH;
 
@@ -243,6 +253,14 @@ export const useDeliveriesMapSplit = ({
     setMapSheetHeight(clampMapSheetHeight(((window.innerHeight - clientY) / window.innerHeight) * 100));
   }, []);
 
+  const beginMobileSheetResize = useCallback((clientY: number) => {
+    if (typeof window === 'undefined' || window.innerWidth >= 1024) return false;
+
+    updateMapSheetHeightFromClientY(clientY);
+    setIsSheetResizing(true);
+    return true;
+  }, [updateMapSheetHeightFromClientY]);
+
   const handleResizePointerDown = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
     if (typeof window === 'undefined' || window.innerWidth < 1024) return;
 
@@ -253,13 +271,11 @@ export const useDeliveriesMapSplit = ({
   }, [updateMapWidthFromClientX]);
 
   const handleSheetResizePointerDown = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
-    if (typeof window === 'undefined' || window.innerWidth >= 1024) return;
+    if (!beginMobileSheetResize(event.clientY)) return;
 
     event.preventDefault();
     event.currentTarget.setPointerCapture?.(event.pointerId);
-    updateMapSheetHeightFromClientY(event.clientY);
-    setIsSheetResizing(true);
-  }, [updateMapSheetHeightFromClientY]);
+  }, [beginMobileSheetResize]);
 
   const handleResizeKeyDown = useCallback((event: KeyboardEvent<HTMLButtonElement>) => {
     const step = event.shiftKey ? 5 : 2;
@@ -332,6 +348,36 @@ export const useDeliveriesMapSplit = ({
       window.removeEventListener('pointercancel', handlePointerUp);
     };
   }, [isSheetResizing, updateMapSheetHeightFromClientY]);
+
+  useEffect(() => {
+    if (!mapOpen || typeof document === 'undefined' || typeof window === 'undefined') {
+      return undefined;
+    }
+
+    if (window.innerWidth >= 1024) return undefined;
+
+    const header = document.querySelector<HTMLElement>('.app-layout-root header');
+    if (!header) return undefined;
+
+    const handleHeaderPointerDown = (event: PointerEvent) => {
+      if (window.innerWidth >= 1024) return;
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      if (shouldIgnoreSheetDragTarget(event.target)) return;
+
+      if (!beginMobileSheetResize(event.clientY)) return;
+
+      event.preventDefault();
+      header.setPointerCapture?.(event.pointerId);
+    };
+
+    header.classList.add('deliveries-map-sheet-drag-handle');
+    header.addEventListener('pointerdown', handleHeaderPointerDown);
+
+    return () => {
+      header.classList.remove('deliveries-map-sheet-drag-handle');
+      header.removeEventListener('pointerdown', handleHeaderPointerDown);
+    };
+  }, [beginMobileSheetResize, mapOpen]);
 
   useEffect(() => {
     if (typeof localStorage === 'undefined') return;
