@@ -20,7 +20,6 @@ import {
   Search,
   Star,
   TimerOff,
-  UserCheck,
   UserPlus,
   XCircle,
 } from 'lucide-react';
@@ -125,6 +124,10 @@ const UNASSIGNED_COURIER_LABEL = '-';
 const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(' ');
 
+const AssignedStatusDot: React.FC<{ className?: string }> = ({ className }) => (
+  <span className={joinClassNames('delivery-status-line__dot', className)} aria-hidden="true" />
+);
+
 const DELIVERY_STATUS_LINE_META: Record<
   DeliveryStatus,
   {
@@ -140,7 +143,7 @@ const DELIVERY_STATUS_LINE_META: Record<
   },
   assigned: {
     label: 'שובץ',
-    icon: UserCheck,
+    icon: AssignedStatusDot,
   },
   delivering: {
     label: 'במסירה',

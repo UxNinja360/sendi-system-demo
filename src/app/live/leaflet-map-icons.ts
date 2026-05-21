@@ -186,13 +186,14 @@ const assignedOrderIcon = makeOrderPin('#eab308', 'rgba(234,179,8,0.42)');
 const deliveringOrderIcon = makeOrderPin('#16a34a', 'rgba(22,163,74,0.42)');
 const deliveredOrderIcon = makeOrderPin('#2563eb', 'rgba(37,99,235,0.42)');
 const cancelledOrderIcon = makeOrderPin('#ef4444', 'rgba(239,68,68,0.42)');
+const expiredOrderIcon = makeOrderPin('#71717a', 'rgba(113,113,122,0.42)');
 
 export const getOrderIcon = (status: string) => {
   if (status === 'pending') return pendingOrderIcon;
   if (status === 'assigned') return assignedOrderIcon;
   if (status === 'delivered') return deliveredOrderIcon;
   if (status === 'cancelled') return cancelledOrderIcon;
-  if (status === 'expired') return cancelledOrderIcon;
+  if (status === 'expired') return expiredOrderIcon;
   return deliveringOrderIcon;
 };
 

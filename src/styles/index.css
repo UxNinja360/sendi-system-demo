@@ -850,6 +850,16 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   color: var(--app-text-secondary);
 }
 
+.delivery-status-line__dot {
+  align-self: center;
+  background: currentColor;
+  border-radius: 999px;
+  box-shadow: 0 0 0 2px var(--app-surface);
+  display: inline-block;
+  height: 0.5rem;
+  width: 0.5rem;
+}
+
 .delivery-status-line__label {
   color: var(--app-text-secondary);
 }
@@ -1071,13 +1081,17 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
 
 @container (min-width: 720px) {
   .delivery-vercel-row {
-    grid-template-areas: "actions status courier route order";
+    column-gap: clamp(8px, 0.8vw, 12px);
+    grid-template-areas: "actions status . distance courier customer restaurant order";
     grid-template-columns:
       clamp(36px, 4%, 48px)
-      max-content
-      minmax(140px, clamp(150px, 16%, 190px))
-      minmax(300px, 1fr)
-      clamp(84px, 10%, 128px);
+      clamp(78px, 10%, 92px)
+      minmax(0, 1fr)
+      clamp(64px, 7%, 84px)
+      clamp(104px, 15%, 150px)
+      minmax(150px, 240px)
+      minmax(180px, 300px)
+      clamp(78px, 9%, 116px);
     grid-template-rows: minmax(70px, auto);
     min-height: 70px;
   }
@@ -1097,41 +1111,48 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   }
 
   .delivery-row__route-table {
-    align-items: center;
-    display: flex;
-    grid-area: route;
-    justify-content: flex-end;
-    min-height: 70px;
-    overflow: hidden;
-    padding: 7px 6px;
+    display: contents;
   }
 
   .delivery-row__route-table-pair {
-    justify-content: flex-start;
-    gap: clamp(8px, 1.1vw, 16px);
-    max-width: min(100%, 740px);
-    min-width: 0;
-    overflow: hidden;
-    width: min(100%, 740px);
+    display: contents;
   }
 
   .delivery-row__route-table-leg {
-    flex: 1 1 0;
+    align-self: center;
     gap: 6px;
+    min-height: 70px;
+    max-width: none;
     min-width: 0;
+    overflow: hidden;
+    padding: 7px 0;
+  }
+
+  .delivery-row__route-table-leg:first-child {
+    grid-area: restaurant;
+    justify-content: flex-start;
+  }
+
+  .delivery-row__route-table-leg:nth-child(2) {
+    grid-area: customer;
+    justify-content: flex-start;
   }
 
   .delivery-row__route-table-distance {
-    justify-content: center;
-    min-width: 54px;
-    padding-inline: 2px;
+    justify-content: flex-end;
+    min-width: 0;
+    padding-inline: 0;
   }
 
   .delivery-row__route-table-distance-wrap {
-    flex: 0 0 clamp(70px, 7vw, 96px);
-    justify-content: flex-start;
-    max-width: 96px;
-    min-width: 70px;
+    align-self: center;
+    grid-area: distance;
+    justify-content: flex-end;
+    max-width: 100%;
+    min-height: 70px;
+    min-width: 0;
+    padding: 7px 0;
+    width: 100%;
   }
 
   .delivery-row__route-table-courier {
@@ -1184,21 +1205,22 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   .delivery-vercel-row {
     grid-template-columns:
       clamp(36px, 4%, 48px)
-      max-content
-      minmax(180px, clamp(188px, 19%, 220px))
-      minmax(300px, 1fr)
-      clamp(84px, 10%, 128px);
+      clamp(84px, 9%, 98px)
+      minmax(0, 1fr)
+      clamp(76px, 7%, 96px)
+      clamp(118px, 14%, 170px)
+      minmax(180px, 280px)
+      minmax(220px, 340px)
+      clamp(82px, 9%, 124px);
   }
 
-  .delivery-row__route-table-pair {
-    max-width: min(100%, 680px);
-    width: min(100%, 680px);
+  .delivery-row__route-table-leg {
+    max-width: none;
   }
 
   .delivery-row__route-table-distance-wrap {
-    flex-basis: 92px;
-    max-width: 104px;
-    min-width: 92px;
+    max-width: 100%;
+    min-width: 0;
   }
 }
 
