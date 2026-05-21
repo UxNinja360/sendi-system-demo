@@ -1620,6 +1620,21 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   }
 }
 
+@container (min-width: 720px) and (max-width: 959px) {
+  .courier-vercel-row {
+    grid-template-columns:
+      minmax(180px, 230px)
+      minmax(90px, 116px)
+      minmax(96px, 126px)
+      minmax(86px, 112px)
+      minmax(74px, 100px)
+      minmax(86px, 112px)
+      minmax(0, 1fr)
+      minmax(58px, 76px)
+      36px !important;
+  }
+}
+
 @container (max-width: 719px) {
   .courier-vercel-list-frame {
     border: 0;

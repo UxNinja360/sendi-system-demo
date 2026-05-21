@@ -584,7 +584,7 @@ const SendiPlusCard: React.FC<{
 
   return (
     <section
-      className={`sendi-plus-card rounded-[8px] border border-app-border bg-app-surface dark:border-[#252525] dark:bg-[#0A0A0A] ${
+      className={`sendi-plus-card rounded-none border border-app-border bg-app-surface dark:border-[#252525] dark:bg-[#0A0A0A] ${
         isSendiPlusEnabled ? 'sendi-plus-card--active' : 'sendi-plus-card--off'
       } ${canActivateFromCard ? 'sendi-plus-card--teaser cursor-pointer' : ''} ${
         isActivationPulseVisible ? 'sendi-plus-card--igniting' : ''
@@ -1244,7 +1244,7 @@ export const Dashboard: React.FC = () => {
             </div>
           </section>
           <section>
-            <div className="dashboard-delivery-summary overflow-hidden rounded-[8px] border border-app-border bg-app-surface text-right dark:border-[#252525] dark:bg-[#0A0A0A]">
+            <div className="dashboard-delivery-summary overflow-hidden rounded-none border border-app-border bg-app-surface text-right dark:border-[#252525] dark:bg-[#0A0A0A]">
               <div className="dashboard-delivery-summary__row grid grid-cols-3" dir="rtl">
               {STATUS_META.filter(
                 (status) =>
@@ -1320,7 +1320,7 @@ export const Dashboard: React.FC = () => {
             <div className="mt-[10px] grid grid-cols-2 gap-[10px] min-[520px]:grid-cols-6">
               <section
                 aria-label="שליחים"
-                className="dashboard-status-card relative col-span-2 min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] dark:hover:bg-[#111111] min-[520px]:col-span-6"
+                className="dashboard-status-card relative col-span-2 min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] dark:hover:bg-[#111111] min-[520px]:col-span-6"
               >
                 <div className="flex min-h-[52px] items-stretch">
                   <button
@@ -1363,7 +1363,7 @@ export const Dashboard: React.FC = () => {
                 type="button"
                 aria-label="מסעדות"
                 onClick={() => navigate('/restaurants')}
-                className="dashboard-status-card col-span-1 min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] dark:hover:bg-[#111111] min-[520px]:col-span-3"
+                className="dashboard-status-card col-span-1 min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] dark:hover:bg-[#111111] min-[520px]:col-span-3"
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
@@ -1382,7 +1382,7 @@ export const Dashboard: React.FC = () => {
                 type="button"
                 aria-label="זמן ממוצע למשלוח"
                 onClick={() => navigate('/deliveries')}
-                className="dashboard-status-card col-span-1 min-w-0 rounded-[8px] border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] dark:hover:bg-[#111111] min-[520px]:col-span-3"
+                className="dashboard-status-card col-span-1 min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] dark:hover:bg-[#111111] min-[520px]:col-span-3"
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">

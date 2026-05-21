@@ -956,19 +956,6 @@ export const CouriersListScreen: React.FC = () => {
               showBottomBorder={false}
               showPeriodControl={false}
               actionsClassName="relative z-[80]"
-              controlsClassName="relative z-10"
-              controls={
-                <div className="flex max-w-full shrink-0 flex-nowrap items-center gap-1 overflow-x-auto no-scrollbar">
-                  <div className="flex shrink-0 items-center gap-1">
-                    <CourierToolbarToggle
-                      active={showActiveCouriersOnly}
-                      label="הצג רק שליחים מחוברים"
-                      onClick={() => setShowActiveCouriersOnly((value) => !value)}
-                      icon={<Link2 className="h-3.5 w-3.5" />}
-                    />
-                  </div>
-                </div>
-              }
               actions={
                 <div className="flex min-w-0 flex-1 items-center gap-1.5">
                   <div className="flex shrink-0 items-center gap-1">
@@ -993,6 +980,12 @@ export const CouriersListScreen: React.FC = () => {
                         }))
                       }
                       icon={<Package className="h-3.5 w-3.5" />}
+                    />
+                    <CourierToolbarToggle
+                      active={showActiveCouriersOnly}
+                      label="הצג רק שליחים מחוברים"
+                      onClick={() => setShowActiveCouriersOnly((value) => !value)}
+                      icon={<Link2 className="h-3.5 w-3.5" />}
                     />
                   </div>
                   <ListToolbarActions
