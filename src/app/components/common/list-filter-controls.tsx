@@ -342,7 +342,7 @@ export const ListMultiSelectFilter: React.FC<ListMultiSelectFilterProps> = ({
         {isOpen && typeof document !== 'undefined'
           ? createPortal(
               <div
-                className="fixed z-50 max-w-[calc(100vw-24px)] rounded-[8px] border border-app-border bg-app-surface p-2 shadow-[var(--app-shadow-panel)] dark:border-app-nav-border"
+                className="fixed z-[180] max-w-[calc(100vw-24px)] rounded-[8px] border border-app-border bg-app-surface p-2 shadow-[var(--app-shadow-panel)] dark:border-app-nav-border"
                 dir="rtl"
                 style={menuStyle}
                 onMouseDown={(event) => event.stopPropagation()}
