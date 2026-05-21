@@ -29,7 +29,7 @@ type UseDeliveriesMapSplitArgs = {
 };
 
 const MAP_SPLIT_WIDTH_STORAGE_KEY = 'sendi:deliveries-map-split-width';
-const MAP_SHEET_HEIGHT_STORAGE_KEY = 'sendi:deliveries-map-sheet-height';
+const MAP_SHEET_HEIGHT_STORAGE_KEY = 'sendi:deliveries-map-control-sheet-height';
 const DEFAULT_MAP_WIDTH = 50;
 const MIN_MAP_WIDTH = 32;
 const MAX_MAP_WIDTH = 74;
@@ -37,9 +37,9 @@ const DESKTOP_MAP_SPLIT_BREAKPOINT = 1024;
 const MIN_DESKTOP_LIST_CONTENT_WIDTH = 340;
 const DEFAULT_EXPANDED_SIDEBAR_WIDTH = 250;
 const COLLAPSED_SIDEBAR_WIDTH = 60;
-const DEFAULT_MAP_SHEET_HEIGHT = 38;
-const MIN_MAP_SHEET_HEIGHT = 26;
-const MAX_MAP_SHEET_HEIGHT = 82;
+const DEFAULT_MAP_SHEET_HEIGHT = 52;
+const MIN_MAP_SHEET_HEIGHT = 30;
+const MAX_MAP_SHEET_HEIGHT = 86;
 
 let sharedMapOpen = false;
 const mapOpenListeners = new Set<() => void>();
@@ -388,7 +388,7 @@ export const useDeliveriesMapSplit = ({
             <button
               type="button"
               className="deliveries-map-sheet-resizer"
-              aria-label="שינוי גובה המפה"
+              aria-label="שינוי גובה פאנל המשלוחים"
               aria-orientation="horizontal"
               aria-valuemin={MIN_MAP_SHEET_HEIGHT}
               aria-valuemax={MAX_MAP_SHEET_HEIGHT}
@@ -398,7 +398,7 @@ export const useDeliveriesMapSplit = ({
               onKeyDown={handleSheetResizeKeyDown}
               onDoubleClick={() => setMapSheetHeight(DEFAULT_MAP_SHEET_HEIGHT)}
               role="separator"
-              title="גרור למעלה או למטה לשינוי גובה המפה. דאבל קליק מאפס."
+              title="גרור למעלה או למטה לשינוי גובה פאנל המשלוחים. דאבל קליק מאפס."
             />
             <button
               type="button"
