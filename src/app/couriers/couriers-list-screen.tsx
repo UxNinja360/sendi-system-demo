@@ -270,8 +270,8 @@ type CourierListSessionState = {
 
 const DEFAULT_COURIER_LIST_SESSION_STATE: CourierListSessionState = {
   courierEmploymentVisibility: {
-    hourly: true,
-    perDelivery: true,
+    hourly: false,
+    perDelivery: false,
   },
   searchQuery: '',
   showActiveCouriersOnly: false,
@@ -440,16 +440,20 @@ export const CouriersListScreen: React.FC = () => {
   const filteredCouriers = useMemo(() => {
     const normalizedSearch = searchQuery.trim().toLowerCase();
     let couriers = state.couriers;
+    const hasEmploymentFilter =
+      courierEmploymentVisibility.hourly || courierEmploymentVisibility.perDelivery;
 
     if (showActiveCouriersOnly) {
       couriers = couriers.filter((courier) => courier.status !== 'offline');
     }
 
-    couriers = couriers.filter((courier) =>
-      courier.employmentType === 'שעתי'
-        ? courierEmploymentVisibility.hourly
-        : courierEmploymentVisibility.perDelivery,
-    );
+    if (hasEmploymentFilter) {
+      couriers = couriers.filter((courier) =>
+        courier.employmentType === 'שעתי'
+          ? courierEmploymentVisibility.hourly
+          : courierEmploymentVisibility.perDelivery,
+      );
+    }
 
     if (normalizedSearch) {
       couriers = couriers.filter((courier) =>
@@ -469,6 +473,10 @@ export const CouriersListScreen: React.FC = () => {
     const compareByName = (a: Courier, b: Courier) => a.name.localeCompare(b.name, 'he');
 
     return [...couriers].sort((a, b) => {
+      if (!hasEmploymentFilter) {
+        return compareByName(a, b);
+      }
+
       const employmentGroupDiff = employmentGroupValue(a) - employmentGroupValue(b);
       if (employmentGroupDiff !== 0) return employmentGroupDiff;
 
@@ -953,6 +961,18 @@ export const CouriersListScreen: React.FC = () => {
                 <div className="flex max-w-full shrink-0 flex-nowrap items-center gap-1 overflow-x-auto no-scrollbar">
                   <div className="flex shrink-0 items-center gap-1">
                     <CourierToolbarToggle
+                      active={showActiveCouriersOnly}
+                      label="הצג רק שליחים מחוברים"
+                      onClick={() => setShowActiveCouriersOnly((value) => !value)}
+                      icon={<Link2 className="h-3.5 w-3.5" />}
+                    />
+                  </div>
+                </div>
+              }
+              actions={
+                <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                  <div className="flex shrink-0 items-center gap-1">
+                    <CourierToolbarToggle
                       active={courierEmploymentVisibility.hourly}
                       label="הצג שליחים שעתיים"
                       onClick={() =>
@@ -975,18 +995,6 @@ export const CouriersListScreen: React.FC = () => {
                       icon={<Package className="h-3.5 w-3.5" />}
                     />
                   </div>
-                  <div className="flex shrink-0 items-center gap-1">
-                    <CourierToolbarToggle
-                      active={showActiveCouriersOnly}
-                      label="הצג רק שליחים מחוברים"
-                      onClick={() => setShowActiveCouriersOnly((value) => !value)}
-                      icon={<Link2 className="h-3.5 w-3.5" />}
-                    />
-                  </div>
-                </div>
-              }
-              actions={
-                <div className="flex min-w-0 flex-1 items-center gap-1.5">
                   <ListToolbarActions
                     searchQuery={searchQuery}
                     onSearchQueryChange={setSearchQuery}

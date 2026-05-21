@@ -43,6 +43,9 @@ const isValidRoutePoint = (point: RoutePoint | null | undefined): point is Route
   point.length === 2 &&
   point.every((value) => Number.isFinite(value));
 
+const isCourierActiveOnMap = (courier: Courier) =>
+  courier.employmentType !== 'שעתי' || courier.isOnShift === true;
+
 interface LeafletMapProps {
   orders: Order[];
   routeOrders?: Order[];
@@ -371,9 +374,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     // Add restaurant markers
     restaurants.forEach((restaurant) => {
       const marker = L.marker([restaurant.lat, restaurant.lng], {
-        icon: createRestaurantIcon(22, restaurant.name),
+        icon: createRestaurantIcon(22, restaurant.name, restaurant.isActive !== false),
         zIndexOffset: 500,
-        title: restaurant.name || '',
       })
         .addTo(mapRef.current!);
       
@@ -382,6 +384,17 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       });
       marker.on('mouseout', () => {
         onRestaurantHover?.(null);
+      });
+      marker.on('click', (event) => {
+        L.DomEvent.stopPropagation(event);
+        const markerEl = marker.getElement();
+        markerEl?.classList.add('restaurant-marker--tooltip-open');
+        if (typeof window !== 'undefined') {
+          window.setTimeout(() => {
+            markerEl?.classList.remove('restaurant-marker--tooltip-open');
+          }, 1800);
+        }
+        onRestaurantHover?.(restaurant.name);
       });
 
       const markerEl = marker.getElement();
@@ -425,7 +438,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         ? [courier.lat, courier.lng]
         : courierRenderPositions.get(courier.id) ?? [courier.lat, courier.lng];
       const marker = L.marker([courierLat, courierLng], {
-        icon: makeCourierIcon(courier.name, hasActiveDelivery, courier.isOnShift !== false),
+        icon: makeCourierIcon(courier.name, isCourierActiveOnMap(courier)),
         zIndexOffset: 900,
         title: courier.name || '',
       })
@@ -724,6 +737,41 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         .restaurant-marker:hover > div {
           transform: scale(1.2);
           box-shadow: 0px 4px 16px rgba(147,51,234,0.6) !important;
+        }
+        .restaurant-marker--inactive:hover > div {
+          box-shadow: 0px 4px 16px rgba(100,116,139,0.38) !important;
+        }
+        .restaurant-marker-name-tooltip {
+          background: rgba(10, 10, 10, 0.92);
+          border: 1px solid rgba(255,255,255,0.12);
+          border-radius: 999px;
+          bottom: calc(100% + 7px);
+          box-shadow: 0 8px 22px rgba(0,0,0,0.26);
+          color: #fafafa;
+          direction: rtl;
+          font-family: 'Rubik', sans-serif;
+          font-size: 12px;
+          font-weight: 700;
+          left: 50%;
+          line-height: 1;
+          opacity: 0;
+          padding: 6px 9px;
+          pointer-events: none;
+          position: absolute;
+          transform: translate(-50%, 2px);
+          transition: opacity 80ms ease, transform 80ms ease;
+          white-space: nowrap;
+          z-index: 1;
+        }
+        .restaurant-marker:hover .restaurant-marker-name-tooltip,
+        .restaurant-marker--tooltip-open .restaurant-marker-name-tooltip {
+          opacity: 1;
+          transform: translate(-50%, -2px);
+        }
+        .dark .restaurant-marker-name-tooltip {
+          background: rgba(10, 10, 10, 0.96);
+          border-color: rgba(255,255,255,0.1);
+          color: #ededed;
         }
         .leaflet-control-zoom {
           border: none !important;

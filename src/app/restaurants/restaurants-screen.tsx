@@ -275,8 +275,8 @@ type RestaurantListSessionState = {
 const DEFAULT_RESTAURANT_LIST_SESSION_STATE: RestaurantListSessionState = {
   restaurantConnectionFilter: null,
   restaurantSourceVisibility: {
-    regular: true,
-    sendiGo: true,
+    regular: false,
+    sendiGo: false,
   },
   searchQuery: '',
   sortColumn: 'name',
@@ -499,6 +499,8 @@ export const RestaurantsScreen: React.FC = () => {
   }, [sortColumn]);
 
   const filteredRestaurants = useMemo(() => {
+    const hasSourceFilter =
+      restaurantSourceVisibility.regular || restaurantSourceVisibility.sendiGo;
     const filtered = restaurants.filter((r) => {
       const matchesSearch = !searchQuery ||
         r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -510,15 +512,22 @@ export const RestaurantsScreen: React.FC = () => {
         !restaurantConnectionFilter ||
         (restaurantConnectionFilter === 'connected' ? r.isActive : !r.isActive);
       const isSendiGo = isSendiPlusRestaurant(r.name, r.chainId);
-      const matchesSource = isSendiGo
-        ? restaurantSourceVisibility.sendiGo
-        : restaurantSourceVisibility.regular;
+      const matchesSource =
+        !hasSourceFilter ||
+        (isSendiGo
+          ? restaurantSourceVisibility.sendiGo
+          : restaurantSourceVisibility.regular);
       return matchesSearch && matchesConnection && matchesSource;
     });
 
     const direction = sortDirection === 'asc' ? 1 : -1;
+    const compareByName = (a: RestaurantRow, b: RestaurantRow) => a.name.localeCompare(b.name, 'he');
 
     return [...filtered].sort((a, b) => {
+      if (!hasSourceFilter) {
+        return compareByName(a, b);
+      }
+
       const aIsSendiGo = isSendiPlusRestaurant(a.name, a.chainId);
       const bIsSendiGo = isSendiPlusRestaurant(b.name, b.chainId);
 
@@ -528,7 +537,7 @@ export const RestaurantsScreen: React.FC = () => {
 
       switch (sortColumn) {
         case 'name':
-          return a.name.localeCompare(b.name, 'he') * direction;
+          return compareByName(a, b) * direction;
         case 'chainId':
           return (a.chainId || '-').localeCompare(b.chainId || '-', 'he') * direction;
         case 'type':
@@ -998,6 +1007,22 @@ export const RestaurantsScreen: React.FC = () => {
                 <div className="flex max-w-full shrink-0 flex-nowrap items-center gap-1 overflow-x-auto no-scrollbar">
                   <div className="flex shrink-0 items-center gap-1">
                     <RestaurantToolbarToggle
+                      active={restaurantConnectionFilter === 'connected'}
+                      label={'\u05d4\u05e6\u05d2 \u05e8\u05e7 \u05de\u05e1\u05e2\u05d3\u05d5\u05ea \u05e4\u05e2\u05d9\u05dc\u05d5\u05ea'}
+                      onClick={() =>
+                        setRestaurantConnectionFilter((value) =>
+                          value === 'connected' ? null : 'connected',
+                        )
+                      }
+                      icon={<Link2 className="h-3.5 w-3.5" />}
+                    />
+                  </div>
+                </div>
+              }
+              actions={
+                <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                  <div className="flex shrink-0 items-center gap-1">
+                    <RestaurantToolbarToggle
                       active={restaurantSourceVisibility.regular}
                       label={'\u05d4\u05e6\u05d2 \u05de\u05e1\u05e2\u05d3\u05d5\u05ea \u05e8\u05d2\u05d9\u05dc\u05d5\u05ea'}
                       onClick={() =>
@@ -1026,22 +1051,6 @@ export const RestaurantsScreen: React.FC = () => {
                       }
                     />
                   </div>
-                  <div className="flex shrink-0 items-center gap-1">
-                    <RestaurantToolbarToggle
-                      active={restaurantConnectionFilter === 'connected'}
-                      label={'\u05d4\u05e6\u05d2 \u05e8\u05e7 \u05de\u05e1\u05e2\u05d3\u05d5\u05ea \u05e4\u05e2\u05d9\u05dc\u05d5\u05ea'}
-                      onClick={() =>
-                        setRestaurantConnectionFilter((value) =>
-                          value === 'connected' ? null : 'connected',
-                        )
-                      }
-                      icon={<Link2 className="h-3.5 w-3.5" />}
-                    />
-                  </div>
-                </div>
-              }
-              actions={
-                <div className="flex min-w-0 flex-1 items-center gap-1.5">
                   <ListToolbarActions
                     searchQuery={searchQuery}
                     onSearchQueryChange={setSearchQuery}

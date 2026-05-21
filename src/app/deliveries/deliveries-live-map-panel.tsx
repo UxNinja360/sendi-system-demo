@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useDelivery } from '../context/delivery-context-value';
 import { LeafletMap } from '../live/leaflet-map';
 import type {
   Courier as MapCourier,
@@ -15,7 +16,12 @@ import type {
   DeliveryStatus,
   Restaurant,
 } from '../types/delivery.types';
-import { isSendiPlusRestaurant } from '../utils/sendi-plus';
+import {
+  SENDI_PLUS_TERMS_ACCEPTED_CHANGE_EVENT,
+  SENDI_PLUS_TERMS_ACCEPTED_STORAGE_KEY,
+  isSendiPlusRestaurant,
+  readStoredSendiPlusTermsAccepted,
+} from '../utils/sendi-plus';
 
 type DeliveriesLiveMapPanelProps = {
   deliveries: Delivery[];
@@ -65,14 +71,43 @@ export const DeliveriesLiveMapPanel: React.FC<DeliveriesLiveMapPanelProps> = ({
   onOpenDelivery,
   selectedStatusFilters,
 }) => {
+  const { state } = useDelivery();
+  const [sendiPlusTermsAccepted, setSendiPlusTermsAccepted] = useState(readStoredSendiPlusTermsAccepted);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [hoveredOrderId, setHoveredOrderId] = useState<string | null>(null);
   const [hoveredCourierId, setHoveredCourierId] = useState<string | null>(null);
   const [hoveredRestaurantName, setHoveredRestaurantName] = useState<string | null>(null);
+  const isSendiPlusActive = state.isSystemOpen && sendiPlusTermsAccepted;
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const syncSendiPlusTermsAccepted = () => {
+      setSendiPlusTermsAccepted(readStoredSendiPlusTermsAccepted());
+    };
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === SENDI_PLUS_TERMS_ACCEPTED_STORAGE_KEY) {
+        syncSendiPlusTermsAccepted();
+      }
+    };
+
+    window.addEventListener(SENDI_PLUS_TERMS_ACCEPTED_CHANGE_EVENT, syncSendiPlusTermsAccepted);
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener(SENDI_PLUS_TERMS_ACCEPTED_CHANGE_EVENT, syncSendiPlusTermsAccepted);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   const mapRestaurants = useMemo<MapMarker[]>(() => (
     restaurants
-      .filter((restaurant) => hasValidPosition({ lat: restaurant.lat, lng: restaurant.lng }))
+      .filter((restaurant) => {
+        if (!hasValidPosition({ lat: restaurant.lat, lng: restaurant.lng })) return false;
+
+        const isSendiPlus = isSendiPlusRestaurant(restaurant.name, restaurant.chainId);
+        return !isSendiPlus || isSendiPlusActive;
+      })
       .map((restaurant) => ({
         id: restaurant.id,
         name: restaurant.name,
@@ -81,7 +116,7 @@ export const DeliveriesLiveMapPanel: React.FC<DeliveriesLiveMapPanelProps> = ({
         isActive: restaurant.isActive,
         isSendiPlus: isSendiPlusRestaurant(restaurant.name, restaurant.chainId),
       }))
-  ), [restaurants]);
+  ), [isSendiPlusActive, restaurants]);
 
   const mapOrders = useMemo<MapOrder[]>(() => (
     deliveries.map((delivery) => {
@@ -134,6 +169,7 @@ export const DeliveriesLiveMapPanel: React.FC<DeliveriesLiveMapPanelProps> = ({
 
   const mapCouriers = useMemo<MapCourier[]>(() => (
     couriers
+      .filter((courier) => courier.status !== 'offline')
       .map((courier, index) => {
         const position = getInitialCourierPosition(courier, deliveries, index);
 
@@ -144,6 +180,7 @@ export const DeliveriesLiveMapPanel: React.FC<DeliveriesLiveMapPanelProps> = ({
           lng: position.lng,
           status: courier.status,
           isOnShift: courier.isOnShift,
+          employmentType: courier.employmentType,
         };
       })
   ), [couriers, deliveries]);

@@ -1,30 +1,56 @@
 ﻿import L from 'leaflet';
 import { getRestaurantBrandMarker } from '../utils/restaurant-branding';
 
-export const createRestaurantIcon = (size: number = 22, restaurantName?: string) => {
+const escapeMarkerHtml = (value: string) =>
+  value.replace(/[&<>"']/g, (char) => {
+    const entities: Record<string, string> = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    };
+    return entities[char] ?? char;
+  });
+
+export const createRestaurantIcon = (
+  size: number = 22,
+  restaurantName?: string,
+  isActive: boolean = true,
+) => {
   const brandMarker = getRestaurantBrandMarker(restaurantName);
+  const tooltipName = restaurantName ? escapeMarkerHtml(restaurantName) : '';
+  const tooltipMarkup = tooltipName
+    ? `<span class="restaurant-marker-name-tooltip" dir="rtl">${tooltipName}</span>`
+    : '';
+  const inactiveFill = '#3f3f46';
+  const inactiveText = '#a1a1aa';
+  const inactiveShadow = '0 1px 4px rgba(0,0,0,0.22)';
+  const inactiveFilter = isActive ? 'none' : 'grayscale(1) saturate(0.35)';
 
   if (brandMarker) {
     return L.divIcon({
-      className: 'custom-marker restaurant-marker',
+      className: `custom-marker restaurant-marker${isActive ? '' : ' restaurant-marker--inactive'}`,
       html: `
         <div style="
           width: ${size}px;
           height: ${size}px;
-          background-color: ${brandMarker.fill};
+          background-color: ${isActive ? brandMarker.fill : inactiveFill};
           border-radius: 5px;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+          box-shadow: ${isActive ? '0 1px 4px rgba(0,0,0,0.35)' : inactiveShadow};
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          opacity: 0.95;
-          color: ${brandMarker.text};
+          opacity: ${isActive ? '0.95' : '0.58'};
+          color: ${isActive ? brandMarker.text : inactiveText};
           font-size: 13px;
           font-weight: 900;
           font-family: Arial, sans-serif;
           line-height: 1;
-        ">${brandMarker.label}</div>
+          filter: ${inactiveFilter};
+          position: relative;
+        ">${brandMarker.label}${tooltipMarkup}</div>
       `,
       iconSize: [size, size],
       iconAnchor: [size / 2, size / 2],
@@ -32,25 +58,28 @@ export const createRestaurantIcon = (size: number = 22, restaurantName?: string)
   }
 
   return L.divIcon({
-    className: 'custom-marker restaurant-marker',
+    className: `custom-marker restaurant-marker${isActive ? '' : ' restaurant-marker--inactive'}`,
     html: `
       <div style="
         width: ${size}px;
         height: ${size}px;
-        background-color: #7c3aed;
+        background-color: ${isActive ? '#7c3aed' : '#52525b'};
         border-radius: 4px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+        box-shadow: ${isActive ? '0 1px 4px rgba(0,0,0,0.35)' : inactiveShadow};
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        opacity: 0.85;
+        opacity: ${isActive ? '0.85' : '0.55'};
+        filter: ${inactiveFilter};
+        position: relative;
       ">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="${isActive ? 'white' : '#d4d4d8'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/>
           <path d="M7 2v20"/>
           <path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>
         </svg>
+        ${tooltipMarkup}
       </div>
     `,
     iconSize: [size, size],
@@ -58,16 +87,16 @@ export const createRestaurantIcon = (size: number = 22, restaurantName?: string)
   });
 };
 
-export const makeCourierIcon = (name: string, hasActiveDelivery: boolean, isOnShift: boolean = true) => {
+export const makeCourierIcon = (name: string, isActiveOnMap: boolean = true) => {
   const firstName = name.split(' ')[0];
   const isDark = document.documentElement.classList.contains('dark');
   const labelTextColor = isDark ? '#fafafa' : '#1f2937';
   const labelBackground = isDark ? 'rgba(23,23,23,0.82)' : 'rgba(255,255,255,0.78)';
   const labelBorder = isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(15,23,42,0.08)';
   const labelShadow = isDark ? '0 1px 3px rgba(0,0,0,0.35)' : '0 1px 2px rgba(0,0,0,0.1)';
-  const courierColor = !isOnShift ? '#64748b' : hasActiveDelivery ? '#f59e0b' : '#22c55e';
-  const courierShadow = !isOnShift ? 'rgba(100,116,139,0.35)' : hasActiveDelivery ? 'rgba(245,158,11,0.5)' : 'rgba(34,197,94,0.45)';
-  const labelOpacity = isOnShift ? '1' : '0.78';
+  const courierColor = isActiveOnMap ? '#22c55e' : '#64748b';
+  const courierShadow = isActiveOnMap ? 'rgba(34,197,94,0.45)' : 'rgba(100,116,139,0.35)';
+  const labelOpacity = isActiveOnMap ? '1' : '0.78';
 
   return L.divIcon({
     className: 'custom-marker courier-dot',

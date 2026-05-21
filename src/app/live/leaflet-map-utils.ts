@@ -33,6 +33,7 @@ export interface Courier {
   lng: number;
   status: string;
   isOnShift?: boolean;
+  employmentType?: string;
 }
 
 export const getPickupGroupKey = (order: Order) => (
