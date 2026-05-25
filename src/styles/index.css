@@ -1251,14 +1251,15 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
 @container (min-width: 880px) {
   .delivery-vercel-row {
     column-gap: clamp(6px, 0.65vw, 10px);
-    grid-template-areas: "actions status courier distance customer restaurant order";
+    grid-template-areas: "actions status courier distance . customer restaurant order";
     grid-template-columns:
       clamp(34px, 4%, 42px)
       clamp(116px, 13%, 144px)
-      minmax(92px, 0.9fr)
+      minmax(92px, 150px)
       clamp(76px, 8%, 96px)
-      minmax(118px, 1.1fr)
-      minmax(150px, 1.35fr)
+      minmax(0, 1fr)
+      minmax(118px, 220px)
+      minmax(150px, 280px)
       clamp(74px, 9%, 104px);
     grid-template-rows: minmax(70px, auto);
     min-height: 70px;
@@ -1392,8 +1393,9 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
       clamp(116px, 13%, 144px)
       max-content
       clamp(76px, 8%, 96px)
-      minmax(118px, 1.1fr)
-      minmax(150px, 1.35fr)
+      minmax(0, 1fr)
+      minmax(118px, 220px)
+      minmax(150px, 280px)
       clamp(74px, 9%, 104px);
   }
 }
@@ -1405,8 +1407,9 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
       clamp(124px, 11%, 144px)
       clamp(106px, 12%, 150px)
       clamp(82px, 8%, 104px)
-      minmax(160px, 1fr)
-      minmax(210px, 1.25fr)
+      minmax(0, 1fr)
+      minmax(160px, 260px)
+      minmax(210px, 320px)
       clamp(82px, 9%, 124px);
   }
 
@@ -1425,8 +1428,9 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
       clamp(124px, 11%, 144px)
       max-content
       clamp(82px, 8%, 104px)
-      minmax(160px, 1fr)
-      minmax(210px, 1.25fr)
+      minmax(0, 1fr)
+      minmax(160px, 260px)
+      minmax(210px, 320px)
       clamp(82px, 9%, 124px);
   }
 }
