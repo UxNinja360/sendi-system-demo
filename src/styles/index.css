@@ -1207,7 +1207,7 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   }
 }
 
-@container (min-width: 720px) and (max-width: 879px) {
+@container (min-width: 400px) and (max-width: 879px) {
   .delivery-row__route-compact {
     gap: 10px;
     padding: 12px 14px 10px;
