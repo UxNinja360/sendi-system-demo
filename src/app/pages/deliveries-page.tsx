@@ -447,6 +447,7 @@ export const DeliveriesPage: React.FC = () => {
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [focusedDeliveryId, setFocusedDeliveryId] = useState<string | null>(null);
+  const [focusedDeliveryScrollSignal, setFocusedDeliveryScrollSignal] = useState(0);
 
   const [drawerDeliveryId, setDrawerDeliveryId] = useState<string | null>(null);
   const [searchRowHidden, setSearchRowHidden] = useState(false);
@@ -497,6 +498,13 @@ export const DeliveriesPage: React.FC = () => {
 
   const handleFocusDeliveryOnMap = useCallback((deliveryId: string) => {
     setFocusedDeliveryId((currentId) => (currentId === deliveryId ? null : deliveryId));
+  }, []);
+
+  const handleMapFocusedDeliveryChange = useCallback((deliveryId: string | null) => {
+    setFocusedDeliveryId(deliveryId);
+    if (deliveryId) {
+      setFocusedDeliveryScrollSignal((current) => current + 1);
+    }
   }, []);
 
   const handleOpenDrawer = useCallback((id: string) => {
@@ -731,7 +739,7 @@ export const DeliveriesPage: React.FC = () => {
     routeStopOrders: state.courierRoutePlans,
     selectedDeliveryIds: selectedIds,
     focusedDeliveryId,
-    onFocusedDeliveryChange: setFocusedDeliveryId,
+    onFocusedDeliveryChange: handleMapFocusedDeliveryChange,
     onOpenDelivery: handleOpenDrawer,
     selectedStatusFilters: statusFilters,
     statusCounts,
@@ -844,6 +852,7 @@ export const DeliveriesPage: React.FC = () => {
               onEditDelivery={handleOpenEdit}
               drawerDeliveryId={drawerDeliveryId}
               focusedDeliveryId={focusedDeliveryId}
+              focusedDeliveryScrollSignal={focusedDeliveryScrollSignal}
               onFocusDeliveryOnMap={handleFocusDeliveryOnMap}
               onSearchRowHiddenChange={handleSearchRowHiddenChange}
               selectionBar={

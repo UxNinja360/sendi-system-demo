@@ -19,15 +19,24 @@ import {
   workbookToExcelBuffer,
 } from '../utils/export-utils';
 import {
+  SENDI_PLUS_BASE_DELIVERY_CHARGE,
+  SENDI_PLUS_DISTANCE_STEP_CHARGE,
+  findDeliveryRestaurant,
   formatCurrency,
   getDeliveryCourierBasePay,
   getDeliveryCustomerCharge,
+  getDeliveryRestaurantCharge,
+  getDeliveryWalletCharge,
+  getSendiPlusBillableDistanceKm,
+  isSendiPlusDelivery,
 } from '../utils/delivery-finance';
+import { SENDI_PLUS_LABEL } from '../utils/sendi-plus';
 import { formatWorkedDuration, getWorkedMinutesWithinRange } from '../utils/shift-work';
 
 const MONEY = (value: number) => formatCurrency(value);
 const DETAIL_HEADERS = [
   'מס׳ הזמנה',
+  'מקור',
   'סטטוס',
   'מסעדה',
   'לקוח',
@@ -35,7 +44,10 @@ const DETAIL_HEADERS = [
   'נוצרה',
   'נאסף',
   'נמסר',
-  'חיוב משלוח',
+  'חיוב לקוח',
+  `חיוב ${SENDI_PLUS_LABEL}`,
+  'חיוב מסעדה רגיל',
+  'ק״מ לחיוב',
   'תשלום שליח',
 ];
 
@@ -70,17 +82,30 @@ export interface CourierReport {
   cancelledCount: number;
   creditCount: number;
   revenue: number;
+  billableRevenue: number;
+  walletRevenue: number;
+  regularRevenue: number;
   courierPay: number;
+  sendiPlusCreditCount: number;
+  regularCreditCount: number;
+  billableDistanceKm: number;
 }
 
 export interface RestaurantReport {
   restaurant: Restaurant;
+  isSendiPlus: boolean;
   deliveries: Delivery[];
   deliveredCount: number;
   cancelledCount: number;
   creditCount: number;
   revenue: number;
+  billableRevenue: number;
+  walletRevenue: number;
+  regularRevenue: number;
   commission: number;
+  sendiPlusCreditCount: number;
+  regularCreditCount: number;
+  billableDistanceKm: number;
 }
 
 interface UseReportsExportParams {
@@ -89,25 +114,39 @@ interface UseReportsExportParams {
   exportSelectedIds: string[];
   courierReports: CourierReport[];
   restaurantReports: RestaurantReport[];
+  restaurants: Restaurant[];
 }
 
-const buildDeliveryRows = (deliveries: Delivery[]) =>
-  deliveries.map((delivery) => [
-    delivery.orderNumber,
-    delivery.status,
-    delivery.rest_name || delivery.restaurantName || '-',
-    delivery.client_name || delivery.customerName || '-',
-    delivery.client_full_address || delivery.address || '-',
-    formatDateTime(delivery.createdAt ?? delivery.creation_time),
-    formatDateTime(delivery.pickedUpAt ?? delivery.picked_up_time),
-    formatDateTime(delivery.deliveredAt ?? delivery.delivered_time),
-    getDeliveryCustomerCharge(delivery),
-    getDeliveryCourierBasePay(delivery),
-  ]);
+const buildDeliveryRows = (deliveries: Delivery[], restaurants: Restaurant[]) =>
+  deliveries.map((delivery) => {
+    const restaurant = findDeliveryRestaurant(delivery, restaurants);
+    const isSendiPlus = isSendiPlusDelivery(delivery, restaurant);
+    const walletCharge = getDeliveryWalletCharge(delivery, restaurant);
+    const restaurantCharge = isSendiPlus ? 0 : getDeliveryRestaurantCharge(delivery);
+    const billableDistanceKm = isSendiPlus ? getSendiPlusBillableDistanceKm(delivery) : 0;
+
+    return [
+      delivery.orderNumber,
+      isSendiPlus ? SENDI_PLUS_LABEL : 'רגיל',
+      delivery.status,
+      delivery.rest_name || delivery.restaurantName || '-',
+      delivery.client_name || delivery.customerName || '-',
+      delivery.client_full_address || delivery.address || '-',
+      formatDateTime(delivery.createdAt ?? delivery.creation_time),
+      formatDateTime(delivery.pickedUpAt ?? delivery.picked_up_time),
+      formatDateTime(delivery.deliveredAt ?? delivery.delivered_time),
+      getDeliveryCustomerCharge(delivery),
+      walletCharge,
+      restaurantCharge,
+      billableDistanceKm || '-',
+      getDeliveryCourierBasePay(delivery),
+    ];
+  });
 
 const buildCourierWorkbook = (
   report: CourierReport,
   dateRange: ReportsDateRange,
+  restaurants: Restaurant[],
   opts?: { includeShifts?: boolean; includeDeliveries?: boolean },
 ) => {
   const includeShifts = opts?.includeShifts ?? true;
@@ -125,7 +164,12 @@ const buildCourierWorkbook = (
       { פרט: 'נמסרו', ערך: report.deliveredCount },
       { פרט: 'בוטלו', ערך: report.cancelledCount },
       { פרט: 'קרדיטים נוצלו', ערך: report.creditCount },
-      { פרט: 'חיובי משלוחים', ערך: MONEY(report.revenue) },
+      { פרט: `${SENDI_PLUS_LABEL} לחיוב`, ערך: report.sendiPlusCreditCount },
+      { פרט: 'רגילים לחיוב', ערך: report.regularCreditCount },
+      { פרט: `חיוב ${SENDI_PLUS_LABEL}`, ערך: MONEY(report.walletRevenue) },
+      { פרט: 'חיוב רגיל ישיר', ערך: MONEY(report.regularRevenue) },
+      { פרט: 'ק״מ לחיוב', ערך: report.billableDistanceKm },
+      { פרט: 'חיוב אמיתי', ערך: MONEY(report.billableRevenue) },
       { פרט: 'תשלום שליח', ערך: MONEY(report.courierPay) },
     ],
     'סיכום',
@@ -180,7 +224,7 @@ const buildCourierWorkbook = (
   if (includeDeliveries) {
     appendAoaSheet(
       workbook,
-      [DETAIL_HEADERS, ...buildDeliveryRows(report.deliveries)],
+      [DETAIL_HEADERS, ...buildDeliveryRows(report.deliveries, restaurants)],
       'משלוחים',
     );
   }
@@ -188,27 +232,33 @@ const buildCourierWorkbook = (
   return workbook;
 };
 
-const buildRestaurantWorkbook = (report: RestaurantReport) => {
+const buildRestaurantWorkbook = (report: RestaurantReport, restaurants: Restaurant[]) => {
   const workbook = createRtlWorkbook();
 
   appendJsonSheet(
     workbook,
     [
       { פרט: 'מסעדה', ערך: report.restaurant.name },
+      { פרט: 'מקור', ערך: report.isSendiPlus ? SENDI_PLUS_LABEL : 'רגיל' },
       { פרט: 'עיר', ערך: report.restaurant.city || '-' },
       { פרט: 'כתובת', ערך: report.restaurant.address || '-' },
       { פרט: 'סה"כ משלוחים', ערך: report.deliveries.length },
       { פרט: 'נמסרו', ערך: report.deliveredCount },
       { פרט: 'בוטלו', ערך: report.cancelledCount },
       { פרט: 'קרדיטים לחיוב', ערך: report.creditCount },
-      { פרט: 'חיובי משלוחים', ערך: MONEY(report.revenue) },
+      { פרט: `${SENDI_PLUS_LABEL} לחיוב`, ערך: report.sendiPlusCreditCount },
+      { פרט: 'רגילים לחיוב', ערך: report.regularCreditCount },
+      { פרט: `חיוב ${SENDI_PLUS_LABEL}`, ערך: MONEY(report.walletRevenue) },
+      { פרט: 'חיוב רגיל ישיר', ערך: MONEY(report.regularRevenue) },
+      { פרט: 'ק״מ לחיוב', ערך: report.billableDistanceKm },
+      { פרט: 'חיוב אמיתי', ערך: MONEY(report.billableRevenue) },
       { פרט: 'עמלות', ערך: MONEY(report.commission) },
     ],
     'סיכום',
   );
   appendAoaSheet(
     workbook,
-    [DETAIL_HEADERS, ...buildDeliveryRows(report.deliveries)],
+    [DETAIL_HEADERS, ...buildDeliveryRows(report.deliveries, restaurants)],
     'משלוחים',
   );
 
@@ -221,6 +271,7 @@ export const useReportsExport = ({
   exportSelectedIds,
   courierReports,
   restaurantReports,
+  restaurants,
 }: UseReportsExportParams) => {
   const handleExportCombined = useCallback(() => {
     const dateTag = `${formatDate(dateRange.start, 'dd-MM-yyyy')}_${formatDate(dateRange.end, 'dd-MM-yyyy')}`;
@@ -249,7 +300,12 @@ export const useReportsExport = ({
           נמסרו: report.deliveredCount,
           בוטלו: report.cancelledCount,
           'קרדיטים נוצלו': report.creditCount,
-          'חיובי משלוחים': report.revenue,
+          [`${SENDI_PLUS_LABEL} לחיוב`]: report.sendiPlusCreditCount,
+          'רגילים לחיוב': report.regularCreditCount,
+          [`חיוב ${SENDI_PLUS_LABEL}`]: report.walletRevenue,
+          'חיוב רגיל ישיר': report.regularRevenue,
+          'ק״מ לחיוב': report.billableDistanceKm,
+          'חיוב אמיתי': report.billableRevenue,
           'תשלום שליח': report.courierPay,
         })),
         'סיכום שליחים',
@@ -257,7 +313,7 @@ export const useReportsExport = ({
       selectedReports.forEach((report) => {
         appendAoaSheet(
           workbook,
-          [DETAIL_HEADERS, ...buildDeliveryRows(report.deliveries)],
+          [DETAIL_HEADERS, ...buildDeliveryRows(report.deliveries, restaurants)],
           safeSheetName(report.courier.name),
         );
       });
@@ -284,11 +340,17 @@ export const useReportsExport = ({
       workbook,
       selectedReports.map((report) => ({
         מסעדה: report.restaurant.name,
+        מקור: report.isSendiPlus ? SENDI_PLUS_LABEL : 'רגיל',
         'סה"כ משלוחים': report.deliveries.length,
         נמסרו: report.deliveredCount,
         בוטלו: report.cancelledCount,
         'קרדיטים לחיוב': report.creditCount,
-        'חיובי משלוחים': report.revenue,
+        [`${SENDI_PLUS_LABEL} לחיוב`]: report.sendiPlusCreditCount,
+        'רגילים לחיוב': report.regularCreditCount,
+        [`חיוב ${SENDI_PLUS_LABEL}`]: report.walletRevenue,
+        'חיוב רגיל ישיר': report.regularRevenue,
+        'ק״מ לחיוב': report.billableDistanceKm,
+        'חיוב אמיתי': report.billableRevenue,
         עמלות: report.commission,
       })),
       'סיכום מסעדות',
@@ -296,7 +358,7 @@ export const useReportsExport = ({
     selectedReports.forEach((report) => {
       appendAoaSheet(
         workbook,
-        [DETAIL_HEADERS, ...buildDeliveryRows(report.deliveries)],
+        [DETAIL_HEADERS, ...buildDeliveryRows(report.deliveries, restaurants)],
         safeSheetName(report.restaurant.name),
       );
     });
@@ -310,6 +372,7 @@ export const useReportsExport = ({
     exportEntityType,
     exportSelectedIds,
     restaurantReports,
+    restaurants,
   ]);
 
   const handleExportSeparate = useCallback(async () => {
@@ -333,7 +396,7 @@ export const useReportsExport = ({
       if (selectedReports.length === 1) {
         const report = selectedReports[0];
         downloadWorkbook(
-          buildCourierWorkbook(report, dateRange, {
+          buildCourierWorkbook(report, dateRange, restaurants, {
             includeShifts: true,
             includeDeliveries: true,
           }),
@@ -349,7 +412,7 @@ export const useReportsExport = ({
         zip.file(
           `${sanitizeExportFileName(report.courier.name)}.xlsx`,
           workbookToExcelBuffer(
-            buildCourierWorkbook(report, dateRange, {
+            buildCourierWorkbook(report, dateRange, restaurants, {
               includeShifts: true,
               includeDeliveries: true,
             }),
@@ -378,7 +441,7 @@ export const useReportsExport = ({
     if (selectedReports.length === 1) {
       const report = selectedReports[0];
       downloadWorkbook(
-        buildRestaurantWorkbook(report),
+        buildRestaurantWorkbook(report, restaurants),
         `דוח_${sanitizeExportFileName(report.restaurant.name)}_${dateTag}.xlsx`,
       );
       toast.success(`הדוח של ${report.restaurant.name} ירד`);
@@ -390,7 +453,7 @@ export const useReportsExport = ({
     selectedReports.forEach((report) => {
       zip.file(
         `${sanitizeExportFileName(report.restaurant.name)}.xlsx`,
-        workbookToExcelBuffer(buildRestaurantWorkbook(report)),
+        workbookToExcelBuffer(buildRestaurantWorkbook(report, restaurants)),
       );
     });
 
@@ -407,6 +470,7 @@ export const useReportsExport = ({
     exportEntityType,
     exportSelectedIds,
     restaurantReports,
+    restaurants,
   ]);
 
   return {

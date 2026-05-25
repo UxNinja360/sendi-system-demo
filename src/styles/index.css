@@ -35,6 +35,85 @@ body {
   background: var(--app-background);
 }
 
+.reports-thinking-dots {
+  direction: rtl;
+  display: inline-flex;
+  gap: 0.02em;
+  justify-content: flex-start;
+  min-width: 0.75em;
+}
+
+.reports-thinking-dots__dot {
+  animation-duration: 1.55s;
+  animation-iteration-count: infinite;
+  animation-timing-function: steps(1, end);
+  display: inline-block;
+  opacity: 0;
+}
+
+.reports-thinking-dots__dot:nth-child(1) {
+  animation-name: reports-thinking-dot-first;
+}
+
+.reports-thinking-dots__dot:nth-child(2) {
+  animation-name: reports-thinking-dot-second;
+}
+
+.reports-thinking-dots__dot:nth-child(3) {
+  animation-name: reports-thinking-dot-third;
+}
+
+@keyframes reports-thinking-dot-first {
+  0%,
+  12% {
+    opacity: 0;
+  }
+
+  13%,
+  82% {
+    opacity: 1;
+  }
+
+  83%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes reports-thinking-dot-second {
+  0%,
+  30% {
+    opacity: 0;
+  }
+
+  31%,
+  82% {
+    opacity: 1;
+  }
+
+  83%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes reports-thinking-dot-third {
+  0%,
+  48% {
+    opacity: 0;
+  }
+
+  49%,
+  82% {
+    opacity: 1;
+  }
+
+  83%,
+  100% {
+    opacity: 0;
+  }
+}
+
 .sendi-plus-label {
   align-items: baseline;
   display: inline-flex;
@@ -925,6 +1004,7 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
 }
 
 .delivery-row__route-compact-status,
+.delivery-row__route-compact-offer,
 .delivery-row__route-compact-courier {
   flex: 0 1 190px;
   max-width: 190px;
@@ -937,6 +1017,7 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
 
 .delivery-row__route-table,
 .delivery-row__status-table,
+.delivery-row__offer-table,
 .delivery-row__courier-table {
   display: none;
 }
@@ -1038,6 +1119,14 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
     width: auto;
   }
 
+  .delivery-row__route-compact-offer {
+    flex: 0 1 auto;
+    justify-content: flex-start;
+    max-width: min(38vw, 140px);
+    min-width: 0;
+    width: auto;
+  }
+
   .delivery-row__route-compact-distance {
     flex: 0 0 auto;
     justify-content: flex-end;
@@ -1082,7 +1171,7 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
 @container (min-width: 720px) {
   .delivery-vercel-row {
     column-gap: clamp(8px, 0.8vw, 12px);
-    grid-template-areas: "actions status . distance courier customer restaurant order";
+    grid-template-areas: "actions status offer distance courier customer restaurant order";
     grid-template-columns:
       clamp(36px, 4%, 48px)
       clamp(78px, 10%, 92px)
@@ -1171,6 +1260,14 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
     width: 100%;
   }
 
+  .delivery-row__route-table-offer {
+    flex: 1 1 auto;
+    justify-content: flex-start;
+    max-width: 100%;
+    min-width: 0;
+    width: 100%;
+  }
+
   .delivery-row__route-table-courier .delivery-row__courier-line,
   .delivery-row__route-table-status .delivery-row__status-line {
     justify-content: flex-start;
@@ -1184,6 +1281,16 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
     min-height: 70px;
     overflow: hidden;
     padding: 7px 1px 7px 5px;
+  }
+
+  .delivery-row__offer-table {
+    align-items: center;
+    display: flex;
+    grid-area: offer;
+    justify-content: flex-start;
+    min-height: 70px;
+    overflow: hidden;
+    padding: 7px 0;
   }
 
   .delivery-row__courier-table {

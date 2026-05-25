@@ -634,7 +634,7 @@ export const CouriersShifts: React.FC = () => {
               }}
             />
           }
-          actions={
+          headerControls={
             <>
               <ToolbarIconButton onClick={handleAutoArrange} label={'\u05e1\u05d9\u05d3\u05d5\u05e8 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9 \u05dc\u05e9\u05d1\u05d5\u05e2'}>
                 <CalendarDays className="h-4 w-4 text-app-text-secondary" />

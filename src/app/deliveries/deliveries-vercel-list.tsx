@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { format as formatDate } from 'date-fns';
 import { useNavigate } from 'react-router';
 import {
@@ -38,7 +38,11 @@ import { EntityRowActionTrigger } from '../components/common/entity-row-action-t
 import { VercelEmptyState } from '../components/common/vercel-empty-state';
 import type { EntityViewMode } from '../components/common/view-mode-toggle';
 import { formatOrderNumber } from '../utils/order-number';
-import { formatCurrency, getDeliveryCustomerCharge } from '../utils/delivery-finance';
+import {
+  formatCurrency,
+  getDeliveryCustomerCharge,
+  isSendiPlusDelivery,
+} from '../utils/delivery-finance';
 import { CourierAvatarMark } from '../couriers/courier-avatar-mark';
 import { RestaurantLogoMark } from '../restaurants/restaurant-logo-mark';
 import {
@@ -47,6 +51,7 @@ import {
 } from '../utils/courier-assignment';
 import {
   DELIVERY_ASSIGNMENT_BLOCK_COPY,
+  getDeliveryOfferRemainingSeconds,
   getDeliveryAssignmentBlockReason,
 } from '../utils/delivery-assignment';
 
@@ -69,6 +74,7 @@ type DeliveriesVercelListProps = {
   onEditDelivery: (deliveryId: string) => void;
   drawerDeliveryId: string | null;
   focusedDeliveryId?: string | null;
+  focusedDeliveryScrollSignal?: number;
   onFocusDeliveryOnMap?: (deliveryId: string) => void;
   selectionBar?: React.ReactNode;
   onSearchRowHiddenChange?: (hidden: boolean) => void;
@@ -80,6 +86,7 @@ type DeliveryVercelRowProps = {
   restaurant: Restaurant | null;
   couriers: Courier[];
   deliveryBalance: number;
+  now: Date;
   showDateForToday: boolean;
   isDrawerTarget: boolean;
   isMapTarget?: boolean;
@@ -118,11 +125,288 @@ const formatDeliveryDate = (delivery: Delivery, showDateForToday: boolean) => {
   }
 };
 
+const formatInlineTime = (value: Date) => {
+  try {
+    return formatDate(value, 'HH:mm');
+  } catch {
+    return '-';
+  }
+};
+
 const PENDING_DELIVERY_STATUS_LABEL = 'ממתין';
 const UNASSIGNED_COURIER_LABEL = '-';
 
 const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(' ');
+
+const UNUSUAL_LATE_THRESHOLD_MINUTES = 15;
+const READY_FOR_PICKUP_DELAY_THRESHOLD_MINUTES = 5;
+
+type UnusualLateInfo = {
+  minutesLate: number;
+  label: string;
+  targetLabel: string;
+};
+
+const toValidDate = (value: Date | string | number | null | undefined) => {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const toPositiveNumber = (value: number | string | null | undefined) => {
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+};
+
+const addMinutes = (date: Date, minutes: number) =>
+  new Date(date.getTime() + minutes * 60 * 1000);
+
+const getDeliveryPickupReadyAt = (delivery: Delivery) => {
+  const explicitReadyAt = toValidDate(
+    delivery.orderReadyTime ??
+      delivery.rest_approved_eta ??
+      delivery.rest_last_eta,
+  );
+  if (explicitReadyAt) return explicitReadyAt;
+
+  const isReportedReady = Boolean(
+    delivery.order_ready ||
+      delivery.reported_order_is_ready ||
+      delivery.reportedOrderIsReady,
+  );
+  if (isReportedReady) {
+    return toValidDate(delivery.createdAt ?? delivery.creation_time);
+  }
+
+  const preparationMinutes = toPositiveNumber(
+    delivery.preparationTime ??
+      delivery.cook_time ??
+      delivery.origin_cook_time,
+  );
+  if (!preparationMinutes) return null;
+
+  const preparationAnchor = toValidDate(
+    delivery.deliveryCreditConsumedAt ??
+      delivery.assignedAt ??
+      delivery.coupled_time ??
+      delivery.createdAt ??
+      delivery.creation_time,
+  );
+  if (!preparationAnchor) return null;
+
+  return addMinutes(preparationAnchor, preparationMinutes);
+};
+
+const hasDeliveryCourier = (delivery: Delivery) =>
+  Boolean(delivery.courierId || delivery.runner_id || delivery.courierName);
+
+const hasDeliveryBeenPickedUp = (delivery: Delivery) =>
+  Boolean(
+    delivery.pickedUpAt ||
+      delivery.took_it_time ||
+      delivery.status === 'delivering' ||
+      delivery.status === 'delivered',
+  );
+
+const hasCourierArrivedAtRestaurant = (delivery: Delivery) =>
+  Boolean(
+    delivery.arrivedAtRestaurantAt ||
+      delivery.arrived_at_rest ||
+      delivery.arrived_at_rest_runner_id,
+  );
+
+const getDeliveryLateTarget = (delivery: Delivery) => {
+  if (delivery.status === 'assigned') {
+    const dueAt = toValidDate(delivery.estimatedArrivalAtRestaurant);
+    if (dueAt) return { dueAt, label: 'הגעה למסעדה' };
+  }
+
+  if (delivery.status === 'delivering') {
+    const dueAt = toValidDate(delivery.estimatedArrivalAtCustomer);
+    if (dueAt) return { dueAt, label: 'הגעה ללקוח' };
+  }
+
+  const deliveryDueAt = toValidDate(delivery.should_delivered_time);
+  if (deliveryDueAt) return { dueAt: deliveryDueAt, label: 'מסירה' };
+
+  const createdAt = toValidDate(delivery.createdAt ?? delivery.creation_time);
+  const targetMinutes = toPositiveNumber(
+    delivery.max_time_to_deliver ??
+      delivery.maxDeliveryTime ??
+      delivery.max_time_to_suplly ??
+      delivery.estimatedTime,
+  );
+
+  if (!createdAt || !targetMinutes) return null;
+
+  return {
+    dueAt: new Date(createdAt.getTime() + targetMinutes * 60 * 1000),
+    label: 'זמן מקסימלי',
+  };
+};
+
+const getUnusualLateInfo = (delivery: Delivery, now: Date): UnusualLateInfo | null => {
+  if (delivery.status === 'delivered' || delivery.status === 'cancelled' || delivery.status === 'expired') {
+    return null;
+  }
+
+  if (!hasDeliveryBeenPickedUp(delivery)) {
+    const readyAt = getDeliveryPickupReadyAt(delivery);
+    const readyWaitMinutes = readyAt
+      ? Math.floor((now.getTime() - readyAt.getTime()) / (60 * 1000))
+      : 0;
+    const pickupDeviationMinutes = toPositiveNumber(delivery.pickup_deviation) ?? 0;
+    const pickupDelayMinutes = Math.max(readyWaitMinutes, pickupDeviationMinutes);
+
+    if (pickupDelayMinutes >= READY_FOR_PICKUP_DELAY_THRESHOLD_MINUTES) {
+      const label = !hasDeliveryCourier(delivery)
+        ? 'מוכן בלי שליח'
+        : hasCourierArrivedAtRestaurant(delivery)
+          ? 'מוכן לא נאסף'
+          : 'מוכן מחכה לאיסוף';
+
+      return {
+        minutesLate: Math.floor(pickupDelayMinutes),
+        label,
+        targetLabel: readyAt ? `מוכן במסעדה מ-${formatInlineTime(readyAt)}` : 'איסוף מהמסעדה',
+      };
+    }
+  }
+
+  if (delivery.status === 'delivering' || hasDeliveryBeenPickedUp(delivery)) {
+    const target = toValidDate(delivery.estimatedArrivalAtCustomer ?? delivery.should_delivered_time);
+    const targetLateMinutes = target
+      ? Math.floor((now.getTime() - target.getTime()) / (60 * 1000))
+      : 0;
+    const dropoffDeviationMinutes = toPositiveNumber(delivery.dropoff_deviation) ?? 0;
+    const dropoffDelayMinutes = Math.max(targetLateMinutes, dropoffDeviationMinutes);
+
+    if (dropoffDelayMinutes >= UNUSUAL_LATE_THRESHOLD_MINUTES) {
+      return {
+        minutesLate: Math.floor(dropoffDelayMinutes),
+        label: 'מסירה מתעכבת',
+        targetLabel: target ? `יעד מסירה ${formatInlineTime(target)}` : 'מסירה ללקוח',
+      };
+    }
+  }
+
+  const explicitLateMinutes = toPositiveNumber(delivery.minutes_late) ?? 0;
+  const target = getDeliveryLateTarget(delivery);
+  const targetLateMinutes = target
+    ? Math.floor((now.getTime() - target.dueAt.getTime()) / (60 * 1000))
+    : 0;
+  const minutesLate = Math.max(explicitLateMinutes, targetLateMinutes);
+
+  if (minutesLate < UNUSUAL_LATE_THRESHOLD_MINUTES) return null;
+
+  const label =
+    delivery.status === 'assigned'
+      ? 'איסוף מתעכב'
+      : delivery.status === 'delivering'
+        ? 'מסירה מתעכבת'
+        : 'איחור חריג';
+
+  return {
+    minutesLate: Math.floor(minutesLate),
+    label,
+    targetLabel: target?.label ?? 'יעד',
+  };
+};
+
+const formatLateMinutes = (minutes: number) => {
+  if (minutes < 60) return `${minutes.toLocaleString('he-IL')} דק׳`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return `${hours}:${remainingMinutes.toString().padStart(2, '0')} ש׳`;
+};
+
+const UnusualLateIndicator: React.FC<{
+  lateInfo: UnusualLateInfo;
+  compact?: boolean;
+  className?: string;
+}> = ({ lateInfo, compact = false, className }) => {
+  const lateLabel = formatLateMinutes(lateInfo.minutesLate);
+
+  return (
+    <span
+      className={joinClassNames(
+        'inline-flex max-w-full shrink-0 items-center gap-1 rounded-[var(--app-radius-xs)] border border-red-500/35 bg-red-500/10 px-1.5 py-0.5 text-[11px] font-semibold leading-none text-red-600 dark:text-red-300',
+        className,
+      )}
+      title={`${lateInfo.label}: ${lateLabel} מעבר ליעד ${lateInfo.targetLabel}`}
+      aria-label={`${lateInfo.label}: ${lateLabel}`}
+      dir="rtl"
+    >
+      <AlertTriangle className="h-3 w-3 shrink-0" />
+      <span className="min-w-0 truncate">
+        {compact ? `${lateInfo.label} ${lateLabel}` : `${lateInfo.label} · ${lateLabel}`}
+      </span>
+    </span>
+  );
+};
+
+const getSendiGoOfferExpiryInfo = (
+  delivery: Delivery,
+  restaurant: Pick<Restaurant, 'chainId' | 'name'> | null,
+  now: Date,
+) => {
+  if (!isSendiPlusDelivery(delivery, restaurant) || delivery.status !== 'pending') {
+    return null;
+  }
+
+  const expiresAt = toValidDate(delivery.offerExpiresAt);
+  if (!expiresAt) return null;
+
+  return {
+    expiresAt,
+    remainingSeconds: getDeliveryOfferRemainingSeconds(delivery, now) ?? 0,
+  };
+};
+
+const formatOfferRemainingSeconds = (seconds: number) => {
+  if (seconds <= 0) return 'פג';
+  const minutes = Math.floor(seconds / 60);
+  const rest = seconds % 60;
+  if (minutes === 0) return `${rest} ש׳`;
+  return `${minutes}:${String(rest).padStart(2, '0')}`;
+};
+
+const OfferExpiryIndicator: React.FC<{
+  expiresAt: Date;
+  remainingSeconds: number;
+  compact?: boolean;
+}> = ({ expiresAt, remainingSeconds, compact = false }) => {
+  const timeLabel = formatOfferRemainingSeconds(remainingSeconds);
+  const isExpiringSoon = remainingSeconds <= 30;
+  const isExpired = remainingSeconds <= 0;
+  const label = isExpired
+    ? 'פג תוקף'
+    : compact
+      ? `תפוג ${timeLabel}`
+      : `צוות עד תפוגה · ${timeLabel}`;
+
+  return (
+    <span
+      className={joinClassNames(
+        'inline-flex max-w-full shrink-0 items-center rounded-[var(--app-radius-xs)] border px-1.5 py-0.5 text-[11px] font-semibold leading-none',
+        isExpired
+          ? 'border-zinc-300 bg-zinc-500/5 text-zinc-500 dark:border-zinc-500/50 dark:bg-zinc-400/10 dark:text-zinc-300'
+          : isExpiringSoon
+            ? 'border-orange-500/35 bg-orange-500/10 text-orange-600 dark:text-orange-300'
+            : 'border-app-nav-border bg-app-surface-raised text-app-text-secondary',
+      )}
+      title={`הצעת סנדי גו ${isExpired ? 'פגה' : 'תפוג'} בשעה ${formatInlineTime(expiresAt)}`}
+      aria-label={`זמן לציוות לפני פקיעת הצעה ${timeLabel}`}
+      dir="rtl"
+    >
+      <span className="min-w-0 truncate">
+        {label}
+      </span>
+    </span>
+  );
+};
 
 const AssignedStatusDot: React.FC<{ className?: string }> = ({ className }) => (
   <span className={joinClassNames('delivery-status-line__dot', className)} aria-hidden="true" />
@@ -223,6 +507,9 @@ const DeliveryCourierLine: React.FC<{
       )}
       dir="rtl"
     >
+      {assigned ? (
+        <Icon className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
+      ) : null}
       <span
         className={joinClassNames(
           'min-w-0 truncate text-sm font-normal',
@@ -231,9 +518,6 @@ const DeliveryCourierLine: React.FC<{
       >
         {assigned ? label : UNASSIGNED_COURIER_LABEL}
       </span>
-      {assigned ? (
-        <Icon className="h-3.5 w-3.5 shrink-0 text-app-text-secondary" />
-      ) : null}
     </span>
   );
 };
@@ -537,6 +821,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
   restaurant,
   couriers,
   deliveryBalance,
+  now,
   showDateForToday,
   isDrawerTarget,
   isMapTarget,
@@ -563,6 +848,8 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
   const courierColumnText = hasAssignedCourier ? courierName : UNASSIGNED_COURIER_LABEL;
   const courierVehicleType = hasAssignedCourier ? courier?.vehicleType || delivery.vehicle_type : undefined;
   const shouldShowCourierAssignment = delivery.status !== 'cancelled' || hasAssignedCourier;
+  const unusualLateInfo = getUnusualLateInfo(delivery, now);
+  const offerExpiryInfo = getSendiGoOfferExpiryInfo(delivery, restaurant, now);
   const distanceLabel = delivery.delivery_distance ? `${delivery.delivery_distance.toFixed(1)} ק״מ` : '-';
 
   const closeMenus = () => {
@@ -608,6 +895,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
 
   return (
     <div
+      data-delivery-row-id={delivery.id}
       onClick={() => onFocusDeliveryOnMap?.(delivery.id)}
       onContextMenu={(event) => {
         event.preventDefault();
@@ -616,6 +904,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
       className={joinClassNames(
         rowGridClass,
         'group relative w-full min-w-0 cursor-pointer border-b border-app-nav-border bg-app-surface text-app-text outline-none transition-colors last:border-b-0 hover:bg-app-surface-raised',
+        unusualLateInfo && 'bg-red-500/[0.04] hover:bg-red-500/[0.08]',
         (isDrawerTarget || isMapTarget) && 'shadow-[inset_2px_0_0_var(--app-brand)]',
       )}
     >
@@ -645,7 +934,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
             <span className="min-w-0 truncate">{formatOrderNumber(delivery.orderNumber)}</span>
             <Copy className="delivery-row__copy-icon h-3.5 w-3.5 shrink-0 text-app-text-secondary opacity-0 transition-opacity group-hover/order-number:opacity-100 group-focus-visible/order-number:opacity-100" />
           </button>
-          <div className="delivery-row__time mt-1 flex shrink-0 items-center justify-start gap-1.5 text-right text-sm font-normal text-app-text-secondary">
+          <div className="delivery-row__time mt-1 flex max-w-full shrink-0 flex-wrap items-center justify-start gap-1.5 text-right text-sm font-normal text-app-text-secondary">
             <span className="whitespace-nowrap" dir="ltr">{formatDeliveryDate(delivery, showDateForToday)}</span>
             <DeliveryTimeDetailsTooltip delivery={delivery}>
               <Clock3 className="h-3.5 w-3.5 shrink-0" />
@@ -713,6 +1002,25 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
             />
           </div>
 
+          {unusualLateInfo || offerExpiryInfo ? (
+            <div className="delivery-row__route-compact-offer flex min-w-0">
+              {unusualLateInfo ? (
+                <UnusualLateIndicator lateInfo={unusualLateInfo} compact />
+              ) : offerExpiryInfo ? (
+                <OfferExpiryIndicator
+                  expiresAt={offerExpiryInfo.expiresAt}
+                  remainingSeconds={offerExpiryInfo.remainingSeconds}
+                  compact
+                />
+              ) : null}
+            </div>
+          ) : null}
+
+          <DeliveryDistanceInline
+            label={distanceLabel}
+            className="delivery-row__route-compact-distance"
+          />
+
           <div
             ref={compactAssignmentAnchorRef}
             className="delivery-row__route-compact-courier flex min-w-0 rounded-md"
@@ -724,11 +1032,6 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
               className="w-full justify-start whitespace-nowrap px-1 py-1"
             />
           </div>
-
-          <DeliveryDistanceInline
-            label={distanceLabel}
-            className="delivery-row__route-compact-distance"
-          />
         </div>
       </div>
 
@@ -740,6 +1043,22 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
             className="delivery-row__status-line w-full px-1 py-1"
           />
         </div>
+      </div>
+
+      <div className="delivery-row__offer-table min-h-0 min-w-0 items-center justify-start">
+        {unusualLateInfo || offerExpiryInfo ? (
+          <div className="delivery-row__route-table-offer flex min-w-0">
+            {unusualLateInfo ? (
+              <UnusualLateIndicator lateInfo={unusualLateInfo} compact />
+            ) : offerExpiryInfo ? (
+              <OfferExpiryIndicator
+                expiresAt={offerExpiryInfo.expiresAt}
+                remainingSeconds={offerExpiryInfo.remainingSeconds}
+                compact
+              />
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       <div className="delivery-row__courier-table min-h-0 min-w-0 items-center justify-start">
@@ -886,6 +1205,7 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
   restaurant,
   couriers,
   deliveryBalance,
+  now,
   showDateForToday,
   isDrawerTarget,
   isMapTarget,
@@ -911,6 +1231,8 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
   const courierColumnText = hasAssignedCourier ? courierName : UNASSIGNED_COURIER_LABEL;
   const courierVehicleType = hasAssignedCourier ? courier?.vehicleType || delivery.vehicle_type : undefined;
   const priceLabel = formatCurrency(getDeliveryCustomerCharge(delivery));
+  const unusualLateInfo = getUnusualLateInfo(delivery, now);
+  const offerExpiryInfo = getSendiGoOfferExpiryInfo(delivery, restaurant, now);
 
   const closeMenus = () => {
     setContextMenuPos(null);
@@ -955,6 +1277,7 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
 
   return (
     <div
+      data-delivery-row-id={delivery.id}
       onClick={() => onFocusDeliveryOnMap?.(delivery.id)}
       onContextMenu={(event) => {
         event.preventDefault();
@@ -962,6 +1285,7 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
       }}
       className={joinClassNames(
         'group min-w-0 cursor-pointer rounded-lg border border-app-nav-border bg-app-surface p-3 text-app-text outline-none transition-colors hover:bg-app-surface-raised',
+        unusualLateInfo && 'border-red-500/35 bg-red-500/[0.04] hover:bg-red-500/[0.08]',
         (isDrawerTarget || isMapTarget) && 'shadow-[inset_2px_0_0_var(--app-brand)]',
       )}
     >
@@ -978,7 +1302,7 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
               <span className="min-w-0 truncate">{formatOrderNumber(delivery.orderNumber)}</span>
               <Copy className="h-3.5 w-3.5 shrink-0 text-app-text-secondary opacity-0 transition-opacity group-hover/order-number:opacity-100 group-focus-visible/order-number:opacity-100" />
             </button>
-            <div className="mt-1 flex min-w-0 items-center gap-1.5 text-xs text-app-text-secondary">
+            <div className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5 text-xs text-app-text-secondary">
               <span className="truncate" dir="ltr">{formatDeliveryDate(delivery, showDateForToday)}</span>
               <DeliveryTimeDetailsTooltip delivery={delivery}>
                 <Clock3 className="h-3.5 w-3.5 shrink-0" />
@@ -1046,8 +1370,18 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
         </div>
       </div>
 
-      <div className="mt-4 flex items-center justify-between border-t border-app-nav-border pt-3 text-xs text-app-text-secondary">
-        <DeliveryStatusLine status={delivery.status} delivery={delivery} />
+      <div className="mt-4 flex items-start justify-between gap-3 border-t border-app-nav-border pt-3 text-xs text-app-text-secondary">
+        <div className="flex min-w-0 flex-col items-start gap-1">
+          <DeliveryStatusLine status={delivery.status} delivery={delivery} />
+          {unusualLateInfo ? (
+            <UnusualLateIndicator lateInfo={unusualLateInfo} />
+          ) : offerExpiryInfo ? (
+            <OfferExpiryIndicator
+              expiresAt={offerExpiryInfo.expiresAt}
+              remainingSeconds={offerExpiryInfo.remainingSeconds}
+            />
+          ) : null}
+        </div>
         <span>{delivery.delivery_distance ? `${delivery.delivery_distance.toFixed(1)} ק״מ` : '-'}</span>
       </div>
 
@@ -1192,17 +1526,27 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
   onEditDelivery,
   drawerDeliveryId,
   focusedDeliveryId,
+  focusedDeliveryScrollSignal = 0,
   onFocusDeliveryOnMap,
   selectionBar,
   onSearchRowHiddenChange,
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const [showScrollTopFab, setShowScrollTopFab] = useState(false);
+  const [now, setNow] = useState(() => new Date());
   const scrollDirectionRef = useRef({
     animationFrame: 0,
     hidden: false,
     lastScrollTop: 0,
   });
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
 
   useLayoutEffect(() => {
     const element = scrollContainerRef.current;
@@ -1232,6 +1576,32 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
       window.removeEventListener('resize', alignToRtlStartEdge);
     };
   }, [filteredDeliveries.length]);
+
+  useLayoutEffect(() => {
+    if (!focusedDeliveryId || focusedDeliveryScrollSignal === 0) return undefined;
+
+    const element = scrollContainerRef.current;
+    if (!element) return undefined;
+
+    const animationFrame = window.requestAnimationFrame(() => {
+      const target = Array
+        .from(element.querySelectorAll<HTMLElement>('[data-delivery-row-id]'))
+        .find((row) => row.dataset.deliveryRowId === focusedDeliveryId);
+
+      if (!target) return;
+
+      onSearchRowHiddenChange?.(false);
+      target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+    };
+  }, [
+    focusedDeliveryId,
+    focusedDeliveryScrollSignal,
+    onSearchRowHiddenChange,
+  ]);
 
   useLayoutEffect(() => {
     const element = scrollContainerRef.current;
@@ -1378,6 +1748,7 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
                   restaurant={restaurant}
                   couriers={couriers}
                   deliveryBalance={deliveryBalance}
+                  now={now}
                   showDateForToday={showDateForToday}
                   isDrawerTarget={drawerDeliveryId === delivery.id}
                   isMapTarget={focusedDeliveryId === delivery.id}
@@ -1418,6 +1789,7 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
                 restaurant={restaurant}
                 couriers={couriers}
                 deliveryBalance={deliveryBalance}
+                now={now}
                 showDateForToday={showDateForToday}
                 isDrawerTarget={drawerDeliveryId === delivery.id}
                 isMapTarget={focusedDeliveryId === delivery.id}

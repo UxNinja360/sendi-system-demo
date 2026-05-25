@@ -7,13 +7,14 @@ import {
   ChevronDown,
   Clock3,
   Loader2,
+  PackageCheck,
   PackageOpen,
   Power,
   PowerOff,
   Plus,
   Store,
   Timer,
-  Truck,
+  UserCheck,
   XCircle,
 } from 'lucide-react';
 import { AppTooltip } from '../components/common/app-tooltip';
@@ -56,6 +57,11 @@ const DASHBOARD_DELIVERY_STATUSES: DeliveryStatus[] = [
   'delivering',
   'delivered',
   'cancelled',
+];
+const ACTIVE_DELIVERY_STATUSES: DeliveryStatus[] = [
+  'pending',
+  'assigned',
+  'delivering',
 ];
 const getDeliveriesStatusFilterPath = (statuses: DeliveryStatus[]) =>
   `/deliveries?statuses=${statuses.join(',')}`;
@@ -129,7 +135,7 @@ const STATUS_META: Array<{
     id: 'assigned',
     label: 'שובצו',
     hint: 'שליח בדרך למסעדה',
-    icon: Truck,
+    icon: UserCheck,
     accentClassName: 'text-yellow-400',
     barClassName: 'bg-yellow-500',
   },
@@ -1066,6 +1072,14 @@ export const Dashboard: React.FC = () => {
     });
     return counts;
   }, [dashboardRefreshVersion, filteredDeliveries]);
+  const activeDeliveriesCount = React.useMemo(
+    () =>
+      ACTIVE_DELIVERY_STATUSES.reduce(
+        (total, status) => total + (statusCounts.get(status) ?? 0),
+        0,
+      ),
+    [statusCounts],
+  );
 
   const sendiPlusDeliveryZones = React.useMemo(
     () => loadStoredDeliveryServiceAreas(),
@@ -1245,12 +1259,27 @@ export const Dashboard: React.FC = () => {
           </section>
           <section>
             <div className="dashboard-delivery-summary overflow-hidden rounded-none border border-app-border bg-app-surface text-right dark:border-[#252525] dark:bg-[#0A0A0A]">
+              <button
+                type="button"
+                onClick={() => navigate(getDeliveriesStatusFilterPath(ACTIVE_DELIVERY_STATUSES))}
+                className="flex w-full min-w-0 items-center justify-between gap-3 border-b border-app-border p-2.5 text-right transition-colors hover:bg-app-surface-raised sm:p-3 dark:border-[#252525] dark:hover:bg-[#111111]"
+              >
+                <div className="flex min-w-0 items-center gap-2">
+                  <PackageCheck className="h-4 w-4 shrink-0 text-app-brand" />
+                  <span className="min-w-0 truncate text-xs font-semibold text-app-text-secondary">
+                    משלוחים פעילים
+                  </span>
+                </div>
+                <div className="text-xl font-bold leading-none text-app-text sm:text-2xl">
+                  <RefreshingMetricValue
+                    refreshing={isDashboardRefreshing}
+                    value={formatNumber(activeDeliveriesCount)}
+                  />
+                </div>
+              </button>
               <div className="dashboard-delivery-summary__row grid grid-cols-3" dir="rtl">
               {STATUS_META.filter(
-                (status) =>
-                  DASHBOARD_DELIVERY_STATUSES.includes(status.id) &&
-                  status.id !== 'delivered' &&
-                  status.id !== 'cancelled',
+                (status) => ACTIVE_DELIVERY_STATUSES.includes(status.id),
               ).map((status) => {
                 const Icon = status.icon;
                 const count = statusCounts.get(status.id) ?? 0;
