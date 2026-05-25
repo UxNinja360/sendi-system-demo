@@ -1,6 +1,7 @@
 ﻿import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { format as formatDate } from 'date-fns';
 import { useLocation } from 'react-router';
+import { MoreHorizontal } from 'lucide-react';
 import { useDelivery } from '../context/delivery-context-value';
 import { Delivery, DeliveryStatus } from '../types/delivery.types';
 import { DeliveriesSidePanel } from '../deliveries/deliveries-side-panel';
@@ -447,6 +448,7 @@ export const DeliveriesPage: React.FC = () => {
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkCourierId, setBulkCourierId] = useState('');
+  const [bulkActionsOpen, setBulkActionsOpen] = useState(false);
   const [focusedDeliveryId, setFocusedDeliveryId] = useState<string | null>(null);
   const [focusedDeliveryScrollSignal, setFocusedDeliveryScrollSignal] = useState(0);
 
@@ -495,6 +497,14 @@ export const DeliveriesPage: React.FC = () => {
     [filteredDeliveries, selectedIds],
   );
 
+  const bulkSelectionLabel = useMemo(
+    () =>
+      `${selectedIds.size.toLocaleString('he-IL')} ${
+        selectedIds.size === 1 ? 'משלוח' : 'משלוחים'
+      }`,
+    [selectedIds.size],
+  );
+
   const selectedActionableDeliveries = useMemo(
     () =>
       selectedDeliveries.filter(
@@ -523,6 +533,11 @@ export const DeliveriesPage: React.FC = () => {
     if (bulkAssignableCouriers.some((courier) => courier.id === bulkCourierId)) return;
     setBulkCourierId('');
   }, [bulkAssignableCouriers, bulkCourierId]);
+
+  useEffect(() => {
+    if (selectedIds.size > 0) return;
+    setBulkActionsOpen(false);
+  }, [selectedIds.size]);
 
   useEffect(() => {
     if (!focusedDeliveryId) return;
@@ -980,15 +995,19 @@ export const DeliveriesPage: React.FC = () => {
               selectionBar={
                 <SelectionActionBar
                   selectedCount={selectedIds.size}
-                  entitySingular={'\u05de\u05e9\u05dc\u05d5\u05d7'}
-                  entityPlural={'\u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd'}
-                  onClear={() => setSelectedIds(new Set())}
+                  selectionLabel={bulkSelectionLabel}
+                  onClear={() => {
+                    setBulkActionsOpen(false);
+                    setSelectedIds(new Set());
+                  }}
+                  layout="single-row"
+                  showClearAction={false}
                   actions={
                     <>
                       <select
                         value={bulkCourierId}
                         onChange={(event) => setBulkCourierId(event.target.value)}
-                        className="h-9 max-w-[44vw] shrink-0 rounded-lg border border-app-border bg-app-background px-2 text-sm font-semibold text-app-text outline-none focus:border-app-brand focus:ring-2 focus:ring-app-brand/20 sm:max-w-[190px]"
+                        className="h-9 min-w-0 flex-1 rounded-lg border border-app-border bg-app-background px-2 text-xs font-semibold text-app-text outline-none focus:border-app-brand focus:ring-2 focus:ring-app-brand/20 sm:max-w-[190px] sm:text-sm"
                         aria-label="בחירת שליח לשיבוץ נבחרים"
                       >
                         <option value="">בחר שליח</option>
@@ -1001,53 +1020,122 @@ export const DeliveriesPage: React.FC = () => {
                       <SelectionActionButton
                         onClick={handleBulkAssignCourier}
                         disabled={!bulkCourierId || selectedActionableDeliveries.length === 0}
+                        className="px-3 text-xs sm:text-sm"
                       >
                         שיבוץ
                       </SelectionActionButton>
-                      <SelectionActionButton
-                        variant="outline"
-                        onClick={handleToggleSelectAll}
-                      >
-                        בחר הכל
-                      </SelectionActionButton>
-                      <SelectionActionButton
-                        variant="outline"
-                        onClick={handleBulkUnassign}
-                        disabled={selectedAssignedDeliveries.length === 0}
-                      >
-                        הסר שיבוץ
-                      </SelectionActionButton>
-                      <SelectionActionButton
-                        variant="neutral"
-                        onClick={() => handleBulkStatusChange(selectedAssignedDeliveries, 'delivering', 'סומנו כנאספו')}
-                        disabled={selectedAssignedDeliveries.length === 0}
-                      >
-                        נאסף
-                      </SelectionActionButton>
-                      <SelectionActionButton
-                        variant="neutral"
-                        onClick={() => handleBulkStatusChange(selectedDeliveringDeliveries, 'delivered', 'סומנו כנמסרו')}
-                        disabled={selectedDeliveringDeliveries.length === 0}
-                      >
-                        נמסר
-                      </SelectionActionButton>
-                      <SelectionActionButton
-                        variant="warning"
-                        onClick={() => handleBulkStatusChange(selectedActionableDeliveries, 'cancelled', 'בוטלו')}
-                        disabled={selectedActionableDeliveries.length === 0}
-                      >
-                        ביטול
-                      </SelectionActionButton>
-                      <SelectionActionButton
-                        variant="accent"
-                        onClick={() => {
-                          setExportOpen(true);
-                          setColumnsOpen(false);
-                          setMapOpen(false);
-                        }}
-                      >
-                        ייצוא
-                      </SelectionActionButton>
+                      <div className="relative shrink-0">
+                        {bulkActionsOpen ? (
+                          <button
+                            type="button"
+                            className="fixed inset-0 z-20 cursor-default bg-transparent"
+                            aria-label="סגור פעולות בחירה מרובה"
+                            onClick={() => setBulkActionsOpen(false)}
+                          />
+                        ) : null}
+                        <button
+                          type="button"
+                          data-haptic="light"
+                          aria-haspopup="menu"
+                          aria-expanded={bulkActionsOpen}
+                          onClick={() => setBulkActionsOpen((open) => !open)}
+                          className="relative z-30 inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-app-border bg-app-background px-3 py-2 text-xs font-bold text-app-text transition-colors hover:bg-app-surface-raised sm:text-sm"
+                        >
+                          <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+                          עוד
+                        </button>
+                        {bulkActionsOpen ? (
+                          <div
+                            className="absolute bottom-[calc(100%+0.5rem)] left-0 z-30 w-52 rounded-lg border border-app-border bg-app-surface p-1.5 text-app-text shadow-2xl"
+                            role="menu"
+                            dir="rtl"
+                          >
+                            <button
+                              type="button"
+                              role="menuitem"
+                              className="block w-full rounded-md px-3 py-2 text-right text-sm font-semibold transition-colors hover:bg-app-surface-raised"
+                              onClick={() => {
+                                setBulkActionsOpen(false);
+                                handleToggleSelectAll();
+                              }}
+                            >
+                              בחר הכל
+                            </button>
+                            <button
+                              type="button"
+                              role="menuitem"
+                              disabled={selectedAssignedDeliveries.length === 0}
+                              className="block w-full rounded-md px-3 py-2 text-right text-sm font-semibold transition-colors hover:bg-app-surface-raised disabled:cursor-not-allowed disabled:opacity-40"
+                              onClick={() => {
+                                setBulkActionsOpen(false);
+                                handleBulkUnassign();
+                              }}
+                            >
+                              הסר שיבוץ
+                            </button>
+                            <button
+                              type="button"
+                              role="menuitem"
+                              disabled={selectedAssignedDeliveries.length === 0}
+                              className="block w-full rounded-md px-3 py-2 text-right text-sm font-semibold transition-colors hover:bg-app-surface-raised disabled:cursor-not-allowed disabled:opacity-40"
+                              onClick={() => {
+                                setBulkActionsOpen(false);
+                                handleBulkStatusChange(selectedAssignedDeliveries, 'delivering', 'סומנו כנאספו');
+                              }}
+                            >
+                              נאסף
+                            </button>
+                            <button
+                              type="button"
+                              role="menuitem"
+                              disabled={selectedDeliveringDeliveries.length === 0}
+                              className="block w-full rounded-md px-3 py-2 text-right text-sm font-semibold transition-colors hover:bg-app-surface-raised disabled:cursor-not-allowed disabled:opacity-40"
+                              onClick={() => {
+                                setBulkActionsOpen(false);
+                                handleBulkStatusChange(selectedDeliveringDeliveries, 'delivered', 'סומנו כנמסרו');
+                              }}
+                            >
+                              נמסר
+                            </button>
+                            <button
+                              type="button"
+                              role="menuitem"
+                              className="block w-full rounded-md px-3 py-2 text-right text-sm font-semibold transition-colors hover:bg-app-surface-raised"
+                              onClick={() => {
+                                setBulkActionsOpen(false);
+                                setExportOpen(true);
+                                setColumnsOpen(false);
+                                setMapOpen(false);
+                              }}
+                            >
+                              ייצוא
+                            </button>
+                            <button
+                              type="button"
+                              role="menuitem"
+                              className="block w-full rounded-md px-3 py-2 text-right text-sm font-semibold text-app-text-secondary transition-colors hover:bg-app-surface-raised"
+                              onClick={() => {
+                                setBulkActionsOpen(false);
+                                setSelectedIds(new Set());
+                              }}
+                            >
+                              נקה בחירה
+                            </button>
+                            <button
+                              type="button"
+                              role="menuitem"
+                              disabled={selectedActionableDeliveries.length === 0}
+                              className="block w-full rounded-md px-3 py-2 text-right text-sm font-semibold text-orange-500 transition-colors hover:bg-orange-500/10 disabled:cursor-not-allowed disabled:opacity-40"
+                              onClick={() => {
+                                setBulkActionsOpen(false);
+                                handleBulkStatusChange(selectedActionableDeliveries, 'cancelled', 'בוטלו');
+                              }}
+                            >
+                              ביטול
+                            </button>
+                          </div>
+                        ) : null}
+                      </div>
                     </>
                   }
                 />

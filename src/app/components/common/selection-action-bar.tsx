@@ -8,6 +8,8 @@ type SelectionActionBarProps = {
   onClear: () => void;
   clearLabel?: string;
   actions?: React.ReactNode;
+  layout?: 'default' | 'single-row';
+  showClearAction?: boolean;
 };
 
 type SelectionActionButtonProps =
@@ -74,6 +76,8 @@ export const SelectionActionBar: React.FC<SelectionActionBarProps> = ({
   onClear,
   clearLabel = TEXT.clearSelection,
   actions,
+  layout = 'default',
+  showClearAction = true,
 }) => {
   if (selectedCount <= 0) return null;
 
@@ -84,23 +88,43 @@ export const SelectionActionBar: React.FC<SelectionActionBarProps> = ({
         ? (entitySingular ?? entityPlural ?? '')
         : (entityPlural ?? entitySingular ?? '')
     }`.trim();
+  const isSingleRow = layout === 'single-row';
 
   return (
     <div className="sticky inset-x-0 bottom-0 z-20 border-t border-[#e5e5e5] bg-white shadow-[0_-4px_16px_rgba(0,0,0,0.08)] dark:border-app-border dark:bg-app-surface">
-      <div className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-3">
-        <div className="inline-flex w-fit shrink-0 items-center rounded-full border border-app-brand bg-app-brand-subtle px-3 py-1.5 text-sm font-semibold text-app-brand-text dark:border-app-nav-border dark:bg-app-brand-subtle dark:text-app-brand-text">
+      <div
+        className={joinClassNames(
+          isSingleRow
+            ? 'flex min-w-0 items-center gap-2 px-3 py-2 sm:px-4'
+            : 'flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center',
+        )}
+      >
+        <div
+          className={joinClassNames(
+            'inline-flex w-fit shrink-0 items-center rounded-full border border-app-brand bg-app-brand-subtle px-3 py-1.5 text-sm font-semibold text-app-brand-text dark:border-app-nav-border dark:bg-app-brand-subtle dark:text-app-brand-text',
+            isSingleRow && 'max-w-[30vw] truncate px-2.5 text-xs sm:max-w-none sm:px-3 sm:text-sm',
+          )}
+        >
           {resolvedSelectionLabel}
         </div>
-        <div className="flex flex-1 flex-nowrap items-center justify-start gap-2 overflow-x-auto pb-0.5 sm:flex-wrap sm:justify-end sm:overflow-visible sm:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div
+          className={joinClassNames(
+            isSingleRow
+              ? 'flex min-w-0 flex-1 flex-nowrap items-center justify-end gap-2'
+              : 'flex flex-1 flex-wrap items-center justify-start gap-2 sm:justify-end',
+          )}
+        >
           {actions}
-          <button
-            type="button"
-            onClick={onClear}
-            data-haptic="light"
-            className="min-h-9 shrink-0 whitespace-nowrap rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm font-semibold text-[#737373] transition-colors hover:bg-[#f5f5f5] dark:border-app-border dark:text-app-text-secondary dark:hover:bg-[#262626]"
-          >
-            {clearLabel}
-          </button>
+          {showClearAction ? (
+            <button
+              type="button"
+              onClick={onClear}
+              data-haptic="light"
+              className="min-h-9 shrink-0 whitespace-nowrap rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm font-semibold text-[#737373] transition-colors hover:bg-[#f5f5f5] dark:border-app-border dark:text-app-text-secondary dark:hover:bg-[#262626]"
+            >
+              {clearLabel}
+            </button>
+          ) : null}
         </div>
       </div>
     </div>
