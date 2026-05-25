@@ -2073,12 +2073,19 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
     element.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const hasFloatingSelectionBar = (selectedDeliveryIds?.size ?? 0) > 0;
+
   const scrollTopFab = showScrollTopFab ? (
     <button
       type="button"
       data-haptic="medium"
       onClick={handleScrollToTop}
-      className="absolute bottom-4 left-4 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full border border-app-border bg-app-surface/95 text-app-text shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur transition-[transform,background-color,border-color] hover:-translate-y-0.5 hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 md:bottom-5 md:left-5"
+      className={joinClassNames(
+        'absolute left-4 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full border border-app-border bg-app-surface/95 text-app-text shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur transition-[bottom,transform,background-color,border-color] hover:-translate-y-0.5 hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 md:left-5',
+        hasFloatingSelectionBar
+          ? 'bottom-[calc(env(safe-area-inset-bottom,0px)+5.25rem)]'
+          : 'bottom-4 md:bottom-5',
+      )}
       aria-label="גלול למעלה"
       title="גלול למעלה"
     >
