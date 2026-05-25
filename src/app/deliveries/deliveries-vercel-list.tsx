@@ -653,7 +653,7 @@ const UnusualLateIndicator: React.FC<{
   return (
     <span
       className={joinClassNames(
-        'inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-[var(--app-radius-xs)] border border-red-500/35 bg-red-500/10 text-red-600 dark:text-red-300',
+        'inline-flex h-5 w-5 shrink-0 items-center justify-center text-red-500 dark:text-red-300',
         className,
       )}
       title={tooltipLabel}
