@@ -177,15 +177,15 @@ const SettingRow: React.FC<{
   danger?: boolean;
 }> = ({ icon, title, hint, control, danger = false }) => (
   <div
-    className={`grid gap-3 border-b px-3 py-3 last:border-b-0 sm:grid-cols-[1fr_auto] sm:items-center sm:px-4 ${
+    className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b px-3 py-2.5 last:border-b-0 sm:px-4 ${
       danger
         ? 'border-red-100 bg-red-50/70 dark:border-red-500/10 dark:bg-red-500/5'
         : 'border-[#f1f1f1] dark:border-app-border'
     }`}
   >
-    <div className="flex min-w-0 items-start gap-3">
+    <div className="flex min-w-0 items-center gap-2.5">
       <div
-        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-9 sm:w-9 ${
+        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md sm:h-8 sm:w-8 ${
           danger
             ? 'bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400'
             : 'bg-[#f5f5f5] text-app-brand dark:bg-app-surface dark:text-app-brand'
@@ -194,17 +194,17 @@ const SettingRow: React.FC<{
         {icon}
       </div>
       <div className="min-w-0">
-        <div className={`text-sm font-semibold ${danger ? 'text-red-700 dark:text-red-300' : 'text-[#0d0d12] dark:text-app-text'}`}>
+        <div className={`truncate text-sm font-semibold ${danger ? 'text-red-700 dark:text-red-300' : 'text-[#0d0d12] dark:text-app-text'}`}>
           {title}
         </div>
         {hint ? (
-          <div className={`mt-0.5 text-xs ${danger ? 'text-red-600/80 dark:text-red-300/75' : 'text-[#666d80] dark:text-app-text-secondary'}`}>
+          <div className={`mt-0.5 truncate text-[11px] ${danger ? 'text-red-600/80 dark:text-red-300/75' : 'text-[#666d80] dark:text-app-text-secondary'}`}>
             {hint}
           </div>
         ) : null}
       </div>
     </div>
-    <div className="flex min-w-0 items-center justify-start sm:justify-end">{control}</div>
+    <div className="flex min-w-0 max-w-[46vw] items-center justify-end sm:max-w-none">{control}</div>
   </div>
 );
 
@@ -430,7 +430,7 @@ const ThemeModePicker: React.FC<{
   onChange: (mode: ThemeMode) => void;
 }> = ({ value, onChange }) => (
   <div
-    className="grid w-full grid-cols-3 gap-1 rounded-lg border border-app-border bg-app-interactive p-1 sm:w-[282px] sm:max-w-[62vw]"
+    className="grid w-[232px] max-w-[46vw] grid-cols-3 gap-1 rounded-lg border border-app-border bg-app-interactive p-1 sm:w-[282px] sm:max-w-[62vw]"
     dir="rtl"
     role="group"
     aria-label={TEXT.themeMode}
@@ -444,7 +444,7 @@ const ThemeModePicker: React.FC<{
           data-haptic="selection"
           aria-pressed={isSelected}
           onClick={() => onChange(id)}
-          className={`inline-flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-md px-2 text-xs font-semibold transition-colors ${
+          className={`inline-flex h-8 min-w-0 items-center justify-center gap-1 rounded-md px-1.5 text-[11px] font-semibold transition-colors sm:h-9 sm:gap-1.5 sm:px-2 sm:text-xs ${
             isSelected
               ? 'bg-app-brand-solid text-app-background shadow-sm'
               : 'text-app-text-secondary hover:bg-app-interactive-hover hover:text-app-text'
@@ -471,16 +471,17 @@ const SectionCard: React.FC<{
         ? 'border-red-200 bg-red-50/50 dark:border-red-500/20 dark:bg-red-500/5'
         : 'border-[#e5e5e5] bg-white dark:border-app-border dark:bg-app-surface'
     }`}
+    aria-label={`${title}. ${description}`}
   >
     <div
-      className={`border-b px-3 py-3 sm:px-4 ${
+      className={`border-b px-3 py-2 sm:px-4 ${
         danger
           ? 'border-red-100 bg-red-50/80 dark:border-red-500/15 dark:bg-red-500/10'
           : 'border-[#f1f1f1] bg-[#fafafa] dark:border-app-border dark:bg-app-surface'
       }`}
     >
-      <div className="flex min-w-0 items-start gap-2.5">
-        <div className="mt-0.5 shrink-0">{icon}</div>
+      <div className="flex min-w-0 items-center gap-2">
+        <div className="shrink-0">{icon}</div>
         <div className="min-w-0">
           <h2
             className={`truncate text-sm font-bold ${
@@ -490,7 +491,7 @@ const SectionCard: React.FC<{
             {title}
           </h2>
           <p
-            className={`mt-1 text-xs leading-5 ${
+            className={`sr-only ${
               danger ? 'text-red-600/80 dark:text-red-300/75' : 'text-[#666d80] dark:text-app-text-secondary'
             }`}
           >
@@ -552,15 +553,15 @@ const SettingsActionCard: React.FC<{
     type="button"
     data-haptic="selection"
     onClick={onClick}
-    className="grid w-full grid-cols-[1fr_auto] items-center gap-3 rounded-lg border border-[#e5e5e5] bg-white px-3 py-3 text-right transition-colors hover:bg-[#f7f7f7] dark:border-app-border dark:bg-app-surface dark:hover:bg-app-surface-raised sm:px-4"
+    className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-[#e5e5e5] bg-white px-3 py-2.5 text-right transition-colors hover:bg-[#f7f7f7] dark:border-app-border dark:bg-app-surface dark:hover:bg-app-surface-raised sm:px-4"
   >
-    <div className="flex min-w-0 items-start gap-2.5">
-      <div className="mt-0.5 shrink-0">{icon}</div>
+    <div className="flex min-w-0 items-center gap-2.5">
+      <div className="shrink-0">{icon}</div>
       <div className="min-w-0">
         <h2 className="truncate text-sm font-bold text-[#0d0d12] dark:text-app-text">
           {title}
         </h2>
-        <p className="mt-1 text-xs leading-5 text-[#666d80] dark:text-app-text-secondary">
+        <p className="mt-0.5 truncate text-[11px] text-[#666d80] dark:text-app-text-secondary">
           {description}
         </p>
       </div>
@@ -616,7 +617,7 @@ export const SettingsPagesPage: React.FC = () => {
   return (
     <div className="flex h-full flex-col overflow-hidden bg-app-background" dir="rtl">
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-2.5 py-3 sm:px-3 md:px-5 md:py-5">
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-2 px-2.5 py-3 sm:px-3 md:px-5 md:py-5">
           <section className="rounded-lg border border-[#e5e5e5] bg-white p-3 dark:border-app-border dark:bg-app-surface sm:p-4">
             <button
               type="button"
@@ -812,7 +813,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-app-background" dir="rtl">
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-2.5 py-3 sm:px-3 md:px-5 md:py-5">
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-2 px-2.5 py-3 sm:px-3 md:px-5 md:py-5">
           <SectionCard
             icon={<Power className="h-4 w-4 text-app-brand" />}
             title={TEXT.system}
