@@ -916,6 +916,34 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   min-height: 92px;
 }
 
+.delivery-swipe-target {
+  touch-action: pan-y;
+}
+
+.delivery-swipe-target--swiping {
+  transition: none !important;
+  user-select: none;
+  will-change: transform;
+}
+
+.delivery-swipe-target--returning {
+  transition:
+    transform 210ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease !important;
+}
+
+.delivery-swipe-target--armed {
+  background-color: color-mix(in srgb, var(--app-brand) 13%, var(--app-surface));
+  border-color: color-mix(in srgb, var(--app-brand) 44%, var(--app-nav-border));
+}
+
+.delivery-swipe-target--selected {
+  border-color: color-mix(in srgb, var(--app-brand) 48%, var(--app-nav-border));
+  background-color: color-mix(in srgb, var(--app-brand) 8%, var(--app-surface));
+}
+
 .delivery-row__actions {
   align-self: center;
   grid-area: actions;

@@ -126,9 +126,12 @@ const formatDeliveryDate = (delivery: Delivery, showDateForToday: boolean) => {
   }
 };
 
-const DELIVERY_TOUCH_LONG_PRESS_MS = 480;
-const DELIVERY_TOUCH_MOVE_CANCEL_PX = 12;
 const DELIVERY_TOUCH_CONTEXT_SUPPRESS_MS = 800;
+const DELIVERY_TOUCH_SWIPE_START_PX = 10;
+const DELIVERY_TOUCH_SWIPE_VERTICAL_CANCEL_PX = 12;
+const DELIVERY_TOUCH_SWIPE_SELECT_THRESHOLD_PX = 54;
+const DELIVERY_TOUCH_SWIPE_MAX_OFFSET_PX = 42;
+const DELIVERY_TOUCH_SWIPE_RETURN_MS = 210;
 const DELIVERY_MOBILE_BOTTOM_REVEAL_GUARD_PX = 96;
 
 const isInteractiveGestureTarget = (target: EventTarget | null) =>
@@ -149,19 +152,26 @@ const useDeliveryFocusGesture = (
   deliveryId: string,
   onFocusDeliveryOnMap?: (deliveryId: string) => void,
 ) => {
-  const timerRef = useRef<number | null>(null);
   const touchResetTimerRef = useRef<number | null>(null);
-  const startPointRef = useRef<{ pointerId: number; x: number; y: number } | null>(null);
+  const swipeReturnTimerRef = useRef<number | null>(null);
+  const startPointRef = useRef<{
+    active: boolean;
+    cancelled: boolean;
+    pointerId: number;
+    x: number;
+    y: number;
+  } | null>(null);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [swipePhase, setSwipePhase] = useState<'idle' | 'dragging' | 'armed' | 'returning'>('idle');
   const touchInteractionRef = useRef(false);
-  const longPressTriggeredRef = useRef(false);
+  const swipeTriggeredRef = useRef(false);
   const lastTouchInteractionAtRef = useRef(0);
 
-  const clearLongPressTimer = () => {
-    if (timerRef.current !== null) {
-      window.clearTimeout(timerRef.current);
-      timerRef.current = null;
+  const clearSwipeReturnTimer = () => {
+    if (swipeReturnTimerRef.current !== null) {
+      window.clearTimeout(swipeReturnTimerRef.current);
+      swipeReturnTimerRef.current = null;
     }
-    startPointRef.current = null;
   };
 
   const clearTouchResetTimer = () => {
@@ -175,9 +185,19 @@ const useDeliveryFocusGesture = (
     clearTouchResetTimer();
     touchResetTimerRef.current = window.setTimeout(() => {
       touchInteractionRef.current = false;
-      longPressTriggeredRef.current = false;
+      swipeTriggeredRef.current = false;
       touchResetTimerRef.current = null;
     }, DELIVERY_TOUCH_CONTEXT_SUPPRESS_MS);
+  };
+
+  const returnSwipeToRest = () => {
+    clearSwipeReturnTimer();
+    setSwipePhase('returning');
+    setSwipeOffset(0);
+    swipeReturnTimerRef.current = window.setTimeout(() => {
+      swipeReturnTimerRef.current = null;
+      setSwipePhase('idle');
+    }, DELIVERY_TOUCH_SWIPE_RETURN_MS);
   };
 
   const focusDelivery = () => {
@@ -185,11 +205,11 @@ const useDeliveryFocusGesture = (
   };
 
   useEffect(() => () => {
-    if (timerRef.current !== null) {
-      window.clearTimeout(timerRef.current);
-    }
     if (touchResetTimerRef.current !== null) {
       window.clearTimeout(touchResetTimerRef.current);
+    }
+    if (swipeReturnTimerRef.current !== null) {
+      window.clearTimeout(swipeReturnTimerRef.current);
     }
   }, []);
 
@@ -199,57 +219,97 @@ const useDeliveryFocusGesture = (
     if (!isDeliveryTouchPointer(event)) {
       touchInteractionRef.current = false;
       clearTouchResetTimer();
+      clearSwipeReturnTimer();
       return;
     }
 
     if (isInteractiveGestureTarget(event.target)) return;
 
-    clearLongPressTimer();
     clearTouchResetTimer();
+    clearSwipeReturnTimer();
     touchInteractionRef.current = true;
-    longPressTriggeredRef.current = false;
+    swipeTriggeredRef.current = false;
+    setSwipeOffset(0);
+    setSwipePhase('idle');
     startPointRef.current = {
+      active: false,
+      cancelled: false,
       pointerId: event.pointerId,
       x: event.clientX,
       y: event.clientY,
     };
 
-    timerRef.current = window.setTimeout(() => {
-      timerRef.current = null;
-      startPointRef.current = null;
-      longPressTriggeredRef.current = true;
-      lastTouchInteractionAtRef.current = getNowForGesture();
-      focusDelivery();
-      playHaptic('selection', { force: true });
-    }, DELIVERY_TOUCH_LONG_PRESS_MS);
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // Pointer capture is best-effort; the swipe still works without it.
+    }
   };
 
   const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
     const startPoint = startPointRef.current;
-    if (!startPoint || startPoint.pointerId !== event.pointerId) return;
+    if (!startPoint || startPoint.pointerId !== event.pointerId || startPoint.cancelled) return;
 
     const deltaX = event.clientX - startPoint.x;
     const deltaY = event.clientY - startPoint.y;
-    if (Math.hypot(deltaX, deltaY) > DELIVERY_TOUCH_MOVE_CANCEL_PX) {
-      clearLongPressTimer();
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+
+    if (!startPoint.active) {
+      if (absY > DELIVERY_TOUCH_SWIPE_VERTICAL_CANCEL_PX && absY > absX) {
+        startPoint.cancelled = true;
+        returnSwipeToRest();
+        return;
+      }
+
+      if (absX < DELIVERY_TOUCH_SWIPE_START_PX || absX < absY * 1.25) return;
+
+      startPoint.active = true;
     }
+
+    event.preventDefault();
+    const offset =
+      Math.sign(deltaX) *
+      Math.min(DELIVERY_TOUCH_SWIPE_MAX_OFFSET_PX, absX * 0.55);
+
+    setSwipeOffset(offset);
+    setSwipePhase(absX >= DELIVERY_TOUCH_SWIPE_SELECT_THRESHOLD_PX ? 'armed' : 'dragging');
   };
 
   const handlePointerEnd = (event: React.PointerEvent<HTMLElement>) => {
-    if (isDeliveryTouchPointer(event) && touchInteractionRef.current) {
+    const startPoint = startPointRef.current;
+    const isTouchPointer = isDeliveryTouchPointer(event);
+
+    if (isTouchPointer && touchInteractionRef.current) {
+      const deltaX = startPoint?.pointerId === event.pointerId ? event.clientX - startPoint.x : 0;
+      const shouldSelect =
+        Boolean(startPoint?.active) &&
+        Math.abs(deltaX) >= DELIVERY_TOUCH_SWIPE_SELECT_THRESHOLD_PX;
+
+      if (shouldSelect) {
+        swipeTriggeredRef.current = true;
+        focusDelivery();
+        playHaptic('selection', { force: true });
+      }
+
       lastTouchInteractionAtRef.current = getNowForGesture();
       scheduleTouchReset();
+      returnSwipeToRest();
+    } else {
+      setSwipeOffset(0);
+      setSwipePhase('idle');
     }
-    clearLongPressTimer();
+
+    startPointRef.current = null;
   };
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     clearTouchResetTimer();
 
-    if (longPressTriggeredRef.current) {
+    if (swipeTriggeredRef.current) {
       event.preventDefault();
       event.stopPropagation();
-      longPressTriggeredRef.current = false;
+      swipeTriggeredRef.current = false;
       touchInteractionRef.current = false;
       return;
     }
@@ -268,7 +328,7 @@ const useDeliveryFocusGesture = (
     const isRecentTouch =
       getNowForGesture() - lastTouchInteractionAtRef.current < DELIVERY_TOUCH_CONTEXT_SUPPRESS_MS;
 
-    if (touchInteractionRef.current || longPressTriggeredRef.current || isRecentTouch) {
+    if (touchInteractionRef.current || swipeTriggeredRef.current || isRecentTouch) {
       event.preventDefault();
       event.stopPropagation();
       scheduleTouchReset();
@@ -278,12 +338,30 @@ const useDeliveryFocusGesture = (
     return true;
   };
 
+  const swipeClassName = [
+    'delivery-swipe-target',
+    swipePhase === 'dragging' || swipePhase === 'armed' ? 'delivery-swipe-target--swiping' : '',
+    swipePhase === 'armed' ? 'delivery-swipe-target--armed' : '',
+    swipePhase === 'returning' ? 'delivery-swipe-target--returning' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const swipeStyle =
+    swipeOffset === 0
+      ? undefined
+      : ({
+          transform: `translate3d(${swipeOffset}px, 0, 0)`,
+        } satisfies React.CSSProperties);
+
   return {
     handleClick,
     handlePointerDown,
     handlePointerMove,
     handlePointerEnd,
     shouldOpenContextMenu,
+    swipeClassName,
+    swipeStyle,
   };
 };
 
@@ -1059,6 +1137,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
   return (
     <div
       data-delivery-row-id={delivery.id}
+      style={focusGesture.swipeStyle}
       onClick={focusGesture.handleClick}
       onPointerDown={focusGesture.handlePointerDown}
       onPointerMove={focusGesture.handlePointerMove}
@@ -1072,9 +1151,10 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
       }}
       className={joinClassNames(
         rowGridClass,
+        focusGesture.swipeClassName,
         'group relative w-full min-w-0 cursor-pointer border-b border-app-nav-border bg-app-surface text-app-text outline-none transition-colors last:border-b-0 hover:bg-app-surface-raised',
         unusualLateInfo && 'bg-red-500/[0.04] hover:bg-red-500/[0.08]',
-        (isDrawerTarget || isMapTarget) && 'shadow-[inset_2px_0_0_var(--app-brand)]',
+        (isDrawerTarget || isMapTarget) && 'delivery-swipe-target--selected shadow-[inset_2px_0_0_var(--app-brand)]',
       )}
     >
       <div
@@ -1448,6 +1528,7 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
   return (
     <div
       data-delivery-row-id={delivery.id}
+      style={focusGesture.swipeStyle}
       onClick={focusGesture.handleClick}
       onPointerDown={focusGesture.handlePointerDown}
       onPointerMove={focusGesture.handlePointerMove}
@@ -1460,9 +1541,10 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
         setContextMenuPos({ x: event.clientX, y: event.clientY });
       }}
       className={joinClassNames(
+        focusGesture.swipeClassName,
         'group min-w-0 cursor-pointer rounded-lg border border-app-nav-border bg-app-surface p-3 text-app-text outline-none transition-colors hover:bg-app-surface-raised',
         unusualLateInfo && 'border-red-500/35 bg-red-500/[0.04] hover:bg-red-500/[0.08]',
-        (isDrawerTarget || isMapTarget) && 'shadow-[inset_2px_0_0_var(--app-brand)]',
+        (isDrawerTarget || isMapTarget) && 'delivery-swipe-target--selected shadow-[inset_2px_0_0_var(--app-brand)]',
       )}
     >
       <div className="flex min-w-0 items-start justify-between gap-3">
