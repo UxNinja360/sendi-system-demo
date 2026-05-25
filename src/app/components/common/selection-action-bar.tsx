@@ -94,7 +94,7 @@ export const SelectionActionBar: React.FC<SelectionActionBarProps> = ({
     <div
       className={joinClassNames(
         isSingleRow
-          ? 'fixed bottom-[calc(env(safe-area-inset-bottom,0px)+0.875rem)] left-3 right-3 z-40 mx-auto max-w-[760px] rounded-2xl border border-[#e5e5e5] bg-white/95 shadow-[0_12px_40px_rgba(0,0,0,0.26)] backdrop-blur dark:border-app-border dark:bg-app-surface/95'
+          ? 'selection-action-bar--floating fixed bottom-[calc(env(safe-area-inset-bottom,0px)+0.875rem)] left-3 right-3 z-40 mx-auto max-w-[760px] rounded-2xl border border-[#e5e5e5] bg-white/95 shadow-[0_12px_40px_rgba(0,0,0,0.26)] backdrop-blur dark:border-app-border dark:bg-app-surface/95'
           : 'sticky inset-x-0 bottom-0 z-20 border-t border-[#e5e5e5] bg-white shadow-[0_-4px_16px_rgba(0,0,0,0.08)] dark:border-app-border dark:bg-app-surface',
       )}
     >
