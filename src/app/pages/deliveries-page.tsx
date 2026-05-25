@@ -1,7 +1,7 @@
 ﻿import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { format as formatDate } from 'date-fns';
 import { useLocation } from 'react-router';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, X } from 'lucide-react';
 import { useDelivery } from '../context/delivery-context-value';
 import { Delivery, DeliveryStatus } from '../types/delivery.types';
 import { DeliveriesSidePanel } from '../deliveries/deliveries-side-panel';
@@ -1118,17 +1118,6 @@ export const DeliveriesPage: React.FC = () => {
                             <button
                               type="button"
                               role="menuitem"
-                              className="block w-full rounded-md px-3 py-2 text-right text-sm font-semibold text-app-text-secondary transition-colors hover:bg-app-surface-raised"
-                              onClick={() => {
-                                setBulkActionsOpen(false);
-                                setSelectedIds(new Set());
-                              }}
-                            >
-                              נקה בחירה
-                            </button>
-                            <button
-                              type="button"
-                              role="menuitem"
                               disabled={selectedActionableDeliveries.length === 0}
                               className="block w-full rounded-md px-3 py-2 text-right text-sm font-semibold text-orange-500 transition-colors hover:bg-orange-500/10 disabled:cursor-not-allowed disabled:opacity-40"
                               onClick={() => {
@@ -1141,6 +1130,19 @@ export const DeliveriesPage: React.FC = () => {
                           </div>
                         ) : null}
                       </div>
+                      <button
+                        type="button"
+                        data-haptic="light"
+                        aria-label="נקה בחירה"
+                        title="נקה בחירה"
+                        onClick={() => {
+                          setBulkActionsOpen(false);
+                          setSelectedIds(new Set());
+                        }}
+                        className="inline-flex min-h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-app-border bg-app-background text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+                      >
+                        <X className="h-4 w-4" aria-hidden="true" />
+                      </button>
                     </>
                   }
                 />
