@@ -1245,11 +1245,11 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
     grid-template-columns:
       clamp(34px, 4%, 42px)
       clamp(72px, 9%, 88px)
-      minmax(0, max-content)
-      max-content
-      minmax(76px, 0.65fr)
-      minmax(136px, 1.25fr)
-      minmax(176px, 1.55fr)
+      minmax(118px, 1fr)
+      clamp(58px, 7%, 78px)
+      minmax(92px, 0.9fr)
+      minmax(118px, 1.1fr)
+      minmax(150px, 1.35fr)
       clamp(74px, 9%, 104px);
     grid-template-rows: minmax(70px, auto);
     min-height: 70px;
@@ -1383,11 +1383,11 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
     grid-template-columns:
       clamp(36px, 4%, 48px)
       clamp(84px, 9%, 100px)
-      minmax(0, max-content)
-      max-content
-      clamp(96px, 10%, 140px)
-      minmax(180px, 1.2fr)
-      minmax(240px, 1.6fr)
+      minmax(160px, 1fr)
+      clamp(76px, 7%, 96px)
+      clamp(106px, 12%, 150px)
+      minmax(160px, 260px)
+      minmax(210px, 320px)
       clamp(82px, 9%, 124px);
   }
 

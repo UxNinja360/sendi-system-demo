@@ -646,23 +646,21 @@ const UnusualLateIndicator: React.FC<{
   lateInfo: UnusualLateInfo;
   compact?: boolean;
   className?: string;
-}> = ({ lateInfo, compact = false, className }) => {
+}> = ({ lateInfo, className }) => {
   const lateLabel = formatLateMinutes(lateInfo.minutesLate);
+  const tooltipLabel = `${lateInfo.label}: ${lateLabel} מעבר ליעד ${lateInfo.targetLabel}`;
 
   return (
     <span
       className={joinClassNames(
-        'inline-flex min-w-0 max-w-full items-center gap-1 overflow-hidden rounded-[var(--app-radius-xs)] border border-red-500/35 bg-red-500/10 px-1.5 py-0.5 text-[11px] font-semibold leading-none text-red-600 dark:text-red-300',
+        'inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-[var(--app-radius-xs)] border border-red-500/35 bg-red-500/10 text-red-600 dark:text-red-300',
         className,
       )}
-      title={`${lateInfo.label}: ${lateLabel} מעבר ליעד ${lateInfo.targetLabel}`}
-      aria-label={`${lateInfo.label}: ${lateLabel}`}
+      title={tooltipLabel}
+      aria-label={tooltipLabel}
       dir="rtl"
     >
-      <AlertTriangle className="h-3 w-3 shrink-0" />
-      <span className="min-w-0 flex-1 truncate">
-        {compact ? `${lateInfo.label} ${lateLabel}` : `${lateInfo.label} · ${lateLabel}`}
-      </span>
+      <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
     </span>
   );
 };
