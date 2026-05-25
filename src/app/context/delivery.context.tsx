@@ -21,6 +21,7 @@ import {
 import { calculateSendiPlusDeliveryCharge } from '../utils/delivery-finance';
 import { isDeliveryOfferExpired } from '../utils/delivery-offers';
 import { showActionInfoToast, showActionToast } from '../notifications/toast-helpers';
+import { getAlertPreferences } from '../notifications/alert-preferences';
 import {
   DEFAULT_RESTAURANT_MAX_DELIVERY_TIME,
   DEFAULT_RESTAURANT_PREPARATION_TIME,
@@ -384,6 +385,8 @@ const createActionToast = (action: DeliveryAction, state: DeliveryState): Action
         title: `מהירות הדמו עודכנה ל-${action.payload}x`,
       };
     case 'ADD_DELIVERY':
+      if (!getAlertPreferences().newDeliveryBannerEnabled) return null;
+
       return {
         actionType: action.type,
         title: 'משלוח חדש נוצר',

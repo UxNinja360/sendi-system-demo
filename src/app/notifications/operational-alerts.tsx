@@ -395,11 +395,14 @@ export const OperationalAlerts: React.FC = () => {
     if (newDeliveries.length === 0) return;
 
     if (isAppInForeground()) {
+      const preferences = getAlertPreferences();
       playNewDeliverySound();
-      if (getAlertPreferences().newDeliveryHapticEnabled) {
+      if (preferences.newDeliveryHapticEnabled) {
         playHaptic('success', { force: true });
       }
-      newDeliveries.forEach(showInAppDeliveryAlert);
+      if (preferences.newDeliveryBannerEnabled) {
+        newDeliveries.forEach(showInAppDeliveryAlert);
+      }
       return;
     }
 

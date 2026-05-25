@@ -118,6 +118,8 @@ const TEXT = {
   hapticFeedbackHint: 'רטט קצר בלחיצה על כפתורים ופקדים תומכים.',
   newDeliveryHaptic: 'רטט למשלוח חדש',
   newDeliveryHapticHint: 'ניסיון להפעיל רטט/הפטיק בכל משלוח חדש.',
+  newDeliveryBanner: 'באנרים למשלוחים חדשים',
+  newDeliveryBannerHint: 'הצגת באנר פנימי כשנכנס משלוח חדש לאפליקציה.',
   browserNotifications: 'התראות דפדפן',
   browserNotificationsHint: 'התראות מערכת כשהאפליקציה אינה בפוקוס. כשהיא פתוחה נשתמש בהתראה פנימית.',
   realPush: 'פוש אמיתי ברקע',
@@ -1000,6 +1002,22 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
             title={TEXT.pushNotifications}
             description={TEXT.pushNotificationsDescription}
           >
+            <SettingRow
+              icon={<BellRing className="h-4 w-4" />}
+              title={TEXT.newDeliveryBanner}
+              hint={TEXT.newDeliveryBannerHint}
+              control={
+                <Toggle
+                  checked={alertPreferences.newDeliveryBannerEnabled}
+                  onChange={() => {
+                    updateAlertPreference(
+                      'newDeliveryBannerEnabled',
+                      !alertPreferences.newDeliveryBannerEnabled,
+                    );
+                  }}
+                />
+              }
+            />
             <SettingRow
               icon={<BellRing className="h-4 w-4" />}
               title={TEXT.browserNotifications}
