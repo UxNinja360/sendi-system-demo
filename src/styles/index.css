@@ -1251,12 +1251,12 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
 @container (min-width: 880px) {
   .delivery-vercel-row {
     column-gap: clamp(6px, 0.65vw, 10px);
-    grid-template-areas: "actions status distance courier customer restaurant order";
+    grid-template-areas: "actions status courier distance customer restaurant order";
     grid-template-columns:
       clamp(34px, 4%, 42px)
-      clamp(100px, 11%, 128px)
-      clamp(58px, 7%, 78px)
+      clamp(116px, 13%, 144px)
       minmax(92px, 0.9fr)
+      clamp(76px, 8%, 96px)
       minmax(118px, 1.1fr)
       minmax(150px, 1.35fr)
       clamp(74px, 9%, 104px);
@@ -1391,9 +1391,9 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   .delivery-vercel-row {
     grid-template-columns:
       clamp(36px, 4%, 48px)
-      clamp(112px, 11%, 136px)
-      clamp(76px, 7%, 96px)
+      clamp(124px, 11%, 144px)
       clamp(106px, 12%, 150px)
+      clamp(82px, 8%, 104px)
       minmax(160px, 260px)
       minmax(210px, 320px)
       clamp(82px, 9%, 124px);

@@ -1333,11 +1333,6 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
             />
           </div>
 
-          <DeliveryDistanceInline
-            label={distanceLabel}
-            className="delivery-row__route-compact-distance"
-          />
-
           <div
             ref={compactAssignmentAnchorRef}
             className="delivery-row__route-compact-courier flex min-w-0 rounded-md"
@@ -1349,6 +1344,11 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
               className="w-full justify-start whitespace-nowrap px-1 py-1"
             />
           </div>
+
+          <DeliveryDistanceInline
+            label={distanceLabel}
+            className="delivery-row__route-compact-distance"
+          />
         </div>
       </div>
 
