@@ -1179,13 +1179,14 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   .delivery-row__route-compact-distance {
     flex: 0 0 auto;
     justify-content: flex-end;
-    margin-left: auto;
+    margin-left: 0;
     max-width: 100%;
   }
 
   .delivery-row__route-compact-courier {
     flex: 0 1 auto;
     justify-content: flex-start;
+    margin-left: auto;
     max-width: min(42vw, 190px);
     min-width: 0;
     width: auto;
