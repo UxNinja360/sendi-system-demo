@@ -896,6 +896,11 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   scrollbar-width: none;
 }
 
+.deliveries-scroll-safe-end {
+  padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+  scroll-padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+}
+
 .deliveries-vercel-scroll::-webkit-scrollbar {
   display: none;
 }

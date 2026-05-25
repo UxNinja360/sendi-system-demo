@@ -129,6 +129,7 @@ const formatDeliveryDate = (delivery: Delivery, showDateForToday: boolean) => {
 const DELIVERY_TOUCH_LONG_PRESS_MS = 480;
 const DELIVERY_TOUCH_MOVE_CANCEL_PX = 12;
 const DELIVERY_TOUCH_CONTEXT_SUPPRESS_MS = 800;
+const DELIVERY_MOBILE_BOTTOM_REVEAL_GUARD_PX = 96;
 
 const isInteractiveGestureTarget = (target: EventTarget | null) =>
   target instanceof Element &&
@@ -1802,26 +1803,29 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
     const handleScroll = () => {
       if (scrollState.animationFrame) return;
       scrollState.animationFrame = window.requestAnimationFrame(() => {
-        const nextScrollTop = element.scrollTop;
+        const maxScrollTop = Math.max(0, element.scrollHeight - element.clientHeight);
+        const nextScrollTop = Math.min(Math.max(0, element.scrollTop), maxScrollTop);
 
         if (isDesktopViewport()) {
           setHidden(false);
-          scrollState.lastScrollTop = Math.max(0, nextScrollTop);
+          scrollState.lastScrollTop = nextScrollTop;
           scrollState.animationFrame = 0;
           return;
         }
 
         const delta = nextScrollTop - scrollState.lastScrollTop;
+        const distanceFromBottom = maxScrollTop - nextScrollTop;
+        const isNearBottomBounce = distanceFromBottom < DELIVERY_MOBILE_BOTTOM_REVEAL_GUARD_PX;
 
         if (nextScrollTop < 12) {
           setHidden(false);
         } else if (delta > 10) {
           setHidden(true);
-        } else if (delta < -8) {
+        } else if (delta < -8 && !isNearBottomBounce) {
           setHidden(false);
         }
 
-        scrollState.lastScrollTop = Math.max(0, nextScrollTop);
+        scrollState.lastScrollTop = nextScrollTop;
         scrollState.animationFrame = 0;
       });
     };
@@ -1907,7 +1911,7 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
   if (viewMode === 'cards') {
     return (
       <div data-view-mode="cards" className="relative flex min-h-0 flex-1 flex-col bg-app-background">
-        <div ref={scrollContainerRef} className="resource-list-scroll min-h-0 flex-1 overflow-auto px-2 pb-3 lg:px-3" dir="rtl">
+        <div ref={scrollContainerRef} className="resource-list-scroll deliveries-scroll-safe-end min-h-0 flex-1 overflow-auto px-2 lg:px-3" dir="rtl">
           <div className="grid grid-cols-1 gap-2 lg:grid-cols-2 xl:grid-cols-3">
             {filteredDeliveries.map((delivery) => {
               const courier = delivery.courierId
@@ -1948,7 +1952,7 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
 
   return (
     <div data-view-mode="list" className="relative flex min-h-0 flex-1 flex-col bg-app-background">
-      <div ref={scrollContainerRef} className="deliveries-vercel-scroll min-h-0 flex-1 overflow-auto px-2 lg:px-3" dir="ltr">
+      <div ref={scrollContainerRef} className="deliveries-vercel-scroll deliveries-scroll-safe-end min-h-0 flex-1 overflow-auto px-2 lg:px-3" dir="ltr">
         <div className="delivery-vercel-list-frame w-full min-w-0 overflow-visible border border-app-nav-border lg:overflow-hidden" dir="rtl">
           {filteredDeliveries.map((delivery) => {
             const courier = delivery.courierId
