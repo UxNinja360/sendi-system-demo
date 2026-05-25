@@ -1046,7 +1046,7 @@ export const DeliveriesPage: React.FC = () => {
                         </button>
                         {bulkActionsOpen ? (
                           <div
-                            className="absolute bottom-[calc(100%+0.5rem)] left-0 z-30 w-52 rounded-lg border border-app-border bg-app-surface p-1.5 text-app-text shadow-2xl"
+                            className="absolute bottom-[calc(100%+0.875rem)] left-0 z-30 w-52 rounded-lg border border-app-border bg-app-surface p-1.5 text-app-text shadow-2xl"
                             role="menu"
                             dir="rtl"
                           >
