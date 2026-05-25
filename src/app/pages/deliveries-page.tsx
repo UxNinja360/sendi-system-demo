@@ -512,6 +512,7 @@ export const DeliveriesPage: React.FC = () => {
       ),
     [selectedDeliveries],
   );
+  const hasBulkAssignmentTargets = selectedActionableDeliveries.length > 0;
 
   const selectedAssignedDeliveries = useMemo(
     () => selectedDeliveries.filter((delivery) => delivery.status === 'assigned'),
@@ -1004,26 +1005,30 @@ export const DeliveriesPage: React.FC = () => {
                   showClearAction={false}
                   actions={
                     <>
-                      <select
-                        value={bulkCourierId}
-                        onChange={(event) => setBulkCourierId(event.target.value)}
-                        className="h-9 min-w-0 flex-1 rounded-lg border border-app-border bg-app-background px-2 text-xs font-semibold text-app-text outline-none focus:border-app-brand focus:ring-2 focus:ring-app-brand/20 sm:max-w-[190px] sm:text-sm"
-                        aria-label="בחירת שליח לשיבוץ נבחרים"
-                      >
-                        <option value="">בחר שליח</option>
-                        {bulkAssignableCouriers.map((courier) => (
-                          <option key={courier.id} value={courier.id}>
-                            {courier.name}
-                          </option>
-                        ))}
-                      </select>
-                      <SelectionActionButton
-                        onClick={handleBulkAssignCourier}
-                        disabled={!bulkCourierId || selectedActionableDeliveries.length === 0}
-                        className="px-3 text-xs sm:text-sm"
-                      >
-                        שיבוץ
-                      </SelectionActionButton>
+                      {hasBulkAssignmentTargets ? (
+                        <>
+                          <select
+                            value={bulkCourierId}
+                            onChange={(event) => setBulkCourierId(event.target.value)}
+                            className="h-9 min-w-0 flex-1 rounded-lg border border-app-border bg-app-background px-2 text-xs font-semibold text-app-text outline-none focus:border-app-brand focus:ring-2 focus:ring-app-brand/20 sm:max-w-[190px] sm:text-sm"
+                            aria-label="בחירת שליח לשיבוץ נבחרים"
+                          >
+                            <option value="">בחר שליח</option>
+                            {bulkAssignableCouriers.map((courier) => (
+                              <option key={courier.id} value={courier.id}>
+                                {courier.name}
+                              </option>
+                            ))}
+                          </select>
+                          <SelectionActionButton
+                            onClick={handleBulkAssignCourier}
+                            disabled={!bulkCourierId}
+                            className="px-3 text-xs sm:text-sm"
+                          >
+                            שיבוץ
+                          </SelectionActionButton>
+                        </>
+                      ) : null}
                       <div className="relative shrink-0">
                         {bulkActionsOpen ? (
                           <button
