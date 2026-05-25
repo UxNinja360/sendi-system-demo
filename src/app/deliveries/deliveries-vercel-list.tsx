@@ -77,6 +77,8 @@ type DeliveriesVercelListProps = {
   focusedDeliveryId?: string | null;
   focusedDeliveryScrollSignal?: number;
   onFocusDeliveryOnMap?: (deliveryId: string) => void;
+  selectedDeliveryIds?: Set<string>;
+  onToggleDeliverySelection?: (deliveryId: string) => void;
   selectionBar?: React.ReactNode;
   onSearchRowHiddenChange?: (hidden: boolean) => void;
 };
@@ -91,7 +93,9 @@ type DeliveryVercelRowProps = {
   showDateForToday: boolean;
   isDrawerTarget: boolean;
   isMapTarget?: boolean;
+  isSelected?: boolean;
   onFocusDeliveryOnMap?: (deliveryId: string) => void;
+  onToggleDeliverySelection?: (deliveryId: string) => void;
   onOpenDrawer: (id: string) => void;
   onStatusChange: (deliveryId: string, status: DeliveryStatus) => void;
   onAssignCourier: (deliveryId: string, courierId: string) => void;
@@ -150,6 +154,7 @@ const getNowForGesture = () =>
 
 const useDeliveryFocusGesture = (
   deliveryId: string,
+  onToggleDeliverySelection?: (deliveryId: string) => void,
   onFocusDeliveryOnMap?: (deliveryId: string) => void,
 ) => {
   const touchResetTimerRef = useRef<number | null>(null);
@@ -202,7 +207,12 @@ const useDeliveryFocusGesture = (
     }, DELIVERY_TOUCH_SWIPE_RETURN_MS);
   };
 
-  const focusDelivery = () => {
+  const activateDelivery = () => {
+    if (onToggleDeliverySelection) {
+      onToggleDeliverySelection(deliveryId);
+      return;
+    }
+
     onFocusDeliveryOnMap?.(deliveryId);
   };
 
@@ -297,7 +307,7 @@ const useDeliveryFocusGesture = (
 
       if (shouldSelect) {
         swipeTriggeredRef.current = true;
-        focusDelivery();
+        activateDelivery();
         playHaptic('selection', { force: true });
       }
 
@@ -313,7 +323,7 @@ const useDeliveryFocusGesture = (
   };
 
   const handlePointerDown = (event: React.PointerEvent<HTMLElement>) => {
-    if (!onFocusDeliveryOnMap || !event.isPrimary || event.button !== 0) return;
+    if ((!onToggleDeliverySelection && !onFocusDeliveryOnMap) || !event.isPrimary || event.button !== 0) return;
 
     if (!isDeliveryTouchPointer(event)) {
       touchInteractionRef.current = false;
@@ -344,7 +354,7 @@ const useDeliveryFocusGesture = (
   };
 
   const handleTouchStart = (event: React.TouchEvent<HTMLElement>) => {
-    if (!onFocusDeliveryOnMap) return;
+    if (!onToggleDeliverySelection && !onFocusDeliveryOnMap) return;
     if (isInteractiveGestureTarget(event.target)) return;
 
     const touch = event.touches[0];
@@ -388,7 +398,7 @@ const useDeliveryFocusGesture = (
       return;
     }
 
-    focusDelivery();
+    activateDelivery();
   };
 
   const shouldOpenContextMenu = (event: React.MouseEvent<HTMLElement>) => {
@@ -642,7 +652,7 @@ const UnusualLateIndicator: React.FC<{
   return (
     <span
       className={joinClassNames(
-        'inline-flex max-w-full shrink-0 items-center gap-1 rounded-[var(--app-radius-xs)] border border-red-500/35 bg-red-500/10 px-1.5 py-0.5 text-[11px] font-semibold leading-none text-red-600 dark:text-red-300',
+        'inline-flex min-w-0 max-w-full items-center gap-1 overflow-hidden rounded-[var(--app-radius-xs)] border border-red-500/35 bg-red-500/10 px-1.5 py-0.5 text-[11px] font-semibold leading-none text-red-600 dark:text-red-300',
         className,
       )}
       title={`${lateInfo.label}: ${lateLabel} מעבר ליעד ${lateInfo.targetLabel}`}
@@ -650,7 +660,7 @@ const UnusualLateIndicator: React.FC<{
       dir="rtl"
     >
       <AlertTriangle className="h-3 w-3 shrink-0" />
-      <span className="min-w-0 truncate">
+      <span className="min-w-0 flex-1 truncate">
         {compact ? `${lateInfo.label} ${lateLabel}` : `${lateInfo.label} · ${lateLabel}`}
       </span>
     </span>
@@ -700,7 +710,7 @@ const OfferExpiryIndicator: React.FC<{
   return (
     <span
       className={joinClassNames(
-        'inline-flex max-w-full shrink-0 items-center rounded-[var(--app-radius-xs)] border px-1.5 py-0.5 text-[11px] font-semibold leading-none',
+        'inline-flex min-w-0 max-w-full items-center overflow-hidden rounded-[var(--app-radius-xs)] border px-1.5 py-0.5 text-[11px] font-semibold leading-none',
         isExpired
           ? 'border-zinc-300 bg-zinc-500/5 text-zinc-500 dark:border-zinc-500/50 dark:bg-zinc-400/10 dark:text-zinc-300'
           : isExpiringSoon
@@ -711,7 +721,7 @@ const OfferExpiryIndicator: React.FC<{
       aria-label={`זמן לציוות לפני פקיעת הצעה ${timeLabel}`}
       dir="rtl"
     >
-      <span className="min-w-0 truncate">
+      <span className="min-w-0 flex-1 truncate">
         {label}
       </span>
     </span>
@@ -1135,7 +1145,9 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
   showDateForToday,
   isDrawerTarget,
   isMapTarget,
+  isSelected = false,
   onFocusDeliveryOnMap,
+  onToggleDeliverySelection,
   onOpenDrawer,
   onStatusChange,
   onAssignCourier,
@@ -1149,7 +1161,11 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
   const [assignmentMenuPos, setAssignmentMenuPos] = useState<{ x: number; y: number } | null>(null);
   const tableAssignmentAnchorRef = useRef<HTMLDivElement | null>(null);
   const compactAssignmentAnchorRef = useRef<HTMLDivElement | null>(null);
-  const focusGesture = useDeliveryFocusGesture(delivery.id, onFocusDeliveryOnMap);
+  const focusGesture = useDeliveryFocusGesture(
+    delivery.id,
+    onToggleDeliverySelection,
+    onFocusDeliveryOnMap,
+  );
   const restaurantName = delivery.rest_name || delivery.restaurantName || restaurant?.name || '-';
   const restaurantMeta = delivery.restaurantAddress || delivery.rest_city || delivery.restaurantCity || 'מסעדה';
   const clientName = delivery.client_name || delivery.customerName || '-';
@@ -1228,7 +1244,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         focusGesture.swipeClassName,
         'group relative w-full min-w-0 cursor-pointer border-b border-app-nav-border bg-app-surface text-app-text outline-none transition-colors last:border-b-0 hover:bg-app-surface-raised',
         unusualLateInfo && 'bg-red-500/[0.04] hover:bg-red-500/[0.08]',
-        (isDrawerTarget || isMapTarget) && 'delivery-swipe-target--selected shadow-[inset_2px_0_0_var(--app-brand)]',
+        (isSelected || isDrawerTarget || isMapTarget) && 'delivery-swipe-target--selected shadow-[inset_2px_0_0_var(--app-brand)]',
       )}
     >
       <div
@@ -1532,7 +1548,9 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
   showDateForToday,
   isDrawerTarget,
   isMapTarget,
+  isSelected = false,
   onFocusDeliveryOnMap,
+  onToggleDeliverySelection,
   onOpenDrawer,
   onStatusChange,
   onAssignCourier,
@@ -1545,7 +1563,11 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [assignmentMenuPos, setAssignmentMenuPos] = useState<{ x: number; y: number } | null>(null);
   const assignmentAnchorRef = useRef<HTMLDivElement | null>(null);
-  const focusGesture = useDeliveryFocusGesture(delivery.id, onFocusDeliveryOnMap);
+  const focusGesture = useDeliveryFocusGesture(
+    delivery.id,
+    onToggleDeliverySelection,
+    onFocusDeliveryOnMap,
+  );
   const restaurantName = delivery.rest_name || delivery.restaurantName || restaurant?.name || '-';
   const restaurantMeta = delivery.restaurantAddress || delivery.rest_city || delivery.restaurantCity || 'מסעדה';
   const clientName = delivery.client_name || delivery.customerName || '-';
@@ -1622,7 +1644,7 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
         focusGesture.swipeClassName,
         'group min-w-0 cursor-pointer rounded-lg border border-app-nav-border bg-app-surface p-3 text-app-text outline-none transition-colors hover:bg-app-surface-raised',
         unusualLateInfo && 'border-red-500/35 bg-red-500/[0.04] hover:bg-red-500/[0.08]',
-        (isDrawerTarget || isMapTarget) && 'delivery-swipe-target--selected shadow-[inset_2px_0_0_var(--app-brand)]',
+        (isSelected || isDrawerTarget || isMapTarget) && 'delivery-swipe-target--selected shadow-[inset_2px_0_0_var(--app-brand)]',
       )}
     >
       <div className="flex min-w-0 items-start justify-between gap-3">
@@ -1864,6 +1886,8 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
   focusedDeliveryId,
   focusedDeliveryScrollSignal = 0,
   onFocusDeliveryOnMap,
+  selectedDeliveryIds,
+  onToggleDeliverySelection,
   selectionBar,
   onSearchRowHiddenChange,
 }) => {
@@ -2100,7 +2124,9 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
                   showDateForToday={showDateForToday}
                   isDrawerTarget={drawerDeliveryId === delivery.id}
                   isMapTarget={focusedDeliveryId === delivery.id}
+                  isSelected={selectedDeliveryIds?.has(delivery.id) ?? false}
                   onFocusDeliveryOnMap={onFocusDeliveryOnMap}
+                  onToggleDeliverySelection={onToggleDeliverySelection}
                   onOpenDrawer={onOpenDrawer}
                   onStatusChange={onStatusChange}
                   onAssignCourier={onAssignCourier}
@@ -2141,7 +2167,9 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
                 showDateForToday={showDateForToday}
                 isDrawerTarget={drawerDeliveryId === delivery.id}
                 isMapTarget={focusedDeliveryId === delivery.id}
+                isSelected={selectedDeliveryIds?.has(delivery.id) ?? false}
                 onFocusDeliveryOnMap={onFocusDeliveryOnMap}
+                onToggleDeliverySelection={onToggleDeliverySelection}
                 onOpenDrawer={onOpenDrawer}
                 onStatusChange={onStatusChange}
                 onAssignCourier={onAssignCourier}

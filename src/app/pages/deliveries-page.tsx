@@ -446,6 +446,7 @@ export const DeliveriesPage: React.FC = () => {
   }, []);
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkCourierId, setBulkCourierId] = useState('');
   const [focusedDeliveryId, setFocusedDeliveryId] = useState<string | null>(null);
   const [focusedDeliveryScrollSignal, setFocusedDeliveryScrollSignal] = useState(0);
 
@@ -488,6 +489,40 @@ export const DeliveriesPage: React.FC = () => {
       return next;
     });
   }, [filteredDeliveries]);
+
+  const selectedDeliveries = useMemo(
+    () => filteredDeliveries.filter((delivery) => selectedIds.has(delivery.id)),
+    [filteredDeliveries, selectedIds],
+  );
+
+  const selectedActionableDeliveries = useMemo(
+    () =>
+      selectedDeliveries.filter(
+        (delivery) => !['delivered', 'cancelled', 'expired'].includes(delivery.status),
+      ),
+    [selectedDeliveries],
+  );
+
+  const selectedAssignedDeliveries = useMemo(
+    () => selectedDeliveries.filter((delivery) => delivery.status === 'assigned'),
+    [selectedDeliveries],
+  );
+
+  const selectedDeliveringDeliveries = useMemo(
+    () => selectedDeliveries.filter((delivery) => delivery.status === 'delivering'),
+    [selectedDeliveries],
+  );
+
+  const bulkAssignableCouriers = useMemo(
+    () => state.couriers.filter((courier) => canCourierAcceptDelivery(courier)),
+    [state.couriers],
+  );
+
+  useEffect(() => {
+    if (!bulkCourierId) return;
+    if (bulkAssignableCouriers.some((courier) => courier.id === bulkCourierId)) return;
+    setBulkCourierId('');
+  }, [bulkAssignableCouriers, bulkCourierId]);
 
   useEffect(() => {
     if (!focusedDeliveryId) return;
@@ -553,9 +588,10 @@ export const DeliveriesPage: React.FC = () => {
           })
         : null;
       toast.error(blockReason ? DELIVERY_ASSIGNMENT_BLOCK_COPY[blockReason] : 'לא ניתן לשבץ כרגע.');
-      return;
+      return false;
     }
 
+    return true;
   }, [assignCourier, state.couriers, state.deliveries, state.deliveryBalance]);
 
   const handleCancelDelivery = useCallback((deliveryId: string) => {
@@ -569,6 +605,90 @@ export const DeliveriesPage: React.FC = () => {
   const handleUnassignCourier = useCallback((deliveryId: string) => {
     unassignCourier(deliveryId);
   }, [unassignCourier]);
+
+  const clearSelectedDeliveries = useCallback((deliveryIds: string[]) => {
+    setSelectedIds((previous) => {
+      const next = new Set(previous);
+      deliveryIds.forEach((id) => next.delete(id));
+      return next;
+    });
+  }, []);
+
+  const handleBulkAssignCourier = useCallback(() => {
+    if (!bulkCourierId) {
+      toast.error('בחר שליח לשיבוץ');
+      return;
+    }
+
+    const targets = selectedActionableDeliveries;
+    if (targets.length === 0) {
+      toast.error('אין משלוחים שניתן לשבץ בבחירה');
+      return;
+    }
+
+    const assignedIds: string[] = [];
+    targets.forEach((delivery) => {
+      if (assignCourier(delivery.id, bulkCourierId)) {
+        assignedIds.push(delivery.id);
+      }
+    });
+
+    if (assignedIds.length > 0) {
+      const courierName =
+        state.couriers.find((courier) => courier.id === bulkCourierId)?.name ?? 'השליח';
+      toast.success(
+        `שובצו ${assignedIds.length.toLocaleString('he-IL')} משלוחים ל${courierName}`,
+      );
+      clearSelectedDeliveries(assignedIds);
+    }
+
+    const failedCount = targets.length - assignedIds.length;
+    if (failedCount > 0) {
+      toast.error(`${failedCount.toLocaleString('he-IL')} משלוחים לא שובצו`);
+    }
+  }, [
+    assignCourier,
+    bulkCourierId,
+    clearSelectedDeliveries,
+    selectedActionableDeliveries,
+    state.couriers,
+  ]);
+
+  const handleBulkUnassign = useCallback(() => {
+    if (selectedAssignedDeliveries.length === 0) {
+      toast.error('אין משלוחים משויכים בבחירה');
+      return;
+    }
+
+    selectedAssignedDeliveries.forEach((delivery) => {
+      unassignCourier(delivery.id);
+    });
+    clearSelectedDeliveries(selectedAssignedDeliveries.map((delivery) => delivery.id));
+    toast.success(`הוסר שיבוץ מ-${selectedAssignedDeliveries.length.toLocaleString('he-IL')} משלוחים`);
+  }, [clearSelectedDeliveries, selectedAssignedDeliveries, unassignCourier]);
+
+  const handleBulkStatusChange = useCallback((
+    targets: Delivery[],
+    status: DeliveryStatus,
+    successLabel: string,
+  ) => {
+    if (targets.length === 0) {
+      toast.error('אין משלוחים מתאימים בבחירה');
+      return;
+    }
+
+    targets.forEach((delivery) => {
+      if (status === 'cancelled') {
+        dispatch({ type: 'CANCEL_DELIVERY', payload: delivery.id });
+      } else if (status === 'delivered') {
+        dispatch({ type: 'COMPLETE_DELIVERY', payload: delivery.id });
+      } else {
+        dispatch({ type: 'UPDATE_STATUS', payload: { deliveryId: delivery.id, status } });
+      }
+    });
+    clearSelectedDeliveries(targets.map((delivery) => delivery.id));
+    toast.success(`${successLabel} ${targets.length.toLocaleString('he-IL')} משלוחים`);
+  }, [clearSelectedDeliveries, dispatch]);
 
   const handleOpenEdit = useCallback((id: string) => { setEditDeliveryId(id); }, []);
   const handleCloseEdit = useCallback(() => { setEditDeliveryId(null); }, []);
@@ -854,6 +974,8 @@ export const DeliveriesPage: React.FC = () => {
               focusedDeliveryId={focusedDeliveryId}
               focusedDeliveryScrollSignal={focusedDeliveryScrollSignal}
               onFocusDeliveryOnMap={handleFocusDeliveryOnMap}
+              selectedDeliveryIds={selectedIds}
+              onToggleDeliverySelection={handleToggleSelect}
               onSearchRowHiddenChange={handleSearchRowHiddenChange}
               selectionBar={
                 <SelectionActionBar
@@ -862,15 +984,71 @@ export const DeliveriesPage: React.FC = () => {
                   entityPlural={'\u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd'}
                   onClear={() => setSelectedIds(new Set())}
                   actions={
-                    <SelectionActionButton
-                      onClick={() => {
-                        setExportOpen(true);
-                        setColumnsOpen(false);
-                        setMapOpen(false);
-                      }}
-                    >
-                      {'\u05d9\u05d9\u05e6\u05d5\u05d0 \u05e0\u05d1\u05d7\u05e8\u05d9\u05dd'}
-                    </SelectionActionButton>
+                    <>
+                      <select
+                        value={bulkCourierId}
+                        onChange={(event) => setBulkCourierId(event.target.value)}
+                        className="h-9 max-w-[44vw] rounded-lg border border-app-border bg-app-background px-2 text-sm font-semibold text-app-text outline-none focus:border-app-brand focus:ring-2 focus:ring-app-brand/20 sm:max-w-[190px]"
+                        aria-label="בחירת שליח לשיבוץ נבחרים"
+                      >
+                        <option value="">בחר שליח</option>
+                        {bulkAssignableCouriers.map((courier) => (
+                          <option key={courier.id} value={courier.id}>
+                            {courier.name}
+                          </option>
+                        ))}
+                      </select>
+                      <SelectionActionButton
+                        onClick={handleBulkAssignCourier}
+                        disabled={!bulkCourierId || selectedActionableDeliveries.length === 0}
+                      >
+                        שיבוץ
+                      </SelectionActionButton>
+                      <SelectionActionButton
+                        variant="outline"
+                        onClick={handleToggleSelectAll}
+                      >
+                        בחר הכל
+                      </SelectionActionButton>
+                      <SelectionActionButton
+                        variant="outline"
+                        onClick={handleBulkUnassign}
+                        disabled={selectedAssignedDeliveries.length === 0}
+                      >
+                        הסר שיבוץ
+                      </SelectionActionButton>
+                      <SelectionActionButton
+                        variant="neutral"
+                        onClick={() => handleBulkStatusChange(selectedAssignedDeliveries, 'delivering', 'סומנו כנאספו')}
+                        disabled={selectedAssignedDeliveries.length === 0}
+                      >
+                        נאסף
+                      </SelectionActionButton>
+                      <SelectionActionButton
+                        variant="neutral"
+                        onClick={() => handleBulkStatusChange(selectedDeliveringDeliveries, 'delivered', 'סומנו כנמסרו')}
+                        disabled={selectedDeliveringDeliveries.length === 0}
+                      >
+                        נמסר
+                      </SelectionActionButton>
+                      <SelectionActionButton
+                        variant="warning"
+                        onClick={() => handleBulkStatusChange(selectedActionableDeliveries, 'cancelled', 'בוטלו')}
+                        disabled={selectedActionableDeliveries.length === 0}
+                      >
+                        ביטול
+                      </SelectionActionButton>
+                      <SelectionActionButton
+                        variant="accent"
+                        onClick={() => {
+                          setExportOpen(true);
+                          setColumnsOpen(false);
+                          setMapOpen(false);
+                        }}
+                      >
+                        ייצוא
+                      </SelectionActionButton>
+                    </>
                   }
                 />
               }
