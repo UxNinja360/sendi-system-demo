@@ -1715,6 +1715,7 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
     hidden: false,
     lastScrollTop: 0,
   });
+  const hasDeliveries = filteredDeliveries.length > 0;
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -1780,10 +1781,18 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
   ]);
 
   useLayoutEffect(() => {
-    const element = scrollContainerRef.current;
-    if (!element || !onSearchRowHiddenChange) return undefined;
-
     const scrollState = scrollDirectionRef.current;
+    if (!onSearchRowHiddenChange) return undefined;
+
+    if (!hasDeliveries) {
+      scrollState.hidden = false;
+      onSearchRowHiddenChange(false);
+      return undefined;
+    }
+
+    const element = scrollContainerRef.current;
+    if (!element) return undefined;
+
     const desktopViewportQuery =
       typeof window.matchMedia === 'function'
         ? window.matchMedia('(min-width: 1024px)')
@@ -1845,7 +1854,7 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
       desktopViewportQuery?.removeEventListener('change', syncDesktopVisibility);
       setHidden(false);
     };
-  }, [filteredDeliveries.length, onSearchRowHiddenChange]);
+  }, [hasDeliveries, onSearchRowHiddenChange, viewMode]);
 
   useLayoutEffect(() => {
     const element = scrollContainerRef.current;
