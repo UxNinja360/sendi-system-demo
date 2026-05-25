@@ -468,6 +468,11 @@ type UnusualLateInfo = {
   targetLabel: string;
 };
 
+type OfferExpiryInfo = {
+  expiresAt: Date;
+  remainingSeconds: number;
+};
+
 const toValidDate = (value: Date | string | number | null | undefined) => {
   if (!value) return null;
   const date = value instanceof Date ? value : new Date(value);
@@ -642,34 +647,11 @@ const formatLateMinutes = (minutes: number) => {
   return `${hours}:${remainingMinutes.toString().padStart(2, '0')} ש׳`;
 };
 
-const UnusualLateIndicator: React.FC<{
-  lateInfo: UnusualLateInfo;
-  compact?: boolean;
-  className?: string;
-}> = ({ lateInfo, className }) => {
-  const lateLabel = formatLateMinutes(lateInfo.minutesLate);
-  const tooltipLabel = `${lateInfo.label}: ${lateLabel} מעבר ליעד ${lateInfo.targetLabel}`;
-
-  return (
-    <span
-      className={joinClassNames(
-        'inline-flex h-5 w-5 shrink-0 items-center justify-center text-red-500 dark:text-red-300',
-        className,
-      )}
-      title={tooltipLabel}
-      aria-label={tooltipLabel}
-      dir="rtl"
-    >
-      <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-    </span>
-  );
-};
-
 const getSendiGoOfferExpiryInfo = (
   delivery: Delivery,
   restaurant: Pick<Restaurant, 'chainId' | 'name'> | null,
   now: Date,
-) => {
+): OfferExpiryInfo | null => {
   if (!isSendiPlusDelivery(delivery, restaurant) || delivery.status !== 'pending') {
     return null;
   }
@@ -691,44 +673,27 @@ const formatOfferRemainingSeconds = (seconds: number) => {
   return `${minutes}:${String(rest).padStart(2, '0')}`;
 };
 
-const OfferExpiryIndicator: React.FC<{
-  expiresAt: Date;
-  remainingSeconds: number;
-  compact?: boolean;
-}> = ({ expiresAt, remainingSeconds, compact = false }) => {
-  const timeLabel = formatOfferRemainingSeconds(remainingSeconds);
-  const isExpiringSoon = remainingSeconds <= 30;
-  const isExpired = remainingSeconds <= 0;
-  const label = isExpired
-    ? 'פג תוקף'
-    : compact
-      ? `תפוג ${timeLabel}`
-      : `צוות עד תפוגה · ${timeLabel}`;
-
-  return (
-    <span
-      className={joinClassNames(
-        'inline-flex min-w-0 max-w-full items-center overflow-hidden rounded-[var(--app-radius-xs)] border px-1.5 py-0.5 text-[11px] font-semibold leading-none',
-        isExpired
-          ? 'border-zinc-300 bg-zinc-500/5 text-zinc-500 dark:border-zinc-500/50 dark:bg-zinc-400/10 dark:text-zinc-300'
-          : isExpiringSoon
-            ? 'border-orange-500/35 bg-orange-500/10 text-orange-600 dark:text-orange-300'
-            : 'border-app-nav-border bg-app-surface-raised text-app-text-secondary',
-      )}
-      title={`הצעת סנדי גו ${isExpired ? 'פגה' : 'תפוג'} בשעה ${formatInlineTime(expiresAt)}`}
-      aria-label={`זמן לציוות לפני פקיעת הצעה ${timeLabel}`}
-      dir="rtl"
-    >
-      <span className="min-w-0 flex-1 truncate">
-        {label}
-      </span>
-    </span>
-  );
-};
-
 const AssignedStatusDot: React.FC<{ className?: string }> = ({ className }) => (
   <span className={joinClassNames('delivery-status-line__dot', className)} aria-hidden="true" />
 );
+
+const getStatusDetailLabel = (
+  unusualLateInfo?: UnusualLateInfo | null,
+  offerExpiryInfo?: OfferExpiryInfo | null,
+) => {
+  if (unusualLateInfo) {
+    const lateLabel = formatLateMinutes(unusualLateInfo.minutesLate);
+    return `${unusualLateInfo.label}: ${lateLabel} מעבר ליעד ${unusualLateInfo.targetLabel}`;
+  }
+
+  if (offerExpiryInfo) {
+    const remainingLabel = formatOfferRemainingSeconds(offerExpiryInfo.remainingSeconds);
+    const expiryLabel = offerExpiryInfo.remainingSeconds <= 0 ? 'פגה' : 'תפוג';
+    return `הצעת סנדי גו ${expiryLabel} בשעה ${formatInlineTime(offerExpiryInfo.expiresAt)} · ${remainingLabel}`;
+  }
+
+  return undefined;
+};
 
 const DELIVERY_STATUS_LINE_META: Record<
   DeliveryStatus,
@@ -768,16 +733,21 @@ const DELIVERY_STATUS_LINE_META: Record<
 const DeliveryStatusLine: React.FC<{
   status: DeliveryStatus;
   delivery?: Delivery;
+  unusualLateInfo?: UnusualLateInfo | null;
+  offerExpiryInfo?: OfferExpiryInfo | null;
   className?: string;
-}> = ({ status, delivery, className }) => {
+}> = ({ status, delivery, unusualLateInfo, offerExpiryInfo, className }) => {
   const meta = DELIVERY_STATUS_LINE_META[status];
-  const Icon = meta.icon;
+  const Icon = unusualLateInfo ? AlertTriangle : offerExpiryInfo ? Clock3 : meta.icon;
+  const detailLabel = getStatusDetailLabel(unusualLateInfo, offerExpiryInfo);
 
   const line = (
     <span
       className={joinClassNames(
         'delivery-status-line',
         `delivery-status-line--${status}`,
+        unusualLateInfo && 'delivery-status-line--has-alert',
+        !unusualLateInfo && offerExpiryInfo && 'delivery-status-line--has-timer',
         'inline-flex min-w-0 items-center gap-2 text-right',
         className,
       )}
@@ -786,13 +756,22 @@ const DeliveryStatusLine: React.FC<{
       <span className="delivery-status-line__label min-w-0 truncate text-sm font-normal">
         {meta.label}
       </span>
-      <Icon
-        className={joinClassNames(
-          'delivery-status-line__icon h-3.5 w-3.5 shrink-0',
-          meta.iconClassName,
-        )}
-        aria-hidden="true"
-      />
+      <span
+        className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center"
+        title={detailLabel}
+        aria-label={detailLabel}
+        aria-hidden={detailLabel ? undefined : true}
+      >
+        <Icon
+          className={joinClassNames(
+            'delivery-status-line__icon h-3.5 w-3.5 shrink-0',
+            unusualLateInfo && 'delivery-status-line__icon--alert',
+            !unusualLateInfo && offerExpiryInfo && 'delivery-status-line__icon--timer',
+            !unusualLateInfo && !offerExpiryInfo && meta.iconClassName,
+          )}
+          aria-hidden="true"
+        />
+      </span>
     </span>
   );
 
@@ -1335,23 +1314,11 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
             <DeliveryStatusLine
               status={delivery.status}
               delivery={delivery}
+              unusualLateInfo={unusualLateInfo}
+              offerExpiryInfo={offerExpiryInfo}
               className="w-full justify-start whitespace-nowrap px-1 py-1"
             />
           </div>
-
-          {unusualLateInfo || offerExpiryInfo ? (
-            <div className="delivery-row__route-compact-offer flex min-w-0">
-              {unusualLateInfo ? (
-                <UnusualLateIndicator lateInfo={unusualLateInfo} compact />
-              ) : offerExpiryInfo ? (
-                <OfferExpiryIndicator
-                  expiresAt={offerExpiryInfo.expiresAt}
-                  remainingSeconds={offerExpiryInfo.remainingSeconds}
-                  compact
-                />
-              ) : null}
-            </div>
-          ) : null}
 
           <DeliveryDistanceInline
             label={distanceLabel}
@@ -1377,25 +1344,11 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
           <DeliveryStatusLine
             status={delivery.status}
             delivery={delivery}
+            unusualLateInfo={unusualLateInfo}
+            offerExpiryInfo={offerExpiryInfo}
             className="delivery-row__status-line w-full px-1 py-1"
           />
         </div>
-      </div>
-
-      <div className="delivery-row__offer-table min-h-0 min-w-0 items-center justify-start">
-        {unusualLateInfo || offerExpiryInfo ? (
-          <div className="delivery-row__route-table-offer flex min-w-0">
-            {unusualLateInfo ? (
-              <UnusualLateIndicator lateInfo={unusualLateInfo} compact />
-            ) : offerExpiryInfo ? (
-              <OfferExpiryIndicator
-                expiresAt={offerExpiryInfo.expiresAt}
-                remainingSeconds={offerExpiryInfo.remainingSeconds}
-                compact
-              />
-            ) : null}
-          </div>
-        ) : null}
       </div>
 
       <div className="delivery-row__courier-table min-h-0 min-w-0 items-center justify-start">
@@ -1728,15 +1681,12 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
 
       <div className="mt-4 flex items-start justify-between gap-3 border-t border-app-nav-border pt-3 text-xs text-app-text-secondary">
         <div className="flex min-w-0 flex-col items-start gap-1">
-          <DeliveryStatusLine status={delivery.status} delivery={delivery} />
-          {unusualLateInfo ? (
-            <UnusualLateIndicator lateInfo={unusualLateInfo} />
-          ) : offerExpiryInfo ? (
-            <OfferExpiryIndicator
-              expiresAt={offerExpiryInfo.expiresAt}
-              remainingSeconds={offerExpiryInfo.remainingSeconds}
-            />
-          ) : null}
+          <DeliveryStatusLine
+            status={delivery.status}
+            delivery={delivery}
+            unusualLateInfo={unusualLateInfo}
+            offerExpiryInfo={offerExpiryInfo}
+          />
         </div>
         <span>{delivery.delivery_distance ? `${delivery.delivery_distance.toFixed(1)} ק״מ` : '-'}</span>
       </div>
