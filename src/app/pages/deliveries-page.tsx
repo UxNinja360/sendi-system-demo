@@ -988,7 +988,7 @@ export const DeliveriesPage: React.FC = () => {
                       <select
                         value={bulkCourierId}
                         onChange={(event) => setBulkCourierId(event.target.value)}
-                        className="h-9 max-w-[44vw] rounded-lg border border-app-border bg-app-background px-2 text-sm font-semibold text-app-text outline-none focus:border-app-brand focus:ring-2 focus:ring-app-brand/20 sm:max-w-[190px]"
+                        className="h-9 max-w-[44vw] shrink-0 rounded-lg border border-app-border bg-app-background px-2 text-sm font-semibold text-app-text outline-none focus:border-app-brand focus:ring-2 focus:ring-app-brand/20 sm:max-w-[190px]"
                         aria-label="בחירת שליח לשיבוץ נבחרים"
                       >
                         <option value="">בחר שליח</option>

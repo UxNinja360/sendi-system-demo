@@ -56,7 +56,7 @@ export const SelectionActionButton: React.FC<SelectionActionButtonProps> = ({
       type={type}
       data-haptic={haptic}
       className={joinClassNames(
-        'inline-flex min-h-9 items-center justify-center rounded-lg px-4 py-2 text-sm font-bold shadow-md transition-colors disabled:cursor-not-allowed disabled:opacity-40',
+        'inline-flex min-h-9 shrink-0 items-center justify-center whitespace-nowrap rounded-lg px-4 py-2 text-sm font-bold shadow-md transition-colors disabled:cursor-not-allowed disabled:opacity-40',
         ACTION_VARIANT_CLASSES[variant],
         className,
       )}
@@ -87,17 +87,17 @@ export const SelectionActionBar: React.FC<SelectionActionBarProps> = ({
 
   return (
     <div className="sticky inset-x-0 bottom-0 z-20 border-t border-[#e5e5e5] bg-white shadow-[0_-4px_16px_rgba(0,0,0,0.08)] dark:border-app-border dark:bg-app-surface">
-      <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center">
-        <div className="inline-flex w-fit items-center rounded-full border border-app-brand bg-app-brand-subtle px-3 py-1.5 text-sm font-semibold text-app-brand-text dark:border-app-nav-border dark:bg-app-brand-subtle dark:text-app-brand-text">
+      <div className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-3">
+        <div className="inline-flex w-fit shrink-0 items-center rounded-full border border-app-brand bg-app-brand-subtle px-3 py-1.5 text-sm font-semibold text-app-brand-text dark:border-app-nav-border dark:bg-app-brand-subtle dark:text-app-brand-text">
           {resolvedSelectionLabel}
         </div>
-        <div className="flex flex-1 flex-wrap items-center justify-start gap-2 sm:justify-end">
+        <div className="flex flex-1 flex-nowrap items-center justify-start gap-2 overflow-x-auto pb-0.5 sm:flex-wrap sm:justify-end sm:overflow-visible sm:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {actions}
           <button
             type="button"
             onClick={onClear}
             data-haptic="light"
-            className="min-h-9 rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm font-semibold text-[#737373] transition-colors hover:bg-[#f5f5f5] dark:border-app-border dark:text-app-text-secondary dark:hover:bg-[#262626]"
+            className="min-h-9 shrink-0 whitespace-nowrap rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm font-semibold text-[#737373] transition-colors hover:bg-[#f5f5f5] dark:border-app-border dark:text-app-text-secondary dark:hover:bg-[#262626]"
           >
             {clearLabel}
           </button>
