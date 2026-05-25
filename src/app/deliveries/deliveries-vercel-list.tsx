@@ -758,7 +758,6 @@ const DeliveryStatusLine: React.FC<{
       dir="rtl"
     >
       <span className="delivery-status-line__label inline-flex min-w-0 items-center gap-1.5 text-sm font-normal">
-        <span className="min-w-0 truncate">{meta.label}</span>
         {offerRemainingLabel ? (
           <span
             className="delivery-status-line__timer shrink-0 text-sm font-normal tabular-nums"
@@ -769,6 +768,7 @@ const DeliveryStatusLine: React.FC<{
             {offerRemainingLabel}
           </span>
         ) : null}
+        <span className="min-w-0 truncate">{meta.label}</span>
       </span>
       <span
         className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center"
