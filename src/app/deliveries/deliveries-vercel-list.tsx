@@ -54,6 +54,7 @@ import {
   getDeliveryOfferRemainingSeconds,
   getDeliveryAssignmentBlockReason,
 } from '../utils/delivery-assignment';
+import { playHaptic } from '../utils/haptics';
 
 type DeliveriesVercelListProps = {
   filteredDeliveries: Delivery[];
@@ -123,6 +124,166 @@ const formatDeliveryDate = (delivery: Delivery, showDateForToday: boolean) => {
   } catch {
     return '-';
   }
+};
+
+const DELIVERY_TOUCH_LONG_PRESS_MS = 480;
+const DELIVERY_TOUCH_MOVE_CANCEL_PX = 12;
+const DELIVERY_TOUCH_CONTEXT_SUPPRESS_MS = 800;
+
+const isInteractiveGestureTarget = (target: EventTarget | null) =>
+  target instanceof Element &&
+  Boolean(
+    target.closest(
+      'button, a[href], input, textarea, select, [role="button"], [data-ignore-row-gesture="true"]',
+    ),
+  );
+
+const isDeliveryTouchPointer = (event: React.PointerEvent<HTMLElement>) =>
+  event.pointerType === 'touch' || event.pointerType === 'pen';
+
+const getNowForGesture = () =>
+  typeof performance !== 'undefined' ? performance.now() : Date.now();
+
+const useDeliveryFocusGesture = (
+  deliveryId: string,
+  onFocusDeliveryOnMap?: (deliveryId: string) => void,
+) => {
+  const timerRef = useRef<number | null>(null);
+  const touchResetTimerRef = useRef<number | null>(null);
+  const startPointRef = useRef<{ pointerId: number; x: number; y: number } | null>(null);
+  const touchInteractionRef = useRef(false);
+  const longPressTriggeredRef = useRef(false);
+  const lastTouchInteractionAtRef = useRef(0);
+
+  const clearLongPressTimer = () => {
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    startPointRef.current = null;
+  };
+
+  const clearTouchResetTimer = () => {
+    if (touchResetTimerRef.current !== null) {
+      window.clearTimeout(touchResetTimerRef.current);
+      touchResetTimerRef.current = null;
+    }
+  };
+
+  const scheduleTouchReset = () => {
+    clearTouchResetTimer();
+    touchResetTimerRef.current = window.setTimeout(() => {
+      touchInteractionRef.current = false;
+      longPressTriggeredRef.current = false;
+      touchResetTimerRef.current = null;
+    }, DELIVERY_TOUCH_CONTEXT_SUPPRESS_MS);
+  };
+
+  const focusDelivery = () => {
+    onFocusDeliveryOnMap?.(deliveryId);
+  };
+
+  useEffect(() => () => {
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current);
+    }
+    if (touchResetTimerRef.current !== null) {
+      window.clearTimeout(touchResetTimerRef.current);
+    }
+  }, []);
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLElement>) => {
+    if (!onFocusDeliveryOnMap || !event.isPrimary || event.button !== 0) return;
+
+    if (!isDeliveryTouchPointer(event)) {
+      touchInteractionRef.current = false;
+      clearTouchResetTimer();
+      return;
+    }
+
+    if (isInteractiveGestureTarget(event.target)) return;
+
+    clearLongPressTimer();
+    clearTouchResetTimer();
+    touchInteractionRef.current = true;
+    longPressTriggeredRef.current = false;
+    startPointRef.current = {
+      pointerId: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+    };
+
+    timerRef.current = window.setTimeout(() => {
+      timerRef.current = null;
+      startPointRef.current = null;
+      longPressTriggeredRef.current = true;
+      lastTouchInteractionAtRef.current = getNowForGesture();
+      focusDelivery();
+      playHaptic('selection', { force: true });
+    }, DELIVERY_TOUCH_LONG_PRESS_MS);
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
+    const startPoint = startPointRef.current;
+    if (!startPoint || startPoint.pointerId !== event.pointerId) return;
+
+    const deltaX = event.clientX - startPoint.x;
+    const deltaY = event.clientY - startPoint.y;
+    if (Math.hypot(deltaX, deltaY) > DELIVERY_TOUCH_MOVE_CANCEL_PX) {
+      clearLongPressTimer();
+    }
+  };
+
+  const handlePointerEnd = (event: React.PointerEvent<HTMLElement>) => {
+    if (isDeliveryTouchPointer(event) && touchInteractionRef.current) {
+      lastTouchInteractionAtRef.current = getNowForGesture();
+      scheduleTouchReset();
+    }
+    clearLongPressTimer();
+  };
+
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    clearTouchResetTimer();
+
+    if (longPressTriggeredRef.current) {
+      event.preventDefault();
+      event.stopPropagation();
+      longPressTriggeredRef.current = false;
+      touchInteractionRef.current = false;
+      return;
+    }
+
+    if (touchInteractionRef.current) {
+      event.preventDefault();
+      event.stopPropagation();
+      touchInteractionRef.current = false;
+      return;
+    }
+
+    focusDelivery();
+  };
+
+  const shouldOpenContextMenu = (event: React.MouseEvent<HTMLElement>) => {
+    const isRecentTouch =
+      getNowForGesture() - lastTouchInteractionAtRef.current < DELIVERY_TOUCH_CONTEXT_SUPPRESS_MS;
+
+    if (touchInteractionRef.current || longPressTriggeredRef.current || isRecentTouch) {
+      event.preventDefault();
+      event.stopPropagation();
+      scheduleTouchReset();
+      return false;
+    }
+
+    return true;
+  };
+
+  return {
+    handleClick,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerEnd,
+    shouldOpenContextMenu,
+  };
 };
 
 const formatInlineTime = (value: Date) => {
@@ -839,6 +1000,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
   const [assignmentMenuPos, setAssignmentMenuPos] = useState<{ x: number; y: number } | null>(null);
   const tableAssignmentAnchorRef = useRef<HTMLDivElement | null>(null);
   const compactAssignmentAnchorRef = useRef<HTMLDivElement | null>(null);
+  const focusGesture = useDeliveryFocusGesture(delivery.id, onFocusDeliveryOnMap);
   const restaurantName = delivery.rest_name || delivery.restaurantName || restaurant?.name || '-';
   const restaurantMeta = delivery.restaurantAddress || delivery.rest_city || delivery.restaurantCity || 'מסעדה';
   const clientName = delivery.client_name || delivery.customerName || '-';
@@ -896,8 +1058,14 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
   return (
     <div
       data-delivery-row-id={delivery.id}
-      onClick={() => onFocusDeliveryOnMap?.(delivery.id)}
+      onClick={focusGesture.handleClick}
+      onPointerDown={focusGesture.handlePointerDown}
+      onPointerMove={focusGesture.handlePointerMove}
+      onPointerUp={focusGesture.handlePointerEnd}
+      onPointerCancel={focusGesture.handlePointerEnd}
+      onPointerLeave={focusGesture.handlePointerEnd}
       onContextMenu={(event) => {
+        if (!focusGesture.shouldOpenContextMenu(event)) return;
         event.preventDefault();
         setContextMenuPos({ x: event.clientX, y: event.clientY });
       }}
@@ -1222,6 +1390,7 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [assignmentMenuPos, setAssignmentMenuPos] = useState<{ x: number; y: number } | null>(null);
   const assignmentAnchorRef = useRef<HTMLDivElement | null>(null);
+  const focusGesture = useDeliveryFocusGesture(delivery.id, onFocusDeliveryOnMap);
   const restaurantName = delivery.rest_name || delivery.restaurantName || restaurant?.name || '-';
   const restaurantMeta = delivery.restaurantAddress || delivery.rest_city || delivery.restaurantCity || 'מסעדה';
   const clientName = delivery.client_name || delivery.customerName || '-';
@@ -1278,8 +1447,14 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
   return (
     <div
       data-delivery-row-id={delivery.id}
-      onClick={() => onFocusDeliveryOnMap?.(delivery.id)}
+      onClick={focusGesture.handleClick}
+      onPointerDown={focusGesture.handlePointerDown}
+      onPointerMove={focusGesture.handlePointerMove}
+      onPointerUp={focusGesture.handlePointerEnd}
+      onPointerCancel={focusGesture.handlePointerEnd}
+      onPointerLeave={focusGesture.handlePointerEnd}
       onContextMenu={(event) => {
+        if (!focusGesture.shouldOpenContextMenu(event)) return;
         event.preventDefault();
         setContextMenuPos({ x: event.clientX, y: event.clientY });
       }}
