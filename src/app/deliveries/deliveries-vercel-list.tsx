@@ -1233,6 +1233,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
         rowGridClass,
         focusGesture.swipeClassName,
         'group relative w-full min-w-0 cursor-pointer border-b border-app-nav-border bg-app-surface text-app-text outline-none transition-colors last:border-b-0 hover:bg-app-surface-raised',
+        !hasAssignedCourier && 'delivery-vercel-row--no-courier',
         unusualLateInfo && 'bg-red-500/[0.04] hover:bg-red-500/[0.08]',
         (isSelected || isDrawerTarget || isMapTarget) && 'delivery-swipe-target--selected shadow-[inset_2px_0_0_var(--app-brand)]',
       )}
@@ -1291,9 +1292,7 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
           </div>
 
           {shouldShowCourierAssignment ? (
-            <div
-              className="delivery-row__route-table-distance-wrap flex min-w-0"
-            >
+            <div className="delivery-row__route-table-distance-wrap flex min-w-0">
               <DeliveryDistanceInline
                 label={distanceLabel}
                 className="delivery-row__route-table-distance"
