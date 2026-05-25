@@ -1005,16 +1005,14 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   color: var(--app-text-muted);
 }
 
-.delivery-status-line .delivery-status-line__icon--timer {
-  color: #f97316;
-  filter: none;
-  stroke-width: 2.45px;
-}
-
 .delivery-status-line .delivery-status-line__icon--alert {
   color: #ef4444;
   filter: none;
   stroke-width: 2.45px;
+}
+
+.delivery-status-line__timer {
+  color: #f97316;
 }
 
 .delivery-courier-line--empty {
@@ -1256,7 +1254,7 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
     grid-template-areas: "actions status distance courier customer restaurant order";
     grid-template-columns:
       clamp(34px, 4%, 42px)
-      clamp(72px, 9%, 88px)
+      clamp(100px, 11%, 128px)
       clamp(58px, 7%, 78px)
       minmax(92px, 0.9fr)
       minmax(118px, 1.1fr)
@@ -1393,7 +1391,7 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   .delivery-vercel-row {
     grid-template-columns:
       clamp(36px, 4%, 48px)
-      clamp(84px, 9%, 100px)
+      clamp(112px, 11%, 136px)
       clamp(76px, 7%, 96px)
       clamp(106px, 12%, 150px)
       minmax(160px, 260px)

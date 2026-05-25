@@ -738,8 +738,12 @@ const DeliveryStatusLine: React.FC<{
   className?: string;
 }> = ({ status, delivery, unusualLateInfo, offerExpiryInfo, className }) => {
   const meta = DELIVERY_STATUS_LINE_META[status];
-  const Icon = unusualLateInfo ? AlertTriangle : offerExpiryInfo ? Clock3 : meta.icon;
+  const Icon = unusualLateInfo ? AlertTriangle : meta.icon;
   const detailLabel = getStatusDetailLabel(unusualLateInfo, offerExpiryInfo);
+  const offerRemainingLabel =
+    !unusualLateInfo && offerExpiryInfo
+      ? formatOfferRemainingSeconds(offerExpiryInfo.remainingSeconds)
+      : null;
 
   const line = (
     <span
@@ -753,21 +757,30 @@ const DeliveryStatusLine: React.FC<{
       )}
       dir="rtl"
     >
-      <span className="delivery-status-line__label min-w-0 truncate text-sm font-normal">
-        {meta.label}
+      <span className="delivery-status-line__label inline-flex min-w-0 items-center gap-1.5 text-sm font-normal">
+        <span className="min-w-0 truncate">{meta.label}</span>
+        {offerRemainingLabel ? (
+          <span
+            className="delivery-status-line__timer shrink-0 text-xs font-semibold tabular-nums"
+            title={detailLabel}
+            aria-label={detailLabel}
+            dir="rtl"
+          >
+            {offerRemainingLabel}
+          </span>
+        ) : null}
       </span>
       <span
         className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center"
-        title={detailLabel}
-        aria-label={detailLabel}
-        aria-hidden={detailLabel ? undefined : true}
+        title={unusualLateInfo ? detailLabel : undefined}
+        aria-label={unusualLateInfo ? detailLabel : undefined}
+        aria-hidden={unusualLateInfo ? undefined : true}
       >
         <Icon
           className={joinClassNames(
             'delivery-status-line__icon h-3.5 w-3.5 shrink-0',
             unusualLateInfo && 'delivery-status-line__icon--alert',
-            !unusualLateInfo && offerExpiryInfo && 'delivery-status-line__icon--timer',
-            !unusualLateInfo && !offerExpiryInfo && meta.iconClassName,
+            !unusualLateInfo && meta.iconClassName,
           )}
           aria-hidden="true"
         />
