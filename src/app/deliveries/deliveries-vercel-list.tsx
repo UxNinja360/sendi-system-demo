@@ -127,10 +127,10 @@ const formatDeliveryDate = (delivery: Delivery, showDateForToday: boolean) => {
 };
 
 const DELIVERY_TOUCH_CONTEXT_SUPPRESS_MS = 800;
-const DELIVERY_TOUCH_SWIPE_START_PX = 10;
-const DELIVERY_TOUCH_SWIPE_VERTICAL_CANCEL_PX = 12;
-const DELIVERY_TOUCH_SWIPE_SELECT_THRESHOLD_PX = 54;
-const DELIVERY_TOUCH_SWIPE_MAX_OFFSET_PX = 42;
+const DELIVERY_TOUCH_SWIPE_START_PX = 7;
+const DELIVERY_TOUCH_SWIPE_VERTICAL_CANCEL_PX = 18;
+const DELIVERY_TOUCH_SWIPE_SELECT_THRESHOLD_PX = 36;
+const DELIVERY_TOUCH_SWIPE_MAX_OFFSET_PX = 36;
 const DELIVERY_TOUCH_SWIPE_RETURN_MS = 210;
 const DELIVERY_MOBILE_BOTTOM_REVEAL_GUARD_PX = 96;
 
@@ -157,7 +157,9 @@ const useDeliveryFocusGesture = (
   const startPointRef = useRef<{
     active: boolean;
     cancelled: boolean;
-    pointerId: number;
+    lastDeltaX: number;
+    source: 'pointer' | 'touch';
+    trackingId: number;
     x: number;
     y: number;
   } | null>(null);
@@ -213,18 +215,12 @@ const useDeliveryFocusGesture = (
     }
   }, []);
 
-  const handlePointerDown = (event: React.PointerEvent<HTMLElement>) => {
-    if (!onFocusDeliveryOnMap || !event.isPrimary || event.button !== 0) return;
-
-    if (!isDeliveryTouchPointer(event)) {
-      touchInteractionRef.current = false;
-      clearTouchResetTimer();
-      clearSwipeReturnTimer();
-      return;
-    }
-
-    if (isInteractiveGestureTarget(event.target)) return;
-
+  const startSwipe = (
+    source: 'pointer' | 'touch',
+    trackingId: number,
+    x: number,
+    y: number,
+  ) => {
     clearTouchResetTimer();
     clearSwipeReturnTimer();
     touchInteractionRef.current = true;
@@ -234,26 +230,37 @@ const useDeliveryFocusGesture = (
     startPointRef.current = {
       active: false,
       cancelled: false,
-      pointerId: event.pointerId,
-      x: event.clientX,
-      y: event.clientY,
+      lastDeltaX: 0,
+      source,
+      trackingId,
+      x,
+      y,
     };
-
-    try {
-      event.currentTarget.setPointerCapture(event.pointerId);
-    } catch {
-      // Pointer capture is best-effort; the swipe still works without it.
-    }
   };
 
-  const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
+  const updateSwipe = (
+    source: 'pointer' | 'touch',
+    trackingId: number,
+    x: number,
+    y: number,
+    event?: React.PointerEvent<HTMLElement> | React.TouchEvent<HTMLElement>,
+  ) => {
     const startPoint = startPointRef.current;
-    if (!startPoint || startPoint.pointerId !== event.pointerId || startPoint.cancelled) return;
+    if (
+      !startPoint ||
+      startPoint.source !== source ||
+      startPoint.trackingId !== trackingId ||
+      startPoint.cancelled
+    ) {
+      return;
+    }
 
-    const deltaX = event.clientX - startPoint.x;
-    const deltaY = event.clientY - startPoint.y;
+    const deltaX = x - startPoint.x;
+    const deltaY = y - startPoint.y;
     const absX = Math.abs(deltaX);
     const absY = Math.abs(deltaY);
+
+    startPoint.lastDeltaX = deltaX;
 
     if (!startPoint.active) {
       if (absY > DELIVERY_TOUCH_SWIPE_VERTICAL_CANCEL_PX && absY > absX) {
@@ -262,12 +269,12 @@ const useDeliveryFocusGesture = (
         return;
       }
 
-      if (absX < DELIVERY_TOUCH_SWIPE_START_PX || absX < absY * 1.25) return;
+      if (absX < DELIVERY_TOUCH_SWIPE_START_PX || absX < absY * 1.15) return;
 
       startPoint.active = true;
     }
 
-    event.preventDefault();
+    event?.preventDefault();
     const offset =
       Math.sign(deltaX) *
       Math.min(DELIVERY_TOUCH_SWIPE_MAX_OFFSET_PX, absX * 0.55);
@@ -276,15 +283,17 @@ const useDeliveryFocusGesture = (
     setSwipePhase(absX >= DELIVERY_TOUCH_SWIPE_SELECT_THRESHOLD_PX ? 'armed' : 'dragging');
   };
 
-  const handlePointerEnd = (event: React.PointerEvent<HTMLElement>) => {
+  const finishSwipe = (source: 'pointer' | 'touch', trackingId?: number) => {
     const startPoint = startPointRef.current;
-    const isTouchPointer = isDeliveryTouchPointer(event);
+    const isCurrentGesture =
+      startPoint &&
+      startPoint.source === source &&
+      (trackingId === undefined || startPoint.trackingId === trackingId);
 
-    if (isTouchPointer && touchInteractionRef.current) {
-      const deltaX = startPoint?.pointerId === event.pointerId ? event.clientX - startPoint.x : 0;
+    if (isCurrentGesture && touchInteractionRef.current) {
       const shouldSelect =
-        Boolean(startPoint?.active) &&
-        Math.abs(deltaX) >= DELIVERY_TOUCH_SWIPE_SELECT_THRESHOLD_PX;
+        startPoint.active &&
+        Math.abs(startPoint.lastDeltaX) >= DELIVERY_TOUCH_SWIPE_SELECT_THRESHOLD_PX;
 
       if (shouldSelect) {
         swipeTriggeredRef.current = true;
@@ -301,6 +310,64 @@ const useDeliveryFocusGesture = (
     }
 
     startPointRef.current = null;
+  };
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLElement>) => {
+    if (!onFocusDeliveryOnMap || !event.isPrimary || event.button !== 0) return;
+
+    if (!isDeliveryTouchPointer(event)) {
+      touchInteractionRef.current = false;
+      clearTouchResetTimer();
+      clearSwipeReturnTimer();
+      return;
+    }
+
+    if (isInteractiveGestureTarget(event.target)) return;
+
+    startSwipe('pointer', event.pointerId, event.clientX, event.clientY);
+
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // Pointer capture is best-effort; the swipe still works without it.
+    }
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
+    updateSwipe('pointer', event.pointerId, event.clientX, event.clientY, event);
+  };
+
+  const handlePointerEnd = (event: React.PointerEvent<HTMLElement>) => {
+    if (!isDeliveryTouchPointer(event)) return;
+    if (startPointRef.current?.source !== 'pointer') return;
+    finishSwipe('pointer', event.pointerId);
+  };
+
+  const handleTouchStart = (event: React.TouchEvent<HTMLElement>) => {
+    if (!onFocusDeliveryOnMap) return;
+    if (isInteractiveGestureTarget(event.target)) return;
+
+    const touch = event.touches[0];
+    if (!touch) return;
+
+    startSwipe('touch', touch.identifier, touch.clientX, touch.clientY);
+  };
+
+  const handleTouchMove = (event: React.TouchEvent<HTMLElement>) => {
+    const startPoint = startPointRef.current;
+    if (!startPoint || startPoint.source !== 'touch') return;
+
+    const touch = Array
+      .from(event.touches)
+      .find((candidate) => candidate.identifier === startPoint.trackingId);
+    if (!touch) return;
+
+    updateSwipe('touch', touch.identifier, touch.clientX, touch.clientY, event);
+  };
+
+  const handleTouchEnd = () => {
+    if (startPointRef.current?.source !== 'touch') return;
+    finishSwipe('touch');
   };
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -359,6 +426,9 @@ const useDeliveryFocusGesture = (
     handlePointerDown,
     handlePointerMove,
     handlePointerEnd,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
     shouldOpenContextMenu,
     swipeClassName,
     swipeStyle,
@@ -1144,6 +1214,10 @@ const DeliveryVercelRow: React.FC<DeliveryVercelRowProps> = ({
       onPointerUp={focusGesture.handlePointerEnd}
       onPointerCancel={focusGesture.handlePointerEnd}
       onPointerLeave={focusGesture.handlePointerEnd}
+      onTouchStart={focusGesture.handleTouchStart}
+      onTouchMove={focusGesture.handleTouchMove}
+      onTouchEnd={focusGesture.handleTouchEnd}
+      onTouchCancel={focusGesture.handleTouchEnd}
       onContextMenu={(event) => {
         if (!focusGesture.shouldOpenContextMenu(event)) return;
         event.preventDefault();
@@ -1535,6 +1609,10 @@ const DeliveryVercelCard: React.FC<DeliveryVercelRowProps> = ({
       onPointerUp={focusGesture.handlePointerEnd}
       onPointerCancel={focusGesture.handlePointerEnd}
       onPointerLeave={focusGesture.handlePointerEnd}
+      onTouchStart={focusGesture.handleTouchStart}
+      onTouchMove={focusGesture.handleTouchMove}
+      onTouchEnd={focusGesture.handleTouchEnd}
+      onTouchCancel={focusGesture.handleTouchEnd}
       onContextMenu={(event) => {
         if (!focusGesture.shouldOpenContextMenu(event)) return;
         event.preventDefault();
