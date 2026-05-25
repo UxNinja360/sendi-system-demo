@@ -761,7 +761,7 @@ const DeliveryStatusLine: React.FC<{
         <span className="min-w-0 truncate">{meta.label}</span>
         {offerRemainingLabel ? (
           <span
-            className="delivery-status-line__timer shrink-0 text-xs font-semibold tabular-nums"
+            className="delivery-status-line__timer shrink-0 text-sm font-normal tabular-nums"
             title={detailLabel}
             aria-label={detailLabel}
             dir="rtl"
