@@ -1307,7 +1307,7 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   }
 
   .delivery-row__route-table-distance {
-    justify-content: flex-end;
+    justify-content: flex-start;
     min-width: 0;
     padding-inline: 0;
   }
@@ -1315,7 +1315,7 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   .delivery-row__route-table-distance-wrap {
     align-self: center;
     grid-area: distance;
-    justify-content: flex-end;
+    justify-content: flex-start;
     max-width: 100%;
     min-height: 70px;
     min-width: 0;
@@ -1325,7 +1325,7 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
 
   .delivery-row__route-table-courier {
     flex: 1 1 auto;
-    justify-content: flex-start;
+    justify-content: flex-end;
     max-width: 100%;
     min-width: 0;
     width: 100%;
@@ -1333,7 +1333,7 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
 
   .delivery-row__route-table-status {
     flex: 1 1 auto;
-    justify-content: flex-start;
+    justify-content: flex-end;
     max-width: 100%;
     min-width: 0;
     width: 100%;
@@ -1356,7 +1356,7 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
     align-items: center;
     display: flex;
     grid-area: status;
-    justify-content: flex-start;
+    justify-content: flex-end;
     min-height: 70px;
     overflow: hidden;
     padding: 7px 1px 7px 5px;
@@ -1376,7 +1376,7 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
     align-items: center;
     display: flex;
     grid-area: courier;
-    justify-content: flex-start;
+    justify-content: flex-end;
     min-height: 70px;
     overflow: hidden;
     padding: 7px 1px 7px 5px;
