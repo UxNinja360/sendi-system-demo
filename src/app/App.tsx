@@ -3,8 +3,11 @@ import { router } from "./routes";
 import { useEffect } from "react";
 import { installHapticFeedback } from "./utils/haptics";
 import { AppUpdateBanner } from "./components/common/app-update-banner";
+import { useScreenWakeLock } from "./pwa/use-screen-wake-lock";
 
 export default function App() {
+  useScreenWakeLock();
+
   useEffect(() => {
     document.documentElement.setAttribute("lang", "he");
     document.documentElement.setAttribute("dir", "rtl");
