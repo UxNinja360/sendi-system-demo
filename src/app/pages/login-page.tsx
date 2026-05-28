@@ -19,7 +19,7 @@ import type { LoginPhoneMode } from '../auth/login-phone';
 import { LoginOtp } from '../auth/login-otp';
 import {
   activateWorkspaceAccount,
-  readWorkspaceAccounts,
+  readWorkspaceAccountByPhone,
 } from '../workspaces/workspace-registry';
 
 const normalizePhone = (value: string) => value.replace(/\D/g, '');
@@ -30,7 +30,7 @@ type LoginDot = {
   y: number;
 };
 
-type LoginDotFieldHandle = {
+export type LoginDotFieldHandle = {
   leave: () => void;
   move: (clientX: number, clientY: number, rect: DOMRect) => void;
 };
@@ -116,7 +116,7 @@ const getLoginPointerInViewBox = (clientX: number, clientY: number, rect: DOMRec
   };
 };
 
-const LoginDotField = React.forwardRef<LoginDotFieldHandle>((_, ref) => {
+export const LoginDotField = React.forwardRef<LoginDotFieldHandle>((_, ref) => {
   const dots = useMemo(createLoginDots, []);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const frameRef = useRef<number | null>(null);
@@ -405,9 +405,7 @@ export const LoginPage: React.FC = () => {
 
   const handlePhoneSubmit = async (phone: string) => {
     const normalizedPhone = normalizePhone(phone);
-    const existingAccount = readWorkspaceAccounts().find(
-      (account) => normalizePhone(account.phone) === normalizedPhone,
-    );
+    const existingAccount = readWorkspaceAccountByPhone(normalizedPhone);
 
     setFormError('');
 
@@ -447,9 +445,7 @@ export const LoginPage: React.FC = () => {
         otp,
         phone: normalizedPhone,
       });
-      const existingAccount = readWorkspaceAccounts().find(
-        (account) => account.phone === normalizedPhone,
-      );
+      const existingAccount = readWorkspaceAccountByPhone(normalizedPhone);
 
       if (existingAccount) {
         activateWorkspaceAccount(existingAccount);
@@ -629,12 +625,26 @@ export const LoginPage: React.FC = () => {
         )}
       </main>
 
-      <footer className="relative z-10 flex h-12 shrink-0 items-center justify-center gap-4 px-4 text-[11px] font-medium text-[#777] dark:text-app-text-secondary">
-        <a href="#" className="transition-colors hover:text-[#0d0d12] dark:hover:text-app-text">
-          תנאי שימוש
+      <footer className="relative z-10 flex h-12 shrink-0 items-center justify-center px-4 text-[11px] font-medium text-[#777] dark:text-app-text-secondary">
+        <a
+          href="#"
+          className="absolute right-4 whitespace-nowrap transition-colors hover:text-[#0d0d12] dark:hover:text-app-text"
+        >
+          נגישות
         </a>
-        <a href="#" className="transition-colors hover:text-[#0d0d12] dark:hover:text-app-text">
-          פרטיות
+        <div className="flex items-center justify-center gap-4">
+          <a href="#" className="whitespace-nowrap transition-colors hover:text-[#0d0d12] dark:hover:text-app-text">
+            תנאי שימוש
+          </a>
+          <a href="#" className="whitespace-nowrap transition-colors hover:text-[#0d0d12] dark:hover:text-app-text">
+            פרטיות
+          </a>
+        </div>
+        <a
+          href="#"
+          className="absolute left-4 whitespace-nowrap transition-colors hover:text-[#0d0d12] dark:hover:text-app-text"
+        >
+          בטיחות בדרכים
         </a>
       </footer>
     </div>

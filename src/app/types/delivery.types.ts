@@ -397,7 +397,9 @@ export interface DeliveryState {
   workspaceId?: string;
   workspaceName?: string;
   workspaceArea?: string;
+  workspaceAreas?: string[];
   workspacePhone?: string;
+  workspaceRegistrationNumber?: string;
   isSystemOpen: boolean;
   isReceivingDeliveries: boolean;
   autoAssignEnabled: boolean;

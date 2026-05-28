@@ -37,6 +37,9 @@ const WORKSPACE_STATE_STORAGE_PREFIX = 'sendi-delivery-state-workspace:';
 const DEFAULT_DELIVERY_BALANCE = 500;
 const DEFAULT_WORKSPACE_NAMES = new Set(['חברת משלוחים חדשה']);
 
+const normalizePhone = (value: string) => value.replace(/\D/g, '');
+const normalizeRegistrationNumber = (value: string) => value.replace(/\D/g, '');
+
 const zeroStats = (): DeliveryState['stats'] => ({
   hour: { total: 0, delivered: 0, cancelled: 0, revenue: 0 },
   today: { total: 0, delivered: 0, cancelled: 0, revenue: 0 },
@@ -183,6 +186,65 @@ export const readWorkspaceAccounts = (): WorkspaceAccount[] => {
   });
 
   return accounts;
+};
+
+export const readWorkspaceAccountByPhone = (phone: string): WorkspaceAccount | null => {
+  const normalizedPhone = normalizePhone(phone);
+  const profiles = readAuthProfiles();
+
+  for (const profile of Object.values(profiles)) {
+    const workspace = profile.workspace;
+    if (!workspace || workspace.accountType !== 'delivery_company') continue;
+    if (workspace.onboardingStatus !== 'complete') continue;
+    if (DEFAULT_WORKSPACE_NAMES.has(workspace.name.trim())) continue;
+    if (normalizePhone(profile.user.phone) !== normalizedPhone) continue;
+
+    return {
+      id: workspace.id,
+      kind: 'registered',
+      name: workspace.name,
+      phone: profile.user.phone,
+      profile,
+      workspace,
+    };
+  }
+
+  if (normalizedPhone === TLV_RUNNERS_DEMO_PHONE) {
+    return getDemoAccount();
+  }
+
+  return null;
+};
+
+export const readWorkspaceAccountByRegistrationNumber = (
+  registrationNumber: string,
+): WorkspaceAccount | null => {
+  const normalizedRegistrationNumber = normalizeRegistrationNumber(registrationNumber);
+  if (!normalizedRegistrationNumber) return null;
+
+  const profiles = readAuthProfiles();
+  const seenWorkspaceIds = new Set<string>();
+
+  for (const profile of Object.values(profiles)) {
+    const workspace = profile.workspace;
+    if (!workspace || workspace.accountType !== 'delivery_company') continue;
+    if (workspace.onboardingStatus !== 'complete') continue;
+    if (DEFAULT_WORKSPACE_NAMES.has(workspace.name.trim())) continue;
+    if (seenWorkspaceIds.has(workspace.id)) continue;
+    seenWorkspaceIds.add(workspace.id);
+    if (normalizeRegistrationNumber(workspace.registrationNumber ?? '') !== normalizedRegistrationNumber) continue;
+
+    return {
+      id: workspace.id,
+      kind: 'registered',
+      name: workspace.name,
+      phone: profile.user.phone,
+      profile,
+      workspace,
+    };
+  }
+
+  return null;
 };
 
 export const activateWorkspaceAccount = (account: WorkspaceAccount) => {

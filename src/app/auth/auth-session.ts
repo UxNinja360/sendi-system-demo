@@ -9,12 +9,26 @@ export type AuthUser = {
   phone: string;
 };
 
+export type WorkspaceRole = 'owner' | 'admin' | 'dispatcher' | 'viewer';
+
+export type AuthWorkspaceMember = {
+  joinedAt: string;
+  name?: string;
+  phone: string;
+  role: WorkspaceRole;
+  userId: string;
+};
+
 export type AuthWorkspace = {
+  activityAreas?: string[];
   id: string;
   accountType: AccountType;
   createdAt: string;
+  members?: AuthWorkspaceMember[];
   name: string;
   onboardingStatus: OnboardingStatus;
+  ownerUserId?: string;
+  registrationNumber?: string;
   updatedAt: string;
 };
 
@@ -233,12 +247,24 @@ export const upsertAuthProfile = ({
             existing?.workspace?.id ??
             createId('wrk', profileKey),
           accountType,
+          activityAreas:
+            workspace?.activityAreas ??
+            existing?.workspace?.activityAreas,
           createdAt: existing?.workspace?.createdAt ?? workspace?.createdAt ?? now,
           name: workspace?.name ?? existing?.workspace?.name ?? 'חברת משלוחים חדשה',
+          members:
+            workspace?.members ??
+            existing?.workspace?.members,
           onboardingStatus:
-            existing?.workspace?.onboardingStatus ??
             workspace?.onboardingStatus ??
+            existing?.workspace?.onboardingStatus ??
             'not_started',
+          ownerUserId:
+            workspace?.ownerUserId ??
+            existing?.workspace?.ownerUserId,
+          registrationNumber:
+            workspace?.registrationNumber ??
+            existing?.workspace?.registrationNumber,
           updatedAt: now,
         }
       : null;
@@ -276,6 +302,28 @@ export const updateAuthSessionWorkspace = (updates: Partial<Omit<AuthWorkspace, 
       ...session.workspace,
       ...updates,
       updatedAt: now,
+    },
+  };
+  const profiles = getProfiles();
+  profiles[getProfileKey(session.user.accountType, session.user.phone)] = {
+    user: nextSession.user,
+    workspace: nextSession.workspace,
+  };
+
+  writeProfiles(profiles);
+  writeAuthSession(nextSession);
+  return nextSession;
+};
+
+export const updateAuthSessionUser = (updates: Partial<Omit<AuthUser, 'id' | 'accountType' | 'createdAt' | 'phone'>>) => {
+  const session = readAuthSession();
+  if (!session) return null;
+
+  const nextSession: AuthSession = {
+    ...session,
+    user: {
+      ...session.user,
+      ...updates,
     },
   };
   const profiles = getProfiles();
