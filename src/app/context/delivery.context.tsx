@@ -983,8 +983,10 @@ const loadInitialState = (baseState: DeliveryState): DeliveryState => {
       sendiPlusTermsAccepted,
     );
     const isSystemOpen = Boolean(parsed.isSystemOpen);
+    const hasCouriers = couriers.length > 0;
     const isReceivingDeliveries =
       isSystemOpen &&
+      hasCouriers &&
       (
         typeof parsed.isReceivingDeliveries === 'boolean'
           ? parsed.isReceivingDeliveries
@@ -996,7 +998,7 @@ const loadInitialState = (baseState: DeliveryState): DeliveryState => {
       ...parsed,
       isSystemOpen,
       isReceivingDeliveries,
-      autoAssignEnabled: isSystemOpen && Boolean(parsed.autoAssignEnabled),
+      autoAssignEnabled: isSystemOpen && hasCouriers && Boolean(parsed.autoAssignEnabled),
       couriers,
       restaurants: syncedRestaurants,
       courierRoutePlans,
@@ -1155,6 +1157,30 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     ) {
       showActionInfoToast('המערכת כבויה', {
         description: 'הדלק את המערכת לפני שינוי קבלת משלוחים או שיבוץ אוטומטי.',
+        duration: ACTION_TOAST_DURATION_MS,
+      });
+      return;
+    }
+
+    if (
+      action.type === 'TOGGLE_DELIVERY_INTAKE' &&
+      !previousState.isReceivingDeliveries &&
+      previousState.couriers.length === 0
+    ) {
+      showActionInfoToast('אין שליחים במערכת', {
+        description: 'הוסף לפחות שליח אחד לפני הפעלת קבלת משלוחים.',
+        duration: ACTION_TOAST_DURATION_MS,
+      });
+      return;
+    }
+
+    if (
+      action.type === 'TOGGLE_AUTO_ASSIGN' &&
+      !previousState.autoAssignEnabled &&
+      previousState.couriers.length === 0
+    ) {
+      showActionInfoToast('אין שליחים במערכת', {
+        description: 'הוסף לפחות שליח אחד לפני הפעלת שיבוץ אוטומטי.',
         duration: ACTION_TOAST_DURATION_MS,
       });
       return;

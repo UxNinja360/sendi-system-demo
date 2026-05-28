@@ -200,12 +200,16 @@ export const activateWorkspaceAccount = (account: WorkspaceAccount) => {
     ...rawTargetState,
     isReceivingDeliveries:
       rawTargetState.isSystemOpen &&
+      ((rawTargetState.couriers ?? []).length > 0) &&
       (
         typeof rawTargetState.isReceivingDeliveries === 'boolean'
           ? rawTargetState.isReceivingDeliveries
           : rawTargetState.isSystemOpen
       ),
-    autoAssignEnabled: rawTargetState.isSystemOpen && rawTargetState.autoAssignEnabled,
+    autoAssignEnabled:
+      rawTargetState.isSystemOpen &&
+      ((rawTargetState.couriers ?? []).length > 0) &&
+      rawTargetState.autoAssignEnabled,
     restaurants: mergeDefaultSendiPlusRestaurants(rawTargetState.restaurants ?? []),
   };
 

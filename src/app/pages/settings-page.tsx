@@ -705,6 +705,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
   const navigate = useNavigate();
   const { themeMode, setThemeMode } = useTheme();
   const { state, dispatch, resetSystem, toggleSystem } = useDelivery();
+  const hasCouriersForOperations = state.couriers.length > 0;
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [isDeleteAccountDialogOpen, setIsDeleteAccountDialogOpen] = useState(false);
   const [alertPreferences, setAlertPreferencesState] = useState<AlertPreferences>(() =>
@@ -898,7 +899,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
                   control={
                     <Toggle
                       checked={state.isReceivingDeliveries}
-                      disabled={!state.isSystemOpen}
+                      disabled={!state.isSystemOpen || !hasCouriersForOperations}
                       onChange={() => dispatch({ type: 'TOGGLE_DELIVERY_INTAKE' })}
                       ariaLabel={TEXT.deliveryIntake}
                     />
@@ -911,7 +912,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
                   control={
                     <Toggle
                       checked={state.autoAssignEnabled}
-                      disabled={!state.isSystemOpen}
+                      disabled={!state.isSystemOpen || !hasCouriersForOperations}
                       onChange={() => dispatch({ type: 'TOGGLE_AUTO_ASSIGN' })}
                       ariaLabel={TEXT.autoAssign}
                     />

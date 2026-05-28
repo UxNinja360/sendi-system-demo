@@ -339,6 +339,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       : Math.max(0, Math.min(1, 1 - mobileMenuTranslateX / MOBILE_SIDEBAR_WIDTH));
   const activeDeliveriesCount = state.deliveries.filter(isOperationalDelivery).length;
   const deliveredDeliveriesCount = state.deliveries.filter((delivery) => delivery.status === 'delivered').length;
+  const hasCouriersForOperations = state.couriers.length > 0;
   const activeRestaurantsCount = state.restaurants.filter((restaurant) =>
     isRestaurantActiveForDisplay(restaurant),
   ).length;
@@ -1270,7 +1271,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                   </span>
                   <Toggle
                     checked={state.isReceivingDeliveries}
-                    disabled={!state.isSystemOpen}
+                    disabled={!state.isSystemOpen || !hasCouriersForOperations}
                     onChange={() => toggleDeliveryIntake()}
                     ariaLabel={deliveryIntakeStatusLabel}
                   />
@@ -1282,7 +1283,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                   </span>
                   <Toggle
                     checked={state.autoAssignEnabled}
-                    disabled={!state.isSystemOpen}
+                    disabled={!state.isSystemOpen || !hasCouriersForOperations}
                     onChange={() => dispatch({ type: 'TOGGLE_AUTO_ASSIGN' })}
                     ariaLabel={LABELS.autoAssign}
                   />

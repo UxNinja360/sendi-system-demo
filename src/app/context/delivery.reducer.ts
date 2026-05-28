@@ -39,6 +39,19 @@ const hasSystemBlockingDeliveries = (state: DeliveryState) =>
     SYSTEM_BLOCKING_DELIVERY_STATUSES.includes(delivery.status)
   );
 
+const hasCouriers = (state: DeliveryState) => state.couriers.length > 0;
+
+const enforceOperationalAvailabilityState = (state: DeliveryState): DeliveryState => {
+  if (state.isSystemOpen && hasCouriers(state)) return state;
+  if (!state.isReceivingDeliveries && !state.autoAssignEnabled) return state;
+
+  return {
+    ...state,
+    isReceivingDeliveries: false,
+    autoAssignEnabled: false,
+  };
+};
+
 const getCourierStatusAfterLoadChange = (
   courierStatus: 'available' | 'busy' | 'offline',
   activeDeliveryIds: string[]
@@ -1897,6 +1910,7 @@ const reduceDeliveryState = (state: DeliveryState, action: DeliveryAction): Deli
 
     case 'TOGGLE_DELIVERY_INTAKE':
       if (!state.isSystemOpen) return state;
+      if (!hasCouriers(state)) return state;
 
       return {
         ...state,
@@ -1905,6 +1919,7 @@ const reduceDeliveryState = (state: DeliveryState, action: DeliveryAction): Deli
 
     case 'TOGGLE_AUTO_ASSIGN':
       if (!state.isSystemOpen) return state;
+      if (!hasCouriers(state)) return state;
 
       return {
         ...state,
@@ -2552,4 +2567,6 @@ const reduceDeliveryState = (state: DeliveryState, action: DeliveryAction): Deli
 };
 
 export const deliveryReducer = (state: DeliveryState, action: DeliveryAction): DeliveryState =>
-  reconcileCourierDeliveryInvariants(reduceDeliveryState(state, action));
+  reconcileCourierDeliveryInvariants(
+    enforceOperationalAvailabilityState(reduceDeliveryState(state, action))
+  );

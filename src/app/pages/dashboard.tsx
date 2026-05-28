@@ -1424,7 +1424,9 @@ export const Dashboard: React.FC = () => {
   const systemPowerLabel = state.isSystemOpen ? 'מערכת דלוקה' : 'מערכת כבויה';
   const deliveryIntakeLabel = state.isReceivingDeliveries ? 'מקבל משלוחים' : 'לא מקבל משלוחים';
   const autoAssignLabel = state.autoAssignEnabled ? 'שיבוץ אוטומטי פעיל' : 'שיבוץ אוטומטי כבוי';
-  const secondaryControlsDisabled = !state.isSystemOpen || isDashboardRefreshing;
+  const hasCouriersForOperations = state.couriers.length > 0;
+  const secondaryControlsDisabled =
+    !state.isSystemOpen || !hasCouriersForOperations || isDashboardRefreshing;
 
   return (
     <>
@@ -1589,6 +1591,44 @@ export const Dashboard: React.FC = () => {
               })}
               </div>
             </div>
+            <section
+              aria-label="סיכום נמסרו ובוטלו"
+              className="mt-[10px] grid grid-cols-2 gap-[10px]"
+            >
+              {(['delivered', 'cancelled'] as DeliveryStatus[]).map((statusId) => {
+                const status = STATUS_META.find((item) => item.id === statusId);
+                if (!status) return null;
+
+                const Icon = status.icon;
+                const count = statusCounts.get(statusId) ?? 0;
+                const label = statusId === 'delivered' ? 'נמסרו' : 'בוטלו';
+                const value = formatNumber(count);
+                const iconClassName = status.accentClassName;
+
+                return (
+                  <button
+                    key={statusId}
+                    type="button"
+                    aria-label={label}
+                    onClick={() => navigate(getDeliveriesStatusFilterPath([statusId]))}
+                    className="dashboard-status-card min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] dark:hover:bg-[#111111]"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
+                        {label}
+                      </span>
+                      <Icon className={`h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4 ${iconClassName}`} />
+                    </div>
+                    <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
+                      <RefreshingMetricValue
+                        refreshing={isDashboardRefreshing}
+                        value={value}
+                      />
+                    </div>
+                  </button>
+                );
+              })}
+            </section>
             <div className="mt-[10px] grid grid-cols-2 gap-[10px] min-[520px]:grid-cols-6">
               <section
                 aria-label="שליחים"
@@ -1666,45 +1706,6 @@ export const Dashboard: React.FC = () => {
             onRadiusKmChange={handleSendiPlusRadiusChange}
             onTermsAcceptedChange={handleSendiPlusTermsAcceptedChange}
           />
-
-          <section
-            aria-label="סיכום נמסרו ובוטלו"
-            className="grid grid-cols-2 gap-[10px]"
-          >
-            {(['delivered', 'cancelled'] as DeliveryStatus[]).map((statusId) => {
-              const status = STATUS_META.find((item) => item.id === statusId);
-              if (!status) return null;
-
-              const Icon = status.icon;
-              const count = statusCounts.get(statusId) ?? 0;
-              const label = statusId === 'delivered' ? 'נמסרו' : 'בוטלו';
-              const value = formatNumber(count);
-              const iconClassName = status.accentClassName;
-
-              return (
-                <button
-                  key={statusId}
-                  type="button"
-                  aria-label={label}
-                  onClick={() => navigate(getDeliveriesStatusFilterPath([statusId]))}
-                  className="dashboard-status-card min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] dark:hover:bg-[#111111]"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
-                      {label}
-                    </span>
-                    <Icon className={`h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4 ${iconClassName}`} />
-                  </div>
-                  <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
-                    <RefreshingMetricValue
-                      refreshing={isDashboardRefreshing}
-                      value={value}
-                    />
-                  </div>
-                </button>
-              );
-            })}
-          </section>
 
         </div>
       </main>
