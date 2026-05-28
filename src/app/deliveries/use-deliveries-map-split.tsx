@@ -9,9 +9,10 @@ import {
   type SetStateAction,
 } from 'react';
 import { createPortal } from 'react-dom';
-import { X } from 'lucide-react';
+import { Settings, X } from 'lucide-react';
 
 import { addAppTopBarActionListener } from '../components/layout/app-top-bar-actions';
+import { Toggle } from '../components/common/toggle';
 import type { Courier, Delivery, DeliveryStatus, Restaurant } from '../types/delivery.types';
 import { DeliveriesLiveMapPanel } from './deliveries-live-map-panel';
 
@@ -31,6 +32,7 @@ type UseDeliveriesMapSplitArgs = {
 
 const MAP_SPLIT_WIDTH_STORAGE_KEY = 'sendi:deliveries-map-split-width';
 const MAP_SHEET_HEIGHT_STORAGE_KEY = 'sendi:deliveries-map-control-sheet-height';
+const MAP_LAYER_VISIBILITY_STORAGE_KEY = 'sendi:deliveries-map-layer-visibility';
 const DEFAULT_MAP_WIDTH = 50;
 const MIN_MAP_WIDTH = 32;
 const MAX_MAP_WIDTH = 74;
@@ -42,6 +44,22 @@ const DEFAULT_MAP_SHEET_HEIGHT = 52;
 const MIN_MAP_SHEET_HEIGHT = 30;
 const MAX_MAP_SHEET_HEIGHT = 86;
 const MAP_SPLIT_EXIT_DURATION_MS = 260;
+
+type MapLayerKey = 'deliveries' | 'couriers' | 'restaurants';
+
+type MapLayerVisibility = Record<MapLayerKey, boolean>;
+
+const DEFAULT_MAP_LAYER_VISIBILITY: MapLayerVisibility = {
+  deliveries: true,
+  couriers: true,
+  restaurants: true,
+};
+
+const MAP_LAYER_OPTIONS: Array<{ key: MapLayerKey; label: string }> = [
+  { key: 'deliveries', label: 'משלוחים' },
+  { key: 'couriers', label: 'שליחים' },
+  { key: 'restaurants', label: 'מסעדות' },
+];
 
 let sharedMapOpen = false;
 const mapOpenListeners = new Set<() => void>();
@@ -178,6 +196,33 @@ const getSavedMapSheetHeight = () => {
   return Number.isFinite(saved) ? clampMapSheetHeight(saved) : DEFAULT_MAP_SHEET_HEIGHT;
 };
 
+const readStoredMapLayerVisibility = (): MapLayerVisibility => {
+  if (typeof localStorage === 'undefined') return DEFAULT_MAP_LAYER_VISIBILITY;
+
+  try {
+    const raw = localStorage.getItem(MAP_LAYER_VISIBILITY_STORAGE_KEY);
+    if (!raw) return DEFAULT_MAP_LAYER_VISIBILITY;
+
+    const parsed = JSON.parse(raw) as Partial<MapLayerVisibility>;
+    return {
+      deliveries:
+        typeof parsed.deliveries === 'boolean'
+          ? parsed.deliveries
+          : DEFAULT_MAP_LAYER_VISIBILITY.deliveries,
+      couriers:
+        typeof parsed.couriers === 'boolean'
+          ? parsed.couriers
+          : DEFAULT_MAP_LAYER_VISIBILITY.couriers,
+      restaurants:
+        typeof parsed.restaurants === 'boolean'
+          ? parsed.restaurants
+          : DEFAULT_MAP_LAYER_VISIBILITY.restaurants,
+    };
+  } catch {
+    return DEFAULT_MAP_LAYER_VISIBILITY;
+  }
+};
+
 export const useDeliveriesMapSplit = ({
   deliveries,
   couriers,
@@ -199,6 +244,8 @@ export const useDeliveriesMapSplit = ({
   const [isSheetResizing, setIsSheetResizing] = useState(false);
   const [isMapRendered, setIsMapRendered] = useState(mapOpen);
   const [isMapClosing, setIsMapClosing] = useState(false);
+  const [isMapSettingsOpen, setIsMapSettingsOpen] = useState(false);
+  const [mapLayerVisibility, setMapLayerVisibility] = useState(readStoredMapLayerVisibility);
   const mapExitTimeoutRef = useRef<number | null>(null);
 
   const clearMapExitTimeout = useCallback(() => {
@@ -264,6 +311,12 @@ export const useDeliveriesMapSplit = ({
 
     return clearMapExitTimeout;
   }, [clearMapExitTimeout, isMapRendered, mapOpen]);
+
+  useEffect(() => {
+    if (mapOpen) return;
+
+    setIsMapSettingsOpen(false);
+  }, [mapOpen]);
 
   useEffect(() => {
     activeMapSplitInstances += 1;
@@ -434,6 +487,19 @@ export const useDeliveriesMapSplit = ({
   }, [mapSheetHeight]);
 
   useEffect(() => {
+    if (typeof localStorage === 'undefined') return;
+
+    localStorage.setItem(MAP_LAYER_VISIBILITY_STORAGE_KEY, JSON.stringify(mapLayerVisibility));
+  }, [mapLayerVisibility]);
+
+  const toggleMapLayer = useCallback((layerKey: MapLayerKey) => {
+    setMapLayerVisibility((current) => ({
+      ...current,
+      [layerKey]: !current[layerKey],
+    }));
+  }, []);
+
+  useEffect(() => {
     if (typeof document === 'undefined') return undefined;
 
     const splitClassName = 'deliveries-map-split-open';
@@ -470,9 +536,9 @@ export const useDeliveriesMapSplit = ({
             aria-label="מפת משלוחים"
           >
             <DeliveriesLiveMapPanel
-              deliveries={deliveries}
-              couriers={couriers}
-              restaurants={restaurants}
+              deliveries={mapLayerVisibility.deliveries ? deliveries : []}
+              couriers={mapLayerVisibility.couriers ? couriers : []}
+              restaurants={mapLayerVisibility.restaurants ? restaurants : []}
               routeStopOrders={routeStopOrders}
               selectedDeliveryIds={selectedDeliveryIds}
               focusedDeliveryId={focusedDeliveryId}
@@ -480,6 +546,41 @@ export const useDeliveriesMapSplit = ({
               onOpenDelivery={onOpenDelivery}
               selectedStatusFilters={selectedStatusFilters}
             />
+            <button
+              type="button"
+              className="deliveries-map-split-settings-button"
+              data-haptic="selection"
+              data-no-sheet-drag="true"
+              onClick={() => setIsMapSettingsOpen((current) => !current)}
+              aria-label="הגדרות מפה"
+              aria-expanded={isMapSettingsOpen}
+              title="הגדרות מפה"
+            >
+              <Settings className="h-4 w-4" />
+            </button>
+            {isMapSettingsOpen ? (
+              <div className="deliveries-map-split-settings-panel" data-no-sheet-drag="true">
+                <div className="border-b border-app-border px-3 py-2 text-xs font-semibold text-app-text-secondary dark:border-[#252525]">
+                  נראות במפה
+                </div>
+                <div className="py-1">
+                  {MAP_LAYER_OPTIONS.map((item) => (
+                    <div
+                      key={item.key}
+                      className="flex items-center justify-between gap-3 px-3 py-2"
+                    >
+                      <span className="text-xs font-medium text-app-text">{item.label}</span>
+                      <Toggle
+                        checked={mapLayerVisibility[item.key]}
+                        onChange={() => toggleMapLayer(item.key)}
+                        ariaLabel={`נראות ${item.label} במפה`}
+                        size="sm"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             <button
               type="button"
               className="deliveries-map-sheet-resizer"

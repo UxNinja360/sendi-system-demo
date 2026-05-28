@@ -771,14 +771,33 @@ const isRestaurantInsideSendiPlusServiceArea = (
   return Boolean(point && isPointCoveredByActiveDeliveryZones(point, zones));
 };
 
+const isRestaurantAvailableForDeliveryIntake = (
+  restaurant: Restaurant,
+  sendiPlusRadiusKm: number,
+  sendiPlusZones: StoredDeliveryZone[],
+) =>
+  isRestaurantEligibleForDeliveryIntake(restaurant, sendiPlusRadiusKm) &&
+  isRestaurantInsideSendiPlusServiceArea(restaurant, sendiPlusZones);
+
+const hasAvailableDeliveryIntakeRestaurant = (
+  restaurants: Restaurant[],
+  sendiPlusRadiusKm = readStoredSendiPlusRadius(),
+  sendiPlusZones = loadStoredDeliveryServiceAreas(),
+) =>
+  restaurants.some((restaurant) =>
+    isRestaurantAvailableForDeliveryIntake(restaurant, sendiPlusRadiusKm, sendiPlusZones)
+  );
+
+const hasAvailableDeliveryCourier = (couriers: Courier[]) =>
+  couriers.some((courier) => canCourierAcceptDelivery(courier));
+
 const getActiveSimulatedDeliveryLimit = (
   state: DeliveryState,
   sendiPlusRadiusKm = readStoredSendiPlusRadius(),
   sendiPlusZones = loadStoredDeliveryServiceAreas(),
 ) => {
   const activeRestaurantCount = state.restaurants.filter((restaurant) =>
-    isRestaurantEligibleForDeliveryIntake(restaurant, sendiPlusRadiusKm) &&
-    isRestaurantInsideSendiPlusServiceArea(restaurant, sendiPlusZones)
+    isRestaurantAvailableForDeliveryIntake(restaurant, sendiPlusRadiusKm, sendiPlusZones)
   ).length;
   const activeCourierCount = state.couriers.filter((courier) =>
     canCourierAcceptDelivery(courier)
@@ -983,10 +1002,12 @@ const loadInitialState = (baseState: DeliveryState): DeliveryState => {
       sendiPlusTermsAccepted,
     );
     const isSystemOpen = Boolean(parsed.isSystemOpen);
-    const hasCouriers = couriers.length > 0;
-    const isReceivingDeliveries =
+    const canReceiveDeliveries =
       isSystemOpen &&
-      hasCouriers &&
+      hasAvailableDeliveryCourier(couriers) &&
+      hasAvailableDeliveryIntakeRestaurant(syncedRestaurants);
+    const isReceivingDeliveries =
+      canReceiveDeliveries &&
       (
         typeof parsed.isReceivingDeliveries === 'boolean'
           ? parsed.isReceivingDeliveries
@@ -998,7 +1019,8 @@ const loadInitialState = (baseState: DeliveryState): DeliveryState => {
       ...parsed,
       isSystemOpen,
       isReceivingDeliveries,
-      autoAssignEnabled: isSystemOpen && hasCouriers && Boolean(parsed.autoAssignEnabled),
+      autoAssignEnabled:
+        isSystemOpen && hasAvailableDeliveryCourier(couriers) && Boolean(parsed.autoAssignEnabled),
       couriers,
       restaurants: syncedRestaurants,
       courierRoutePlans,
@@ -1165,10 +1187,22 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (
       action.type === 'TOGGLE_DELIVERY_INTAKE' &&
       !previousState.isReceivingDeliveries &&
-      previousState.couriers.length === 0
+      !hasAvailableDeliveryIntakeRestaurant(previousState.restaurants)
     ) {
-      showActionInfoToast('אין שליחים במערכת', {
-        description: 'הוסף לפחות שליח אחד לפני הפעלת קבלת משלוחים.',
+      showActionInfoToast('אין מסעדות זמינות במערכת', {
+        description: 'לא ניתן להדליק קבלת משלוחים כי אין מסעדות זמינות. הוסף מסעדות או הדלק את סנדי פלוס.',
+        duration: ACTION_TOAST_DURATION_MS,
+      });
+      return;
+    }
+
+    if (
+      action.type === 'TOGGLE_DELIVERY_INTAKE' &&
+      !previousState.isReceivingDeliveries &&
+      !hasAvailableDeliveryCourier(previousState.couriers)
+    ) {
+      showActionInfoToast('אין שליחים זמינים', {
+        description: 'חייבים שליחים זמינים בשביל לקבל משלוחים. חבר שליח זמין או פתח משמרת לשליח.',
         duration: ACTION_TOAST_DURATION_MS,
       });
       return;

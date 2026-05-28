@@ -32,20 +32,7 @@ import type { AppNavIconKey, AppNavItem } from '../../app-navigation';
 import { useDelivery } from '../../context/delivery-context-value';
 import { findDeliveryRestaurant, getDeliveryWalletCharge } from '../../utils/delivery-finance';
 import { isOperationalDelivery } from '../../utils/delivery-status';
-import {
-  SENDI_PLUS_RADIUS_CHANGE_EVENT,
-  SENDI_PLUS_TERMS_ACCEPTED_CHANGE_EVENT,
-  SENDI_PLUS_TERMS_ACCEPTED_STORAGE_KEY,
-  isRestaurantActiveForDisplay,
-  isRestaurantEligibleForDeliveryIntake,
-  isSendiPlusRestaurant,
-  readStoredSendiPlusRadius,
-} from '../../utils/sendi-plus';
-import {
-  DELIVERY_ZONES_CHANGE_EVENT,
-  isPointCoveredByActiveDeliveryZones,
-  loadStoredDeliveryServiceAreas,
-} from '../../utils/delivery-zones';
+import { isRestaurantActiveForDisplay } from '../../utils/sendi-plus';
 import { AppTooltip as SidebarIconTooltip } from '../common/app-tooltip';
 import { playHaptic } from '../../utils/haptics';
 import { Toggle } from '../common/toggle';
@@ -68,7 +55,6 @@ const LABELS = {
   receivingDeliveries: '\u05de\u05e7\u05d1\u05dc \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
   notReceivingDeliveries: '\u05dc\u05d0 \u05de\u05e7\u05d1\u05dc \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
   autoAssign: '\u05e9\u05d9\u05d1\u05d5\u05e5 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9',
-  intakeBlocked: '\u05e7\u05d1\u05dc\u05d4 \u05d7\u05e1\u05d5\u05de\u05d4',
   systemOn: '\u05de\u05e2\u05e8\u05db\u05ea \u05d3\u05dc\u05d5\u05e7\u05d4',
   systemOff: '\u05de\u05e2\u05e8\u05db\u05ea \u05db\u05d1\u05d5\u05d9\u05d4',
   settings: '\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea',
@@ -263,8 +249,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
   const [isBusinessPopupOpen, setIsBusinessPopupOpen] = useState(false);
   const [businessSearch, setBusinessSearch] = useState('');
   const [selectedBusiness, setSelectedBusiness] = useState(workspaceBusinessName);
-  const [sendiPlusRadiusKm, setSendiPlusRadiusKm] = useState(readStoredSendiPlusRadius);
-  const [sendiPlusAccessVersion, setSendiPlusAccessVersion] = useState(0);
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= DESKTOP_SIDEBAR_BREAKPOINT);
   const [isCollapsed, setIsCollapsed] = useState(() => {
     try {
@@ -344,31 +328,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
     isRestaurantActiveForDisplay(restaurant),
   ).length;
   const activeCouriersCount = state.couriers.filter((courier) => courier.status !== 'offline').length;
-  const sendiPlusDeliveryZones = useMemo(
-    () => loadStoredDeliveryServiceAreas(),
-    [sendiPlusAccessVersion],
-  );
-  const hasDeliveryIntakeRestaurants = useMemo(
-    () => state.restaurants.some((restaurant) =>
-      isRestaurantEligibleForDeliveryIntake(restaurant, sendiPlusRadiusKm) &&
-      (!isSendiPlusRestaurant(restaurant.name, restaurant.chainId) ||
-        (Number.isFinite(restaurant.lat) &&
-          Number.isFinite(restaurant.lng) &&
-          isPointCoveredByActiveDeliveryZones(
-            { lat: restaurant.lat, lng: restaurant.lng },
-            sendiPlusDeliveryZones,
-          )))
-    ),
-    [sendiPlusDeliveryZones, sendiPlusRadiusKm, state.restaurants],
-  );
-  const isDeliveryIntakeBlocked =
-    state.isSystemOpen && state.isReceivingDeliveries && !hasDeliveryIntakeRestaurants;
   const systemStatusLabel = state.isSystemOpen ? LABELS.systemOn : LABELS.systemOff;
-  const deliveryIntakeStatusLabel = isDeliveryIntakeBlocked
-    ? LABELS.intakeBlocked
-    : state.isReceivingDeliveries
-      ? LABELS.receivingDeliveries
-      : LABELS.notReceivingDeliveries;
+  const deliveryIntakeStatusLabel = state.isReceivingDeliveries
+    ? LABELS.receivingDeliveries
+    : LABELS.notReceivingDeliveries;
   const walletRevenue = state.deliveries
     .filter((delivery) => delivery.status === 'delivered')
     .reduce(
@@ -429,43 +392,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isBusinessPopupOpen]);
-
-  useEffect(() => {
-    const syncSendiPlusRadius = () => {
-      setSendiPlusRadiusKm(readStoredSendiPlusRadius());
-    };
-    const syncSendiPlusAccess = () => {
-      setSendiPlusAccessVersion((version) => version + 1);
-    };
-
-    const handleStorageChange = (event: StorageEvent) => {
-      if (
-        event.key === 'sendi-plus-radius-km' ||
-        event.key === 'sendi-go-radius-km'
-      ) {
-        syncSendiPlusRadius();
-      }
-
-      if (event.key === SENDI_PLUS_TERMS_ACCEPTED_STORAGE_KEY) {
-        syncSendiPlusAccess();
-      }
-
-      if (event.key === 'delivery_zones_v1') {
-        syncSendiPlusAccess();
-      }
-    };
-
-    window.addEventListener(SENDI_PLUS_RADIUS_CHANGE_EVENT, syncSendiPlusRadius);
-    window.addEventListener(SENDI_PLUS_TERMS_ACCEPTED_CHANGE_EVENT, syncSendiPlusAccess);
-    window.addEventListener(DELIVERY_ZONES_CHANGE_EVENT, syncSendiPlusAccess);
-    window.addEventListener('storage', handleStorageChange);
-    return () => {
-      window.removeEventListener(SENDI_PLUS_RADIUS_CHANGE_EVENT, syncSendiPlusRadius);
-      window.removeEventListener(SENDI_PLUS_TERMS_ACCEPTED_CHANGE_EVENT, syncSendiPlusAccess);
-      window.removeEventListener(DELIVERY_ZONES_CHANGE_EVENT, syncSendiPlusAccess);
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
 
   useEffect(() => {
     if (!isBusinessPopupOpen) return;
@@ -1274,7 +1200,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                   </span>
                   <Toggle
                     checked={state.isReceivingDeliveries}
-                    disabled={!state.isSystemOpen || !hasCouriersForOperations}
+                    disabled={!state.isSystemOpen}
                     onChange={() => toggleDeliveryIntake()}
                     ariaLabel={deliveryIntakeStatusLabel}
                   />
@@ -1304,11 +1230,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                 >
                   <Power
                     className={`h-4 w-4 transition-colors ${
-                      state.isSystemOpen
-                        ? isDeliveryIntakeBlocked
-                          ? 'text-[#f59e0b]'
-                          : 'text-app-success-text'
-                        : 'text-[#dc2626]'
+                      state.isSystemOpen ? 'text-app-success-text' : 'text-[#dc2626]'
                     }`}
                   />
                 </button>

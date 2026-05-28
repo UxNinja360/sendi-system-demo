@@ -929,7 +929,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
                   control={
                     <Toggle
                       checked={state.isReceivingDeliveries}
-                      disabled={!state.isSystemOpen || !hasCouriersForOperations}
+                      disabled={!state.isSystemOpen}
                       onChange={() => dispatch({ type: 'TOGGLE_DELIVERY_INTAKE' })}
                       ariaLabel={TEXT.deliveryIntake}
                     />

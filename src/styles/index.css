@@ -35,6 +35,80 @@ body {
   background: var(--app-background);
 }
 
+.login-shell {
+  --login-bg: #f7f8fb;
+  --login-dot-a: #0f172a;
+  --login-dot-b: #2563eb;
+  --login-dot-c: #0f766e;
+  --login-dot-d: #64748b;
+  --login-dot-veil: rgba(247, 248, 251, 0.12);
+
+  background: var(--login-bg);
+}
+
+.dark .login-shell {
+  --login-bg: #030507;
+  --login-dot-a: #5eead4;
+  --login-dot-b: #60a5fa;
+  --login-dot-c: #818cf8;
+  --login-dot-d: #e5e7eb;
+  --login-dot-veil: rgba(3, 5, 7, 0.18);
+}
+
+.twilight .login-shell {
+  --login-bg: #07111f;
+  --login-dot-a: #38bdf8;
+  --login-dot-b: #14b8a6;
+  --login-dot-c: #a78bfa;
+  --login-dot-d: #dbeafe;
+  --login-dot-veil: rgba(7, 17, 31, 0.16);
+}
+
+.login-dot-field {
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  position: absolute;
+  z-index: 0;
+}
+
+.login-dot-field::before {
+  background: var(--login-bg);
+  content: '';
+  inset: 0;
+  position: absolute;
+}
+
+.login-dot-field::after {
+  background: var(--login-dot-veil);
+  content: '';
+  inset: 0;
+  position: absolute;
+}
+
+.login-dot-field__svg {
+  height: 108%;
+  inset: -4%;
+  overflow: visible;
+  position: absolute;
+  width: 108%;
+}
+
+.login-dot-field__dot {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition:
+    opacity 70ms ease-out,
+    transform 64ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-dot-field__dot {
+    transition: none;
+  }
+}
+
 .reports-thinking-dots {
   direction: rtl;
   display: inline-flex;
@@ -816,10 +890,42 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   z-index: 960;
 }
 
+.deliveries-map-split-settings-button {
+  align-items: center;
+  background: color-mix(in srgb, var(--app-surface) 94%, transparent);
+  border: 1px solid var(--app-nav-border);
+  border-radius: 999px;
+  color: var(--app-text);
+  display: inline-flex;
+  height: 34px;
+  justify-content: center;
+  left: auto;
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  width: 34px;
+  z-index: 960;
+}
+
 .deliveries-map-split-close:hover,
-.deliveries-map-split-close:focus-visible {
+.deliveries-map-split-close:focus-visible,
+.deliveries-map-split-settings-button:hover,
+.deliveries-map-split-settings-button:focus-visible {
   background: var(--app-surface-raised);
   outline: none;
+}
+
+.deliveries-map-split-settings-panel {
+  background: color-mix(in srgb, var(--app-surface) 96%, transparent);
+  border: 1px solid var(--app-nav-border);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+  color: var(--app-text);
+  min-width: 184px;
+  position: absolute;
+  right: 12px;
+  top: 54px;
+  width: min(220px, calc(100% - 24px));
+  z-index: 960;
 }
 
 @supports (height: 100svh) {

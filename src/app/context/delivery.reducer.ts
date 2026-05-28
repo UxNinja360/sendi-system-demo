@@ -39,10 +39,11 @@ const hasSystemBlockingDeliveries = (state: DeliveryState) =>
     SYSTEM_BLOCKING_DELIVERY_STATUSES.includes(delivery.status)
   );
 
-const hasCouriers = (state: DeliveryState) => state.couriers.length > 0;
+const hasAvailableCouriers = (state: DeliveryState) =>
+  state.couriers.some((courier) => canCourierAcceptDelivery(courier));
 
 const enforceOperationalAvailabilityState = (state: DeliveryState): DeliveryState => {
-  if (state.isSystemOpen && hasCouriers(state)) return state;
+  if (state.isSystemOpen && hasAvailableCouriers(state)) return state;
   if (!state.isReceivingDeliveries && !state.autoAssignEnabled) return state;
 
   return {
@@ -1910,7 +1911,7 @@ const reduceDeliveryState = (state: DeliveryState, action: DeliveryAction): Deli
 
     case 'TOGGLE_DELIVERY_INTAKE':
       if (!state.isSystemOpen) return state;
-      if (!hasCouriers(state)) return state;
+      if (!hasAvailableCouriers(state)) return state;
 
       return {
         ...state,
@@ -1919,7 +1920,7 @@ const reduceDeliveryState = (state: DeliveryState, action: DeliveryAction): Deli
 
     case 'TOGGLE_AUTO_ASSIGN':
       if (!state.isSystemOpen) return state;
-      if (!hasCouriers(state)) return state;
+      if (!hasAvailableCouriers(state)) return state;
 
       return {
         ...state,

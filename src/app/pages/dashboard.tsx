@@ -231,53 +231,7 @@ const RefreshingMetricValue: React.FC<{
   </span>
 );
 
-const CourierAvailabilityValue: React.FC<{
-  connected: number;
-  free: number;
-  refreshing: boolean;
-  total: number;
-}> = ({ connected, free, refreshing, total }) => (
-  <RefreshingMetricValue
-    refreshing={refreshing}
-    value={
-      <span
-        className="inline-flex items-baseline justify-end leading-none"
-        aria-label={`${formatNumber(free)} שליחים זמינים, ${formatNumber(connected)} שליחים מחוברים, ${formatNumber(total)} שליחים במערכת`}
-      >
-        <span>{formatNumber(free)}</span>
-        <span className="px-1 text-sm font-semibold text-app-text-muted sm:text-base">/</span>
-        <span className="text-sm font-semibold text-app-text-muted sm:text-base">{formatNumber(connected)}</span>
-        <span className="px-1 text-sm font-semibold text-app-text-muted sm:text-base">/</span>
-        <span className="text-sm font-semibold text-app-text-muted sm:text-base">{formatNumber(total)}</span>
-      </span>
-    }
-  />
-);
-
-const RestaurantActivityValue: React.FC<{
-  active: number;
-  refreshing: boolean;
-  total: number;
-}> = ({ active, refreshing, total }) => (
-  <RefreshingMetricValue
-    refreshing={refreshing}
-    value={
-      <span
-        className="inline-flex items-baseline justify-end leading-none"
-        aria-label={`${formatNumber(active)} מסעדות פעילות, ${formatNumber(total)} מסעדות במערכת`}
-      >
-        <span>{formatNumber(active)}</span>
-        <span className="px-1 text-sm font-semibold text-app-text-muted sm:text-base">/</span>
-        <span className="text-sm font-semibold text-app-text-muted sm:text-base">{formatNumber(total)}</span>
-      </span>
-    }
-  />
-);
-
-const AnimatedMetricNumber: React.FC<{
-  refreshing: boolean;
-  value: number;
-}> = ({ refreshing, value }) => {
+const useAnimatedMetricValue = (value: number, refreshing: boolean) => {
   const [displayValue, setDisplayValue] = React.useState(value);
   const displayValueRef = React.useRef(value);
   const animationFrameRef = React.useRef<number | null>(null);
@@ -330,6 +284,69 @@ const AnimatedMetricNumber: React.FC<{
 
     return cancelAnimation;
   }, [cancelAnimation, refreshing, value]);
+
+  return displayValue;
+};
+
+const CourierAvailabilityValue: React.FC<{
+  connected: number;
+  free: number;
+  refreshing: boolean;
+  total: number;
+}> = ({ connected, free, refreshing, total }) => {
+  const animatedFree = useAnimatedMetricValue(free, refreshing);
+  const animatedConnected = useAnimatedMetricValue(connected, refreshing);
+  const animatedTotal = useAnimatedMetricValue(total, refreshing);
+
+  return (
+    <RefreshingMetricValue
+      refreshing={refreshing}
+      value={
+        <span
+          className="inline-flex items-baseline justify-end leading-none"
+          aria-label={`${formatNumber(free)} שליחים זמינים, ${formatNumber(connected)} שליחים מחוברים, ${formatNumber(total)} שליחים במערכת`}
+        >
+          <span>{formatNumber(animatedFree)}</span>
+          <span className="px-1 text-sm font-semibold text-app-text-muted sm:text-base">/</span>
+          <span className="text-sm font-semibold text-app-text-muted sm:text-base">{formatNumber(animatedConnected)}</span>
+          <span className="px-1 text-sm font-semibold text-app-text-muted sm:text-base">/</span>
+          <span className="text-sm font-semibold text-app-text-muted sm:text-base">{formatNumber(animatedTotal)}</span>
+        </span>
+      }
+    />
+  );
+};
+
+const RestaurantActivityValue: React.FC<{
+  active: number;
+  refreshing: boolean;
+  total: number;
+}> = ({ active, refreshing, total }) => {
+  const animatedActive = useAnimatedMetricValue(active, refreshing);
+  const animatedTotal = useAnimatedMetricValue(total, refreshing);
+
+  return (
+    <RefreshingMetricValue
+      refreshing={refreshing}
+      value={
+        <span
+          className="inline-flex items-baseline justify-end leading-none"
+          aria-label={`${formatNumber(active)} מסעדות פעילות, ${formatNumber(total)} מסעדות במערכת`}
+        >
+          <span>{formatNumber(animatedActive)}</span>
+          <span className="px-1 text-sm font-semibold text-app-text-muted sm:text-base">/</span>
+          <span className="text-sm font-semibold text-app-text-muted sm:text-base">{formatNumber(animatedTotal)}</span>
+        </span>
+      }
+    />
+  );
+};
+
+const AnimatedMetricNumber: React.FC<{
+  refreshing: boolean;
+  value: number;
+}> = ({ refreshing, value }) => {
+  const displayValue = useAnimatedMetricValue(value, refreshing);
 
   return (
     <RefreshingMetricValue
@@ -1404,8 +1421,7 @@ export const Dashboard: React.FC = () => {
     () => sendiPlusDeliveryZones.filter(isDeliveryZoneActive).length,
     [dashboardRefreshVersion, sendiPlusDeliveryZones],
   );
-  const isSendiPlusOperational =
-    state.isSystemOpen && state.isReceivingDeliveries && sendiPlusTermsAccepted;
+  const isSendiPlusOperational = state.isSystemOpen && sendiPlusTermsAccepted;
   const sendiPlusActiveRestaurantCount = React.useMemo(
     () =>
       state.restaurants.filter(
@@ -1510,7 +1526,8 @@ export const Dashboard: React.FC = () => {
   const deliveryIntakeLabel = state.isReceivingDeliveries ? 'מקבל משלוחים' : 'לא מקבל משלוחים';
   const autoAssignLabel = state.autoAssignEnabled ? 'שיבוץ אוטומטי פעיל' : 'שיבוץ אוטומטי כבוי';
   const hasCouriersForOperations = state.couriers.length > 0;
-  const secondaryControlsDisabled =
+  const deliveryIntakeControlDisabled = !state.isSystemOpen || isDashboardRefreshing;
+  const autoAssignControlDisabled =
     !state.isSystemOpen || !hasCouriersForOperations || isDashboardRefreshing;
   const dashboardCardsDisabled = !state.isSystemOpen;
   const dashboardCardDisabledClassName = dashboardCardsDisabled
@@ -1595,7 +1612,7 @@ export const Dashboard: React.FC = () => {
                 />
                 <DashboardToolbarToggle
                   active={state.isReceivingDeliveries}
-                  disabled={secondaryControlsDisabled}
+                  disabled={deliveryIntakeControlDisabled}
                   label={deliveryIntakeLabel}
                   onClick={() => dispatch({ type: 'TOGGLE_DELIVERY_INTAKE' })}
                   icon={
@@ -1608,7 +1625,7 @@ export const Dashboard: React.FC = () => {
                 />
                 <DashboardToolbarToggle
                   active={state.autoAssignEnabled}
-                  disabled={secondaryControlsDisabled}
+                  disabled={autoAssignControlDisabled}
                   label={autoAssignLabel}
                   onClick={() => dispatch({ type: 'TOGGLE_AUTO_ASSIGN' })}
                   icon={<Sparkles className="h-3.5 w-3.5" />}
