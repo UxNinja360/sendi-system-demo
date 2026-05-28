@@ -40,27 +40,38 @@ body {
   --login-dot: #111827;
   --login-dot-opacity: 0.26;
   --login-dot-veil: rgba(247, 248, 251, 0.12);
-  --login-keyboard-offset: 0px;
-
   background: var(--login-bg);
   min-height: 100svh;
 }
 
-.login-shell--keyboard,
-.login-shell--input-focused {
-  overflow-y: auto;
-}
-
-.login-main {
-  transition:
-    padding 180ms ease,
-    transform 180ms ease;
+.login-shell--fixed {
+  height: 100svh;
+  min-height: 100svh;
 }
 
 @supports (height: 100dvh) {
   .login-shell {
     min-height: 100dvh;
   }
+
+  .login-shell--fixed {
+    height: 100dvh;
+    min-height: 100dvh;
+  }
+}
+
+.login-main--activity-area {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.onboarding-area-list {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.onboarding-area-list > * {
+  flex-shrink: 0;
 }
 
 @media (max-width: 767.98px) {
@@ -77,14 +88,11 @@ body {
     padding-bottom: max(7rem, calc(var(--app-safe-bottom) + 7rem));
   }
 
-  .login-shell--input-focused .login-main {
-    align-items: flex-start;
-    min-height: auto;
-    padding-bottom: max(18rem, calc(var(--app-safe-bottom) + var(--login-keyboard-offset) + 9rem));
-    padding-top: max(5.25rem, calc(var(--app-safe-top) + 5.25rem));
-    transform: none;
+  .login-main.login-main--activity-area {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding-bottom: max(0.75rem, var(--app-safe-bottom));
   }
-
 }
 
 .dark .login-shell {

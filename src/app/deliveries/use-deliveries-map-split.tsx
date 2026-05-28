@@ -8,7 +8,7 @@ import {
   type SetStateAction,
 } from 'react';
 import { createPortal } from 'react-dom';
-import { Settings, X } from 'lucide-react';
+import { Layers, X } from 'lucide-react';
 
 import { addAppTopBarActionListener } from '../components/layout/app-top-bar-actions';
 import { Toggle } from '../components/common/toggle';
@@ -517,7 +517,7 @@ export const useDeliveriesMapSplit = ({
               aria-expanded={isMapSettingsOpen}
               title="הגדרות מפה"
             >
-              <Settings className="h-4 w-4" />
+              <Layers className="h-4 w-4" />
             </button>
             {isMapSettingsOpen ? (
               <div className="deliveries-map-split-settings-panel" data-no-sheet-drag="true">

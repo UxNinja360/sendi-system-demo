@@ -734,13 +734,10 @@ export const OnboardingPage: React.FC = () => {
   const [companyRegistrationNumber, setCompanyRegistrationNumber] = useState('');
   const [selectedWorkspaceAreas, setSelectedWorkspaceAreas] = useState<string[]>([]);
   const [workspaceAreaSearch, setWorkspaceAreaSearch] = useState('');
-  const [isWorkspaceAreaDropdownOpen, setIsWorkspaceAreaDropdownOpen] = useState(false);
   const [isMobileWorkspaceAreaSearchOpen, setIsMobileWorkspaceAreaSearchOpen] = useState(false);
   const [expandedWorkspaceAreaGroups, setExpandedWorkspaceAreaGroups] = useState<string[]>([]);
-  const [expandedWorkspaceAreaSections, setExpandedWorkspaceAreaSections] = useState<string[]>([]);
   const [joinRegistrationNumber, setJoinRegistrationNumber] = useState('');
   const [error, setError] = useState('');
-  const [isInputFocused, setIsInputFocused] = useState(false);
   const dotFieldRef = useRef<LoginDotFieldHandle>(null);
   const navigate = useNavigate();
 
@@ -820,14 +817,6 @@ export const OnboardingPage: React.FC = () => {
       currentGroups.includes(groupLabel)
         ? currentGroups.filter((label) => label !== groupLabel)
         : [...currentGroups, groupLabel],
-    );
-  }, []);
-
-  const toggleExpandedWorkspaceAreaSection = useCallback((sectionKey: string) => {
-    setExpandedWorkspaceAreaSections((currentSections) =>
-      currentSections.includes(sectionKey)
-        ? currentSections.filter((key) => key !== sectionKey)
-        : [...currentSections, sectionKey],
     );
   }, []);
 
@@ -974,7 +963,6 @@ export const OnboardingPage: React.FC = () => {
 
     if (step === 'activityArea') {
       setWorkspaceAreaSearch('');
-      setIsWorkspaceAreaDropdownOpen(false);
       setStep('companyDetails');
       return;
     }
@@ -999,35 +987,13 @@ export const OnboardingPage: React.FC = () => {
     dotFieldRef.current?.leave();
   }, []);
 
-  const handleFocusCapture = useCallback((event: React.FocusEvent<HTMLDivElement>) => {
-    const target = event.target;
-    if (!(target instanceof HTMLElement) || !target.matches('input, textarea, select')) return;
-
-    setIsInputFocused(true);
-    window.setTimeout(() => {
-      target.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'auto' });
-    }, 90);
-  }, []);
-
-  const handleBlurCapture = useCallback(() => {
-    window.setTimeout(() => {
-      const activeElement = document.activeElement;
-      setIsInputFocused(
-        activeElement instanceof HTMLElement &&
-        activeElement.matches('input, textarea, select'),
-      );
-    }, 80);
-  }, []);
-
   if (!session) return null;
 
   return (
     <div
       className={`login-shell relative isolate flex w-full flex-col overflow-hidden text-app-text ${
-        isInputFocused ? 'login-shell--input-focused' : ''
+        step === 'activityArea' ? 'login-shell--fixed' : ''
       }`}
-      onBlurCapture={handleBlurCapture}
-      onFocusCapture={handleFocusCapture}
       onPointerLeave={handlePointerLeave}
       onPointerMove={handlePointerMove}
     >
@@ -1046,7 +1012,13 @@ export const OnboardingPage: React.FC = () => {
         </button>
       </header>
 
-      <main className="login-main relative z-10 flex flex-1 items-center justify-center px-5 pb-16 pt-8 sm:px-6">
+      <main
+        className={`login-main relative z-10 flex min-h-0 flex-1 justify-center px-5 sm:px-6 ${
+          step === 'activityArea'
+            ? 'login-main--activity-area items-start overflow-hidden pb-3 pt-4 sm:pb-4'
+            : 'items-center overflow-hidden pb-16 pt-8'
+        }`}
+      >
         {step === 'userName' ? (
           <section className="w-full max-w-[320px] text-center" dir="rtl" aria-label="פרטי משתמש">
             <h1 className="mb-7 text-3xl font-extrabold text-[#0d0d12] dark:text-app-text sm:text-[32px]">
@@ -1174,20 +1146,13 @@ export const OnboardingPage: React.FC = () => {
         ) : null}
 
         {step === 'activityArea' ? (
-          <section className="w-full max-w-[560px] text-center" dir="rtl" aria-label="בחירת אזור פעילות">
-            <h1 className="mb-7 text-3xl font-extrabold text-[#0d0d12] dark:text-app-text sm:text-[32px]">
+          <section className="flex h-full min-h-0 w-full max-w-[560px] flex-1 flex-col text-center sm:max-w-[720px]" dir="rtl" aria-label="בחירת אזור פעילות">
+            <h1 className="mb-5 shrink-0 text-3xl font-extrabold text-[#0d0d12] dark:text-app-text sm:mb-7 sm:text-[32px]">
               בחירת אזור פעילות
             </h1>
 
-            <form onSubmit={handleActivityAreaSubmit} className="space-y-3">
-              <div
-                className="relative space-y-3 text-right"
-                onBlur={(event) => {
-                  const nextTarget = event.relatedTarget;
-                  if (nextTarget instanceof Node && event.currentTarget.contains(nextTarget)) return;
-                  setIsWorkspaceAreaDropdownOpen(false);
-                }}
-              >
+            <form onSubmit={handleActivityAreaSubmit} className="flex min-h-0 flex-1 flex-col gap-3">
+              <div className="flex min-h-0 flex-1 flex-col gap-3 text-right">
                 <label className="sr-only" htmlFor="onboarding-workspace-area">
                   אזור פעילות
                 </label>
@@ -1195,47 +1160,23 @@ export const OnboardingPage: React.FC = () => {
                   <input
                     id="onboarding-workspace-area"
                     value={workspaceAreaSearch}
-                    onFocus={() => setIsWorkspaceAreaDropdownOpen(true)}
                     onChange={(event) => {
                       setWorkspaceAreaSearch(event.target.value);
-                      setIsWorkspaceAreaDropdownOpen(true);
                       setError('');
                     }}
                     onKeyDown={(event) => {
-                      if (event.key === 'Escape') {
-                        setIsWorkspaceAreaDropdownOpen(false);
-                        return;
-                      }
-
-                      if (event.key !== 'Enter') return;
+                      if (event.key !== 'Enter' || !isCustomWorkspaceAreaVisible) return;
                       event.preventDefault();
-
-                      if (!isWorkspaceAreaDropdownOpen) {
-                        setIsWorkspaceAreaDropdownOpen(true);
-                        return;
-                      }
-
-                      if (isCustomWorkspaceAreaVisible) addCustomWorkspaceArea();
+                      addCustomWorkspaceArea();
                     }}
                     placeholder={
                       selectedWorkspaceAreas.length > 0
                         ? formatWorkspaceAreaSummary(selectedWorkspaceAreas)
                         : 'חפש עיר או יישוב'
                     }
-                    className={`${inputClassName} pl-10`}
-                    aria-expanded={isWorkspaceAreaDropdownOpen}
-                    aria-haspopup="listbox"
+                    className={inputClassName}
                     autoComplete="off"
                   />
-                  <button
-                    type="button"
-                    className="absolute left-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-xs font-black text-[#777] transition-colors hover:bg-[#f5f5f5] dark:text-[#888] dark:hover:bg-[#111]"
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => setIsWorkspaceAreaDropdownOpen((isOpen) => !isOpen)}
-                    aria-label={isWorkspaceAreaDropdownOpen ? 'סגור רשימת אזורי פעילות' : 'פתח רשימת אזורי פעילות'}
-                  >
-                    <span aria-hidden="true">{isWorkspaceAreaDropdownOpen ? '⌃' : '⌄'}</span>
-                  </button>
                 </div>
 
                 <div className="space-y-2 sm:hidden">
@@ -1280,7 +1221,7 @@ export const OnboardingPage: React.FC = () => {
                 </div>
 
                 {selectedWorkspaceAreas.length > 0 ? (
-                  <div className="flex max-h-24 flex-wrap gap-2 overflow-y-auto rounded-lg border border-[#d8d8d8] bg-white p-2 dark:border-[#252525] dark:bg-[#050505]">
+                  <div className="flex flex-wrap gap-2 rounded-lg border border-[#d8d8d8] bg-white p-2 dark:border-[#252525] dark:bg-[#050505]">
                     {selectedWorkspaceAreas.map((area) => (
                       <button
                         key={area}
@@ -1296,35 +1237,31 @@ export const OnboardingPage: React.FC = () => {
                   </div>
                 ) : null}
 
-                <div
-                  className={`z-20 w-full rounded-lg border border-[#d8d8d8] bg-white p-1 text-right shadow-xl dark:border-[#252525] dark:bg-[#050505] sm:absolute sm:right-0 sm:top-[calc(100%+0.5rem)] ${
-                    isWorkspaceAreaDropdownOpen ? 'sm:block' : 'sm:hidden'
-                  }`}
-                >
-                    <div className="max-h-[min(24rem,42vh)] overflow-y-auto">
+                <div className="z-20 min-h-0 flex-1 text-right">
+                  <div className="onboarding-area-list flex h-full min-h-0 flex-col gap-2 overflow-y-auto pb-2 pl-1">
+                    <button
+                      type="button"
+                      className={`flex h-12 w-full items-center justify-between rounded-lg border px-3 text-sm font-black transition-colors ${
+                        selectedWorkspaceAreas.includes(ALL_COUNTRY_AREA)
+                          ? 'border-[#0d0d12] bg-[#0d0d12] text-white dark:border-[#ededed] dark:bg-[#ededed] dark:text-[#050505]'
+                          : 'border-[#d8d8d8] bg-white text-[#0d0d12] hover:border-[#bdbdbd] hover:bg-[#f5f5f5] dark:border-[#252525] dark:bg-[#050505] dark:text-app-text dark:hover:border-[#3a3a3a] dark:hover:bg-[#111]'
+                      }`}
+                      onClick={() => toggleWorkspaceArea(ALL_COUNTRY_AREA)}
+                    >
+                      <span>{ALL_COUNTRY_AREA}</span>
+                      {selectedWorkspaceAreas.includes(ALL_COUNTRY_AREA) ? <span aria-hidden="true">✓</span> : null}
+                    </button>
+
+                    {isCustomWorkspaceAreaVisible ? (
                       <button
                         type="button"
-                        className={`mb-1 flex h-10 w-full items-center justify-between rounded-md px-3 text-sm font-black transition-colors ${
-                          selectedWorkspaceAreas.includes(ALL_COUNTRY_AREA)
-                            ? 'bg-[#0d0d12] text-white dark:bg-[#ededed] dark:text-[#050505]'
-                            : 'text-[#0d0d12] hover:bg-[#f5f5f5] dark:text-app-text dark:hover:bg-[#111]'
-                        }`}
-                        onClick={() => toggleWorkspaceArea(ALL_COUNTRY_AREA)}
+                        className="flex h-12 w-full items-center justify-between rounded-lg border border-dashed border-[#bdbdbd] bg-white px-3 text-sm font-bold text-[#0d0d12] transition-colors hover:bg-[#f5f5f5] dark:border-[#3a3a3a] dark:bg-[#050505] dark:text-app-text dark:hover:bg-[#111]"
+                        onClick={addCustomWorkspaceArea}
                       >
-                        <span>{ALL_COUNTRY_AREA}</span>
-                        {selectedWorkspaceAreas.includes(ALL_COUNTRY_AREA) ? <span aria-hidden="true">✓</span> : null}
+                        <span>הוסף אזור מותאם</span>
+                        <span>{normalizeWorkspaceArea(workspaceAreaSearch)}</span>
                       </button>
-
-                      {isCustomWorkspaceAreaVisible ? (
-                        <button
-                          type="button"
-                          className="mb-2 flex h-10 w-full items-center justify-between rounded-md border border-dashed border-[#bdbdbd] px-3 text-sm font-bold text-[#0d0d12] transition-colors hover:bg-[#f5f5f5] dark:border-[#3a3a3a] dark:text-app-text dark:hover:bg-[#111]"
-                          onClick={addCustomWorkspaceArea}
-                        >
-                          <span>הוסף אזור מותאם</span>
-                          <span>{normalizeWorkspaceArea(workspaceAreaSearch)}</span>
-                        </button>
-                      ) : null}
+                    ) : null}
 
                       {filteredWorkspaceAreaGroups.length > 0 ? (
                         filteredWorkspaceAreaGroups.map((group) => {
@@ -1333,13 +1270,13 @@ export const OnboardingPage: React.FC = () => {
                             hasQuery || expandedWorkspaceAreaGroups.includes(group.label);
 
                           return (
-                            <div key={group.label} className="border-b border-[#ededed] py-2 last:border-b-0 dark:border-[#1f1f1f]">
-                              <div className="flex items-center justify-between gap-2">
+                            <div key={group.label} className="overflow-hidden rounded-lg border border-[#d8d8d8] bg-white dark:border-[#252525] dark:bg-[#050505]">
+                              <div className="flex h-12 items-center justify-between gap-2 px-3">
                                 <button
                                   type="button"
-                                  className={`rounded-md px-2 py-1 text-sm font-black transition-colors ${
+                                  className={`min-w-0 flex-1 rounded-md px-2 py-1 text-right text-sm font-black transition-colors ${
                                     isGroupExpanded
-                                      ? 'bg-[#0d0d12] text-white dark:bg-[#ededed] dark:text-[#050505]'
+                                      ? 'text-[#0d0d12] dark:text-app-text'
                                       : 'text-[#0d0d12] hover:bg-[#f5f5f5] dark:text-app-text dark:hover:bg-[#111]'
                                   }`}
                                   onClick={() => toggleExpandedWorkspaceAreaGroup(group.label)}
@@ -1356,57 +1293,41 @@ export const OnboardingPage: React.FC = () => {
                               </div>
 
                               {isGroupExpanded ? (
-                                <div className="mt-2 space-y-2">
+                                <div className="space-y-2 border-t border-[#ededed] p-2 dark:border-[#1f1f1f]">
                                   {group.sections.map((section) => {
                                     const sectionKey = `${group.label}-${section.label}`;
-                                    const isSectionExpanded =
-                                      hasQuery || expandedWorkspaceAreaSections.includes(sectionKey);
 
                                     return (
                                       <div key={sectionKey} className="rounded-md bg-[#fafafa] p-2 dark:bg-[#080808]">
-                                        <div className="flex items-center justify-between gap-2">
-                                          <button
-                                            type="button"
-                                            className={`rounded-md px-2 py-1 text-xs font-black transition-colors ${
-                                              isSectionExpanded
-                                                ? 'bg-[#0d0d12] text-white dark:bg-[#ededed] dark:text-[#050505]'
-                                                : 'text-[#0d0d12] hover:bg-[#f0f0f0] dark:text-app-text dark:hover:bg-[#111]'
-                                            }`}
-                                            onClick={() => toggleExpandedWorkspaceAreaSection(sectionKey)}
-                                          >
+                                        <div className="mb-2 flex items-center justify-between gap-2 px-1">
+                                          <h2 className="text-xs font-black text-[#0d0d12] dark:text-app-text">
                                             {section.label}
-                                          </button>
-                                          <button
-                                            type="button"
-                                            className="rounded-md px-2 py-1 text-[11px] font-bold text-[#777] transition-colors hover:bg-[#f0f0f0] dark:text-[#888] dark:hover:bg-[#111]"
-                                            onClick={() => toggleExpandedWorkspaceAreaSection(sectionKey)}
-                                          >
-                                            {isSectionExpanded ? 'סגור' : section.areas.length}
-                                          </button>
+                                          </h2>
+                                          <span className="text-[11px] font-bold text-[#777] dark:text-[#888]">
+                                            {section.areas.length}
+                                          </span>
                                         </div>
 
-                                        {isSectionExpanded ? (
-                                          <div className="mt-2 flex flex-wrap gap-1.5">
-                                            {section.areas.map((area) => {
-                                              const isSelected = selectedWorkspaceAreas.includes(area);
+                                        <div className="flex flex-wrap gap-1.5">
+                                          {section.areas.map((area) => {
+                                            const isSelected = selectedWorkspaceAreas.includes(area);
 
-                                              return (
-                                                <button
-                                                  key={`${section.label}-${area}`}
-                                                  type="button"
-                                                  className={`inline-flex h-8 items-center rounded-full border px-2.5 text-xs font-bold transition-colors ${
-                                                    isSelected
-                                                      ? 'border-[#0d0d12] bg-[#0d0d12] text-white dark:border-[#ededed] dark:bg-[#ededed] dark:text-[#050505]'
-                                                      : 'border-[#d8d8d8] bg-white text-[#0d0d12] hover:border-[#bdbdbd] hover:bg-[#f5f5f5] dark:border-[#252525] dark:bg-[#050505] dark:text-app-text dark:hover:border-[#3a3a3a] dark:hover:bg-[#111]'
-                                                  }`}
-                                                  onClick={() => toggleWorkspaceArea(area)}
-                                                >
-                                                  {area}
-                                                </button>
-                                              );
-                                            })}
-                                          </div>
-                                        ) : null}
+                                            return (
+                                              <button
+                                                key={`${section.label}-${area}`}
+                                                type="button"
+                                                className={`inline-flex h-8 items-center rounded-full border px-2.5 text-xs font-bold transition-colors ${
+                                                  isSelected
+                                                    ? 'border-[#0d0d12] bg-[#0d0d12] text-white dark:border-[#ededed] dark:bg-[#ededed] dark:text-[#050505]'
+                                                    : 'border-[#d8d8d8] bg-white text-[#0d0d12] hover:border-[#bdbdbd] hover:bg-[#f5f5f5] dark:border-[#252525] dark:bg-[#050505] dark:text-app-text dark:hover:border-[#3a3a3a] dark:hover:bg-[#111]'
+                                                }`}
+                                                onClick={() => toggleWorkspaceArea(area)}
+                                              >
+                                                {area}
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
                                       </div>
                                     );
                                   })}
@@ -1416,7 +1337,7 @@ export const OnboardingPage: React.FC = () => {
                           );
                         })
                       ) : (
-                        <div className="px-3 py-3 text-sm font-medium text-[#777] dark:text-[#888]">
+                        <div className="rounded-lg border border-[#d8d8d8] bg-white px-3 py-4 text-sm font-medium text-[#777] dark:border-[#252525] dark:bg-[#050505] dark:text-[#888]">
                           לא מצאנו אזור ברשימה. אפשר להוסיף אזור מותאם.
                         </div>
                       )}
@@ -1430,9 +1351,11 @@ export const OnboardingPage: React.FC = () => {
                 </div>
               ) : null}
 
-              <button type="submit" className={primaryButtonClassName}>
-                כניסה
-              </button>
+              <div className="z-30 shrink-0 bg-[var(--login-bg)] pb-2 pt-2">
+                <button type="submit" className={primaryButtonClassName}>
+                  כניסה
+                </button>
+              </div>
             </form>
           </section>
         ) : null}
