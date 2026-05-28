@@ -70,6 +70,7 @@ const SIDEBAR_COLLAPSED_WIDTH = 60;
 const MOBILE_SIDEBAR_WIDTH = 260;
 const MOBILE_MENU_SWIPE_START_THRESHOLD = 3;
 const MOBILE_MENU_SWIPE_CLOSE_THRESHOLD = 76;
+const MOBILE_MENU_CLICK_GUARD_MS = 450;
 const DESKTOP_SIDEBAR_BREAKPOINT = 1024;
 const SIDEBAR_LEGACY_OPEN_KEY = 'sidebar-legacy-open-v2';
 const SIDEBAR_EXPERIMENTS_OPEN_KEY = 'sidebar-experiments-open-v2';
@@ -281,6 +282,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
   } | null>(null);
   const mobileMenuPointerIdRef = useRef<number | null>(null);
   const mobileMenuSwipeClickGuardRef = useRef(false);
+  const mobileMenuSwipeClickGuardTimeoutRef = useRef<number | null>(null);
   const [isLegacySectionOpen, setIsLegacySectionOpen] = useState(() => {
     try {
       const saved = localStorage.getItem(SIDEBAR_LEGACY_OPEN_KEY);
@@ -309,6 +311,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
   const isExpanded = !isCollapsed || !isDesktop;
   const isMobileMenuOpen = !isDesktop && isCollapsed;
   const mobileSidebarWidth = Math.max(MOBILE_SIDEBAR_WIDTH, viewportWidth);
+  const clearMobileMenuClickGuard = useCallback(() => {
+    if (mobileMenuSwipeClickGuardTimeoutRef.current !== null) {
+      window.clearTimeout(mobileMenuSwipeClickGuardTimeoutRef.current);
+      mobileMenuSwipeClickGuardTimeoutRef.current = null;
+    }
+
+    mobileMenuSwipeClickGuardRef.current = false;
+  }, []);
+  const guardNextMobileMenuClick = useCallback(() => {
+    mobileMenuSwipeClickGuardRef.current = true;
+
+    if (mobileMenuSwipeClickGuardTimeoutRef.current !== null) {
+      window.clearTimeout(mobileMenuSwipeClickGuardTimeoutRef.current);
+    }
+
+    mobileMenuSwipeClickGuardTimeoutRef.current = window.setTimeout(() => {
+      mobileMenuSwipeClickGuardRef.current = false;
+      mobileMenuSwipeClickGuardTimeoutRef.current = null;
+    }, MOBILE_MENU_CLICK_GUARD_MS);
+  }, []);
   const updateMobileMenuDragX = useCallback((value: number) => {
     mobileMenuDragXRef.current = value;
     setMobileMenuDragX(value);
@@ -462,9 +484,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       setIsMobileMenuDragging(false);
       mobileMenuSwipeRef.current = null;
       mobileMenuPointerIdRef.current = null;
-      mobileMenuSwipeClickGuardRef.current = false;
+      if (isDesktop) clearMobileMenuClickGuard();
     }
-  }, [isCollapsed, isDesktop, updateMobileMenuDragX]);
+  }, [clearMobileMenuClickGuard, isCollapsed, isDesktop, updateMobileMenuDragX]);
+
+  useEffect(() => () => clearMobileMenuClickGuard(), [clearMobileMenuClickGuard]);
 
   useEffect(() => {
     try {
@@ -540,9 +564,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
     setIsMobileMenuDragging(false);
     mobileMenuSwipeRef.current = null;
     mobileMenuPointerIdRef.current = null;
-    mobileMenuSwipeClickGuardRef.current = false;
+    clearMobileMenuClickGuard();
     setIsCollapsed((prev) => !prev);
-  }, [updateMobileMenuDragX]);
+  }, [clearMobileMenuClickGuard, updateMobileMenuDragX]);
 
   const toggleDesktopSidebar = useCallback(() => {
     setIsCollapsed((value) => {
@@ -626,9 +650,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
         started: false,
       };
       updateMobileMenuDragX(0);
-      mobileMenuSwipeClickGuardRef.current = false;
+      clearMobileMenuClickGuard();
     },
-    [isCollapsed, isDesktop, updateMobileMenuDragX],
+    [clearMobileMenuClickGuard, isCollapsed, isDesktop, updateMobileMenuDragX],
   );
 
   const moveMobileMenuSwipeTo = useCallback(
@@ -668,7 +692,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       currentDragX >= MOBILE_MENU_SWIPE_CLOSE_THRESHOLD;
     mobileMenuSwipeRef.current = null;
     mobileMenuPointerIdRef.current = null;
-    mobileMenuSwipeClickGuardRef.current = swipe.started;
+    if (swipe.started) guardNextMobileMenuClick();
     setIsMobileMenuDragging(false);
 
     if (shouldClose) {
@@ -678,7 +702,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
     }
 
     updateMobileMenuDragX(0);
-  }, [updateMobileMenuDragX]);
+  }, [guardNextMobileMenuClick, updateMobileMenuDragX]);
 
   useEffect(() => {
     if (isDesktop || typeof document === 'undefined') return;
@@ -730,10 +754,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       finishMobileMenuSwipe();
     };
 
+    const handleNativeClickCapture = (event: MouseEvent) => {
+      if (!mobileMenuSwipeClickGuardRef.current) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+    };
+
     document.addEventListener('pointerdown', handleNativePointerDown);
     document.addEventListener('pointermove', handleNativePointerMove, { passive: false });
     document.addEventListener('pointerup', handleNativePointerEnd);
     document.addEventListener('pointercancel', handleNativePointerEnd);
+    document.addEventListener('click', handleNativeClickCapture, true);
     document.addEventListener('mouseup', finishMobileMenuSwipe);
     window.addEventListener('blur', finishMobileMenuSwipe);
 
@@ -746,6 +779,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       document.removeEventListener('pointermove', handleNativePointerMove);
       document.removeEventListener('pointerup', handleNativePointerEnd);
       document.removeEventListener('pointercancel', handleNativePointerEnd);
+      document.removeEventListener('click', handleNativeClickCapture, true);
       document.removeEventListener('mouseup', finishMobileMenuSwipe);
       window.removeEventListener('blur', finishMobileMenuSwipe);
     };
@@ -768,14 +802,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       setIsMobileMenuDragging(false);
       mobileMenuSwipeRef.current = null;
       mobileMenuPointerIdRef.current = null;
-      mobileMenuSwipeClickGuardRef.current = false;
+      clearMobileMenuClickGuard();
       setIsCollapsed(false);
     }
   };
 
   const handleNav = (path: string) => {
+    if (mobileMenuSwipeClickGuardRef.current) return;
+
     navigate(path);
     closeMobileMenu();
+  };
+
+  const handleMobileMenuClickCapture = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (isDesktop || !mobileMenuSwipeClickGuardRef.current) return;
+
+    event.preventDefault();
+    event.stopPropagation();
   };
 
   const getNavBadge = (item: AppNavItem): SidebarNavBadgeValue | null => {
@@ -894,9 +937,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
             backdropFilter: `blur(${mobileMenuOpenProgress * 4}px)`,
             touchAction: 'pan-y',
           }}
-          onClick={() => {
-            if (mobileMenuSwipeClickGuardRef.current) {
-              mobileMenuSwipeClickGuardRef.current = false;
+        onClick={() => {
+          if (mobileMenuSwipeClickGuardRef.current) {
               return;
             }
 
@@ -907,7 +949,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
       <div
         dir="rtl"
-        className={`app-shell-height group/sidebar fixed inset-y-0 right-0 z-[110] flex flex-col border-l border-app-nav-border bg-app-nav-bg shadow-xl will-change-transform lg:static lg:z-50 lg:shadow-none ${
+        onClickCapture={handleMobileMenuClickCapture}
+        className={`app-shell-height group/sidebar fixed inset-y-0 right-0 z-[110] flex flex-col border-0 border-app-nav-border bg-app-nav-bg shadow-xl will-change-transform lg:static lg:z-50 lg:border-l lg:shadow-none ${
           isCollapsed ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'
         }`}
         style={{
