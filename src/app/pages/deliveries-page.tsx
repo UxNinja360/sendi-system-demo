@@ -995,6 +995,7 @@ export const DeliveriesPage: React.FC = () => {
               selectedDeliveryIds={selectedIds}
               onToggleDeliverySelection={handleToggleSelect}
               onSearchRowHiddenChange={handleSearchRowHiddenChange}
+              mapFabVisible={!mapOpen}
               selectionBar={
                 <SelectionActionBar
                   selectedCount={selectedIds.size}

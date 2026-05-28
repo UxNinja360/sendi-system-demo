@@ -502,6 +502,11 @@ export const RestaurantsScreen: React.FC = () => {
   const filteredRestaurants = useMemo(() => {
     const hasSourceFilter =
       restaurantSourceVisibility.regular || restaurantSourceVisibility.sendiGo;
+
+    if (!hasSourceFilter) {
+      return [];
+    }
+
     const filtered = restaurants.filter((r) => {
       const matchesSearch = !searchQuery ||
         r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -514,10 +519,9 @@ export const RestaurantsScreen: React.FC = () => {
         (restaurantConnectionFilter === 'connected' ? r.isActive : !r.isActive);
       const isSendiGo = isSendiPlusRestaurant(r.name, r.chainId);
       const matchesSource =
-        !hasSourceFilter ||
-        (isSendiGo
+        isSendiGo
           ? restaurantSourceVisibility.sendiGo
-          : restaurantSourceVisibility.regular);
+          : restaurantSourceVisibility.regular;
       return matchesSearch && matchesConnection && matchesSource;
     });
 
@@ -525,10 +529,6 @@ export const RestaurantsScreen: React.FC = () => {
     const compareByName = (a: RestaurantRow, b: RestaurantRow) => a.name.localeCompare(b.name, 'he');
 
     return [...filtered].sort((a, b) => {
-      if (!hasSourceFilter) {
-        return compareByName(a, b);
-      }
-
       const aIsSendiGo = isSendiPlusRestaurant(a.name, a.chainId);
       const bIsSendiGo = isSendiPlusRestaurant(b.name, b.chainId);
 

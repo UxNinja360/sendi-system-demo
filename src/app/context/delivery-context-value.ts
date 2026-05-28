@@ -1,8 +1,10 @@
 import { createContext, useContext, type Dispatch } from 'react';
 import type { Courier, Delivery, DeliveryAction, DeliveryState } from '../types/delivery.types';
+import type { MapPosition } from '../live/live-simulation-engine';
 
 export interface DeliveryContextType {
   state: DeliveryState;
+  courierPositions: Map<string, MapPosition>;
   dispatch: Dispatch<DeliveryAction>;
   toggleSystem: () => void;
   assignCourier: (deliveryId: string, courierId: string, pickupBatchId?: string) => boolean;

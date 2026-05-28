@@ -444,17 +444,19 @@ export const CouriersListScreen: React.FC = () => {
     const hasEmploymentFilter =
       courierEmploymentVisibility.hourly || courierEmploymentVisibility.perDelivery;
 
+    if (!hasEmploymentFilter) {
+      return [];
+    }
+
     if (showActiveCouriersOnly) {
       couriers = couriers.filter((courier) => courier.status !== 'offline');
     }
 
-    if (hasEmploymentFilter) {
-      couriers = couriers.filter((courier) =>
-        courier.employmentType === 'שעתי'
-          ? courierEmploymentVisibility.hourly
-          : courierEmploymentVisibility.perDelivery,
-      );
-    }
+    couriers = couriers.filter((courier) =>
+      courier.employmentType === 'שעתי'
+        ? courierEmploymentVisibility.hourly
+        : courierEmploymentVisibility.perDelivery,
+    );
 
     if (normalizedSearch) {
       couriers = couriers.filter((courier) =>
@@ -474,10 +476,6 @@ export const CouriersListScreen: React.FC = () => {
     const compareByName = (a: Courier, b: Courier) => a.name.localeCompare(b.name, 'he');
 
     return [...couriers].sort((a, b) => {
-      if (!hasEmploymentFilter) {
-        return compareByName(a, b);
-      }
-
       const employmentGroupDiff = employmentGroupValue(a) - employmentGroupValue(b);
       if (employmentGroupDiff !== 0) return employmentGroupDiff;
 

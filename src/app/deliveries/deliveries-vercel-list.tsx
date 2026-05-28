@@ -81,6 +81,7 @@ type DeliveriesVercelListProps = {
   onToggleDeliverySelection?: (deliveryId: string) => void;
   selectionBar?: React.ReactNode;
   onSearchRowHiddenChange?: (hidden: boolean) => void;
+  mapFabVisible?: boolean;
 };
 
 type DeliveryVercelRowProps = {
@@ -1850,6 +1851,7 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
   onToggleDeliverySelection,
   selectionBar,
   onSearchRowHiddenChange,
+  mapFabVisible = false,
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const [showScrollTopFab, setShowScrollTopFab] = useState(false);
@@ -2034,6 +2036,11 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
   };
 
   const hasFloatingSelectionBar = (selectedDeliveryIds?.size ?? 0) > 0;
+  const scrollTopFabBottomClass = hasFloatingSelectionBar
+    ? 'bottom-[calc(env(safe-area-inset-bottom,0px)+5.25rem)]'
+    : mapFabVisible
+      ? 'bottom-[calc(env(safe-area-inset-bottom,0px)+5rem)] md:bottom-[calc(env(safe-area-inset-bottom,0px)+5.25rem)]'
+      : 'bottom-4 md:bottom-5';
 
   const scrollTopFab = showScrollTopFab ? (
     <button
@@ -2041,10 +2048,8 @@ export const DeliveriesVercelList: React.FC<DeliveriesVercelListProps> = ({
       data-haptic="medium"
       onClick={handleScrollToTop}
       className={joinClassNames(
-        'absolute left-4 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full border border-app-border bg-app-surface/95 text-app-text shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur transition-[bottom,transform,background-color,border-color] hover:-translate-y-0.5 hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 md:left-5',
-        hasFloatingSelectionBar
-          ? 'bottom-[calc(env(safe-area-inset-bottom,0px)+5.25rem)]'
-          : 'bottom-4 md:bottom-5',
+        'absolute left-4 z-50 inline-flex h-11 w-11 items-center justify-center rounded-full border border-app-border bg-app-surface/95 text-app-text shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur transition-[bottom,transform,background-color,border-color] hover:-translate-y-0.5 hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 md:left-5',
+        scrollTopFabBottomClass,
       )}
       aria-label="גלול למעלה"
       title="גלול למעלה"

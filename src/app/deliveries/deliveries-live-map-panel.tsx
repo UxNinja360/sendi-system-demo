@@ -72,7 +72,7 @@ export const DeliveriesLiveMapPanel: React.FC<DeliveriesLiveMapPanelProps> = ({
   onOpenDelivery,
   selectedStatusFilters,
 }) => {
-  const { state, dispatch } = useDelivery();
+  const { state, courierPositions, dispatch } = useDelivery();
   const navigate = useNavigate();
   const [sendiPlusTermsAccepted, setSendiPlusTermsAccepted] = useState(readStoredSendiPlusTermsAccepted);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -173,7 +173,7 @@ export const DeliveriesLiveMapPanel: React.FC<DeliveriesLiveMapPanelProps> = ({
     couriers
       .filter((courier) => courier.status !== 'offline')
       .map((courier, index) => {
-        const position = getInitialCourierPosition(courier, deliveries, index);
+        const position = courierPositions.get(courier.id) ?? getInitialCourierPosition(courier, deliveries, index);
 
         return {
           id: courier.id,
@@ -185,7 +185,7 @@ export const DeliveriesLiveMapPanel: React.FC<DeliveriesLiveMapPanelProps> = ({
           employmentType: courier.employmentType,
         };
       })
-  ), [couriers, deliveries]);
+  ), [courierPositions, couriers, deliveries]);
 
   const visibleOrders = useMemo(
     () => (

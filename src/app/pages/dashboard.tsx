@@ -8,6 +8,7 @@ import {
   Clock3,
   Loader2,
   MapPin,
+  Package,
   PackageCheck,
   PackageOpen,
   PhoneCall,
@@ -16,7 +17,6 @@ import {
   Sparkles,
   Store,
   Timer,
-  Truck,
   UserCheck,
   UserPlus,
   XCircle,
@@ -151,7 +151,7 @@ const STATUS_META: Array<{
     id: 'delivering',
     label: 'במסירה',
     hint: 'שליח בדרך ללקוח',
-    icon: Truck,
+    icon: Package,
     accentClassName: 'text-green-400',
     barClassName: 'bg-green-500',
   },
@@ -849,11 +849,11 @@ const SendiPlusCard: React.FC<{
         </div>
       </div>
 
-      <div className="border-t border-app-border px-3 py-2 sm:px-4 dark:border-[#252525]" dir="rtl">
+      <div className="border-t border-app-border px-3 py-2.5 sm:px-4 sm:py-3 dark:border-[#252525]" dir="rtl">
         <div
           data-pull-refresh-ignore="true"
           data-sidebar-swipe-ignore="true"
-          className="flex min-w-0 items-center justify-between gap-3"
+          className="flex min-w-0 items-center justify-between gap-4"
         >
           <span className={`sendi-plus-terms-text min-w-0 truncate text-xs font-normal ${termsTextClassName}`}>
             {termsSummaryText}

@@ -1,4 +1,5 @@
 ﻿import React, { useReducer, useEffect, useCallback, useRef } from 'react';
+import { useState } from 'react';
 import {
   ActivityLogEntry,
   DeliveryState,
@@ -779,6 +780,22 @@ const isRestaurantAvailableForDeliveryIntake = (
   isRestaurantEligibleForDeliveryIntake(restaurant, sendiPlusRadiusKm) &&
   isRestaurantInsideSendiPlusServiceArea(restaurant, sendiPlusZones);
 
+const arePositionMapsEqual = (
+  left: Map<string, MapPosition>,
+  right: Map<string, MapPosition>,
+) => {
+  if (left.size !== right.size) return false;
+
+  for (const [key, value] of left.entries()) {
+    const match = right.get(key);
+    if (!match || match.lat !== value.lat || match.lng !== value.lng) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
 const hasAvailableDeliveryIntakeRestaurant = (
   restaurants: Restaurant[],
   sendiPlusRadiusKm = readStoredSendiPlusRadius(),
@@ -1281,7 +1298,14 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const deliveryCounter = useRef(0);
   const courierPositionsRef = useRef<Map<string, MapPosition>>(new Map());
   const courierPositionTimestampsRef = useRef<Map<string, number>>(new Map());
+  const [courierPositionsSnapshot, setCourierPositionsSnapshot] = useState<Map<string, MapPosition>>(new Map());
   const simulationOpenedAtRef = useRef<number | null>(null);
+
+  const publishCourierPositions = useCallback((positions: Map<string, MapPosition>) => {
+    setCourierPositionsSnapshot((current) => (
+      arePositionMapsEqual(current, positions) ? current : new Map(positions)
+    ));
+  }, []);
 
   // Reuse the seeded restaurant id when the name matches.
   const getRestaurantId = (restaurantName: string): string => {
@@ -1336,7 +1360,8 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       courierPositionsRef.current = new Map();
       courierPositionTimestampsRef.current = new Map();
     }
-  }, []);
+    publishCourierPositions(courierPositionsRef.current);
+  }, [publishCourierPositions]);
 
   useEffect(() => {
     let changed = false;
@@ -1368,7 +1393,8 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       LIVE_MANAGER_COURIER_POSITIONS_TS_STORAGE_KEY,
       JSON.stringify(Object.fromEntries(courierPositionTimestampsRef.current.entries()))
     );
-  }, [state.couriers]);
+    publishCourierPositions(courierPositionsRef.current);
+  }, [publishCourierPositions, state.couriers]);
 
   // Real delivery addresses with GPS coordinates around central Israel.
 
@@ -2056,6 +2082,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (shouldPersistPositions) {
         courierPositionsRef.current = draftPositions;
         courierPositionTimestampsRef.current = draftTimestamps;
+        publishCourierPositions(draftPositions);
         persistCourierPositions();
       }
     };
@@ -2094,7 +2121,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         document.removeEventListener('visibilitychange', handleVisibilityChange);
       }
     };
-  }, []);
+  }, [publishCourierPositions]);
 
   const toggleSystem = () => {
     dispatch({ type: 'TOGGLE_SYSTEM' });
@@ -2179,6 +2206,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     <DeliveryContext.Provider
       value={{
         state,
+        courierPositions: courierPositionsSnapshot,
         dispatch,
         toggleSystem,
         assignCourier,
