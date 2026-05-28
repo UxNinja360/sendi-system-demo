@@ -25,6 +25,7 @@ import {
   Sunset,
   SlidersHorizontal,
   TrendingUp,
+  Trash2,
   type LucideIcon,
   Users,
   Volume2,
@@ -56,6 +57,11 @@ import {
   type DeliveryPushStatus,
 } from '../notifications/web-push';
 import { playHaptic } from '../utils/haptics';
+import { clearAuthSession, readAuthSession } from '../auth/auth-session';
+import {
+  deleteCurrentWorkspaceAccount,
+  TLV_RUNNERS_WORKSPACE_ID,
+} from '../workspaces/workspace-registry';
 
 const TEXT = {
   title: '\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea',
@@ -145,11 +151,21 @@ const TEXT = {
   playHaptic: 'רטט',
   appearance: 'תצוגה',
   appearanceDescription: 'העדפות תצוגה שמשפיעות על סביבת העבודה האישית.',
+  account: 'חשבון וחברה',
+  accountDescription: 'פעולות שמשפיעות על החשבון הנוכחי וחברת המשלוחים המחוברת אליו.',
   advanced: '\u05de\u05ea\u05e7\u05d3\u05dd',
   advancedDescription: '\u05e4\u05e2\u05d5\u05dc\u05d5\u05ea \u05de\u05e2\u05e8\u05db\u05ea \u05e8\u05d2\u05d9\u05e9\u05d5\u05ea. \u05de\u05d5\u05de\u05dc\u05e5 \u05dc\u05d2\u05e2\u05ea \u05d1\u05d4\u05df \u05e8\u05e7 \u05db\u05e9\u05d1\u05d0\u05de\u05ea \u05e6\u05e8\u05d9\u05da.',
   logout: '\u05d4\u05ea\u05e0\u05ea\u05e7\u05d5\u05ea',
   logoutHint: '\u05d9\u05e6\u05d9\u05d0\u05d4 \u05de\u05d4\u05d7\u05e9\u05d1\u05d5\u05df \u05d5\u05d7\u05d6\u05e8\u05d4 \u05dc\u05de\u05e1\u05da \u05d4\u05d4\u05ea\u05d7\u05d1\u05e8\u05d5\u05ea.',
   logoutShort: '\u05d4\u05ea\u05e0\u05ea\u05e7',
+  deleteAccount: 'מחיקת חשבון',
+  deleteAccountHint: 'מחיקת חברת המשלוחים והמספר שמחובר אליה. אחרי המחיקה אפשר להשתמש במספר שוב.',
+  deleteAccountShort: 'מחק חשבון',
+  deleteAccountDemoUnavailable: 'לא ניתן למחוק את חשבון הדמו הקבוע.',
+  deleteAccountConfirm: 'למחוק את החשבון הזה?',
+  deleteAccountConfirmBody: 'הפעולה תמחק את חברת המשלוחים, תשחרר את מספר הטלפון להרשמה חדשה ותוציא אותך מהמערכת. אי אפשר לשחזר את החשבון מתוך הדמו.',
+  deleteAccountCancel: 'השאר חשבון',
+  deleteAccountConfirmAction: 'מחק חשבון',
   reset: '\u05d0\u05d9\u05e4\u05d5\u05e1 \u05de\u05e2\u05e8\u05db\u05ea',
   resetHint: '\u05de\u05d7\u05d6\u05d9\u05e8 \u05d0\u05ea \u05d4\u05de\u05e2\u05e8\u05db\u05ea \u05dc\u05de\u05e6\u05d1 \u05d4\u05d4\u05ea\u05d7\u05dc\u05ea\u05d9.',
   resetShort: '\u05d0\u05e4\u05e1',
@@ -187,7 +203,7 @@ const SettingRow: React.FC<{
   >
     <div className="flex min-w-0 items-center gap-2.5">
       <div
-        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md sm:h-8 sm:w-8 ${
+        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-none sm:h-8 sm:w-8 ${
           danger
             ? 'bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400'
             : 'bg-[#f5f5f5] text-app-brand dark:bg-app-surface dark:text-app-brand'
@@ -299,7 +315,7 @@ const SoundPicker: React.FC<{
         type="button"
         data-haptic="selection"
         onClick={() => setIsOpen((value) => !value)}
-        className="inline-flex h-10 w-full items-center justify-between gap-2 rounded-xl border border-app-border bg-[#f5f5f5] pl-3 pr-3 text-right text-xs font-semibold text-[#0d0d12] outline-none transition-colors hover:bg-[#ececec] focus:border-app-brand focus:bg-white focus:ring-2 focus:ring-app-brand/20 dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised dark:focus:bg-app-surface"
+        className="inline-flex h-10 w-full items-center justify-between gap-2 rounded-none border border-app-border bg-[#f5f5f5] pl-3 pr-3 text-right text-xs font-semibold text-[#0d0d12] outline-none transition-colors hover:bg-[#ececec] focus:border-app-brand focus:bg-white focus:ring-2 focus:ring-app-brand/20 dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised dark:focus:bg-app-surface"
         aria-label="בחירת צליל למשלוח חדש"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
@@ -327,7 +343,7 @@ const SoundPicker: React.FC<{
             role="listbox"
             aria-label="בחירת צליל למשלוח חדש"
             style={panelStyle}
-            className={`absolute overflow-hidden rounded-2xl border border-app-border bg-white text-right shadow-2xl dark:border-app-border dark:bg-app-surface ${
+            className={`absolute overflow-hidden rounded-none border border-app-border bg-white text-right shadow-2xl dark:border-app-border dark:bg-app-surface ${
               isSheetMode
                 ? 'inset-x-3 bottom-3 max-h-[min(70vh,430px)]'
                 : ''
@@ -351,7 +367,7 @@ const SoundPicker: React.FC<{
                     data-haptic={isSelected ? 'selection' : 'light'}
                     aria-selected={isSelected}
                     onClick={() => handleSelect(sound.id)}
-                    className={`mb-1 flex h-11 w-full items-center justify-between gap-3 rounded-xl px-3 text-right text-sm transition-colors ${
+                    className={`mb-1 flex h-11 w-full items-center justify-between gap-3 rounded-none px-3 text-right text-sm transition-colors ${
                       isSelected
                         ? 'bg-app-brand-solid text-app-background'
                         : 'text-[#0d0d12] hover:bg-[#f5f5f5] dark:text-app-text dark:hover:bg-app-surface-raised'
@@ -432,7 +448,7 @@ const ThemeModePicker: React.FC<{
   onChange: (mode: ThemeMode) => void;
 }> = ({ value, onChange }) => (
   <div
-    className="grid w-[232px] max-w-[46vw] grid-cols-3 gap-1 rounded-lg border border-app-border bg-app-interactive p-1 sm:w-[282px] sm:max-w-[62vw]"
+    className="grid w-[232px] max-w-[46vw] grid-cols-3 gap-1 rounded-none border border-app-border bg-app-interactive p-1 sm:w-[282px] sm:max-w-[62vw]"
     dir="rtl"
     role="group"
     aria-label={TEXT.themeMode}
@@ -446,7 +462,7 @@ const ThemeModePicker: React.FC<{
           data-haptic="selection"
           aria-pressed={isSelected}
           onClick={() => onChange(id)}
-          className={`inline-flex h-8 min-w-0 items-center justify-center gap-1 rounded-md px-1.5 text-[11px] font-semibold transition-colors sm:h-9 sm:gap-1.5 sm:px-2 sm:text-xs ${
+          className={`inline-flex h-8 min-w-0 items-center justify-center gap-1 rounded-none px-1.5 text-[11px] font-semibold transition-colors sm:h-9 sm:gap-1.5 sm:px-2 sm:text-xs ${
             isSelected
               ? 'bg-app-brand-solid text-app-background shadow-sm'
               : 'text-app-text-secondary hover:bg-app-interactive-hover hover:text-app-text'
@@ -468,7 +484,7 @@ const SectionCard: React.FC<{
   danger?: boolean;
 }> = ({ icon, title, description, children, danger = false }) => (
   <section
-    className={`overflow-hidden rounded-lg border ${
+    className={`overflow-hidden rounded-none border ${
       danger
         ? 'border-red-200 bg-red-50/50 dark:border-red-500/20 dark:bg-red-500/5'
         : 'border-[#e5e5e5] bg-white dark:border-app-border dark:bg-app-surface'
@@ -520,7 +536,7 @@ const SettingsLinkRow: React.FC<{
     className="grid w-full grid-cols-[1fr_auto] items-center gap-3 border-b border-[#f1f1f1] px-3 py-3 text-right transition-colors last:border-b-0 hover:bg-[#f7f7f7] dark:border-app-border dark:hover:bg-app-surface-raised sm:px-4"
   >
     <div className="flex min-w-0 items-start gap-3">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#f5f5f5] text-app-brand dark:bg-app-surface dark:text-app-brand sm:h-9 sm:w-9">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-none bg-[#f5f5f5] text-app-brand dark:bg-app-surface dark:text-app-brand sm:h-9 sm:w-9">
         {icon}
       </div>
       <div className="min-w-0">
@@ -529,7 +545,7 @@ const SettingsLinkRow: React.FC<{
             {title}
           </span>
           {tag ? (
-            <span className="shrink-0 rounded bg-app-brand/10 px-1.5 py-0.5 text-[10px] font-bold text-app-brand">
+            <span className="shrink-0 rounded-none bg-app-brand/10 px-1.5 py-0.5 text-[10px] font-bold text-app-brand">
               {tag}
             </span>
           ) : null}
@@ -555,7 +571,7 @@ const SettingsActionCard: React.FC<{
     type="button"
     data-haptic="selection"
     onClick={onClick}
-    className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-[#e5e5e5] bg-white px-3 py-2.5 text-right transition-colors hover:bg-[#f7f7f7] dark:border-app-border dark:bg-app-surface dark:hover:bg-app-surface-raised sm:px-4"
+    className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-none border border-[#e5e5e5] bg-white px-3 py-2.5 text-right transition-colors hover:bg-[#f7f7f7] dark:border-app-border dark:bg-app-surface dark:hover:bg-app-surface-raised sm:px-4"
   >
     <div className="flex min-w-0 items-center gap-2.5">
       <div className="shrink-0">{icon}</div>
@@ -587,6 +603,13 @@ const SettingsLinkGroup: React.FC<{
     <div>{children}</div>
   </div>
 );
+
+const formatPhone = (value: string) => {
+  const normalized = value.replace(/\D/g, '');
+  if (!normalized) return '';
+
+  return normalized.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+};
 
 type NotificationPermissionState = NotificationPermission | 'unsupported';
 
@@ -620,12 +643,12 @@ export const SettingsPagesPage: React.FC = () => {
     <div className="flex h-full flex-col overflow-hidden bg-app-background" dir="rtl">
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-2 px-2.5 py-3 sm:px-3 md:px-5 md:py-5">
-          <section className="rounded-lg border border-[#e5e5e5] bg-white p-3 dark:border-app-border dark:bg-app-surface sm:p-4">
+          <section className="rounded-none border border-[#e5e5e5] bg-white p-3 dark:border-app-border dark:bg-app-surface sm:p-4">
             <button
               type="button"
               data-haptic="selection"
               onClick={() => navigate('/settings')}
-              className="mb-3 inline-flex h-9 items-center gap-2 rounded-lg bg-[#f5f5f5] px-3 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface-raised dark:text-app-text dark:hover:bg-app-interactive-hover"
+              className="mb-3 inline-flex h-9 items-center gap-2 rounded-none bg-[#f5f5f5] px-3 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface-raised dark:text-app-text dark:hover:bg-app-interactive-hover"
             >
               <ChevronLeft className="h-4 w-4 rotate-180" />
               <span>חזרה להגדרות</span>
@@ -681,6 +704,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
   const { themeMode, setThemeMode } = useTheme();
   const { state, dispatch, resetSystem, toggleSystem } = useDelivery();
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [isDeleteAccountDialogOpen, setIsDeleteAccountDialogOpen] = useState(false);
   const [alertPreferences, setAlertPreferencesState] = useState<AlertPreferences>(() =>
     getAlertPreferences(),
   );
@@ -688,6 +712,9 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
     useState<NotificationPermissionState>(() => getNotificationPermissionState());
   const [deliveryPushStatus, setDeliveryPushStatus] = useState<DeliveryPushStatus | null>(null);
   const [isDeliveryPushBusy, setIsDeliveryPushBusy] = useState(false);
+  const currentSession = readAuthSession();
+  const isDemoAccount = currentSession?.workspace?.id === TLV_RUNNERS_WORKSPACE_ID;
+  const currentPhone = currentSession?.user.phone ?? state.workspacePhone ?? '';
 
   useEffect(() => {
     const handlePreferencesChange = () => {
@@ -710,13 +737,30 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
       return;
     }
 
-    localStorage.removeItem('isAuthenticated');
+    clearAuthSession();
     navigate('/login', { replace: true });
   };
 
   const handleResetSystem = () => {
     setIsResetDialogOpen(false);
     resetSystem();
+  };
+
+  const handleDeleteAccount = () => {
+    const result = deleteCurrentWorkspaceAccount();
+    setIsDeleteAccountDialogOpen(false);
+
+    if (!result.ok) {
+      toast.error(
+        result.reason === 'demo'
+          ? TEXT.deleteAccountDemoUnavailable
+          : 'לא הצלחנו למחוק את החשבון הנוכחי',
+      );
+      return;
+    }
+
+    toast.success('החשבון נמחק והמספר שוחרר להרשמה חדשה');
+    navigate('/login', { replace: true });
   };
 
   const updateAlertPreference = <Key extends keyof AlertPreferences>(
@@ -815,66 +859,77 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-app-background" dir="rtl">
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto flex w-full max-w-5xl flex-col gap-2 px-2.5 py-3 sm:px-3 md:px-5 md:py-5">
-          <SectionCard
-            icon={<Power className="h-4 w-4 text-app-brand" />}
-            title={TEXT.system}
-            description={TEXT.systemDescription}
-          >
-            <SettingRow
-              icon={<Power className="h-4 w-4" />}
-              title={TEXT.systemOpen}
-              hint={TEXT.systemOpenHint}
-              control={
-                <Toggle
-                  checked={state.isSystemOpen}
-                  onChange={toggleSystem}
-                  haptic={state.isSystemOpen ? 'warning' : 'success'}
-                  ariaLabel={TEXT.systemOpen}
+        <div className="mx-auto w-full max-w-5xl px-2.5 py-3 sm:px-3 md:px-5 md:py-5">
+          <header className="mb-3 border-b border-[#e5e5e5] pb-3 dark:border-app-border">
+            <h1 className="text-xl font-black text-[#0d0d12] dark:text-app-text">
+              {TEXT.title}
+            </h1>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-[#666d80] dark:text-app-text-secondary">
+              {TEXT.subtitle}
+            </p>
+          </header>
+
+          <div className="flex flex-col gap-3">
+            <main className="flex min-w-0 flex-col gap-3">
+              <SectionCard
+                icon={<Power className="h-4 w-4 text-app-brand" />}
+                title={TEXT.system}
+                description={TEXT.systemDescription}
+              >
+                <SettingRow
+                  icon={<Power className="h-4 w-4" />}
+                  title={TEXT.systemOpen}
+                  hint={TEXT.systemOpenHint}
+                  control={
+                    <Toggle
+                      checked={state.isSystemOpen}
+                      onChange={toggleSystem}
+                      haptic={state.isSystemOpen ? 'warning' : 'success'}
+                      ariaLabel={TEXT.systemOpen}
+                    />
+                  }
                 />
-              }
-            />
-            <SettingRow
-              icon={<Bot className="h-4 w-4" />}
-              title={TEXT.autoAssign}
-              hint={TEXT.autoAssignHint}
-              control={
-                <Toggle
-                  checked={state.autoAssignEnabled}
-                  onChange={() => dispatch({ type: 'TOGGLE_AUTO_ASSIGN' })}
-                  ariaLabel={TEXT.autoAssign}
+                <SettingRow
+                  icon={<Bot className="h-4 w-4" />}
+                  title={TEXT.autoAssign}
+                  hint={TEXT.autoAssignHint}
+                  control={
+                    <Toggle
+                      checked={state.autoAssignEnabled}
+                      onChange={() => dispatch({ type: 'TOGGLE_AUTO_ASSIGN' })}
+                      ariaLabel={TEXT.autoAssign}
+                    />
+                  }
                 />
-              }
-            />
-            <SettingRow
-              icon={<Clock3 className="h-4 w-4" />}
-              title={TEXT.timeMultiplier}
-              hint={`${TEXT.timeHintPrefix}${state.timeMultiplier.toLocaleString('he-IL')}`}
-              control={
-                <div className="relative w-[132px]">
-                  <select
-                    value={state.timeMultiplier}
-                    data-haptic="selection"
-                    onChange={(event) =>
-                      dispatch({
-                        type: 'SET_TIME_MULTIPLIER',
-                        payload: Number(event.currentTarget.value),
-                      })
-                    }
-                    className="h-10 w-full appearance-none rounded-xl border border-app-border bg-[#f5f5f5] pl-8 pr-3 text-right text-xs font-semibold text-[#0d0d12] outline-none transition-colors hover:bg-[#ececec] focus:border-app-brand focus:bg-white focus:ring-2 focus:ring-app-brand/20 dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised dark:focus:bg-app-surface"
-                    aria-label={TEXT.timeMultiplier}
-                  >
-                    {[0.5, 1, 2, 4, 8].map((speed) => (
-                      <option key={speed} value={speed}>
-                        x{speed.toLocaleString('he-IL')}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#666d80] dark:text-app-text-secondary" />
-                </div>
-              }
-            />
-          </SectionCard>
+                <SettingRow
+                  icon={<Clock3 className="h-4 w-4" />}
+                  title={TEXT.timeMultiplier}
+                  hint={`${TEXT.timeHintPrefix}${state.timeMultiplier.toLocaleString('he-IL')}`}
+                  control={
+                    <div className="relative w-[132px]">
+                      <select
+                        value={state.timeMultiplier}
+                        data-haptic="selection"
+                        onChange={(event) =>
+                          dispatch({
+                            type: 'SET_TIME_MULTIPLIER',
+                            payload: Number(event.currentTarget.value),
+                          })
+                        }
+                        className="h-10 w-full appearance-none rounded-none border border-app-border bg-[#f5f5f5] pl-8 pr-3 text-right text-xs font-semibold text-[#0d0d12] outline-none transition-colors hover:bg-[#ececec] focus:border-app-brand focus:bg-white focus:ring-2 focus:ring-app-brand/20 dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised dark:focus:bg-app-surface"
+                        aria-label={TEXT.timeMultiplier}
+                      >
+                        {[0.5, 1, 2, 4, 8].map((speed) => (
+                          <option key={speed} value={speed}>
+                            x{speed.toLocaleString('he-IL')}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#666d80] dark:text-app-text-secondary" />
+                    </div>
+                  }
+                />
+              </SectionCard>
 
           <SectionCard
             icon={<Palette className="h-4 w-4 text-app-brand" />}
@@ -936,7 +991,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
                   type="button"
                   data-haptic="light"
                   onClick={handleTestSound}
-                  className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#f5f5f5] px-3 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
+                  className="inline-flex h-9 items-center gap-2 rounded-none bg-[#f5f5f5] px-3 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
                 >
                   <Volume2 className="h-4 w-4" />
                   <span>{TEXT.playSound}</span>
@@ -988,7 +1043,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
                   type="button"
                   data-haptic="success"
                   onClick={handleTestHaptic}
-                  className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#f5f5f5] px-3 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
+                  className="inline-flex h-9 items-center gap-2 rounded-none bg-[#f5f5f5] px-3 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
                 >
                   <Zap className="h-4 w-4" />
                   <span>{TEXT.playHaptic}</span>
@@ -1039,13 +1094,13 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
                     type="button"
                     data-haptic="selection"
                     onClick={handleRequestNotificationPermission}
-                    className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#f5f5f5] px-3 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
+                    className="inline-flex h-9 items-center gap-2 rounded-none bg-[#f5f5f5] px-3 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
                   >
                     <BellRing className="h-4 w-4" />
                     <span>{TEXT.enableNotifications}</span>
                   </button>
                 ) : (
-                  <span className="rounded-lg bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#666d80] dark:bg-app-surface dark:text-app-text-secondary">
+                  <span className="rounded-none bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#666d80] dark:bg-app-surface dark:text-app-text-secondary">
                     {getNotificationPermissionLabel(notificationPermission)}
                   </span>
                 )
@@ -1057,7 +1112,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
               hint={TEXT.realPushHint}
               control={
                 <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-                  <span className="rounded-lg bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#666d80] dark:bg-app-surface dark:text-app-text-secondary">
+                  <span className="rounded-none bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#666d80] dark:bg-app-surface dark:text-app-text-secondary">
                     {getDeliveryPushStatusLabel(deliveryPushStatus)}
                   </span>
                   <button
@@ -1065,7 +1120,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
                     data-haptic="selection"
                     onClick={handleEnableDeliveryPush}
                     disabled={isDeliveryPushBusy}
-                    className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#f5f5f5] px-3 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] disabled:cursor-wait disabled:opacity-60 dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
+                    className="inline-flex h-9 items-center gap-2 rounded-none bg-[#f5f5f5] px-3 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] disabled:cursor-wait disabled:opacity-60 dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
                   >
                     <BellRing className="h-4 w-4" />
                     <span>{TEXT.enableRealPush}</span>
@@ -1075,7 +1130,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
                     data-haptic="success"
                     onClick={handleTestDeliveryPush}
                     disabled={isDeliveryPushBusy || deliveryPushStatus !== 'subscribed'}
-                    className="inline-flex h-9 items-center rounded-lg bg-[#f5f5f5] px-3 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
+                    className="inline-flex h-9 items-center rounded-none bg-[#f5f5f5] px-3 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
                   >
                     <span>{TEXT.testRealPush}</span>
                   </button>
@@ -1084,54 +1139,138 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
             />
           </SectionCard>
 
-          <SettingsActionCard
-            icon={<SlidersHorizontal className="h-4 w-4 text-app-brand" />}
-            title={TEXT.pagesHub}
-            description={TEXT.pagesHubHint}
-            onClick={() => navigate('/settings/pages')}
-          />
+            </main>
 
-          <SectionCard
-            icon={<LogOut className="h-4 w-4 text-app-brand" />}
-            title={TEXT.advanced}
-            description={TEXT.advancedDescription}
-          >
-            <SettingRow
-              icon={<LogOut className="h-4 w-4" />}
-              title={TEXT.logout}
-              hint={TEXT.logoutHint}
-              control={
-                <button
-                  type="button"
-                  data-haptic="selection"
-                  onClick={handleLogout}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>{TEXT.logoutShort}</span>
-                </button>
-              }
-            />
-            <SettingRow
-              icon={<AlertTriangle className="h-4 w-4" />}
-              title={TEXT.reset}
-              hint={TEXT.resetHint}
-              danger
-              control={
-                <button
-                  type="button"
-                  data-haptic="warning"
-                  onClick={() => setIsResetDialogOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-red-700"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                  <span>{TEXT.resetShort}</span>
-                </button>
-              }
-            />
-          </SectionCard>
+            <aside className="flex min-w-0 flex-col gap-3">
+              <SectionCard
+                icon={<SlidersHorizontal className="h-4 w-4 text-app-brand" />}
+                title={TEXT.pages}
+                description={TEXT.pagesDescription}
+              >
+                <SettingsLinkRow
+                  icon={<SlidersHorizontal className="h-4 w-4" />}
+                  title={TEXT.pagesHub}
+                  hint={TEXT.pagesHubHint}
+                  onClick={() => navigate('/settings/pages')}
+                />
+              </SectionCard>
+
+              <SectionCard
+                icon={<Users className="h-4 w-4 text-app-brand" />}
+                title={TEXT.account}
+                description={TEXT.accountDescription}
+              >
+                <SettingRow
+                  icon={<LogOut className="h-4 w-4" />}
+                  title={TEXT.logout}
+                  hint={TEXT.logoutHint}
+                  control={
+                    <button
+                      type="button"
+                      data-haptic="selection"
+                      onClick={handleLogout}
+                      className="inline-flex items-center gap-2 rounded-none bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span>{TEXT.logoutShort}</span>
+                    </button>
+                  }
+                />
+                <SettingRow
+                  icon={<Trash2 className="h-4 w-4" />}
+                  title={TEXT.deleteAccount}
+                  hint={isDemoAccount ? TEXT.deleteAccountDemoUnavailable : TEXT.deleteAccountHint}
+                  danger
+                  control={
+                    <button
+                      type="button"
+                      data-haptic="warning"
+                      disabled={isDemoAccount}
+                      onClick={() => setIsDeleteAccountDialogOpen(true)}
+                      className="inline-flex items-center gap-2 rounded-none bg-red-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-300 disabled:text-white/80 dark:disabled:bg-red-500/30"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span>{TEXT.deleteAccountShort}</span>
+                    </button>
+                  }
+                />
+              </SectionCard>
+
+              <SectionCard
+                icon={<AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-300" />}
+                title={TEXT.advanced}
+                description={TEXT.advancedDescription}
+                danger
+              >
+                <SettingRow
+                  icon={<AlertTriangle className="h-4 w-4" />}
+                  title={TEXT.reset}
+                  hint={TEXT.resetHint}
+                  danger
+                  control={
+                    <button
+                      type="button"
+                      data-haptic="warning"
+                      onClick={() => setIsResetDialogOpen(true)}
+                      className="inline-flex items-center gap-2 rounded-none bg-red-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-red-700"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                      <span>{TEXT.resetShort}</span>
+                    </button>
+                  }
+                />
+              </SectionCard>
+            </aside>
+          </div>
         </div>
       </div>
+
+      {isDeleteAccountDialogOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 px-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-account-title"
+            className="w-full max-w-md rounded-none border border-red-200 bg-white p-5 shadow-xl dark:border-red-500/30 dark:bg-app-surface"
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-none bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-300">
+                <Trash2 className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <h2 id="delete-account-title" className="text-base font-bold text-[#0d0d12] dark:text-app-text">
+                  {TEXT.deleteAccountConfirm}
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-[#666d80] dark:text-app-text-secondary">
+                  {TEXT.deleteAccountConfirmBody}
+                </p>
+                {currentPhone ? (
+                  <div className="mt-3 border border-red-200 bg-red-50 px-3 py-2 text-sm font-bold text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200" dir="ltr">
+                    {formatPhone(currentPhone)}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+            <div className="mt-5 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsDeleteAccountDialogOpen(false)}
+                className="rounded-none bg-[#f5f5f5] px-4 py-2 text-sm font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-[#262626] dark:text-app-text dark:hover:bg-[#333]"
+              >
+                {TEXT.deleteAccountCancel}
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                className="inline-flex items-center gap-2 rounded-none bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span>{TEXT.deleteAccountConfirmAction}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {isResetDialogOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 px-4">
@@ -1139,10 +1278,10 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
             role="dialog"
             aria-modal="true"
             aria-labelledby="reset-system-title"
-            className="w-full max-w-md rounded-2xl border border-red-200 bg-white p-5 shadow-xl dark:border-red-500/30 dark:bg-app-surface"
+            className="w-full max-w-md rounded-none border border-red-200 bg-white p-5 shadow-xl dark:border-red-500/30 dark:bg-app-surface"
           >
             <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-300">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-none bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-300">
                 <AlertTriangle className="h-5 w-5" />
               </div>
               <div className="min-w-0">
@@ -1158,14 +1297,14 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
               <button
                 type="button"
                 onClick={() => setIsResetDialogOpen(false)}
-                className="rounded-xl bg-[#f5f5f5] px-4 py-2 text-sm font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-[#262626] dark:text-app-text dark:hover:bg-[#333]"
+                className="rounded-none bg-[#f5f5f5] px-4 py-2 text-sm font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-[#262626] dark:text-app-text dark:hover:bg-[#333]"
               >
                 {TEXT.resetCancel}
               </button>
               <button
                 type="button"
                 onClick={handleResetSystem}
-                className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700"
+                className="inline-flex items-center gap-2 rounded-none bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700"
               >
                 <RotateCcw className="h-4 w-4" />
                 <span>{TEXT.resetConfirmAction}</span>

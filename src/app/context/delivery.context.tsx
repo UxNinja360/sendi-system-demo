@@ -30,9 +30,11 @@ import {
   activateSendiPlusRestaurants,
   createInitialDeliveryState,
   initialState,
+  mergeDefaultSendiPlusRestaurants,
   mergeSeededRestaurants,
   normalizeCouriers,
   normalizeDeliveryPreparationTime,
+  normalizeRestaurants,
 } from './delivery-bootstrap';
 import { sanitizeLoadedDeliveryState } from './delivery-state-sanitizer';
 import {
@@ -57,6 +59,10 @@ import {
   loadStoredDeliveryServiceAreas,
   type StoredDeliveryZone,
 } from '../utils/delivery-zones';
+import {
+  TLV_RUNNERS_WORKSPACE_ID,
+  writeWorkspaceState,
+} from '../workspaces/workspace-registry';
 
 const STORAGE_KEY = DELIVERY_STORAGE_KEYS.state;
 const STATE_EPOCH_KEY = DELIVERY_STORAGE_KEYS.stateEpoch;
@@ -930,16 +936,22 @@ const loadInitialState = (baseState: DeliveryState): DeliveryState => {
 
     const parsed = reviveDates(JSON.parse(raw)) as Partial<DeliveryState>;
 
-    const restaurants = mergeSeededRestaurants(
-      (parsed.restaurants as Restaurant[] | undefined) ?? baseState.restaurants
-    );
+    const isWorkspaceState =
+      parsed.dataMode === 'workspace' ||
+      parsed.workspaceId === TLV_RUNNERS_WORKSPACE_ID ||
+      (!parsed.dataMode && Boolean(parsed.workspaceId));
+    const restaurants = isWorkspaceState
+      ? mergeDefaultSendiPlusRestaurants((parsed.restaurants as Restaurant[] | undefined) ?? [])
+      : mergeSeededRestaurants(
+          (parsed.restaurants as Restaurant[] | undefined) ?? baseState.restaurants
+        );
     const sendiGoDefaultsAlreadyApplied = window.localStorage.getItem(
       DELIVERY_STORAGE_KEYS.sendiGoDefaultActiveMigration
     );
-    const migratedRestaurants = sendiGoDefaultsAlreadyApplied
+    const migratedRestaurants = isWorkspaceState || sendiGoDefaultsAlreadyApplied
       ? restaurants
       : activateSendiPlusRestaurants(restaurants);
-    if (!sendiGoDefaultsAlreadyApplied) {
+    if (!isWorkspaceState && !sendiGoDefaultsAlreadyApplied) {
       window.localStorage.setItem(DELIVERY_STORAGE_KEYS.sendiGoDefaultActiveMigration, '1');
     }
     const couriers = normalizeCouriers(
@@ -1135,6 +1147,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       storageEpochRef.current = currentEpoch;
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      writeWorkspaceState(state, window.localStorage);
     } catch (error) {
       console.warn('Failed to persist delivery state', error);
     }

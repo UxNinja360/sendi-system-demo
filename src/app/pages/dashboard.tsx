@@ -7,21 +7,25 @@ import {
   ChevronDown,
   Clock3,
   Loader2,
+  MapPin,
   PackageCheck,
   PackageOpen,
+  PhoneCall,
   Power,
   PowerOff,
   Plus,
+  Sparkles,
   Store,
   Timer,
   UserCheck,
+  UserPlus,
   XCircle,
 } from 'lucide-react';
 import { AppTooltip } from '../components/common/app-tooltip';
 import { Toggle } from '../components/common/toggle';
 import { useDelivery } from '../context/delivery-context-value';
 import { useDeliveriesMapSplit } from '../deliveries/use-deliveries-map-split';
-import type { Delivery, DeliveryStatus } from '../types/delivery.types';
+import type { Courier, Delivery, DeliveryStatus } from '../types/delivery.types';
 import { canCourierAcceptDelivery } from '../utils/courier-assignment';
 import { playHaptic } from '../utils/haptics';
 import {
@@ -69,6 +73,8 @@ const formatRadiusKm = formatSendiPlusRadiusKm;
 const SENDI_PLUS_TERMS_TEXT =
   'מתחייב בזמני משלוח של 60 דקות מסירה';
 const SENDI_PLUS_DETAILS_OPEN_STORAGE_KEY = 'dashboard-sendi-plus-details-open';
+const WORKSPACE_START_DISMISSED_STORAGE_PREFIX = 'dashboard-workspace-start-dismissed:';
+const WORKSPACE_START_SENDI_PLUS_RADIUS_KM = 5;
 const DASHBOARD_PULL_REFRESH_START_DISTANCE = 22;
 const DASHBOARD_PULL_REFRESH_THRESHOLD = 64;
 const DASHBOARD_PULL_REFRESH_MAX = 132;
@@ -187,6 +193,7 @@ const toDateInputValue = (date: Date) => {
 };
 
 const formatNumber = (value: number) => value.toLocaleString('he-IL');
+const normalizePhone = (value: string) => value.replace(/\D/g, '');
 
 const getDashboardGreeting = (date = new Date()) => {
   const hour = date.getHours();
@@ -756,6 +763,178 @@ const SendiPlusCard: React.FC<{
   );
 };
 
+const createInvitedCourier = (phone: string, workspaceId?: string): Courier => {
+  const now = new Date();
+  const suffix = phone.slice(-4) || 'חדש';
+
+  return {
+    id: `c-invite-${workspaceId ?? 'workspace'}-${now.getTime()}`,
+    name: `שליח ${suffix}`,
+    phone,
+    vehicleType: 'אופנוע',
+    employmentType: 'פר משלוח',
+    status: 'offline',
+    connectedAt: null,
+    disconnectedAt: now,
+    isOnShift: false,
+    shiftStartedAt: null,
+    shiftEndedAt: null,
+    currentShiftAssignmentId: null,
+    activeDeliveryIds: [],
+    rating: 5,
+    totalDeliveries: 0,
+  };
+};
+
+const WorkspaceStartSpotlight: React.FC<{
+  area?: string;
+  companyPhone?: string;
+  courierCount: number;
+  restaurantCount: number;
+  sendiPlusActive: boolean;
+  workspaceName?: string;
+  onActivateSendiPlus: () => void;
+  onDismiss: () => void;
+  onInviteCourier: (phone: string) => void;
+  onOpenCouriers: () => void;
+  onOpenRestaurants: () => void;
+}> = ({
+  area,
+  companyPhone,
+  courierCount,
+  restaurantCount,
+  sendiPlusActive,
+  workspaceName,
+  onActivateSendiPlus,
+  onDismiss,
+  onInviteCourier,
+  onOpenCouriers,
+  onOpenRestaurants,
+}) => {
+  const [courierPhone, setCourierPhone] = React.useState('');
+  const [notice, setNotice] = React.useState('');
+  const normalizedCourierPhone = normalizePhone(courierPhone);
+  const canInviteCourier = normalizedCourierPhone.length >= 9;
+
+  const handleInviteCourier = () => {
+    if (!canInviteCourier) return;
+
+    onInviteCourier(normalizedCourierPhone);
+    setCourierPhone('');
+    setNotice(`נשלחה הזמנה לשליח ${normalizedCourierPhone}. בדמו הוא מופיע כשליח שממתין להרשמה.`);
+  };
+
+  return (
+    <section className="rounded-none border border-app-brand/35 bg-app-surface text-right shadow-[0_18px_50px_rgba(0,0,0,0.08)] dark:border-app-brand/25 dark:bg-[#0A0A0A]">
+      <div className="flex flex-col gap-3 border-b border-app-border p-3 sm:flex-row sm:items-start sm:justify-between sm:p-4 dark:border-[#252525]">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 shrink-0 text-app-brand" />
+            <h2 className="truncate text-sm font-black text-app-text">
+              התחלה מהירה: {workspaceName || 'חברת המשלוחים'}
+            </h2>
+          </div>
+          <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-semibold text-app-text-secondary">
+            {area ? (
+              <span className="inline-flex items-center gap-1 rounded-[6px] border border-app-border px-2 py-1 dark:border-[#252525]">
+                <MapPin className="h-3.5 w-3.5" />
+                {area}
+              </span>
+            ) : null}
+            {companyPhone ? (
+              <span className="inline-flex items-center gap-1 rounded-[6px] border border-app-border px-2 py-1 dark:border-[#252525]" dir="ltr">
+                <PhoneCall className="h-3.5 w-3.5" />
+                {companyPhone}
+              </span>
+            ) : null}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="w-fit rounded-[6px] border border-app-border px-3 py-1.5 text-xs font-semibold text-app-text-secondary transition-colors hover:bg-app-surface-raised dark:border-[#252525] dark:hover:bg-[#111111]"
+        >
+          סגור
+        </button>
+      </div>
+
+      <div className="grid gap-0 md:grid-cols-3" dir="rtl">
+        <div className="border-b border-app-border p-3 md:border-b-0 md:border-l dark:border-[#252525]">
+          <div className="text-xs font-bold text-app-text">סנדי פלוס</div>
+          <p className="mt-1 text-xs leading-5 text-app-text-secondary">
+            {sendiPlusActive ? 'פעיל ומוכן לקבלת משלוחים.' : 'כבוי כרגע. אפשר להדליק כשאתה מוכן.'}
+          </p>
+          <button
+            type="button"
+            onClick={onActivateSendiPlus}
+            disabled={sendiPlusActive}
+            className="mt-3 inline-flex items-center gap-2 rounded-[6px] bg-app-brand-solid px-3 py-2 text-xs font-black text-app-background transition-colors hover:bg-app-brand-hover disabled:cursor-default disabled:bg-app-brand-soft disabled:text-app-brand-text"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            {sendiPlusActive ? 'סנדי פלוס פעיל' : 'הפעל סנדי פלוס'}
+          </button>
+        </div>
+
+        <div className="border-b border-app-border p-3 md:border-b-0 md:border-l dark:border-[#252525]">
+          <div className="text-xs font-bold text-app-text">הזמנת שליח</div>
+          <div className="mt-2 flex gap-2">
+            <input
+              value={courierPhone}
+              onChange={(event) => {
+                setCourierPhone(normalizePhone(event.target.value));
+                setNotice('');
+              }}
+              inputMode="tel"
+              dir="ltr"
+              placeholder="0501234567"
+              className="min-w-0 flex-1 rounded-[6px] border border-app-border bg-app-background px-2.5 py-2 text-left text-xs text-app-text focus:outline-none focus:ring-2 focus:ring-app-brand/40 dark:border-[#252525]"
+            />
+            <button
+              type="button"
+              onClick={handleInviteCourier}
+              disabled={!canInviteCourier}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-[6px] bg-app-text px-3 py-2 text-xs font-black text-app-background transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              <UserPlus className="h-3.5 w-3.5" />
+              שלח
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={onOpenCouriers}
+            className="mt-2 text-xs font-semibold text-app-brand hover:underline"
+          >
+            {courierCount > 0 ? `${formatNumber(courierCount)} שליחים במערכת` : 'פתח מסך שליחים'}
+          </button>
+        </div>
+
+        <div className="p-3">
+          <div className="text-xs font-bold text-app-text">מסעדות סנדי פלוס</div>
+          <p className="mt-1 text-xs leading-5 text-app-text-secondary">
+            {restaurantCount > 0
+              ? `${formatNumber(restaurantCount)} מסעדות דיפולט זמינות.`
+              : 'רשת סנדי פלוס תיטען אוטומטית לחשבון.'}
+          </p>
+          <button
+            type="button"
+            onClick={onOpenRestaurants}
+            className="mt-3 inline-flex items-center gap-2 rounded-[6px] border border-app-border px-3 py-2 text-xs font-black text-app-text transition-colors hover:bg-app-surface-raised dark:border-[#252525] dark:hover:bg-[#111111]"
+          >
+            <Store className="h-3.5 w-3.5" />
+            פתח מסעדות
+          </button>
+        </div>
+      </div>
+
+      {notice ? (
+        <div className="border-t border-app-border px-3 py-2 text-xs font-semibold text-app-text-secondary dark:border-[#252525]">
+          {notice}
+        </div>
+      ) : null}
+    </section>
+  );
+};
+
 export const Dashboard: React.FC = () => {
   const { state, dispatch, toggleSystem } = useDelivery();
   const navigate = useNavigate();
@@ -779,6 +958,11 @@ export const Dashboard: React.FC = () => {
   const pullRefreshResetTimeoutRef = React.useRef<number | null>(null);
   const dashboardRefreshTimeoutRef = React.useRef<number | null>(null);
   const pullRefreshHapticButtonRef = React.useRef<HTMLButtonElement | null>(null);
+  const workspaceStartStorageKey = React.useMemo(
+    () => `${WORKSPACE_START_DISMISSED_STORAGE_PREFIX}${state.workspaceId ?? state.workspaceName ?? 'default'}`,
+    [state.workspaceId, state.workspaceName],
+  );
+  const [isWorkspaceStartDismissed, setIsWorkspaceStartDismissed] = React.useState(false);
 
   const isMobilePullRefreshPointer = React.useCallback(() => {
     if (typeof window === 'undefined') return false;
@@ -860,6 +1044,14 @@ export const Dashboard: React.FC = () => {
       window.clearTimeout(dashboardRefreshTimeoutRef.current);
     }
   }, []);
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    setIsWorkspaceStartDismissed(
+      window.localStorage.getItem(workspaceStartStorageKey) === 'true',
+    );
+  }, [workspaceStartStorageKey]);
 
   const handlePullRefreshTouchStart = React.useCallback((event: React.TouchEvent<HTMLElement>) => {
     if (isDashboardRefreshingRef.current || !isMobilePullRefreshPointer()) return;
@@ -1053,6 +1245,40 @@ export const Dashboard: React.FC = () => {
     setSendiPlusRadiusKm(DEFAULT_SENDI_PLUS_RADIUS_KM);
   }, [sendiPlusTermsAccepted, state.isSystemOpen]);
 
+  const handleActivateSendiPlusFromSpotlight = React.useCallback(() => {
+    if (!state.isSystemOpen) return;
+
+    const nextRadiusKm =
+      sendiPlusRadiusKm > 0 ? sendiPlusRadiusKm : WORKSPACE_START_SENDI_PLUS_RADIUS_KM;
+    setSendiPlusRadiusKm(nextRadiusKm);
+    writeStoredSendiPlusRadius(nextRadiusKm);
+    handleSendiPlusTermsAcceptedChange(true);
+  }, [handleSendiPlusTermsAcceptedChange, sendiPlusRadiusKm, state.isSystemOpen]);
+
+  const handleDismissWorkspaceStart = React.useCallback(() => {
+    setIsWorkspaceStartDismissed(true);
+
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(workspaceStartStorageKey, 'true');
+  }, [workspaceStartStorageKey]);
+
+  const handleInviteCourierFromSpotlight = React.useCallback((phone: string) => {
+    const normalizedPhone = normalizePhone(phone);
+    const alreadyExists = state.couriers.some(
+      (courier) => normalizePhone(courier.phone) === normalizedPhone,
+    );
+
+    if (alreadyExists) {
+      navigate('/couriers');
+      return;
+    }
+
+    dispatch({
+      type: 'ADD_COURIER',
+      payload: createInvitedCourier(normalizedPhone, state.workspaceId),
+    });
+  }, [dispatch, navigate, state.couriers, state.workspaceId]);
+
   const dateDeliveries = React.useMemo(
     () =>
       state.deliveries.filter((delivery) => {
@@ -1130,6 +1356,14 @@ export const Dashboard: React.FC = () => {
   const activeRestaurantsCount = baseActiveRestaurantsCount + (
     isSendiPlusOperational ? sendiPlusRestaurantsForDashboardCount : 0
   );
+  const shouldShowWorkspaceStart =
+    state.dataMode === 'workspace' &&
+    !isWorkspaceStartDismissed &&
+    (
+      state.couriers.length === 0 ||
+      activeRestaurantsCount === 0 ||
+      !sendiPlusTermsAccepted
+    );
   const freeCouriersCount = React.useMemo(() => {
     const busyCourierIds = new Set(
       state.deliveries
@@ -1257,6 +1491,21 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
           </section>
+          {shouldShowWorkspaceStart ? (
+            <WorkspaceStartSpotlight
+              area={state.workspaceArea}
+              companyPhone={state.workspacePhone}
+              courierCount={state.couriers.length}
+              restaurantCount={state.restaurants.length}
+              sendiPlusActive={isSendiPlusOperational}
+              workspaceName={state.workspaceName}
+              onActivateSendiPlus={handleActivateSendiPlusFromSpotlight}
+              onDismiss={handleDismissWorkspaceStart}
+              onInviteCourier={handleInviteCourierFromSpotlight}
+              onOpenCouriers={() => navigate('/couriers')}
+              onOpenRestaurants={() => navigate('/restaurants')}
+            />
+          ) : null}
           <section>
             <div className="dashboard-delivery-summary overflow-hidden rounded-none border border-app-border bg-app-surface text-right dark:border-[#252525] dark:bg-[#0A0A0A]">
               <button

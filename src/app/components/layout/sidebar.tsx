@@ -15,6 +15,7 @@ import {
   Map,
   Package,
   Palette,
+  Plus,
   Power,
   Ruler,
   Search,
@@ -48,6 +49,11 @@ import {
 import { AppTooltip as SidebarIconTooltip } from '../common/app-tooltip';
 import { playHaptic } from '../../utils/haptics';
 import { Toggle } from '../common/toggle';
+import {
+  activateWorkspaceAccount,
+  readWorkspaceAccounts,
+  type WorkspaceAccount,
+} from '../../workspaces/workspace-registry';
 
 interface SidebarProps {
   onLogout: () => void;
@@ -68,22 +74,6 @@ const LABELS = {
   deliveryBalance: '\u05d9\u05ea\u05e8\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
   beta: '\u05d1\u05d8\u05d0',
 };
-
-const BUSINESSES = [
-  'Tel Aviv - Runners',
-  'Mr. Delivery',
-  'Delivery Champion',
-  'Express Deliveries',
-  'Jerusalem Couriers',
-  'Haifa Delivery',
-  'Beer Sheva Couriers',
-  'Netanya Deliveries',
-  'Petah Tikva Delivery',
-  'Rishon LeZion Couriers',
-  'Ashdod Express',
-  'Ramat Gan Deliveries',
-  'Bnei Brak Delivery',
-];
 
 const SIDEBAR_MIN_WIDTH = 250;
 const SIDEBAR_MAX_WIDTH = 400;
@@ -212,11 +202,14 @@ const BusinessAvatar: React.FC<{ name: string; className?: string }> = ({ name, 
   </span>
 );
 
-const BusinessPlanBadge: React.FC<{ className?: string }> = ({ className = '' }) => (
+const BusinessPlanBadge: React.FC<{ className?: string; label?: string }> = ({
+  className = '',
+  label = 'PRO',
+}) => (
   <span
     className={`inline-flex h-[18px] shrink-0 items-center rounded-full border border-app-nav-border bg-app-surface-raised px-2 text-[11px] font-medium leading-none text-app-text dark:border-[#2E2E2E] dark:bg-[#1F1F1F] dark:text-[#EDEDED] ${className}`}
   >
-    PRO
+    {label}
   </span>
 );
 
@@ -251,11 +244,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
   const navigate = useNavigate();
   const location = useLocation();
   const { state, dispatch } = useDelivery();
+  const workspaceBusinessName = state.workspaceName?.trim() || 'TLV RUNNERS';
+  const workspaceAccounts = useMemo(() => readWorkspaceAccounts(), [
+    state.workspaceId,
+    state.workspaceName,
+  ]);
+  const selectedWorkspaceAccount = useMemo(
+    () =>
+      workspaceAccounts.find((account) => account.id === state.workspaceId) ??
+      workspaceAccounts.find((account) => account.name === workspaceBusinessName) ??
+      null,
+    [state.workspaceId, workspaceAccounts, workspaceBusinessName],
+  );
   const businessSwitcherRef = useRef<HTMLDivElement | null>(null);
   const businessSearchRef = useRef<HTMLInputElement | null>(null);
   const [isBusinessPopupOpen, setIsBusinessPopupOpen] = useState(false);
   const [businessSearch, setBusinessSearch] = useState('');
-  const [selectedBusiness, setSelectedBusiness] = useState(BUSINESSES[0]);
+  const [selectedBusiness, setSelectedBusiness] = useState(workspaceBusinessName);
   const [sendiPlusRadiusKm, setSendiPlusRadiusKm] = useState(readStoredSendiPlusRadius);
   const [sendiPlusAccessVersion, setSendiPlusAccessVersion] = useState(0);
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= DESKTOP_SIDEBAR_BREAKPOINT);
@@ -371,9 +376,35 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
   const settingsItem = getNavItemById('settings');
   const filteredBusinesses = useMemo(() => {
     const query = businessSearch.trim().toLowerCase();
-    if (!query) return BUSINESSES;
-    return BUSINESSES.filter((business) => business.toLowerCase().includes(query));
-  }, [businessSearch]);
+    if (!query) return workspaceAccounts;
+
+    return workspaceAccounts.filter((account) =>
+      account.name.toLowerCase().includes(query) ||
+      account.phone.includes(query)
+    );
+  }, [workspaceAccounts, businessSearch]);
+
+  const switchWorkspaceAccount = useCallback((account: WorkspaceAccount) => {
+    if (account.id === state.workspaceId) {
+      setSelectedBusiness(account.name);
+      setIsBusinessPopupOpen(false);
+      return;
+    }
+
+    activateWorkspaceAccount(account);
+    setSelectedBusiness(account.name);
+    setIsBusinessPopupOpen(false);
+    window.location.assign('/dashboard');
+  }, [state.workspaceId]);
+
+  const startNewWorkspaceRegistration = useCallback(() => {
+    setIsBusinessPopupOpen(false);
+    _onLogout();
+  }, [_onLogout]);
+
+  useEffect(() => {
+    setSelectedBusiness(workspaceBusinessName);
+  }, [workspaceBusinessName]);
 
   useEffect(() => {
     if (!isBusinessPopupOpen) return;
@@ -994,7 +1025,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                 <span className="min-w-0 flex-1 truncate text-sm font-semibold">
                   {selectedBusiness}
                 </span>
-                <BusinessPlanBadge />
+                <BusinessPlanBadge label={selectedWorkspaceAccount?.kind === 'demo' ? 'DEMO' : 'PRO'} />
                 <span
                   className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] border transition-colors ${
                     isBusinessPopupOpen
@@ -1047,27 +1078,32 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
                 <div className="max-h-[304px] overflow-y-auto p-2">
                   {filteredBusinesses.length > 0 ? (
-                    filteredBusinesses.map((business) => {
-                      const isSelected = business === selectedBusiness;
+                    filteredBusinesses.map((account) => {
+                      const isSelected = account.id === state.workspaceId;
 
                       return (
                         <button
-                          key={business}
+                          key={account.id}
                           type="button"
                           data-haptic={isSelected ? 'selection' : 'light'}
-                          onClick={() => {
-                            setSelectedBusiness(business);
-                            setIsBusinessPopupOpen(false);
-                          }}
-                          className={`mb-1 flex h-11 w-full items-center gap-3 rounded-[6px] px-2 text-right text-sm transition-colors ${
+                          onClick={() => switchWorkspaceAccount(account)}
+                          className={`mb-1 flex min-h-11 w-full items-center gap-3 rounded-[6px] px-2 py-2 text-right text-sm transition-colors ${
                             isSelected
                               ? 'bg-app-surface-raised text-app-text'
                               : 'text-app-text-secondary hover:bg-app-surface-raised hover:text-app-text'
                           }`}
                         >
-                          <BusinessAvatar name={business} className="h-6 w-6 text-[10px]" />
-                          <span className="min-w-0 flex-1 truncate font-medium">{business}</span>
-                          <BusinessPlanBadge className="px-1.5 text-[9px]" />
+                          <BusinessAvatar name={account.name} className="h-6 w-6 text-[10px]" />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate font-medium">{account.name}</span>
+                            <span className="block truncate text-[11px] text-app-text-muted" dir="ltr">
+                              {account.phone}
+                            </span>
+                          </span>
+                          <BusinessPlanBadge
+                            className="px-1.5 text-[9px]"
+                            label={account.kind === 'demo' ? 'DEMO' : 'PRO'}
+                          />
                           {isSelected ? (
                             <Check className="h-4 w-4 shrink-0 text-[#EDEDED]" />
                           ) : null}
@@ -1079,6 +1115,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                       {LABELS.noBusinesses}
                     </div>
                   )}
+                </div>
+
+                <div className="border-t border-app-nav-border p-2">
+                  <button
+                    type="button"
+                    data-haptic="selection"
+                    onClick={startNewWorkspaceRegistration}
+                    className="flex h-10 w-full items-center justify-center gap-2 rounded-[6px] border border-app-nav-border bg-app-surface-raised px-3 text-sm font-semibold text-app-text transition-colors hover:border-app-border-strong hover:bg-app-nav-hover-bg"
+                  >
+                    <Plus className="h-4 w-4" />
+                    פתח חברת משלוחים חדשה
+                  </button>
                 </div>
               </div>
             )}

@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router';
 import { AppLayout } from './components/layout/app-layout';
 import { LoginPage } from './pages/login-page';
 import { NotFoundPage } from './pages/not-found-page';
+import { OnboardingPage } from './pages/onboarding-page';
 import { Dashboard } from './pages/dashboard';
 import { DashboardLegacy } from './pages/dashboard-legacy';
 import { WalletPage } from './pages/wallet-page';
@@ -42,6 +43,14 @@ export const router = createBrowserRouter([
     element: (
       <ThemeProvider>
         <LoginPage />
+      </ThemeProvider>
+    ),
+  },
+  {
+    path: '/onboarding',
+    element: (
+      <ThemeProvider>
+        <OnboardingPage />
       </ThemeProvider>
     ),
   },

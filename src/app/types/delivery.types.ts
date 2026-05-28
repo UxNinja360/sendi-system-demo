@@ -393,6 +393,11 @@ export interface Customer {
 
 // State של המערכת
 export interface DeliveryState {
+  dataMode?: 'demo' | 'workspace';
+  workspaceId?: string;
+  workspaceName?: string;
+  workspaceArea?: string;
+  workspacePhone?: string;
   isSystemOpen: boolean;
   autoAssignEnabled: boolean;
   timeMultiplier: number; // מכפיל זמן - x1 = זמן אמת, x2 = כפול מהר יותר

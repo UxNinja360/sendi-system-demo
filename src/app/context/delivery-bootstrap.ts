@@ -83,7 +83,7 @@ const normalizeRestaurant = (restaurant: Restaurant): Restaurant => ({
       : DEFAULT_RESTAURANT_MAX_DELIVERY_TIME,
 });
 
-const normalizeRestaurants = (restaurants: Restaurant[]): Restaurant[] =>
+export const normalizeRestaurants = (restaurants: Restaurant[]): Restaurant[] =>
   restaurants.map(normalizeRestaurant);
 
 const getRestaurantPreparationTimeForDelivery = (
@@ -665,6 +665,21 @@ export const activateSendiPlusRestaurants = (restaurants: Restaurant[]): Restaur
   });
 
 export const RESTAURANTS_DATA: Restaurant[] = normalizeRestaurants(generateRestaurants());
+export const SENDI_PLUS_RESTAURANTS_DATA: Restaurant[] = RESTAURANTS_DATA.filter((restaurant) =>
+  isSendiPlusRestaurant(restaurant.name, restaurant.chainId),
+);
+
+export const mergeDefaultSendiPlusRestaurants = (restaurants: Restaurant[]): Restaurant[] => {
+  const normalizedExisting = normalizeRestaurants(restaurants);
+  const existingNames = new Set(
+    normalizedExisting.map(restaurant => restaurant.name.trim().toLowerCase())
+  );
+  const missingSendiPlusRestaurants = SENDI_PLUS_RESTAURANTS_DATA.filter(
+    restaurant => !existingNames.has(restaurant.name.trim().toLowerCase())
+  );
+
+  return [...normalizedExisting, ...missingSendiPlusRestaurants.map((restaurant) => ({ ...restaurant }))];
+};
 
 export const mergeSeededRestaurants = (restaurants: Restaurant[]): Restaurant[] => {
   const normalizedExisting = normalizeRestaurants(restaurants);
@@ -803,6 +818,9 @@ const buildInitialShifts = (): WorkShift[] => {
 
 // Create a fresh initial state so reset never reuses mutated runtime references.
 export const createInitialDeliveryState = (): DeliveryState => ({
+  dataMode: 'demo',
+  workspaceId: 'wrk_legacy_tlv_runners',
+  workspaceName: 'TLV RUNNERS',
   isSystemOpen: false,
   autoAssignEnabled: false, // Keep auto-assignment off while the system is closed.
   timeMultiplier: 1, // Real-time simulation speed.

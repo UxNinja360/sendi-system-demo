@@ -8,6 +8,7 @@ import { LoadingBar } from '../ui/loading-bar';
 import { Toaster } from '../common/toaster';
 import { OperationalAlerts } from '../../notifications/operational-alerts';
 import { APP_MANAGED_SCROLL_PATHS } from '../../app-navigation';
+import { clearAuthSession, readAuthSession } from '../../auth/auth-session';
 
 export const AppLayout: React.FC = () => {
   const [isPageLoading, setIsPageLoading] = useState(false);
@@ -17,9 +18,14 @@ export const AppLayout: React.FC = () => {
   const navigation = useNavigation();
 
   useEffect(() => {
-    const auth = localStorage.getItem('isAuthenticated');
-    if (auth !== 'true') {
+    const session = readAuthSession();
+    if (!session) {
       navigate('/login', { replace: true });
+      return;
+    }
+
+    if (session.workspace?.onboardingStatus !== 'complete') {
+      navigate('/onboarding', { replace: true });
     }
   }, [navigate]);
 
@@ -41,7 +47,7 @@ export const AppLayout: React.FC = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated');
+    clearAuthSession();
     navigate('/login', { replace: true });
   };
 
