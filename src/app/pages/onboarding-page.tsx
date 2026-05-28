@@ -735,6 +735,7 @@ export const OnboardingPage: React.FC = () => {
   const [selectedWorkspaceAreas, setSelectedWorkspaceAreas] = useState<string[]>([]);
   const [workspaceAreaSearch, setWorkspaceAreaSearch] = useState('');
   const [isWorkspaceAreaDropdownOpen, setIsWorkspaceAreaDropdownOpen] = useState(false);
+  const [isMobileWorkspaceAreaSearchOpen, setIsMobileWorkspaceAreaSearchOpen] = useState(false);
   const [expandedWorkspaceAreaGroups, setExpandedWorkspaceAreaGroups] = useState<string[]>([]);
   const [expandedWorkspaceAreaSections, setExpandedWorkspaceAreaSections] = useState<string[]>([]);
   const [joinRegistrationNumber, setJoinRegistrationNumber] = useState('');
@@ -1190,7 +1191,7 @@ export const OnboardingPage: React.FC = () => {
                 <label className="sr-only" htmlFor="onboarding-workspace-area">
                   אזור פעילות
                 </label>
-                <div className="relative">
+                <div className="relative hidden sm:block">
                   <input
                     id="onboarding-workspace-area"
                     value={workspaceAreaSearch}
@@ -1237,6 +1238,47 @@ export const OnboardingPage: React.FC = () => {
                   </button>
                 </div>
 
+                <div className="space-y-2 sm:hidden">
+                  <button
+                    type="button"
+                    className={secondaryButtonClassName}
+                    onClick={() => {
+                      setIsMobileWorkspaceAreaSearchOpen((isOpen) => {
+                        const nextIsOpen = !isOpen;
+                        if (!nextIsOpen) setWorkspaceAreaSearch('');
+                        return nextIsOpen;
+                      });
+                    }}
+                  >
+                    <span>{isMobileWorkspaceAreaSearchOpen ? 'סגור חיפוש' : 'חיפוש עיר או יישוב'}</span>
+                    <span aria-hidden="true">{isMobileWorkspaceAreaSearchOpen ? '⌃' : '⌄'}</span>
+                  </button>
+
+                  {isMobileWorkspaceAreaSearchOpen ? (
+                    <>
+                      <label className="sr-only" htmlFor="onboarding-workspace-area-mobile">
+                        חיפוש אזור פעילות
+                      </label>
+                      <input
+                        id="onboarding-workspace-area-mobile"
+                        value={workspaceAreaSearch}
+                        onChange={(event) => {
+                          setWorkspaceAreaSearch(event.target.value);
+                          setError('');
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key !== 'Enter' || !isCustomWorkspaceAreaVisible) return;
+                          event.preventDefault();
+                          addCustomWorkspaceArea();
+                        }}
+                        placeholder="חפש עיר או יישוב"
+                        className={inputClassName}
+                        autoComplete="off"
+                      />
+                    </>
+                  ) : null}
+                </div>
+
                 {selectedWorkspaceAreas.length > 0 ? (
                   <div className="flex max-h-24 flex-wrap gap-2 overflow-y-auto rounded-lg border border-[#d8d8d8] bg-white p-2 dark:border-[#252525] dark:bg-[#050505]">
                     {selectedWorkspaceAreas.map((area) => (
@@ -1254,8 +1296,11 @@ export const OnboardingPage: React.FC = () => {
                   </div>
                 ) : null}
 
-                {isWorkspaceAreaDropdownOpen ? (
-                  <div className="absolute right-0 top-[calc(100%+0.5rem)] z-20 w-full rounded-lg border border-[#d8d8d8] bg-white p-1 text-right shadow-xl dark:border-[#252525] dark:bg-[#050505]">
+                <div
+                  className={`z-20 w-full rounded-lg border border-[#d8d8d8] bg-white p-1 text-right shadow-xl dark:border-[#252525] dark:bg-[#050505] sm:absolute sm:right-0 sm:top-[calc(100%+0.5rem)] ${
+                    isWorkspaceAreaDropdownOpen ? 'sm:block' : 'sm:hidden'
+                  }`}
+                >
                     <div className="max-h-[min(24rem,42vh)] overflow-y-auto">
                       <button
                         type="button"
@@ -1376,8 +1421,7 @@ export const OnboardingPage: React.FC = () => {
                         </div>
                       )}
                     </div>
-                  </div>
-                ) : null}
+                </div>
               </div>
 
               {error ? (

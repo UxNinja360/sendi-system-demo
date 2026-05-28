@@ -636,9 +636,6 @@ export const LoginPage: React.FC = () => {
           <a href="#" className="whitespace-nowrap transition-colors hover:text-[#0d0d12] dark:hover:text-app-text">
             תנאי שימוש
           </a>
-          <a href="#" className="whitespace-nowrap transition-colors hover:text-[#0d0d12] dark:hover:text-app-text">
-            פרטיות
-          </a>
         </div>
         <a
           href="#"
