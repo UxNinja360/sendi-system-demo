@@ -777,7 +777,7 @@ body {
 }
 
 .deliveries-map-split-portal {
-  animation: deliveries-map-split-enter 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: none;
   background: var(--app-background);
   border: 0;
   border-radius: 0;
@@ -790,52 +790,8 @@ body {
   right: 0;
   top: 0;
   transform-origin: left center;
+  transition: none;
   z-index: 80;
-}
-
-.deliveries-map-split-portal--closing {
-  animation: deliveries-map-split-exit 260ms cubic-bezier(0.4, 0, 0.2, 1) both;
-  pointer-events: none;
-}
-
-@keyframes deliveries-map-split-enter {
-  from {
-    transform: translate3d(-100%, 0, 0);
-  }
-
-  to {
-    transform: translate3d(0, 0, 0);
-  }
-}
-
-@keyframes deliveries-map-split-exit {
-  from {
-    transform: translate3d(0, 0, 0);
-  }
-
-  to {
-    transform: translate3d(-100%, 0, 0);
-  }
-}
-
-@keyframes deliveries-map-sheet-enter {
-  from {
-    transform: translateY(10px);
-  }
-
-  to {
-    transform: translateY(0);
-  }
-}
-
-@keyframes deliveries-map-sheet-exit {
-  from {
-    transform: translateY(0);
-  }
-
-  to {
-    transform: translateY(10px);
-  }
 }
 
 .deliveries-map-split-portal > section {
@@ -1681,6 +1637,7 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   body.deliveries-map-split-open .app-layout-root {
     margin-left: var(--deliveries-map-split-width, 50vw);
     max-width: calc(100vw - var(--deliveries-map-split-width, 50vw));
+    transition: none;
     width: calc(100vw - var(--deliveries-map-split-width, 50vw));
   }
 
@@ -1688,12 +1645,6 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
     left: calc(var(--deliveries-map-split-width, 50vw) + 0.75rem);
     max-width: min(760px, calc(100vw - var(--deliveries-map-split-width, 50vw) - 1.5rem));
     right: 0.75rem;
-  }
-
-  body.deliveries-map-split-closing .app-layout-root {
-    margin-left: 0;
-    max-width: 100%;
-    width: 100%;
   }
 
   body.deliveries-map-split-resizing {
@@ -1818,6 +1769,7 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   }
 
   body.deliveries-map-split-open .app-layout-root {
+    animation: none;
     background: color-mix(in srgb, var(--app-background) 96%, transparent);
     border: 1px solid var(--app-nav-border);
     border-bottom: 0;
@@ -1836,8 +1788,22 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
     position: fixed;
     right: 0;
     top: auto;
+    transition: none;
     width: 100vw;
     z-index: 120;
+  }
+
+  body.deliveries-map-split-open.mobile-sidebar-open .app-layout-root {
+    border: 0;
+    border-radius: 0;
+    bottom: 0;
+    box-shadow: none;
+    height: 100vh;
+    max-height: none;
+    min-height: 100vh;
+    padding-bottom: 0;
+    top: 0;
+    z-index: 980;
   }
 
   body.deliveries-map-split-open .selection-action-bar--floating {
@@ -1846,20 +1812,9 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
     right: 0.75rem;
   }
 
-  body.deliveries-map-split-open .app-layout-root {
-    animation: deliveries-map-sheet-enter 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-
-  body.deliveries-map-split-closing .app-layout-root {
-    animation: deliveries-map-sheet-exit 260ms cubic-bezier(0.4, 0, 0.2, 1) both;
-  }
-
   .deliveries-map-split-portal {
-    animation: deliveries-map-mobile-enter 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-
-  .deliveries-map-split-portal--closing {
-    animation: deliveries-map-mobile-exit 260ms cubic-bezier(0.4, 0, 0.2, 1) both;
+    animation: none;
+    transition: none;
   }
 
   body.deliveries-map-sheet-resizing {
@@ -1887,26 +1842,12 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
     body.deliveries-map-split-open .app-layout-root {
       max-height: calc(100svh - var(--app-safe-top) - 16px);
     }
-  }
-}
 
-@keyframes deliveries-map-mobile-enter {
-  from {
-    transform: translateY(6px);
-  }
-
-  to {
-    transform: translateY(0);
-  }
-}
-
-@keyframes deliveries-map-mobile-exit {
-  from {
-    transform: translateY(0);
-  }
-
-  to {
-    transform: translateY(6px);
+    body.deliveries-map-split-open.mobile-sidebar-open .app-layout-root {
+      height: 100svh;
+      max-height: none;
+      min-height: 100svh;
+    }
   }
 }
 

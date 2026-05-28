@@ -45,7 +45,7 @@ export const LoginPhone: React.FC<LoginPhoneProps> = ({
           value={phone}
           onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
           placeholder="0501234567"
-          className="h-12 w-full rounded-lg border border-[#d8d8d8] bg-white px-3 text-left text-sm font-medium text-[#0d0d12] outline-none transition-colors placeholder:text-[#777] focus:border-[#0d0d12] focus:bg-white focus:ring-2 focus:ring-[#0d0d12]/10 dark:border-[#252525] dark:bg-[#050505] dark:text-app-text dark:placeholder:text-[#777] dark:focus:border-[#ededed] dark:focus:ring-[#ededed]/10"
+          className="h-12 w-full rounded-lg border border-[#d8d8d8] bg-white px-3 text-left text-sm font-medium text-[#0d0d12] outline-none transition-colors placeholder:text-[#777] hover:border-[#bdbdbd] focus:border-[#0d0d12] focus:bg-white focus:ring-2 focus:ring-[#0d0d12]/10 dark:border-[#252525] dark:bg-[#050505] dark:text-app-text dark:placeholder:text-[#777] dark:hover:border-[#3a3a3a] dark:hover:bg-[#080808] dark:focus:border-[#ededed] dark:focus:ring-[#ededed]/10"
           maxLength={10}
           dir="ltr"
           autoComplete="tel"

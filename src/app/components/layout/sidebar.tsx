@@ -26,6 +26,7 @@ import {
   TriangleAlert,
   Users,
   Wallet,
+  X,
 } from 'lucide-react';
 import { getNavItemById, isNavItemActive, SIDEBAR_NAV_SECTIONS } from '../../app-navigation';
 import type { AppNavIconKey, AppNavItem } from '../../app-navigation';
@@ -250,6 +251,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
   const [businessSearch, setBusinessSearch] = useState('');
   const [selectedBusiness, setSelectedBusiness] = useState(workspaceBusinessName);
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= DESKTOP_SIDEBAR_BREAKPOINT);
+  const [viewportWidth, setViewportWidth] = useState(() => window.innerWidth);
   const [isCollapsed, setIsCollapsed] = useState(() => {
     try {
       if (window.innerWidth < DESKTOP_SIDEBAR_BREAKPOINT) return false;
@@ -306,6 +308,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
   const isExpanded = !isCollapsed || !isDesktop;
   const isMobileMenuOpen = !isDesktop && isCollapsed;
+  const mobileSidebarWidth = Math.max(MOBILE_SIDEBAR_WIDTH, viewportWidth);
   const updateMobileMenuDragX = useCallback((value: number) => {
     mobileMenuDragXRef.current = value;
     setMobileMenuDragX(value);
@@ -315,12 +318,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       ? mobileMenuDragX
       : isMobileMenuOpen
         ? 0
-        : MOBILE_SIDEBAR_WIDTH
+        : mobileSidebarWidth
     : undefined;
   const mobileMenuOpenProgress =
     mobileMenuTranslateX === undefined
       ? 0
-      : Math.max(0, Math.min(1, 1 - mobileMenuTranslateX / MOBILE_SIDEBAR_WIDTH));
+      : Math.max(0, Math.min(1, 1 - mobileMenuTranslateX / mobileSidebarWidth));
   const activeDeliveriesCount = state.deliveries.filter(isOperationalDelivery).length;
   const deliveredDeliveriesCount = state.deliveries.filter((delivery) => delivery.status === 'delivered').length;
   const hasCouriersForOperations = state.couriers.length > 0;
@@ -400,7 +403,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
   useEffect(() => {
     const handleResize = () => {
-      const desktop = window.innerWidth >= DESKTOP_SIDEBAR_BREAKPOINT;
+      const width = window.innerWidth;
+      const desktop = width >= DESKTOP_SIDEBAR_BREAKPOINT;
+      setViewportWidth(width);
       setIsDesktop(desktop);
       if (!desktop) setIsCollapsed(false);
     };
@@ -408,6 +413,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+
+    document.body.classList.toggle('mobile-sidebar-open', isMobileMenuOpen);
+
+    return () => {
+      document.body.classList.remove('mobile-sidebar-open');
+    };
+  }, [isMobileMenuOpen]);
 
   useEffect(() => {
     try {
@@ -634,13 +649,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
         playHaptic('medium', { force: true });
       }
 
-      const clampedDelta = Math.min(MOBILE_SIDEBAR_WIDTH, Math.max(0, deltaX));
+      const clampedDelta = Math.min(mobileSidebarWidth, Math.max(0, deltaX));
 
       updateMobileMenuDragX(clampedDelta);
 
       return true;
     },
-    [isDesktop, updateMobileMenuDragX],
+    [isDesktop, mobileSidebarWidth, updateMobileMenuDragX],
   );
 
   const finishMobileMenuSwipe = useCallback(() => {
@@ -896,7 +911,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
           isCollapsed ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'
         }`}
         style={{
-          width: isDesktop ? (isCollapsed ? SIDEBAR_COLLAPSED_WIDTH : sidebarWidth) : `${MOBILE_SIDEBAR_WIDTH}px`,
+          width: isDesktop ? (isCollapsed ? SIDEBAR_COLLAPSED_WIDTH : sidebarWidth) : `${mobileSidebarWidth}px`,
           transform: mobileMenuTranslateX === undefined ? undefined : `translateX(${mobileMenuTranslateX}px)`,
           touchAction: isDesktop ? undefined : 'pan-y',
           transition: isDesktop
@@ -1070,6 +1085,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
             )}
           </div>
 
+          {!isDesktop && (
+            <button
+              type="button"
+              data-haptic="light"
+              onClick={closeMobileMenu}
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[6px] border border-app-nav-border bg-app-surface-raised text-app-text-secondary transition-colors hover:border-app-border-strong hover:bg-app-nav-hover-bg hover:text-app-text"
+              aria-label="סגור תפריט"
+              title="סגור תפריט"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto bg-app-nav-bg py-2 scrollbar-thin scrollbar-thumb-[#d4d4d4] dark:scrollbar-thumb-[#404040]">

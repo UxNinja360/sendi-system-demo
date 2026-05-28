@@ -168,29 +168,21 @@ export const OnboardingPage: React.FC = () => {
   if (!session) return null;
 
   return (
-    <div className="min-h-[100dvh] w-full bg-app-background px-4 py-5 text-[#0d0d12] dark:text-app-text sm:px-6">
-      <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-3xl flex-col">
-        <header className="flex items-center justify-between gap-4 border-b border-[#e5e5e5] pb-5 dark:border-app-border">
-          <div className="flex min-w-0 items-center gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-app-brand-solid shadow-lg">
-              <AppLogo size={30} className="text-app-background" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="truncate text-2xl font-black">פתיחת חברה</h1>
-              <p className="mt-1 text-sm text-[#666d80] dark:text-app-text-secondary">
-                מכניסים פרטים בסיסיים ונכנסים ישר למערכת.
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="shrink-0 rounded-lg bg-[#f5f5f5] px-3 py-2 text-sm font-medium text-[#0d0d12] transition-colors hover:bg-[#e5e5e5] dark:bg-[#262626] dark:text-app-text dark:hover:bg-[#404040]"
-          >
-            חזור
-          </button>
-        </header>
+    <div className="min-h-[100dvh] w-full bg-app-background text-[#0d0d12] dark:text-app-text">
+      <header className="relative z-10 flex h-16 shrink-0 items-center justify-between px-4 sm:px-6" dir="rtl">
+        <div className="inline-flex items-center gap-2 text-sm font-extrabold text-[#0d0d12] dark:text-app-text">
+          <AppLogo size={28} className="h-7 w-7" />
+        </div>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="inline-flex h-10 items-center justify-center rounded-md border border-[#d8d8d8] px-4 text-sm font-bold text-[#0d0d12] transition-colors hover:border-[#bdbdbd] hover:bg-[#f5f5f5] dark:border-[#252525] dark:text-app-text dark:hover:border-[#3a3a3a] dark:hover:bg-[#111]"
+        >
+          חזור
+        </button>
+      </header>
 
+      <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-3xl flex-col px-4 sm:px-6">
         <main className="flex flex-1 items-center py-8">
           <section className="w-full rounded-lg border border-[#e5e5e5] bg-white p-5 shadow-xl dark:border-app-border dark:bg-app-surface sm:p-6">
             <div className="mb-5 flex items-center gap-3">

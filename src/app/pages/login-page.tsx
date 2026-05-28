@@ -487,8 +487,7 @@ export const LoginPage: React.FC = () => {
 
       <header className="relative z-10 flex h-16 shrink-0 items-center justify-between px-4 sm:px-6" dir="rtl">
         <div className="inline-flex items-center gap-2 text-sm font-extrabold text-[#0d0d12] dark:text-app-text">
-          <AppLogo size={20} className="h-5 w-5" />
-          <span>סנדי</span>
+          <AppLogo size={28} className="h-7 w-7" />
         </div>
 
         {authStep === 'phone' ? (
@@ -496,7 +495,7 @@ export const LoginPage: React.FC = () => {
             type="button"
             disabled={isSubmitting}
             onClick={() => handleModeChange(authMode === 'signup' ? 'login' : 'signup')}
-            className="inline-flex h-8 items-center justify-center rounded-md border border-[#d8d8d8] px-3 text-xs font-bold text-[#0d0d12] transition-colors hover:border-[#bdbdbd] hover:bg-[#f5f5f5] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#252525] dark:text-app-text dark:hover:border-[#3a3a3a] dark:hover:bg-[#111]"
+            className="inline-flex h-10 items-center justify-center rounded-md border border-[#d8d8d8] px-4 text-sm font-bold text-[#0d0d12] transition-colors hover:border-[#bdbdbd] hover:bg-[#f5f5f5] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#252525] dark:text-app-text dark:hover:border-[#3a3a3a] dark:hover:bg-[#111]"
           >
             {headerActionLabel}
           </button>
