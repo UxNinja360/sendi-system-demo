@@ -430,6 +430,8 @@ const SendiPlusCard: React.FC<{
   const [isActivationPulseVisible, setIsActivationPulseVisible] = React.useState(false);
   const radiusBubbleHideTimeoutRef = React.useRef<number | null>(null);
   const activationPulseTimeoutRef = React.useRef<number | null>(null);
+  const cardTouchStartRef = React.useRef<{ x: number; y: number } | null>(null);
+  const cardTouchMovedRef = React.useRef(false);
   const radiusPercent = (radiusKm / MAX_SENDI_PLUS_RADIUS_KM) * 100;
   const isAccordionOpen = isSendiPlusEnabled && isDetailsOpen;
   const termsTextClassName = isSendiPlusEnabled
@@ -574,7 +576,38 @@ const SendiPlusCard: React.FC<{
 
     setTermsAcceptedFromControl(true);
   }, [canActivateFromCard, setTermsAcceptedFromControl]);
+  const handleCardPointerDown = React.useCallback((event: React.PointerEvent<HTMLElement>) => {
+    if (event.pointerType !== 'touch') {
+      cardTouchStartRef.current = null;
+      cardTouchMovedRef.current = false;
+      return;
+    }
+
+    cardTouchStartRef.current = { x: event.clientX, y: event.clientY };
+    cardTouchMovedRef.current = false;
+  }, []);
+  const handleCardPointerMove = React.useCallback((event: React.PointerEvent<HTMLElement>) => {
+    if (event.pointerType !== 'touch' || !cardTouchStartRef.current) return;
+
+    const deltaX = Math.abs(event.clientX - cardTouchStartRef.current.x);
+    const deltaY = Math.abs(event.clientY - cardTouchStartRef.current.y);
+    if (deltaX > 8 || deltaY > 8) {
+      cardTouchMovedRef.current = true;
+    }
+  }, []);
+  const handleCardPointerCancel = React.useCallback(() => {
+    cardTouchStartRef.current = null;
+    cardTouchMovedRef.current = false;
+  }, []);
   const handleCardClick = React.useCallback((event: React.MouseEvent<HTMLElement>) => {
+    if (cardTouchMovedRef.current) {
+      event.preventDefault();
+      event.stopPropagation();
+      cardTouchMovedRef.current = false;
+      cardTouchStartRef.current = null;
+      return;
+    }
+
     if (!canActivateFromCard) return;
 
     const target = event.target;
@@ -630,6 +663,9 @@ const SendiPlusCard: React.FC<{
       } ${systemDisabledCardClassName}`}
       onClick={handleCardClick}
       onKeyDown={handleCardKeyDown}
+      onPointerCancel={handleCardPointerCancel}
+      onPointerDown={handleCardPointerDown}
+      onPointerMove={handleCardPointerMove}
       role={canActivateFromCard ? 'button' : undefined}
       tabIndex={canActivateFromCard ? 0 : undefined}
       aria-disabled={isSystemDisabled}
@@ -1459,7 +1495,7 @@ export const Dashboard: React.FC = () => {
     : '';
   const dashboardCardHoverClassName = dashboardCardsDisabled
     ? ''
-    : 'hover:bg-app-surface-raised dark:hover:bg-[#111111]';
+    : 'dashboard-card-hover';
 
   return (
     <>

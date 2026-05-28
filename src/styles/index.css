@@ -177,48 +177,10 @@ body {
   transform: translate3d(18px, -8px, 0) rotate(5deg);
 }
 
-.sendi-plus-card--teaser:hover {
-  border-color: color-mix(in srgb, #0a84ff 42%, var(--app-border));
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, #0a84ff 18%, transparent),
-    0 14px 34px color-mix(in srgb, #0a84ff 14%, transparent);
-  transform: translateY(-1px);
-}
-
-.sendi-plus-card--teaser:hover::before {
-  animation: sendi-plus-card-smoke 6s ease-in-out infinite alternate;
-  opacity: 0.72;
-}
-
-.sendi-plus-card--teaser:hover::after {
-  animation: sendi-plus-card-glow-drift 4.8s ease-in-out infinite alternate;
-  opacity: 0.46;
-}
-
-.sendi-plus-card--teaser:hover .sendi-plus-label__word--off,
-.sendi-plus-card--teaser:hover .sendi-plus-label__plus--off {
-  color: var(--app-text);
-  opacity: 0.95;
-}
-
 .sendi-plus-terms-text {
   transition:
     color 180ms ease,
     opacity 180ms ease;
-}
-
-.sendi-plus-card--teaser:hover .sendi-plus-terms-text {
-  color: var(--app-text-secondary);
-  opacity: 0.86;
-}
-
-.sendi-plus-card--teaser:hover .sendi-plus-card__toggle {
-  background: color-mix(in srgb, var(--app-surface-raised) 78%, var(--app-text-secondary) 10%) !important;
-  border-color: color-mix(in srgb, #0a84ff 42%, transparent) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 0 0 1px color-mix(in srgb, #0a84ff 14%, transparent),
-    0 0 16px rgba(10, 132, 255, 0.12);
 }
 
 .sendi-plus-card--igniting {
@@ -231,21 +193,6 @@ body {
 
 .sendi-plus-card--igniting::after {
   opacity: 0.18;
-}
-
-.dashboard-status-card:not(:disabled):not([aria-disabled='true']):hover {
-  background: var(--app-surface-raised);
-  border-color: var(--app-border);
-}
-
-.dark .dashboard-status-card:not(:disabled):not([aria-disabled='true']):hover {
-  background: #111111;
-  border-color: #252525;
-}
-
-.twilight.dark .dashboard-status-card:not(:disabled):not([aria-disabled='true']):hover {
-  background: var(--app-surface-raised);
-  border-color: var(--app-border);
 }
 
 .dashboard-delivery-summary,
@@ -284,7 +231,73 @@ body {
   border-right-color: var(--app-border);
 }
 
+@media (hover: hover) and (pointer: fine) {
+  .sendi-plus-card--teaser:hover {
+    border-color: color-mix(in srgb, #0a84ff 42%, var(--app-border));
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, #0a84ff 18%, transparent),
+      0 14px 34px color-mix(in srgb, #0a84ff 14%, transparent);
+    transform: translateY(-1px);
+  }
+
+  .sendi-plus-card--teaser:hover::before {
+    animation: sendi-plus-card-smoke 6s ease-in-out infinite alternate;
+    opacity: 0.72;
+  }
+
+  .sendi-plus-card--teaser:hover::after {
+    animation: sendi-plus-card-glow-drift 4.8s ease-in-out infinite alternate;
+    opacity: 0.46;
+  }
+
+  .sendi-plus-card--teaser:hover .sendi-plus-label__word--off,
+  .sendi-plus-card--teaser:hover .sendi-plus-label__plus--off {
+    color: var(--app-text);
+    opacity: 0.95;
+  }
+
+  .sendi-plus-card--teaser:hover .sendi-plus-terms-text {
+    color: var(--app-text-secondary);
+    opacity: 0.86;
+  }
+
+  .sendi-plus-card--teaser:hover .sendi-plus-card__toggle {
+    background: color-mix(in srgb, var(--app-surface-raised) 78%, var(--app-text-secondary) 10%) !important;
+    border-color: color-mix(in srgb, #0a84ff 42%, transparent) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 0 0 1px color-mix(in srgb, #0a84ff 14%, transparent),
+      0 0 16px rgba(10, 132, 255, 0.12);
+  }
+
+  .dashboard-card-hover:hover,
+  .dashboard-status-card:not(:disabled):not([aria-disabled='true']):hover {
+    background: var(--app-surface-raised);
+    border-color: var(--app-border);
+  }
+
+  .dark .dashboard-card-hover:hover,
+  .dark .dashboard-status-card:not(:disabled):not([aria-disabled='true']):hover {
+    background: #111111;
+    border-color: #252525;
+  }
+
+  .twilight.dark .dashboard-card-hover:hover,
+  .twilight.dark .dashboard-status-card:not(:disabled):not([aria-disabled='true']):hover {
+    background: var(--app-surface-raised);
+    border-color: var(--app-border);
+  }
+}
+
 @media (hover: none), (pointer: coarse) {
+  .dashboard-card-hover,
+  .dashboard-status-card,
+  .dashboard-delivery-summary button,
+  .sendi-plus-card,
+  .sendi-plus-card button {
+    -webkit-tap-highlight-color: transparent;
+  }
+
   [data-toolbar-icon-button] {
     -webkit-tap-highlight-color: transparent;
   }
@@ -421,20 +434,22 @@ body {
   opacity: 1 !important;
 }
 
-.sendi-plus-card--teaser:hover .sendi-plus-mark--off {
-  background:
-    radial-gradient(circle at 50% 35%, rgba(10, 132, 255, 0.2), transparent 65%),
-    color-mix(in srgb, var(--app-surface-raised) 82%, var(--app-text-secondary) 9%);
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, #0a84ff 38%, var(--app-border)),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 0 12px rgba(10, 132, 255, 0.16);
-  opacity: 0.92;
-  transform: scale(1.03);
-}
+@media (hover: hover) and (pointer: fine) {
+  .sendi-plus-card--teaser:hover .sendi-plus-mark--off {
+    background:
+      radial-gradient(circle at 50% 35%, rgba(10, 132, 255, 0.2), transparent 65%),
+      color-mix(in srgb, var(--app-surface-raised) 82%, var(--app-text-secondary) 9%);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, #0a84ff 38%, var(--app-border)),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 0 12px rgba(10, 132, 255, 0.16);
+    opacity: 0.92;
+    transform: scale(1.03);
+  }
 
-.sendi-plus-card--teaser:hover .sendi-plus-mark--off svg {
-  color: #8ec7ff !important;
+  .sendi-plus-card--teaser:hover .sendi-plus-mark--off svg {
+    color: #8ec7ff !important;
+  }
 }
 
 .sendi-plus-mark__inner {
