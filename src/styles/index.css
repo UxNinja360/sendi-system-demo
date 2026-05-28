@@ -195,7 +195,6 @@ body {
   opacity: 0.18;
 }
 
-.dashboard-delivery-summary,
 .dashboard-delivery-summary__status-row,
 .dashboard-delivery-summary__row > * + * {
   border-color: var(--app-border);
@@ -216,7 +215,20 @@ body {
   border-right-width: 1px;
 }
 
-.twilight .dashboard-delivery-summary,
+.dark .dashboard-delivery-summary__status-row,
+.dark .dashboard-delivery-summary__row > * + * {
+  border-color: #252525;
+}
+
+.dark .dashboard-delivery-summary__status-row {
+  border-top-color: #252525;
+}
+
+.dark .dashboard-delivery-summary__row > * + * {
+  border-inline-start-color: #252525;
+  border-right-color: #252525;
+}
+
 .twilight .dashboard-delivery-summary__status-row,
 .twilight .dashboard-delivery-summary__row > * + * {
   border-color: var(--app-border);

@@ -1712,10 +1712,11 @@ export const Dashboard: React.FC = () => {
                     onClick={() => navigate('/couriers')}
                     className="min-w-0 flex-1 text-right focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between gap-2">
                       <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
                         שליחים
                       </span>
+                      <Bike className="h-3.5 w-3.5 shrink-0 text-emerald-400 sm:h-4 sm:w-4" />
                     </div>
                     <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
                       <CourierAvailabilityValue
