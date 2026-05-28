@@ -78,34 +78,13 @@ const createLocalDemoOtp = (phone: string, accountType: AccountType): RequestOtp
   };
 };
 
-const verifyLocalDemoOtp = ({
+const createLocalDemoVerification = ({
   accountType,
-  challengeId,
-  otp,
   phone,
 }: {
   accountType: AccountType;
-  challengeId: string;
-  otp: string;
   phone: string;
 }): VerifyOtpResult => {
-  const challenges = readLocalChallenges();
-  const challenge = challenges[challengeId];
-  const normalizedOtp = otp.replace(/\D/g, '');
-
-  if (
-    !challenge ||
-    challenge.accountType !== accountType ||
-    challenge.phone !== phone ||
-    challenge.expiresAt < Date.now() ||
-    normalizedOtp.length !== 6
-  ) {
-    throw new Error('invalid_otp');
-  }
-
-  delete challenges[challengeId];
-  writeLocalChallenges(challenges);
-
   const profileKey = `${accountType}:${phone}`;
   const now = new Date().toISOString();
 
@@ -131,6 +110,44 @@ const verifyLocalDemoOtp = ({
           }
         : null,
   };
+};
+
+const verifyLocalDemoOtp = ({
+  accountType,
+  challengeId,
+  otp,
+  phone,
+}: {
+  accountType: AccountType;
+  challengeId: string;
+  otp: string;
+  phone: string;
+}): VerifyOtpResult => {
+  const challenges = readLocalChallenges();
+  const challenge = challenges[challengeId];
+  const normalizedOtp = otp.replace(/\D/g, '');
+
+  if (normalizedOtp.length !== 6) {
+    throw new Error('invalid_otp');
+  }
+
+  if (
+    challenge &&
+    (
+      challenge.accountType !== accountType ||
+      challenge.phone !== phone ||
+      challenge.expiresAt < Date.now()
+    )
+  ) {
+    throw new Error('invalid_otp');
+  }
+
+  if (challenge) {
+    delete challenges[challengeId];
+    writeLocalChallenges(challenges);
+  }
+
+  return createLocalDemoVerification({ accountType, phone });
 };
 
 const postJson = async <Result>(path: string, body: Record<string, unknown>) => {
@@ -196,7 +213,8 @@ export const verifyOtp = async ({
       phone: normalizedPhone,
     });
   } catch (error) {
-    if (!challengeId.startsWith('local_')) throw error;
+    if (accountType !== 'delivery_company') throw error;
+
     return verifyLocalDemoOtp({
       accountType,
       challengeId,
