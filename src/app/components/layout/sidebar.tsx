@@ -65,10 +65,12 @@ const LABELS = {
   searchBusiness: '\u05d7\u05e4\u05e9 \u05d7\u05d1\u05e8\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd...',
   deliveryCompanies: '\u05d7\u05d1\u05e8\u05d5\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
   noBusinesses: '\u05dc\u05d0 \u05e0\u05de\u05e6\u05d0\u05d5 \u05d7\u05d1\u05e8\u05d5\u05ea',
-  acceptDeliveries: '\u05e7\u05d1\u05dc\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
+  receivingDeliveries: '\u05de\u05e7\u05d1\u05dc \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
+  notReceivingDeliveries: '\u05dc\u05d0 \u05de\u05e7\u05d1\u05dc \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
   autoAssign: '\u05e9\u05d9\u05d1\u05d5\u05e5 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9',
   intakeBlocked: '\u05e7\u05d1\u05dc\u05d4 \u05d7\u05e1\u05d5\u05de\u05d4',
-  systemClosed: '\u05de\u05e2\u05e8\u05db\u05ea \u05e1\u05d2\u05d5\u05e8\u05d4',
+  systemOn: '\u05de\u05e2\u05e8\u05db\u05ea \u05d3\u05dc\u05d5\u05e7\u05d4',
+  systemOff: '\u05de\u05e2\u05e8\u05db\u05ea \u05db\u05d1\u05d5\u05d9\u05d4',
   settings: '\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea',
   wallet: '\u05d0\u05e8\u05e0\u05e7',
   deliveryBalance: '\u05d9\u05ea\u05e8\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
@@ -243,7 +245,7 @@ const NAV_ICON_MAP: Record<AppNavIconKey, React.FC<React.SVGProps<SVGSVGElement>
 export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileMenuToggleReady }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { state, dispatch } = useDelivery();
+  const { state, dispatch, toggleSystem: toggleSystemPower } = useDelivery();
   const workspaceBusinessName = state.workspaceName?.trim() || 'TLV RUNNERS';
   const workspaceAccounts = useMemo(() => readWorkspaceAccounts(), [
     state.workspaceId,
@@ -358,12 +360,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
     ),
     [sendiPlusDeliveryZones, sendiPlusRadiusKm, state.restaurants],
   );
-  const isDeliveryIntakeBlocked = state.isSystemOpen && !hasDeliveryIntakeRestaurants;
-  const systemStatusLabel = isDeliveryIntakeBlocked
+  const isDeliveryIntakeBlocked =
+    state.isSystemOpen && state.isReceivingDeliveries && !hasDeliveryIntakeRestaurants;
+  const systemStatusLabel = state.isSystemOpen ? LABELS.systemOn : LABELS.systemOff;
+  const deliveryIntakeStatusLabel = isDeliveryIntakeBlocked
     ? LABELS.intakeBlocked
-    : state.isSystemOpen
-      ? LABELS.acceptDeliveries
-      : LABELS.systemClosed;
+    : state.isReceivingDeliveries
+      ? LABELS.receivingDeliveries
+      : LABELS.notReceivingDeliveries;
   const walletRevenue = state.deliveries
     .filter((delivery) => delivery.status === 'delivered')
     .reduce(
@@ -845,7 +849,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
   const toggleSystem = (event?: React.MouseEvent) => {
     event?.stopPropagation();
-    dispatch({ type: 'TOGGLE_SYSTEM' });
+    toggleSystemPower();
+  };
+
+  const toggleDeliveryIntake = (event?: React.MouseEvent) => {
+    event?.stopPropagation();
+    dispatch({ type: 'TOGGLE_DELIVERY_INTAKE' });
   };
 
   const renderNavItem = (item: AppNavItem) => {
@@ -1257,10 +1266,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
 
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-xs text-app-text-secondary">
+                    {deliveryIntakeStatusLabel}
+                  </span>
+                  <Toggle
+                    checked={state.isReceivingDeliveries}
+                    disabled={!state.isSystemOpen}
+                    onChange={() => toggleDeliveryIntake()}
+                    ariaLabel={deliveryIntakeStatusLabel}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xs text-app-text-secondary">
                     {LABELS.autoAssign}
                   </span>
                   <Toggle
                     checked={state.autoAssignEnabled}
+                    disabled={!state.isSystemOpen}
                     onChange={() => dispatch({ type: 'TOGGLE_AUTO_ASSIGN' })}
                     ariaLabel={LABELS.autoAssign}
                   />

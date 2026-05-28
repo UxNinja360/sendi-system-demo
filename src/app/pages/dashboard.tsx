@@ -362,10 +362,11 @@ const getDeliveryPrimaryDate = (delivery: Delivery) =>
 
 const DashboardToolbarToggle: React.FC<{
   active: boolean;
+  disabled?: boolean;
   icon: React.ReactNode;
   label: string;
   onClick: () => void;
-}> = ({ active, icon, label, onClick }) => (
+}> = ({ active, disabled = false, icon, label, onClick }) => (
   <AppTooltip label={label} side="bottom" sideOffset={8} className="inline-flex shrink-0">
     <button
       type="button"
@@ -374,9 +375,12 @@ const DashboardToolbarToggle: React.FC<{
       data-haptic="light"
       data-toolbar-icon-button
       data-active={active ? 'true' : 'false'}
+      disabled={disabled}
       onClick={onClick}
       className={`relative inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-[var(--app-radius-xs)] border text-xs font-semibold leading-none transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 ${
-        active
+        disabled
+          ? 'cursor-not-allowed border-[#E5E5E5] bg-white text-[#A3A3A3] opacity-55 dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#555555]'
+          : active
           ? 'border-[#0D0D12] bg-[#F5F5F5] text-[#0D0D12] dark:border-[#2E2E2E] dark:bg-[#1F1F1F] dark:text-[#EDEDED]'
           : 'border-[#E5E5E5] bg-white text-[#0D0D12] hover:bg-[#F5F5F5] dark:border-app-nav-border dark:bg-[#0A0A0A] dark:text-[#EDEDED] dark:hover:bg-[#111111]'
       }`}
@@ -1315,7 +1319,8 @@ export const Dashboard: React.FC = () => {
     () => sendiPlusDeliveryZones.filter(isDeliveryZoneActive).length,
     [dashboardRefreshVersion, sendiPlusDeliveryZones],
   );
-  const isSendiPlusOperational = state.isSystemOpen && sendiPlusTermsAccepted;
+  const isSendiPlusOperational =
+    state.isSystemOpen && state.isReceivingDeliveries && sendiPlusTermsAccepted;
   const sendiPlusActiveRestaurantCount = React.useMemo(
     () =>
       state.restaurants.filter(
@@ -1416,6 +1421,10 @@ export const Dashboard: React.FC = () => {
   const pullRefreshLabel = isDashboardRefreshing || isPullRefreshReady
     ? 'מרענן'
     : 'משוך לרענון';
+  const systemPowerLabel = state.isSystemOpen ? 'מערכת דלוקה' : 'מערכת כבויה';
+  const deliveryIntakeLabel = state.isReceivingDeliveries ? 'מקבל משלוחים' : 'לא מקבל משלוחים';
+  const autoAssignLabel = state.autoAssignEnabled ? 'שיבוץ אוטומטי פעיל' : 'שיבוץ אוטומטי כבוי';
+  const secondaryControlsDisabled = !state.isSystemOpen || isDashboardRefreshing;
 
   return (
     <>
@@ -1476,8 +1485,9 @@ export const Dashboard: React.FC = () => {
               <div className="flex shrink-0 items-center gap-1">
                 <DashboardToolbarToggle
                   active={state.isSystemOpen}
-                  label={state.isSystemOpen ? 'מערכת פתוחה' : 'מערכת סגורה'}
-                  onClick={isDashboardRefreshing ? () => undefined : toggleSystem}
+                  disabled={isDashboardRefreshing}
+                  label={systemPowerLabel}
+                  onClick={toggleSystem}
                   icon={
                     pullRefreshArmed ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -1487,6 +1497,26 @@ export const Dashboard: React.FC = () => {
                       <PowerOff className="h-3.5 w-3.5" />
                     )
                   }
+                />
+                <DashboardToolbarToggle
+                  active={state.isReceivingDeliveries}
+                  disabled={secondaryControlsDisabled}
+                  label={deliveryIntakeLabel}
+                  onClick={() => dispatch({ type: 'TOGGLE_DELIVERY_INTAKE' })}
+                  icon={
+                    state.isReceivingDeliveries ? (
+                      <PackageCheck className="h-3.5 w-3.5" />
+                    ) : (
+                      <PackageOpen className="h-3.5 w-3.5" />
+                    )
+                  }
+                />
+                <DashboardToolbarToggle
+                  active={state.autoAssignEnabled}
+                  disabled={secondaryControlsDisabled}
+                  label={autoAssignLabel}
+                  onClick={() => dispatch({ type: 'TOGGLE_AUTO_ASSIGN' })}
+                  icon={<Sparkles className="h-3.5 w-3.5" />}
                 />
               </div>
             </div>
@@ -1514,7 +1544,6 @@ export const Dashboard: React.FC = () => {
                 className="flex w-full min-w-0 items-center justify-between gap-3 border-b border-app-border p-2.5 text-right transition-colors hover:bg-app-surface-raised sm:p-3 dark:border-[#252525] dark:hover:bg-[#111111]"
               >
                 <div className="flex min-w-0 items-center gap-2">
-                  <PackageCheck className="h-4 w-4 shrink-0 text-app-brand" />
                   <span className="min-w-0 truncate text-xs font-semibold text-app-text-secondary">
                     משלוחים פעילים
                   </span>
@@ -1559,41 +1588,6 @@ export const Dashboard: React.FC = () => {
                 );
               })}
               </div>
-              <div className="dashboard-delivery-summary__row dashboard-delivery-summary__status-row grid grid-cols-2" dir="rtl">
-              {(['delivered', 'cancelled'] as DeliveryStatus[]).map((statusId) => {
-                const status = STATUS_META.find((item) => item.id === statusId);
-                if (!status) return null;
-
-                const Icon = status.icon;
-                const count = statusCounts.get(statusId) ?? 0;
-                const label = statusId === 'delivered' ? 'נמסרו' : 'בוטלו';
-                const value = formatNumber(count);
-                const iconClassName = status.accentClassName;
-
-                return (
-                  <button
-                    key={statusId}
-                    type="button"
-                    aria-label={label}
-                    onClick={() => navigate(getDeliveriesStatusFilterPath([statusId]))}
-                    className="min-w-0 p-2.5 text-right transition-colors hover:bg-app-surface-raised sm:p-3 dark:hover:bg-[#111111]"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
-                        {label}
-                      </span>
-                      <Icon className={`h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4 ${iconClassName}`} />
-                    </div>
-                    <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
-                      <RefreshingMetricValue
-                        refreshing={isDashboardRefreshing}
-                        value={value}
-                      />
-                    </div>
-                  </button>
-                );
-              })}
-              </div>
             </div>
             <div className="mt-[10px] grid grid-cols-2 gap-[10px] min-[520px]:grid-cols-6">
               <section
@@ -1604,7 +1598,7 @@ export const Dashboard: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => navigate('/couriers')}
-                    className="min-w-0 flex-1 pl-[7.5rem] text-right focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+                    className="min-w-0 flex-1 text-right focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
                   >
                     <div className="flex items-center gap-2">
                       <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
@@ -1619,22 +1613,6 @@ export const Dashboard: React.FC = () => {
                       />
                     </div>
                   </button>
-                  <div dir="ltr" className="absolute left-2.5 top-1/2 flex h-[52px] min-w-[6.75rem] -translate-y-1/2 flex-col items-start justify-between py-0.5 sm:left-3">
-                    <span className="max-w-[7.5rem] truncate text-left text-[11px] font-semibold leading-none text-app-text-secondary sm:text-xs">
-                      שיבוץ אוטומטי
-                    </span>
-                    <Toggle
-                      checked={state.autoAssignEnabled}
-                      disabled={isDashboardRefreshing}
-                      ariaLabel="שיבוץ אוטומטי"
-                      size="sm"
-                      onChange={
-                        isDashboardRefreshing
-                          ? () => undefined
-                          : () => dispatch({ type: 'TOGGLE_AUTO_ASSIGN' })
-                      }
-                    />
-                  </div>
                 </div>
               </section>
               <button
@@ -1688,6 +1666,46 @@ export const Dashboard: React.FC = () => {
             onRadiusKmChange={handleSendiPlusRadiusChange}
             onTermsAcceptedChange={handleSendiPlusTermsAcceptedChange}
           />
+
+          <section
+            aria-label="סיכום נמסרו ובוטלו"
+            className="grid grid-cols-2 gap-[10px]"
+          >
+            {(['delivered', 'cancelled'] as DeliveryStatus[]).map((statusId) => {
+              const status = STATUS_META.find((item) => item.id === statusId);
+              if (!status) return null;
+
+              const Icon = status.icon;
+              const count = statusCounts.get(statusId) ?? 0;
+              const label = statusId === 'delivered' ? 'נמסרו' : 'בוטלו';
+              const value = formatNumber(count);
+              const iconClassName = status.accentClassName;
+
+              return (
+                <button
+                  key={statusId}
+                  type="button"
+                  aria-label={label}
+                  onClick={() => navigate(getDeliveriesStatusFilterPath([statusId]))}
+                  className="dashboard-status-card min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] dark:hover:bg-[#111111]"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
+                      {label}
+                    </span>
+                    <Icon className={`h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4 ${iconClassName}`} />
+                  </div>
+                  <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
+                    <RefreshingMetricValue
+                      refreshing={isDashboardRefreshing}
+                      value={value}
+                    />
+                  </div>
+                </button>
+              );
+            })}
+          </section>
+
         </div>
       </main>
       </div>

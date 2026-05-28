@@ -101,8 +101,18 @@ const createActivityLogEntry = (action: DeliveryAction, state: DeliveryState): A
       return {
         id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
         timestamp: now,
-        title: state.isSystemOpen ? 'המערכת נסגרה' : 'המערכת נפתחה',
-        description: state.isSystemOpen ? 'קבלת משלוחים הופסקה' : 'קבלת משלוחים הופעלה',
+        title: state.isSystemOpen ? 'המערכת כובתה' : 'המערכת נדלקה',
+        description: state.isSystemOpen
+          ? 'קבלת משלוחים, שיבוץ אוטומטי וסנדי פלוס כובו'
+          : 'המערכת מוכנה להפעלה',
+        actionType: action.type,
+        category: 'system',
+      };
+    case 'TOGGLE_DELIVERY_INTAKE':
+      return {
+        id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: now,
+        title: state.isReceivingDeliveries ? 'קבלת משלוחים כובתה' : 'קבלת משלוחים הופעלה',
         actionType: action.type,
         category: 'system',
       };
@@ -378,7 +388,12 @@ const createActionToast = (action: DeliveryAction, state: DeliveryState): Action
     case 'TOGGLE_SYSTEM':
       return {
         actionType: action.type,
-        title: state.isSystemOpen ? 'קבלת משלוחים כובתה' : 'קבלת משלוחים הופעלה',
+        title: state.isSystemOpen ? 'המערכת כובתה' : 'המערכת נדלקה',
+      };
+    case 'TOGGLE_DELIVERY_INTAKE':
+      return {
+        actionType: action.type,
+        title: state.isReceivingDeliveries ? 'קבלת משלוחים כובתה' : 'קבלת משלוחים הופעלה',
       };
     case 'TOGGLE_AUTO_ASSIGN':
       return {
@@ -681,6 +696,7 @@ const getAggregateActionToastTitle = (actionType: DeliveryAction['type'], count:
 
 const shouldUseNeutralActionToast = (actionType: DeliveryAction['type']) =>
   actionType === 'TOGGLE_SYSTEM' ||
+  actionType === 'TOGGLE_DELIVERY_INTAKE' ||
   actionType === 'TOGGLE_AUTO_ASSIGN' ||
   actionType === 'SET_TIME_MULTIPLIER' ||
   actionType === 'UPDATE_DELIVERY' ||
@@ -966,10 +982,21 @@ const loadInitialState = (baseState: DeliveryState): DeliveryState => {
       migratedRestaurants,
       sendiPlusTermsAccepted,
     );
+    const isSystemOpen = Boolean(parsed.isSystemOpen);
+    const isReceivingDeliveries =
+      isSystemOpen &&
+      (
+        typeof parsed.isReceivingDeliveries === 'boolean'
+          ? parsed.isReceivingDeliveries
+          : isSystemOpen
+      );
 
     const loadedState = {
       ...baseState,
       ...parsed,
+      isSystemOpen,
+      isReceivingDeliveries,
+      autoAssignEnabled: isSystemOpen && Boolean(parsed.autoAssignEnabled),
       couriers,
       restaurants: syncedRestaurants,
       courierRoutePlans,
@@ -1107,6 +1134,31 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const dispatch = useCallback((action: DeliveryAction) => {
     const previousState = stateRef.current;
+
+    if (action.type === 'TOGGLE_SYSTEM' && previousState.isSystemOpen) {
+      const activeDeliveriesCount = previousState.deliveries.filter(isLiveActiveDelivery).length;
+
+      if (activeDeliveriesCount > 0) {
+        showActionInfoToast('אי אפשר לכבות מערכת', {
+          description: `יש ${activeDeliveriesCount.toLocaleString('he-IL')} משלוחים פעילים. סיים או בטל אותם לפני הכיבוי.`,
+          duration: ACTION_TOAST_DURATION_MS,
+        });
+        return;
+      }
+
+      writeStoredSendiPlusTermsAccepted(false);
+    }
+
+    if (
+      (action.type === 'TOGGLE_DELIVERY_INTAKE' || action.type === 'TOGGLE_AUTO_ASSIGN') &&
+      !previousState.isSystemOpen
+    ) {
+      showActionInfoToast('המערכת כבויה', {
+        description: 'הדלק את המערכת לפני שינוי קבלת משלוחים או שיבוץ אוטומטי.',
+        duration: ACTION_TOAST_DURATION_MS,
+      });
+      return;
+    }
 
     if (action.type === 'TOGGLE_RESTAURANT' && readStoredSendiPlusTermsAccepted()) {
       const restaurant = previousState.restaurants.find((item) => item.id === action.payload);
@@ -1645,7 +1697,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // A single scheduler keeps the demo realistic and prevents HMR/reload bursts.
   useEffect(() => {
-    if (!state.isSystemOpen) {
+    if (!state.isSystemOpen || !state.isReceivingDeliveries) {
       simulationOpenedAtRef.current = null;
       return;
     }
@@ -1656,7 +1708,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const spawnEligibleDelivery = (now: Date = new Date()) => {
       const stateNow = stateRef.current;
-      if (!stateNow.isSystemOpen) return;
+      if (!stateNow.isSystemOpen || !stateNow.isReceivingDeliveries) return;
 
       const speed = Math.max(stateNow.timeMultiplier || 1, 0.1);
       const sendiPlusRadiusKm = readStoredSendiPlusRadius();
@@ -1767,7 +1819,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         document.removeEventListener('visibilitychange', handleVisibilityChange);
       }
     };
-  }, [state.isSystemOpen, state.timeMultiplier, generateDelivery, rawDispatch]);
+  }, [state.isReceivingDeliveries, state.isSystemOpen, state.timeMultiplier, generateDelivery, rawDispatch]);
 
   useEffect(() => {
     const expireOffers = () => {
@@ -1795,6 +1847,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Auto-assign pending deliveries while the feature is enabled.
   useEffect(() => {
+    if (!state.isSystemOpen) return;
     if (!state.autoAssignEnabled) return;
 
     const runAutoAssign = () => {
@@ -1984,10 +2037,6 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   const toggleSystem = () => {
-    if (stateRef.current.isSystemOpen) {
-      writeStoredSendiPlusTermsAccepted(false);
-    }
-
     dispatch({ type: 'TOGGLE_SYSTEM' });
   };
 

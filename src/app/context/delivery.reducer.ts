@@ -28,6 +28,17 @@ import {
 } from '../live/live-simulation-engine';
 import { reconcileCourierDeliveryInvariants } from './delivery-state-invariants';
 
+const SYSTEM_BLOCKING_DELIVERY_STATUSES: DeliveryStatus[] = [
+  'pending',
+  'assigned',
+  'delivering',
+];
+
+const hasSystemBlockingDeliveries = (state: DeliveryState) =>
+  state.deliveries.some((delivery) =>
+    SYSTEM_BLOCKING_DELIVERY_STATUSES.includes(delivery.status)
+  );
+
 const getCourierStatusAfterLoadChange = (
   courierStatus: 'available' | 'busy' | 'offline',
   activeDeliveryIds: string[]
@@ -1866,13 +1877,35 @@ const appendActivityLogEntry = (
 
 const reduceDeliveryState = (state: DeliveryState, action: DeliveryAction): DeliveryState => {
   switch (action.type) {
-    case 'TOGGLE_SYSTEM':
+    case 'TOGGLE_SYSTEM': {
+      if (state.isSystemOpen) {
+        if (hasSystemBlockingDeliveries(state)) return state;
+
+        return {
+          ...state,
+          isSystemOpen: false,
+          isReceivingDeliveries: false,
+          autoAssignEnabled: false,
+        };
+      }
+
       return {
         ...state,
-        isSystemOpen: !state.isSystemOpen,
+        isSystemOpen: true,
+      };
+    }
+
+    case 'TOGGLE_DELIVERY_INTAKE':
+      if (!state.isSystemOpen) return state;
+
+      return {
+        ...state,
+        isReceivingDeliveries: !state.isReceivingDeliveries,
       };
 
     case 'TOGGLE_AUTO_ASSIGN':
+      if (!state.isSystemOpen) return state;
+
       return {
         ...state,
         autoAssignEnabled: !state.autoAssignEnabled,

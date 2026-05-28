@@ -46,6 +46,7 @@ const createEmptyWorkspaceState = ({
     workspaceArea: area.trim(),
     workspacePhone: companyPhone.trim(),
     isSystemOpen: false,
+    isReceivingDeliveries: false,
     autoAssignEnabled: false,
     deliveries: [],
     couriers: [],

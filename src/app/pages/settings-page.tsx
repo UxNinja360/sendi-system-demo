@@ -71,8 +71,10 @@ const TEXT = {
   operationsDescription: '\u05e8\u05d9\u05db\u05d5\u05d6 \u05db\u05dc \u05d4\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea \u05e9\u05e7\u05d5\u05d1\u05e2\u05d5\u05ea \u05d0\u05d9\u05da \u05d4\u05e2\u05e1\u05e7 \u05e2\u05d5\u05d1\u05d3 \u05d1\u05e9\u05d8\u05d7: \u05e9\u05e2\u05d5\u05ea, \u05d0\u05d6\u05d5\u05e8\u05d9\u05dd \u05d5\u05ea\u05de\u05d7\u05d5\u05e8.',
   system: '\u05d4\u05de\u05e2\u05e8\u05db\u05ea',
   systemDescription: '\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea \u05e9\u05de\u05db\u05ea\u05d9\u05d1\u05d5\u05ea \u05d0\u05d9\u05da \u05d4\u05de\u05e2\u05e8\u05db\u05ea \u05db\u05d5\u05dc\u05d4 \u05e2\u05d5\u05d1\u05d3\u05ea \u05d1\u05d6\u05de\u05df \u05d0\u05de\u05ea.',
-  systemOpen: '\u05d4\u05de\u05e2\u05e8\u05db\u05ea \u05e4\u05ea\u05d5\u05d7\u05d4',
-  systemOpenHint: '\u05db\u05d9\u05d1\u05d5\u05d9 \u05e2\u05d5\u05e6\u05e8 \u05d9\u05e6\u05d9\u05e8\u05d4 \u05d5\u05e2\u05d1\u05d5\u05d3\u05d4 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9\u05ea.',
+  systemOpen: '\u05de\u05e2\u05e8\u05db\u05ea \u05d3\u05dc\u05d5\u05e7\u05d4',
+  systemOpenHint: '\u05db\u05d9\u05d1\u05d5\u05d9 \u05d6\u05de\u05d9\u05df \u05e8\u05e7 \u05db\u05e9\u05d0\u05d9\u05df \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd \u05e4\u05e2\u05d9\u05dc\u05d9\u05dd, \u05d5\u05de\u05db\u05d1\u05d4 \u05d0\u05ea \u05db\u05dc \u05de\u05e6\u05d1\u05d9 \u05d4\u05ea\u05e4\u05e2\u05d5\u05dc.',
+  deliveryIntake: '\u05e7\u05d1\u05dc\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
+  deliveryIntakeHint: '\u05e9\u05dc\u05d9\u05d8\u05d4 \u05d1\u05db\u05e0\u05d9\u05e1\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd \u05d7\u05d3\u05e9\u05d9\u05dd \u05db\u05e9\u05d4\u05de\u05e2\u05e8\u05db\u05ea \u05d3\u05dc\u05d5\u05e7\u05d4.',
   autoAssign: '\u05e9\u05d9\u05d1\u05d5\u05e5 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9',
   autoAssignHint: '\u05e9\u05d9\u05d1\u05d5\u05e5 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9 \u05dc\u05e9\u05dc\u05d9\u05d7\u05d9\u05dd \u05db\u05e9\u05d4\u05de\u05e2\u05e8\u05db\u05ea \u05e2\u05d5\u05d1\u05d3\u05ea.',
   timeMultiplier: '\u05de\u05db\u05e4\u05d9\u05dc \u05d6\u05de\u05df',
@@ -890,12 +892,26 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
                   }
                 />
                 <SettingRow
+                  icon={<Package className="h-4 w-4" />}
+                  title={TEXT.deliveryIntake}
+                  hint={TEXT.deliveryIntakeHint}
+                  control={
+                    <Toggle
+                      checked={state.isReceivingDeliveries}
+                      disabled={!state.isSystemOpen}
+                      onChange={() => dispatch({ type: 'TOGGLE_DELIVERY_INTAKE' })}
+                      ariaLabel={TEXT.deliveryIntake}
+                    />
+                  }
+                />
+                <SettingRow
                   icon={<Bot className="h-4 w-4" />}
                   title={TEXT.autoAssign}
                   hint={TEXT.autoAssignHint}
                   control={
                     <Toggle
                       checked={state.autoAssignEnabled}
+                      disabled={!state.isSystemOpen}
                       onChange={() => dispatch({ type: 'TOGGLE_AUTO_ASSIGN' })}
                       ariaLabel={TEXT.autoAssign}
                     />

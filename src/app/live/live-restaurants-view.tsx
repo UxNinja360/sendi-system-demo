@@ -37,7 +37,9 @@ export const LiveRestaurantsView: React.FC = () => {
   );
 
   const emptyMessage = !state.isSystemOpen
-    ? 'המערכת סגורה - הפעל את המערכת כדי לראות מסעדות'
+    ? 'המערכת כבויה - הדלק את המערכת כדי לראות מסעדות'
+    : !state.isReceivingDeliveries
+      ? 'קבלת משלוחים כבויה - הפעל קבלת משלוחים כדי לראות פעילות חדשה'
     : restaurantsWithOrders.length === 0
       ? 'אין מסעדות פעילות - הפעל מסעדות דרך ניהול ישויות'
       : 'לא נמצאו מסעדות תואמות';

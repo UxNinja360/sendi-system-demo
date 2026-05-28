@@ -399,6 +399,7 @@ export interface DeliveryState {
   workspaceArea?: string;
   workspacePhone?: string;
   isSystemOpen: boolean;
+  isReceivingDeliveries: boolean;
   autoAssignEnabled: boolean;
   timeMultiplier: number; // מכפיל זמן - x1 = זמן אמת, x2 = כפול מהר יותר
   deliveries: Delivery[];
@@ -457,6 +458,7 @@ export interface ActivityLogEntry {
 // Actions
 export type DeliveryAction =
   | { type: 'TOGGLE_SYSTEM' }
+  | { type: 'TOGGLE_DELIVERY_INTAKE' }
   | { type: 'TOGGLE_AUTO_ASSIGN' }
   | { type: 'SET_TIME_MULTIPLIER'; payload: number } // שינוי מכפיל הזמן
   | { type: 'ADD_DELIVERY'; payload: Delivery }

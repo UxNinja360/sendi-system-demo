@@ -16,14 +16,20 @@ export const OperatingHoursPage: React.FC = () => {
         icon={<Clock className="h-5 w-5" />}
         title="שעות פעילות"
         subtitle="כאן נגדיר מתי חברת המשלוחים מקבלת משלוחים, מה קורה מחוץ לשעות פעילות, ואיך חריגים משפיעים על מסעדות, שליחים ורשתות."
-        statusLabel={state.isSystemOpen ? 'קבלת משלוחים פתוחה' : 'קבלת משלוחים סגורה'}
-        statusTone={state.isSystemOpen ? 'connected' : 'warning'}
+        statusLabel={state.isReceivingDeliveries ? 'קבלת משלוחים פתוחה' : 'קבלת משלוחים סגורה'}
+        statusTone={state.isReceivingDeliveries ? 'connected' : 'warning'}
         metrics={[
           {
             label: 'מצב מערכת',
-            value: state.isSystemOpen ? 'פתוח' : 'סגור',
-            helper: 'לפי מתג קבלת משלוחים',
+            value: state.isSystemOpen ? 'דלוקה' : 'כבויה',
+            helper: 'לפי מתג מערכת דלוקה/כבויה',
             tone: state.isSystemOpen ? 'success' : 'warning',
+          },
+          {
+            label: 'קבלת משלוחים',
+            value: state.isReceivingDeliveries ? 'פתוחה' : 'סגורה',
+            helper: 'כניסת משלוחים חדשים',
+            tone: state.isReceivingDeliveries ? 'success' : 'warning',
           },
           {
             label: 'מסעדות פעילות',

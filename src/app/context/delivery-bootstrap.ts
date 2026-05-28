@@ -822,6 +822,7 @@ export const createInitialDeliveryState = (): DeliveryState => ({
   workspaceId: 'wrk_legacy_tlv_runners',
   workspaceName: 'TLV RUNNERS',
   isSystemOpen: false,
+  isReceivingDeliveries: false,
   autoAssignEnabled: false, // Keep auto-assignment off while the system is closed.
   timeMultiplier: 1, // Real-time simulation speed.
   deliveries: [],

@@ -313,7 +313,7 @@ export const DispatchLabPage: React.FC = () => {
                   ניסוי
                 </span>
               </div>
-              <div className="text-xs text-[#737373]">פעילות עכשיו · {state.isSystemOpen ? 'קבלה פעילה' : 'קבלה כבויה'}</div>
+              <div className="text-xs text-[#737373]">פעילות עכשיו · {state.isReceivingDeliveries ? 'קבלה פעילה' : 'קבלה כבויה'}</div>
             </div>
           </div>
 

@@ -79,7 +79,7 @@ export const DeliveriesLiveMapPanel: React.FC<DeliveriesLiveMapPanelProps> = ({
   const [hoveredOrderId, setHoveredOrderId] = useState<string | null>(null);
   const [hoveredCourierId, setHoveredCourierId] = useState<string | null>(null);
   const [hoveredRestaurantName, setHoveredRestaurantName] = useState<string | null>(null);
-  const isSendiPlusActive = state.isSystemOpen && sendiPlusTermsAccepted;
+  const isSendiPlusActive = state.isSystemOpen && state.isReceivingDeliveries && sendiPlusTermsAccepted;
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
