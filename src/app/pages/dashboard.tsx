@@ -16,6 +16,7 @@ import {
   Sparkles,
   Store,
   Timer,
+  Truck,
   UserCheck,
   UserPlus,
   XCircle,
@@ -54,6 +55,7 @@ import {
   isPointCoveredByActiveDeliveryZones,
   loadStoredDeliveryServiceAreas,
 } from '../utils/delivery-zones';
+import { readAuthSession } from '../auth/auth-session';
 
 const DASHBOARD_DELIVERY_STATUSES: DeliveryStatus[] = [
   'pending',
@@ -149,7 +151,7 @@ const STATUS_META: Array<{
     id: 'delivering',
     label: 'במסירה',
     hint: 'שליח בדרך ללקוח',
-    icon: Bike,
+    icon: Truck,
     accentClassName: 'text-green-400',
     barClassName: 'bg-green-500',
   },
@@ -1044,6 +1046,7 @@ const WorkspaceStartSpotlight: React.FC<{
 export const Dashboard: React.FC = () => {
   const { state, dispatch, toggleSystem } = useDelivery();
   const navigate = useNavigate();
+  const [authSession, setAuthSession] = React.useState(readAuthSession);
   const todayDateKey = React.useMemo(() => toDateInputValue(new Date()), []);
   const [sendiPlusRadiusKm, setSendiPlusRadiusKm] = React.useState(readStoredSendiPlusRadius);
   const [sendiPlusTermsAccepted, setSendiPlusTermsAccepted] = React.useState(readStoredSendiPlusTermsAccepted);
@@ -1069,6 +1072,7 @@ export const Dashboard: React.FC = () => {
     [state.workspaceId, state.workspaceName],
   );
   const [isWorkspaceStartDismissed, setIsWorkspaceStartDismissed] = React.useState(false);
+  const dashboardUserName = authSession?.user.name?.trim() || 'משתמש';
 
   const isMobilePullRefreshPointer = React.useCallback(() => {
     if (typeof window === 'undefined') return false;
@@ -1149,6 +1153,20 @@ export const Dashboard: React.FC = () => {
     if (dashboardRefreshTimeoutRef.current !== null) {
       window.clearTimeout(dashboardRefreshTimeoutRef.current);
     }
+  }, []);
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const refreshAuthSession = () => setAuthSession(readAuthSession());
+
+    window.addEventListener('storage', refreshAuthSession);
+    window.addEventListener('focus', refreshAuthSession);
+
+    return () => {
+      window.removeEventListener('storage', refreshAuthSession);
+      window.removeEventListener('focus', refreshAuthSession);
+    };
   }, []);
 
   React.useEffect(() => {
@@ -1539,6 +1557,47 @@ export const Dashboard: React.FC = () => {
   const dashboardCardHoverClassName = dashboardCardsDisabled
     ? ''
     : 'dashboard-card-hover';
+  const deliveredCancelledSummary = (
+    <section
+      aria-label="סיכום נמסרו ובוטלו"
+      className="grid grid-cols-2 gap-[10px]"
+    >
+      {(['delivered', 'cancelled'] as DeliveryStatus[]).map((statusId) => {
+        const status = STATUS_META.find((item) => item.id === statusId);
+        if (!status) return null;
+
+        const Icon = status.icon;
+        const count = statusCounts.get(statusId) ?? 0;
+        const label = statusId === 'delivered' ? 'נמסרו' : 'בוטלו';
+        const value = formatNumber(count);
+        const iconClassName = status.accentClassName;
+
+        return (
+          <button
+            key={statusId}
+            type="button"
+            aria-label={label}
+            disabled={dashboardCardsDisabled}
+            onClick={() => navigate(getDeliveriesStatusFilterPath([statusId]))}
+            className={`dashboard-status-card min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] ${dashboardCardHoverClassName} ${dashboardCardDisabledClassName}`}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
+                {label}
+              </span>
+              <Icon className={`h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4 ${iconClassName}`} />
+            </div>
+            <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
+              <RefreshingMetricValue
+                refreshing={isDashboardRefreshing}
+                value={value}
+              />
+            </div>
+          </button>
+        );
+      })}
+    </section>
+  );
 
   return (
     <>
@@ -1592,7 +1651,7 @@ export const Dashboard: React.FC = () => {
           <section className="flex w-full items-center justify-between gap-3">
             <div className="min-w-0 text-right">
               <h1 className="truncate text-lg font-bold leading-tight text-app-text sm:text-xl">
-                {isDashboardRefreshing ? '-' : `${dashboardGreeting}, אלכס`}
+                {isDashboardRefreshing ? '-' : `${dashboardGreeting}, ${dashboardUserName}`}
               </h1>
             </div>
             <div className="flex max-w-full min-w-0 items-center gap-2 overflow-x-auto no-scrollbar" dir="ltr">
@@ -1703,45 +1762,6 @@ export const Dashboard: React.FC = () => {
               })}
               </div>
             </div>
-            <section
-              aria-label="סיכום נמסרו ובוטלו"
-              className="mt-[10px] grid grid-cols-2 gap-[10px]"
-            >
-              {(['delivered', 'cancelled'] as DeliveryStatus[]).map((statusId) => {
-                const status = STATUS_META.find((item) => item.id === statusId);
-                if (!status) return null;
-
-                const Icon = status.icon;
-                const count = statusCounts.get(statusId) ?? 0;
-                const label = statusId === 'delivered' ? 'נמסרו' : 'בוטלו';
-                const value = formatNumber(count);
-                const iconClassName = status.accentClassName;
-
-                return (
-                  <button
-                    key={statusId}
-                    type="button"
-                    aria-label={label}
-                    disabled={dashboardCardsDisabled}
-                    onClick={() => navigate(getDeliveriesStatusFilterPath([statusId]))}
-                    className={`dashboard-status-card min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] ${dashboardCardHoverClassName} ${dashboardCardDisabledClassName}`}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
-                        {label}
-                      </span>
-                      <Icon className={`h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4 ${iconClassName}`} />
-                    </div>
-                    <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
-                      <RefreshingMetricValue
-                        refreshing={isDashboardRefreshing}
-                        value={value}
-                      />
-                    </div>
-                  </button>
-                );
-              })}
-            </section>
             <div className="mt-[10px] grid grid-cols-2 gap-[10px] min-[520px]:grid-cols-6">
               <section
                 aria-label="שליחים"
@@ -1826,6 +1846,8 @@ export const Dashboard: React.FC = () => {
             onRadiusKmChange={handleSendiPlusRadiusChange}
             onTermsAcceptedChange={handleSendiPlusTermsAcceptedChange}
           />
+
+          {deliveredCancelledSummary}
 
         </div>
       </main>
