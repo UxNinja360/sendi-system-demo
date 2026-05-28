@@ -37,10 +37,8 @@ body {
 
 .login-shell {
   --login-bg: #f7f8fb;
-  --login-dot-a: #0f172a;
-  --login-dot-b: #2563eb;
-  --login-dot-c: #0f766e;
-  --login-dot-d: #64748b;
+  --login-dot: #111827;
+  --login-dot-opacity: 0.26;
   --login-dot-veil: rgba(247, 248, 251, 0.12);
 
   background: var(--login-bg);
@@ -48,19 +46,15 @@ body {
 
 .dark .login-shell {
   --login-bg: #030507;
-  --login-dot-a: #5eead4;
-  --login-dot-b: #60a5fa;
-  --login-dot-c: #818cf8;
-  --login-dot-d: #e5e7eb;
+  --login-dot: #2f3b4a;
+  --login-dot-opacity: 0.74;
   --login-dot-veil: rgba(3, 5, 7, 0.18);
 }
 
 .twilight .login-shell {
   --login-bg: #07111f;
-  --login-dot-a: #38bdf8;
-  --login-dot-b: #14b8a6;
-  --login-dot-c: #a78bfa;
-  --login-dot-d: #dbeafe;
+  --login-dot: #2f5f72;
+  --login-dot-opacity: 0.72;
   --login-dot-veil: rgba(7, 17, 31, 0.16);
 }
 
@@ -95,18 +89,9 @@ body {
 }
 
 .login-dot-field__dot {
-  transform-box: fill-box;
-  transform-origin: center;
-  transition:
-    opacity 70ms ease-out,
-    transform 64ms cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: opacity, transform;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .login-dot-field__dot {
-    transition: none;
-  }
+  fill: var(--login-dot);
+  opacity: var(--login-dot-opacity);
+  will-change: transform;
 }
 
 .reports-thinking-dots {

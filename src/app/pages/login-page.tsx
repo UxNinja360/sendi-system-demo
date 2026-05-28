@@ -1,4 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useNavigate } from 'react-router';
 import { requestOtp, verifyOtp } from '../auth/auth-api';
 import type { AccountType } from '../auth/auth-session';
@@ -17,63 +24,36 @@ import {
 
 const normalizePhone = (value: string) => value.replace(/\D/g, '');
 
-type LoginPointerState = {
-  active: boolean;
-  x: number;
-  y: number;
-};
-
 type LoginDot = {
-  color: string;
-  depth: number;
   id: string;
-  opacity: number;
-  radius: number;
   x: number;
   y: number;
 };
 
-const LOGIN_POINTER_REST: LoginPointerState = { active: false, x: 50, y: 45 };
-const LOGIN_DOT_COLUMNS = 92;
+type LoginDotFieldHandle = {
+  leave: () => void;
+  move: (clientX: number, clientY: number, rect: DOMRect) => void;
+};
+
+const LOGIN_VIEWBOX_WIDTH = 160;
+const LOGIN_VIEWBOX_HEIGHT = 100;
+const LOGIN_DOT_COLUMNS = 88;
 const LOGIN_DOT_ROWS = 54;
-const LOGIN_DOT_COLORS = [
-  'var(--login-dot-a)',
-  'var(--login-dot-b)',
-  'var(--login-dot-c)',
-  'var(--login-dot-d)',
-] as const;
+const LOGIN_DOT_RADIUS = 0.09;
+const LOGIN_CURSOR_RADIUS = 17.5;
 
 const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value));
 
-const fract = (value: number) => value - Math.floor(value);
-
-const seededNoise = (x: number, y: number, salt = 0) =>
-  fract(Math.sin((x + 1) * 12.9898 + (y + 1) * 78.233 + salt * 37.719) * 43758.5453);
-
-const createLoginDots = (): LoginDot[] => {
+const createLoginDots = () => {
   const dots: LoginDot[] = [];
 
   for (let row = 0; row < LOGIN_DOT_ROWS; row += 1) {
     for (let column = 0; column < LOGIN_DOT_COLUMNS; column += 1) {
-      const noise = seededNoise(column, row);
-      const x = (column / (LOGIN_DOT_COLUMNS - 1)) * 104 - 2 + (noise - 0.5) * 0.36;
-      const y =
-        (row / (LOGIN_DOT_ROWS - 1)) * 104 -
-        2 +
-        (seededNoise(column, row, 1) - 0.5) * 0.36;
-      const color = LOGIN_DOT_COLORS[
-        Math.floor(seededNoise(column, row, 2) * LOGIN_DOT_COLORS.length)
-      ];
-
       dots.push({
-        color,
-        depth: 0.3 + seededNoise(column, row, 3) * 0.9,
         id: `${row}-${column}`,
-        opacity: 0.18 + seededNoise(column, row, 4) * 0.32,
-        radius: 0.055 + seededNoise(column, row, 5) * 0.055,
-        x,
-        y,
+        x: (column / (LOGIN_DOT_COLUMNS - 1)) * LOGIN_VIEWBOX_WIDTH,
+        y: (row / (LOGIN_DOT_ROWS - 1)) * LOGIN_VIEWBOX_HEIGHT,
       });
     }
   }
@@ -81,23 +61,99 @@ const createLoginDots = (): LoginDot[] => {
   return dots;
 };
 
-const useLoginPointer = () => {
-  const [pointer, setPointer] = useState<LoginPointerState>(LOGIN_POINTER_REST);
+const getLoginPointerInViewBox = (clientX: number, clientY: number, rect: DOMRect) => {
+  const viewAspect = LOGIN_VIEWBOX_WIDTH / LOGIN_VIEWBOX_HEIGHT;
+  const rectAspect = rect.width / rect.height;
+
+  if (rectAspect < viewAspect) {
+    const scale = LOGIN_VIEWBOX_HEIGHT / rect.height;
+    const visibleWidth = rect.width * scale;
+    const offsetX = (LOGIN_VIEWBOX_WIDTH - visibleWidth) / 2;
+
+    return {
+      x: clamp(offsetX + (clientX - rect.left) * scale, 0, LOGIN_VIEWBOX_WIDTH),
+      y: clamp((clientY - rect.top) * scale, 0, LOGIN_VIEWBOX_HEIGHT),
+    };
+  }
+
+  const scale = LOGIN_VIEWBOX_WIDTH / rect.width;
+  const visibleHeight = rect.height * scale;
+  const offsetY = (LOGIN_VIEWBOX_HEIGHT - visibleHeight) / 2;
+
+  return {
+    x: clamp((clientX - rect.left) * scale, 0, LOGIN_VIEWBOX_WIDTH),
+    y: clamp(offsetY + (clientY - rect.top) * scale, 0, LOGIN_VIEWBOX_HEIGHT),
+  };
+};
+
+const LoginDotField = React.forwardRef<LoginDotFieldHandle>((_, ref) => {
+  const dots = useMemo(createLoginDots, []);
+  const circlesRef = useRef<Array<SVGCircleElement | null>>([]);
   const frameRef = useRef<number | null>(null);
-  const pendingPointerRef = useRef<LoginPointerState>(LOGIN_POINTER_REST);
+  const activeIndexesRef = useRef<number[]>([]);
+  const pointerRef = useRef({ active: false, x: LOGIN_VIEWBOX_WIDTH / 2, y: LOGIN_VIEWBOX_HEIGHT / 2 });
 
-  const flushPointer = useCallback(() => {
+  const applyDistortion = useCallback(() => {
     frameRef.current = null;
-    setPointer(pendingPointerRef.current);
-  }, []);
 
-  const schedulePointer = useCallback((nextPointer: LoginPointerState) => {
-    pendingPointerRef.current = nextPointer;
+    activeIndexesRef.current.forEach((index) => {
+      circlesRef.current[index]?.removeAttribute('transform');
+    });
+    activeIndexesRef.current = [];
 
+    const pointer = pointerRef.current;
+    if (!pointer.active) return;
+
+    const nextActiveIndexes: number[] = [];
+
+    dots.forEach((dot, index) => {
+      const dx = dot.x - pointer.x;
+      const dy = (dot.y - pointer.y) * 1.08;
+      const distance = Math.hypot(dx, dy);
+
+      if (distance >= LOGIN_CURSOR_RADIUS) return;
+
+      const influence = 1 - distance / LOGIN_CURSOR_RADIUS;
+      const eased = influence * influence * (3 - 2 * influence);
+      const normalX = distance > 0 ? dx / distance : 0;
+      const normalY = distance > 0 ? dy / distance : 0;
+      const push = eased * 1.06;
+      const curve = eased * 0.34;
+      const moveX = normalX * push - normalY * curve;
+      const moveY = normalY * push + normalX * curve;
+
+      circlesRef.current[index]?.setAttribute(
+        'transform',
+        `translate(${moveX.toFixed(3)} ${moveY.toFixed(3)})`,
+      );
+      nextActiveIndexes.push(index);
+    });
+
+    activeIndexesRef.current = nextActiveIndexes;
+  }, [dots]);
+
+  const scheduleDistortion = useCallback(() => {
     if (frameRef.current !== null) return;
+    frameRef.current = window.requestAnimationFrame(applyDistortion);
+  }, [applyDistortion]);
 
-    frameRef.current = window.requestAnimationFrame(flushPointer);
-  }, [flushPointer]);
+  useImperativeHandle(ref, () => ({
+    leave: () => {
+      pointerRef.current = {
+        active: false,
+        x: LOGIN_VIEWBOX_WIDTH / 2,
+        y: LOGIN_VIEWBOX_HEIGHT / 2,
+      };
+      scheduleDistortion();
+    },
+    move: (clientX, clientY, rect) => {
+      pointerRef.current = {
+        active: true,
+        ...getLoginPointerInViewBox(clientX, clientY, rect),
+      };
+      scheduleDistortion();
+    },
+  }), [scheduleDistortion]);
 
   useEffect(() => () => {
     if (frameRef.current !== null) {
@@ -105,67 +161,32 @@ const useLoginPointer = () => {
     }
   }, []);
 
-  const handlePointerMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === 'touch') return;
-
-    const rect = event.currentTarget.getBoundingClientRect();
-    schedulePointer({
-      active: true,
-      x: clamp(((event.clientX - rect.left) / rect.width) * 100, 0, 100),
-      y: clamp(((event.clientY - rect.top) / rect.height) * 100, 0, 100),
-    });
-  }, [schedulePointer]);
-
-  const handlePointerLeave = useCallback(() => {
-    schedulePointer(LOGIN_POINTER_REST);
-  }, [schedulePointer]);
-
-  return { handlePointerLeave, handlePointerMove, pointer };
-};
-
-const LoginDotField: React.FC<{ pointer: LoginPointerState }> = ({ pointer }) => {
-  const dots = useMemo(createLoginDots, []);
-  const parallaxX = pointer.active ? (pointer.x - 50) / 50 : 0;
-  const parallaxY = pointer.active ? (pointer.y - 50) / 50 : 0;
-
   return (
     <div className="login-dot-field" aria-hidden="true">
       <svg
         className="login-dot-field__svg"
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
+        viewBox={`0 0 ${LOGIN_VIEWBOX_WIDTH} ${LOGIN_VIEWBOX_HEIGHT}`}
+        preserveAspectRatio="xMidYMid slice"
         focusable="false"
       >
-        {dots.map((dot) => {
-          const offsetX = dot.x - pointer.x;
-          const offsetY = (dot.y - pointer.y) * 1.35;
-          const distance = Math.hypot(offsetX, offsetY);
-          const influence = pointer.active ? Math.max(0, 1 - distance / 15.5) : 0;
-          const directionX = distance > 0 ? offsetX / distance : 0;
-          const directionY = distance > 0 ? offsetY / distance : 0;
-          const moveX = directionX * influence * 16 + parallaxX * dot.depth * 4.8;
-          const moveY = directionY * influence * 12 + parallaxY * dot.depth * 3.6;
-          const opacity = Math.min(0.88, dot.opacity + influence * 0.46);
-
-          return (
-            <circle
-              key={dot.id}
-              className="login-dot-field__dot"
-              cx={dot.x}
-              cy={dot.y}
-              r={dot.radius}
-              style={{
-                fill: dot.color,
-                opacity,
-                transform: `translate(${moveX.toFixed(3)}px, ${moveY.toFixed(3)}px)`,
-              }}
-            />
-          );
-        })}
+        {dots.map((dot, index) => (
+          <circle
+            key={dot.id}
+            ref={(node) => {
+              circlesRef.current[index] = node;
+            }}
+            className="login-dot-field__dot"
+            cx={dot.x}
+            cy={dot.y}
+            r={LOGIN_DOT_RADIUS}
+          />
+        ))}
       </svg>
     </div>
   );
-};
+});
+
+LoginDotField.displayName = 'LoginDotField';
 
 const getAuthDestination = () => {
   const session = readAuthSession();
@@ -201,7 +222,7 @@ export const LoginPage: React.FC = () => {
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
-  const { handlePointerLeave, handlePointerMove, pointer } = useLoginPointer();
+  const dotFieldRef = useRef<LoginDotFieldHandle>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -310,6 +331,19 @@ export const LoginPage: React.FC = () => {
     setFormError('');
   };
 
+  const handlePointerMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === 'touch') return;
+    dotFieldRef.current?.move(
+      event.clientX,
+      event.clientY,
+      event.currentTarget.getBoundingClientRect(),
+    );
+  }, []);
+
+  const handlePointerLeave = useCallback(() => {
+    dotFieldRef.current?.leave();
+  }, []);
+
   const headerActionLabel = authMode === 'signup' ? 'כניסה' : 'הרשמה';
 
   return (
@@ -318,7 +352,7 @@ export const LoginPage: React.FC = () => {
       onPointerLeave={handlePointerLeave}
       onPointerMove={handlePointerMove}
     >
-      <LoginDotField pointer={pointer} />
+      <LoginDotField ref={dotFieldRef} />
 
       <header className="relative z-10 flex h-16 shrink-0 items-center justify-between px-4 sm:px-6" dir="rtl">
         <div className="inline-flex items-center gap-2 text-sm font-extrabold text-[#0d0d12] dark:text-app-text">
