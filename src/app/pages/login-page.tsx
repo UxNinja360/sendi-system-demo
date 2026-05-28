@@ -6,6 +6,7 @@ import {
   readAuthSession,
   upsertAuthProfile,
 } from '../auth/auth-session';
+import { AppLogo } from '../components/icons/app-logo';
 import { LoginPhone } from '../auth/login-phone';
 import type { LoginPhoneMode } from '../auth/login-phone';
 import { LoginOtp } from '../auth/login-otp';
@@ -47,8 +48,6 @@ export const LoginPage: React.FC = () => {
   const [authStep, setAuthStep] = useState<'phone' | 'otp'>('phone');
   const [authMode, setAuthMode] = useState<LoginPhoneMode>('login');
   const [challengeId, setChallengeId] = useState('');
-  const [demoOtp, setDemoOtp] = useState('');
-  const [expiresAt, setExpiresAt] = useState<number | undefined>();
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -85,8 +84,6 @@ export const LoginPage: React.FC = () => {
       const result = await requestOtp({ accountType, phone });
       setPhoneNumber(normalizedPhone);
       setChallengeId(result.challengeId);
-      setDemoOtp(result.demoOtp);
-      setExpiresAt(result.expiresAt);
       setAuthStep('otp');
     } catch (error) {
       setFormError(getAuthErrorMessage(error));
@@ -154,8 +151,6 @@ export const LoginPage: React.FC = () => {
   const handleBack = () => {
     setAuthStep('phone');
     setChallengeId('');
-    setDemoOtp('');
-    setExpiresAt(undefined);
     setFormError('');
   };
 
@@ -164,28 +159,58 @@ export const LoginPage: React.FC = () => {
     setFormError('');
   };
 
+  const headerActionLabel = authMode === 'signup' ? 'כניסה' : 'הרשמה';
+
   return (
-    <div className="flex min-h-[100dvh] w-full items-center justify-center bg-app-background p-4 sm:p-6">
-      {authStep === 'phone' ? (
-        <LoginPhone
-          error={formError}
-          isSubmitting={isSubmitting}
-          mode={authMode}
-          onModeChange={handleModeChange}
-          onSubmit={handlePhoneSubmit}
-        />
-      ) : (
-        <LoginOtp
-          demoOtp={demoOtp}
-          error={formError}
-          expiresAt={expiresAt}
-          isSubmitting={isSubmitting}
-          phone={phoneNumber}
-          onBack={handleBack}
-          onResend={handleResend}
-          onSubmit={handleOtpSubmit}
-        />
-      )}
+    <div className="flex min-h-[100dvh] w-full flex-col bg-app-background text-[#0d0d12] dark:text-app-text">
+      <header className="flex h-16 shrink-0 items-center justify-between px-4 sm:px-6" dir="ltr">
+        <div className="inline-flex items-center gap-2 text-sm font-extrabold text-[#0d0d12] dark:text-app-text">
+          <AppLogo size={20} className="h-5 w-5" />
+          <span>סנדי</span>
+        </div>
+
+        {authStep === 'phone' ? (
+          <button
+            type="button"
+            disabled={isSubmitting}
+            onClick={() => handleModeChange(authMode === 'signup' ? 'login' : 'signup')}
+            className="inline-flex h-8 items-center justify-center rounded-md border border-[#d8d8d8] px-3 text-xs font-bold text-[#0d0d12] transition-colors hover:border-[#bdbdbd] hover:bg-[#f5f5f5] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#252525] dark:text-app-text dark:hover:border-[#3a3a3a] dark:hover:bg-[#111]"
+          >
+            {headerActionLabel}
+          </button>
+        ) : (
+          <span className="h-8 w-16" aria-hidden="true" />
+        )}
+      </header>
+
+      <main className="flex flex-1 items-center justify-center px-5 pb-16 pt-8 sm:px-6">
+        {authStep === 'phone' ? (
+          <LoginPhone
+            error={formError}
+            isSubmitting={isSubmitting}
+            mode={authMode}
+            onSubmit={handlePhoneSubmit}
+          />
+        ) : (
+          <LoginOtp
+            error={formError}
+            isSubmitting={isSubmitting}
+            phone={phoneNumber}
+            onBack={handleBack}
+            onResend={handleResend}
+            onSubmit={handleOtpSubmit}
+          />
+        )}
+      </main>
+
+      <footer className="flex h-12 shrink-0 items-center justify-center gap-4 px-4 text-[11px] font-medium text-[#777] dark:text-app-text-secondary">
+        <a href="#" className="transition-colors hover:text-[#0d0d12] dark:hover:text-app-text">
+          תנאי שימוש
+        </a>
+        <a href="#" className="transition-colors hover:text-[#0d0d12] dark:hover:text-app-text">
+          פרטיות
+        </a>
+      </footer>
     </div>
   );
 };

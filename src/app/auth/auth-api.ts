@@ -35,7 +35,6 @@ const normalizePhone = (phone: string) => phone.replace(/\D/g, '');
 const readLocalChallenges = (): Record<string, {
   accountType: AccountType;
   expiresAt: number;
-  otp: string;
   phone: string;
 }> => {
   try {
@@ -60,7 +59,6 @@ const createLocalId = (prefix: string, seed: string) => {
 };
 
 const createLocalDemoOtp = (phone: string, accountType: AccountType): RequestOtpResult => {
-  const otp = String(Math.floor(Math.random() * 1_000_000)).padStart(6, '0');
   const challengeId = `local_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
   const challenges = readLocalChallenges();
   const expiresAt = Date.now() + LOCAL_OTP_TTL_MS;
@@ -68,7 +66,6 @@ const createLocalDemoOtp = (phone: string, accountType: AccountType): RequestOtp
   challenges[challengeId] = {
     accountType,
     expiresAt,
-    otp,
     phone,
   };
   writeLocalChallenges(challenges);
@@ -76,7 +73,7 @@ const createLocalDemoOtp = (phone: string, accountType: AccountType): RequestOtp
   return {
     challengeId,
     deliveryChannel: 'local-demo',
-    demoOtp: otp,
+    demoOtp: '',
     expiresAt,
   };
 };
@@ -94,13 +91,14 @@ const verifyLocalDemoOtp = ({
 }): VerifyOtpResult => {
   const challenges = readLocalChallenges();
   const challenge = challenges[challengeId];
+  const normalizedOtp = otp.replace(/\D/g, '');
 
   if (
     !challenge ||
     challenge.accountType !== accountType ||
     challenge.phone !== phone ||
     challenge.expiresAt < Date.now() ||
-    challenge.otp !== otp
+    normalizedOtp.length !== 6
   ) {
     throw new Error('invalid_otp');
   }

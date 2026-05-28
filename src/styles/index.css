@@ -244,6 +244,13 @@ body {
 }
 
 @media (hover: hover) and (pointer: fine) {
+  .dashboard-map-fab:hover {
+    background: var(--app-surface-raised);
+    border-color: var(--app-border);
+    box-shadow: 0 16px 38px rgba(0, 0, 0, 0.42);
+    transform: translateY(-2px);
+  }
+
   .sendi-plus-card--teaser:hover {
     border-color: color-mix(in srgb, #0a84ff 42%, var(--app-border));
     box-shadow:
@@ -282,19 +289,19 @@ body {
       0 0 16px rgba(10, 132, 255, 0.12);
   }
 
-  .dashboard-card-hover:hover,
+  .dashboard-card-hover:not(:disabled):not([aria-disabled='true']):hover,
   .dashboard-status-card:not(:disabled):not([aria-disabled='true']):hover {
     background: var(--app-surface-raised);
     border-color: var(--app-border);
   }
 
-  .dark .dashboard-card-hover:hover,
+  .dark .dashboard-card-hover:not(:disabled):not([aria-disabled='true']):hover,
   .dark .dashboard-status-card:not(:disabled):not([aria-disabled='true']):hover {
     background: #111111;
     border-color: #252525;
   }
 
-  .twilight.dark .dashboard-card-hover:hover,
+  .twilight.dark .dashboard-card-hover:not(:disabled):not([aria-disabled='true']):hover,
   .twilight.dark .dashboard-status-card:not(:disabled):not([aria-disabled='true']):hover {
     background: var(--app-surface-raised);
     border-color: var(--app-border);
@@ -302,6 +309,7 @@ body {
 }
 
 @media (hover: none), (pointer: coarse) {
+  .dashboard-map-fab,
   .dashboard-card-hover,
   .dashboard-status-card,
   .dashboard-delivery-summary button,
@@ -692,10 +700,18 @@ body {
 
 .app-layout-root {
   max-width: 100%;
+  transition:
+    margin-left 320ms cubic-bezier(0.16, 1, 0.3, 1),
+    max-width 320ms cubic-bezier(0.16, 1, 0.3, 1),
+    width 320ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 300ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-radius 300ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 300ms ease;
   width: 100%;
 }
 
 .deliveries-map-split-portal {
+  animation: deliveries-map-split-enter 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
   background: var(--app-background);
   border: 0;
   border-radius: 0;
@@ -707,7 +723,53 @@ body {
   position: fixed;
   right: 0;
   top: 0;
+  transform-origin: left center;
   z-index: 80;
+}
+
+.deliveries-map-split-portal--closing {
+  animation: deliveries-map-split-exit 260ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  pointer-events: none;
+}
+
+@keyframes deliveries-map-split-enter {
+  from {
+    transform: translate3d(-100%, 0, 0);
+  }
+
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes deliveries-map-split-exit {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: translate3d(-100%, 0, 0);
+  }
+}
+
+@keyframes deliveries-map-sheet-enter {
+  from {
+    transform: translateY(10px);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes deliveries-map-sheet-exit {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(10px);
+  }
 }
 
 .deliveries-map-split-portal > section {
@@ -746,9 +808,9 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   display: inline-flex;
   height: 34px;
   justify-content: center;
-  left: auto;
+  left: 12px;
   position: absolute;
-  right: 12px;
+  right: auto;
   top: 12px;
   width: 34px;
   z-index: 960;
@@ -1530,14 +1592,20 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
     right: 0.75rem;
   }
 
-  body.deliveries-map-split-open .app-layout-root,
-  body.deliveries-map-split-open .deliveries-map-split-portal {
-    transition: none !important;
+  body.deliveries-map-split-closing .app-layout-root {
+    margin-left: 0;
+    max-width: 100%;
+    width: 100%;
   }
 
   body.deliveries-map-split-resizing {
     cursor: col-resize;
     user-select: none;
+  }
+
+  body.deliveries-map-split-resizing .app-layout-root,
+  body.deliveries-map-split-resizing .deliveries-map-split-portal {
+    transition: none !important;
   }
 
   body.deliveries-map-sheet-resizing {
@@ -1641,10 +1709,6 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
     outline: none;
   }
 
-  .deliveries-map-split-close {
-    display: none;
-  }
-
   .deliveries-map-sheet-resizer {
     display: none;
   }
@@ -1684,9 +1748,20 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
     right: 0.75rem;
   }
 
-  body.deliveries-map-split-open .app-layout-root,
-  body.deliveries-map-split-open .deliveries-map-split-portal {
-    transition: none !important;
+  body.deliveries-map-split-open .app-layout-root {
+    animation: deliveries-map-sheet-enter 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  body.deliveries-map-split-closing .app-layout-root {
+    animation: deliveries-map-sheet-exit 260ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+
+  .deliveries-map-split-portal {
+    animation: deliveries-map-mobile-enter 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .deliveries-map-split-portal--closing {
+    animation: deliveries-map-mobile-exit 260ms cubic-bezier(0.4, 0, 0.2, 1) both;
   }
 
   body.deliveries-map-sheet-resizing {
@@ -1714,6 +1789,26 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
     body.deliveries-map-split-open .app-layout-root {
       max-height: calc(100svh - var(--app-safe-top) - 16px);
     }
+  }
+}
+
+@keyframes deliveries-map-mobile-enter {
+  from {
+    transform: translateY(6px);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes deliveries-map-mobile-exit {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(6px);
   }
 }
 

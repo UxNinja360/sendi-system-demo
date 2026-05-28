@@ -9,6 +9,7 @@ import type { ExportScopeItem } from '../deliveries/export-drawer';
 import { DeliveriesVercelList } from '../deliveries/deliveries-vercel-list';
 import { DeliveriesOverlays } from '../deliveries/deliveries-overlays';
 import { DeliveriesCommandSearch } from '../deliveries/deliveries-command-search';
+import { DeliveriesMapFab } from '../deliveries/deliveries-map-fab';
 import { useDeliveriesMapSplit } from '../deliveries/use-deliveries-map-split';
 import { ALL_COLUMNS, COLUMN_MAP } from '../deliveries/column-defs';
 import type { ColumnDef } from '../deliveries/column-defs';
@@ -897,6 +898,7 @@ export const DeliveriesPage: React.FC = () => {
   return (
     <>
       {mapSplitPortal}
+      <DeliveriesMapFab mapOpen={mapOpen} setMapOpen={setMapOpen} />
 
       <EntityListShell
         sidePanel={

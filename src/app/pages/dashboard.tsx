@@ -23,6 +23,7 @@ import {
 import { AppTooltip } from '../components/common/app-tooltip';
 import { Toggle } from '../components/common/toggle';
 import { useDelivery } from '../context/delivery-context-value';
+import { DeliveriesMapFab } from '../deliveries/deliveries-map-fab';
 import { useDeliveriesMapSplit } from '../deliveries/use-deliveries-map-split';
 import type { Courier, Delivery, DeliveryStatus } from '../types/delivery.types';
 import { canCourierAcceptDelivery } from '../utils/courier-assignment';
@@ -234,15 +235,40 @@ const CourierAvailabilityValue: React.FC<{
   connected: number;
   free: number;
   refreshing: boolean;
-}> = ({ connected, free, refreshing }) => (
+  total: number;
+}> = ({ connected, free, refreshing, total }) => (
   <RefreshingMetricValue
     refreshing={refreshing}
     value={
-      <span className="inline-flex items-baseline justify-end gap-1.5 leading-none">
+      <span
+        className="inline-flex items-baseline justify-end leading-none"
+        aria-label={`${formatNumber(free)} שליחים זמינים, ${formatNumber(connected)} שליחים מחוברים, ${formatNumber(total)} שליחים במערכת`}
+      >
         <span>{formatNumber(free)}</span>
-        <span className="text-sm font-semibold text-app-text-muted sm:text-base">
-          / {formatNumber(connected)}
-        </span>
+        <span className="px-1 text-sm font-semibold text-app-text-muted sm:text-base">/</span>
+        <span className="text-sm font-semibold text-app-text-muted sm:text-base">{formatNumber(connected)}</span>
+        <span className="px-1 text-sm font-semibold text-app-text-muted sm:text-base">/</span>
+        <span className="text-sm font-semibold text-app-text-muted sm:text-base">{formatNumber(total)}</span>
+      </span>
+    }
+  />
+);
+
+const RestaurantActivityValue: React.FC<{
+  active: number;
+  refreshing: boolean;
+  total: number;
+}> = ({ active, refreshing, total }) => (
+  <RefreshingMetricValue
+    refreshing={refreshing}
+    value={
+      <span
+        className="inline-flex items-baseline justify-end leading-none"
+        aria-label={`${formatNumber(active)} מסעדות פעילות, ${formatNumber(total)} מסעדות במערכת`}
+      >
+        <span>{formatNumber(active)}</span>
+        <span className="px-1 text-sm font-semibold text-app-text-muted sm:text-base">/</span>
+        <span className="text-sm font-semibold text-app-text-muted sm:text-base">{formatNumber(total)}</span>
       </span>
     }
   />
@@ -1467,7 +1493,7 @@ export const Dashboard: React.FC = () => {
     return Number.isFinite(averageMinutes) && averageMinutes > 0 ? averageMinutes : null;
   }, [dashboardRefreshVersion, filteredDeliveries]);
   const dashboardGreeting = getDashboardGreeting();
-  const { mapSplitPortal } = useDeliveriesMapSplit({
+  const { mapOpen, setMapOpen, mapSplitPortal } = useDeliveriesMapSplit({
     deliveries: filteredDeliveries,
     couriers: state.couriers,
     restaurants: state.restaurants,
@@ -1723,6 +1749,7 @@ export const Dashboard: React.FC = () => {
                         connected={connectedCouriersCount}
                         free={freeCouriersCount}
                         refreshing={isDashboardRefreshing}
+                        total={state.couriers.length}
                       />
                     </div>
                   </button>
@@ -1742,9 +1769,10 @@ export const Dashboard: React.FC = () => {
                   <Store className="h-3.5 w-3.5 shrink-0 text-purple-400 sm:h-4 sm:w-4" />
                 </div>
                 <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
-                  <AnimatedMetricNumber
+                  <RestaurantActivityValue
+                    active={activeRestaurantsCount}
                     refreshing={isDashboardRefreshing}
-                    value={activeRestaurantsCount}
+                    total={state.restaurants.length}
                   />
                 </div>
               </button>
@@ -1784,6 +1812,7 @@ export const Dashboard: React.FC = () => {
 
         </div>
       </main>
+      <DeliveriesMapFab mapOpen={mapOpen} setMapOpen={setMapOpen} />
       </div>
     </>
   );

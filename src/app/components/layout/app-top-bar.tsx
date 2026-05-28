@@ -28,6 +28,15 @@ type TopBarBreadcrumb = {
   currentLabel: string;
 };
 
+const settingsBreadcrumbLabels: Record<string, string> = {
+  '/settings/system': 'הגדרות מערכת',
+  '/settings/display': 'תצוגה',
+  '/settings/audio': 'שמע',
+  '/settings/notifications': 'התראות',
+  '/settings/pages': 'תפעול עמודים',
+  '/settings/advanced': 'הגדרות מתקדמות',
+};
+
 type AppTopBarProps = {
   onOpenMobileMenu?: () => void;
 };
@@ -195,6 +204,15 @@ export const AppTopBar: React.FC<AppTopBarProps> = ({ onOpenMobileMenu }) => {
         parentLabel: 'מערכת עיצוב',
         parentPath: '/design-system',
         currentLabel: 'פלייגראונד',
+      };
+    }
+
+    const settingsBreadcrumbLabel = settingsBreadcrumbLabels[location.pathname];
+    if (settingsBreadcrumbLabel) {
+      return {
+        parentLabel: 'הגדרות',
+        parentPath: '/settings',
+        currentLabel: settingsBreadcrumbLabel,
       };
     }
 

@@ -175,8 +175,28 @@ export const router = createBrowserRouter([
         element: <SettingsPage />,
       },
       {
+        path: 'settings/system',
+        element: <SettingsPage category="system" />,
+      },
+      {
+        path: 'settings/display',
+        element: <SettingsPage category="display" />,
+      },
+      {
+        path: 'settings/audio',
+        element: <SettingsPage category="audio" />,
+      },
+      {
+        path: 'settings/notifications',
+        element: <SettingsPage category="notifications" />,
+      },
+      {
         path: 'settings/pages',
         element: <SettingsPagesPage />,
+      },
+      {
+        path: 'settings/advanced',
+        element: <SettingsPage category="advanced" />,
       },
       {
         path: routePath('hours'),

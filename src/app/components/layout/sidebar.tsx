@@ -375,10 +375,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       (sum, delivery) =>
         sum + getDeliveryWalletCharge(delivery, findDeliveryRestaurant(delivery, state.restaurants)),
       0,
-    );
+  );
   const walletItem = getNavItemById('wallet');
   const balanceItem = getNavItemById('delivery-balance');
-  const settingsItem = getNavItemById('settings');
   const filteredBusinesses = useMemo(() => {
     const query = businessSearch.trim().toLowerCase();
     if (!query) return workspaceAccounts;
@@ -921,8 +920,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
           item.id === 'dashboard' &&
           section.items[itemIndex - 1]?.id === 'live') ||
         (section.id === 'data' &&
-          item.id === 'reports' &&
-          section.items[itemIndex - 1]?.id === 'courier-shifts');
+          item.id === 'performance' &&
+          section.items[itemIndex - 1]?.id === 'courier-shifts') ||
+        (section.id === 'data' &&
+          item.id === 'settings' &&
+          section.items[itemIndex - 1]?.id === 'reports');
 
       return (
         <React.Fragment key={item.id}>
@@ -1254,14 +1256,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
           <div className="border-b border-app-nav-border px-4 py-3">
             {isExpanded ? (
               <div className="space-y-3">
-                <div data-onboarding="system-toggle" className="flex items-center justify-between gap-3">
+                <div className="flex items-center justify-between gap-3">
                   <span className="text-xs text-app-text-secondary">
-                    {systemStatusLabel}
+                    {LABELS.autoAssign}
                   </span>
                   <Toggle
-                    checked={state.isSystemOpen}
-                    onChange={() => toggleSystem()}
-                    ariaLabel={systemStatusLabel}
+                    checked={state.autoAssignEnabled}
+                    disabled={!state.isSystemOpen || !hasCouriersForOperations}
+                    onChange={() => dispatch({ type: 'TOGGLE_AUTO_ASSIGN' })}
+                    ariaLabel={LABELS.autoAssign}
                   />
                 </div>
 
@@ -1277,15 +1280,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                   />
                 </div>
 
-                <div className="flex items-center justify-between gap-3">
+                <div data-onboarding="system-toggle" className="flex items-center justify-between gap-3">
                   <span className="text-xs text-app-text-secondary">
-                    {LABELS.autoAssign}
+                    {systemStatusLabel}
                   </span>
                   <Toggle
-                    checked={state.autoAssignEnabled}
-                    disabled={!state.isSystemOpen || !hasCouriersForOperations}
-                    onChange={() => dispatch({ type: 'TOGGLE_AUTO_ASSIGN' })}
-                    ariaLabel={LABELS.autoAssign}
+                    checked={state.isSystemOpen}
+                    onChange={() => toggleSystem()}
+                    ariaLabel={systemStatusLabel}
                   />
                 </div>
               </div>
@@ -1313,31 +1315,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
               </SidebarIconTooltip>
             )}
           </div>
-
-          <button
-            type="button"
-            data-haptic="selection"
-            onClick={() => handleNav(settingsItem?.path ?? '/settings')}
-            className={`w-full cursor-pointer px-4 py-3 text-right transition-colors ${
-              location.pathname.startsWith(settingsItem?.path ?? '/settings')
-                ? 'bg-[#f5f5f5] text-app-nav-active-text dark:bg-[#1F1F1F]'
-                : 'text-app-text-secondary hover:bg-app-nav-hover-bg hover:text-app-text'
-            }`}
-          >
-            {isExpanded ? (
-              <span className="flex items-center gap-3">
-                <Settings size={20} className="shrink-0 stroke-[1.5px]" />
-                <span className="truncate text-sm font-medium">{settingsItem?.label ?? LABELS.settings}</span>
-              </span>
-            ) : (
-              <SidebarIconTooltip
-                label={settingsItem?.label ?? LABELS.settings}
-                className="hidden items-center justify-center md:flex"
-              >
-                <Settings size={20} className="stroke-[1.5px]" />
-              </SidebarIconTooltip>
-            )}
-          </button>
         </div>
       </div>
 

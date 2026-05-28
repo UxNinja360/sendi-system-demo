@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
   useSyncExternalStore,
   type KeyboardEvent,
@@ -40,6 +41,7 @@ const COLLAPSED_SIDEBAR_WIDTH = 60;
 const DEFAULT_MAP_SHEET_HEIGHT = 52;
 const MIN_MAP_SHEET_HEIGHT = 30;
 const MAX_MAP_SHEET_HEIGHT = 86;
+const MAP_SPLIT_EXIT_DURATION_MS = 260;
 
 let sharedMapOpen = false;
 const mapOpenListeners = new Set<() => void>();
@@ -51,6 +53,7 @@ const removeMapSplitBodyState = () => {
 
   document.body.classList.remove(
     'deliveries-map-split-open',
+    'deliveries-map-split-closing',
     'deliveries-map-split-resizing',
     'deliveries-map-sheet-resizing',
   );
@@ -194,6 +197,16 @@ export const useDeliveriesMapSplit = ({
   const [mapSheetHeight, setMapSheetHeight] = useState(getSavedMapSheetHeight);
   const [isResizing, setIsResizing] = useState(false);
   const [isSheetResizing, setIsSheetResizing] = useState(false);
+  const [isMapRendered, setIsMapRendered] = useState(mapOpen);
+  const [isMapClosing, setIsMapClosing] = useState(false);
+  const mapExitTimeoutRef = useRef<number | null>(null);
+
+  const clearMapExitTimeout = useCallback(() => {
+    if (mapExitTimeoutRef.current === null || typeof window === 'undefined') return;
+
+    window.clearTimeout(mapExitTimeoutRef.current);
+    mapExitTimeoutRef.current = null;
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
@@ -220,6 +233,37 @@ export const useDeliveriesMapSplit = ({
       sidebarResizeObserver?.disconnect();
     };
   }, []);
+
+  useEffect(() => clearMapExitTimeout, [clearMapExitTimeout]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      setIsMapRendered(mapOpen);
+      setIsMapClosing(false);
+      return undefined;
+    }
+
+    if (mapOpen) {
+      clearMapExitTimeout();
+      setIsMapRendered(true);
+      setIsMapClosing(false);
+      return undefined;
+    }
+
+    if (!isMapRendered) {
+      setIsMapClosing(false);
+      return undefined;
+    }
+
+    setIsMapClosing(true);
+    mapExitTimeoutRef.current = window.setTimeout(() => {
+      mapExitTimeoutRef.current = null;
+      setIsMapRendered(false);
+      setIsMapClosing(false);
+    }, MAP_SPLIT_EXIT_DURATION_MS);
+
+    return clearMapExitTimeout;
+  }, [clearMapExitTimeout, isMapRendered, mapOpen]);
 
   useEffect(() => {
     activeMapSplitInstances += 1;
@@ -348,7 +392,7 @@ export const useDeliveriesMapSplit = ({
   }, [isSheetResizing, updateMapSheetHeightFromClientY]);
 
   useEffect(() => {
-    if (!mapOpen || typeof document === 'undefined' || typeof window === 'undefined') {
+    if (!isMapRendered || typeof document === 'undefined' || typeof window === 'undefined') {
       return undefined;
     }
 
@@ -375,7 +419,7 @@ export const useDeliveriesMapSplit = ({
       header.classList.remove('deliveries-map-sheet-drag-handle');
       header.removeEventListener('pointerdown', handleHeaderPointerDown);
     };
-  }, [beginMobileSheetResize, mapOpen]);
+  }, [beginMobileSheetResize, isMapRendered]);
 
   useEffect(() => {
     if (typeof localStorage === 'undefined') return;
@@ -393,9 +437,10 @@ export const useDeliveriesMapSplit = ({
     if (typeof document === 'undefined') return undefined;
 
     const splitClassName = 'deliveries-map-split-open';
+    const closingClassName = 'deliveries-map-split-closing';
     const resizingClassName = 'deliveries-map-split-resizing';
     const sheetResizingClassName = 'deliveries-map-sheet-resizing';
-    if (mapOpen) {
+    if (isMapRendered) {
       document.body.classList.add(splitClassName);
       document.body.style.setProperty('--deliveries-map-split-width', `${mapWidth}vw`);
       document.body.style.setProperty('--deliveries-map-mobile-height', `${mapSheetHeight}svh`);
@@ -403,19 +448,27 @@ export const useDeliveriesMapSplit = ({
       removeMapSplitBodyState();
     }
 
+    document.body.classList.toggle(closingClassName, isMapClosing);
     document.body.classList.toggle(resizingClassName, isResizing);
     document.body.classList.toggle(sheetResizingClassName, isSheetResizing);
 
     return () => {
+      document.body.classList.remove(closingClassName);
       document.body.classList.remove(resizingClassName);
       document.body.classList.remove(sheetResizingClassName);
     };
-  }, [isResizing, isSheetResizing, mapOpen, mapSheetHeight, mapWidth]);
+  }, [isMapClosing, isMapRendered, isResizing, isSheetResizing, mapSheetHeight, mapWidth]);
 
   const mapSplitPortal =
-    mapOpen && typeof document !== 'undefined'
+    isMapRendered && typeof document !== 'undefined'
       ? createPortal(
-          <div className="deliveries-map-split-portal" dir="rtl" aria-label="מפת משלוחים">
+          <div
+            className={`deliveries-map-split-portal ${
+              isMapClosing ? 'deliveries-map-split-portal--closing' : 'deliveries-map-split-portal--open'
+            }`}
+            dir="rtl"
+            aria-label="מפת משלוחים"
+          >
             <DeliveriesLiveMapPanel
               deliveries={deliveries}
               couriers={couriers}
@@ -472,5 +525,5 @@ export const useDeliveriesMapSplit = ({
         )
       : null;
 
-  return { mapOpen, setMapOpen, mapSplitPortal };
+  return { mapOpen: mapOpen || isMapRendered, setMapOpen, mapSplitPortal };
 };

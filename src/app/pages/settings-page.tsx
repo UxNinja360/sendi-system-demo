@@ -448,35 +448,36 @@ const settingsNavGroups: Array<{
 const ThemeModePicker: React.FC<{
   value: ThemeMode;
   onChange: (mode: ThemeMode) => void;
-}> = ({ value, onChange }) => (
-  <div
-    className="grid w-[232px] max-w-[46vw] grid-cols-3 gap-1 rounded-none border border-app-border bg-app-interactive p-1 sm:w-[282px] sm:max-w-[62vw]"
-    dir="rtl"
-    role="group"
-    aria-label={TEXT.themeMode}
-  >
-    {themeModeOptions.map(({ id, label, icon: Icon }) => {
-      const isSelected = value === id;
-      return (
-        <button
-          key={id}
-          type="button"
-          data-haptic="selection"
-          aria-pressed={isSelected}
-          onClick={() => onChange(id)}
-          className={`inline-flex h-8 min-w-0 items-center justify-center gap-1 rounded-none px-1.5 text-[11px] font-semibold transition-colors sm:h-9 sm:gap-1.5 sm:px-2 sm:text-xs ${
-            isSelected
-              ? 'bg-app-brand-solid text-app-background shadow-sm'
-              : 'text-app-text-secondary hover:bg-app-interactive-hover hover:text-app-text'
-          }`}
-        >
-          <Icon className="h-4 w-4 shrink-0" />
-          <span className="truncate">{label}</span>
-        </button>
-      );
-    })}
-  </div>
-);
+}> = ({ value, onChange }) => {
+  const selectedOption = themeModeOptions.find((option) => option.id === value) ?? themeModeOptions[0];
+  const SelectedIcon = selectedOption.icon;
+
+  return (
+    <div className="relative w-[156px] max-w-[46vw] sm:w-[172px]" dir="rtl">
+      <select
+        value={value}
+        data-haptic="selection"
+        aria-label={TEXT.themeMode}
+        onChange={(event) => onChange(event.currentTarget.value as ThemeMode)}
+        className="h-10 w-full appearance-none rounded-none border border-app-border bg-[#f5f5f5] pl-8 pr-9 text-right text-xs font-semibold text-[#0d0d12] outline-none transition-colors hover:bg-[#ececec] focus:border-app-brand focus:bg-white focus:ring-2 focus:ring-app-brand/20 dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised dark:focus:bg-app-surface"
+      >
+        {themeModeOptions.map(({ id, label }) => (
+          <option key={id} value={id}>
+            {label}
+          </option>
+        ))}
+      </select>
+      <SelectedIcon
+        aria-hidden="true"
+        className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-app-brand"
+      />
+      <ChevronDown
+        aria-hidden="true"
+        className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#666d80] dark:text-app-text-secondary"
+      />
+    </div>
+  );
+};
 
 const SectionCard: React.FC<{
   icon: React.ReactNode;
@@ -484,7 +485,8 @@ const SectionCard: React.FC<{
   description: string;
   children: React.ReactNode;
   danger?: boolean;
-}> = ({ icon, title, description, children, danger = false }) => (
+  hideHeader?: boolean;
+}> = ({ icon, title, description, children, danger = false, hideHeader = false }) => (
   <section
     className={`overflow-hidden rounded-none border ${
       danger
@@ -493,33 +495,35 @@ const SectionCard: React.FC<{
     }`}
     aria-label={`${title}. ${description}`}
   >
-    <div
-      className={`border-b px-3 py-2 sm:px-4 ${
-        danger
-          ? 'border-red-100 bg-red-50/80 dark:border-red-500/15 dark:bg-red-500/10'
-          : 'border-[#f1f1f1] bg-[#fafafa] dark:border-app-border dark:bg-app-surface'
-      }`}
-    >
-      <div className="flex min-w-0 items-center gap-2">
-        <div className="shrink-0">{icon}</div>
-        <div className="min-w-0">
-          <h2
-            className={`truncate text-sm font-bold ${
-              danger ? 'text-red-700 dark:text-red-300' : 'text-[#0d0d12] dark:text-app-text'
-            }`}
-          >
-            {title}
-          </h2>
-          <p
-            className={`sr-only ${
-              danger ? 'text-red-600/80 dark:text-red-300/75' : 'text-[#666d80] dark:text-app-text-secondary'
-            }`}
-          >
-            {description}
-          </p>
+    {!hideHeader ? (
+      <div
+        className={`border-b px-3 py-2 sm:px-4 ${
+          danger
+            ? 'border-red-100 bg-red-50/80 dark:border-red-500/15 dark:bg-red-500/10'
+            : 'border-[#f1f1f1] bg-[#fafafa] dark:border-app-border dark:bg-app-surface'
+        }`}
+      >
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="shrink-0">{icon}</div>
+          <div className="min-w-0">
+            <h2
+              className={`truncate text-sm font-bold ${
+                danger ? 'text-red-700 dark:text-red-300' : 'text-[#0d0d12] dark:text-app-text'
+              }`}
+            >
+              {title}
+            </h2>
+            <p
+              className={`sr-only ${
+                danger ? 'text-red-600/80 dark:text-red-300/75' : 'text-[#666d80] dark:text-app-text-secondary'
+              }`}
+            >
+              {description}
+            </p>
+          </div>
         </div>
       </div>
-    </div>
+    ) : null}
     <div>{children}</div>
   </section>
 );
@@ -638,6 +642,8 @@ const getDeliveryPushStatusLabel = (status: DeliveryPushStatus | null) => {
   return TEXT.notificationsDefault;
 };
 
+type SettingsCategory = 'system' | 'display' | 'audio' | 'notifications' | 'advanced';
+
 export const SettingsPagesPage: React.FC = () => {
   const navigate = useNavigate();
 
@@ -645,29 +651,6 @@ export const SettingsPagesPage: React.FC = () => {
     <div className="flex h-full flex-col overflow-hidden bg-app-background" dir="rtl">
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-2 px-2.5 py-3 sm:px-3 md:px-5 md:py-5">
-          <section className="rounded-none border border-[#e5e5e5] bg-white p-3 dark:border-app-border dark:bg-app-surface sm:p-4">
-            <button
-              type="button"
-              data-haptic="selection"
-              onClick={() => navigate('/settings')}
-              className="mb-3 inline-flex h-9 items-center gap-2 rounded-none bg-[#f5f5f5] px-3 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface-raised dark:text-app-text dark:hover:bg-app-interactive-hover"
-            >
-              <ChevronLeft className="h-4 w-4 rotate-180" />
-              <span>חזרה להגדרות</span>
-            </button>
-            <div className="flex min-w-0 items-start gap-2.5">
-              <SlidersHorizontal className="mt-0.5 h-4 w-4 shrink-0 text-app-brand" />
-              <div className="min-w-0">
-                <h1 className="text-base font-bold text-[#0d0d12] dark:text-app-text">
-                  {TEXT.pagesHub}
-                </h1>
-                <p className="mt-1 text-xs leading-5 text-[#666d80] dark:text-app-text-secondary">
-                  {TEXT.pagesHubDescription}
-                </p>
-              </div>
-            </div>
-          </section>
-
           {settingsNavGroups.map((group) => {
             const GroupIcon = settingsNavIconMap[group.icon];
             const groupItems = APP_NAV_ITEMS.filter((item) => item.section === group.section);
@@ -701,7 +684,10 @@ export const SettingsPagesPage: React.FC = () => {
   );
 };
 
-export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
+export const SettingsPage: React.FC<{ onLogout?: () => void; category?: SettingsCategory }> = ({
+  onLogout,
+  category,
+}) => {
   const navigate = useNavigate();
   const { themeMode, setThemeMode } = useTheme();
   const { state, dispatch, resetSystem, toggleSystem } = useDelivery();
@@ -858,26 +844,70 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
     unlockAlertSound();
     playNewDeliverySound({ force: true });
   };
-
   return (
     <div className="flex h-full flex-col overflow-hidden bg-app-background" dir="rtl">
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-5xl px-2.5 py-3 sm:px-3 md:px-5 md:py-5">
-          <header className="mb-3 border-b border-[#e5e5e5] pb-3 dark:border-app-border">
-            <h1 className="text-xl font-black text-[#0d0d12] dark:text-app-text">
-              {TEXT.title}
-            </h1>
-            <p className="mt-1 max-w-2xl text-sm leading-6 text-[#666d80] dark:text-app-text-secondary">
-              {TEXT.subtitle}
-            </p>
-          </header>
-
           <div className="flex flex-col gap-3">
+            {!category ? (
+              <main className="flex min-w-0 flex-col gap-3">
+                <div
+                  className="overflow-hidden rounded-none border border-[#e5e5e5] bg-white dark:border-app-border dark:bg-app-surface"
+                  aria-label="מעברים להגדרות"
+                >
+                  <SettingsLinkRow
+                    icon={<Power className="h-4 w-4" />}
+                    title="הגדרות מערכת"
+                    hint={TEXT.systemDescription}
+                    onClick={() => navigate('/settings/system')}
+                  />
+                  <SettingsLinkRow
+                    icon={<Palette className="h-4 w-4" />}
+                    title={TEXT.appearance}
+                    hint={TEXT.appearanceDescription}
+                    onClick={() => navigate('/settings/display')}
+                  />
+                  <SettingsLinkRow
+                    icon={<Volume2 className="h-4 w-4" />}
+                    title="שמע"
+                    hint="צלילים, בחירת צליל ורטטים של הממשק."
+                    onClick={() => navigate('/settings/audio')}
+                  />
+                  <SettingsLinkRow
+                    icon={<BellRing className="h-4 w-4" />}
+                    title="התראות"
+                    hint={TEXT.pushNotificationsDescription}
+                    onClick={() => navigate('/settings/notifications')}
+                  />
+                  <SettingsLinkRow
+                    icon={<SlidersHorizontal className="h-4 w-4" />}
+                    title={TEXT.pagesHub}
+                    hint={TEXT.pagesHubHint}
+                    onClick={() => navigate('/settings/pages')}
+                  />
+                  <SettingsLinkRow
+                    icon={<AlertTriangle className="h-4 w-4" />}
+                    title="הגדרות מתקדמות"
+                    hint="מחיקת חשבון ואיפוס חשבון."
+                    onClick={() => navigate('/settings/advanced')}
+                  />
+                  <SettingsLinkRow
+                    icon={<LogOut className="h-4 w-4" />}
+                    title={TEXT.logout}
+                    hint={TEXT.logoutHint}
+                    onClick={handleLogout}
+                  />
+                </div>
+              </main>
+            ) : null}
+            {category ? (
             <main className="flex min-w-0 flex-col gap-3">
+              {category === 'system' ? (
               <SectionCard
                 icon={<Power className="h-4 w-4 text-app-brand" />}
                 title={TEXT.system}
                 description={TEXT.systemDescription}
+                hideHeader
               >
                 <SettingRow
                   icon={<Power className="h-4 w-4" />}
@@ -947,11 +977,14 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
                   }
                 />
               </SectionCard>
+              ) : null}
 
+          {category === 'display' ? (
           <SectionCard
             icon={<Palette className="h-4 w-4 text-app-brand" />}
             title={TEXT.appearance}
             description={TEXT.appearanceDescription}
+            hideHeader
           >
             <SettingRow
               icon={
@@ -968,11 +1001,15 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
               control={<ThemeModePicker value={themeMode} onChange={setThemeMode} />}
             />
           </SectionCard>
+          ) : null}
 
+          {category === 'audio' ? (
+            <>
           <SectionCard
             icon={<Volume2 className="h-4 w-4 text-app-brand" />}
             title={TEXT.sounds}
             description={TEXT.soundsDescription}
+            hideHeader
           >
             <SettingRow
               icon={<Volume2 className="h-4 w-4" />}
@@ -1021,6 +1058,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
             icon={<Zap className="h-4 w-4 text-app-brand" />}
             title={TEXT.haptics}
             description={TEXT.hapticsDescription}
+            hideHeader
           >
             <SettingRow
               icon={<Zap className="h-4 w-4" />}
@@ -1068,11 +1106,15 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
               }
             />
           </SectionCard>
+            </>
+          ) : null}
 
+          {category === 'notifications' ? (
           <SectionCard
             icon={<BellRing className="h-4 w-4 text-app-brand" />}
             title={TEXT.pushNotifications}
             description={TEXT.pushNotificationsDescription}
+            hideHeader
           >
             <SettingRow
               icon={<BellRing className="h-4 w-4" />}
@@ -1155,44 +1197,17 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
               }
             />
           </SectionCard>
+          ) : null}
 
-            </main>
-
-            <aside className="flex min-w-0 flex-col gap-3">
+          {category === 'advanced' ? (
+            <>
               <SectionCard
-                icon={<SlidersHorizontal className="h-4 w-4 text-app-brand" />}
-                title={TEXT.pages}
-                description={TEXT.pagesDescription}
+                icon={<AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-300" />}
+                title={TEXT.advanced}
+                description={TEXT.advancedDescription}
+                danger
+                hideHeader
               >
-                <SettingsLinkRow
-                  icon={<SlidersHorizontal className="h-4 w-4" />}
-                  title={TEXT.pagesHub}
-                  hint={TEXT.pagesHubHint}
-                  onClick={() => navigate('/settings/pages')}
-                />
-              </SectionCard>
-
-              <SectionCard
-                icon={<Users className="h-4 w-4 text-app-brand" />}
-                title={TEXT.account}
-                description={TEXT.accountDescription}
-              >
-                <SettingRow
-                  icon={<LogOut className="h-4 w-4" />}
-                  title={TEXT.logout}
-                  hint={TEXT.logoutHint}
-                  control={
-                    <button
-                      type="button"
-                      data-haptic="selection"
-                      onClick={handleLogout}
-                      className="inline-flex items-center gap-2 rounded-none bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      <span>{TEXT.logoutShort}</span>
-                    </button>
-                  }
-                />
                 <SettingRow
                   icon={<Trash2 className="h-4 w-4" />}
                   title={TEXT.deleteAccount}
@@ -1211,14 +1226,6 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
                     </button>
                   }
                 />
-              </SectionCard>
-
-              <SectionCard
-                icon={<AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-300" />}
-                title={TEXT.advanced}
-                description={TEXT.advancedDescription}
-                danger
-              >
                 <SettingRow
                   icon={<AlertTriangle className="h-4 w-4" />}
                   title={TEXT.reset}
@@ -1237,7 +1244,10 @@ export const SettingsPage: React.FC<{ onLogout?: () => void }> = ({ onLogout }) 
                   }
                 />
               </SectionCard>
-            </aside>
+            </>
+          ) : null}
+            </main>
+            ) : null}
           </div>
         </div>
       </div>

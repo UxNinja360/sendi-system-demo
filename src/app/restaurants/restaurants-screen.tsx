@@ -74,6 +74,7 @@ import {
 import { getDefaultRestaurantOwnerName, getDefaultRestaurantOwnerPhone } from '../context/delivery-bootstrap';
 import { DELIVERY_STORAGE_KEYS } from '../context/delivery-storage';
 import { RestaurantsVercelList } from './restaurants-vercel-list';
+import { DeliveriesMapFab } from '../deliveries/deliveries-map-fab';
 import { useDeliveriesMapSplit } from '../deliveries/use-deliveries-map-split';
 import { DELIVERY_HUBS, TLV_RUNNERS_HUB_ID } from '../constants/delivery-hubs';
 
@@ -938,7 +939,7 @@ export const RestaurantsScreen: React.FC = () => {
       }),
     [periodDeliveries, visibleRestaurantIdSet, visibleRestaurantNameSet],
   );
-  const { mapSplitPortal } = useDeliveriesMapSplit({
+  const { mapOpen, setMapOpen, mapSplitPortal } = useDeliveriesMapSplit({
     deliveries: mapDeliveries,
     couriers: state.couriers,
     restaurants: mapRestaurants,
@@ -951,6 +952,7 @@ export const RestaurantsScreen: React.FC = () => {
   return (
     <>
       {mapSplitPortal}
+      <DeliveriesMapFab mapOpen={mapOpen} setMapOpen={setMapOpen} />
 
       <EntityListShell
         mainClassName="mx-auto w-full max-w-[1280px]"

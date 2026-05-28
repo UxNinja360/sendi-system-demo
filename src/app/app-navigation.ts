@@ -278,7 +278,7 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
     path: '/performance',
     routePath: 'performance',
     label: '\u05d1\u05d9\u05e6\u05d5\u05e2\u05d9\u05dd',
-    section: 'legacy',
+    section: 'data',
     icon: 'trendingUp',
     showInSidebar: true,
     managedScroll: true,
@@ -322,8 +322,9 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
     path: '/settings',
     routePath: 'settings',
     label: '\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea',
-    section: 'settings',
+    section: 'data',
     icon: 'settings',
+    showInSidebar: true,
     managedScroll: true,
   },
 ];
@@ -331,7 +332,9 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
 const visibleSidebarItems = APP_NAV_ITEMS.filter((item) => item.showInSidebar);
 const sidebarDataItemOrder: Record<string, number> = {
   'courier-shifts': 0,
-  reports: 1,
+  performance: 1,
+  reports: 2,
+  settings: 3,
 };
 
 const getSidebarDataItems = () =>

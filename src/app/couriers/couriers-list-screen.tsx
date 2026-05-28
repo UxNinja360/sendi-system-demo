@@ -44,6 +44,7 @@ import { Courier } from '../types/delivery.types';
 import { getPeriodDateRange, isDeliveryInPeriod, toDateInputValue } from '../utils/date-period';
 import { exportRowsToExcel } from '../utils/export-utils';
 import { CouriersVercelList } from './couriers-vercel-list';
+import { DeliveriesMapFab } from '../deliveries/deliveries-map-fab';
 import { useDeliveriesMapSplit } from '../deliveries/use-deliveries-map-split';
 
 const TEXT = {
@@ -904,7 +905,7 @@ export const CouriersListScreen: React.FC = () => {
       }),
     [state.deliveries, visibleCourierIdSet],
   );
-  const { mapSplitPortal } = useDeliveriesMapSplit({
+  const { mapOpen, setMapOpen, mapSplitPortal } = useDeliveriesMapSplit({
     deliveries: mapDeliveries,
     couriers: filteredCouriers,
     restaurants: state.restaurants,
@@ -914,6 +915,7 @@ export const CouriersListScreen: React.FC = () => {
   return (
     <>
       {mapSplitPortal}
+      <DeliveriesMapFab mapOpen={mapOpen} setMapOpen={setMapOpen} />
 
       <EntityListShell
         mainClassName="mx-auto w-full max-w-[1280px]"
