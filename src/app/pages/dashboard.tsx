@@ -12,7 +12,6 @@ import {
   PackageOpen,
   PhoneCall,
   Power,
-  PowerOff,
   Plus,
   Sparkles,
   Store,
@@ -421,6 +420,7 @@ const SendiPlusCard: React.FC<{
   onTermsAcceptedChange,
 }) => {
   const isSendiPlusEnabled = termsAccepted && isSystemOpen;
+  const isSystemDisabled = !isSystemOpen;
   const receivesDeliveries = canReceiveSendiPlusDeliveries(radiusKm, isSendiPlusEnabled);
   const canActivateFromCard = isSystemOpen && !isRefreshing && !isSendiPlusEnabled;
   const [isDetailsOpen, setIsDetailsOpen] = React.useState(
@@ -434,13 +434,35 @@ const SendiPlusCard: React.FC<{
   const isAccordionOpen = isSendiPlusEnabled && isDetailsOpen;
   const termsTextClassName = isSendiPlusEnabled
     ? 'text-app-text-secondary'
+    : isSystemDisabled
+    ? 'text-app-text-secondary'
     : 'text-app-text-muted opacity-70';
   const helperTextClassName = isSendiPlusEnabled
+    ? 'text-app-text-secondary'
+    : isSystemDisabled
     ? 'text-app-text-secondary'
     : 'text-app-text-muted opacity-70';
   const radiusLabelClassName = isSendiPlusEnabled
     ? 'text-app-text-secondary'
+    : isSystemDisabled
+    ? 'text-app-text-secondary'
     : 'text-app-text-muted opacity-70';
+  const systemDisabledCardClassName = isSystemDisabled
+    ? 'cursor-not-allowed opacity-45 grayscale'
+    : '';
+  const disabledControlClassName = isSystemDisabled
+    ? 'cursor-not-allowed'
+    : 'cursor-not-allowed opacity-45';
+  const offLabelClassName = isSystemDisabled ? '' : 'sendi-plus-label__word--off';
+  const offPlusClassName = isSystemDisabled ? '' : 'sendi-plus-label__plus--off';
+  const offMarkClassName = isSystemDisabled
+    ? 'sendi-plus-mark--off sendi-plus-mark--system-off'
+    : 'sendi-plus-mark--off';
+  const toggleClassName = isSystemDisabled
+    ? 'sendi-plus-card__system-off-toggle'
+    : canActivateFromCard
+    ? 'sendi-plus-card__toggle'
+    : undefined;
   const selectedRadiusText = `${formatRadiusKm(radiusKm)} ק״מ`;
   const termsSummaryText = SENDI_PLUS_TERMS_TEXT;
   const radiusHelperText = !isSystemOpen
@@ -605,11 +627,12 @@ const SendiPlusCard: React.FC<{
         isSendiPlusEnabled ? 'sendi-plus-card--active' : 'sendi-plus-card--off'
       } ${canActivateFromCard ? 'sendi-plus-card--teaser cursor-pointer' : ''} ${
         isActivationPulseVisible ? 'sendi-plus-card--igniting' : ''
-      }`}
+      } ${systemDisabledCardClassName}`}
       onClick={handleCardClick}
       onKeyDown={handleCardKeyDown}
       role={canActivateFromCard ? 'button' : undefined}
       tabIndex={canActivateFromCard ? 0 : undefined}
+      aria-disabled={isSystemDisabled}
       aria-label={canActivateFromCard ? `הפעל ${SENDI_PLUS_LABEL}` : undefined}
     >
       <div className="flex items-center gap-3 px-3 py-2.5 sm:px-4 sm:py-3" dir="ltr">
@@ -622,7 +645,7 @@ const SendiPlusCard: React.FC<{
           className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] text-app-text-secondary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0a84ff]/30 ${
             isSendiPlusEnabled
               ? 'hover:bg-app-surface-raised hover:text-app-text dark:hover:bg-[#1f1f1f]'
-              : 'cursor-not-allowed opacity-45'
+              : disabledControlClassName
           }`}
           aria-label={
             isSendiPlusEnabled
@@ -648,12 +671,12 @@ const SendiPlusCard: React.FC<{
           >
             <span className="flex min-w-0 items-center gap-1.5">
               <span className="sendi-plus-label truncate text-sm font-semibold text-app-text">
-                <span className={isSendiPlusEnabled ? '' : 'sendi-plus-label__word--off'}>
+                <span className={isSendiPlusEnabled ? '' : offLabelClassName}>
                   סנדי
                 </span>
                 <span
                   className={`sendi-plus-label__plus ${
-                    isSendiPlusEnabled ? '' : 'sendi-plus-label__plus--off'
+                    isSendiPlusEnabled ? '' : offPlusClassName
                   }`}
                 >
                   פלוס
@@ -661,7 +684,7 @@ const SendiPlusCard: React.FC<{
               </span>
               <span
                 className={`sendi-plus-mark ${
-                  isSendiPlusEnabled ? 'sendi-plus-mark--active' : 'sendi-plus-mark--off'
+                  isSendiPlusEnabled ? 'sendi-plus-mark--active' : offMarkClassName
                 }`}
                 aria-hidden="true"
               >
@@ -758,7 +781,7 @@ const SendiPlusCard: React.FC<{
             checked={isSendiPlusEnabled}
             onChange={() => setTermsAcceptedFromControl(!isSendiPlusEnabled)}
             disabled={!isSystemOpen || isRefreshing}
-            className={canActivateFromCard ? 'sendi-plus-card__toggle' : undefined}
+            className={toggleClassName}
             ariaLabel="אישור תנאי סנדי פלוס"
           />
         </div>
@@ -1427,6 +1450,16 @@ export const Dashboard: React.FC = () => {
   const hasCouriersForOperations = state.couriers.length > 0;
   const secondaryControlsDisabled =
     !state.isSystemOpen || !hasCouriersForOperations || isDashboardRefreshing;
+  const dashboardCardsDisabled = !state.isSystemOpen;
+  const dashboardCardDisabledClassName = dashboardCardsDisabled
+    ? 'cursor-not-allowed opacity-45 grayscale'
+    : '';
+  const dashboardCardInnerDisabledClassName = dashboardCardsDisabled
+    ? 'cursor-not-allowed'
+    : '';
+  const dashboardCardHoverClassName = dashboardCardsDisabled
+    ? ''
+    : 'hover:bg-app-surface-raised dark:hover:bg-[#111111]';
 
   return (
     <>
@@ -1493,10 +1526,8 @@ export const Dashboard: React.FC = () => {
                   icon={
                     pullRefreshArmed ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : state.isSystemOpen ? (
-                      <Power className="h-3.5 w-3.5" />
                     ) : (
-                      <PowerOff className="h-3.5 w-3.5" />
+                      <Power className="h-3.5 w-3.5" />
                     )
                   }
                 />
@@ -1539,11 +1570,12 @@ export const Dashboard: React.FC = () => {
             />
           ) : null}
           <section>
-            <div className="dashboard-delivery-summary overflow-hidden rounded-none border border-app-border bg-app-surface text-right dark:border-[#252525] dark:bg-[#0A0A0A]">
+            <div className={`dashboard-delivery-summary overflow-hidden rounded-none border border-app-border bg-app-surface text-right dark:border-[#252525] dark:bg-[#0A0A0A] ${dashboardCardDisabledClassName}`}>
               <button
                 type="button"
+                disabled={dashboardCardsDisabled}
                 onClick={() => navigate(getDeliveriesStatusFilterPath(ACTIVE_DELIVERY_STATUSES))}
-                className="flex w-full min-w-0 items-center justify-between gap-3 border-b border-app-border p-2.5 text-right transition-colors hover:bg-app-surface-raised sm:p-3 dark:border-[#252525] dark:hover:bg-[#111111]"
+                className={`flex w-full min-w-0 items-center justify-between gap-3 border-b border-app-border p-2.5 text-right transition-colors sm:p-3 dark:border-[#252525] ${dashboardCardHoverClassName} ${dashboardCardInnerDisabledClassName}`}
               >
                 <div className="flex min-w-0 items-center gap-2">
                   <span className="min-w-0 truncate text-xs font-semibold text-app-text-secondary">
@@ -1571,8 +1603,9 @@ export const Dashboard: React.FC = () => {
                   <button
                     key={status.id}
                     type="button"
+                    disabled={dashboardCardsDisabled}
                     onClick={() => navigate(getDeliveriesStatusFilterPath([status.id]))}
-                    className="min-w-0 p-2.5 text-right transition-colors hover:bg-app-surface-raised sm:p-3 dark:hover:bg-[#111111]"
+                    className={`min-w-0 p-2.5 text-right transition-colors sm:p-3 ${dashboardCardHoverClassName} ${dashboardCardInnerDisabledClassName}`}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
@@ -1610,8 +1643,9 @@ export const Dashboard: React.FC = () => {
                     key={statusId}
                     type="button"
                     aria-label={label}
+                    disabled={dashboardCardsDisabled}
                     onClick={() => navigate(getDeliveriesStatusFilterPath([statusId]))}
-                    className="dashboard-status-card min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] dark:hover:bg-[#111111]"
+                    className={`dashboard-status-card min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] ${dashboardCardHoverClassName} ${dashboardCardDisabledClassName}`}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
@@ -1632,11 +1666,13 @@ export const Dashboard: React.FC = () => {
             <div className="mt-[10px] grid grid-cols-2 gap-[10px] min-[520px]:grid-cols-6">
               <section
                 aria-label="שליחים"
-                className="dashboard-status-card relative col-span-2 min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] dark:hover:bg-[#111111] min-[520px]:col-span-6"
+                aria-disabled={dashboardCardsDisabled}
+                className={`dashboard-status-card relative col-span-2 min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] min-[520px]:col-span-6 ${dashboardCardHoverClassName} ${dashboardCardDisabledClassName}`}
               >
                 <div className="flex min-h-[52px] items-stretch">
                   <button
                     type="button"
+                    disabled={dashboardCardsDisabled}
                     onClick={() => navigate('/couriers')}
                     className="min-w-0 flex-1 text-right focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
                   >
@@ -1658,8 +1694,9 @@ export const Dashboard: React.FC = () => {
               <button
                 type="button"
                 aria-label="מסעדות"
+                disabled={dashboardCardsDisabled}
                 onClick={() => navigate('/restaurants')}
-                className="dashboard-status-card col-span-1 min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] dark:hover:bg-[#111111] min-[520px]:col-span-3"
+                className={`dashboard-status-card col-span-1 min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] min-[520px]:col-span-3 ${dashboardCardHoverClassName} ${dashboardCardDisabledClassName}`}
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
@@ -1677,8 +1714,9 @@ export const Dashboard: React.FC = () => {
               <button
                 type="button"
                 aria-label="זמן ממוצע למשלוח"
+                disabled={dashboardCardsDisabled}
                 onClick={() => navigate('/deliveries')}
-                className="dashboard-status-card col-span-1 min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] dark:hover:bg-[#111111] min-[520px]:col-span-3"
+                className={`dashboard-status-card col-span-1 min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] min-[520px]:col-span-3 ${dashboardCardHoverClassName} ${dashboardCardDisabledClassName}`}
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
