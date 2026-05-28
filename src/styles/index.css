@@ -42,6 +42,16 @@ body {
   --login-dot-veil: rgba(247, 248, 251, 0.12);
 
   background: var(--login-bg);
+  height: var(--login-visual-height, 100dvh);
+  min-height: var(--login-visual-height, 100dvh);
+}
+
+.login-shell--keyboard {
+  overflow-y: auto;
+}
+
+.login-shell--keyboard .login-main {
+  padding-bottom: max(1rem, var(--app-safe-bottom));
 }
 
 .dark .login-shell {

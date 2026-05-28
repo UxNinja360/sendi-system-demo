@@ -68,6 +68,7 @@ const LOGIN_POINTER_REST_MS = 42;
 const LOGIN_DOT_COLUMN_GAP = LOGIN_VIEWBOX_WIDTH / (LOGIN_DOT_COLUMNS - 1);
 const LOGIN_DOT_ROW_GAP = LOGIN_VIEWBOX_HEIGHT / (LOGIN_DOT_ROWS - 1);
 const LOGIN_TAU = Math.PI * 2;
+const LOGIN_KEYBOARD_VISUAL_VIEWPORT_THRESHOLD = 96;
 
 const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value));
@@ -348,9 +349,44 @@ export const LoginPage: React.FC = () => {
   const [challengeId, setChallengeId] = useState('');
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const dotFieldRef = useRef<LoginDotFieldHandle>(null);
+  const shellRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
+
+  const syncVisualViewport = useCallback(() => {
+    if (typeof window === 'undefined') return;
+
+    const visualViewport = window.visualViewport;
+    const visualHeight = Math.round(visualViewport?.height ?? window.innerHeight);
+    const layoutHeight = window.innerHeight;
+    const keyboardOpen = Boolean(
+      visualViewport &&
+      layoutHeight - visualHeight > LOGIN_KEYBOARD_VISUAL_VIEWPORT_THRESHOLD,
+    );
+
+    shellRef.current?.style.setProperty('--login-visual-height', `${visualHeight}px`);
+    setIsKeyboardOpen(keyboardOpen);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const visualViewport = window.visualViewport;
+    syncVisualViewport();
+
+    window.addEventListener('resize', syncVisualViewport);
+    visualViewport?.addEventListener('resize', syncVisualViewport);
+    visualViewport?.addEventListener('scroll', syncVisualViewport);
+
+    return () => {
+      window.removeEventListener('resize', syncVisualViewport);
+      visualViewport?.removeEventListener('resize', syncVisualViewport);
+      visualViewport?.removeEventListener('scroll', syncVisualViewport);
+      shellRef.current?.style.removeProperty('--login-visual-height');
+    };
+  }, [syncVisualViewport]);
 
   useEffect(() => {
     const destination = getAuthDestination();
@@ -475,11 +511,28 @@ export const LoginPage: React.FC = () => {
     dotFieldRef.current?.leave();
   }, []);
 
+  const handleFocusCapture = useCallback((event: React.FocusEvent<HTMLDivElement>) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    if (!target.matches('input, textarea, select')) return;
+
+    syncVisualViewport();
+
+    window.setTimeout(() => {
+      syncVisualViewport();
+      target.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
+    }, 80);
+  }, [syncVisualViewport]);
+
   const headerActionLabel = authMode === 'signup' ? 'כניסה' : 'הרשמה';
 
   return (
     <div
-      className="login-shell relative isolate flex min-h-[100dvh] w-full flex-col overflow-hidden text-app-text"
+      ref={shellRef}
+      className={`login-shell relative isolate flex w-full flex-col overflow-hidden text-app-text ${
+        isKeyboardOpen ? 'login-shell--keyboard' : ''
+      }`}
+      onFocusCapture={handleFocusCapture}
       onPointerLeave={handlePointerLeave}
       onPointerMove={handlePointerMove}
     >
@@ -504,7 +557,7 @@ export const LoginPage: React.FC = () => {
         )}
       </header>
 
-      <main className="relative z-10 flex flex-1 items-center justify-center px-5 pb-16 pt-8 sm:px-6">
+      <main className="login-main relative z-10 flex flex-1 items-center justify-center px-5 pb-16 pt-8 sm:px-6">
         {authStep === 'phone' ? (
           <LoginPhone
             error={formError}

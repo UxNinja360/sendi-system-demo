@@ -17,16 +17,30 @@ export const LoginPhone: React.FC<LoginPhoneProps> = ({
 }) => {
   const [phone, setPhone] = useState('');
 
-  const canSubmit = phone.length === 10 && !isSubmitting;
+  const canSubmit = !isSubmitting;
   const isSignup = mode === 'signup';
   const title = isSignup ? 'הרשמה לסנדי' : 'כניסה לסנדי';
-  const submitText = isSignup ? 'המשך להרשמה' : 'המשך';
+  const submitText = 'שלח קוד אימות';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (canSubmit) {
+    if (phone.length === 10 && canSubmit) {
       onSubmit(phone);
     }
+  };
+
+  const handlePhoneChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    event.currentTarget.setCustomValidity('');
+    setPhone(event.target.value.replace(/\D/g, '').slice(0, 10));
+  };
+
+  const handlePhoneInvalid = (event: React.InvalidEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    input.setCustomValidity(
+      input.value
+        ? 'צריך להזין מספר טלפון תקין בן 10 ספרות'
+        : 'צריך להזין מספר טלפון',
+    );
   };
 
   return (
@@ -43,9 +57,12 @@ export const LoginPhone: React.FC<LoginPhoneProps> = ({
           id="login-phone-number"
           type="tel"
           value={phone}
-          onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+          onChange={handlePhoneChange}
+          onInvalid={handlePhoneInvalid}
           placeholder="0501234567"
           className="h-12 w-full rounded-lg border border-[#d8d8d8] bg-white px-3 text-left text-sm font-medium text-[#0d0d12] outline-none transition-colors placeholder:text-[#777] hover:border-[#bdbdbd] focus:border-[#0d0d12] focus:bg-white focus:ring-2 focus:ring-[#0d0d12]/10 dark:border-[#252525] dark:bg-[#050505] dark:text-app-text dark:placeholder:text-[#777] dark:hover:border-[#3a3a3a] dark:hover:bg-[#080808] dark:focus:border-[#ededed] dark:focus:ring-[#ededed]/10"
+          required
+          pattern="[0-9]{10}"
           maxLength={10}
           dir="ltr"
           autoComplete="tel"
@@ -54,7 +71,7 @@ export const LoginPhone: React.FC<LoginPhoneProps> = ({
 
         <button
           type="submit"
-          disabled={!canSubmit}
+          disabled={isSubmitting}
           className="flex h-12 w-full items-center justify-center rounded-lg bg-[#0d0d12] px-4 text-sm font-bold text-white transition-colors hover:bg-[#24242b] active:bg-[#050505] disabled:cursor-not-allowed disabled:opacity-45 dark:bg-[#ededed] dark:text-[#050505] dark:hover:bg-white dark:active:bg-[#d8d8d8]"
         >
           {isSubmitting ? 'שולח קוד...' : submitText}
