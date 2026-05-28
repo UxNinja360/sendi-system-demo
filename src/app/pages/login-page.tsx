@@ -69,6 +69,8 @@ const LOGIN_DOT_COLUMN_GAP = LOGIN_VIEWBOX_WIDTH / (LOGIN_DOT_COLUMNS - 1);
 const LOGIN_DOT_ROW_GAP = LOGIN_VIEWBOX_HEIGHT / (LOGIN_DOT_ROWS - 1);
 const LOGIN_TAU = Math.PI * 2;
 const LOGIN_KEYBOARD_VISUAL_VIEWPORT_THRESHOLD = 96;
+const LOGIN_ASSUMED_KEYBOARD_RATIO = 0.42;
+const LOGIN_FOCUS_SCROLL_DELAYS = [0, 90, 220, 420];
 
 const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value));
@@ -350,6 +352,7 @@ export const LoginPage: React.FC = () => {
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+  const [isInputFocused, setIsInputFocused] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const dotFieldRef = useRef<LoginDotFieldHandle>(null);
   const shellRef = useRef<HTMLDivElement | null>(null);
@@ -367,6 +370,10 @@ export const LoginPage: React.FC = () => {
     );
 
     shellRef.current?.style.setProperty('--login-visual-height', `${visualHeight}px`);
+    shellRef.current?.style.setProperty(
+      '--login-keyboard-offset',
+      `${Math.max(0, layoutHeight - visualHeight)}px`,
+    );
     setIsKeyboardOpen(keyboardOpen);
   }, []);
 
@@ -385,6 +392,7 @@ export const LoginPage: React.FC = () => {
       visualViewport?.removeEventListener('resize', syncVisualViewport);
       visualViewport?.removeEventListener('scroll', syncVisualViewport);
       shellRef.current?.style.removeProperty('--login-visual-height');
+      shellRef.current?.style.removeProperty('--login-keyboard-offset');
     };
   }, [syncVisualViewport]);
 
@@ -511,18 +519,59 @@ export const LoginPage: React.FC = () => {
     dotFieldRef.current?.leave();
   }, []);
 
+  const keepFocusedControlVisible = useCallback((target: HTMLElement) => {
+    const shell = shellRef.current;
+    if (!shell) return;
+
+    const panel = target.closest('section') as HTMLElement | null;
+    const targetRect = (panel ?? target).getBoundingClientRect();
+    const visualViewport = window.visualViewport;
+    const visualBottom = visualViewport
+      ? visualViewport.offsetTop + visualViewport.height
+      : window.innerHeight;
+    const fallbackKeyboardBottom =
+      window.innerHeight - Math.round(window.innerHeight * LOGIN_ASSUMED_KEYBOARD_RATIO);
+    const safeBottom = Math.min(visualBottom, fallbackKeyboardBottom) - 18;
+    const overflow = targetRect.bottom - safeBottom;
+
+    if (overflow > 0) {
+      shell.scrollTop += overflow + 18;
+      return;
+    }
+
+    target.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'auto' });
+  }, []);
+
   const handleFocusCapture = useCallback((event: React.FocusEvent<HTMLDivElement>) => {
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
     if (!target.matches('input, textarea, select')) return;
 
+    setIsInputFocused(true);
+    shellRef.current?.classList.add('login-shell--input-focused');
     syncVisualViewport();
 
+    LOGIN_FOCUS_SCROLL_DELAYS.forEach((delay) => {
+      window.setTimeout(() => {
+        syncVisualViewport();
+        keepFocusedControlVisible(target);
+      }, delay);
+    });
+  }, [keepFocusedControlVisible, syncVisualViewport]);
+
+  const handleBlurCapture = useCallback(() => {
     window.setTimeout(() => {
-      syncVisualViewport();
-      target.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
+      const activeElement = document.activeElement;
+      const stillFocused = activeElement instanceof HTMLElement &&
+        activeElement.matches('input, textarea, select');
+
+      setIsInputFocused(stillFocused);
+
+      if (!stillFocused) {
+        shellRef.current?.classList.remove('login-shell--input-focused');
+      }
     }, 80);
-  }, [syncVisualViewport]);
+  }, []);
 
   const headerActionLabel = authMode === 'signup' ? 'כניסה' : 'הרשמה';
 
@@ -531,7 +580,10 @@ export const LoginPage: React.FC = () => {
       ref={shellRef}
       className={`login-shell relative isolate flex w-full flex-col overflow-hidden text-app-text ${
         isKeyboardOpen ? 'login-shell--keyboard' : ''
+      } ${
+        isInputFocused ? 'login-shell--input-focused' : ''
       }`}
+      onBlurCapture={handleBlurCapture}
       onFocusCapture={handleFocusCapture}
       onPointerLeave={handlePointerLeave}
       onPointerMove={handlePointerMove}
