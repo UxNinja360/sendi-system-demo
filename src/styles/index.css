@@ -88,6 +88,13 @@ body {
   width: 108%;
 }
 
+.login-dot-field__canvas {
+  height: 108%;
+  inset: -4%;
+  position: absolute;
+  width: 108%;
+}
+
 .login-dot-field__dot {
   fill: var(--login-dot);
   opacity: var(--login-dot-opacity);

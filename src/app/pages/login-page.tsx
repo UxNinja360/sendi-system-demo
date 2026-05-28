@@ -35,12 +35,39 @@ type LoginDotFieldHandle = {
   move: (clientX: number, clientY: number, rect: DOMRect) => void;
 };
 
+type LoginPointer = {
+  x: number;
+  y: number;
+};
+
+type LoginPointerSample = {
+  clientX: number;
+  clientY: number;
+  time: number;
+};
+
+type LoginCanvasMetrics = {
+  dpr: number;
+  height: number;
+  offsetX: number;
+  offsetY: number;
+  scale: number;
+  width: number;
+};
+
 const LOGIN_VIEWBOX_WIDTH = 160;
 const LOGIN_VIEWBOX_HEIGHT = 100;
 const LOGIN_DOT_COLUMNS = 88;
 const LOGIN_DOT_ROWS = 54;
 const LOGIN_DOT_RADIUS = 0.09;
-const LOGIN_CURSOR_RADIUS = 17.5;
+const LOGIN_CURSOR_RADIUS = 15.8;
+const LOGIN_REPULSION_STRENGTH = 3.1;
+const LOGIN_FAST_POINTER_SPEED = 1.35;
+const LOGIN_FAST_REPULSION_SCALE = 0.1;
+const LOGIN_POINTER_REST_MS = 42;
+const LOGIN_DOT_COLUMN_GAP = LOGIN_VIEWBOX_WIDTH / (LOGIN_DOT_COLUMNS - 1);
+const LOGIN_DOT_ROW_GAP = LOGIN_VIEWBOX_HEIGHT / (LOGIN_DOT_ROWS - 1);
+const LOGIN_TAU = Math.PI * 2;
 
 const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value));
@@ -88,100 +115,200 @@ const getLoginPointerInViewBox = (clientX: number, clientY: number, rect: DOMRec
 
 const LoginDotField = React.forwardRef<LoginDotFieldHandle>((_, ref) => {
   const dots = useMemo(createLoginDots, []);
-  const circlesRef = useRef<Array<SVGCircleElement | null>>([]);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const frameRef = useRef<number | null>(null);
-  const activeIndexesRef = useRef<number[]>([]);
-  const pointerRef = useRef({ active: false, x: LOGIN_VIEWBOX_WIDTH / 2, y: LOGIN_VIEWBOX_HEIGHT / 2 });
+  const lastPointerSampleRef = useRef<LoginPointerSample | null>(null);
+  const metricsRef = useRef<LoginCanvasMetrics | null>(null);
+  const pointerRef = useRef<LoginPointer & { active: boolean; strengthScale: number }>({
+    active: false,
+    strengthScale: 1,
+    x: 0,
+    y: 0,
+  });
+  const restTimerRef = useRef<number | null>(null);
 
-  const applyDistortion = useCallback(() => {
+  const syncCanvasMetrics = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+
+    const rect = canvas.getBoundingClientRect();
+    const width = Math.max(1, rect.width);
+    const height = Math.max(1, rect.height);
+    const dpr = window.devicePixelRatio || 1;
+    const viewAspect = LOGIN_VIEWBOX_WIDTH / LOGIN_VIEWBOX_HEIGHT;
+    const rectAspect = width / height;
+    const scale = rectAspect > viewAspect
+      ? width / LOGIN_VIEWBOX_WIDTH
+      : height / LOGIN_VIEWBOX_HEIGHT;
+    const offsetX = (width - LOGIN_VIEWBOX_WIDTH * scale) / 2;
+    const offsetY = (height - LOGIN_VIEWBOX_HEIGHT * scale) / 2;
+
+    if (canvas.width !== Math.round(width * dpr)) {
+      canvas.width = Math.round(width * dpr);
+    }
+
+    if (canvas.height !== Math.round(height * dpr)) {
+      canvas.height = Math.round(height * dpr);
+    }
+
+    const metrics = {
+      dpr,
+      height,
+      offsetX,
+      offsetY,
+      scale,
+      width,
+    };
+
+    metricsRef.current = metrics;
+    return metrics;
+  }, []);
+
+  const drawDots = useCallback(() => {
     frameRef.current = null;
 
-    activeIndexesRef.current.forEach((index) => {
-      circlesRef.current[index]?.removeAttribute('transform');
-    });
-    activeIndexesRef.current = [];
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const metrics = metricsRef.current ?? syncCanvasMetrics();
+    if (!metrics) return;
+
+    const context = canvas.getContext('2d');
+    if (!context) return;
 
     const pointer = pointerRef.current;
-    if (!pointer.active) return;
+    const styles = getComputedStyle(canvas);
+    const dotColor = styles.getPropertyValue('--login-dot').trim() || '#2f5f72';
+    const dotOpacity = Number(styles.getPropertyValue('--login-dot-opacity').trim()) || 0.72;
+    const strength = LOGIN_REPULSION_STRENGTH * pointer.strengthScale;
 
-    const nextActiveIndexes: number[] = [];
+    context.setTransform(1, 0, 0, 1, 0, 0);
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.setTransform(
+      metrics.dpr * metrics.scale,
+      0,
+      0,
+      metrics.dpr * metrics.scale,
+      metrics.dpr * metrics.offsetX,
+      metrics.dpr * metrics.offsetY,
+    );
+    context.fillStyle = dotColor;
+    context.globalAlpha = dotOpacity;
 
-    dots.forEach((dot, index) => {
-      const dx = dot.x - pointer.x;
-      const dy = (dot.y - pointer.y) * 1.08;
-      const distance = Math.hypot(dx, dy);
+    dots.forEach((dot) => {
+      let x = dot.x;
+      let y = dot.y;
 
-      if (distance >= LOGIN_CURSOR_RADIUS) return;
+      if (pointer.active) {
+        const dx = dot.x - pointer.x;
+        const dy = dot.y - pointer.y;
+        const distance = Math.hypot(dx, dy);
 
-      const influence = 1 - distance / LOGIN_CURSOR_RADIUS;
-      const eased = influence * influence * (3 - 2 * influence);
-      const normalX = distance > 0 ? dx / distance : 0;
-      const normalY = distance > 0 ? dy / distance : 0;
-      const push = eased * 1.06;
-      const curve = eased * 0.34;
-      const moveX = normalX * push - normalY * curve;
-      const moveY = normalY * push + normalX * curve;
+        if (distance > 0.001 && distance < LOGIN_CURSOR_RADIUS) {
+          const influence = 1 - distance / LOGIN_CURSOR_RADIUS;
+          const force = influence * influence * strength;
 
-      circlesRef.current[index]?.setAttribute(
-        'transform',
-        `translate(${moveX.toFixed(3)} ${moveY.toFixed(3)})`,
-      );
-      nextActiveIndexes.push(index);
+          x += (dx / distance) * force;
+          y += (dy / distance) * force;
+        }
+      }
+
+      context.beginPath();
+      context.arc(x, y, LOGIN_DOT_RADIUS, 0, LOGIN_TAU);
+      context.fill();
     });
 
-    activeIndexesRef.current = nextActiveIndexes;
-  }, [dots]);
+    context.globalAlpha = 1;
+  }, [dots, syncCanvasMetrics]);
 
-  const scheduleDistortion = useCallback(() => {
+  const scheduleDraw = useCallback(() => {
     if (frameRef.current !== null) return;
-    frameRef.current = window.requestAnimationFrame(applyDistortion);
-  }, [applyDistortion]);
+    frameRef.current = window.requestAnimationFrame(drawDots);
+  }, [drawDots]);
+
+  const leave = useCallback(() => {
+    lastPointerSampleRef.current = null;
+
+    if (restTimerRef.current !== null) {
+      window.clearTimeout(restTimerRef.current);
+      restTimerRef.current = null;
+    }
+
+    pointerRef.current = {
+      ...pointerRef.current,
+      active: false,
+    };
+    scheduleDraw();
+  }, [scheduleDraw]);
 
   useImperativeHandle(ref, () => ({
-    leave: () => {
-      pointerRef.current = {
-        active: false,
-        x: LOGIN_VIEWBOX_WIDTH / 2,
-        y: LOGIN_VIEWBOX_HEIGHT / 2,
-      };
-      scheduleDistortion();
-    },
+    leave,
     move: (clientX, clientY, rect) => {
+      const now = performance.now();
+      const previous = lastPointerSampleRef.current;
+      const speed = previous
+        ? Math.hypot(clientX - previous.clientX, clientY - previous.clientY) / Math.max(8, now - previous.time)
+        : 0;
+      const speedFactor = clamp(speed / LOGIN_FAST_POINTER_SPEED, 0, 1);
+      const strengthScale = 1 - speedFactor * (1 - LOGIN_FAST_REPULSION_SCALE);
+
+      lastPointerSampleRef.current = { clientX, clientY, time: now };
       pointerRef.current = {
         active: true,
+        strengthScale,
         ...getLoginPointerInViewBox(clientX, clientY, rect),
       };
-      scheduleDistortion();
-    },
-  }), [scheduleDistortion]);
 
-  useEffect(() => () => {
-    if (frameRef.current !== null) {
-      window.cancelAnimationFrame(frameRef.current);
-    }
-  }, []);
+      if (restTimerRef.current !== null) {
+        window.clearTimeout(restTimerRef.current);
+      }
+
+      scheduleDraw();
+
+      restTimerRef.current = window.setTimeout(() => {
+        const pointer = pointerRef.current;
+        if (!pointer.active) return;
+
+        pointerRef.current = {
+          ...pointer,
+          strengthScale: 1,
+        };
+        scheduleDraw();
+        restTimerRef.current = null;
+      }, LOGIN_POINTER_REST_MS);
+    },
+  }), [leave, scheduleDraw]);
+
+  useEffect(() => {
+    syncCanvasMetrics();
+    drawDots();
+
+    const canvas = canvasRef.current;
+    if (!canvas) return undefined;
+
+    const resizeObserver = new ResizeObserver(() => {
+      syncCanvasMetrics();
+      scheduleDraw();
+    });
+
+    resizeObserver.observe(canvas);
+
+    return () => {
+      resizeObserver.disconnect();
+
+      if (frameRef.current !== null) {
+        window.cancelAnimationFrame(frameRef.current);
+      }
+
+      if (restTimerRef.current !== null) {
+        window.clearTimeout(restTimerRef.current);
+      }
+    };
+  }, [drawDots, scheduleDraw, syncCanvasMetrics]);
 
   return (
     <div className="login-dot-field" aria-hidden="true">
-      <svg
-        className="login-dot-field__svg"
-        viewBox={`0 0 ${LOGIN_VIEWBOX_WIDTH} ${LOGIN_VIEWBOX_HEIGHT}`}
-        preserveAspectRatio="xMidYMid slice"
-        focusable="false"
-      >
-        {dots.map((dot, index) => (
-          <circle
-            key={dot.id}
-            ref={(node) => {
-              circlesRef.current[index] = node;
-            }}
-            className="login-dot-field__dot"
-            cx={dot.x}
-            cy={dot.y}
-            r={LOGIN_DOT_RADIUS}
-          />
-        ))}
-      </svg>
+      <canvas ref={canvasRef} className="login-dot-field__canvas" />
     </div>
   );
 });
@@ -333,9 +460,13 @@ export const LoginPage: React.FC = () => {
 
   const handlePointerMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
     if (event.pointerType === 'touch') return;
+
+    const coalescedEvents = event.nativeEvent.getCoalescedEvents?.();
+    const latestEvent = coalescedEvents?.[coalescedEvents.length - 1] ?? event;
+
     dotFieldRef.current?.move(
-      event.clientX,
-      event.clientY,
+      latestEvent.clientX,
+      latestEvent.clientY,
       event.currentTarget.getBoundingClientRect(),
     );
   }, []);
