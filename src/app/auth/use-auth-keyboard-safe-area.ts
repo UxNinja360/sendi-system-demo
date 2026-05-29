@@ -25,9 +25,24 @@ export const useAuthKeyboardSafeArea = <TElement extends HTMLElement>() => {
 
     if (!root || !visualViewport) return undefined;
 
+    const html = document.documentElement;
+    const body = document.body;
+    const previousHtmlOverflow = html.style.overflow;
+    const previousBodyHeight = body.style.height;
+    const previousBodyInset = body.style.inset;
+    const previousBodyOverflow = body.style.overflow;
+    const previousBodyPosition = body.style.position;
+    const previousBodyWidth = body.style.width;
     let animationFrameId: number | null = null;
     let keyboardIsOpen = false;
     const timeoutIds = new Set<number>();
+
+    html.style.overflow = 'hidden';
+    body.style.height = '100%';
+    body.style.inset = '0';
+    body.style.overflow = 'hidden';
+    body.style.position = 'fixed';
+    body.style.width = '100%';
 
     const setStableLayoutHeight = () => {
       const height = Math.round(window.innerHeight || document.documentElement.clientHeight);
@@ -55,6 +70,7 @@ export const useAuthKeyboardSafeArea = <TElement extends HTMLElement>() => {
       keyboardIsOpen = false;
       root.removeAttribute('data-auth-keyboard');
       root.style.setProperty('--auth-panel-shift', '0px');
+      root.style.setProperty('--auth-viewport-offset-top', '0px');
     };
 
     const getKeyboardInset = () => {
@@ -85,9 +101,16 @@ export const useAuthKeyboardSafeArea = <TElement extends HTMLElement>() => {
       keepDocumentAnchored();
 
       const keyboardInset = getKeyboardInset();
-      keyboardIsOpen = keyboardInset > KEYBOARD_OPEN_THRESHOLD;
+      const viewportOffsetTop = Math.max(0, Math.round(visualViewport.offsetTop));
+      keyboardIsOpen =
+        keyboardInset > KEYBOARD_OPEN_THRESHOLD ||
+        (viewportOffsetTop > 0 && getActiveEditableInside(root) !== null);
 
       root.setAttribute('data-auth-keyboard', keyboardIsOpen ? 'open' : 'closed');
+      root.style.setProperty(
+        '--auth-viewport-offset-top',
+        keyboardIsOpen ? `${viewportOffsetTop}px` : '0px',
+      );
 
       if (keyboardIsOpen) {
         root.style.setProperty('--auth-panel-shift', `-${getActionOverflow()}px`);
@@ -162,6 +185,12 @@ export const useAuthKeyboardSafeArea = <TElement extends HTMLElement>() => {
       visualViewport.removeEventListener('resize', sync);
       visualViewport.removeEventListener('scroll', sync);
       window.removeEventListener('resize', handleWindowResize);
+      html.style.overflow = previousHtmlOverflow;
+      body.style.height = previousBodyHeight;
+      body.style.inset = previousBodyInset;
+      body.style.overflow = previousBodyOverflow;
+      body.style.position = previousBodyPosition;
+      body.style.width = previousBodyWidth;
       root.style.removeProperty('--auth-layout-height');
       reset();
     };

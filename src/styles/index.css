@@ -44,6 +44,7 @@ body {
   --login-footer-height: 3rem;
   --auth-layout-height: 100svh;
   --auth-panel-shift: 0px;
+  --auth-viewport-offset-top: 0px;
   background: var(--login-bg);
   height: var(--auth-layout-height);
   inset: 0;
@@ -51,7 +52,9 @@ body {
   min-height: var(--auth-layout-height);
   overflow: hidden;
   position: fixed;
+  transform: translate3d(0, var(--auth-viewport-offset-top), 0);
   width: 100%;
+  will-change: transform;
 }
 
 .login-shell > header {
