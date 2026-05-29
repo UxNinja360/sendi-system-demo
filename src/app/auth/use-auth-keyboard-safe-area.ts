@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 const EDITABLE_SELECTOR = 'input:not([type="hidden"]), textarea, select, [contenteditable="true"]';
 const KEYBOARD_OPEN_THRESHOLD = 80;
 const SYNC_DELAYS = [40, 120, 260, 420];
-const VISIBLE_MARGIN = 14;
+const VISIBLE_MARGIN = 20;
 
 const isEditableElement = (target: EventTarget | null): target is HTMLElement =>
   target instanceof HTMLElement && target.matches(EDITABLE_SELECTOR);
@@ -26,7 +26,13 @@ export const useAuthKeyboardSafeArea = <TElement extends HTMLElement>() => {
     if (!root || !visualViewport) return undefined;
 
     let animationFrameId: number | null = null;
+    let keyboardIsOpen = false;
     const timeoutIds = new Set<number>();
+
+    const setStableLayoutHeight = () => {
+      const height = Math.round(window.innerHeight || document.documentElement.clientHeight);
+      root.style.setProperty('--auth-layout-height', `${height}px`);
+    };
 
     const clearQueuedSyncs = () => {
       if (animationFrameId !== null) {
@@ -40,9 +46,9 @@ export const useAuthKeyboardSafeArea = <TElement extends HTMLElement>() => {
 
     const reset = () => {
       clearQueuedSyncs();
+      keyboardIsOpen = false;
       root.removeAttribute('data-auth-keyboard');
-      root.style.removeProperty('--auth-keyboard-inset');
-      root.style.removeProperty('--auth-visual-height');
+      root.style.setProperty('--auth-panel-shift', '0px');
     };
 
     const getKeyboardInset = () => {
@@ -54,9 +60,9 @@ export const useAuthKeyboardSafeArea = <TElement extends HTMLElement>() => {
       return Math.max(0, Math.max(layoutHeight, rootHeight) - visibleHeight - visibleOffsetTop);
     };
 
-    const keepActionVisible = () => {
+    const getActionOverflow = () => {
       const activeElement = getActiveEditableInside(root);
-      if (!activeElement) return;
+      if (!activeElement) return 0;
 
       const form = activeElement.closest('form');
       const primaryAction =
@@ -64,37 +70,23 @@ export const useAuthKeyboardSafeArea = <TElement extends HTMLElement>() => {
         root.querySelector<HTMLElement>('[data-auth-primary-action]');
       const target = primaryAction ?? activeElement;
       const targetRect = target.getBoundingClientRect();
-      const visibleTop = visualViewport.offsetTop + VISIBLE_MARGIN;
       const visibleBottom = visualViewport.offsetTop + visualViewport.height - VISIBLE_MARGIN;
-      const scrollViewport = root.querySelector<HTMLElement>('.login-main') ?? root;
 
-      if (targetRect.bottom > visibleBottom) {
-        scrollViewport.scrollBy({
-          top: targetRect.bottom - visibleBottom,
-          behavior: 'auto',
-        });
-        return;
-      }
-
-      if (targetRect.top < visibleTop) {
-        scrollViewport.scrollBy({
-          top: targetRect.top - visibleTop,
-          behavior: 'auto',
-        });
-      }
+      return Math.max(0, Math.ceil(targetRect.bottom - visibleBottom));
     };
 
     const sync = () => {
       const keyboardInset = getKeyboardInset();
-      const keyboardIsOpen = keyboardInset > KEYBOARD_OPEN_THRESHOLD;
+      keyboardIsOpen = keyboardInset > KEYBOARD_OPEN_THRESHOLD;
 
-      root.style.setProperty('--auth-visual-height', `${Math.round(visualViewport.height)}px`);
-      root.style.setProperty('--auth-keyboard-inset', keyboardIsOpen ? `${keyboardInset}px` : '0px');
       root.setAttribute('data-auth-keyboard', keyboardIsOpen ? 'open' : 'closed');
 
       if (keyboardIsOpen) {
-        keepActionVisible();
+        root.style.setProperty('--auth-panel-shift', `-${getActionOverflow()}px`);
+        return;
       }
+
+      root.style.setProperty('--auth-panel-shift', '0px');
     };
 
     const queueSyncs = () => {
@@ -137,11 +129,20 @@ export const useAuthKeyboardSafeArea = <TElement extends HTMLElement>() => {
       timeoutIds.add(timeoutId);
     };
 
+    const handleWindowResize = () => {
+      if (!keyboardIsOpen && !getActiveEditableInside(root)) {
+        setStableLayoutHeight();
+      }
+
+      sync();
+    };
+
+    setStableLayoutHeight();
     root.addEventListener('focusin', handleFocusIn);
     root.addEventListener('focusout', handleFocusOut);
     visualViewport.addEventListener('resize', sync);
     visualViewport.addEventListener('scroll', sync);
-    window.addEventListener('resize', sync);
+    window.addEventListener('resize', handleWindowResize);
 
     if (getActiveEditableInside(root)) {
       queueSyncs();
@@ -152,7 +153,8 @@ export const useAuthKeyboardSafeArea = <TElement extends HTMLElement>() => {
       root.removeEventListener('focusout', handleFocusOut);
       visualViewport.removeEventListener('resize', sync);
       visualViewport.removeEventListener('scroll', sync);
-      window.removeEventListener('resize', sync);
+      window.removeEventListener('resize', handleWindowResize);
+      root.style.removeProperty('--auth-layout-height');
       reset();
     };
   }, []);
