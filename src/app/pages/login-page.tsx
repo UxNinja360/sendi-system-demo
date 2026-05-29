@@ -504,7 +504,7 @@ export const LoginPage: React.FC = () => {
         )}
       </header>
 
-      <main className="login-main relative z-10 flex flex-1 items-center justify-center px-5 pb-16 pt-8 sm:px-6">
+      <main className="login-main login-main--auth relative z-10 flex flex-1 items-center justify-center px-5 pb-16 pt-8 sm:px-6">
         {authStep === 'phone' ? (
           <LoginPhone
             error={formError}

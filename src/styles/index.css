@@ -20,6 +20,13 @@ body,
   max-width: 100%;
 }
 
+html:has(.login-shell),
+body:has(.login-shell),
+#root:has(.login-shell) {
+  height: 100%;
+  overflow: hidden;
+}
+
 html,
 body {
   overflow-x: hidden;
@@ -43,9 +50,19 @@ body {
   --login-header-height: 4rem;
   --login-footer-height: 3rem;
   background: var(--login-bg);
-  height: 100svh;
-  min-height: 100svh;
-  overflow: hidden;
+  height: 100dvh;
+  max-height: 100dvh;
+  min-height: 100dvh;
+  overflow: clip;
+  overscroll-behavior: none;
+}
+
+@supports not (height: 100dvh) {
+  .login-shell {
+    height: 100svh;
+    max-height: 100svh;
+    min-height: 100svh;
+  }
 }
 
 .login-shell > header {
@@ -67,14 +84,19 @@ body {
 }
 
 .login-main {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.login-main--auth {
   align-items: start !important;
   display: grid !important;
-  flex: 1 1 auto;
   grid-template-columns: minmax(0, 1fr);
   justify-items: center;
   min-height: 0;
+  overscroll-behavior: none;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: hidden;
   padding: clamp(7.5rem, 22svh, 16rem) max(1rem, var(--app-safe-left)) max(1.25rem, calc(var(--app-safe-bottom) + 1rem)) max(1rem, var(--app-safe-right)) !important;
 }
 
@@ -99,10 +121,34 @@ body {
     padding-bottom: max(0.75rem, var(--app-safe-bottom));
   }
 
+  .login-main--auth :is(input, button) {
+    scroll-margin-bottom: 1rem;
+    scroll-margin-top: calc(var(--login-header-height) + 1rem);
+  }
+
   .login-shell :is(input, textarea, select) {
     font-size: 16px;
   }
+}
 
+@media (max-width: 767.98px) and (max-height: 740px) {
+  .login-main--auth {
+    padding-top: clamp(4.75rem, 13svh, 6.5rem) !important;
+  }
+}
+
+@media (max-width: 767.98px) and (max-height: 620px) {
+  .login-shell {
+    --login-footer-height: 0px;
+  }
+
+  .login-shell > footer {
+    display: none;
+  }
+
+  .login-main--auth {
+    padding-top: clamp(2.75rem, 10svh, 4.5rem) !important;
+  }
 }
 
 .dark .login-shell {
@@ -123,7 +169,7 @@ body {
   inset: 0;
   overflow: hidden;
   pointer-events: none;
-  position: fixed;
+  position: absolute;
   z-index: 0;
 }
 
