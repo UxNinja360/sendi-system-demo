@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 interface LoginOtpProps {
   error?: string;
@@ -40,37 +40,14 @@ export const LoginOtp: React.FC<LoginOtpProps> = ({
     input.focus({ preventScroll: true });
   }, []);
 
-  useLayoutEffect(() => {
-    focusFirstInput();
-  }, [focusFirstInput]);
-
   useEffect(() => {
-    focusFirstInput();
-
     const animationFrameId = window.requestAnimationFrame(focusFirstInput);
-    const shortDelayId = window.setTimeout(focusFirstInput, 80);
+    const shortDelayId = window.setTimeout(focusFirstInput, 120);
 
     return () => {
       window.cancelAnimationFrame(animationFrameId);
       window.clearTimeout(shortDelayId);
     };
-  }, [focusFirstInput]);
-
-  useEffect(() => {
-    if (!isSubmitting) {
-      focusFirstInput();
-    }
-  }, [focusFirstInput, isSubmitting]);
-
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        window.setTimeout(focusFirstInput, 50);
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [focusFirstInput]);
 
   useEffect(() => {
@@ -86,7 +63,7 @@ export const LoginOtp: React.FC<LoginOtpProps> = ({
     setError('קוד שגוי או פג תוקף, נסה שוב');
     otpRef.current = EMPTY_OTP;
     setOtp(EMPTY_OTP);
-    inputRefs.current[0]?.focus();
+    inputRefs.current[0]?.focus({ preventScroll: true });
     return false;
   };
 
@@ -131,7 +108,7 @@ export const LoginOtp: React.FC<LoginOtpProps> = ({
     otpRef.current = EMPTY_OTP;
     setOtp(EMPTY_OTP);
     setError('');
-    inputRefs.current[0]?.focus();
+    inputRefs.current[0]?.focus({ preventScroll: true });
     onResend();
   };
 

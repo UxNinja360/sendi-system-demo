@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React from 'react';
 
 export type LoginPhoneMode = 'login' | 'signup';
 
@@ -130,6 +130,8 @@ interface LoginPhoneProps {
   error?: string;
   isSubmitting?: boolean;
   mode: LoginPhoneMode;
+  phone: string;
+  onPhoneChange: (phone: string) => void;
   onSubmit: (phone: string) => void;
 }
 
@@ -137,11 +139,10 @@ export const LoginPhone: React.FC<LoginPhoneProps> = ({
   error,
   isSubmitting = false,
   mode,
+  phone,
+  onPhoneChange,
   onSubmit,
 }) => {
-  const [phone, setPhone] = useState('');
-  const inputRef = useRef<HTMLInputElement | null>(null);
-
   const canSubmit = !isSubmitting;
   const isSignup = mode === 'signup';
   const title = isSignup ? 'הרשמה לסנדי' : 'כניסה לסנדי';
@@ -150,14 +151,13 @@ export const LoginPhone: React.FC<LoginPhoneProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (phone.length === 10 && canSubmit) {
-      inputRef.current?.focus({ preventScroll: true });
       onSubmit(phone);
     }
   };
 
   const handlePhoneChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     event.currentTarget.setCustomValidity('');
-    setPhone(event.target.value.replace(/\D/g, '').slice(0, 10));
+    onPhoneChange(event.target.value.replace(/\D/g, '').slice(0, 10));
   };
 
   const handlePhoneInvalid = (event: React.InvalidEvent<HTMLInputElement>) => {
@@ -175,24 +175,25 @@ export const LoginPhone: React.FC<LoginPhoneProps> = ({
         {title}
       </h1>
 
-      <form onSubmit={handleSubmit} className="space-y-3">
+      <form onSubmit={handleSubmit} className="space-y-3" aria-busy={isSubmitting}>
         <label className="sr-only" htmlFor="login-phone-number">
           מספר טלפון
         </label>
         <input
           id="login-phone-number"
-          ref={inputRef}
           type="tel"
           value={phone}
           onChange={handlePhoneChange}
           onInvalid={handlePhoneInvalid}
           placeholder="0501234567"
           className="h-12 w-full rounded-lg border border-[#d8d8d8] bg-white px-3 text-left text-sm font-medium text-[#0d0d12] outline-none transition-colors placeholder:text-[#777] hover:border-[#bdbdbd] focus:border-[#0d0d12] focus:bg-white focus:ring-2 focus:ring-[#0d0d12]/10 dark:border-[#252525] dark:bg-[#050505] dark:text-app-text dark:placeholder:text-[#777] dark:hover:border-[#3a3a3a] dark:hover:bg-[#080808] dark:focus:border-[#ededed] dark:focus:ring-[#ededed]/10"
+          disabled={isSubmitting}
           required
           pattern="[0-9]{10}"
           maxLength={10}
           dir="ltr"
           autoComplete="tel"
+          enterKeyHint="done"
           inputMode="tel"
         />
 
@@ -201,7 +202,7 @@ export const LoginPhone: React.FC<LoginPhoneProps> = ({
           disabled={isSubmitting}
           className="flex h-12 w-full items-center justify-center rounded-lg bg-[#0d0d12] px-4 text-sm font-bold text-white transition-colors hover:bg-[#24242b] active:bg-[#050505] disabled:cursor-not-allowed disabled:opacity-45 dark:bg-[#ededed] dark:text-[#050505] dark:hover:bg-white dark:active:bg-[#d8d8d8]"
         >
-          {isSubmitting ? 'שולח קוד...' : submitText}
+          {isSubmitting ? 'מאמת...' : submitText}
         </button>
       </form>
 

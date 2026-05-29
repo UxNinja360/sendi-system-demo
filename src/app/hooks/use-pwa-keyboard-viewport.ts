@@ -9,8 +9,23 @@ type StandaloneNavigator = Navigator & {
   standalone?: boolean;
 };
 
-const isEditableTarget = (target: EventTarget | null): target is HTMLElement =>
+export const isEditableTarget = (target: EventTarget | null): target is HTMLElement =>
   target instanceof HTMLElement && target.matches(EDITABLE_SELECTOR);
+
+export const getActiveEditableInside = (root: HTMLElement | null) => {
+  const activeElement = document.activeElement;
+
+  return root?.contains(activeElement) && isEditableTarget(activeElement)
+    ? activeElement
+    : null;
+};
+
+export const blurActiveEditableInside = (root: HTMLElement | null) => {
+  getActiveEditableInside(root)?.blur();
+};
+
+export const hasActiveEditableInside = (root: HTMLElement | null) =>
+  getActiveEditableInside(root) !== null;
 
 const isStandaloneTouchApp = () => {
   if (typeof window === 'undefined') return false;
@@ -37,10 +52,7 @@ export const usePwaKeyboardViewport = <TElement extends HTMLElement>() => {
 
     if (!root || !visualViewport || !isStandaloneTouchApp()) return undefined;
 
-    let focusedElement: HTMLElement | null = root.contains(document.activeElement)
-      && isEditableTarget(document.activeElement)
-      ? document.activeElement
-      : null;
+    let focusedElement: HTMLElement | null = getActiveEditableInside(root);
     let animationFrameId: number | null = null;
     const timeoutIds = new Set<number>();
 

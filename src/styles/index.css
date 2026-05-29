@@ -106,6 +106,10 @@ body {
     padding-bottom: max(0.75rem, var(--app-safe-bottom));
   }
 
+  .login-shell :is(input, textarea, select) {
+    font-size: 16px;
+  }
+
 }
 
 .dark .login-shell {

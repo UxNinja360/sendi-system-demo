@@ -26,7 +26,10 @@ import {
   readWorkspaceAccountByRegistrationNumber,
   writeWorkspaceState,
 } from '../workspaces/workspace-registry';
-import { usePwaKeyboardViewport } from '../hooks/use-pwa-keyboard-viewport';
+import {
+  blurActiveEditableInside,
+  usePwaKeyboardViewport,
+} from '../hooks/use-pwa-keyboard-viewport';
 import { LoginDotField, type LoginDotFieldHandle } from './login-page';
 
 type OnboardingStep = 'userName' | 'companyChoice' | 'companyDetails' | 'activityArea' | 'joinCompany';
@@ -839,6 +842,7 @@ export const OnboardingPage: React.FC = () => {
 
     setSession(nextSession);
     setError('');
+    blurActiveEditableInside(shellRef.current);
     setStep('companyChoice');
   };
 
@@ -856,6 +860,7 @@ export const OnboardingPage: React.FC = () => {
     }
 
     setError('');
+    blurActiveEditableInside(shellRef.current);
     setStep('activityArea');
   };
 
@@ -878,6 +883,7 @@ export const OnboardingPage: React.FC = () => {
       return;
     }
 
+    blurActiveEditableInside(shellRef.current);
     saveWorkspace({
       area: formatWorkspaceAreaSummary(normalizedAreas),
       areas: normalizedAreas,
@@ -905,6 +911,7 @@ export const OnboardingPage: React.FC = () => {
       return;
     }
 
+    blurActiveEditableInside(shellRef.current);
     const ownerMember = {
       joinedAt: account.profile.user.createdAt,
       name: account.profile.user.name,
@@ -950,6 +957,7 @@ export const OnboardingPage: React.FC = () => {
   };
 
   const handleBack = () => {
+    blurActiveEditableInside(shellRef.current);
     setError('');
 
     if (step === 'userName') {
