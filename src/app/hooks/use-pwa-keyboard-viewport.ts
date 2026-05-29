@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 const EDITABLE_SELECTOR = 'input:not([type="hidden"]), textarea, select, [contenteditable="true"]';
 const KEYBOARD_VISUAL_VIEWPORT_THRESHOLD = 80;
 const KEYBOARD_SYNC_DELAYS = [50, 140, 280, 420];
+const FOCUSED_FIELD_MARGIN = 16;
 
 type StandaloneNavigator = Navigator & {
   standalone?: boolean;
@@ -57,7 +58,28 @@ export const usePwaKeyboardViewport = <TElement extends HTMLElement>() => {
       clearQueuedSyncs();
       focusedElement = null;
       root.removeAttribute('data-pwa-keyboard');
-      root.style.removeProperty('--login-visual-height');
+      root.style.removeProperty('--pwa-keyboard-inset');
+    };
+
+    const keepFocusedElementVisible = () => {
+      if (!focusedElement) return;
+
+      const rect = focusedElement.getBoundingClientRect();
+      const visibleTop = visualViewport.offsetTop + FOCUSED_FIELD_MARGIN;
+      const visibleBottom = visualViewport.offsetTop + visualViewport.height - FOCUSED_FIELD_MARGIN;
+      const scrollDelta =
+        rect.bottom > visibleBottom
+          ? rect.bottom - visibleBottom
+          : rect.top < visibleTop
+            ? rect.top - visibleTop
+            : 0;
+
+      if (Math.abs(scrollDelta) < 1) return;
+
+      root.scrollBy({
+        top: scrollDelta,
+        behavior: 'auto',
+      });
     };
 
     const syncViewport = () => {
@@ -71,15 +93,11 @@ export const usePwaKeyboardViewport = <TElement extends HTMLElement>() => {
       const keyboardInset = Math.max(0, window.innerHeight - visualHeight - visualOffsetTop);
       const isKeyboardOpen = keyboardInset > KEYBOARD_VISUAL_VIEWPORT_THRESHOLD;
 
-      root.style.setProperty('--login-visual-height', `${visualHeight}px`);
-      root.setAttribute('data-pwa-keyboard', isKeyboardOpen ? 'open' : 'pending');
+      root.style.setProperty('--pwa-keyboard-inset', isKeyboardOpen ? `${keyboardInset}px` : '0px');
+      root.setAttribute('data-pwa-keyboard', isKeyboardOpen ? 'open' : 'focused');
 
       if (isKeyboardOpen) {
-        focusedElement.scrollIntoView({
-          block: 'center',
-          inline: 'nearest',
-          behavior: 'auto',
-        });
+        keepFocusedElementVisible();
       }
     };
 
@@ -125,7 +143,7 @@ export const usePwaKeyboardViewport = <TElement extends HTMLElement>() => {
       timeoutIds.add(timeoutId);
     };
 
-    root.setAttribute('data-pwa-keyboard', focusedElement ? 'pending' : 'idle');
+    root.setAttribute('data-pwa-keyboard', focusedElement ? 'focused' : 'idle');
     if (focusedElement) queueViewportSyncs();
 
     root.addEventListener('focusin', handleFocusIn);
