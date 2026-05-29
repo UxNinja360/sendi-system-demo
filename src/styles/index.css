@@ -152,6 +152,134 @@ body {
   will-change: transform;
 }
 
+.signup-proof-ticker {
+  color: #5f6673;
+  height: 1.75rem;
+  margin-inline: auto;
+  max-width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.signup-proof-ticker__track {
+  height: 100%;
+  position: relative;
+}
+
+.signup-proof-ticker__item {
+  align-items: center;
+  animation: signup-proof-rise 9.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  display: flex;
+  direction: rtl;
+  filter: blur(7px);
+  font-size: 0.82rem;
+  font-weight: 600;
+  gap: 0.32rem;
+  inset: 0;
+  justify-content: center;
+  opacity: 0;
+  position: absolute;
+  transform: translate3d(0, 0.85rem, 0);
+  white-space: nowrap;
+  will-change: transform, opacity, filter;
+}
+
+.signup-proof-ticker__logo {
+  display: inline-block;
+  flex: 0 0 auto;
+}
+
+.signup-proof-ticker__logo--dominos {
+  height: 1.25rem;
+  width: 1.25rem;
+}
+
+.signup-proof-ticker__logo--mcdonalds {
+  color: #fbc817;
+  height: 1.05rem;
+  width: 1.3rem;
+}
+
+.signup-proof-ticker__logo--pizzahut {
+  height: 1.18rem;
+  width: 1.18rem;
+}
+
+.signup-proof-ticker__item:nth-child(2) {
+  animation-delay: 3.2s;
+}
+
+.signup-proof-ticker__item:nth-child(3) {
+  animation-delay: 6.4s;
+}
+
+.signup-proof-ticker__muted {
+  color: currentColor;
+  opacity: 0.72;
+}
+
+.signup-proof-ticker__highlight {
+  color: #111827;
+  font-weight: 800;
+}
+
+.signup-proof-ticker__brand {
+  color: #0d0d12;
+  font-weight: 900;
+}
+
+.dark .signup-proof-ticker {
+  color: #858b96;
+}
+
+.dark .signup-proof-ticker__highlight,
+.dark .signup-proof-ticker__brand {
+  color: #f4f4f5;
+}
+
+.twilight .signup-proof-ticker {
+  color: #8da7b7;
+}
+
+.twilight .signup-proof-ticker__highlight,
+.twilight .signup-proof-ticker__brand {
+  color: #f2f7fb;
+}
+
+@keyframes signup-proof-rise {
+  0% {
+    filter: blur(7px);
+    opacity: 0;
+    transform: translate3d(0, 0.85rem, 0);
+  }
+
+  7%,
+  25% {
+    filter: blur(0);
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+
+  33%,
+  100% {
+    filter: blur(6px);
+    opacity: 0;
+    transform: translate3d(0, -0.75rem, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signup-proof-ticker__item {
+    animation: none;
+  }
+
+  .signup-proof-ticker__item:first-child {
+    filter: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .reports-thinking-dots {
   direction: rtl;
   display: inline-flex;

@@ -529,14 +529,14 @@ export const LoginPage: React.FC = () => {
         </a>
         <div className="flex items-center justify-center gap-4">
           <a href="#" className="whitespace-nowrap transition-colors hover:text-[#0d0d12] dark:hover:text-app-text">
-            תנאי שימוש
+            בטיחות בדרכים
           </a>
         </div>
         <a
           href="#"
           className="absolute left-4 whitespace-nowrap transition-colors hover:text-[#0d0d12] dark:hover:text-app-text"
         >
-          בטיחות בדרכים
+          תנאי שימוש
         </a>
       </footer>
     </div>
