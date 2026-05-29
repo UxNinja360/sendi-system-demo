@@ -46,9 +46,12 @@ body {
   --auth-panel-shift: 0px;
   background: var(--login-bg);
   height: var(--auth-layout-height);
+  inset: 0;
   max-height: var(--auth-layout-height);
   min-height: var(--auth-layout-height);
   overflow: hidden;
+  position: fixed;
+  width: 100%;
 }
 
 .login-shell > header {

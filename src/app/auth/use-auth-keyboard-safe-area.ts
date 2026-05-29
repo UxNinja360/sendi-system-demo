@@ -34,6 +34,12 @@ export const useAuthKeyboardSafeArea = <TElement extends HTMLElement>() => {
       root.style.setProperty('--auth-layout-height', `${height}px`);
     };
 
+    const keepDocumentAnchored = () => {
+      if (window.scrollX !== 0 || window.scrollY !== 0) {
+        window.scrollTo(0, 0);
+      }
+    };
+
     const clearQueuedSyncs = () => {
       if (animationFrameId !== null) {
         window.cancelAnimationFrame(animationFrameId);
@@ -76,6 +82,8 @@ export const useAuthKeyboardSafeArea = <TElement extends HTMLElement>() => {
     };
 
     const sync = () => {
+      keepDocumentAnchored();
+
       const keyboardInset = getKeyboardInset();
       keyboardIsOpen = keyboardInset > KEYBOARD_OPEN_THRESHOLD;
 
