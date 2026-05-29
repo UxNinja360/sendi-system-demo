@@ -21,11 +21,6 @@ import {
   activateWorkspaceAccount,
   readWorkspaceAccountByPhone,
 } from '../workspaces/workspace-registry';
-import {
-  blurActiveEditableInside,
-  hasActiveEditableInside,
-  usePwaKeyboardViewport,
-} from '../hooks/use-pwa-keyboard-viewport';
 
 const normalizePhone = (value: string) => value.replace(/\D/g, '');
 
@@ -355,8 +350,6 @@ export const LoginPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const dotFieldRef = useRef<LoginDotFieldHandle>(null);
-  const modePointerHandledRef = useRef(false);
-  const shellRef = usePwaKeyboardViewport<HTMLDivElement>();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -382,7 +375,6 @@ export const LoginPage: React.FC = () => {
       return;
     }
 
-    blurActiveEditableInside(shellRef.current);
     setIsSubmitting(true);
 
     try {
@@ -462,24 +454,7 @@ export const LoginPage: React.FC = () => {
     setFormError('');
   };
 
-  const handleModePointerDown = (event: React.PointerEvent<HTMLButtonElement>) => {
-    if (isSubmitting || !hasActiveEditableInside(shellRef.current)) return;
-
-    event.preventDefault();
-    modePointerHandledRef.current = true;
-    handleModeChange();
-
-    window.setTimeout(() => {
-      modePointerHandledRef.current = false;
-    }, 700);
-  };
-
   const handleModeClick = () => {
-    if (modePointerHandledRef.current) {
-      modePointerHandledRef.current = false;
-      return;
-    }
-
     handleModeChange();
   };
 
@@ -504,8 +479,7 @@ export const LoginPage: React.FC = () => {
 
   return (
     <div
-      ref={shellRef}
-      className="login-shell relative isolate flex w-full flex-col overflow-hidden text-app-text"
+      className="login-shell relative isolate flex w-full flex-col overflow-x-hidden text-app-text"
       onPointerLeave={handlePointerLeave}
       onPointerMove={handlePointerMove}
     >
@@ -521,7 +495,6 @@ export const LoginPage: React.FC = () => {
             type="button"
             disabled={isSubmitting}
             onClick={handleModeClick}
-            onPointerDown={handleModePointerDown}
             className="inline-flex h-10 items-center justify-center rounded-md border border-[#d8d8d8] px-4 text-sm font-bold text-[#0d0d12] transition-colors hover:border-[#bdbdbd] hover:bg-[#f5f5f5] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#252525] dark:text-app-text dark:hover:border-[#3a3a3a] dark:hover:bg-[#111]"
           >
             {headerActionLabel}

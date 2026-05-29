@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface LoginOtpProps {
   error?: string;
@@ -32,23 +32,6 @@ export const LoginOtp: React.FC<LoginOtpProps> = ({
   const otpRef = useRef(EMPTY_OTP);
   const otpString = otp.join('');
   const canSubmit = otp.every(Boolean) && !isSubmitting;
-
-  const focusFirstInput = useCallback(() => {
-    const input = inputRefs.current[0];
-    if (!input || input.disabled) return;
-
-    input.focus({ preventScroll: true });
-  }, []);
-
-  useEffect(() => {
-    const animationFrameId = window.requestAnimationFrame(focusFirstInput);
-    const shortDelayId = window.setTimeout(focusFirstInput, 120);
-
-    return () => {
-      window.cancelAnimationFrame(animationFrameId);
-      window.clearTimeout(shortDelayId);
-    };
-  }, [focusFirstInput]);
 
   useEffect(() => {
     setError(externalError || '');
@@ -132,7 +115,6 @@ export const LoginOtp: React.FC<LoginOtpProps> = ({
             type="text"
             inputMode="numeric"
             autoComplete={index === 0 ? 'one-time-code' : 'off'}
-            autoFocus={index === 0}
             maxLength={1}
             value={digit}
             disabled={isSubmitting}

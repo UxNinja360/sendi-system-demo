@@ -26,10 +26,7 @@ import {
   readWorkspaceAccountByRegistrationNumber,
   writeWorkspaceState,
 } from '../workspaces/workspace-registry';
-import {
-  blurActiveEditableInside,
-  usePwaKeyboardViewport,
-} from '../hooks/use-pwa-keyboard-viewport';
+import { blurActiveEditableInside } from '../utils/editable-focus';
 import { LoginDotField, type LoginDotFieldHandle } from './login-page';
 
 type OnboardingStep = 'userName' | 'companyChoice' | 'companyDetails' | 'activityArea' | 'joinCompany';
@@ -743,7 +740,7 @@ export const OnboardingPage: React.FC = () => {
   const [joinRegistrationNumber, setJoinRegistrationNumber] = useState('');
   const [error, setError] = useState('');
   const dotFieldRef = useRef<LoginDotFieldHandle>(null);
-  const shellRef = usePwaKeyboardViewport<HTMLDivElement>();
+  const shellRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
 
   const filteredWorkspaceAreaGroups = useMemo(() => {
@@ -1002,7 +999,7 @@ export const OnboardingPage: React.FC = () => {
   return (
     <div
       ref={shellRef}
-      className={`login-shell relative isolate flex w-full flex-col overflow-hidden text-app-text ${
+      className={`login-shell relative isolate flex w-full flex-col overflow-x-hidden text-app-text ${
         step === 'activityArea' ? 'login-shell--fixed' : ''
       }`}
       onPointerLeave={handlePointerLeave}
@@ -1027,7 +1024,7 @@ export const OnboardingPage: React.FC = () => {
         className={`login-main relative z-10 flex min-h-0 flex-1 justify-center px-5 sm:px-6 ${
           step === 'activityArea'
             ? 'login-main--activity-area items-start overflow-hidden pb-3 pt-4 sm:pb-4'
-            : 'items-center overflow-hidden pb-16 pt-8'
+            : 'items-center overflow-y-auto pb-16 pt-8'
         }`}
       >
         {step === 'userName' ? (
