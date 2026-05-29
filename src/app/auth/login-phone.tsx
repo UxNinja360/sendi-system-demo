@@ -24,6 +24,13 @@ const SIGNUP_PROOF_ITEMS = [
     highlight: '15,000',
     mutedAfter: 'המבורגרים ביום',
   },
+  {
+    brand: 'mexicani',
+    brandLabel: 'המקסיקני',
+    mutedBefore: 'שולחים',
+    highlight: '2,500',
+    mutedAfter: 'טורטיות ביום',
+  },
 ] as const;
 
 const SignupProofLogo: React.FC<{
@@ -67,6 +74,28 @@ const SignupProofLogo: React.FC<{
           fill="currentColor"
           d="M17.243 3.006c2.066 0 3.742 8.714 3.742 19.478H24c0-11.588-3.042-20.968-6.766-20.968-2.127 0-4.007 2.81-5.248 7.227-1.241-4.416-3.121-7.227-5.231-7.227C3.031 1.516 0 10.888 0 22.476h3.014c0-10.763 1.658-19.47 3.724-19.47 2.066 0 3.741 8.05 3.741 17.98h2.997c0-9.93 1.684-17.98 3.75-17.98Z"
         />
+      </svg>
+    );
+  }
+
+  if (brand === 'mexicani') {
+    return (
+      <svg
+        className="signup-proof-ticker__logo signup-proof-ticker__logo--mexicani"
+        role="img"
+        viewBox="0 0 24 24"
+        aria-label={label}
+      >
+        <path
+          fill="#f4c96b"
+          d="M4 8.4c0-3.1 3.6-5.7 8-5.7s8 2.6 8 5.7v7.2c0 3.1-3.6 5.7-8 5.7s-8-2.6-8-5.7V8.4Z"
+        />
+        <path
+          fill="#fff0c7"
+          d="M6.1 8.5C7.3 6.9 9.5 6 12 6s4.7.9 5.9 2.5c-1.3 1.5-3.5 2.4-5.9 2.4s-4.6-.9-5.9-2.4Z"
+        />
+        <path stroke="#0f8f4f" strokeLinecap="round" strokeWidth="1.4" d="M7.5 13.4c1.2.9 2.7 1.3 4.5 1.3s3.3-.4 4.5-1.3" />
+        <path stroke="#d9271c" strokeLinecap="round" strokeWidth="1.2" d="M8.3 16.1c1 .6 2.2.9 3.7.9s2.7-.3 3.7-.9" />
       </svg>
     );
   }
