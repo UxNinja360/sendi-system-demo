@@ -1362,7 +1362,7 @@ export const OnboardingPage: React.FC = () => {
                 </div>
               ) : null}
 
-              <div className="z-30 shrink-0 bg-[var(--login-bg)] pb-2 pt-2">
+              <div className="onboarding-action-bar z-30 shrink-0 bg-[var(--login-bg)] pb-2 pt-2">
                 <button type="submit" className={primaryButtonClassName}>
                   כניסה
                 </button>

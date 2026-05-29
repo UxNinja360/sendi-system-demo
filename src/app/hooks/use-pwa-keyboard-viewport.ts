@@ -4,6 +4,7 @@ const EDITABLE_SELECTOR = 'input:not([type="hidden"]), textarea, select, [conten
 const KEYBOARD_VISUAL_VIEWPORT_THRESHOLD = 80;
 const KEYBOARD_SYNC_DELAYS = [50, 140, 280, 420];
 const FOCUSED_FIELD_MARGIN = 16;
+const SCROLL_VIEWPORT_SELECTOR = '.login-main';
 
 type StandaloneNavigator = Navigator & {
   standalone?: boolean;
@@ -53,6 +54,7 @@ export const usePwaKeyboardViewport = <TElement extends HTMLElement>() => {
     if (!root || !visualViewport || !isStandaloneTouchApp()) return undefined;
 
     let focusedElement: HTMLElement | null = getActiveEditableInside(root);
+    let layoutViewportHeight = Math.round(root.getBoundingClientRect().height || window.innerHeight);
     let animationFrameId: number | null = null;
     const timeoutIds = new Set<number>();
 
@@ -71,24 +73,33 @@ export const usePwaKeyboardViewport = <TElement extends HTMLElement>() => {
       focusedElement = null;
       root.removeAttribute('data-pwa-keyboard');
       root.style.removeProperty('--pwa-keyboard-inset');
+      root.style.removeProperty('--pwa-visual-height');
     };
 
     const keepFocusedElementVisible = () => {
       if (!focusedElement) return;
 
+      const scrollViewport = root.querySelector<HTMLElement>(SCROLL_VIEWPORT_SELECTOR) ?? root;
+      const headerBottom = root.querySelector<HTMLElement>('header')?.getBoundingClientRect().bottom ?? 0;
       const rect = focusedElement.getBoundingClientRect();
-      const visibleTop = visualViewport.offsetTop + FOCUSED_FIELD_MARGIN;
+      const form = focusedElement.closest('form');
+      const submitControl = form?.querySelector<HTMLElement>('button[type="submit"], input[type="submit"]');
+      const submitRect =
+        submitControl && root.contains(submitControl) ? submitControl.getBoundingClientRect() : null;
+      const targetTop = submitRect ? Math.min(rect.top, submitRect.top) : rect.top;
+      const targetBottom = submitRect ? Math.max(rect.bottom, submitRect.bottom) : rect.bottom;
+      const visibleTop = Math.max(visualViewport.offsetTop, headerBottom) + FOCUSED_FIELD_MARGIN;
       const visibleBottom = visualViewport.offsetTop + visualViewport.height - FOCUSED_FIELD_MARGIN;
       const scrollDelta =
-        rect.bottom > visibleBottom
-          ? rect.bottom - visibleBottom
-          : rect.top < visibleTop
-            ? rect.top - visibleTop
+        targetBottom > visibleBottom
+          ? targetBottom - visibleBottom
+          : targetTop < visibleTop
+            ? targetTop - visibleTop
             : 0;
 
       if (Math.abs(scrollDelta) < 1) return;
 
-      root.scrollBy({
+      scrollViewport.scrollBy({
         top: scrollDelta,
         behavior: 'auto',
       });
@@ -102,9 +113,15 @@ export const usePwaKeyboardViewport = <TElement extends HTMLElement>() => {
 
       const visualHeight = Math.round(visualViewport.height);
       const visualOffsetTop = Math.round(visualViewport.offsetTop);
-      const keyboardInset = Math.max(0, window.innerHeight - visualHeight - visualOffsetTop);
+      const currentLayoutHeight = Math.round(root.getBoundingClientRect().height || window.innerHeight);
+      const keyboardInset = Math.max(0, layoutViewportHeight - visualHeight - visualOffsetTop);
       const isKeyboardOpen = keyboardInset > KEYBOARD_VISUAL_VIEWPORT_THRESHOLD;
 
+      if (!isKeyboardOpen) {
+        layoutViewportHeight = currentLayoutHeight;
+      }
+
+      root.style.setProperty('--pwa-visual-height', `${visualHeight}px`);
       root.style.setProperty('--pwa-keyboard-inset', isKeyboardOpen ? `${keyboardInset}px` : '0px');
       root.setAttribute('data-pwa-keyboard', isKeyboardOpen ? 'open' : 'focused');
 
@@ -136,6 +153,7 @@ export const usePwaKeyboardViewport = <TElement extends HTMLElement>() => {
       if (!isEditableTarget(event.target)) return;
 
       focusedElement = event.target;
+      layoutViewportHeight = Math.round(root.getBoundingClientRect().height || window.innerHeight);
       queueViewportSyncs();
     };
 

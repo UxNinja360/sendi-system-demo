@@ -40,25 +40,25 @@ body {
   --login-dot: #111827;
   --login-dot-opacity: 0.26;
   --login-dot-veil: rgba(247, 248, 251, 0.12);
+  --login-header-height: 4rem;
+  --login-footer-height: 3rem;
   --pwa-keyboard-inset: 0px;
+  --pwa-visual-height: 100svh;
   background: var(--login-bg);
   min-height: 100svh;
+}
+
+.login-shell > header {
+  flex: 0 0 var(--login-header-height);
+}
+
+.login-shell > footer {
+  flex: 0 0 var(--login-footer-height);
 }
 
 .login-shell--fixed {
   height: 100svh;
   min-height: 100svh;
-}
-
-.login-shell[data-pwa-keyboard='focused'],
-.login-shell[data-pwa-keyboard='open'] {
-  -webkit-overflow-scrolling: touch;
-  overflow-y: auto;
-}
-
-.login-shell[data-pwa-keyboard='open']::after {
-  content: '';
-  flex: 0 0 var(--pwa-keyboard-inset, 0px);
 }
 
 @supports (height: 100dvh) {
@@ -75,6 +75,27 @@ body {
 .login-main--activity-area {
   flex: 1 1 auto;
   min-height: 0;
+}
+
+.login-shell[data-pwa-keyboard='open'] .login-main {
+  -webkit-overflow-scrolling: touch;
+  flex: 0 0 calc(var(--pwa-visual-height, 100svh) - var(--login-header-height, 4rem));
+  height: calc(var(--pwa-visual-height, 100svh) - var(--login-header-height, 4rem));
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-bottom: max(1rem, var(--app-safe-bottom));
+  scroll-padding-bottom: max(1rem, var(--app-safe-bottom));
+  scroll-padding-top: 1rem;
+}
+
+.login-shell[data-pwa-keyboard='open'] > footer {
+  display: none;
+}
+
+.onboarding-action-bar {
+  bottom: 0;
+  position: sticky;
 }
 
 .onboarding-area-list {
@@ -103,6 +124,14 @@ body {
   .login-main.login-main--activity-area {
     flex: 1 1 auto;
     min-height: 0;
+    padding-bottom: max(0.75rem, var(--app-safe-bottom));
+  }
+
+  .login-shell[data-pwa-keyboard='open'] .login-main {
+    padding-bottom: max(0.75rem, var(--app-safe-bottom));
+  }
+
+  .login-shell[data-pwa-keyboard='open'] .onboarding-action-bar {
     padding-bottom: max(0.75rem, var(--app-safe-bottom));
   }
 
