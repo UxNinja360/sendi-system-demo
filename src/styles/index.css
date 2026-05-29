@@ -42,6 +42,8 @@ body {
   --login-dot-veil: rgba(247, 248, 251, 0.12);
   --login-header-height: 4rem;
   --login-footer-height: 3rem;
+  --auth-keyboard-inset: 0px;
+  --auth-visual-height: 100svh;
   background: var(--login-bg);
   min-height: 100svh;
 }
@@ -73,6 +75,23 @@ body {
 .login-main--activity-area {
   flex: 1 1 auto;
   min-height: 0;
+}
+
+.login-shell[data-auth-keyboard='open'] {
+  height: var(--auth-visual-height);
+  min-height: var(--auth-visual-height);
+}
+
+.login-shell[data-auth-keyboard='open'] .login-main {
+  -webkit-overflow-scrolling: touch;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-bottom: max(1rem, var(--app-safe-bottom));
+}
+
+.login-shell[data-auth-keyboard='open'] > footer {
+  display: none;
 }
 
 .onboarding-action-bar {

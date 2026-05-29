@@ -17,6 +17,7 @@ import { AppLogo } from '../components/icons/app-logo';
 import { LoginPhone } from '../auth/login-phone';
 import type { LoginPhoneMode } from '../auth/login-phone';
 import { LoginOtp } from '../auth/login-otp';
+import { useAuthKeyboardSafeArea } from '../auth/use-auth-keyboard-safe-area';
 import {
   activateWorkspaceAccount,
   readWorkspaceAccountByPhone,
@@ -350,6 +351,7 @@ export const LoginPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const dotFieldRef = useRef<LoginDotFieldHandle>(null);
+  const shellRef = useAuthKeyboardSafeArea<HTMLDivElement>();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -479,6 +481,7 @@ export const LoginPage: React.FC = () => {
 
   return (
     <div
+      ref={shellRef}
       className="login-shell relative isolate flex w-full flex-col overflow-x-hidden text-app-text"
       onPointerLeave={handlePointerLeave}
       onPointerMove={handlePointerMove}

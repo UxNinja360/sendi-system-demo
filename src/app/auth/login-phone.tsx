@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 
 export type LoginPhoneMode = 'login' | 'signup';
 
@@ -147,12 +147,35 @@ export const LoginPhone: React.FC<LoginPhoneProps> = ({
   const isSignup = mode === 'signup';
   const title = isSignup ? 'הרשמה לסנדי' : 'כניסה לסנדי';
   const submitText = 'שלח קוד אימות';
+  const touchSubmitHandledRef = useRef(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const submitPhone = () => {
     if (phone.length === 10 && canSubmit) {
       onSubmit(phone);
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (touchSubmitHandledRef.current) {
+      touchSubmitHandledRef.current = false;
+      return;
+    }
+
+    submitPhone();
+  };
+
+  const handleSubmitPointerDown = (event: React.PointerEvent<HTMLButtonElement>) => {
+    if (event.pointerType !== 'touch' || phone.length !== 10 || !canSubmit) return;
+
+    event.preventDefault();
+    touchSubmitHandledRef.current = true;
+    submitPhone();
+
+    window.setTimeout(() => {
+      touchSubmitHandledRef.current = false;
+    }, 700);
   };
 
   const handlePhoneChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -200,6 +223,8 @@ export const LoginPhone: React.FC<LoginPhoneProps> = ({
         <button
           type="submit"
           disabled={isSubmitting}
+          data-auth-primary-action
+          onPointerDown={handleSubmitPointerDown}
           className="flex h-12 w-full items-center justify-center rounded-lg bg-[#0d0d12] px-4 text-sm font-bold text-white transition-colors hover:bg-[#24242b] active:bg-[#050505] disabled:cursor-not-allowed disabled:opacity-45 dark:bg-[#ededed] dark:text-[#050505] dark:hover:bg-white dark:active:bg-[#d8d8d8]"
         >
           {isSubmitting ? 'מאמת...' : submitText}
