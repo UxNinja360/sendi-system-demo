@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 export type LoginPhoneMode = 'login' | 'signup';
 
@@ -140,6 +140,7 @@ export const LoginPhone: React.FC<LoginPhoneProps> = ({
   onSubmit,
 }) => {
   const [phone, setPhone] = useState('');
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const canSubmit = !isSubmitting;
   const isSignup = mode === 'signup';
@@ -149,6 +150,7 @@ export const LoginPhone: React.FC<LoginPhoneProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (phone.length === 10 && canSubmit) {
+      inputRef.current?.focus({ preventScroll: true });
       onSubmit(phone);
     }
   };
@@ -179,6 +181,7 @@ export const LoginPhone: React.FC<LoginPhoneProps> = ({
         </label>
         <input
           id="login-phone-number"
+          ref={inputRef}
           type="tel"
           value={phone}
           onChange={handlePhoneChange}

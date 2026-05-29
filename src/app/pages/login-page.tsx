@@ -536,7 +536,7 @@ export const LoginPage: React.FC = () => {
           href="#"
           className="absolute left-4 whitespace-nowrap transition-colors hover:text-[#0d0d12] dark:hover:text-app-text"
         >
-          תנאי שימוש
+          תנאים
         </a>
       </footer>
     </div>

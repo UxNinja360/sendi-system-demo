@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 interface LoginOtpProps {
   error?: string;
@@ -33,9 +33,45 @@ export const LoginOtp: React.FC<LoginOtpProps> = ({
   const otpString = otp.join('');
   const canSubmit = otp.every(Boolean) && !isSubmitting;
 
-  useEffect(() => {
-    inputRefs.current[0]?.focus();
+  const focusFirstInput = useCallback(() => {
+    const input = inputRefs.current[0];
+    if (!input || input.disabled) return;
+
+    input.focus({ preventScroll: true });
   }, []);
+
+  useLayoutEffect(() => {
+    focusFirstInput();
+  }, [focusFirstInput]);
+
+  useEffect(() => {
+    focusFirstInput();
+
+    const animationFrameId = window.requestAnimationFrame(focusFirstInput);
+    const shortDelayId = window.setTimeout(focusFirstInput, 80);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrameId);
+      window.clearTimeout(shortDelayId);
+    };
+  }, [focusFirstInput]);
+
+  useEffect(() => {
+    if (!isSubmitting) {
+      focusFirstInput();
+    }
+  }, [focusFirstInput, isSubmitting]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        window.setTimeout(focusFirstInput, 50);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [focusFirstInput]);
 
   useEffect(() => {
     setError(externalError || '');
@@ -119,6 +155,7 @@ export const LoginOtp: React.FC<LoginOtpProps> = ({
             type="text"
             inputMode="numeric"
             autoComplete={index === 0 ? 'one-time-code' : 'off'}
+            autoFocus={index === 0}
             maxLength={1}
             value={digit}
             disabled={isSubmitting}
