@@ -49,6 +49,16 @@ body {
   min-height: 100svh;
 }
 
+.login-shell[data-pwa-keyboard='open'],
+.login-shell[data-pwa-keyboard='pending'] {
+  height: var(--login-visual-height, 100svh);
+  min-height: var(--login-visual-height, 100svh);
+}
+
+.login-shell[data-pwa-keyboard='open'] {
+  overflow-y: auto;
+}
+
 @supports (height: 100dvh) {
   .login-shell {
     min-height: 100dvh;
@@ -92,6 +102,11 @@ body {
     flex: 1 1 auto;
     min-height: 0;
     padding-bottom: max(0.75rem, var(--app-safe-bottom));
+  }
+
+  .login-shell[data-pwa-keyboard='open'] .login-main:not(.login-main--activity-area) {
+    min-height: calc(var(--login-visual-height, 100svh) - 7rem);
+    padding-bottom: max(1rem, var(--app-safe-bottom));
   }
 }
 

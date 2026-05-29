@@ -26,6 +26,7 @@ import {
   readWorkspaceAccountByRegistrationNumber,
   writeWorkspaceState,
 } from '../workspaces/workspace-registry';
+import { usePwaKeyboardViewport } from '../hooks/use-pwa-keyboard-viewport';
 import { LoginDotField, type LoginDotFieldHandle } from './login-page';
 
 type OnboardingStep = 'userName' | 'companyChoice' | 'companyDetails' | 'activityArea' | 'joinCompany';
@@ -739,6 +740,7 @@ export const OnboardingPage: React.FC = () => {
   const [joinRegistrationNumber, setJoinRegistrationNumber] = useState('');
   const [error, setError] = useState('');
   const dotFieldRef = useRef<LoginDotFieldHandle>(null);
+  const shellRef = usePwaKeyboardViewport<HTMLDivElement>();
   const navigate = useNavigate();
 
   const filteredWorkspaceAreaGroups = useMemo(() => {
@@ -991,6 +993,7 @@ export const OnboardingPage: React.FC = () => {
 
   return (
     <div
+      ref={shellRef}
       className={`login-shell relative isolate flex w-full flex-col overflow-hidden text-app-text ${
         step === 'activityArea' ? 'login-shell--fixed' : ''
       }`}

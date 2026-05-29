@@ -21,6 +21,7 @@ import {
   activateWorkspaceAccount,
   readWorkspaceAccountByPhone,
 } from '../workspaces/workspace-registry';
+import { usePwaKeyboardViewport } from '../hooks/use-pwa-keyboard-viewport';
 
 const normalizePhone = (value: string) => value.replace(/\D/g, '');
 
@@ -350,6 +351,7 @@ export const LoginPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const dotFieldRef = useRef<LoginDotFieldHandle>(null);
+  const shellRef = usePwaKeyboardViewport<HTMLDivElement>();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -475,6 +477,7 @@ export const LoginPage: React.FC = () => {
 
   return (
     <div
+      ref={shellRef}
       className="login-shell relative isolate flex w-full flex-col overflow-hidden text-app-text"
       onPointerLeave={handlePointerLeave}
       onPointerMove={handlePointerMove}
