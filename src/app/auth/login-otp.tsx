@@ -37,8 +37,7 @@ export const LoginOtp: React.FC<LoginOtpProps> = ({
     const input = inputRefs.current[0];
     if (!input || input.disabled) return;
 
-    input.focus({ preventScroll: false });
-    input.scrollIntoView({ block: 'center', inline: 'nearest' });
+    input.focus({ preventScroll: true });
   }, []);
 
   useLayoutEffect(() => {
@@ -162,7 +161,6 @@ export const LoginOtp: React.FC<LoginOtpProps> = ({
       <button
         type="button"
         disabled={!canSubmit}
-        data-auth-primary-action
         onClick={() => void handleSubmit(otpString)}
         className="mt-3 flex h-12 w-full items-center justify-center rounded-lg bg-[#0d0d12] px-4 text-sm font-bold text-white transition-colors hover:bg-[#24242b] active:bg-[#050505] disabled:cursor-not-allowed disabled:opacity-45 dark:bg-[#ededed] dark:text-[#050505] dark:hover:bg-white dark:active:bg-[#d8d8d8]"
       >

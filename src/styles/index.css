@@ -42,19 +42,10 @@ body {
   --login-dot-veil: rgba(247, 248, 251, 0.12);
   --login-header-height: 4rem;
   --login-footer-height: 3rem;
-  --auth-layout-height: 100svh;
-  --auth-panel-shift: 0px;
-  --auth-viewport-offset-top: 0px;
   background: var(--login-bg);
-  height: var(--auth-layout-height);
-  inset: 0;
-  max-height: var(--auth-layout-height);
-  min-height: var(--auth-layout-height);
+  height: 100svh;
+  min-height: 100svh;
   overflow: hidden;
-  position: fixed;
-  transform: translate3d(0, var(--auth-viewport-offset-top), 0);
-  width: 100%;
-  will-change: transform;
 }
 
 .login-shell > header {
@@ -66,8 +57,8 @@ body {
 }
 
 .login-shell--fixed {
-  height: var(--auth-layout-height);
-  min-height: var(--auth-layout-height);
+  height: 100svh;
+  min-height: 100svh;
 }
 
 .login-main--activity-area {
@@ -75,8 +66,16 @@ body {
   min-height: 0;
 }
 
-.login-shell[data-auth-keyboard='open'] .login-main {
-  -webkit-overflow-scrolling: touch;
+.login-main {
+  align-items: start !important;
+  display: grid !important;
+  flex: 1 1 auto;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: clamp(7.5rem, 22svh, 16rem) max(1rem, var(--app-safe-left)) max(1.25rem, calc(var(--app-safe-bottom) + 1rem)) max(1rem, var(--app-safe-right)) !important;
 }
 
 .onboarding-action-bar {
@@ -94,19 +93,6 @@ body {
 }
 
 @media (max-width: 767.98px) {
-  .login-main {
-    align-items: flex-start !important;
-    flex: 1 1 auto;
-    justify-content: flex-start !important;
-    min-height: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
-    padding-bottom: max(1.25rem, calc(var(--app-safe-bottom) + 1rem));
-    padding-top: clamp(3.25rem, 8svh, 4.75rem);
-    transform: translate3d(0, var(--auth-panel-shift), 0);
-    transition: transform 140ms ease-out;
-  }
-
   .login-main.login-main--activity-area {
     flex: 1 1 auto;
     min-height: 0;
