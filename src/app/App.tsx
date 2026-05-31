@@ -1,4 +1,5 @@
 import { RouterProvider } from "react-router";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { router } from "./routes";
 import { useEffect } from "react";
 import { installHapticFeedback } from "./utils/haptics";
@@ -25,6 +26,7 @@ export default function App() {
     <>
       <RouterProvider router={router} />
       <AppUpdateBanner />
+      <SpeedInsights />
     </>
   );
 }

@@ -1,20 +1,16 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
-  BarChart3,
   ChevronDown,
   CreditCard,
   FileText,
   Minus,
   Pencil,
   Plus,
-  TrendingUp,
-  WalletCards,
   X,
 } from 'lucide-react';
 import { useDelivery } from '../context/delivery-context-value';
-import { getDeliveryCreditConsumedAt } from '../utils/delivery-credits';
 
-type BalanceTab = 'usage' | 'breakdown' | 'invoices';
+type BalanceTab = 'usage' | 'invoices';
 type PurchaseStep = 'amount' | 'payment';
 type SelectDirection = 'down' | 'up';
 
@@ -48,15 +44,6 @@ const creditPackages: CreditPackage[] = [
 const customMaxAmount = creditPackages[creditPackages.length - 1].amount;
 const purchaseInvoicesStoragePrefix = 'sendi:delivery-balance-invoices';
 
-const statusLabels: Record<string, string> = {
-  assigned: 'שובץ',
-  cancelled: 'בוטל',
-  delivered: 'נמסר',
-  delivering: 'במסירה',
-  expired: 'פג תוקף',
-  pending: 'ממתין',
-};
-
 const formatNumber = (value: number) => new Intl.NumberFormat('he-IL').format(value);
 
 const formatCurrency = (value: number) =>
@@ -74,13 +61,6 @@ const formatDateTime = (date: Date) =>
     minute: '2-digit',
     month: '2-digit',
   }).format(date);
-
-const daysAgo = (days: number) => {
-  const date = new Date();
-  date.setHours(0, 0, 0, 0);
-  date.setDate(date.getDate() - days);
-  return date;
-};
 
 const normalizeCustomAmount = (value: number) =>
   Math.min(customMaxAmount, Math.max(customMinAmount, Number.isFinite(value) ? value : customMinAmount));
@@ -120,12 +100,6 @@ const getPackagePrice = (amount: number) => {
 const getPackageUnitPrice = (amount: number) => {
   const normalizedAmount = normalizeCustomAmount(amount);
   return getPackagePrice(normalizedAmount) / normalizedAmount;
-};
-
-const getRemainingPercent = (remaining: number, used: number) => {
-  const total = remaining + used;
-  if (total <= 0) return 100;
-  return Math.max(0, Math.min(100, Math.round((remaining / total) * 100)));
 };
 
 const getPurchaseInvoicesStorageKey = (workspaceId?: string) =>
@@ -177,6 +151,7 @@ export const DeliveryBalanceHub: React.FC = () => {
   const { state, dispatch } = useDelivery();
   const amountDropdownRef = useRef<HTMLDivElement>(null);
   const amountSelectRef = useRef<HTMLDivElement>(null);
+  const purchaseCardRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<BalanceTab>('usage');
   const [purchaseOpen, setPurchaseOpen] = useState(false);
   const [purchaseStep, setPurchaseStep] = useState<PurchaseStep>('amount');
@@ -185,10 +160,6 @@ export const DeliveryBalanceHub: React.FC = () => {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customMode, setCustomMode] = useState(false);
   const [customAmount, setCustomAmount] = useState(defaultAmount);
-  const [autoReloadOpen, setAutoReloadOpen] = useState(false);
-  const [autoReloadEnabled, setAutoReloadEnabled] = useState(false);
-  const [autoReloadMinimum, setAutoReloadMinimum] = useState(100);
-  const [autoReloadTarget, setAutoReloadTarget] = useState(1000);
   const invoicesStorageKey = useMemo(
     () => getPurchaseInvoicesStorageKey(state.workspaceId),
     [state.workspaceId],
@@ -226,47 +197,10 @@ export const DeliveryBalanceHub: React.FC = () => {
     return () => window.removeEventListener('resize', updateSelectDirection);
   }, [customMode, selectOpen]);
 
-  const usageEvents = useMemo(
-    () =>
-      state.deliveries
-        .map((delivery) => ({
-          consumedAt: getDeliveryCreditConsumedAt(delivery),
-          delivery,
-        }))
-        .filter((event): event is { consumedAt: Date; delivery: (typeof state.deliveries)[number] } =>
-          Boolean(event.consumedAt)
-        )
-        .sort((a, b) => b.consumedAt.getTime() - a.consumedAt.getTime()),
-    [state.deliveries]
-  );
-
-  const usage = useMemo(() => {
-    const todayStart = daysAgo(0).getTime();
-    const weekStart = daysAgo(6).getTime();
-    const monthStart = daysAgo(29).getTime();
-
-    const today = usageEvents.filter((event) => event.consumedAt.getTime() >= todayStart).length;
-    const week = usageEvents.filter((event) => event.consumedAt.getTime() >= weekStart).length;
-    const month = usageEvents.filter((event) => event.consumedAt.getTime() >= monthStart).length;
-
-    return {
-      month: month || state.stats.month.total,
-      today: today || state.stats.today.total,
-      week: week || state.stats.week.total,
-    };
-  }, [state.stats.month.total, state.stats.today.total, state.stats.week.total, usageEvents]);
-
   const currentBalance = state.deliveryBalance;
-  const averageDailyUsage = usage.month > 0 ? Math.max(1, Math.round(usage.month / 30)) : 0;
-  const coverageDays = averageDailyUsage > 0 ? Math.floor(currentBalance / averageDailyUsage) : 0;
   const selectedPrice = selectedAmount === null ? 0 : getPackagePrice(selectedAmount);
   const selectedUnitPrice = selectedAmount === null ? 0 : getPackageUnitPrice(selectedAmount);
   const canContinuePurchase = selectedAmount !== null;
-  const todayRemainingPercent = getRemainingPercent(currentBalance, usage.today);
-  const weekRemainingPercent = getRemainingPercent(currentBalance, usage.week);
-  const monthRemainingPercent = getRemainingPercent(currentBalance, usage.month);
-  const autoReloadAmount = Math.max(customMinAmount, autoReloadTarget - Math.min(currentBalance, autoReloadMinimum));
-  const autoReloadPrice = getPackagePrice(autoReloadAmount);
   const customDraftPrice = getPackagePrice(clampCustomAmount(customAmount));
   const customDraftUnitPrice = getPackageUnitPrice(clampCustomAmount(customAmount));
   const purchasedInvoiceAmount = useMemo(
@@ -293,6 +227,40 @@ export const DeliveryBalanceHub: React.FC = () => {
     setPurchaseStep('amount');
     setSelectOpen(false);
     setSelectDirection('down');
+  };
+
+  useEffect(() => {
+    if (!purchaseOpen) return undefined;
+
+    const closeOnOutsidePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node) || purchaseCardRef.current?.contains(target)) {
+        return;
+      }
+
+      closePurchaseDialog();
+    };
+
+    document.addEventListener('pointerdown', closeOnOutsidePointerDown);
+
+    return () => document.removeEventListener('pointerdown', closeOnOutsidePointerDown);
+  }, [purchaseOpen]);
+
+  const handlePurchaseBackdropInteraction = (event: React.MouseEvent<HTMLElement>) => {
+    if (event.target === event.currentTarget) {
+      closePurchaseDialog();
+    }
+  };
+
+  const handlePurchaseCardMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!selectOpen) return;
+
+    const target = event.target as Node;
+    if (amountSelectRef.current?.contains(target) || amountDropdownRef.current?.contains(target)) {
+      return;
+    }
+
+    setSelectOpen(false);
   };
 
   const selectPackage = (amount: number) => {
@@ -342,44 +310,36 @@ export const DeliveryBalanceHub: React.FC = () => {
     setActiveTab('invoices');
   };
 
-  const saveAutoReload = () => {
-    const minimum = clampCustomAmount(autoReloadMinimum);
-    const target = Math.max(minimum + customStep, clampCustomAmount(autoReloadTarget));
-    setAutoReloadMinimum(minimum);
-    setAutoReloadTarget(target);
-    setAutoReloadEnabled(true);
-    setAutoReloadOpen(false);
-  };
-
   return (
     <div className="mx-auto flex w-full max-w-[76rem] flex-col gap-7 text-right" dir="rtl">
-      <header className="border-b border-app-border">
-        <div className="flex gap-6 overflow-x-auto">
-          <TabButton active={activeTab === 'usage'} onClick={() => setActiveTab('usage')}>
-            שימוש
-          </TabButton>
-          <TabButton active={activeTab === 'breakdown'} onClick={() => setActiveTab('breakdown')}>
-            פירוט צריכה
-          </TabButton>
-          <TabButton active={activeTab === 'invoices'} onClick={() => setActiveTab('invoices')}>
-            חשבוניות
-          </TabButton>
+      <header className="pb-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="inline-flex w-fit items-center rounded-[var(--app-radius-sm)] border border-app-border bg-app-background p-1">
+            <TabButton active={activeTab === 'usage'} onClick={() => setActiveTab('usage')}>
+              שימוש
+            </TabButton>
+            <TabButton active={activeTab === 'invoices'} onClick={() => setActiveTab('invoices')}>
+              חשבוניות
+            </TabButton>
+          </div>
+
+          <button
+            type="button"
+            onClick={openPurchaseDialog}
+            className="inline-flex h-10 w-fit items-center justify-center rounded-[var(--app-radius-sm)] bg-app-text px-5 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/35 max-sm:w-full"
+          >
+            רכישת יתרה
+          </button>
         </div>
       </header>
 
       {activeTab === 'usage' ? (
         <section className="space-y-7">
-          <div className="space-y-1">
-            <h1 className="text-xl font-bold text-app-text">יתרה ושימוש</h1>
-            <p className="text-sm text-app-text-secondary">מעקב מהיר אחרי צריכת המשלוחים והיתרה שנשארה בחשבון.</p>
-          </div>
-
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="rounded-none border border-app-border bg-app-surface p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2 text-sm font-semibold text-app-text-secondary">
-                    <WalletCards className="h-4 w-4 text-app-brand-text" />
                     יתרת משלוחים
                   </div>
                   <div className="mt-4 text-4xl font-bold leading-none tabular-nums text-app-text">
@@ -389,114 +349,8 @@ export const DeliveryBalanceHub: React.FC = () => {
                     השתמש ביתרה כדי להמשיך לקבל ולשבץ משלוחים.
                   </p>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={openPurchaseDialog}
-                  aria-label="רכישת משלוחים"
-                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-app-text text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/35"
-                >
-                  <Plus className="h-5 w-5" />
-                </button>
               </div>
             </div>
-          </div>
-
-          <div className="grid gap-4 lg:grid-cols-2">
-            <UsageLimitCard
-              label="שימוש היום"
-              value={`${todayRemainingPercent}% נותר`}
-              helper={`${formatNumber(usage.today)} משלוחים נוצלו היום`}
-              progress={todayRemainingPercent}
-            />
-            <UsageLimitCard
-              label="שימוש שבועי"
-              value={`${weekRemainingPercent}% נותר`}
-              helper={`${formatNumber(usage.week)} משלוחים נוצלו השבוע`}
-              progress={weekRemainingPercent}
-            />
-            <UsageLimitCard
-              label="שימוש חודשי"
-              value={`${monthRemainingPercent}% נותר`}
-              helper={`${formatNumber(usage.month)} משלוחים נוצלו ב-30 יום`}
-              progress={monthRemainingPercent}
-            />
-            <UsageLimitCard
-              label="כיסוי בקצב הנוכחי"
-              value={coverageDays > 0 ? `${formatNumber(coverageDays)} ימים` : 'אין מספיק נתונים'}
-              helper={averageDailyUsage > 0 ? `${formatNumber(averageDailyUsage)} משלוחים בממוצע ליום` : 'נדרש שימוש כדי לחשב ממוצע'}
-              progress={coverageDays > 0 ? Math.min(100, coverageDays * 3) : 100}
-            />
-          </div>
-
-          <div className="space-y-4 pt-2">
-            <h2 className="text-xl font-bold text-app-text">טעינה אוטומטית</h2>
-
-            <div className="rounded-none border border-app-border bg-app-surface p-5">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 text-sm font-bold text-app-text">
-                    <span>טעינת משלוחים אוטומטית</span>
-                    {autoReloadEnabled ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-bold text-app-success-text">
-                        <span className="h-1.5 w-1.5 rounded-full bg-app-success-text" />
-                        פעיל
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="mt-2 text-sm leading-6 text-app-text-secondary">
-                    הוסף משלוחים אוטומטית כאשר היתרה יורדת מתחת לסף שהגדרת.
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setAutoReloadOpen(true)}
-                  className="h-9 shrink-0 rounded-full bg-app-background px-4 text-sm font-bold text-app-text transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
-                >
-                  הגדרות
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-      ) : activeTab === 'breakdown' ? (
-        <section className="space-y-5">
-          <div className="space-y-1">
-            <h1 className="text-xl font-bold text-app-text">פירוט צריכה</h1>
-            <p className="text-sm text-app-text-secondary">רשימת האירועים שבהם ירד משלוח מהיתרה.</p>
-          </div>
-
-          <div className="overflow-hidden rounded-[var(--app-radius-md)] border border-app-border bg-app-surface">
-            <div className="grid grid-cols-[minmax(0,1fr)_140px_80px] border-b border-app-border px-4 py-3 text-xs font-bold text-app-text-secondary max-sm:hidden">
-              <span>משלוח</span>
-              <span>זמן</span>
-              <span className="text-left">משלוחים</span>
-            </div>
-
-            {usageEvents.length > 0 ? (
-              usageEvents.map(({ consumedAt, delivery }) => (
-                <div
-                  key={`${delivery.id}-${consumedAt.toISOString()}`}
-                  className="grid gap-3 border-b border-app-border px-4 py-3 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_140px_80px]"
-                >
-                  <div className="min-w-0">
-                    <div className="truncate text-sm font-bold text-app-text">{delivery.rest_name || 'משלוח'}</div>
-                    <div className="mt-1 text-xs text-app-text-muted">
-                      {statusLabels[delivery.status] ?? delivery.status} · {delivery.api_short_order_id ?? delivery.id}
-                    </div>
-                  </div>
-                  <div className="text-xs font-semibold text-app-text-secondary">{formatDateTime(consumedAt)}</div>
-                  <div className="text-left text-sm font-bold tabular-nums text-app-error-text" dir="ltr">
-                    -1
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="flex min-h-44 items-center justify-center px-4 py-8 text-center text-sm text-app-text-secondary">
-                עדיין אין צריכת משלוחים מתועדת.
-              </div>
-            )}
           </div>
         </section>
       ) : (
@@ -566,133 +420,47 @@ export const DeliveryBalanceHub: React.FC = () => {
         </section>
       )}
 
-      {autoReloadOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6 backdrop-blur-sm">
-          <div className="w-full max-w-[32rem] rounded-[var(--app-radius-lg)] border border-app-border bg-app-surface p-6 shadow-2xl">
-            <div className="flex items-center justify-between gap-4">
-              <button
-                type="button"
-                onClick={() => setAutoReloadOpen(false)}
-                aria-label="סגירה"
-                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--app-radius-sm)] text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
-              >
-                <X className="h-5 w-5" />
-              </button>
-
-              <h2 className="min-w-0 text-lg font-bold text-app-text">טעינת משלוחים אוטומטית</h2>
-            </div>
-
-            <div className="mt-7 space-y-6">
-              <label className="block space-y-2">
-                <span className="block text-sm font-bold text-app-text">יתרה מינימלית</span>
-                <span className="block text-sm leading-6 text-app-text-secondary">
-                  טעינה אוטומטית תפעל כאשר יתרת המשלוחים יורדת מתחת לסכום הזה.
-                </span>
-                <input
-                  type="number"
-                  max={customMaxAmount}
-                  min={customMinAmount}
-                  step={customStep}
-                  value={autoReloadMinimum}
-                  onBlur={() => setAutoReloadMinimum((value) => clampCustomAmount(value))}
-                  onChange={(event) => setAutoReloadMinimum(limitCustomAmountInput(Number(event.target.value)))}
-                  className="h-12 w-full rounded-[var(--app-radius-md)] border border-app-border bg-app-surface-raised px-4 text-sm font-bold tabular-nums text-app-text outline-none transition-colors focus:border-app-border-strong focus:ring-2 focus:ring-app-brand/20"
-                />
-              </label>
-
-              <label className="block space-y-2">
-                <span className="block text-sm font-bold text-app-text">יעד יתרה</span>
-                <span className="block text-sm leading-6 text-app-text-secondary">
-                  הטעינה האוטומטית תחזיר את יתרת המשלוחים עד לסכום הזה.
-                </span>
-                <input
-                  type="number"
-                  max={customMaxAmount}
-                  min={customMinAmount}
-                  step={customStep}
-                  value={autoReloadTarget}
-                  onBlur={() =>
-                    setAutoReloadTarget((value) =>
-                      Math.max(clampCustomAmount(autoReloadMinimum) + customStep, clampCustomAmount(value))
-                    )
-                  }
-                  onChange={(event) => setAutoReloadTarget(limitCustomAmountInput(Number(event.target.value)))}
-                  className="h-12 w-full rounded-[var(--app-radius-md)] border border-app-border bg-app-surface-raised px-4 text-sm font-bold tabular-nums text-app-text outline-none transition-colors focus:border-app-border-strong focus:ring-2 focus:ring-app-brand/20"
-                />
-              </label>
-
-              <div className="space-y-4 text-sm leading-6 text-app-text-secondary">
-                <p>
-                  יירכשו לפחות {formatNumber(autoReloadAmount)} משלוחים, בעלות משוערת של{' '}
-                  <span className="font-bold text-app-text">{formatCurrency(autoReloadPrice)}</span>.
-                </p>
-                <p>נחייב את אמצעי התשלום באופן אוטומטי כאשר היתרה תגיע למינימום שהגדרת.</p>
-              </div>
-
-              {!autoReloadEnabled ? (
-                <div className="rounded-[var(--app-radius-md)] border border-app-border bg-app-background p-4 text-sm leading-6 text-app-text-secondary">
-                  הפעלת טעינה אוטומטית תבצע רכישה חד פעמית כדי להגיע ליעד היתרה. לאחר מכן המערכת תטעין רק כאשר היתרה תרד מתחת למינימום.
-                </div>
-              ) : null}
-
-              <div className="flex justify-end gap-3 pt-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (autoReloadEnabled) {
-                      setAutoReloadEnabled(false);
-                    }
-                    setAutoReloadOpen(false);
-                  }}
-                  className="h-10 rounded-full bg-app-background px-4 text-sm font-bold text-app-text transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
-                >
-                  {autoReloadEnabled ? 'כבה' : 'ביטול'}
-                </button>
-                <button
-                  type="button"
-                  onClick={saveAutoReload}
-                  className="h-10 rounded-full bg-app-text px-5 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
-                >
-                  {autoReloadEnabled ? 'שמור' : 'הפעל'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
       {purchaseOpen ? (
         <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto overscroll-contain bg-black/70 p-4 backdrop-blur-sm sm:p-6">
-          <div className="relative w-full max-w-[44rem] -translate-y-[6vh] overflow-visible rounded-[var(--app-radius-lg)] border border-app-border bg-app-surface p-6 shadow-2xl sm:p-7">
-            <button
-              type="button"
-              onClick={closePurchaseDialog}
-              aria-label="סגירה"
-              className="absolute left-5 top-5 inline-flex h-9 w-9 items-center justify-center rounded-[var(--app-radius-sm)] text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
-            >
-              <X className="h-4 w-4" />
-            </button>
+          <button
+            type="button"
+            aria-label="סגירת פופאפ"
+            tabIndex={-1}
+            className="absolute inset-0 cursor-default border-0 bg-transparent p-0"
+            onClick={handlePurchaseBackdropInteraction}
+            onMouseDown={handlePurchaseBackdropInteraction}
+          />
+          <div
+            ref={purchaseCardRef}
+            className="relative z-10 w-full max-w-[44rem] -translate-y-[6vh] overflow-visible rounded-[var(--app-radius-lg)] border border-app-border bg-app-surface p-6 shadow-2xl sm:p-7"
+            onMouseDown={handlePurchaseCardMouseDown}
+          >
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={closePurchaseDialog}
+                aria-label="סגירה"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--app-radius-sm)] text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
 
-            <div className="pl-12">
-              <div className="min-w-0">
-                <h2 className="text-lg font-bold text-app-text">
-                  {purchaseStep === 'amount' ? 'רכישת משלוחים' : 'פרטי תשלום'}
-                </h2>
-                <p className="mt-3 text-sm leading-6 text-app-text-secondary">
-                  {purchaseStep === 'amount'
-                    ? 'בחר חבילת משלוחים או הזן כמות מותאמת להוספה לחשבון.'
-                    : 'הכנס פרטי כרטיס אשראי כדי להשלים את הרכישה.'}
-                </p>
-              </div>
+            <div className="mt-5 min-w-0">
+              <h2 className="text-lg font-bold text-app-text">
+                {purchaseStep === 'amount' ? 'רכישת משלוחים' : 'פרטי תשלום'}
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-app-text-secondary">
+                {purchaseStep === 'amount'
+                  ? 'המחיר מחושב לפי מדרגות: חבילה גדולה יותר מורידה את העלות לכל משלוח.'
+                  : 'הכנס פרטי כרטיס אשראי כדי להשלים את הרכישה.'}
+              </p>
             </div>
 
             {purchaseStep === 'amount' ? (
-              <div className="mt-7 space-y-5">
+                <div className="mt-7 space-y-5">
                 <div className="space-y-2">
                   <label className="block text-sm font-bold text-app-text">כמות להוספה</label>
-                  <p className="text-xs leading-5 text-app-text-muted">
-                    המחיר מחושב לפי מדרגות: חבילה גדולה יותר מורידה את העלות לכל משלוח.
-                  </p>
                   <div ref={amountSelectRef} className="relative z-20">
                     <button
                       type="button"
@@ -706,11 +474,11 @@ export const DeliveryBalanceHub: React.FC = () => {
                         <span className={`block ${selectedAmount === null ? 'text-app-text-secondary' : 'text-app-text'}`}>
                           {selectedAmount === null ? 'בחר כמות משלוחים' : `${formatNumber(selectedAmount)} משלוחים`}
                         </span>
-                        <span className="block text-xs font-semibold text-app-text-secondary">
-                          {selectedAmount === null
-                            ? 'ככל שרוכשים יותר, המחיר למשלוח יורד'
-                            : `${formatCurrency(selectedUnitPrice)} למשלוח`}
-                        </span>
+                        {selectedAmount !== null ? (
+                          <span className="block text-xs font-semibold text-app-text-secondary">
+                            {formatCurrency(selectedUnitPrice)} למשלוח
+                          </span>
+                        ) : null}
                       </span>
                       <span className="flex shrink-0 items-center gap-3 text-app-text-secondary">
                         {selectedAmount !== null ? (
@@ -765,8 +533,8 @@ export const DeliveryBalanceHub: React.FC = () => {
 
                         {customMode ? (
                           <div className="border-t border-app-border px-4 py-3">
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                              <label className="flex min-w-0 items-center justify-end gap-2 text-sm font-bold text-app-text">
+                            <div className="flex items-center justify-between gap-2">
+                              <label className="flex min-w-0 items-center justify-end gap-1.5 text-sm font-bold text-app-text">
                                 <span className="shrink-0 text-sm font-bold text-app-text">משלוחים</span>
                                 <input
                                   type="number"
@@ -780,23 +548,23 @@ export const DeliveryBalanceHub: React.FC = () => {
                                     setCustomAmount(limitCustomAmountInput(Number(event.target.value)))
                                   }
                                   onFocus={(event) => event.currentTarget.select()}
-                                  className="h-9 w-24 rounded-[var(--app-radius-sm)] border border-app-border bg-app-background px-2 text-center text-sm font-bold tabular-nums text-app-text outline-none transition-colors focus:border-app-border-strong focus:ring-2 focus:ring-app-brand/20"
+                                  className="h-8 w-14 border-0 bg-transparent px-0 text-left text-sm font-bold tabular-nums text-app-text outline-none transition-colors focus:ring-0 sm:h-9 sm:w-24"
                                   dir="ltr"
                                 />
                               </label>
-                              <div className="flex flex-wrap items-center justify-between gap-3 sm:shrink-0 sm:justify-end">
-                                <span className="text-sm font-bold text-app-text-secondary">
+                              <div className="flex shrink-0 items-center justify-end gap-2">
+                                <span className="max-w-20 shrink-0 text-left text-xs font-bold text-app-text-secondary sm:max-w-none sm:text-sm">
                                   <span className="block tabular-nums">{formatCurrency(customDraftPrice)}</span>
-                                  <span className="block text-xs font-semibold text-app-text-muted">
+                                  <span className="hidden text-xs font-semibold text-app-text-muted sm:block">
                                     {formatCurrency(customDraftUnitPrice)} למשלוח
                                   </span>
                                 </span>
-                                <div className="flex items-center gap-2">
+                                <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
                                   <button
                                     type="button"
                                     onClick={() => stepCustomAmount(-1)}
                                     aria-label="הפחת כמות"
-                                    className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--app-radius-sm)] border border-app-border bg-app-background text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:opacity-45"
+                                    className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--app-radius-sm)] border border-app-border bg-app-background text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:opacity-45 sm:h-9 sm:w-9"
                                     disabled={clampCustomAmount(customAmount) <= customMinAmount}
                                   >
                                     <Minus className="h-4 w-4" />
@@ -805,7 +573,7 @@ export const DeliveryBalanceHub: React.FC = () => {
                                     type="button"
                                     onClick={() => stepCustomAmount(1)}
                                     aria-label="הוסף כמות"
-                                    className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--app-radius-sm)] border border-app-border bg-app-background text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:opacity-45"
+                                    className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--app-radius-sm)] border border-app-border bg-app-background text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:opacity-45 sm:h-9 sm:w-9"
                                     disabled={clampCustomAmount(customAmount) >= customMaxAmount}
                                   >
                                     <Plus className="h-4 w-4" />
@@ -813,7 +581,7 @@ export const DeliveryBalanceHub: React.FC = () => {
                                   <button
                                     type="button"
                                     onClick={applyCustomAmount}
-                                    className="h-9 rounded-full bg-app-text px-4 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+                                    className="h-8 rounded-full bg-app-text px-3 text-xs font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:h-9 sm:px-4 sm:text-sm"
                                   >
                                     החל
                                   </button>
@@ -830,11 +598,11 @@ export const DeliveryBalanceHub: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-3 pt-1">
+                <div className="flex justify-end gap-3 pt-1 max-sm:flex-col-reverse">
                   <button
                     type="button"
                     onClick={closePurchaseDialog}
-                    className="h-10 rounded-full bg-app-background px-4 text-sm font-bold text-app-text transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+                    className="h-10 rounded-full bg-app-background px-4 text-sm font-bold text-app-text transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 max-sm:w-full"
                   >
                     ביטול
                   </button>
@@ -846,7 +614,7 @@ export const DeliveryBalanceHub: React.FC = () => {
                       setSelectOpen(false);
                     }}
                     disabled={!canContinuePurchase}
-                    className="h-10 rounded-full bg-app-text px-5 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:bg-app-surface-raised disabled:text-app-text-muted"
+                    className="h-10 rounded-full bg-app-text px-5 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:bg-app-surface-raised disabled:text-app-text-muted max-sm:w-full"
                   >
                     המשך
                   </button>
@@ -895,11 +663,11 @@ export const DeliveryBalanceHub: React.FC = () => {
                   </span>
                 </div>
 
-                <div className="flex justify-between gap-3 pt-1">
+                <div className="flex justify-between gap-3 pt-1 max-sm:flex-col-reverse">
                   <button
                     type="button"
                     onClick={() => setPurchaseStep('amount')}
-                    className="h-10 rounded-full bg-app-background px-4 text-sm font-bold text-app-text transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+                    className="h-10 rounded-full bg-app-background px-4 text-sm font-bold text-app-text transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 max-sm:w-full"
                   >
                     חזרה
                   </button>
@@ -907,7 +675,7 @@ export const DeliveryBalanceHub: React.FC = () => {
                     type="button"
                     onClick={completePurchase}
                     disabled={!canContinuePurchase}
-                    className="h-10 rounded-full bg-app-text px-5 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:bg-app-surface-raised disabled:text-app-text-muted"
+                    className="h-10 rounded-full bg-app-text px-5 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:bg-app-surface-raised disabled:text-app-text-muted max-sm:w-full"
                   >
                     אישור רכישה
                   </button>
@@ -929,12 +697,11 @@ const TabButton: React.FC<{
   <button
     type="button"
     onClick={onClick}
-    className={`relative h-10 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 ${
-      active ? 'text-app-text' : 'text-app-text-secondary hover:text-app-text'
+    className={`h-8 rounded-[var(--app-radius-sm)] px-4 text-sm font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 ${
+      active ? 'bg-app-surface-raised text-app-text shadow-sm' : 'text-app-text-secondary hover:bg-app-surface hover:text-app-text'
     }`}
   >
     {children}
-    {active ? <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-app-text" /> : null}
   </button>
 );
 
@@ -948,24 +715,3 @@ const InvoiceSummaryCard: React.FC<{
   </div>
 );
 
-const UsageLimitCard: React.FC<{
-  helper: string;
-  label: string;
-  progress: number;
-  value: string;
-}> = ({ helper, label, progress, value }) => (
-  <div className="rounded-none border border-app-border bg-app-surface p-5">
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-sm font-bold text-app-text-secondary">{label}</span>
-      <BarChart3 className="h-4 w-4 text-app-text-muted" />
-    </div>
-    <div className="mt-4 text-2xl font-bold leading-none text-app-text">{value}</div>
-    <div className="mt-5 h-2 rounded-full bg-app-surface-raised" dir="ltr">
-      <div className="h-full rounded-full bg-app-success-text" style={{ width: `${progress}%` }} />
-    </div>
-    <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-app-text-muted">
-      <TrendingUp className="h-3.5 w-3.5" />
-      {helper}
-    </div>
-  </div>
-);

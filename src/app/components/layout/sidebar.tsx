@@ -192,16 +192,39 @@ const BusinessAvatar: React.FC<{ name: string; className?: string }> = ({ name, 
   </span>
 );
 
-const BusinessPlanBadge: React.FC<{ className?: string; label?: string }> = ({
+const BusinessPlanBadge: React.FC<{
+  ariaLabel?: string;
+  className?: string;
+  label?: string;
+  onClick?: (event: React.MouseEvent<HTMLSpanElement>) => void;
+  tone?: 'default' | 'deliveryBalanceHigh' | 'deliveryBalanceLow';
+}> = ({
+  ariaLabel,
   className = '',
   label = 'PRO',
-}) => (
-  <span
-    className={`inline-flex h-[18px] shrink-0 items-center rounded-full border border-app-nav-border bg-app-surface-raised px-2 text-[11px] font-medium leading-none text-app-text dark:border-[#2E2E2E] dark:bg-[#1F1F1F] dark:text-[#EDEDED] ${className}`}
-  >
-    {label}
-  </span>
-);
+  onClick,
+  tone = 'default',
+}) => {
+  const toneClass =
+    tone === 'deliveryBalanceLow'
+      ? 'text-[#dc2626] dark:text-[#f87171]'
+      : tone === 'deliveryBalanceHigh'
+        ? 'text-[#f59e0b] dark:text-[#fbbf24]'
+        : 'text-app-text dark:text-[#EDEDED]';
+
+  return (
+    <span
+      aria-label={ariaLabel}
+      className={`inline-flex h-[18px] shrink-0 items-center rounded-full border border-app-nav-border bg-app-surface-raised px-2 text-[11px] font-medium leading-none dark:border-[#2E2E2E] dark:bg-[#1F1F1F] ${
+        onClick ? 'cursor-pointer transition-colors hover:border-app-border-strong hover:bg-app-nav-hover-bg' : ''
+      } ${toneClass} ${className}`}
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+    >
+      {label}
+    </span>
+  );
+};
 
 const ONBOARDING_BY_ID: Record<string, string> = {
   live: 'nav-live',
@@ -366,6 +389,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
   );
   const walletItem = getNavItemById('wallet');
   const balanceItem = getNavItemById('delivery-balance');
+  const deliveryBalanceTone =
+    state.deliveryBalance <= 100 ? 'deliveryBalanceLow' : 'deliveryBalanceHigh';
+  const deliveryBalanceTextClass =
+    state.deliveryBalance <= 100
+      ? 'text-[#dc2626] dark:text-[#f87171]'
+      : 'text-[#f59e0b] dark:text-[#fbbf24]';
   const filteredBusinesses = useMemo(() => {
     const query = businessSearch.trim().toLowerCase();
     if (!query) return workspaceAccounts;
@@ -814,6 +843,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
     closeMobileMenu();
   };
 
+  const handleHeaderDeliveryBalanceClick = (event: React.MouseEvent<HTMLSpanElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsBusinessPopupOpen(false);
+    handleNav(balanceItem?.path ?? '/delivery-balance');
+  };
+
   const handleMobileMenuClickCapture = (event: React.MouseEvent<HTMLDivElement>) => {
     if (isDesktop || !mobileMenuSwipeClickGuardRef.current) return;
 
@@ -1012,7 +1048,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                   setBusinessSearch('');
                   setIsBusinessPopupOpen((value) => !value);
                 }}
-                className="group flex h-10 w-full min-w-0 flex-1 items-center gap-2 rounded-[6px] px-2 text-right text-app-text transition-colors focus:outline-none"
+                className="flex h-10 w-full min-w-0 flex-1 items-center gap-2 rounded-[6px] px-2 text-right text-app-text transition-colors focus:outline-none"
                 aria-expanded={isBusinessPopupOpen}
                 aria-haspopup="dialog"
                 aria-label={LABELS.selectBusiness}
@@ -1021,12 +1057,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                 <span className="min-w-0 flex-1 truncate text-sm font-semibold">
                   {selectedBusiness}
                 </span>
-                <BusinessPlanBadge label={selectedWorkspaceAccount?.kind === 'demo' ? 'DEMO' : 'PRO'} />
+                <BusinessPlanBadge
+                  ariaLabel={LABELS.deliveryBalance}
+                  label={formatSidebarBadgeNumber(state.deliveryBalance)}
+                  onClick={handleHeaderDeliveryBalanceClick}
+                  tone={deliveryBalanceTone}
+                />
                 <span
                   className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] border transition-colors ${
                     isBusinessPopupOpen
                       ? 'border-app-border-strong bg-app-surface-raised text-app-text'
-                      : 'border-transparent text-app-text-secondary group-hover:border-app-border-strong group-hover:bg-app-surface-raised group-hover:text-app-text'
+                      : 'border-transparent text-app-text-secondary hover:border-app-border-strong hover:bg-app-surface-raised hover:text-app-text'
                   }`}
                 >
                   <ChevronsUpDown className="h-3.5 w-3.5" />
@@ -1220,13 +1261,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                     {balanceItem?.label ?? LABELS.deliveryBalance}
                   </span>
                 </span>
-                <span
-                  className={`text-xs font-bold ${
-                    state.deliveryBalance <= 100
-                      ? 'text-[#dc2626] dark:text-[#f87171]'
-                      : 'text-[#f59e0b] dark:text-[#fbbf24]'
-                  }`}
-                >
+                <span className={`text-xs font-bold ${deliveryBalanceTextClass}`}>
                   {state.deliveryBalance.toLocaleString('he-IL')}
                 </span>
               </span>
@@ -1236,13 +1271,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                 className="hidden flex-col items-center gap-1 md:flex"
               >
                 <Package size={16} className="text-current" />
-                <span
-                  className={`text-[10px] font-bold ${
-                    state.deliveryBalance <= 100
-                      ? 'text-[#dc2626] dark:text-[#f87171]'
-                      : 'text-[#f59e0b] dark:text-[#fbbf24]'
-                  }`}
-                >
+                <span className={`text-[10px] font-bold ${deliveryBalanceTextClass}`}>
                   {state.deliveryBalance > 999 ? `${Math.floor(state.deliveryBalance / 1000)}K` : state.deliveryBalance}
                 </span>
               </SidebarIconTooltip>
