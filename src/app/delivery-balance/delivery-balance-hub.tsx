@@ -1,8 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   BarChart3,
   ChevronDown,
   CreditCard,
+  FileText,
+  Minus,
   Pencil,
   Plus,
   TrendingUp,
@@ -12,12 +14,23 @@ import {
 import { useDelivery } from '../context/delivery-context-value';
 import { getDeliveryCreditConsumedAt } from '../utils/delivery-credits';
 
-type BalanceTab = 'usage' | 'breakdown';
+type BalanceTab = 'usage' | 'breakdown' | 'invoices';
 type PurchaseStep = 'amount' | 'payment';
 
 type CreditPackage = {
   amount: number;
   price: number;
+};
+
+type PurchaseInvoice = {
+  amount: number;
+  balanceAfter: number;
+  balanceBefore: number;
+  id: string;
+  invoiceNumber: string;
+  issuedAt: string;
+  total: number;
+  unitPrice: number;
 };
 
 const customMinAmount = 100;
@@ -32,6 +45,7 @@ const creditPackages: CreditPackage[] = [
   { amount: 300000, price: 100270.5 },
 ];
 const customMaxAmount = creditPackages[creditPackages.length - 1].amount;
+const purchaseInvoicesStoragePrefix = 'sendi:delivery-balance-invoices';
 
 const statusLabels: Record<string, string> = {
   assigned: 'שובץ',
@@ -113,19 +127,75 @@ const getRemainingPercent = (remaining: number, used: number) => {
   return Math.max(0, Math.min(100, Math.round((remaining / total) * 100)));
 };
 
+const getPurchaseInvoicesStorageKey = (workspaceId?: string) =>
+  `${purchaseInvoicesStoragePrefix}:${workspaceId || 'default'}`;
+
+const isPurchaseInvoice = (value: unknown): value is PurchaseInvoice => {
+  if (!value || typeof value !== 'object') return false;
+  const invoice = value as Partial<PurchaseInvoice>;
+  return (
+    typeof invoice.id === 'string' &&
+    typeof invoice.invoiceNumber === 'string' &&
+    typeof invoice.issuedAt === 'string' &&
+    typeof invoice.amount === 'number' &&
+    typeof invoice.unitPrice === 'number' &&
+    typeof invoice.total === 'number' &&
+    typeof invoice.balanceBefore === 'number' &&
+    typeof invoice.balanceAfter === 'number'
+  );
+};
+
+const readStoredPurchaseInvoices = (storageKey: string): PurchaseInvoice[] => {
+  if (typeof window === 'undefined') return [];
+
+  try {
+    const raw = window.localStorage.getItem(storageKey);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed)
+      ? parsed.filter(isPurchaseInvoice).sort((a, b) => Date.parse(b.issuedAt) - Date.parse(a.issuedAt))
+      : [];
+  } catch {
+    return [];
+  }
+};
+
+const writeStoredPurchaseInvoices = (storageKey: string, invoices: PurchaseInvoice[]) => {
+  if (typeof window === 'undefined') return;
+
+  try {
+    window.localStorage.setItem(storageKey, JSON.stringify(invoices));
+  } catch {
+    // Invoice persistence is best-effort; the balance update itself still succeeds.
+  }
+};
+
+const createInvoiceNumber = (issuedAt: Date, sequence: number) =>
+  `INV-${issuedAt.getFullYear()}${String(issuedAt.getMonth() + 1).padStart(2, '0')}-${String(sequence).padStart(4, '0')}`;
+
 export const DeliveryBalanceHub: React.FC = () => {
   const { state, dispatch } = useDelivery();
   const [activeTab, setActiveTab] = useState<BalanceTab>('usage');
   const [purchaseOpen, setPurchaseOpen] = useState(false);
   const [purchaseStep, setPurchaseStep] = useState<PurchaseStep>('amount');
   const [selectOpen, setSelectOpen] = useState(false);
-  const [selectedAmount, setSelectedAmount] = useState(defaultAmount);
+  const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customMode, setCustomMode] = useState(false);
   const [customAmount, setCustomAmount] = useState(defaultAmount);
   const [autoReloadOpen, setAutoReloadOpen] = useState(false);
   const [autoReloadEnabled, setAutoReloadEnabled] = useState(false);
   const [autoReloadMinimum, setAutoReloadMinimum] = useState(100);
   const [autoReloadTarget, setAutoReloadTarget] = useState(1000);
+  const invoicesStorageKey = useMemo(
+    () => getPurchaseInvoicesStorageKey(state.workspaceId),
+    [state.workspaceId],
+  );
+  const [purchaseInvoices, setPurchaseInvoices] = useState<PurchaseInvoice[]>(() =>
+    readStoredPurchaseInvoices(invoicesStorageKey)
+  );
+
+  useEffect(() => {
+    setPurchaseInvoices(readStoredPurchaseInvoices(invoicesStorageKey));
+  }, [invoicesStorageKey]);
 
   const usageEvents = useMemo(
     () =>
@@ -160,9 +230,10 @@ export const DeliveryBalanceHub: React.FC = () => {
   const currentBalance = state.deliveryBalance;
   const averageDailyUsage = usage.month > 0 ? Math.max(1, Math.round(usage.month / 30)) : 0;
   const coverageDays = averageDailyUsage > 0 ? Math.floor(currentBalance / averageDailyUsage) : 0;
-  const selectedPrice = getPackagePrice(selectedAmount);
-  const selectedUnitPrice = getPackageUnitPrice(selectedAmount);
-  const balanceAfterPurchase = currentBalance + selectedAmount;
+  const selectedPrice = selectedAmount === null ? 0 : getPackagePrice(selectedAmount);
+  const selectedUnitPrice = selectedAmount === null ? 0 : getPackageUnitPrice(selectedAmount);
+  const balanceAfterPurchase = selectedAmount === null ? currentBalance : currentBalance + selectedAmount;
+  const canContinuePurchase = selectedAmount !== null;
   const todayRemainingPercent = getRemainingPercent(currentBalance, usage.today);
   const weekRemainingPercent = getRemainingPercent(currentBalance, usage.week);
   const monthRemainingPercent = getRemainingPercent(currentBalance, usage.month);
@@ -170,12 +241,20 @@ export const DeliveryBalanceHub: React.FC = () => {
   const autoReloadPrice = getPackagePrice(autoReloadAmount);
   const customDraftPrice = getPackagePrice(clampCustomAmount(customAmount));
   const customDraftUnitPrice = getPackageUnitPrice(clampCustomAmount(customAmount));
+  const purchasedInvoiceAmount = useMemo(
+    () => purchaseInvoices.reduce((total, invoice) => total + invoice.amount, 0),
+    [purchaseInvoices],
+  );
+  const purchasedInvoiceTotal = useMemo(
+    () => purchaseInvoices.reduce((total, invoice) => total + invoice.total, 0),
+    [purchaseInvoices],
+  );
 
   const openPurchaseDialog = () => {
     setPurchaseOpen(true);
     setPurchaseStep('amount');
     setSelectOpen(false);
-    setSelectedAmount(defaultAmount);
+    setSelectedAmount(null);
     setCustomAmount(defaultAmount);
     setCustomMode(false);
   };
@@ -201,12 +280,36 @@ export const DeliveryBalanceHub: React.FC = () => {
     setSelectOpen(false);
   };
 
+  const stepCustomAmount = (direction: -1 | 1) => {
+    setCustomAmount((amount) => clampCustomAmount(amount + direction * customStep));
+  };
+
   const completePurchase = () => {
+    if (selectedAmount === null) return;
+
+    const amount = selectedAmount;
+    const price = getPackagePrice(amount);
+    const unitPrice = getPackageUnitPrice(amount);
+    const issuedAt = new Date();
+    const invoice: PurchaseInvoice = {
+      amount,
+      balanceAfter: currentBalance + amount,
+      balanceBefore: currentBalance,
+      id: `invoice-${issuedAt.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+      invoiceNumber: createInvoiceNumber(issuedAt, purchaseInvoices.length + 1),
+      issuedAt: issuedAt.toISOString(),
+      total: price,
+      unitPrice,
+    };
+    const nextInvoices = [invoice, ...purchaseInvoices].slice(0, 200);
+    setPurchaseInvoices(nextInvoices);
+    writeStoredPurchaseInvoices(invoicesStorageKey, nextInvoices);
     dispatch({
-      payload: selectedAmount,
+      payload: amount,
       type: 'ADD_DELIVERY_BALANCE',
     });
     closePurchaseDialog();
+    setActiveTab('invoices');
   };
 
   const saveAutoReload = () => {
@@ -221,12 +324,15 @@ export const DeliveryBalanceHub: React.FC = () => {
   return (
     <div className="mx-auto flex w-full max-w-[76rem] flex-col gap-7 text-right" dir="rtl">
       <header className="border-b border-app-border">
-        <div className="flex gap-6">
+        <div className="flex gap-6 overflow-x-auto">
           <TabButton active={activeTab === 'usage'} onClick={() => setActiveTab('usage')}>
             שימוש
           </TabButton>
           <TabButton active={activeTab === 'breakdown'} onClick={() => setActiveTab('breakdown')}>
             פירוט צריכה
+          </TabButton>
+          <TabButton active={activeTab === 'invoices'} onClick={() => setActiveTab('invoices')}>
+            חשבוניות
           </TabButton>
         </div>
       </header>
@@ -324,7 +430,7 @@ export const DeliveryBalanceHub: React.FC = () => {
             </div>
           </div>
         </section>
-      ) : (
+      ) : activeTab === 'breakdown' ? (
         <section className="space-y-5">
           <div className="space-y-1">
             <h1 className="text-xl font-bold text-app-text">פירוט צריכה</h1>
@@ -359,6 +465,71 @@ export const DeliveryBalanceHub: React.FC = () => {
             ) : (
               <div className="flex min-h-44 items-center justify-center px-4 py-8 text-center text-sm text-app-text-secondary">
                 עדיין אין צריכת משלוחים מתועדת.
+              </div>
+            )}
+          </div>
+        </section>
+      ) : (
+        <section className="space-y-5">
+          <div className="space-y-1">
+            <h1 className="text-xl font-bold text-app-text">חשבוניות רכישה</h1>
+            <p className="text-sm text-app-text-secondary">חשבוניות עבור משלוחים שנרכשו דרך יתרת המשלוחים.</p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            <InvoiceSummaryCard label="חשבוניות" value={formatNumber(purchaseInvoices.length)} />
+            <InvoiceSummaryCard label="משלוחים שנרכשו" value={formatNumber(purchasedInvoiceAmount)} />
+            <InvoiceSummaryCard label="סכום רכישות" value={formatCurrency(purchasedInvoiceTotal)} />
+          </div>
+
+          <div className="overflow-hidden rounded-none border border-app-border bg-app-surface">
+            <div className="grid grid-cols-[minmax(0,1.15fr)_150px_120px_130px_130px] border-b border-app-border px-4 py-3 text-xs font-bold text-app-text-secondary max-lg:hidden">
+              <span>חשבונית</span>
+              <span>תאריך</span>
+              <span>כמות</span>
+              <span>מחיר למשלוח</span>
+              <span className="text-left">סה״כ</span>
+            </div>
+
+            {purchaseInvoices.length > 0 ? (
+              purchaseInvoices.map((invoice) => {
+                const issuedAt = new Date(invoice.issuedAt);
+
+                return (
+                  <div
+                    key={invoice.id}
+                    className="grid gap-3 border-b border-app-border px-4 py-4 last:border-b-0 lg:grid-cols-[minmax(0,1.15fr)_150px_120px_130px_130px] lg:items-center"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 text-sm font-bold text-app-text">
+                        <FileText className="h-4 w-4 text-app-brand-text" />
+                        <span className="truncate">{invoice.invoiceNumber}</span>
+                      </div>
+                      <div className="mt-1 text-xs font-semibold text-app-text-muted lg:hidden">
+                        {formatDateTime(issuedAt)}
+                      </div>
+                    </div>
+                    <div className="hidden text-xs font-semibold text-app-text-secondary lg:block">
+                      {formatDateTime(issuedAt)}
+                    </div>
+                    <div className="text-sm font-bold tabular-nums text-app-text-secondary">
+                      {formatNumber(invoice.amount)}
+                    </div>
+                    <div className="text-sm font-bold tabular-nums text-app-text-secondary">
+                      {formatCurrency(invoice.unitPrice)}
+                    </div>
+                    <div className="text-left text-sm font-bold tabular-nums text-app-text" dir="ltr">
+                      {formatCurrency(invoice.total)}
+                    </div>
+                    <div className="text-xs font-semibold text-app-text-muted lg:col-span-5">
+                      יתרה אחרי רכישה: {formatNumber(invoice.balanceAfter)}
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="flex min-h-44 items-center justify-center px-4 py-8 text-center text-sm text-app-text-secondary">
+                עדיין אין חשבוניות רכישה.
               </div>
             )}
           </div>
@@ -461,25 +632,25 @@ export const DeliveryBalanceHub: React.FC = () => {
       ) : null}
 
       {purchaseOpen ? (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto overscroll-contain bg-black/70 px-4 py-4 backdrop-blur-sm sm:py-6">
-          <div className="max-h-[calc(100svh-2rem)] w-full max-w-[36rem] overflow-y-auto rounded-[var(--app-radius-lg)] border border-app-border bg-app-surface p-6 shadow-2xl">
-            <div className="flex items-start justify-between gap-4">
-              <button
-                type="button"
-                onClick={closePurchaseDialog}
-                aria-label="סגירה"
-                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--app-radius-sm)] text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
-              >
-                <X className="h-5 w-5" />
-              </button>
+        <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto overscroll-contain bg-black/70 p-4 backdrop-blur-sm sm:p-6">
+          <div className="relative w-full max-w-[44rem] overflow-visible rounded-[var(--app-radius-lg)] border border-app-border bg-app-surface p-6 shadow-2xl sm:p-7">
+            <button
+              type="button"
+              onClick={closePurchaseDialog}
+              aria-label="סגירה"
+              className="absolute left-5 top-5 inline-flex h-9 w-9 items-center justify-center rounded-[var(--app-radius-sm)] text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+            >
+              <X className="h-4 w-4" />
+            </button>
 
+            <div className="pl-12">
               <div className="min-w-0">
                 <h2 className="text-lg font-bold text-app-text">
                   {purchaseStep === 'amount' ? 'רכישת משלוחים' : 'פרטי תשלום'}
                 </h2>
                 <p className="mt-3 text-sm leading-6 text-app-text-secondary">
                   {purchaseStep === 'amount'
-                    ? 'בחר כמות משלוחים להוספה לחשבון. אפשר לבחור חבילה או להזין כמות מותאמת.'
+                    ? 'בחר חבילת משלוחים או הזן כמות מותאמת להוספה לחשבון.'
                     : 'הכנס פרטי כרטיס אשראי כדי להשלים את הרכישה.'}
                 </p>
               </div>
@@ -489,28 +660,38 @@ export const DeliveryBalanceHub: React.FC = () => {
               <div className="mt-7 space-y-5">
                 <div className="space-y-2">
                   <label className="block text-sm font-bold text-app-text">כמות להוספה</label>
-                  <div className="relative">
+                  <p className="text-xs leading-5 text-app-text-muted">
+                    המחיר מחושב לפי מדרגות: חבילה גדולה יותר מורידה את העלות לכל משלוח.
+                  </p>
+                  <div className="relative z-20">
                     <button
                       type="button"
+                      aria-expanded={selectOpen}
                       onClick={() => setSelectOpen((open) => !open)}
                       className={`flex min-h-14 w-full items-center justify-between gap-3 rounded-[var(--app-radius-md)] border bg-app-surface-raised px-4 py-2 text-right text-sm font-bold text-app-text transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 ${
                         selectOpen ? 'border-app-border-strong' : 'border-app-border'
                       }`}
                     >
                       <span className="min-w-0">
-                        <span className="block">{formatNumber(selectedAmount)} משלוחים</span>
+                        <span className={`block ${selectedAmount === null ? 'text-app-text-secondary' : 'text-app-text'}`}>
+                          {selectedAmount === null ? 'בחר כמות משלוחים' : `${formatNumber(selectedAmount)} משלוחים`}
+                        </span>
                         <span className="block text-xs font-semibold text-app-text-secondary">
-                          {formatCurrency(selectedUnitPrice)} למשלוח
+                          {selectedAmount === null
+                            ? 'ככל שרוכשים יותר, המחיר למשלוח יורד'
+                            : `${formatCurrency(selectedUnitPrice)} למשלוח`}
                         </span>
                       </span>
                       <span className="flex shrink-0 items-center gap-3 text-app-text-secondary">
-                        <span className="tabular-nums">{formatCurrency(selectedPrice)}</span>
+                        {selectedAmount !== null ? (
+                          <span className="tabular-nums">{formatCurrency(selectedPrice)}</span>
+                        ) : null}
                         <ChevronDown className="h-4 w-4" />
                       </span>
                     </button>
 
                     {selectOpen ? (
-                      <div className="mt-2 overflow-hidden rounded-[var(--app-radius-md)] border border-app-border bg-app-surface shadow-2xl">
+                      <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-full overflow-hidden rounded-[var(--app-radius-md)] border border-app-border bg-app-surface shadow-2xl">
                         {creditPackages.map((option) => {
                           const selected = !customMode && selectedAmount === option.amount;
                           const unitPrice = option.price / option.amount;
@@ -539,7 +720,7 @@ export const DeliveryBalanceHub: React.FC = () => {
                           type="button"
                           onClick={() => {
                             setCustomMode(true);
-                            setCustomAmount(selectedAmount);
+                            setCustomAmount(selectedAmount ?? defaultAmount);
                           }}
                           className="flex h-12 w-full items-center gap-2 border-t border-app-border px-4 text-sm font-semibold text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text"
                         >
@@ -550,28 +731,58 @@ export const DeliveryBalanceHub: React.FC = () => {
                         {customMode ? (
                           <div className="border-t border-app-border px-4 py-3">
                             <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center">
-                              <input
-                                type="number"
-                                max={customMaxAmount}
-                                min={customMinAmount}
-                                step={customStep}
-                                value={customAmount}
-                                onChange={(event) => setCustomAmount(limitCustomAmountInput(Number(event.target.value)))}
-                                className="h-10 w-full min-w-0 rounded-[var(--app-radius-sm)] border border-app-border bg-app-background px-3 text-sm font-bold tabular-nums text-app-text outline-none focus:border-app-border-strong focus:ring-2 focus:ring-app-brand/20"
-                              />
+                              <label className="flex min-w-0 items-center gap-2 text-sm font-bold text-app-text" dir="ltr">
+                                <input
+                                  type="number"
+                                  inputMode="numeric"
+                                  max={customMaxAmount}
+                                  min={customMinAmount}
+                                  step={customStep}
+                                  value={customAmount}
+                                  onBlur={() => setCustomAmount((amount) => clampCustomAmount(amount))}
+                                  onChange={(event) =>
+                                    setCustomAmount(limitCustomAmountInput(Number(event.target.value)))
+                                  }
+                                  onFocus={(event) => event.currentTarget.select()}
+                                  className="h-9 w-24 rounded-[var(--app-radius-sm)] border border-transparent bg-transparent px-0 text-left text-sm font-bold tabular-nums text-app-text outline-none transition-colors focus:border-app-border focus:bg-app-background focus:px-2 focus:ring-2 focus:ring-app-brand/20"
+                                />
+                                <span className="shrink-0 text-sm font-bold text-app-text" dir="rtl">
+                                  משלוחים
+                                </span>
+                              </label>
                               <span className="text-sm font-bold text-app-text-secondary sm:shrink-0">
                                 <span className="block tabular-nums">{formatCurrency(customDraftPrice)}</span>
                                 <span className="block text-xs font-semibold text-app-text-muted">
                                   {formatCurrency(customDraftUnitPrice)} למשלוח
                                 </span>
                               </span>
-                              <button
-                                type="button"
-                                onClick={applyCustomAmount}
-                                className="h-10 w-full rounded-full bg-app-text px-4 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:w-auto"
-                              >
-                                החל
-                              </button>
+                              <div className="flex items-center gap-2 sm:justify-end">
+                                <button
+                                  type="button"
+                                  onClick={() => stepCustomAmount(-1)}
+                                  aria-label="הפחת כמות"
+                                  className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--app-radius-sm)] border border-app-border bg-app-background text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:opacity-45"
+                                  disabled={clampCustomAmount(customAmount) <= customMinAmount}
+                                >
+                                  <Minus className="h-4 w-4" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => stepCustomAmount(1)}
+                                  aria-label="הוסף כמות"
+                                  className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--app-radius-sm)] border border-app-border bg-app-background text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:opacity-45"
+                                  disabled={clampCustomAmount(customAmount) >= customMaxAmount}
+                                >
+                                  <Plus className="h-4 w-4" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={applyCustomAmount}
+                                  className="h-9 rounded-full bg-app-text px-4 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+                                >
+                                  החל
+                                </button>
+                              </div>
                             </div>
                             <p className="mt-3 text-xs text-app-text-muted">
                               הזן משלוחים בקפיצות של 100. מינימום רכישה: 100 משלוחים, מקסימום 300,000.
@@ -583,10 +794,18 @@ export const DeliveryBalanceHub: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between rounded-[var(--app-radius-sm)] bg-app-background px-4 py-3 text-sm">
-                  <span className="text-app-text-secondary">יתרה אחרי רכישה</span>
-                  <span className="font-bold tabular-nums text-app-text">{formatNumber(balanceAfterPurchase)}</span>
-                </div>
+                {selectedAmount !== null ? (
+                  <div className="grid gap-3 rounded-[var(--app-radius-sm)] bg-app-background px-4 py-3 text-sm sm:grid-cols-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-app-text-secondary">סה״כ לתשלום</span>
+                      <span className="font-bold tabular-nums text-app-text">{formatCurrency(selectedPrice)}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-app-text-secondary">יתרה אחרי רכישה</span>
+                      <span className="font-bold tabular-nums text-app-text">{formatNumber(balanceAfterPurchase)}</span>
+                    </div>
+                  </div>
+                ) : null}
 
                 <div className="flex justify-end gap-3 pt-1">
                   <button
@@ -599,10 +818,12 @@ export const DeliveryBalanceHub: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => {
+                      if (!canContinuePurchase) return;
                       setPurchaseStep('payment');
                       setSelectOpen(false);
                     }}
-                    className="h-10 rounded-full bg-app-text px-5 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+                    disabled={!canContinuePurchase}
+                    className="h-10 rounded-full bg-app-text px-5 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:bg-app-surface-raised disabled:text-app-text-muted"
                   >
                     המשך
                   </button>
@@ -642,9 +863,13 @@ export const DeliveryBalanceHub: React.FC = () => {
 
                 <div className="flex items-center justify-between rounded-[var(--app-radius-sm)] bg-app-background px-4 py-3 text-sm">
                   <span className="text-app-text-secondary">
-                    {formatNumber(selectedAmount)} משלוחים · {formatCurrency(selectedUnitPrice)} למשלוח
+                    {selectedAmount === null
+                      ? 'בחר כמות משלוחים'
+                      : `${formatNumber(selectedAmount)} משלוחים · ${formatCurrency(selectedUnitPrice)} למשלוח`}
                   </span>
-                  <span className="font-bold tabular-nums text-app-text">{formatCurrency(selectedPrice)}</span>
+                  <span className="font-bold tabular-nums text-app-text">
+                    {selectedAmount === null ? '-' : formatCurrency(selectedPrice)}
+                  </span>
                 </div>
 
                 <div className="flex justify-between gap-3 pt-1">
@@ -658,7 +883,8 @@ export const DeliveryBalanceHub: React.FC = () => {
                   <button
                     type="button"
                     onClick={completePurchase}
-                    className="h-10 rounded-full bg-app-text px-5 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+                    disabled={!canContinuePurchase}
+                    className="h-10 rounded-full bg-app-text px-5 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:bg-app-surface-raised disabled:text-app-text-muted"
                   >
                     אישור רכישה
                   </button>
@@ -687,6 +913,16 @@ const TabButton: React.FC<{
     {children}
     {active ? <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-app-text" /> : null}
   </button>
+);
+
+const InvoiceSummaryCard: React.FC<{
+  label: string;
+  value: string;
+}> = ({ label, value }) => (
+  <div className="rounded-none border border-app-border bg-app-surface p-4">
+    <div className="text-xs font-bold text-app-text-secondary">{label}</div>
+    <div className="mt-3 text-xl font-bold tabular-nums text-app-text">{value}</div>
+  </div>
 );
 
 const UsageLimitCard: React.FC<{

@@ -7,7 +7,10 @@ import { build } from 'esbuild';
 const entry = `
 import { createInitialDeliveryState } from './src/app/context/delivery-bootstrap';
 import { deliveryReducer } from './src/app/context/delivery.reducer';
-import { getCreditCostForAssignment } from './src/app/utils/delivery-credits';
+import {
+  getCreditCostForAssignment,
+  getCreditCostForDeliveryIntake,
+} from './src/app/utils/delivery-credits';
 import {
   DELIVERY_ASSIGNMENT_BLOCK_COPY,
   getDeliveryAssignmentBlockReason,
@@ -17,6 +20,7 @@ import {
   isVisibleInDefaultDeliveriesView,
 } from './src/app/utils/delivery-status';
 import { canCourierAcceptDelivery } from './src/app/utils/courier-assignment';
+import { isSendiPlusRestaurant } from './src/app/utils/sendi-plus';
 
 const assert = (condition, message) => {
   if (!condition) {
@@ -115,6 +119,9 @@ const restaurant = state.restaurants.find((item) => !item.chainId || item.chainI
   ?? state.restaurants[0];
 const networkRestaurant = state.restaurants.find((item) => item.chainId && item.chainId !== '-')
   ?? state.restaurants[0];
+const sendiPlusRestaurant = state.restaurants.find((item) =>
+  isSendiPlusRestaurant(item.name, item.chainId)
+) ?? networkRestaurant;
 const courier = state.couriers[0];
 
 const allCouriersOfflineState = {
@@ -140,10 +147,22 @@ state = {
   ),
 };
 
-state = deliveryReducer(state, { type: 'ADD_DELIVERY', payload: makeDelivery('regular-1', restaurant) });
-let blocked = assign(state, 'regular-1', courier.id);
-assert(blocked.deliveryBalance === 0, 'No-credit assignment changed balance');
-assert(blocked.deliveries[0].status === 'pending', 'No-credit assignment changed delivery status');
+const regularWithoutCredits = deliveryReducer(state, { type: 'ADD_DELIVERY', payload: makeDelivery('regular-1', restaurant) });
+assert(regularWithoutCredits.deliveryBalance === 0, 'No-credit intake changed balance');
+assert(regularWithoutCredits.deliveries.length === 0, 'No-credit intake added a regular delivery');
+assert(getCreditCostForDeliveryIntake(makeDelivery('regular-cost', restaurant), restaurant) === 1, 'Regular delivery should cost one credit at intake');
+assert(getCreditCostForDeliveryIntake(makeDelivery('sendi-cost', sendiPlusRestaurant), sendiPlusRestaurant) === 0, 'Sendi Plus delivery should not cost credit at intake');
+
+const sendiPlusNoCreditState = deliveryReducer(state, {
+  type: 'ADD_DELIVERY',
+  payload: makeDelivery('sendi-no-credit', sendiPlusRestaurant, {
+    createdAt: new Date(),
+    creation_time: new Date(),
+  }),
+});
+let blocked = assign(sendiPlusNoCreditState, 'sendi-no-credit', courier.id);
+assert(blocked.deliveryBalance === 0, 'No-credit Sendi Plus assignment changed balance');
+assert(blocked.deliveries[0].status === 'pending', 'No-credit Sendi Plus assignment changed delivery status');
 
 const blockReason = getDeliveryAssignmentBlockReason(blocked.deliveries[0], {
   deliveryBalance: blocked.deliveryBalance,
@@ -152,15 +171,18 @@ const blockReason = getDeliveryAssignmentBlockReason(blocked.deliveries[0], {
 assert(blockReason === 'no_credits', 'Expected no_credits block reason');
 assert(DELIVERY_ASSIGNMENT_BLOCK_COPY[blockReason] === 'אין מספיק יתרת משלוחים', 'No-credit copy mismatch');
 
-state = { ...blocked, deliveryBalance: 1 };
+state = { ...state, deliveryBalance: 1, deliveries: [] };
+state = deliveryReducer(state, { type: 'ADD_DELIVERY', payload: makeDelivery('regular-1', restaurant) });
+const pendingRegular = state.deliveries.find((item) => item.id === 'regular-1');
+assert(state.deliveryBalance === 0, 'Regular intake did not consume exactly one credit');
+assert(pendingRegular.deliveryCreditConsumedAt instanceof Date, 'Regular intake did not stamp credit consumption');
 state = assign(state, 'regular-1', courier.id);
 const assignedRegular = state.deliveries.find((item) => item.id === 'regular-1');
-assert(state.deliveryBalance === 0, 'Assignment did not consume exactly one credit');
+assert(state.deliveryBalance === 0, 'Assignment consumed an extra credit after regular intake');
 assert(assignedRegular.status === 'assigned', 'Assignment did not set status assigned');
-assert(assignedRegular.deliveryCreditConsumedAt instanceof Date, 'Assignment did not stamp credit consumption');
 assert(getCreditCostForAssignment(assignedRegular) === 0, 'Consumed delivery should not cost another credit');
-assert(assignedRegular.orderReadyTime.getTime() === addMinutes(assignedRegular.deliveryCreditConsumedAt, restaurant.defaultPreparationTime).getTime(), 'Prep timer did not start at assignment');
-assert(assignedRegular.should_delivered_time.getTime() === addMinutes(assignedRegular.deliveryCreditConsumedAt, restaurant.maxDeliveryTime).getTime(), 'SLA timer did not start at assignment');
+assert(assignedRegular.orderReadyTime.getTime() === addMinutes(assignedRegular.deliveryCreditConsumedAt, restaurant.defaultPreparationTime).getTime(), 'Prep timer did not start at credit consumption');
+assert(assignedRegular.should_delivered_time.getTime() === addMinutes(assignedRegular.deliveryCreditConsumedAt, restaurant.maxDeliveryTime).getTime(), 'SLA timer did not start at credit consumption');
 
 state = deliveryReducer(state, { type: 'CANCEL_DELIVERY', payload: 'regular-1' });
 assert(state.deliveryBalance === 0, 'Cancelled assigned delivery refunded credit');
@@ -176,10 +198,11 @@ state = {
     : item
   ),
 };
-state = deliveryReducer(state, { type: 'ADD_DELIVERY', payload: makeDelivery('network-expired', networkRestaurant, { createdAt: oldCreatedAt, creation_time: oldCreatedAt }) });
+state = deliveryReducer(state, { type: 'ADD_DELIVERY', payload: makeDelivery('network-expired', sendiPlusRestaurant, { createdAt: oldCreatedAt, creation_time: oldCreatedAt }) });
 const pendingNetwork = state.deliveries.find((item) => item.id === 'network-expired');
 assert(pendingNetwork.offerExpiresAt instanceof Date, 'Network delivery did not receive offer expiry');
 assert(pendingNetwork.offerExpiresAt.getTime() === addMinutes(oldCreatedAt, 2).getTime(), 'Network offer expiry is not exactly two minutes');
+assert(pendingNetwork.deliveryCreditConsumedAt === null, 'Sendi Plus delivery consumed credit before assignment');
 
 state = deliveryReducer(state, { type: 'EXPIRE_DELIVERY_OFFERS', payload: addMinutes(oldCreatedAt, 3) });
 const expiredNetwork = state.deliveries.find((item) => item.id === 'network-expired');
@@ -222,7 +245,7 @@ assert(canCourierAcceptDelivery(perDeliveryOffShiftCourier), 'Per-delivery couri
 
 state = {
   ...state,
-  deliveryBalance: 2,
+  deliveryBalance: 3,
   deliveries: [],
   couriers: [hourlyOffShiftCourier, perDeliveryOffShiftCourier],
 };
@@ -260,14 +283,16 @@ assert(perDeliveryUnassigned.is_requires_approval === false, 'Unassigned deliver
 
 export const results = [
   'system can open without active couriers',
-  'no credits hard-block assignment',
-  'assignment consumes one credit',
+  'no credits hard-block regular delivery intake',
+  'Sendi Plus assignment is blocked without credits',
+  'regular delivery intake consumes one credit',
   'cancel after assignment does not refund credit',
   'network offer expires after two minutes',
+  'expired Sendi Plus offer does not consume intake credit',
   'expired offer cannot be assigned',
   'expired offer is excluded from operational delivery counts',
   'expired offer is hidden from the default deliveries view',
-  'prep and SLA timers start at assignment',
+  'prep and SLA timers start at credit consumption',
   'hourly couriers must be on shift for assignment',
   'per-delivery couriers can receive assignments without a shift',
   'per-delivery assignments are flagged for courier approval',

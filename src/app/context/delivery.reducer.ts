@@ -14,7 +14,9 @@ import { canCourierAcceptDelivery } from '../utils/courier-assignment';
 import {
   DELIVERY_CREDITS_PER_ASSIGNMENT,
   canAssignDeliveryWithCredits,
+  getCreditCostForDeliveryIntake,
   getDeliveryCreditConsumedAt,
+  shouldConsumeDeliveryCreditOnIntake,
 } from '../utils/delivery-credits';
 import {
   getDeliveryOfferExpiresAt,
@@ -1611,8 +1613,11 @@ const normalizeIncomingDelivery = (payload: Delivery, restaurant: Restaurant) =>
       : typeof payload.max_time_to_deliver === 'number' && payload.max_time_to_deliver > 0
         ? payload.max_time_to_deliver
         : getRestaurantMaxDeliveryTime(restaurant);
-  const assignmentAnchor =
+  const deliveryCreditConsumedAt =
     getDeliveryCreditConsumedAt(payload) ??
+    (shouldConsumeDeliveryCreditOnIntake(payload, restaurant) ? createdAt : null);
+  const assignmentAnchor =
+    deliveryCreditConsumedAt ??
     toValidDateValue(payload.assignedAt) ??
     toValidDateValue(payload.coupled_time);
   const orderReadyTime = assignmentAnchor
@@ -1629,7 +1634,7 @@ const normalizeIncomingDelivery = (payload: Delivery, restaurant: Restaurant) =>
     ...payload,
     createdAt,
     creation_time: toValidDateValue(payload.creation_time) ?? createdAt,
-    deliveryCreditConsumedAt: getDeliveryCreditConsumedAt(payload),
+    deliveryCreditConsumedAt,
     offerExpiresAt,
     expiredAt: toValidDateValue(payload.expiredAt),
     preparationTime,
@@ -1671,17 +1676,20 @@ const buildStateAfterAddingDelivery = (
   delivery: Delivery,
   restaurant: Restaurant,
   recentRestaurantDeliveries: Delivery[],
-  maxAllowed: number
+  maxAllowed: number,
+  creditCost: number
 ) => {
   const deliveries = [...state.deliveries, delivery];
+  const deliveryBalance = state.deliveryBalance - creditCost;
 
   console.log(
-    `Added delivery for ${restaurant.name} (${restaurant.type}), available credits: ${state.deliveryBalance}, hourly load: ${recentRestaurantDeliveries.length + 1}/${maxAllowed}`
+    `Added delivery for ${restaurant.name} (${restaurant.type}), available credits: ${deliveryBalance}, hourly load: ${recentRestaurantDeliveries.length + 1}/${maxAllowed}`
   );
 
   return {
     ...state,
     deliveries,
+    deliveryBalance,
     stats: calculateStats(deliveries),
   };
 };
@@ -2037,13 +2045,20 @@ const reduceDeliveryState = (state: DeliveryState, action: DeliveryAction): Deli
         return state;
       }
 
+      const intakeCreditCost = getCreditCostForDeliveryIntake(action.payload, restaurant);
+      if (intakeCreditCost > state.deliveryBalance) {
+        console.warn('Attempted to add a delivery without delivery credits.');
+        return state;
+      }
+
       const normalizedDelivery = normalizeIncomingDelivery(action.payload, restaurant);
       return buildStateAfterAddingDelivery(
         state,
         normalizedDelivery,
         restaurant,
         restaurantDeliveriesInLastHour,
-        maxAllowed
+        maxAllowed,
+        intakeCreditCost
       );
     }
 

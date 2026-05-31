@@ -1,4 +1,5 @@
-import type { Delivery, DeliveryState } from '../types/delivery.types';
+import type { Delivery, DeliveryState, Restaurant } from '../types/delivery.types';
+import { isSendiPlusDelivery } from './delivery-finance';
 
 export const DELIVERY_CREDITS_PER_ASSIGNMENT = 1;
 
@@ -11,6 +12,19 @@ export const getDeliveryCreditConsumedAt = (delivery: Delivery) => {
 
 export const hasDeliveryConsumedCredit = (delivery: Delivery) =>
   getDeliveryCreditConsumedAt(delivery) !== null;
+
+export const shouldConsumeDeliveryCreditOnIntake = (
+  delivery: Delivery,
+  restaurant?: Pick<Restaurant, 'chainId' | 'name'> | null,
+) => !isSendiPlusDelivery(delivery, restaurant);
+
+export const getCreditCostForDeliveryIntake = (
+  delivery: Delivery,
+  restaurant?: Pick<Restaurant, 'chainId' | 'name'> | null,
+) =>
+  hasDeliveryConsumedCredit(delivery) || !shouldConsumeDeliveryCreditOnIntake(delivery, restaurant)
+    ? 0
+    : DELIVERY_CREDITS_PER_ASSIGNMENT;
 
 export const getCreditCostForAssignment = (delivery: Delivery) =>
   hasDeliveryConsumedCredit(delivery) ? 0 : DELIVERY_CREDITS_PER_ASSIGNMENT;
