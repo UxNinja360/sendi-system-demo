@@ -34,7 +34,7 @@ export const TLV_RUNNERS_WORKSPACE_ID = 'wrk_legacy_tlv_runners';
 export const TLV_RUNNERS_DEMO_PHONE = '0500000000';
 
 const WORKSPACE_STATE_STORAGE_PREFIX = 'sendi-delivery-state-workspace:';
-const DEFAULT_DELIVERY_BALANCE = 500;
+const DEFAULT_DELIVERY_BALANCE = 100;
 const DEFAULT_WORKSPACE_NAMES = new Set(['חברת משלוחים חדשה']);
 
 const normalizePhone = (value: string) => value.replace(/\D/g, '');

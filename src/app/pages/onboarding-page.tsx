@@ -674,7 +674,7 @@ const createEmptyWorkspaceState = ({
         category: 'settings',
       },
     ],
-    deliveryBalance: 500,
+    deliveryBalance: 100,
     stats: {
       hour: { total: 0, delivered: 0, cancelled: 0, revenue: 0 },
       today: { total: 0, delivered: 0, cancelled: 0, revenue: 0 },

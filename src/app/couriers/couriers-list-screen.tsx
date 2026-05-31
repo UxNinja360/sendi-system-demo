@@ -271,8 +271,8 @@ type CourierListSessionState = {
 
 const DEFAULT_COURIER_LIST_SESSION_STATE: CourierListSessionState = {
   courierEmploymentVisibility: {
-    hourly: false,
-    perDelivery: false,
+    hourly: true,
+    perDelivery: true,
   },
   searchQuery: '',
   showActiveCouriersOnly: false,

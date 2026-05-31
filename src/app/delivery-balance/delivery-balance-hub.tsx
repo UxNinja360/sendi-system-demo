@@ -20,18 +20,18 @@ type CreditPackage = {
   price: number;
 };
 
-const customMinAmount = 250;
-const customStep = 250;
-const defaultAmount = 1000;
+const customMinAmount = 100;
+const customStep = 100;
+const defaultAmount = 100;
 
 const creditPackages: CreditPackage[] = [
-  { amount: 500, price: 20 },
-  { amount: 1000, price: 40 },
-  { amount: 1500, price: 60 },
-  { amount: 2500, price: 100 },
-  { amount: 5000, price: 200 },
-  { amount: 10000, price: 400 },
+  { amount: 100, price: 221.2 },
+  { amount: 1000, price: 1883.87 },
+  { amount: 10000, price: 6563.16 },
+  { amount: 100000, price: 35854.3 },
+  { amount: 300000, price: 100270.5 },
 ];
+const customMaxAmount = creditPackages[creditPackages.length - 1].amount;
 
 const statusLabels: Record<string, string> = {
   assigned: 'שובץ',
@@ -47,7 +47,8 @@ const formatNumber = (value: number) => new Intl.NumberFormat('he-IL').format(va
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat('he-IL', {
     currency: 'ILS',
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
     style: 'currency',
   }).format(value);
 
@@ -66,12 +67,44 @@ const daysAgo = (days: number) => {
   return date;
 };
 
+const normalizeCustomAmount = (value: number) =>
+  Math.min(customMaxAmount, Math.max(customMinAmount, Number.isFinite(value) ? value : customMinAmount));
+
+const limitCustomAmountInput = (value: number) =>
+  Math.min(customMaxAmount, Math.max(0, Number.isFinite(value) ? value : 0));
+
 const clampCustomAmount = (value: number) =>
-  Math.max(customMinAmount, Math.round(value / customStep) * customStep);
+  normalizeCustomAmount(Math.round(value / customStep) * customStep);
+
+const roundPrice = (value: number) => Math.round(value * 100) / 100;
 
 const getPackagePrice = (amount: number) => {
   const packagePrice = creditPackages.find((item) => item.amount === amount)?.price;
-  return packagePrice ?? Math.max(10, Math.round(amount * 0.04));
+  if (packagePrice !== undefined) return packagePrice;
+
+  const normalizedAmount = normalizeCustomAmount(amount);
+  const lowerTier = [...creditPackages].reverse().find((item) => item.amount <= normalizedAmount);
+  const upperTier = creditPackages.find((item) => item.amount >= normalizedAmount);
+
+  if (!lowerTier) {
+    return roundPrice(normalizedAmount * (creditPackages[0].price / creditPackages[0].amount));
+  }
+
+  if (!upperTier || lowerTier.amount === upperTier.amount) {
+    return roundPrice(normalizedAmount * (lowerTier.price / lowerTier.amount));
+  }
+
+  const tierProgress =
+    (normalizedAmount - lowerTier.amount) / (upperTier.amount - lowerTier.amount);
+
+  return roundPrice(
+    lowerTier.price + (upperTier.price - lowerTier.price) * tierProgress,
+  );
+};
+
+const getPackageUnitPrice = (amount: number) => {
+  const normalizedAmount = normalizeCustomAmount(amount);
+  return getPackagePrice(normalizedAmount) / normalizedAmount;
 };
 
 const getRemainingPercent = (remaining: number, used: number) => {
@@ -91,8 +124,8 @@ export const DeliveryBalanceHub: React.FC = () => {
   const [customAmount, setCustomAmount] = useState(defaultAmount);
   const [autoReloadOpen, setAutoReloadOpen] = useState(false);
   const [autoReloadEnabled, setAutoReloadEnabled] = useState(false);
-  const [autoReloadMinimum, setAutoReloadMinimum] = useState(125);
-  const [autoReloadTarget, setAutoReloadTarget] = useState(250);
+  const [autoReloadMinimum, setAutoReloadMinimum] = useState(100);
+  const [autoReloadTarget, setAutoReloadTarget] = useState(1000);
 
   const usageEvents = useMemo(
     () =>
@@ -128,17 +161,23 @@ export const DeliveryBalanceHub: React.FC = () => {
   const averageDailyUsage = usage.month > 0 ? Math.max(1, Math.round(usage.month / 30)) : 0;
   const coverageDays = averageDailyUsage > 0 ? Math.floor(currentBalance / averageDailyUsage) : 0;
   const selectedPrice = getPackagePrice(selectedAmount);
+  const selectedUnitPrice = getPackageUnitPrice(selectedAmount);
   const balanceAfterPurchase = currentBalance + selectedAmount;
   const todayRemainingPercent = getRemainingPercent(currentBalance, usage.today);
   const weekRemainingPercent = getRemainingPercent(currentBalance, usage.week);
   const monthRemainingPercent = getRemainingPercent(currentBalance, usage.month);
   const autoReloadAmount = Math.max(customMinAmount, autoReloadTarget - Math.min(currentBalance, autoReloadMinimum));
   const autoReloadPrice = getPackagePrice(autoReloadAmount);
+  const customDraftPrice = getPackagePrice(clampCustomAmount(customAmount));
+  const customDraftUnitPrice = getPackageUnitPrice(clampCustomAmount(customAmount));
 
   const openPurchaseDialog = () => {
     setPurchaseOpen(true);
     setPurchaseStep('amount');
     setSelectOpen(false);
+    setSelectedAmount(defaultAmount);
+    setCustomAmount(defaultAmount);
+    setCustomMode(false);
   };
 
   const closePurchaseDialog = () => {
@@ -200,6 +239,34 @@ export const DeliveryBalanceHub: React.FC = () => {
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
+            <div className="rounded-none border border-app-border bg-app-surface p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 text-sm font-semibold text-app-text-secondary">
+                    <WalletCards className="h-4 w-4 text-app-brand-text" />
+                    יתרת משלוחים
+                  </div>
+                  <div className="mt-4 text-4xl font-bold leading-none tabular-nums text-app-text">
+                    {formatNumber(currentBalance)}
+                  </div>
+                  <p className="mt-3 text-sm text-app-text-secondary">
+                    השתמש ביתרה כדי להמשיך לקבל ולשבץ משלוחים.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={openPurchaseDialog}
+                  aria-label="רכישת משלוחים"
+                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-app-text text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/35"
+                >
+                  <Plus className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
             <UsageLimitCard
               label="שימוש היום"
               value={`${todayRemainingPercent}% נותר`}
@@ -226,34 +293,6 @@ export const DeliveryBalanceHub: React.FC = () => {
             />
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-none border border-app-border bg-app-surface p-5">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2 text-sm font-semibold text-app-text-secondary">
-                    <WalletCards className="h-4 w-4 text-app-brand-text" />
-                    יתרת קרדיטים
-                  </div>
-                  <div className="mt-4 text-4xl font-bold leading-none tabular-nums text-app-text">
-                    {formatNumber(currentBalance)}
-                  </div>
-                  <p className="mt-3 text-sm text-app-text-secondary">
-                    השתמש בקרדיטים כדי להמשיך לקבל ולשבץ משלוחים.
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={openPurchaseDialog}
-                  aria-label="רכישת קרדיטים"
-                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-app-text text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/35"
-                >
-                  <Plus className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-          </div>
-
           <div className="space-y-4 pt-2">
             <h2 className="text-xl font-bold text-app-text">טעינה אוטומטית</h2>
 
@@ -261,7 +300,7 @@ export const DeliveryBalanceHub: React.FC = () => {
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2 text-sm font-bold text-app-text">
-                    <span>טעינת קרדיטים אוטומטית</span>
+                    <span>טעינת משלוחים אוטומטית</span>
                     {autoReloadEnabled ? (
                       <span className="inline-flex items-center gap-1 text-xs font-bold text-app-success-text">
                         <span className="h-1.5 w-1.5 rounded-full bg-app-success-text" />
@@ -270,7 +309,7 @@ export const DeliveryBalanceHub: React.FC = () => {
                     ) : null}
                   </div>
                   <p className="mt-2 text-sm leading-6 text-app-text-secondary">
-                    הוסף קרדיטים אוטומטית כאשר היתרה יורדת מתחת לסף שהגדרת.
+                    הוסף משלוחים אוטומטית כאשר היתרה יורדת מתחת לסף שהגדרת.
                   </p>
                 </div>
 
@@ -289,14 +328,14 @@ export const DeliveryBalanceHub: React.FC = () => {
         <section className="space-y-5">
           <div className="space-y-1">
             <h1 className="text-xl font-bold text-app-text">פירוט צריכה</h1>
-            <p className="text-sm text-app-text-secondary">רשימת האירועים שבהם ירד קרדיט מהיתרה.</p>
+            <p className="text-sm text-app-text-secondary">רשימת האירועים שבהם ירד משלוח מהיתרה.</p>
           </div>
 
           <div className="overflow-hidden rounded-[var(--app-radius-md)] border border-app-border bg-app-surface">
             <div className="grid grid-cols-[minmax(0,1fr)_140px_80px] border-b border-app-border px-4 py-3 text-xs font-bold text-app-text-secondary max-sm:hidden">
               <span>משלוח</span>
               <span>זמן</span>
-              <span className="text-left">קרדיטים</span>
+              <span className="text-left">משלוחים</span>
             </div>
 
             {usageEvents.length > 0 ? (
@@ -319,7 +358,7 @@ export const DeliveryBalanceHub: React.FC = () => {
               ))
             ) : (
               <div className="flex min-h-44 items-center justify-center px-4 py-8 text-center text-sm text-app-text-secondary">
-                עדיין אין צריכת קרדיטים מתועדת.
+                עדיין אין צריכת משלוחים מתועדת.
               </div>
             )}
           </div>
@@ -339,22 +378,23 @@ export const DeliveryBalanceHub: React.FC = () => {
                 <X className="h-5 w-5" />
               </button>
 
-              <h2 className="min-w-0 text-lg font-bold text-app-text">טעינת קרדיטים אוטומטית</h2>
+              <h2 className="min-w-0 text-lg font-bold text-app-text">טעינת משלוחים אוטומטית</h2>
             </div>
 
             <div className="mt-7 space-y-6">
               <label className="block space-y-2">
                 <span className="block text-sm font-bold text-app-text">יתרה מינימלית</span>
                 <span className="block text-sm leading-6 text-app-text-secondary">
-                  טעינה אוטומטית תפעל כאשר יתרת הקרדיטים יורדת מתחת לסכום הזה.
+                  טעינה אוטומטית תפעל כאשר יתרת המשלוחים יורדת מתחת לסכום הזה.
                 </span>
                 <input
                   type="number"
+                  max={customMaxAmount}
                   min={customMinAmount}
                   step={customStep}
                   value={autoReloadMinimum}
                   onBlur={() => setAutoReloadMinimum((value) => clampCustomAmount(value))}
-                  onChange={(event) => setAutoReloadMinimum(Number(event.target.value) || customMinAmount)}
+                  onChange={(event) => setAutoReloadMinimum(limitCustomAmountInput(Number(event.target.value)))}
                   className="h-12 w-full rounded-[var(--app-radius-md)] border border-app-border bg-app-surface-raised px-4 text-sm font-bold tabular-nums text-app-text outline-none transition-colors focus:border-app-border-strong focus:ring-2 focus:ring-app-brand/20"
                 />
               </label>
@@ -362,10 +402,11 @@ export const DeliveryBalanceHub: React.FC = () => {
               <label className="block space-y-2">
                 <span className="block text-sm font-bold text-app-text">יעד יתרה</span>
                 <span className="block text-sm leading-6 text-app-text-secondary">
-                  הטעינה האוטומטית תחזיר את יתרת הקרדיטים עד לסכום הזה.
+                  הטעינה האוטומטית תחזיר את יתרת המשלוחים עד לסכום הזה.
                 </span>
                 <input
                   type="number"
+                  max={customMaxAmount}
                   min={customMinAmount}
                   step={customStep}
                   value={autoReloadTarget}
@@ -374,14 +415,14 @@ export const DeliveryBalanceHub: React.FC = () => {
                       Math.max(clampCustomAmount(autoReloadMinimum) + customStep, clampCustomAmount(value))
                     )
                   }
-                  onChange={(event) => setAutoReloadTarget(Number(event.target.value) || customMinAmount)}
+                  onChange={(event) => setAutoReloadTarget(limitCustomAmountInput(Number(event.target.value)))}
                   className="h-12 w-full rounded-[var(--app-radius-md)] border border-app-border bg-app-surface-raised px-4 text-sm font-bold tabular-nums text-app-text outline-none transition-colors focus:border-app-border-strong focus:ring-2 focus:ring-app-brand/20"
                 />
               </label>
 
               <div className="space-y-4 text-sm leading-6 text-app-text-secondary">
                 <p>
-                  יירכשו לפחות {formatNumber(autoReloadAmount)} קרדיטים, בעלות משוערת של{' '}
+                  יירכשו לפחות {formatNumber(autoReloadAmount)} משלוחים, בעלות משוערת של{' '}
                   <span className="font-bold text-app-text">{formatCurrency(autoReloadPrice)}</span>.
                 </p>
                 <p>נחייב את אמצעי התשלום באופן אוטומטי כאשר היתרה תגיע למינימום שהגדרת.</p>
@@ -420,8 +461,8 @@ export const DeliveryBalanceHub: React.FC = () => {
       ) : null}
 
       {purchaseOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6 backdrop-blur-sm">
-          <div className="w-full max-w-[36rem] rounded-[var(--app-radius-lg)] border border-app-border bg-app-surface p-6 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto overscroll-contain bg-black/70 px-4 py-4 backdrop-blur-sm sm:py-6">
+          <div className="max-h-[calc(100svh-2rem)] w-full max-w-[36rem] overflow-y-auto rounded-[var(--app-radius-lg)] border border-app-border bg-app-surface p-6 shadow-2xl">
             <div className="flex items-start justify-between gap-4">
               <button
                 type="button"
@@ -434,11 +475,11 @@ export const DeliveryBalanceHub: React.FC = () => {
 
               <div className="min-w-0">
                 <h2 className="text-lg font-bold text-app-text">
-                  {purchaseStep === 'amount' ? 'רכישת קרדיטים' : 'פרטי תשלום'}
+                  {purchaseStep === 'amount' ? 'רכישת משלוחים' : 'פרטי תשלום'}
                 </h2>
                 <p className="mt-3 text-sm leading-6 text-app-text-secondary">
                   {purchaseStep === 'amount'
-                    ? 'בחר כמות קרדיטים להוספה לחשבון. אפשר לבחור חבילה או להזין כמות מותאמת.'
+                    ? 'בחר כמות משלוחים להוספה לחשבון. אפשר לבחור חבילה או להזין כמות מותאמת.'
                     : 'הכנס פרטי כרטיס אשראי כדי להשלים את הרכישה.'}
                 </p>
               </div>
@@ -452,32 +493,43 @@ export const DeliveryBalanceHub: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setSelectOpen((open) => !open)}
-                      className={`flex h-12 w-full items-center justify-between gap-3 rounded-[var(--app-radius-md)] border bg-app-surface-raised px-4 text-right text-sm font-bold text-app-text transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 ${
+                      className={`flex min-h-14 w-full items-center justify-between gap-3 rounded-[var(--app-radius-md)] border bg-app-surface-raised px-4 py-2 text-right text-sm font-bold text-app-text transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 ${
                         selectOpen ? 'border-app-border-strong' : 'border-app-border'
                       }`}
                     >
-                      <span>{formatNumber(selectedAmount)} קרדיטים</span>
-                      <span className="flex items-center gap-3 text-app-text-secondary">
-                        {formatCurrency(selectedPrice)}
+                      <span className="min-w-0">
+                        <span className="block">{formatNumber(selectedAmount)} משלוחים</span>
+                        <span className="block text-xs font-semibold text-app-text-secondary">
+                          {formatCurrency(selectedUnitPrice)} למשלוח
+                        </span>
+                      </span>
+                      <span className="flex shrink-0 items-center gap-3 text-app-text-secondary">
+                        <span className="tabular-nums">{formatCurrency(selectedPrice)}</span>
                         <ChevronDown className="h-4 w-4" />
                       </span>
                     </button>
 
                     {selectOpen ? (
-                      <div className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-10 overflow-hidden rounded-[var(--app-radius-md)] border border-app-border bg-app-surface shadow-2xl">
+                      <div className="mt-2 overflow-hidden rounded-[var(--app-radius-md)] border border-app-border bg-app-surface shadow-2xl">
                         {creditPackages.map((option) => {
                           const selected = !customMode && selectedAmount === option.amount;
+                          const unitPrice = option.price / option.amount;
 
                           return (
                             <button
                               key={option.amount}
                               type="button"
                               onClick={() => selectPackage(option.amount)}
-                              className={`flex h-12 w-full items-center justify-between px-4 text-sm transition-colors hover:bg-app-surface-raised ${
+                              className={`grid min-h-14 w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-2 text-sm transition-colors hover:bg-app-surface-raised ${
                                 selected ? 'bg-app-surface-raised text-app-text' : 'text-app-text-secondary'
                               }`}
                             >
-                              <span className="font-semibold">{formatNumber(option.amount)} קרדיטים</span>
+                              <span className="min-w-0 text-right">
+                                <span className="block font-semibold">{formatNumber(option.amount)} משלוחים</span>
+                                <span className="block text-xs font-semibold text-app-text-muted">
+                                  {formatCurrency(unitPrice)} למשלוח
+                                </span>
+                              </span>
                               <span className="font-bold tabular-nums">{formatCurrency(option.price)}</span>
                             </button>
                           );
@@ -497,28 +549,32 @@ export const DeliveryBalanceHub: React.FC = () => {
 
                         {customMode ? (
                           <div className="border-t border-app-border px-4 py-3">
-                            <div className="flex items-center gap-3">
+                            <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center">
                               <input
                                 type="number"
+                                max={customMaxAmount}
                                 min={customMinAmount}
                                 step={customStep}
                                 value={customAmount}
-                                onChange={(event) => setCustomAmount(Number(event.target.value) || customMinAmount)}
-                                className="h-10 min-w-0 flex-1 rounded-[var(--app-radius-sm)] border border-app-border bg-app-background px-3 text-sm font-bold tabular-nums text-app-text outline-none focus:border-app-border-strong focus:ring-2 focus:ring-app-brand/20"
+                                onChange={(event) => setCustomAmount(limitCustomAmountInput(Number(event.target.value)))}
+                                className="h-10 w-full min-w-0 rounded-[var(--app-radius-sm)] border border-app-border bg-app-background px-3 text-sm font-bold tabular-nums text-app-text outline-none focus:border-app-border-strong focus:ring-2 focus:ring-app-brand/20"
                               />
-                              <span className="shrink-0 text-sm font-bold text-app-text-secondary">
-                                {formatCurrency(getPackagePrice(customAmount))}
+                              <span className="text-sm font-bold text-app-text-secondary sm:shrink-0">
+                                <span className="block tabular-nums">{formatCurrency(customDraftPrice)}</span>
+                                <span className="block text-xs font-semibold text-app-text-muted">
+                                  {formatCurrency(customDraftUnitPrice)} למשלוח
+                                </span>
                               </span>
                               <button
                                 type="button"
                                 onClick={applyCustomAmount}
-                                className="h-10 rounded-full bg-app-text px-4 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+                                className="h-10 w-full rounded-full bg-app-text px-4 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:w-auto"
                               >
                                 החל
                               </button>
                             </div>
                             <p className="mt-3 text-xs text-app-text-muted">
-                              הזן קרדיטים בקפיצות של 250. מינימום רכישה: 250 קרדיטים.
+                              הזן משלוחים בקפיצות של 100. מינימום רכישה: 100 משלוחים, מקסימום 300,000.
                             </p>
                           </div>
                         ) : null}
@@ -585,7 +641,9 @@ export const DeliveryBalanceHub: React.FC = () => {
                 </div>
 
                 <div className="flex items-center justify-between rounded-[var(--app-radius-sm)] bg-app-background px-4 py-3 text-sm">
-                  <span className="text-app-text-secondary">{formatNumber(selectedAmount)} קרדיטים</span>
+                  <span className="text-app-text-secondary">
+                    {formatNumber(selectedAmount)} משלוחים · {formatCurrency(selectedUnitPrice)} למשלוח
+                  </span>
                   <span className="font-bold tabular-nums text-app-text">{formatCurrency(selectedPrice)}</span>
                 </div>
 

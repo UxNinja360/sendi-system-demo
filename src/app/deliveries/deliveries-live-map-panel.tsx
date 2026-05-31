@@ -79,7 +79,7 @@ export const DeliveriesLiveMapPanel: React.FC<DeliveriesLiveMapPanelProps> = ({
   const [hoveredOrderId, setHoveredOrderId] = useState<string | null>(null);
   const [hoveredCourierId, setHoveredCourierId] = useState<string | null>(null);
   const [hoveredRestaurantName, setHoveredRestaurantName] = useState<string | null>(null);
-  const isSendiPlusActive = state.isSystemOpen && state.isReceivingDeliveries && sendiPlusTermsAccepted;
+  const shouldShowSendiPlusRestaurants = state.isSystemOpen && sendiPlusTermsAccepted;
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
@@ -108,7 +108,7 @@ export const DeliveriesLiveMapPanel: React.FC<DeliveriesLiveMapPanelProps> = ({
         if (!hasValidPosition({ lat: restaurant.lat, lng: restaurant.lng })) return false;
 
         const isSendiPlus = isSendiPlusRestaurant(restaurant.name, restaurant.chainId);
-        return !isSendiPlus || isSendiPlusActive;
+        return !isSendiPlus || shouldShowSendiPlusRestaurants;
       })
       .map((restaurant) => ({
         id: restaurant.id,
@@ -118,7 +118,7 @@ export const DeliveriesLiveMapPanel: React.FC<DeliveriesLiveMapPanelProps> = ({
         isActive: restaurant.isActive,
         isSendiPlus: isSendiPlusRestaurant(restaurant.name, restaurant.chainId),
       }))
-  ), [isSendiPlusActive, restaurants]);
+  ), [restaurants, shouldShowSendiPlusRestaurants]);
 
   const mapOrders = useMemo<MapOrder[]>(() => (
     deliveries.map((delivery) => {

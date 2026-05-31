@@ -840,7 +840,7 @@ export const createInitialDeliveryState = (): DeliveryState => ({
   customers: CUSTOMERS_DATA.map((customer) => ({ ...customer })),
   courierRoutePlans: {},
   activityLogs: [],
-  deliveryBalance: 500,
+  deliveryBalance: 100,
   stats: {
     hour: { total: 0, delivered: 0, cancelled: 0, revenue: 0 },
     today: { total: 0, delivered: 0, cancelled: 0, revenue: 0 },

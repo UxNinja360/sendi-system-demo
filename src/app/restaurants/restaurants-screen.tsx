@@ -276,8 +276,8 @@ type RestaurantListSessionState = {
 const DEFAULT_RESTAURANT_LIST_SESSION_STATE: RestaurantListSessionState = {
   restaurantConnectionFilter: null,
   restaurantSourceVisibility: {
-    regular: false,
-    sendiGo: false,
+    regular: true,
+    sendiGo: true,
   },
   searchQuery: '',
   sortColumn: 'name',
