@@ -227,7 +227,7 @@ export const DeliveryBalanceHub: React.FC = () => {
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-[var(--app-radius-md)] border border-app-border bg-app-surface p-5">
+            <div className="rounded-none border border-app-border bg-app-surface p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2 text-sm font-semibold text-app-text-secondary">
@@ -257,7 +257,7 @@ export const DeliveryBalanceHub: React.FC = () => {
           <div className="space-y-4 pt-2">
             <h2 className="text-xl font-bold text-app-text">טעינה אוטומטית</h2>
 
-            <div className="rounded-[var(--app-radius-lg)] border border-app-border bg-app-surface p-5">
+            <div className="rounded-none border border-app-border bg-app-surface p-5">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2 text-sm font-bold text-app-text">
@@ -637,7 +637,7 @@ const UsageLimitCard: React.FC<{
   progress: number;
   value: string;
 }> = ({ helper, label, progress, value }) => (
-  <div className="rounded-[var(--app-radius-lg)] border border-app-border bg-app-surface p-5">
+  <div className="rounded-none border border-app-border bg-app-surface p-5">
     <div className="flex items-center justify-between gap-3">
       <span className="text-sm font-bold text-app-text-secondary">{label}</span>
       <BarChart3 className="h-4 w-4 text-app-text-muted" />

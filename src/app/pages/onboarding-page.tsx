@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Check, ChevronDown, Search, X } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import {
   clearAuthSession,
@@ -588,7 +589,7 @@ const inputClassName =
   'h-12 w-full rounded-lg border border-[#d8d8d8] bg-white px-3 text-right text-sm font-medium text-[#0d0d12] outline-none transition-colors placeholder:text-[#777] hover:border-[#bdbdbd] focus:border-[#0d0d12] focus:bg-white focus:ring-2 focus:ring-[#0d0d12]/10 dark:border-[#252525] dark:bg-[#050505] dark:text-app-text dark:placeholder:text-[#777] dark:hover:border-[#3a3a3a] dark:hover:bg-[#080808] dark:focus:border-[#ededed] dark:focus:ring-[#ededed]/10';
 
 const primaryButtonClassName =
-  'flex h-12 w-full items-center justify-center rounded-lg bg-[#0d0d12] px-4 text-sm font-bold text-white transition-colors hover:bg-[#24242b] active:bg-[#050505] dark:bg-[#ededed] dark:text-[#050505] dark:hover:bg-white dark:active:bg-[#d8d8d8]';
+  'flex h-12 w-full items-center justify-center rounded-lg bg-[#0d0d12] px-4 text-sm font-bold text-white transition-colors hover:bg-[#24242b] active:bg-[#050505] disabled:cursor-not-allowed disabled:opacity-45 dark:bg-[#ededed] dark:text-[#050505] dark:hover:bg-white dark:active:bg-[#d8d8d8]';
 
 const secondaryButtonClassName =
   'flex min-h-12 w-full items-center justify-between gap-3 rounded-lg border border-[#d8d8d8] bg-white px-4 py-3 text-right text-sm font-bold text-[#0d0d12] outline-none transition-colors hover:border-[#bdbdbd] hover:bg-[#f5f5f5] focus:border-[#0d0d12] focus:ring-2 focus:ring-[#0d0d12]/10 active:bg-[#ededed] dark:border-[#252525] dark:bg-[#050505] dark:text-app-text dark:hover:border-[#3a3a3a] dark:hover:bg-[#111] dark:focus:border-[#ededed] dark:focus:ring-[#ededed]/10 dark:active:bg-[#181818]';
@@ -735,7 +736,6 @@ export const OnboardingPage: React.FC = () => {
   const [companyRegistrationNumber, setCompanyRegistrationNumber] = useState('');
   const [selectedWorkspaceAreas, setSelectedWorkspaceAreas] = useState<string[]>([]);
   const [workspaceAreaSearch, setWorkspaceAreaSearch] = useState('');
-  const [isMobileWorkspaceAreaSearchOpen, setIsMobileWorkspaceAreaSearchOpen] = useState(false);
   const [expandedWorkspaceAreaGroups, setExpandedWorkspaceAreaGroups] = useState<string[]>([]);
   const [joinRegistrationNumber, setJoinRegistrationNumber] = useState('');
   const [error, setError] = useState('');
@@ -774,6 +774,16 @@ export const OnboardingPage: React.FC = () => {
 
     return !WORKSPACE_AREA_SEARCH_OPTIONS.some((area) => area === customArea);
   }, [workspaceAreaSearch]);
+
+  const selectedWorkspaceAreaStatus = useMemo(() => {
+    if (selectedWorkspaceAreas.includes(ALL_COUNTRY_AREA)) return 'כל הארץ נבחר';
+    if (selectedWorkspaceAreas.length === 0) return 'לא נבחר אזור';
+    if (selectedWorkspaceAreas.length === 1) return 'אזור אחד נבחר';
+
+    return `${selectedWorkspaceAreas.length} אזורים נבחרו`;
+  }, [selectedWorkspaceAreas]);
+
+  const canContinueActivityArea = selectedWorkspaceAreas.length > 0;
 
   useEffect(() => {
     const currentSession = readAuthSession();
@@ -1024,7 +1034,7 @@ export const OnboardingPage: React.FC = () => {
         className={`login-main relative z-10 flex min-h-0 flex-1 justify-center px-5 sm:px-6 ${
           step === 'activityArea'
             ? 'login-main--activity-area items-start overflow-hidden pb-3 pt-4 sm:pb-4'
-            : 'items-center overflow-y-auto pb-16 pt-8'
+            : 'login-main--auth'
         }`}
       >
         {step === 'userName' ? (
@@ -1160,11 +1170,15 @@ export const OnboardingPage: React.FC = () => {
             </h1>
 
             <form onSubmit={handleActivityAreaSubmit} className="flex min-h-0 flex-1 flex-col gap-3">
-              <div className="flex min-h-0 flex-1 flex-col gap-3 text-right">
+              <div className="flex min-h-0 flex-col gap-3 text-right">
                 <label className="sr-only" htmlFor="onboarding-workspace-area">
                   אזור פעילות
                 </label>
-                <div className="relative hidden sm:block">
+                <div className="relative">
+                  <Search
+                    aria-hidden="true"
+                    className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#777] dark:text-[#888]"
+                  />
                   <input
                     id="onboarding-workspace-area"
                     value={workspaceAreaSearch}
@@ -1182,73 +1196,33 @@ export const OnboardingPage: React.FC = () => {
                         ? formatWorkspaceAreaSummary(selectedWorkspaceAreas)
                         : 'חפש עיר או יישוב'
                     }
-                    className={inputClassName}
+                    className={`${inputClassName} pr-10`}
                     autoComplete="off"
                   />
                 </div>
 
-                <div className="space-y-2 sm:hidden">
-                  <button
-                    type="button"
-                    className={secondaryButtonClassName}
-                    onClick={() => {
-                      setIsMobileWorkspaceAreaSearchOpen((isOpen) => {
-                        const nextIsOpen = !isOpen;
-                        if (!nextIsOpen) setWorkspaceAreaSearch('');
-                        return nextIsOpen;
-                      });
-                    }}
-                  >
-                    <span>{isMobileWorkspaceAreaSearchOpen ? 'סגור חיפוש' : 'חיפוש עיר או יישוב'}</span>
-                    <span aria-hidden="true">{isMobileWorkspaceAreaSearchOpen ? '⌃' : '⌄'}</span>
-                  </button>
-
-                  {isMobileWorkspaceAreaSearchOpen ? (
-                    <>
-                      <label className="sr-only" htmlFor="onboarding-workspace-area-mobile">
-                        חיפוש אזור פעילות
-                      </label>
-                      <input
-                        id="onboarding-workspace-area-mobile"
-                        value={workspaceAreaSearch}
-                        onChange={(event) => {
-                          setWorkspaceAreaSearch(event.target.value);
-                          setError('');
-                        }}
-                        onKeyDown={(event) => {
-                          if (event.key !== 'Enter' || !isCustomWorkspaceAreaVisible) return;
-                          event.preventDefault();
-                          addCustomWorkspaceArea();
-                        }}
-                        placeholder="חפש עיר או יישוב"
-                        className={inputClassName}
-                        autoComplete="off"
-                      />
-                    </>
-                  ) : null}
-                </div>
-
                 {selectedWorkspaceAreas.length > 0 ? (
-                  <div className="flex flex-wrap gap-2 rounded-lg border border-[#d8d8d8] bg-white p-2 dark:border-[#252525] dark:bg-[#050505]">
+                  <div className="flex max-h-[86px] flex-wrap gap-2 overflow-y-auto rounded-lg border border-[#d8d8d8] bg-white p-2 dark:border-[#252525] dark:bg-[#050505]">
                     {selectedWorkspaceAreas.map((area) => (
                       <button
                         key={area}
                         type="button"
-                        className="inline-flex h-8 items-center gap-2 rounded-full bg-[#f0f0f0] px-3 text-xs font-bold text-[#0d0d12] transition-colors hover:bg-[#e4e4e4] dark:bg-[#1a1a1a] dark:text-app-text dark:hover:bg-[#222]"
+                        className="inline-flex h-8 items-center gap-2 rounded-full bg-[#0d0d12] px-3 text-xs font-bold text-white transition-colors hover:bg-[#24242b] dark:bg-[#ededed] dark:text-[#050505] dark:hover:bg-white"
                         onClick={() => toggleWorkspaceArea(area)}
                         aria-label={`הסר ${area}`}
                       >
                         <span>{area}</span>
-                        <span aria-hidden="true">×</span>
+                        <X aria-hidden="true" className="h-3.5 w-3.5" />
                       </button>
                     ))}
                   </div>
                 ) : null}
 
-                <div className="z-20 min-h-0 flex-1 text-right">
-                  <div className="onboarding-area-list flex h-full min-h-0 flex-col gap-2 overflow-y-auto pb-2 pl-1">
+                <div className="z-20 min-h-0 text-right">
+                  <div className="onboarding-area-list flex max-h-[52svh] min-h-0 flex-col gap-2 overflow-y-auto pb-2 pl-1 sm:max-h-[34rem]">
                     <button
                       type="button"
+                      aria-pressed={selectedWorkspaceAreas.includes(ALL_COUNTRY_AREA)}
                       className={`flex h-12 w-full items-center justify-between rounded-lg border px-3 text-sm font-black transition-colors ${
                         selectedWorkspaceAreas.includes(ALL_COUNTRY_AREA)
                           ? 'border-[#0d0d12] bg-[#0d0d12] text-white dark:border-[#ededed] dark:bg-[#ededed] dark:text-[#050505]'
@@ -1257,7 +1231,9 @@ export const OnboardingPage: React.FC = () => {
                       onClick={() => toggleWorkspaceArea(ALL_COUNTRY_AREA)}
                     >
                       <span>{ALL_COUNTRY_AREA}</span>
-                      {selectedWorkspaceAreas.includes(ALL_COUNTRY_AREA) ? <span aria-hidden="true">✓</span> : null}
+                      {selectedWorkspaceAreas.includes(ALL_COUNTRY_AREA) ? (
+                        <Check aria-hidden="true" className="h-4 w-4" />
+                      ) : null}
                     </button>
 
                     {isCustomWorkspaceAreaVisible ? (
@@ -1276,29 +1252,38 @@ export const OnboardingPage: React.FC = () => {
                           const hasQuery = normalizeWorkspaceArea(workspaceAreaSearch).length > 0;
                           const isGroupExpanded =
                             hasQuery || expandedWorkspaceAreaGroups.includes(group.label);
+                          const groupAreaCount = group.sections.reduce(
+                            (total, section) => total + section.areas.length,
+                            0,
+                          );
+                          const selectedGroupAreaCount = group.sections.reduce(
+                            (total, section) =>
+                              total + section.areas.filter((area) => selectedWorkspaceAreas.includes(area)).length,
+                            0,
+                          );
 
                           return (
                             <div key={group.label} className="overflow-hidden rounded-lg border border-[#d8d8d8] bg-white dark:border-[#252525] dark:bg-[#050505]">
-                              <div className="flex h-12 items-center justify-between gap-2 px-3">
-                                <button
-                                  type="button"
-                                  className={`min-w-0 flex-1 rounded-md px-2 py-1 text-right text-sm font-black transition-colors ${
-                                    isGroupExpanded
-                                      ? 'text-[#0d0d12] dark:text-app-text'
-                                      : 'text-[#0d0d12] hover:bg-[#f5f5f5] dark:text-app-text dark:hover:bg-[#111]'
-                                  }`}
-                                  onClick={() => toggleExpandedWorkspaceAreaGroup(group.label)}
-                                >
-                                  {group.label}
-                                </button>
-                                <button
-                                  type="button"
-                                  className="rounded-md px-2 py-1 text-xs font-bold text-[#777] transition-colors hover:bg-[#f5f5f5] dark:text-[#888] dark:hover:bg-[#111]"
-                                  onClick={() => toggleExpandedWorkspaceAreaGroup(group.label)}
-                                >
-                                  {isGroupExpanded ? 'סגור' : `${group.sections.reduce((total, section) => total + section.areas.length, 0)} אזורים`}
-                                </button>
-                              </div>
+                              <button
+                                type="button"
+                                aria-expanded={isGroupExpanded}
+                                className="flex min-h-12 w-full items-center justify-between gap-3 px-3 py-2 text-right text-sm font-black text-[#0d0d12] transition-colors hover:bg-[#f5f5f5] dark:text-app-text dark:hover:bg-[#111]"
+                                onClick={() => toggleExpandedWorkspaceAreaGroup(group.label)}
+                              >
+                                <span className="min-w-0 truncate">{group.label}</span>
+                                <span className="flex shrink-0 items-center gap-2 text-xs font-bold text-[#777] dark:text-[#888]">
+                                  {selectedGroupAreaCount > 0 ? (
+                                    <span className="rounded-full bg-[#0d0d12] px-2 py-1 text-white dark:bg-[#ededed] dark:text-[#050505]">
+                                      {selectedGroupAreaCount} נבחרו
+                                    </span>
+                                  ) : null}
+                                  <span>{groupAreaCount} אזורים</span>
+                                  <ChevronDown
+                                    aria-hidden="true"
+                                    className={`h-4 w-4 transition-transform ${isGroupExpanded ? 'rotate-180' : ''}`}
+                                  />
+                                </span>
+                              </button>
 
                               {isGroupExpanded ? (
                                 <div className="space-y-2 border-t border-[#ededed] p-2 dark:border-[#1f1f1f]">
@@ -1324,14 +1309,16 @@ export const OnboardingPage: React.FC = () => {
                                               <button
                                                 key={`${section.label}-${area}`}
                                                 type="button"
-                                                className={`inline-flex h-8 items-center rounded-full border px-2.5 text-xs font-bold transition-colors ${
+                                                aria-pressed={isSelected}
+                                                className={`inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-xs font-bold transition-colors ${
                                                   isSelected
                                                     ? 'border-[#0d0d12] bg-[#0d0d12] text-white dark:border-[#ededed] dark:bg-[#ededed] dark:text-[#050505]'
                                                     : 'border-[#d8d8d8] bg-white text-[#0d0d12] hover:border-[#bdbdbd] hover:bg-[#f5f5f5] dark:border-[#252525] dark:bg-[#050505] dark:text-app-text dark:hover:border-[#3a3a3a] dark:hover:bg-[#111]'
                                                 }`}
                                                 onClick={() => toggleWorkspaceArea(area)}
                                               >
-                                                {area}
+                                                <span>{area}</span>
+                                                {isSelected ? <Check aria-hidden="true" className="h-3.5 w-3.5" /> : null}
                                               </button>
                                             );
                                           })}
@@ -1359,9 +1346,15 @@ export const OnboardingPage: React.FC = () => {
                 </div>
               ) : null}
 
-              <div className="onboarding-action-bar z-30 shrink-0 bg-[var(--login-bg)] pb-2 pt-2">
-                <button type="submit" className={primaryButtonClassName}>
-                  כניסה
+              <div className="onboarding-action-bar z-30 shrink-0 border-t border-[#d8d8d8]/70 bg-[var(--login-bg)] pb-2 pt-3 dark:border-[#252525]">
+                <div className="mb-2 flex items-center justify-between gap-3 text-xs font-bold text-[#777] dark:text-[#888]">
+                  <span>{selectedWorkspaceAreaStatus}</span>
+                  {selectedWorkspaceAreas.length > 0 ? (
+                    <span className="min-w-0 truncate">{formatWorkspaceAreaSummary(selectedWorkspaceAreas)}</span>
+                  ) : null}
+                </div>
+                <button type="submit" className={primaryButtonClassName} disabled={!canContinueActivityArea}>
+                  המשך
                 </button>
               </div>
             </form>
