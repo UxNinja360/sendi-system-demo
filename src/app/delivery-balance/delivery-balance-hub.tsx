@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   BarChart3,
   ChevronDown,
@@ -16,6 +16,7 @@ import { getDeliveryCreditConsumedAt } from '../utils/delivery-credits';
 
 type BalanceTab = 'usage' | 'breakdown' | 'invoices';
 type PurchaseStep = 'amount' | 'payment';
+type SelectDirection = 'down' | 'up';
 
 type CreditPackage = {
   amount: number;
@@ -174,10 +175,13 @@ const createInvoiceNumber = (issuedAt: Date, sequence: number) =>
 
 export const DeliveryBalanceHub: React.FC = () => {
   const { state, dispatch } = useDelivery();
+  const amountDropdownRef = useRef<HTMLDivElement>(null);
+  const amountSelectRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<BalanceTab>('usage');
   const [purchaseOpen, setPurchaseOpen] = useState(false);
   const [purchaseStep, setPurchaseStep] = useState<PurchaseStep>('amount');
   const [selectOpen, setSelectOpen] = useState(false);
+  const [selectDirection, setSelectDirection] = useState<SelectDirection>('down');
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customMode, setCustomMode] = useState(false);
   const [customAmount, setCustomAmount] = useState(defaultAmount);
@@ -196,6 +200,31 @@ export const DeliveryBalanceHub: React.FC = () => {
   useEffect(() => {
     setPurchaseInvoices(readStoredPurchaseInvoices(invoicesStorageKey));
   }, [invoicesStorageKey]);
+
+  useLayoutEffect(() => {
+    if (!selectOpen) return undefined;
+
+    const updateSelectDirection = () => {
+      const dropdown = amountDropdownRef.current;
+      const select = amountSelectRef.current;
+      if (!dropdown || !select) return;
+
+      const viewportPadding = 16;
+      const gap = 8;
+      const selectRect = select.getBoundingClientRect();
+      const dropdownHeight = dropdown.offsetHeight;
+      const spaceBelow = window.innerHeight - selectRect.bottom - viewportPadding;
+      const spaceAbove = selectRect.top - viewportPadding;
+      const shouldOpenUp = spaceBelow < dropdownHeight + gap && spaceAbove + 32 >= spaceBelow;
+
+      setSelectDirection(shouldOpenUp ? 'up' : 'down');
+    };
+
+    updateSelectDirection();
+    window.addEventListener('resize', updateSelectDirection);
+
+    return () => window.removeEventListener('resize', updateSelectDirection);
+  }, [customMode, selectOpen]);
 
   const usageEvents = useMemo(
     () =>
@@ -232,7 +261,6 @@ export const DeliveryBalanceHub: React.FC = () => {
   const coverageDays = averageDailyUsage > 0 ? Math.floor(currentBalance / averageDailyUsage) : 0;
   const selectedPrice = selectedAmount === null ? 0 : getPackagePrice(selectedAmount);
   const selectedUnitPrice = selectedAmount === null ? 0 : getPackageUnitPrice(selectedAmount);
-  const balanceAfterPurchase = selectedAmount === null ? currentBalance : currentBalance + selectedAmount;
   const canContinuePurchase = selectedAmount !== null;
   const todayRemainingPercent = getRemainingPercent(currentBalance, usage.today);
   const weekRemainingPercent = getRemainingPercent(currentBalance, usage.week);
@@ -254,6 +282,7 @@ export const DeliveryBalanceHub: React.FC = () => {
     setPurchaseOpen(true);
     setPurchaseStep('amount');
     setSelectOpen(false);
+    setSelectDirection('down');
     setSelectedAmount(null);
     setCustomAmount(defaultAmount);
     setCustomMode(false);
@@ -263,6 +292,7 @@ export const DeliveryBalanceHub: React.FC = () => {
     setPurchaseOpen(false);
     setPurchaseStep('amount');
     setSelectOpen(false);
+    setSelectDirection('down');
   };
 
   const selectPackage = (amount: number) => {
@@ -633,7 +663,7 @@ export const DeliveryBalanceHub: React.FC = () => {
 
       {purchaseOpen ? (
         <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto overscroll-contain bg-black/70 p-4 backdrop-blur-sm sm:p-6">
-          <div className="relative w-full max-w-[44rem] overflow-visible rounded-[var(--app-radius-lg)] border border-app-border bg-app-surface p-6 shadow-2xl sm:p-7">
+          <div className="relative w-full max-w-[44rem] -translate-y-[6vh] overflow-visible rounded-[var(--app-radius-lg)] border border-app-border bg-app-surface p-6 shadow-2xl sm:p-7">
             <button
               type="button"
               onClick={closePurchaseDialog}
@@ -663,7 +693,7 @@ export const DeliveryBalanceHub: React.FC = () => {
                   <p className="text-xs leading-5 text-app-text-muted">
                     המחיר מחושב לפי מדרגות: חבילה גדולה יותר מורידה את העלות לכל משלוח.
                   </p>
-                  <div className="relative z-20">
+                  <div ref={amountSelectRef} className="relative z-20">
                     <button
                       type="button"
                       aria-expanded={selectOpen}
@@ -691,7 +721,12 @@ export const DeliveryBalanceHub: React.FC = () => {
                     </button>
 
                     {selectOpen ? (
-                      <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-full overflow-hidden rounded-[var(--app-radius-md)] border border-app-border bg-app-surface shadow-2xl">
+                      <div
+                        ref={amountDropdownRef}
+                        className={`absolute right-0 z-50 w-full overflow-hidden rounded-[var(--app-radius-md)] border border-app-border bg-app-surface shadow-2xl ${
+                          selectDirection === 'up' ? 'bottom-[calc(100%+0.5rem)]' : 'top-[calc(100%+0.5rem)]'
+                        }`}
+                      >
                         {creditPackages.map((option) => {
                           const selected = !customMode && selectedAmount === option.amount;
                           const unitPrice = option.price / option.amount;
@@ -730,8 +765,9 @@ export const DeliveryBalanceHub: React.FC = () => {
 
                         {customMode ? (
                           <div className="border-t border-app-border px-4 py-3">
-                            <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center">
-                              <label className="flex min-w-0 items-center gap-2 text-sm font-bold text-app-text" dir="ltr">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                              <label className="flex min-w-0 items-center justify-end gap-2 text-sm font-bold text-app-text">
+                                <span className="shrink-0 text-sm font-bold text-app-text">משלוחים</span>
                                 <input
                                   type="number"
                                   inputMode="numeric"
@@ -744,44 +780,44 @@ export const DeliveryBalanceHub: React.FC = () => {
                                     setCustomAmount(limitCustomAmountInput(Number(event.target.value)))
                                   }
                                   onFocus={(event) => event.currentTarget.select()}
-                                  className="h-9 w-24 rounded-[var(--app-radius-sm)] border border-transparent bg-transparent px-0 text-left text-sm font-bold tabular-nums text-app-text outline-none transition-colors focus:border-app-border focus:bg-app-background focus:px-2 focus:ring-2 focus:ring-app-brand/20"
+                                  className="h-9 w-24 rounded-[var(--app-radius-sm)] border border-app-border bg-app-background px-2 text-center text-sm font-bold tabular-nums text-app-text outline-none transition-colors focus:border-app-border-strong focus:ring-2 focus:ring-app-brand/20"
+                                  dir="ltr"
                                 />
-                                <span className="shrink-0 text-sm font-bold text-app-text" dir="rtl">
-                                  משלוחים
-                                </span>
                               </label>
-                              <span className="text-sm font-bold text-app-text-secondary sm:shrink-0">
-                                <span className="block tabular-nums">{formatCurrency(customDraftPrice)}</span>
-                                <span className="block text-xs font-semibold text-app-text-muted">
-                                  {formatCurrency(customDraftUnitPrice)} למשלוח
+                              <div className="flex flex-wrap items-center justify-between gap-3 sm:shrink-0 sm:justify-end">
+                                <span className="text-sm font-bold text-app-text-secondary">
+                                  <span className="block tabular-nums">{formatCurrency(customDraftPrice)}</span>
+                                  <span className="block text-xs font-semibold text-app-text-muted">
+                                    {formatCurrency(customDraftUnitPrice)} למשלוח
+                                  </span>
                                 </span>
-                              </span>
-                              <div className="flex items-center gap-2 sm:justify-end">
-                                <button
-                                  type="button"
-                                  onClick={() => stepCustomAmount(-1)}
-                                  aria-label="הפחת כמות"
-                                  className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--app-radius-sm)] border border-app-border bg-app-background text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:opacity-45"
-                                  disabled={clampCustomAmount(customAmount) <= customMinAmount}
-                                >
-                                  <Minus className="h-4 w-4" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => stepCustomAmount(1)}
-                                  aria-label="הוסף כמות"
-                                  className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--app-radius-sm)] border border-app-border bg-app-background text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:opacity-45"
-                                  disabled={clampCustomAmount(customAmount) >= customMaxAmount}
-                                >
-                                  <Plus className="h-4 w-4" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={applyCustomAmount}
-                                  className="h-9 rounded-full bg-app-text px-4 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
-                                >
-                                  החל
-                                </button>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => stepCustomAmount(-1)}
+                                    aria-label="הפחת כמות"
+                                    className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--app-radius-sm)] border border-app-border bg-app-background text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:opacity-45"
+                                    disabled={clampCustomAmount(customAmount) <= customMinAmount}
+                                  >
+                                    <Minus className="h-4 w-4" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => stepCustomAmount(1)}
+                                    aria-label="הוסף כמות"
+                                    className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--app-radius-sm)] border border-app-border bg-app-background text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:opacity-45"
+                                    disabled={clampCustomAmount(customAmount) >= customMaxAmount}
+                                  >
+                                    <Plus className="h-4 w-4" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={applyCustomAmount}
+                                    className="h-9 rounded-full bg-app-text px-4 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+                                  >
+                                    החל
+                                  </button>
+                                </div>
                               </div>
                             </div>
                             <p className="mt-3 text-xs text-app-text-muted">
@@ -793,19 +829,6 @@ export const DeliveryBalanceHub: React.FC = () => {
                     ) : null}
                   </div>
                 </div>
-
-                {selectedAmount !== null ? (
-                  <div className="grid gap-3 rounded-[var(--app-radius-sm)] bg-app-background px-4 py-3 text-sm sm:grid-cols-2">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-app-text-secondary">סה״כ לתשלום</span>
-                      <span className="font-bold tabular-nums text-app-text">{formatCurrency(selectedPrice)}</span>
-                    </div>
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-app-text-secondary">יתרה אחרי רכישה</span>
-                      <span className="font-bold tabular-nums text-app-text">{formatNumber(balanceAfterPurchase)}</span>
-                    </div>
-                  </div>
-                ) : null}
 
                 <div className="flex justify-end gap-3 pt-1">
                   <button
