@@ -5,7 +5,6 @@ import {
   Minus,
   Pencil,
   Plus,
-  Sparkles,
   X,
 } from 'lucide-react';
 import { useDelivery } from '../context/delivery-context-value';
@@ -311,38 +310,39 @@ export const DeliveryBalanceHub: React.FC = () => {
   return (
     <div className="mx-auto flex w-full max-w-[76rem] flex-col gap-5 text-right" dir="rtl">
       <header>
-        <div className="flex items-center justify-start">
+        <div className="flex items-center justify-between gap-3">
           <div className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-[var(--app-radius-sm)] border border-app-border bg-app-background px-4 text-sm font-bold text-app-text">
             <span>קרדיטים</span>
             <span className={`tabular-nums ${deliveryBalanceTextClass}`}>
               {formatNumber(currentBalance)}
             </span>
           </div>
+          <button
+            type="button"
+            onClick={openPurchaseDialog}
+            className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface px-3 text-sm font-bold text-app-text transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/35 sm:px-4"
+          >
+            <span>רכישת יתרה</span>
+            <Plus className="h-4 w-4" />
+          </button>
         </div>
 
-        <div className="mt-4 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface px-4 py-3">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex min-w-0 items-center gap-3 text-app-text-secondary">
-              <Sparkles className="h-4 w-4 shrink-0 text-app-text-muted" />
-              <p className="min-w-0 text-sm font-semibold leading-5 text-app-text-secondary">
-                הוסף יתרה לחשבון כדי להמשיך לקבל ולשבץ משלוחים.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={openPurchaseDialog}
-              className="inline-flex h-9 shrink-0 items-center justify-center rounded-[var(--app-radius-sm)] bg-app-text px-5 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/35 max-sm:w-full"
-            >
-              רכישת יתרה
-            </button>
-          </div>
-        </div>
       </header>
 
-      <section className="space-y-5">
-          <div className="overflow-hidden rounded-none border border-app-border bg-app-surface">
-            {purchaseInvoices.length > 0 ? (
+      <section className="space-y-4" aria-labelledby="purchase-invoices-title">
+        <h2 id="purchase-invoices-title" className="text-sm font-bold text-app-text">
+          חשבוניות
+        </h2>
+
+        {purchaseInvoices.length > 0 ? (
+          <>
+            <div className="space-y-3 md:hidden">
+              {purchaseInvoices.map((invoice) => (
+                <InvoiceMobileCard key={invoice.id} invoice={invoice} />
+              ))}
+            </div>
+
+            <div className="hidden overflow-hidden rounded-none border border-app-border bg-app-surface md:block">
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[760px] table-fixed border-collapse text-right">
                   <colgroup>
@@ -393,12 +393,13 @@ export const DeliveryBalanceHub: React.FC = () => {
                   </tbody>
                 </table>
               </div>
-            ) : (
-              <div className="flex min-h-44 items-center justify-center px-4 py-8 text-center text-sm text-app-text-secondary">
-                עדיין אין חשבוניות רכישה.
-              </div>
-            )}
+            </div>
+          </>
+        ) : (
+          <div className="flex min-h-44 items-center justify-center rounded-none border border-app-border bg-app-surface px-4 py-8 text-center text-sm text-app-text-secondary">
+            עדיין אין חשבוניות רכישה.
           </div>
+        )}
       </section>
 
       {purchaseOpen ? (
@@ -416,7 +417,7 @@ export const DeliveryBalanceHub: React.FC = () => {
             className="relative z-10 w-full max-w-[44rem] -translate-y-[6vh] overflow-visible rounded-[var(--app-radius-lg)] border border-app-border bg-app-surface p-6 shadow-2xl sm:p-7"
             onMouseDown={handlePurchaseCardMouseDown}
           >
-            <div className="flex justify-end">
+            <div className="flex justify-start">
               <button
                 type="button"
                 onClick={closePurchaseDialog}
@@ -670,3 +671,30 @@ export const DeliveryBalanceHub: React.FC = () => {
   );
 };
 
+const InvoiceMobileCard: React.FC<{
+  invoice: PurchaseInvoice;
+}> = ({ invoice }) => {
+  const issuedAt = new Date(invoice.issuedAt);
+
+  return (
+    <article className="rounded-none border border-app-border bg-app-surface px-4 py-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0 truncate text-sm font-bold text-app-text">
+          {formatDateTime(issuedAt)}
+        </div>
+        <div className="shrink-0 text-left text-base font-bold tabular-nums text-app-text" dir="ltr">
+          {formatTableCurrency(invoice.total)}
+        </div>
+      </div>
+
+      <div className="mt-2 flex items-center justify-between gap-3 text-xs font-semibold text-app-text-muted">
+        <span className="min-w-0 truncate" dir="ltr">
+          {invoice.invoiceNumber}
+        </span>
+        <span className="shrink-0 tabular-nums">
+          {formatNumber(invoice.amount)} משלוחים
+        </span>
+      </div>
+    </article>
+  );
+};
