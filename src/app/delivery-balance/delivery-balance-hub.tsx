@@ -153,6 +153,7 @@ const createInvoiceNumber = (issuedAt: Date, sequence: number) =>
 
 export const DeliveryBalanceHub: React.FC = () => {
   const { state, dispatch } = useDelivery();
+  const customAmountPanelRef = useRef<HTMLDivElement>(null);
   const amountDropdownRef = useRef<HTMLDivElement>(null);
   const amountSelectRef = useRef<HTMLDivElement>(null);
   const purchaseCardRef = useRef<HTMLDivElement>(null);
@@ -160,8 +161,12 @@ export const DeliveryBalanceHub: React.FC = () => {
   const [purchaseStep, setPurchaseStep] = useState<PurchaseStep>('amount');
   const [selectOpen, setSelectOpen] = useState(false);
   const [selectDirection, setSelectDirection] = useState<SelectDirection>('down');
+  const [selectDropdownFixed, setSelectDropdownFixed] = useState(false);
+  const [selectDropdownStyle, setSelectDropdownStyle] = useState<React.CSSProperties | undefined>(undefined);
+  const [selectMaxHeight, setSelectMaxHeight] = useState<number | null>(null);
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customMode, setCustomMode] = useState(false);
+  const [customPanelOpen, setCustomPanelOpen] = useState(false);
   const [customAmount, setCustomAmount] = useState(defaultAmount);
   const invoicesStorageKey = useMemo(
     () => getPurchaseInvoicesStorageKey(state.workspaceId),
@@ -178,27 +183,141 @@ export const DeliveryBalanceHub: React.FC = () => {
   useLayoutEffect(() => {
     if (!selectOpen) return undefined;
 
-    const updateSelectDirection = () => {
+    let frame = 0;
+
+    const updateSelectLayout = () => {
       const dropdown = amountDropdownRef.current;
       const select = amountSelectRef.current;
       if (!dropdown || !select) return;
 
       const viewportPadding = 16;
       const gap = 8;
+      const visualViewport = window.visualViewport;
+      const viewportTop = visualViewport?.offsetTop ?? 0;
+      const viewportBottom = viewportTop + (visualViewport?.height ?? window.innerHeight);
       const selectRect = select.getBoundingClientRect();
-      const dropdownHeight = dropdown.offsetHeight;
-      const spaceBelow = window.innerHeight - selectRect.bottom - viewportPadding;
-      const spaceAbove = selectRect.top - viewportPadding;
-      const shouldOpenUp = spaceBelow < dropdownHeight + gap && spaceAbove + 32 >= spaceBelow;
+      const dropdownHeight = dropdown.scrollHeight;
+      const spaceBelow = viewportBottom - selectRect.bottom - viewportPadding;
+      const spaceAbove = selectRect.top - viewportTop - viewportPadding;
+      const fitsBelow = spaceBelow >= dropdownHeight + gap;
+      const fitsAbove = spaceAbove >= dropdownHeight + gap;
+      const shouldOpenUp = !fitsBelow && (fitsAbove || spaceAbove > spaceBelow);
+      const availableSpace = Math.max(0, (shouldOpenUp ? spaceAbove : spaceBelow) - gap);
+      const isSmallScreen = window.matchMedia('(max-width: 640px)').matches;
 
       setSelectDirection(shouldOpenUp ? 'up' : 'down');
+      setSelectMaxHeight(Math.floor(availableSpace));
+      setSelectDropdownFixed(isSmallScreen);
+      setSelectDropdownStyle(
+        isSmallScreen
+          ? (() => {
+              const minComfortableHeight = customPanelOpen ? 320 : 260;
+              const bestSpace = Math.max(spaceAbove, spaceBelow);
+              const useFullScreenPanel = customPanelOpen || bestSpace - gap < minComfortableHeight;
+              const horizontalInset = Math.max(14, viewportPadding);
+              const left = Math.max(horizontalInset, Math.floor(selectRect.left));
+              const right = Math.max(horizontalInset, Math.floor(window.innerWidth - selectRect.right));
+
+              if (useFullScreenPanel) {
+                const fullHeight = Math.max(160, window.innerHeight - viewportPadding * 2);
+                const height = Math.min(fullHeight, dropdownHeight);
+
+                return {
+                  height,
+                  left: horizontalInset,
+                  maxHeight: fullHeight,
+                  position: 'fixed',
+                  right: horizontalInset,
+                  top: viewportPadding,
+                  width: 'auto',
+                };
+              }
+
+              if (shouldOpenUp) {
+                const bottom = Math.max(
+                  viewportPadding,
+                  Math.ceil(window.innerHeight - selectRect.top + gap),
+                );
+                const availableHeight = Math.max(160, window.innerHeight - viewportPadding - bottom);
+                const height = Math.min(availableHeight, dropdownHeight);
+
+                return {
+                  bottom,
+                  height,
+                  left,
+                  maxHeight: availableHeight,
+                  position: 'fixed',
+                  right,
+                  width: 'auto',
+                };
+              }
+
+              const top = Math.max(viewportPadding, Math.floor(selectRect.bottom + gap));
+              const availableHeight = Math.max(160, window.innerHeight - top - viewportPadding);
+              const height = Math.min(availableHeight, dropdownHeight);
+
+              return {
+                height,
+                left,
+                maxHeight: availableHeight,
+                position: 'fixed',
+                right,
+                top,
+                width: 'auto',
+              };
+            })()
+          : { maxHeight: Math.floor(availableSpace) },
+      );
     };
 
-    updateSelectDirection();
-    window.addEventListener('resize', updateSelectDirection);
+    const scheduleSelectLayoutUpdate = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(updateSelectLayout);
+    };
 
-    return () => window.removeEventListener('resize', updateSelectDirection);
-  }, [customMode, selectOpen]);
+    scheduleSelectLayoutUpdate();
+    window.addEventListener('resize', scheduleSelectLayoutUpdate);
+    window.addEventListener('scroll', scheduleSelectLayoutUpdate, true);
+    window.visualViewport?.addEventListener('resize', scheduleSelectLayoutUpdate);
+    window.visualViewport?.addEventListener('scroll', scheduleSelectLayoutUpdate);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener('resize', scheduleSelectLayoutUpdate);
+      window.removeEventListener('scroll', scheduleSelectLayoutUpdate, true);
+      window.visualViewport?.removeEventListener('resize', scheduleSelectLayoutUpdate);
+      window.visualViewport?.removeEventListener('scroll', scheduleSelectLayoutUpdate);
+    };
+  }, [customPanelOpen, selectOpen]);
+
+  useLayoutEffect(() => {
+    if (!selectOpen || !customPanelOpen) return undefined;
+
+    let secondFrame = 0;
+    const frame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => {
+        const dropdown = amountDropdownRef.current;
+        const panel = customAmountPanelRef.current;
+        if (!dropdown || !panel) return;
+
+        const dropdownRect = dropdown.getBoundingClientRect();
+        const panelRect = panel.getBoundingClientRect();
+        const bottomOverflow = panelRect.bottom - dropdownRect.bottom;
+        const topOverflow = dropdownRect.top - panelRect.top;
+
+        if (bottomOverflow > 0) {
+          dropdown.scrollTop += bottomOverflow + 8;
+        } else if (topOverflow > 0) {
+          dropdown.scrollTop -= topOverflow + 8;
+        }
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.cancelAnimationFrame(secondFrame);
+    };
+  }, [customPanelOpen, selectDropdownStyle, selectOpen]);
 
   const currentBalance = state.deliveryBalance;
   const deliveryBalanceTextClass =
@@ -215,9 +334,13 @@ export const DeliveryBalanceHub: React.FC = () => {
     setPurchaseStep('amount');
     setSelectOpen(false);
     setSelectDirection('down');
+    setSelectDropdownFixed(false);
+    setSelectDropdownStyle(undefined);
+    setSelectMaxHeight(null);
     setSelectedAmount(null);
     setCustomAmount(defaultAmount);
     setCustomMode(false);
+    setCustomPanelOpen(false);
   };
 
   const closePurchaseDialog = () => {
@@ -225,6 +348,10 @@ export const DeliveryBalanceHub: React.FC = () => {
     setPurchaseStep('amount');
     setSelectOpen(false);
     setSelectDirection('down');
+    setSelectDropdownFixed(false);
+    setSelectDropdownStyle(undefined);
+    setSelectMaxHeight(null);
+    setCustomPanelOpen(false);
   };
 
   useEffect(() => {
@@ -259,13 +386,21 @@ export const DeliveryBalanceHub: React.FC = () => {
     }
 
     setSelectOpen(false);
+    setSelectDropdownFixed(false);
+    setSelectDropdownStyle(undefined);
+    setSelectMaxHeight(null);
+    setCustomPanelOpen(false);
   };
 
   const selectPackage = (amount: number) => {
     setSelectedAmount(amount);
     setCustomAmount(amount);
     setCustomMode(false);
+    setCustomPanelOpen(false);
     setSelectOpen(false);
+    setSelectDropdownFixed(false);
+    setSelectDropdownStyle(undefined);
+    setSelectMaxHeight(null);
   };
 
   const applyCustomAmount = () => {
@@ -273,11 +408,23 @@ export const DeliveryBalanceHub: React.FC = () => {
     setSelectedAmount(amount);
     setCustomAmount(amount);
     setCustomMode(true);
+    setCustomPanelOpen(false);
     setSelectOpen(false);
+    setSelectDropdownFixed(false);
+    setSelectDropdownStyle(undefined);
+    setSelectMaxHeight(null);
   };
 
   const stepCustomAmount = (direction: -1 | 1) => {
     setCustomAmount((amount) => clampCustomAmount(amount + direction * customStep));
+  };
+
+  const toggleCustomAmountPanel = () => {
+    if (!customPanelOpen) {
+      setCustomAmount(selectedAmount ?? defaultAmount);
+    }
+
+    setCustomPanelOpen((open) => !open);
   };
 
   const completePurchase = () => {
@@ -414,10 +561,10 @@ export const DeliveryBalanceHub: React.FC = () => {
           />
           <div
             ref={purchaseCardRef}
-            className="relative z-10 w-full max-w-[44rem] -translate-y-[6vh] overflow-visible rounded-[var(--app-radius-lg)] border border-app-border bg-app-surface p-6 shadow-2xl sm:p-7"
+            className="relative z-10 w-full max-w-[44rem] overflow-visible rounded-[var(--app-radius-lg)] border border-app-border bg-app-surface p-6 shadow-2xl sm:p-7"
             onMouseDown={handlePurchaseCardMouseDown}
           >
-            <div className="flex justify-start">
+            <div className="flex justify-end">
               <button
                 type="button"
                 onClick={closePurchaseDialog}
@@ -447,7 +594,16 @@ export const DeliveryBalanceHub: React.FC = () => {
                     <button
                       type="button"
                       aria-expanded={selectOpen}
-                      onClick={() => setSelectOpen((open) => !open)}
+                      onClick={() => {
+                        if (selectOpen) {
+                          setCustomPanelOpen(false);
+                        }
+
+                        setSelectOpen((open) => !open);
+                        setSelectDropdownFixed(false);
+                        setSelectDropdownStyle(undefined);
+                        setSelectMaxHeight(null);
+                      }}
                       className={`flex min-h-14 w-full items-center justify-between gap-3 rounded-[var(--app-radius-md)] border bg-app-surface-raised px-4 py-2 text-right text-sm font-bold text-app-text transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 ${
                         selectOpen ? 'border-app-border-strong' : 'border-app-border'
                       }`}
@@ -473,9 +629,14 @@ export const DeliveryBalanceHub: React.FC = () => {
                     {selectOpen ? (
                       <div
                         ref={amountDropdownRef}
-                        className={`absolute right-0 z-50 w-full overflow-hidden rounded-[var(--app-radius-md)] border border-app-border bg-app-surface shadow-2xl ${
-                          selectDirection === 'up' ? 'bottom-[calc(100%+0.5rem)]' : 'top-[calc(100%+0.5rem)]'
+                        className={`z-50 overflow-y-auto overscroll-contain rounded-[var(--app-radius-md)] border border-app-border bg-app-surface shadow-2xl ${
+                          selectDropdownFixed
+                            ? 'fixed'
+                            : `absolute right-0 w-full ${
+                                selectDirection === 'up' ? 'bottom-[calc(100%+0.5rem)]' : 'top-[calc(100%+0.5rem)]'
+                              }`
                         }`}
+                        style={selectDropdownStyle}
                       >
                         {creditPackages.map((option) => {
                           const selected = !customMode && selectedAmount === option.amount;
@@ -503,20 +664,34 @@ export const DeliveryBalanceHub: React.FC = () => {
 
                         <button
                           type="button"
-                          onClick={() => {
-                            setCustomMode(true);
-                            setCustomAmount(selectedAmount ?? defaultAmount);
-                          }}
-                          className="flex h-12 w-full items-center gap-2 border-t border-app-border px-4 text-sm font-semibold text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text"
+                          aria-controls="custom-amount-panel"
+                          aria-expanded={customPanelOpen}
+                          onClick={toggleCustomAmountPanel}
+                          className={`flex h-12 w-full items-center justify-between gap-3 border-t border-app-border px-4 text-sm font-semibold transition-colors hover:bg-app-surface-raised hover:text-app-text ${
+                            customPanelOpen || customMode
+                              ? 'bg-app-surface-raised text-app-text'
+                              : 'text-app-text-secondary'
+                          }`}
                         >
-                          <Pencil className="h-4 w-4" />
-                          כמות מותאמת
+                          <span className="inline-flex min-w-0 items-center gap-2">
+                            <Pencil className="h-4 w-4 shrink-0" />
+                            <span className="truncate">כמות מותאמת</span>
+                          </span>
+                          <ChevronDown
+                            className={`h-4 w-4 shrink-0 transition-transform ${
+                              customPanelOpen ? 'rotate-180' : ''
+                            }`}
+                          />
                         </button>
 
-                        {customMode ? (
-                          <div className="border-t border-app-border px-4 py-3">
-                            <div className="flex items-center justify-between gap-2">
-                              <label className="flex min-w-0 items-center justify-end gap-1.5 text-sm font-bold text-app-text">
+                        {customPanelOpen ? (
+                          <div
+                            ref={customAmountPanelRef}
+                            id="custom-amount-panel"
+                            className="border-t border-app-border px-4 py-3"
+                          >
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
+                              <label className="flex min-w-0 items-center justify-between gap-2 text-sm font-bold text-app-text sm:justify-end sm:gap-1.5">
                                 <span className="shrink-0 text-sm font-bold text-app-text">משלוחים</span>
                                 <input
                                   type="number"
@@ -530,12 +705,12 @@ export const DeliveryBalanceHub: React.FC = () => {
                                     setCustomAmount(limitCustomAmountInput(Number(event.target.value)))
                                   }
                                   onFocus={(event) => event.currentTarget.select()}
-                                  className="h-8 w-14 border-0 bg-transparent px-0 text-left text-sm font-bold tabular-nums text-app-text outline-none transition-colors focus:ring-0 sm:h-9 sm:w-24"
+                                  className="h-8 w-20 border-0 bg-transparent px-0 text-left text-sm font-bold tabular-nums text-app-text outline-none transition-colors focus:ring-0 sm:h-9 sm:w-24"
                                   dir="ltr"
                                 />
                               </label>
-                              <div className="flex shrink-0 items-center justify-end gap-2">
-                                <span className="max-w-20 shrink-0 text-left text-xs font-bold text-app-text-secondary sm:max-w-none sm:text-sm">
+                              <div className="flex min-w-0 items-center justify-between gap-2 sm:shrink-0 sm:justify-end">
+                                <span className="min-w-0 shrink text-left text-xs font-bold text-app-text-secondary sm:max-w-none sm:shrink-0 sm:text-sm">
                                   <span className="block tabular-nums">{formatCurrency(customDraftPrice)}</span>
                                   <span className="hidden text-xs font-semibold text-app-text-muted sm:block">
                                     {formatCurrency(customDraftUnitPrice)} למשלוח
@@ -594,6 +769,7 @@ export const DeliveryBalanceHub: React.FC = () => {
                       if (!canContinuePurchase) return;
                       setPurchaseStep('payment');
                       setSelectOpen(false);
+                      setCustomPanelOpen(false);
                     }}
                     disabled={!canContinuePurchase}
                     className="h-10 rounded-full bg-app-text px-5 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:bg-app-surface-raised disabled:text-app-text-muted max-sm:w-full"
