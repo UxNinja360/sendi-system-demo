@@ -211,15 +211,6 @@ export const DeliveryBalanceHub: React.FC = () => {
   const canContinuePurchase = selectedAmount !== null;
   const customDraftPrice = getPackagePrice(clampCustomAmount(customAmount));
   const customDraftUnitPrice = getPackageUnitPrice(clampCustomAmount(customAmount));
-  const purchasedInvoiceAmount = useMemo(
-    () => purchaseInvoices.reduce((total, invoice) => total + invoice.amount, 0),
-    [purchaseInvoices],
-  );
-  const purchasedInvoiceTotal = useMemo(
-    () => purchaseInvoices.reduce((total, invoice) => total + invoice.total, 0),
-    [purchaseInvoices],
-  );
-
   const openPurchaseDialog = () => {
     setPurchaseOpen(true);
     setPurchaseStep('amount');
@@ -318,8 +309,8 @@ export const DeliveryBalanceHub: React.FC = () => {
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-[76rem] flex-col gap-7 text-right" dir="rtl">
-      <header className="pb-4">
+    <div className="mx-auto flex w-full max-w-[76rem] flex-col gap-5 text-right" dir="rtl">
+      <header>
         <div className="flex items-center justify-start">
           <div className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-[var(--app-radius-sm)] border border-app-border bg-app-background px-4 text-sm font-bold text-app-text">
             <span>קרדיטים</span>
@@ -350,12 +341,6 @@ export const DeliveryBalanceHub: React.FC = () => {
       </header>
 
       <section className="space-y-5">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <InvoiceSummaryCard label="חשבוניות" value={formatNumber(purchaseInvoices.length)} />
-            <InvoiceSummaryCard label="משלוחים שנרכשו" value={formatNumber(purchasedInvoiceAmount)} />
-            <InvoiceSummaryCard label="סכום רכישות" value={formatCurrency(purchasedInvoiceTotal)} />
-          </div>
-
           <div className="overflow-hidden rounded-none border border-app-border bg-app-surface">
             {purchaseInvoices.length > 0 ? (
               <div className="overflow-x-auto">
@@ -684,14 +669,4 @@ export const DeliveryBalanceHub: React.FC = () => {
     </div>
   );
 };
-
-const InvoiceSummaryCard: React.FC<{
-  label: string;
-  value: string;
-}> = ({ label, value }) => (
-  <div className="rounded-none border border-app-border bg-app-surface p-4">
-    <div className="text-xs font-bold text-app-text-secondary">{label}</div>
-    <div className="mt-3 text-xl font-bold tabular-nums text-app-text">{value}</div>
-  </div>
-);
 
