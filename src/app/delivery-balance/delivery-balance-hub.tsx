@@ -2,7 +2,6 @@ import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 're
 import {
   ChevronDown,
   CreditCard,
-  FileText,
   Minus,
   Pencil,
   Plus,
@@ -11,7 +10,6 @@ import {
 } from 'lucide-react';
 import { useDelivery } from '../context/delivery-context-value';
 
-type BalanceTab = 'usage' | 'invoices';
 type PurchaseStep = 'amount' | 'payment';
 type SelectDirection = 'down' | 'up';
 
@@ -54,6 +52,12 @@ const formatCurrency = (value: number) =>
     minimumFractionDigits: 2,
     style: 'currency',
   }).format(value);
+
+const formatTableCurrency = (value: number) =>
+  `${new Intl.NumberFormat('he-IL', {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
+  }).format(value)} ₪`;
 
 const formatDateTime = (date: Date) =>
   new Intl.DateTimeFormat('he-IL', {
@@ -153,7 +157,6 @@ export const DeliveryBalanceHub: React.FC = () => {
   const amountDropdownRef = useRef<HTMLDivElement>(null);
   const amountSelectRef = useRef<HTMLDivElement>(null);
   const purchaseCardRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<BalanceTab>('usage');
   const [purchaseOpen, setPurchaseOpen] = useState(false);
   const [purchaseStep, setPurchaseStep] = useState<PurchaseStep>('amount');
   const [selectOpen, setSelectOpen] = useState(false);
@@ -312,24 +315,14 @@ export const DeliveryBalanceHub: React.FC = () => {
       type: 'ADD_DELIVERY_BALANCE',
     });
     closePurchaseDialog();
-    setActiveTab('invoices');
   };
 
   return (
     <div className="mx-auto flex w-full max-w-[76rem] flex-col gap-7 text-right" dir="rtl">
       <header className="pb-4">
-        <div className="flex items-center justify-between">
-          <div className="inline-flex w-fit items-center rounded-[var(--app-radius-sm)] border border-app-border bg-app-background p-1">
-            <TabButton active={activeTab === 'usage'} onClick={() => setActiveTab('usage')}>
-              שימוש
-            </TabButton>
-            <TabButton active={activeTab === 'invoices'} onClick={() => setActiveTab('invoices')}>
-              חשבוניות
-            </TabButton>
-          </div>
-
+        <div className="flex items-center justify-start">
           <div className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-[var(--app-radius-sm)] border border-app-border bg-app-background px-4 text-sm font-bold text-app-text">
-            <span>יתרת משלוחים</span>
+            <span>קרדיטים</span>
             <span className={`tabular-nums ${deliveryBalanceTextClass}`}>
               {formatNumber(currentBalance)}
             </span>
@@ -356,8 +349,7 @@ export const DeliveryBalanceHub: React.FC = () => {
         </div>
       </header>
 
-      {activeTab === 'usage' ? null : (
-        <section className="space-y-5">
+      <section className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-3">
             <InvoiceSummaryCard label="חשבוניות" value={formatNumber(purchaseInvoices.length)} />
             <InvoiceSummaryCard label="משלוחים שנרכשו" value={formatNumber(purchasedInvoiceAmount)} />
@@ -365,58 +357,64 @@ export const DeliveryBalanceHub: React.FC = () => {
           </div>
 
           <div className="overflow-hidden rounded-none border border-app-border bg-app-surface">
-            <div className="grid grid-cols-[minmax(0,1.15fr)_150px_120px_130px_130px] border-b border-app-border px-4 py-3 text-xs font-bold text-app-text-secondary max-lg:hidden">
-              <span>חשבונית</span>
-              <span>תאריך</span>
-              <span>כמות</span>
-              <span>מחיר למשלוח</span>
-              <span className="text-left">סה״כ</span>
-            </div>
-
             {purchaseInvoices.length > 0 ? (
-              purchaseInvoices.map((invoice) => {
-                const issuedAt = new Date(invoice.issuedAt);
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[760px] table-fixed border-collapse text-right">
+                  <colgroup>
+                    <col className="w-[34%]" />
+                    <col className="w-[18%]" />
+                    <col className="w-[14%]" />
+                    <col className="w-[17%]" />
+                    <col className="w-[17%]" />
+                  </colgroup>
+                  <thead className="bg-app-background/35 text-xs font-bold text-app-text-secondary">
+                    <tr className="border-b border-app-border">
+                      <th scope="col" className="px-5 py-3 text-right">חשבונית</th>
+                      <th scope="col" className="px-5 py-3 text-right">תאריך</th>
+                      <th scope="col" className="px-5 py-3 text-right">כמות</th>
+                      <th scope="col" className="px-5 py-3 text-right">מחיר למשלוח</th>
+                      <th scope="col" className="px-5 py-3 text-right">סה״כ</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-app-border">
+                    {purchaseInvoices.map((invoice) => {
+                      const issuedAt = new Date(invoice.issuedAt);
 
-                return (
-                  <div
-                    key={invoice.id}
-                    className="grid gap-3 border-b border-app-border px-4 py-4 last:border-b-0 lg:grid-cols-[minmax(0,1.15fr)_150px_120px_130px_130px] lg:items-center"
-                  >
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 text-sm font-bold text-app-text">
-                        <FileText className="h-4 w-4 text-app-brand-text" />
-                        <span className="truncate">{invoice.invoiceNumber}</span>
-                      </div>
-                      <div className="mt-1 text-xs font-semibold text-app-text-muted lg:hidden">
-                        {formatDateTime(issuedAt)}
-                      </div>
-                    </div>
-                    <div className="hidden text-xs font-semibold text-app-text-secondary lg:block">
-                      {formatDateTime(issuedAt)}
-                    </div>
-                    <div className="text-sm font-bold tabular-nums text-app-text-secondary">
-                      {formatNumber(invoice.amount)}
-                    </div>
-                    <div className="text-sm font-bold tabular-nums text-app-text-secondary">
-                      {formatCurrency(invoice.unitPrice)}
-                    </div>
-                    <div className="text-left text-sm font-bold tabular-nums text-app-text" dir="ltr">
-                      {formatCurrency(invoice.total)}
-                    </div>
-                    <div className="text-xs font-semibold text-app-text-muted lg:col-span-5">
-                      יתרה אחרי רכישה: {formatNumber(invoice.balanceAfter)}
-                    </div>
-                  </div>
-                );
-              })
+                      return (
+                        <tr key={invoice.id} className="h-[72px] transition-colors hover:bg-app-surface-raised/30">
+                          <td className="px-5 py-4 align-middle">
+                            <div className="truncate text-sm font-bold text-app-text" dir="ltr">
+                              {invoice.invoiceNumber}
+                            </div>
+                            <div className="mt-1 text-xs font-semibold text-app-text-muted">
+                              יתרה אחרי רכישה: {formatNumber(invoice.balanceAfter)}
+                            </div>
+                          </td>
+                          <td className="whitespace-nowrap px-5 py-4 align-middle text-sm font-semibold tabular-nums text-app-text-secondary">
+                            {formatDateTime(issuedAt)}
+                          </td>
+                          <td className="whitespace-nowrap px-5 py-4 align-middle text-sm font-bold tabular-nums text-app-text-secondary">
+                            {formatNumber(invoice.amount)}
+                          </td>
+                          <td className="whitespace-nowrap px-5 py-4 align-middle text-sm font-bold tabular-nums text-app-text-secondary" dir="ltr">
+                            {formatTableCurrency(invoice.unitPrice)}
+                          </td>
+                          <td className="whitespace-nowrap px-5 py-4 align-middle text-sm font-bold tabular-nums text-app-text" dir="ltr">
+                            {formatTableCurrency(invoice.total)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             ) : (
               <div className="flex min-h-44 items-center justify-center px-4 py-8 text-center text-sm text-app-text-secondary">
                 עדיין אין חשבוניות רכישה.
               </div>
             )}
           </div>
-        </section>
-      )}
+      </section>
 
       {purchaseOpen ? (
         <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto overscroll-contain bg-black/70 p-4 backdrop-blur-sm sm:p-6">
@@ -686,22 +684,6 @@ export const DeliveryBalanceHub: React.FC = () => {
     </div>
   );
 };
-
-const TabButton: React.FC<{
-  active: boolean;
-  children: React.ReactNode;
-  onClick: () => void;
-}> = ({ active, children, onClick }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className={`h-8 rounded-[var(--app-radius-sm)] px-4 text-sm font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 ${
-      active ? 'bg-app-surface-raised text-app-text shadow-sm' : 'text-app-text-secondary hover:bg-app-surface hover:text-app-text'
-    }`}
-  >
-    {children}
-  </button>
-);
 
 const InvoiceSummaryCard: React.FC<{
   label: string;
