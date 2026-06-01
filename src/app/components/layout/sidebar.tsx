@@ -194,12 +194,14 @@ const BusinessAvatar: React.FC<{ name: string; className?: string }> = ({ name, 
 
 const BusinessPlanBadge: React.FC<{
   ariaLabel?: string;
+  appearance?: 'badge' | 'plain';
   className?: string;
   label?: string;
   onClick?: (event: React.MouseEvent<HTMLSpanElement>) => void;
   tone?: 'default' | 'deliveryBalanceHigh' | 'deliveryBalanceLow';
 }> = ({
   ariaLabel,
+  appearance = 'badge',
   className = '',
   label = 'PRO',
   onClick,
@@ -211,13 +213,20 @@ const BusinessPlanBadge: React.FC<{
       : tone === 'deliveryBalanceHigh'
         ? 'text-[#f59e0b] dark:text-[#fbbf24]'
         : 'text-app-text dark:text-[#EDEDED]';
+  const appearanceClass =
+    appearance === 'plain'
+      ? 'px-0 text-[11px] font-bold'
+      : 'rounded-full border border-app-nav-border bg-app-surface-raised px-2 text-[11px] font-medium dark:border-[#2E2E2E] dark:bg-[#1F1F1F]';
+  const interactionClass = onClick
+    ? appearance === 'plain'
+      ? 'cursor-pointer transition-colors hover:brightness-125'
+      : 'cursor-pointer transition-colors hover:border-app-border-strong hover:bg-app-interactive-hover dark:hover:bg-[#2D3548]'
+    : '';
 
   return (
     <span
       aria-label={ariaLabel}
-      className={`inline-flex h-[18px] shrink-0 items-center rounded-full border border-app-nav-border bg-app-surface-raised px-2 text-[11px] font-medium leading-none dark:border-[#2E2E2E] dark:bg-[#1F1F1F] ${
-        onClick ? 'cursor-pointer transition-colors hover:border-app-border-strong hover:bg-app-nav-hover-bg' : ''
-      } ${toneClass} ${className}`}
+      className={`inline-flex h-[18px] shrink-0 items-center leading-none ${interactionClass} ${appearanceClass} ${toneClass} ${className}`}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
     >
@@ -1040,18 +1049,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
             className={`relative flex min-w-0 ${isExpanded ? 'flex-1' : 'mx-auto'}`}
           >
             {isExpanded ? (
-              <button
-                type="button"
-                data-haptic="medium"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setBusinessSearch('');
-                  setIsBusinessPopupOpen((value) => !value);
-                }}
+              <div
                 className="flex h-10 w-full min-w-0 flex-1 items-center gap-2 rounded-[6px] px-2 text-right text-app-text transition-colors focus:outline-none"
-                aria-expanded={isBusinessPopupOpen}
-                aria-haspopup="dialog"
-                aria-label={LABELS.selectBusiness}
               >
                 <BusinessAvatar name={selectedBusiness} className="h-5 w-5 text-[9px]" />
                 <span className="min-w-0 flex-1 truncate text-sm font-semibold">
@@ -1059,20 +1058,31 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                 </span>
                 <BusinessPlanBadge
                   ariaLabel={LABELS.deliveryBalance}
+                  appearance="plain"
                   label={formatSidebarBadgeNumber(state.deliveryBalance)}
                   onClick={handleHeaderDeliveryBalanceClick}
                   tone={deliveryBalanceTone}
                 />
-                <span
+                <button
+                  type="button"
+                  data-haptic="medium"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setBusinessSearch('');
+                    setIsBusinessPopupOpen((value) => !value);
+                  }}
                   className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] border transition-colors ${
                     isBusinessPopupOpen
                       ? 'border-app-border-strong bg-app-surface-raised text-app-text'
                       : 'border-transparent text-app-text-secondary hover:border-app-border-strong hover:bg-app-surface-raised hover:text-app-text'
                   }`}
+                  aria-expanded={isBusinessPopupOpen}
+                  aria-haspopup="dialog"
+                  aria-label={LABELS.selectBusiness}
                 >
                   <ChevronsUpDown className="h-3.5 w-3.5" />
-                </span>
-              </button>
+                </button>
+              </div>
             ) : (
               <SidebarIconTooltip label={selectedBusiness} className="hidden justify-center md:flex">
                 <button

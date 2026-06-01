@@ -6,6 +6,7 @@ import {
   Minus,
   Pencil,
   Plus,
+  Sparkles,
   X,
 } from 'lucide-react';
 import { useDelivery } from '../context/delivery-context-value';
@@ -198,6 +199,10 @@ export const DeliveryBalanceHub: React.FC = () => {
   }, [customMode, selectOpen]);
 
   const currentBalance = state.deliveryBalance;
+  const deliveryBalanceTextClass =
+    currentBalance <= 100
+      ? 'text-[#dc2626] dark:text-[#f87171]'
+      : 'text-[#f59e0b] dark:text-[#fbbf24]';
   const selectedPrice = selectedAmount === null ? 0 : getPackagePrice(selectedAmount);
   const selectedUnitPrice = selectedAmount === null ? 0 : getPackageUnitPrice(selectedAmount);
   const canContinuePurchase = selectedAmount !== null;
@@ -313,7 +318,7 @@ export const DeliveryBalanceHub: React.FC = () => {
   return (
     <div className="mx-auto flex w-full max-w-[76rem] flex-col gap-7 text-right" dir="rtl">
       <header className="pb-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center justify-between">
           <div className="inline-flex w-fit items-center rounded-[var(--app-radius-sm)] border border-app-border bg-app-background p-1">
             <TabButton active={activeTab === 'usage'} onClick={() => setActiveTab('usage')}>
               שימוש
@@ -323,43 +328,36 @@ export const DeliveryBalanceHub: React.FC = () => {
             </TabButton>
           </div>
 
-          <button
-            type="button"
-            onClick={openPurchaseDialog}
-            className="inline-flex h-10 w-fit items-center justify-center rounded-[var(--app-radius-sm)] bg-app-text px-5 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/35 max-sm:w-full"
-          >
-            רכישת יתרה
-          </button>
+          <div className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-[var(--app-radius-sm)] border border-app-border bg-app-background px-4 text-sm font-bold text-app-text">
+            <span>יתרת משלוחים</span>
+            <span className={`tabular-nums ${deliveryBalanceTextClass}`}>
+              {formatNumber(currentBalance)}
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface px-4 py-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-3 text-app-text-secondary">
+              <Sparkles className="h-4 w-4 shrink-0 text-app-text-muted" />
+              <p className="min-w-0 text-sm font-semibold leading-5 text-app-text-secondary">
+                הוסף יתרה לחשבון כדי להמשיך לקבל ולשבץ משלוחים.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={openPurchaseDialog}
+              className="inline-flex h-9 shrink-0 items-center justify-center rounded-[var(--app-radius-sm)] bg-app-text px-5 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/35 max-sm:w-full"
+            >
+              רכישת יתרה
+            </button>
+          </div>
         </div>
       </header>
 
-      {activeTab === 'usage' ? (
-        <section className="space-y-7">
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-none border border-app-border bg-app-surface p-5">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2 text-sm font-semibold text-app-text-secondary">
-                    יתרת משלוחים
-                  </div>
-                  <div className="mt-4 text-4xl font-bold leading-none tabular-nums text-app-text">
-                    {formatNumber(currentBalance)}
-                  </div>
-                  <p className="mt-3 text-sm text-app-text-secondary">
-                    השתמש ביתרה כדי להמשיך לקבל ולשבץ משלוחים.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      ) : (
+      {activeTab === 'usage' ? null : (
         <section className="space-y-5">
-          <div className="space-y-1">
-            <h1 className="text-xl font-bold text-app-text">חשבוניות רכישה</h1>
-            <p className="text-sm text-app-text-secondary">חשבוניות עבור משלוחים שנרכשו דרך יתרת המשלוחים.</p>
-          </div>
-
           <div className="grid gap-4 sm:grid-cols-3">
             <InvoiceSummaryCard label="חשבוניות" value={formatNumber(purchaseInvoices.length)} />
             <InvoiceSummaryCard label="משלוחים שנרכשו" value={formatNumber(purchasedInvoiceAmount)} />
