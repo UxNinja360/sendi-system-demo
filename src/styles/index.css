@@ -1065,7 +1065,7 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   outline: none;
 }
 
-.deliveries-map-split-close {
+.deliveries-map-split-settings-button {
   align-items: center;
   background: color-mix(in srgb, var(--app-surface) 94%, transparent);
   border: 1px solid var(--app-nav-border);
@@ -1082,25 +1082,6 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   z-index: 960;
 }
 
-.deliveries-map-split-settings-button {
-  align-items: center;
-  background: color-mix(in srgb, var(--app-surface) 94%, transparent);
-  border: 1px solid var(--app-nav-border);
-  border-radius: 999px;
-  color: var(--app-text);
-  display: inline-flex;
-  height: 34px;
-  justify-content: center;
-  left: auto;
-  position: absolute;
-  right: 12px;
-  top: 12px;
-  width: 34px;
-  z-index: 960;
-}
-
-.deliveries-map-split-close:hover,
-.deliveries-map-split-close:focus-visible,
 .deliveries-map-split-settings-button:hover,
 .deliveries-map-split-settings-button:focus-visible {
   background: var(--app-surface-raised);

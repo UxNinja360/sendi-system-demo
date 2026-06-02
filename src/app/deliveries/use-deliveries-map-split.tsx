@@ -8,7 +8,7 @@ import {
   type SetStateAction,
 } from 'react';
 import { createPortal } from 'react-dom';
-import { Layers, X } from 'lucide-react';
+import { Layers } from 'lucide-react';
 
 import { addAppTopBarActionListener } from '../components/layout/app-top-bar-actions';
 import { Toggle } from '../components/common/toggle';
@@ -42,6 +42,8 @@ const COLLAPSED_SIDEBAR_WIDTH = 60;
 const DEFAULT_MAP_SHEET_HEIGHT = 52;
 const MIN_MAP_SHEET_HEIGHT = 30;
 const MAX_MAP_SHEET_HEIGHT = 100;
+const CLOSE_MAP_SHEET_HEIGHT_THRESHOLD = 99;
+const CLOSE_MAP_SHEET_TOP_OFFSET = 8;
 
 type MapLayerKey = 'deliveries' | 'couriers' | 'restaurants';
 
@@ -207,7 +209,12 @@ const getSavedMapSheetHeight = () => {
   if (typeof localStorage === 'undefined') return DEFAULT_MAP_SHEET_HEIGHT;
 
   const saved = Number(localStorage.getItem(MAP_SHEET_HEIGHT_STORAGE_KEY));
-  return Number.isFinite(saved) ? clampMapSheetHeight(saved) : DEFAULT_MAP_SHEET_HEIGHT;
+  if (!Number.isFinite(saved)) return DEFAULT_MAP_SHEET_HEIGHT;
+
+  const clampedHeight = clampMapSheetHeight(saved);
+  return clampedHeight >= CLOSE_MAP_SHEET_HEIGHT_THRESHOLD
+    ? DEFAULT_MAP_SHEET_HEIGHT
+    : clampedHeight;
 };
 
 const readStoredMapLayerVisibility = (): MapLayerVisibility => {
@@ -316,16 +323,33 @@ export const useDeliveriesMapSplit = ({
     setMapWidth(clampMapWidth((clientX / window.innerWidth) * 100));
   }, []);
 
-  const updateMapSheetHeightFromClientY = useCallback((clientY: number) => {
-    if (typeof window === 'undefined' || window.innerHeight <= 0) return;
+  const closeMapFromFullSheetStretch = useCallback(() => {
+    setMapSheetHeight(DEFAULT_MAP_SHEET_HEIGHT);
+    setIsSheetResizing(false);
+    setMapOpen(false);
+  }, [setMapOpen]);
 
-    setMapSheetHeight(clampMapSheetHeight(((window.innerHeight - clientY) / window.innerHeight) * 100));
-  }, []);
+  const updateMapSheetHeightFromClientY = useCallback((clientY: number) => {
+    if (typeof window === 'undefined' || window.innerHeight <= 0) return false;
+
+    const nextHeight = ((window.innerHeight - clientY) / window.innerHeight) * 100;
+    if (
+      clientY <= CLOSE_MAP_SHEET_TOP_OFFSET ||
+      nextHeight >= CLOSE_MAP_SHEET_HEIGHT_THRESHOLD
+    ) {
+      closeMapFromFullSheetStretch();
+      return true;
+    }
+
+    setMapSheetHeight(clampMapSheetHeight(nextHeight));
+    return false;
+  }, [closeMapFromFullSheetStretch]);
 
   const beginMobileSheetResize = useCallback((clientY: number) => {
     if (typeof window === 'undefined' || window.innerWidth >= 1024) return false;
 
-    updateMapSheetHeightFromClientY(clientY);
+    if (updateMapSheetHeightFromClientY(clientY)) return false;
+
     setIsSheetResizing(true);
     return true;
   }, [updateMapSheetHeightFromClientY]);
@@ -375,8 +399,13 @@ export const useDeliveriesMapSplit = ({
     if (nextHeight === null) return;
 
     event.preventDefault();
+    if (nextHeight >= CLOSE_MAP_SHEET_HEIGHT_THRESHOLD) {
+      closeMapFromFullSheetStretch();
+      return;
+    }
+
     setMapSheetHeight(clampMapSheetHeight(nextHeight));
-  }, [mapSheetHeight]);
+  }, [closeMapFromFullSheetStretch, mapSheetHeight]);
 
   useEffect(() => {
     if (!isResizing) return undefined;
@@ -565,16 +594,6 @@ export const useDeliveriesMapSplit = ({
               role="separator"
               title="גרור למעלה או למטה לשינוי גובה פאנל המשלוחים. דאבל קליק מאפס."
             />
-            <button
-              type="button"
-              className="deliveries-map-split-close"
-              data-haptic="light"
-              onClick={() => setMapOpen(false)}
-              aria-label="סגור מפה"
-              title="סגור מפה"
-            >
-              <X className="h-4 w-4" />
-            </button>
             <button
               type="button"
               className="deliveries-map-split-resizer"
