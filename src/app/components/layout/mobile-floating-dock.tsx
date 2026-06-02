@@ -35,7 +35,7 @@ export const MobileFloatingDock: FC<MobileFloatingDockProps> = ({ onOpenMenu }) 
   return (
     <div
       dir="ltr"
-      className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+0.875rem)] left-1/2 z-40 flex h-12 -translate-x-1/2 items-center overflow-hidden rounded-[18px] border border-app-border bg-app-surface/95 text-app-text shadow-[0_16px_40px_rgba(0,0,0,0.28)] backdrop-blur-xl lg:hidden"
+      className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+0.875rem)] left-1/2 z-40 flex h-12 -translate-x-1/2 items-center overflow-hidden rounded-[18px] bg-[color-mix(in_srgb,var(--app-surface-raised)_92%,var(--app-text)_5%)] text-app-text shadow-[0_16px_40px_color-mix(in_srgb,var(--app-surface-inset)_58%,transparent)] backdrop-blur-xl lg:hidden"
       aria-label={QUICK_ACTIONS_LABEL}
     >
       <button
@@ -44,8 +44,8 @@ export const MobileFloatingDock: FC<MobileFloatingDockProps> = ({ onOpenMenu }) 
         onClick={handleOpenMap}
         className={`flex h-full min-w-[5.75rem] items-center justify-center gap-2 px-4 text-sm font-semibold transition-colors ${
           mapButtonActive
-            ? 'bg-app-accent/10 text-app-accent'
-            : 'text-app-text-secondary hover:bg-app-surface-raised hover:text-app-text'
+            ? 'bg-[color-mix(in_srgb,var(--app-brand)_18%,transparent)] text-app-text'
+            : 'text-app-text-secondary hover:bg-[color-mix(in_srgb,var(--app-text-secondary)_12%,transparent)] hover:text-app-text'
         }`}
         aria-label={OPEN_MAP_LABEL}
         aria-pressed={mapButtonActive}
@@ -54,13 +54,16 @@ export const MobileFloatingDock: FC<MobileFloatingDockProps> = ({ onOpenMenu }) 
         <span>{MAP_LABEL}</span>
       </button>
 
-      <span className="h-6 w-px bg-app-border" aria-hidden="true" />
+      <span
+        className="h-6 w-px bg-[color-mix(in_srgb,var(--app-text-secondary)_22%,transparent)]"
+        aria-hidden="true"
+      />
 
       <button
         type="button"
         data-haptic="medium"
         onClick={onOpenMenu}
-        className="flex h-full w-12 items-center justify-center text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text"
+        className="flex h-full w-12 items-center justify-center text-app-text-secondary transition-colors hover:bg-[color-mix(in_srgb,var(--app-text-secondary)_12%,transparent)] hover:text-app-text"
         aria-label={OPEN_MENU_LABEL}
       >
         <Menu className="h-5 w-5" />
