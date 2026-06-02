@@ -41,7 +41,7 @@ const DEFAULT_EXPANDED_SIDEBAR_WIDTH = 250;
 const COLLAPSED_SIDEBAR_WIDTH = 60;
 const DEFAULT_MAP_SHEET_HEIGHT = 52;
 const MIN_MAP_SHEET_HEIGHT = 30;
-const MAX_MAP_SHEET_HEIGHT = 86;
+const MAX_MAP_SHEET_HEIGHT = 100;
 
 type MapLayerKey = 'deliveries' | 'couriers' | 'restaurants';
 
