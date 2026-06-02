@@ -1021,7 +1021,6 @@ const loadInitialState = (baseState: DeliveryState): DeliveryState => {
     const isSystemOpen = Boolean(parsed.isSystemOpen);
     const canReceiveDeliveries =
       isSystemOpen &&
-      hasAvailableDeliveryCourier(couriers) &&
       hasAvailableDeliveryIntakeRestaurant(syncedRestaurants);
     const isReceivingDeliveries =
       canReceiveDeliveries &&
@@ -1208,18 +1207,6 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     ) {
       showActionInfoToast('אין מסעדות זמינות במערכת', {
         description: 'לא ניתן להדליק קבלת משלוחים כי אין מסעדות זמינות. הוסף מסעדות או הדלק את סנדי פלוס.',
-        duration: ACTION_TOAST_DURATION_MS,
-      });
-      return;
-    }
-
-    if (
-      action.type === 'TOGGLE_DELIVERY_INTAKE' &&
-      !previousState.isReceivingDeliveries &&
-      !hasAvailableDeliveryCourier(previousState.couriers)
-    ) {
-      showActionInfoToast('אין שליחים זמינים', {
-        description: 'חייבים שליחים זמינים בשביל לקבל משלוחים. חבר שליח זמין או פתח משמרת לשליח.',
         duration: ACTION_TOAST_DURATION_MS,
       });
       return;

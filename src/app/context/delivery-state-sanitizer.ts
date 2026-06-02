@@ -288,7 +288,7 @@ export const sanitizeLoadedDeliveryState = (
   return {
     ...state,
     isSystemOpen,
-    isReceivingDeliveries: isSystemOpen && hasCouriers && Boolean(state.isReceivingDeliveries),
+    isReceivingDeliveries: isSystemOpen && Boolean(state.isReceivingDeliveries),
     autoAssignEnabled: isSystemOpen && hasCouriers && Boolean(state.autoAssignEnabled),
     deliveries,
     shifts,
