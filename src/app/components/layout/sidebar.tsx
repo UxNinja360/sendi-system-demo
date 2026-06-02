@@ -37,6 +37,7 @@ import { isRestaurantActiveForDisplay } from '../../utils/sendi-plus';
 import { AppTooltip as SidebarIconTooltip } from '../common/app-tooltip';
 import { playHaptic } from '../../utils/haptics';
 import { Toggle } from '../common/toggle';
+import { BusinessAvatar } from './business-avatar';
 import {
   activateWorkspaceAccount,
   readWorkspaceAccounts,
@@ -173,24 +174,6 @@ const SidebarNavBadge: React.FC<{
 
   return <span className={className}>{badge.value}</span>;
 };
-
-const getBusinessInitials = (name: string) =>
-  name
-    .split(/[\s-]+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase();
-
-const BusinessAvatar: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
-  <span
-    className={`flex shrink-0 items-center justify-center rounded-full bg-app-brand-solid font-bold text-app-background shadow-[inset_0_0_0_1px_rgba(255,255,255,0.22)] ${className ?? 'h-7 w-7 text-[11px]'}`}
-    aria-hidden="true"
-  >
-    {getBusinessInitials(name)}
-  </span>
-);
 
 const BusinessPlanBadge: React.FC<{
   ariaLabel?: string;
@@ -411,6 +394,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       account.phone.includes(query)
     );
   }, [workspaceAccounts, businessSearch]);
+
+  const toggleBusinessPopup = useCallback(() => {
+    setBusinessSearch('');
+    setIsBusinessPopupOpen((value) => !value);
+  }, []);
 
   const switchWorkspaceAccount = useCallback((account: WorkspaceAccount) => {
     if (account.id === state.workspaceId) {
@@ -1040,43 +1028,36 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
             className={`relative flex min-w-0 ${isExpanded ? 'flex-1' : 'mx-auto'}`}
           >
             {isExpanded ? (
-              <div
-                className="flex h-10 w-full min-w-0 flex-1 items-center gap-2 rounded-[6px] px-2 text-right text-app-text transition-colors focus:outline-none"
+              <button
+                type="button"
+                data-haptic="medium"
+                onClick={toggleBusinessPopup}
+                className="flex h-10 w-full min-w-0 flex-1 items-center gap-2 rounded-[6px] px-2 text-right text-app-text transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/25"
+                aria-expanded={isBusinessPopupOpen}
+                aria-haspopup="dialog"
+                aria-label={LABELS.selectBusiness}
               >
                 <BusinessAvatar name={selectedBusiness} className="h-5 w-5 text-[9px]" />
                 <span className="min-w-0 flex-1 truncate text-sm font-semibold">
                   {selectedBusiness}
                 </span>
-                <button
-                  type="button"
-                  data-haptic="medium"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    setBusinessSearch('');
-                    setIsBusinessPopupOpen((value) => !value);
-                  }}
+                <span
                   className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] border transition-colors ${
                     isBusinessPopupOpen
                       ? 'border-app-border-strong bg-app-surface-raised text-app-text'
                       : 'border-transparent text-app-text-secondary hover:border-app-border-strong hover:bg-app-surface-raised hover:text-app-text'
                   }`}
-                  aria-expanded={isBusinessPopupOpen}
-                  aria-haspopup="dialog"
-                  aria-label={LABELS.selectBusiness}
+                  aria-hidden="true"
                 >
                   <ChevronsUpDown className="h-3.5 w-3.5" />
-                </button>
-              </div>
+                </span>
+              </button>
             ) : (
               <SidebarIconTooltip label={selectedBusiness} className="hidden justify-center md:flex">
                 <button
                   type="button"
                   data-haptic="medium"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    setBusinessSearch('');
-                    setIsBusinessPopupOpen((value) => !value);
-                  }}
+                  onClick={toggleBusinessPopup}
                   className={`flex h-10 w-10 items-center justify-center rounded-[6px] transition-colors ${
                     isBusinessPopupOpen ? 'bg-[#1F1F1F]' : 'hover:bg-app-nav-hover-bg'
                   }`}

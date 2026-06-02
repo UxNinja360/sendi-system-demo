@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   Download,
   Map as MapIcon,
-  Menu,
   MessageSquare,
   MoreHorizontal,
   PackagePlus,
@@ -15,6 +14,7 @@ import { useDelivery } from '../../context/delivery-context-value';
 import { useDeliveriesMapOpen } from '../../deliveries/use-deliveries-map-split';
 import { formatOrderNumber } from '../../utils/order-number';
 import { emitAppTopBarAction, type AppTopBarAction } from './app-top-bar-actions';
+import { BusinessAvatar } from './business-avatar';
 
 type PageMenuAction = {
   action: AppTopBarAction;
@@ -149,6 +149,7 @@ export const AppTopBar: React.FC<AppTopBarProps> = ({ onOpenMobileMenu }) => {
   const mapOpen = useDeliveriesMapOpen();
   const currentItem = getNavItemForPath(location.pathname);
   const pageTitle = currentItem?.label ?? 'Sendi';
+  const workspaceBusinessName = state.workspaceName?.trim() || 'TLV RUNNERS';
   const pageMenuActions = getPageMenuActions(location.pathname, mapOpen);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -266,12 +267,14 @@ export const AppTopBar: React.FC<AppTopBarProps> = ({ onOpenMobileMenu }) => {
       {mapOpen ? (
         <div
           data-deliveries-map-sheet-grip="true"
-          className="inline-flex h-8 w-8 shrink-0 cursor-row-resize touch-none select-none items-center justify-center text-app-text-secondary/85 lg:hidden"
+          className="inline-flex h-8 w-8 shrink-0 cursor-row-resize touch-none select-none items-center justify-center text-app-text-secondary/90 lg:hidden"
           aria-hidden="true"
         >
-          <span className="flex h-4 w-4 flex-col items-center justify-center gap-[3px]">
-            <span className="h-[1.5px] w-3.5 rounded-full bg-current" />
-            <span className="h-[1.5px] w-3.5 rounded-full bg-current" />
+          <span className="flex h-6 w-6 items-center justify-center rounded-full border border-app-nav-border/70 bg-app-surface-raised/45 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+            <span className="flex flex-col items-center justify-center gap-[3px]">
+              <span className="h-[1.5px] w-3 rounded-full bg-current opacity-90" />
+              <span className="h-[1.5px] w-3 rounded-full bg-current opacity-55" />
+            </span>
           </span>
         </div>
       ) : (
@@ -279,10 +282,10 @@ export const AppTopBar: React.FC<AppTopBarProps> = ({ onOpenMobileMenu }) => {
           type="button"
           data-haptic="medium"
           onClick={onOpenMobileMenu}
-          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--app-radius-sm)] text-app-text-secondary transition-colors hover:bg-app-nav-hover-bg hover:text-app-text lg:hidden"
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--app-radius-sm)] transition-colors hover:bg-app-nav-hover-bg focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/25 lg:hidden"
           aria-label="פתח תפריט"
         >
-          <Menu className="h-4 w-4" />
+          <BusinessAvatar name={workspaceBusinessName} className="h-5 w-5 text-[8px]" />
         </button>
       )}
 
