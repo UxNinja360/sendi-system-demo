@@ -1,4 +1,4 @@
-import { Map as MapIcon, Menu } from 'lucide-react';
+import { Map as MapIcon, Menu, X } from 'lucide-react';
 import { useCallback, type FC } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 
@@ -47,15 +47,11 @@ export const MobileFloatingDock: FC<MobileFloatingDockProps> = ({ onOpenMenu }) 
         type="button"
         data-haptic="selection"
         onClick={handleOpenMap}
-        className={`flex h-full min-w-[5.75rem] items-center justify-center gap-2 px-4 text-sm font-semibold transition-colors ${
-          mapButtonActive
-            ? 'bg-[color-mix(in_srgb,var(--app-brand)_18%,transparent)] text-app-text'
-            : 'text-app-text-secondary hover:bg-[color-mix(in_srgb,var(--app-text-secondary)_12%,transparent)] hover:text-app-text'
-        }`}
+        className="flex h-full min-w-[5.75rem] items-center justify-center gap-2 px-4 text-sm font-semibold text-app-text-secondary transition-colors hover:bg-[color-mix(in_srgb,var(--app-text-secondary)_12%,transparent)] hover:text-app-text"
         aria-label={mapButtonActive ? CLOSE_MAP_LABEL : OPEN_MAP_LABEL}
         aria-pressed={mapButtonActive}
       >
-        <MapIcon className="h-4 w-4" />
+        {mapButtonActive ? <X className="h-4 w-4" /> : <MapIcon className="h-4 w-4" />}
         <span>{MAP_LABEL}</span>
       </button>
 

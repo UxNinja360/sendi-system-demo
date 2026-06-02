@@ -260,15 +260,27 @@ export const AppTopBar: React.FC<AppTopBarProps> = ({ onOpenMobileMenu }) => {
         hasSecondaryTabs ? '' : 'border-b border-app-nav-border'
       }`}
     >
-      <button
-        type="button"
-        data-haptic="medium"
-        onClick={onOpenMobileMenu}
-        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--app-radius-sm)] text-app-text-secondary transition-colors hover:bg-app-nav-hover-bg hover:text-app-text lg:hidden"
-        aria-label="פתח תפריט"
-      >
-        <Menu className="h-4 w-4" />
-      </button>
+      {mapOpen ? (
+        <div
+          className="pointer-events-none inline-flex h-8 w-8 shrink-0 cursor-row-resize items-center justify-center text-app-text-secondary/85 lg:hidden"
+          aria-hidden="true"
+        >
+          <span className="flex h-4 w-4 flex-col items-center justify-center gap-[3px]">
+            <span className="h-[1.5px] w-3.5 rounded-full bg-current" />
+            <span className="h-[1.5px] w-3.5 rounded-full bg-current" />
+          </span>
+        </div>
+      ) : (
+        <button
+          type="button"
+          data-haptic="medium"
+          onClick={onOpenMobileMenu}
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--app-radius-sm)] text-app-text-secondary transition-colors hover:bg-app-nav-hover-bg hover:text-app-text lg:hidden"
+          aria-label="פתח תפריט"
+        >
+          <Menu className="h-4 w-4" />
+        </button>
+      )}
 
       <div className="pointer-events-none absolute inset-y-0 right-14 left-14 flex items-center justify-center text-center lg:right-5 lg:left-16 lg:justify-start lg:text-right">
         {topBarBreadcrumb ? (
