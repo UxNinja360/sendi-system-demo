@@ -146,8 +146,6 @@ const TEXT = {
   playHaptic: 'רטט',
   appearance: 'תצוגה',
   appearanceDescription: 'העדפות תצוגה שמשפיעות על סביבת העבודה האישית.',
-  account: 'חשבון וחברה',
-  accountDescription: 'פעולות שמשפיעות על החשבון הנוכחי וחברת המשלוחים המחוברת אליו.',
   advanced: '\u05de\u05ea\u05e7\u05d3\u05dd',
   advancedDescription: '\u05e4\u05e2\u05d5\u05dc\u05d5\u05ea \u05de\u05e2\u05e8\u05db\u05ea \u05e8\u05d2\u05d9\u05e9\u05d5\u05ea. \u05de\u05d5\u05de\u05dc\u05e5 \u05dc\u05d2\u05e2\u05ea \u05d1\u05d4\u05df \u05e8\u05e7 \u05db\u05e9\u05d1\u05d0\u05de\u05ea \u05e6\u05e8\u05d9\u05da.',
   logout: '\u05d4\u05ea\u05e0\u05ea\u05e7\u05d5\u05ea',
@@ -708,31 +706,19 @@ const AccountTextField: React.FC<{
   </label>
 );
 
-const AccountSettingsPanel: React.FC<{
+const UserSettingsPanel: React.FC<{
   form: AccountFormState;
   onChange: <Key extends keyof AccountFormState>(key: Key, value: AccountFormState[Key]) => void;
   onSave: () => void;
 }> = ({ form, onChange, onSave }) => (
   <SectionCard
     icon={<Users className="h-4 w-4 text-app-brand" />}
-    title={TEXT.account}
-    description={TEXT.accountDescription}
+    title="פרטי משתמש"
+    description="שם המשתמש, הטלפון והתפקיד שלו במערכת."
+    hideHeader
   >
-    <div className="border-b border-[#f1f1f1] px-3 py-3 dark:border-app-border sm:px-4">
-      <div className="flex min-w-0 items-center gap-2.5">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-none bg-[#f5f5f5] text-app-brand dark:bg-app-surface">
-          <Users className="h-4 w-4" />
-        </div>
-        <div className="min-w-0">
-          <h2 className="truncate text-sm font-bold text-[#0d0d12] dark:text-app-text">
-            המשתמש שלי
-          </h2>
-          <p className="mt-0.5 truncate text-xs text-[#666d80] dark:text-app-text-secondary">
-            השם שמופיע בדשבורד, טלפון המשתמש והתפקיד שלו במערכת.
-          </p>
-        </div>
-      </div>
-      <div className="mt-3 grid gap-3 sm:grid-cols-3">
+    <div className="px-3 py-3 sm:px-4">
+      <div className="grid gap-3 sm:grid-cols-3">
         <AccountTextField
           label="שם משתמש"
           value={form.userName}
@@ -766,23 +752,34 @@ const AccountSettingsPanel: React.FC<{
           </div>
         </label>
       </div>
-    </div>
-
-    <div className="px-3 py-3 sm:px-4">
-      <div className="flex min-w-0 items-center gap-2.5">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-none bg-[#f5f5f5] text-app-brand dark:bg-app-surface">
-          <Store className="h-4 w-4" />
-        </div>
-        <div className="min-w-0">
-          <h2 className="truncate text-sm font-bold text-[#0d0d12] dark:text-app-text">
-            חברת המשלוחים
-          </h2>
-          <p className="mt-0.5 truncate text-xs text-[#666d80] dark:text-app-text-secondary">
-            פרטי העסק: שם החברה, ח.פ וטלפון עסקי.
-          </p>
-        </div>
+      <div className="mt-3 flex justify-end">
+        <button
+          type="button"
+          data-haptic="success"
+          onClick={onSave}
+          className="inline-flex h-10 items-center gap-2 rounded-none bg-[#0d0d12] px-4 text-sm font-bold text-white transition-colors hover:bg-[#2b2d33] focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 dark:bg-app-brand-solid dark:text-app-background dark:hover:bg-app-brand"
+        >
+          <Check className="h-4 w-4" />
+          <span>שמור פרטי משתמש</span>
+        </button>
       </div>
-      <div className="mt-3 grid gap-3 sm:grid-cols-3">
+    </div>
+  </SectionCard>
+);
+
+const CompanySettingsPanel: React.FC<{
+  form: AccountFormState;
+  onChange: <Key extends keyof AccountFormState>(key: Key, value: AccountFormState[Key]) => void;
+  onSave: () => void;
+}> = ({ form, onChange, onSave }) => (
+  <SectionCard
+    icon={<Store className="h-4 w-4 text-app-brand" />}
+    title="חברת המשלוחים"
+    description="פרטי העסק: שם החברה, ח.פ וטלפון עסקי."
+    hideHeader
+  >
+    <div className="px-3 py-3 sm:px-4">
+      <div className="grid gap-3 sm:grid-cols-3">
         <AccountTextField
           label="שם חברת המשלוחים"
           value={form.companyName}
@@ -811,7 +808,7 @@ const AccountSettingsPanel: React.FC<{
           className="inline-flex h-10 items-center gap-2 rounded-none bg-[#0d0d12] px-4 text-sm font-bold text-white transition-colors hover:bg-[#2b2d33] focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 dark:bg-app-brand-solid dark:text-app-background dark:hover:bg-app-brand"
         >
           <Check className="h-4 w-4" />
-          <span>שמור פרטים</span>
+          <span>שמור פרטי חברה</span>
         </button>
       </div>
     </div>
@@ -832,7 +829,15 @@ const getNotificationPermissionLabel = (permission: NotificationPermissionState)
   return TEXT.notificationsDefault;
 };
 
-type SettingsCategory = 'system' | 'display' | 'audio' | 'haptics' | 'notifications' | 'advanced';
+type SettingsCategory =
+  | 'system'
+  | 'profile'
+  | 'company'
+  | 'display'
+  | 'audio'
+  | 'haptics'
+  | 'notifications'
+  | 'advanced';
 
 export const SettingsPagesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -957,7 +962,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
     }));
   };
 
-  const handleSaveAccountSettings = () => {
+  const handleSaveAccountSettings = (scope: 'all' | 'profile' | 'company' = 'all') => {
     const session = authSession ?? readAuthSession();
     if (!session) {
       toast.error('צריך להתחבר מחדש כדי לערוך פרטי פרופיל.');
@@ -1044,7 +1049,13 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
         workspaceRegistrationNumber: companyRegistrationNumber || undefined,
       }),
     );
-    toast.success('פרטי המשתמש והחברה נשמרו.');
+    toast.success(
+      scope === 'profile'
+        ? 'פרטי המשתמש נשמרו.'
+        : scope === 'company'
+          ? 'פרטי חברת המשלוחים נשמרו.'
+          : 'פרטי המשתמש והחברה נשמרו.',
+    );
   };
 
   const updateAlertPreference = <Key extends keyof AlertPreferences>(
@@ -1093,15 +1104,22 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
           <div className="flex flex-col gap-3">
             {!category ? (
               <main className="flex min-w-0 flex-col gap-3">
-                <AccountSettingsPanel
-                  form={accountForm}
-                  onChange={handleAccountFormChange}
-                  onSave={handleSaveAccountSettings}
-                />
                 <div
                   className="overflow-hidden rounded-none border border-[#e5e5e5] bg-white dark:border-app-border dark:bg-app-surface"
                   aria-label="מעברים להגדרות"
                 >
+                  <SettingsLinkRow
+                    icon={<Users className="h-4 w-4" />}
+                    title="פרטי משתמש"
+                    hint="שם המשתמש, טלפון המשתמש והתפקיד שלו במערכת."
+                    onClick={() => navigate('/settings/profile')}
+                  />
+                  <SettingsLinkRow
+                    icon={<Store className="h-4 w-4" />}
+                    title="חברת המשלוחים"
+                    hint="שם חברת המשלוחים, ח.פ וטלפון העסק."
+                    onClick={() => navigate('/settings/company')}
+                  />
                   <SettingsLinkRow
                     icon={<Power className="h-4 w-4" />}
                     title="הגדרות מערכת"
@@ -1155,6 +1173,22 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
             ) : null}
             {category ? (
             <main className="flex min-w-0 flex-col gap-3">
+              {category === 'profile' ? (
+                <UserSettingsPanel
+                  form={accountForm}
+                  onChange={handleAccountFormChange}
+                  onSave={() => handleSaveAccountSettings('profile')}
+                />
+              ) : null}
+
+              {category === 'company' ? (
+                <CompanySettingsPanel
+                  form={accountForm}
+                  onChange={handleAccountFormChange}
+                  onSave={() => handleSaveAccountSettings('company')}
+                />
+              ) : null}
+
               {category === 'system' ? (
               <SectionCard
                 icon={<Power className="h-4 w-4 text-app-brand" />}

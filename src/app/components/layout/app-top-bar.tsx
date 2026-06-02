@@ -30,6 +30,8 @@ type TopBarBreadcrumb = {
 
 const settingsBreadcrumbLabels: Record<string, string> = {
   '/settings/system': 'הגדרות מערכת',
+  '/settings/profile': 'פרטי משתמש',
+  '/settings/company': 'חברת המשלוחים',
   '/settings/display': 'תצוגה',
   '/settings/audio': 'צלילים',
   '/settings/haptics': 'רטט',

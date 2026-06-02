@@ -179,6 +179,14 @@ export const router = createBrowserRouter([
         element: <SettingsPage category="system" />,
       },
       {
+        path: 'settings/profile',
+        element: <SettingsPage category="profile" />,
+      },
+      {
+        path: 'settings/company',
+        element: <SettingsPage category="company" />,
+      },
+      {
         path: 'settings/display',
         element: <SettingsPage category="display" />,
       },
