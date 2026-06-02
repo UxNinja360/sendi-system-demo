@@ -462,6 +462,14 @@ export type DeliveryAction =
   | { type: 'TOGGLE_SYSTEM' }
   | { type: 'TOGGLE_DELIVERY_INTAKE' }
   | { type: 'TOGGLE_AUTO_ASSIGN' }
+  | {
+      type: 'UPDATE_WORKSPACE_DETAILS';
+      payload: {
+        workspaceName?: string;
+        workspacePhone?: string;
+        workspaceRegistrationNumber?: string;
+      };
+    }
   | { type: 'SET_TIME_MULTIPLIER'; payload: number } // שינוי מכפיל הזמן
   | { type: 'ADD_DELIVERY'; payload: Delivery }
   | { type: 'ADD_COURIER'; payload: Courier }

@@ -1942,6 +1942,12 @@ const reduceDeliveryState = (state: DeliveryState, action: DeliveryAction): Deli
         timeMultiplier: action.payload,
       };
 
+    case 'UPDATE_WORKSPACE_DETAILS':
+      return {
+        ...state,
+        ...action.payload,
+      };
+
     case 'CREATE_SHIFT_TEMPLATE':
       return {
         ...state,

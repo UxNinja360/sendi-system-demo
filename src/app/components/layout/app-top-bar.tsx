@@ -31,7 +31,8 @@ type TopBarBreadcrumb = {
 const settingsBreadcrumbLabels: Record<string, string> = {
   '/settings/system': 'הגדרות מערכת',
   '/settings/display': 'תצוגה',
-  '/settings/audio': 'שמע',
+  '/settings/audio': 'צלילים',
+  '/settings/haptics': 'רטט',
   '/settings/notifications': 'התראות',
   '/settings/pages': 'תפעול עמודים',
   '/settings/advanced': 'הגדרות מתקדמות',
@@ -262,7 +263,8 @@ export const AppTopBar: React.FC<AppTopBarProps> = ({ onOpenMobileMenu }) => {
     >
       {mapOpen ? (
         <div
-          className="pointer-events-none inline-flex h-8 w-8 shrink-0 cursor-row-resize items-center justify-center text-app-text-secondary/85 lg:hidden"
+          data-deliveries-map-sheet-grip="true"
+          className="inline-flex h-8 w-8 shrink-0 cursor-row-resize touch-none select-none items-center justify-center text-app-text-secondary/85 lg:hidden"
           aria-hidden="true"
         >
           <span className="flex h-4 w-4 flex-col items-center justify-center gap-[3px]">

@@ -36,6 +36,7 @@ import { useNavigate } from 'react-router';
 import { APP_NAV_ITEMS, type AppNavIconKey, type AppNavSectionId } from '../app-navigation';
 import { useTheme, type ThemeMode } from '../context/theme.context';
 import { useDelivery } from '../context/delivery-context-value';
+import type { DeliveryState } from '../types/delivery.types';
 import { Toggle } from '../components/common/toggle';
 import {
   ALERT_PREFERENCES_EVENT,
@@ -50,14 +51,16 @@ import {
   requestNotificationPermission,
   unlockAlertSound,
 } from '../notifications/operational-alerts';
-import {
-  getDeliveryPushStatus,
-  sendTestDeliveryPushNotification,
-  subscribeToDeliveryPushNotifications,
-  type DeliveryPushStatus,
-} from '../notifications/web-push';
 import { playHaptic } from '../utils/haptics';
-import { clearAuthSession, readAuthSession } from '../auth/auth-session';
+import {
+  clearAuthSession,
+  readAuthSession,
+  updateAuthSessionUser,
+  updateAuthSessionWorkspace,
+  type AuthSession,
+  type AuthWorkspaceMember,
+  type WorkspaceRole,
+} from '../auth/auth-session';
 import {
   deleteCurrentWorkspaceAccount,
   TLV_RUNNERS_WORKSPACE_ID,
@@ -113,13 +116,13 @@ const TEXT = {
   alerts: 'צלילים והתראות',
   alertsDescription: 'שליטה בצליל, רטט והתראות כשנכנס משלוח חדש.',
   sounds: 'צלילים',
-  soundsDescription: 'הפעלת צליל, בחירת צליל ובדיקת שמע למשלוחים חדשים.',
+  soundsDescription: 'הפעלת צלילים, בחירת צליל ובדיקת צליל למשלוחים חדשים.',
   soundChoice: 'בחירת צליל',
   soundChoiceHint: 'בחר איזה צליל יופעל כשנכנס משלוח חדש.',
   haptics: 'רטטים',
   hapticsDescription: 'כל רטטי הממשק והרטטים של משלוח חדש במקום אחד.',
   pushNotifications: 'התראות Push',
-  pushNotificationsDescription: 'הרשאות, התראות דפדפן ופוש אמיתי ברקע.',
+  pushNotificationsDescription: 'הרשאות והתראות דפדפן למשלוחים חדשים.',
   newDeliverySound: 'צליל משלוח חדש',
   newDeliverySoundHint: 'השמעת צליל קצר בכל משלוח חדש.',
   hapticFeedback: 'הפטיק בממשק',
@@ -130,16 +133,6 @@ const TEXT = {
   newDeliveryBannerHint: 'הצגת באנר פנימי כשנכנס משלוח חדש לאפליקציה.',
   browserNotifications: 'התראות דפדפן',
   browserNotificationsHint: 'התראות מערכת כשהאפליקציה אינה בפוקוס. כשהיא פתוחה נשתמש בהתראה פנימית.',
-  realPush: 'פוש אמיתי ברקע',
-  realPushHint: 'רישום המכשיר ל-Web Push כדי לקבל התראות כשה-PWA ממוזער או סגור.',
-  enableRealPush: 'חבר',
-  testRealPush: 'בדיקה',
-  realPushSubscribed: 'מחובר',
-  realPushReady: 'מוכן',
-  realPushNeedsPermission: 'צריך הרשאה',
-  realPushNotConfigured: 'חסר VAPID בשרת',
-  realPushUnsupported: 'לא נתמך',
-  realPushError: 'שגיאה',
   notificationPermission: 'הרשאת התראות',
   notificationPermissionHint: 'נדרש כדי להציג התראות מערכת במחשב וב-PWA.',
   enableNotifications: 'אפשר',
@@ -617,6 +610,214 @@ const formatPhone = (value: string) => {
   return normalized.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
 };
 
+const normalizePhoneValue = (value: string) => value.replace(/\D/g, '');
+const normalizeRegistrationNumber = (value: string) => value.replace(/\D/g, '');
+
+const workspaceRoleOptions: Array<{ id: WorkspaceRole; label: string }> = [
+  { id: 'owner', label: 'בעלים' },
+  { id: 'admin', label: 'מנהל' },
+  { id: 'dispatcher', label: 'מוקדן' },
+  { id: 'viewer', label: 'צופה' },
+];
+
+const getSessionWorkspaceRole = (session: AuthSession | null): WorkspaceRole => {
+  if (!session) return 'dispatcher';
+
+  const memberRole = session.workspace?.members?.find(
+    (member) => member.userId === session.user.id,
+  )?.role;
+  if (memberRole) return memberRole;
+
+  if (
+    session.workspace?.ownerUserId === session.user.id ||
+    session.workspace?.id === TLV_RUNNERS_WORKSPACE_ID
+  ) {
+    return 'owner';
+  }
+
+  return 'dispatcher';
+};
+
+type AccountFormState = {
+  companyName: string;
+  companyPhone: string;
+  companyRegistrationNumber: string;
+  userName: string;
+  userPhone: string;
+  userRole: WorkspaceRole;
+};
+
+const createAccountFormState = (
+  session: AuthSession | null,
+  state: DeliveryState,
+): AccountFormState => ({
+  companyName: session?.workspace?.name ?? state.workspaceName ?? '',
+  companyPhone: session?.workspace?.phone ?? state.workspacePhone ?? session?.user.phone ?? '',
+  companyRegistrationNumber:
+    session?.workspace?.registrationNumber ?? state.workspaceRegistrationNumber ?? '',
+  userName: session?.user.name ?? '',
+  userPhone: session?.user.phone ?? '',
+  userRole: getSessionWorkspaceRole(session),
+});
+
+const createCurrentUserWorkspaceMembers = ({
+  role,
+  session,
+  userName,
+  userPhone,
+}: {
+  role: WorkspaceRole;
+  session: AuthSession;
+  userName: string;
+  userPhone: string;
+}): AuthWorkspaceMember[] => {
+  const existingMembers = session.workspace?.members ?? [];
+  const existingMember = existingMembers.find((member) => member.userId === session.user.id);
+  const nextMember: AuthWorkspaceMember = {
+    joinedAt: existingMember?.joinedAt ?? session.createdAt,
+    name: userName,
+    phone: userPhone,
+    role,
+    userId: session.user.id,
+  };
+
+  return [
+    ...existingMembers.filter((member) => member.userId !== session.user.id),
+    nextMember,
+  ];
+};
+
+const AccountTextField: React.FC<{
+  dir?: 'ltr' | 'rtl';
+  inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
+  label: string;
+  onChange: (value: string) => void;
+  value: string;
+}> = ({ dir = 'rtl', inputMode, label, onChange, value }) => (
+  <label className="block min-w-0">
+    <span className="mb-1.5 block text-xs font-semibold text-[#666d80] dark:text-app-text-secondary">
+      {label}
+    </span>
+    <input
+      value={value}
+      dir={dir}
+      inputMode={inputMode}
+      onChange={(event) => onChange(event.currentTarget.value)}
+      className="h-10 w-full rounded-none border border-app-border bg-[#f5f5f5] px-3 text-sm font-semibold text-[#0d0d12] outline-none transition-colors placeholder:text-[#8a8f98] focus:border-app-brand focus:bg-white focus:ring-2 focus:ring-app-brand/20 dark:bg-app-surface dark:text-app-text dark:placeholder:text-app-text-muted dark:focus:bg-app-surface"
+    />
+  </label>
+);
+
+const AccountSettingsPanel: React.FC<{
+  form: AccountFormState;
+  onChange: <Key extends keyof AccountFormState>(key: Key, value: AccountFormState[Key]) => void;
+  onSave: () => void;
+}> = ({ form, onChange, onSave }) => (
+  <SectionCard
+    icon={<Users className="h-4 w-4 text-app-brand" />}
+    title={TEXT.account}
+    description={TEXT.accountDescription}
+  >
+    <div className="border-b border-[#f1f1f1] px-3 py-3 dark:border-app-border sm:px-4">
+      <div className="flex min-w-0 items-center gap-2.5">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-none bg-[#f5f5f5] text-app-brand dark:bg-app-surface">
+          <Users className="h-4 w-4" />
+        </div>
+        <div className="min-w-0">
+          <h2 className="truncate text-sm font-bold text-[#0d0d12] dark:text-app-text">
+            המשתמש שלי
+          </h2>
+          <p className="mt-0.5 truncate text-xs text-[#666d80] dark:text-app-text-secondary">
+            השם שמופיע בדשבורד, טלפון המשתמש והתפקיד שלו במערכת.
+          </p>
+        </div>
+      </div>
+      <div className="mt-3 grid gap-3 sm:grid-cols-3">
+        <AccountTextField
+          label="שם משתמש"
+          value={form.userName}
+          onChange={(value) => onChange('userName', value)}
+        />
+        <AccountTextField
+          dir="ltr"
+          inputMode="tel"
+          label="טלפון משתמש"
+          value={form.userPhone}
+          onChange={(value) => onChange('userPhone', value)}
+        />
+        <label className="block min-w-0">
+          <span className="mb-1.5 block text-xs font-semibold text-[#666d80] dark:text-app-text-secondary">
+            תפקיד
+          </span>
+          <div className="relative">
+            <select
+              value={form.userRole}
+              data-haptic="selection"
+              onChange={(event) => onChange('userRole', event.currentTarget.value as WorkspaceRole)}
+              className="h-10 w-full appearance-none rounded-none border border-app-border bg-[#f5f5f5] pl-8 pr-3 text-right text-sm font-semibold text-[#0d0d12] outline-none transition-colors focus:border-app-brand focus:bg-white focus:ring-2 focus:ring-app-brand/20 dark:bg-app-surface dark:text-app-text dark:focus:bg-app-surface"
+            >
+              {workspaceRoleOptions.map((role) => (
+                <option key={role.id} value={role.id}>
+                  {role.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#666d80] dark:text-app-text-secondary" />
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <div className="px-3 py-3 sm:px-4">
+      <div className="flex min-w-0 items-center gap-2.5">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-none bg-[#f5f5f5] text-app-brand dark:bg-app-surface">
+          <Store className="h-4 w-4" />
+        </div>
+        <div className="min-w-0">
+          <h2 className="truncate text-sm font-bold text-[#0d0d12] dark:text-app-text">
+            חברת המשלוחים
+          </h2>
+          <p className="mt-0.5 truncate text-xs text-[#666d80] dark:text-app-text-secondary">
+            פרטי העסק: שם החברה, ח.פ וטלפון עסקי.
+          </p>
+        </div>
+      </div>
+      <div className="mt-3 grid gap-3 sm:grid-cols-3">
+        <AccountTextField
+          label="שם חברת המשלוחים"
+          value={form.companyName}
+          onChange={(value) => onChange('companyName', value)}
+        />
+        <AccountTextField
+          dir="ltr"
+          inputMode="numeric"
+          label="ח.פ"
+          value={form.companyRegistrationNumber}
+          onChange={(value) => onChange('companyRegistrationNumber', value)}
+        />
+        <AccountTextField
+          dir="ltr"
+          inputMode="tel"
+          label="טלפון עסק"
+          value={form.companyPhone}
+          onChange={(value) => onChange('companyPhone', value)}
+        />
+      </div>
+      <div className="mt-3 flex justify-end">
+        <button
+          type="button"
+          data-haptic="success"
+          onClick={onSave}
+          className="inline-flex h-10 items-center gap-2 rounded-none bg-[#0d0d12] px-4 text-sm font-bold text-white transition-colors hover:bg-[#2b2d33] focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 dark:bg-app-brand-solid dark:text-app-background dark:hover:bg-app-brand"
+        >
+          <Check className="h-4 w-4" />
+          <span>שמור פרטים</span>
+        </button>
+      </div>
+    </div>
+  </SectionCard>
+);
+
 type NotificationPermissionState = NotificationPermission | 'unsupported';
 
 const getNotificationPermissionState = (): NotificationPermissionState => {
@@ -631,18 +832,7 @@ const getNotificationPermissionLabel = (permission: NotificationPermissionState)
   return TEXT.notificationsDefault;
 };
 
-const getDeliveryPushStatusLabel = (status: DeliveryPushStatus | null) => {
-  if (status === 'subscribed') return TEXT.realPushSubscribed;
-  if (status === 'ready') return TEXT.realPushReady;
-  if (status === 'permission-needed') return TEXT.realPushNeedsPermission;
-  if (status === 'permission-denied') return TEXT.notificationsBlocked;
-  if (status === 'not-configured') return TEXT.realPushNotConfigured;
-  if (status === 'unsupported') return TEXT.realPushUnsupported;
-  if (status === 'error') return TEXT.realPushError;
-  return TEXT.notificationsDefault;
-};
-
-type SettingsCategory = 'system' | 'display' | 'audio' | 'notifications' | 'advanced';
+type SettingsCategory = 'system' | 'display' | 'audio' | 'haptics' | 'notifications' | 'advanced';
 
 export const SettingsPagesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -699,11 +889,22 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
   );
   const [notificationPermission, setNotificationPermission] =
     useState<NotificationPermissionState>(() => getNotificationPermissionState());
-  const [deliveryPushStatus, setDeliveryPushStatus] = useState<DeliveryPushStatus | null>(null);
-  const [isDeliveryPushBusy, setIsDeliveryPushBusy] = useState(false);
-  const currentSession = readAuthSession();
+  const [authSession, setAuthSession] = useState<AuthSession | null>(() => readAuthSession());
+  const [accountForm, setAccountForm] = useState<AccountFormState>(() =>
+    createAccountFormState(readAuthSession(), state),
+  );
+  const currentSession = authSession;
   const isDemoAccount = currentSession?.workspace?.id === TLV_RUNNERS_WORKSPACE_ID;
   const currentPhone = currentSession?.user.phone ?? state.workspacePhone ?? '';
+
+  useEffect(() => {
+    setAccountForm(createAccountFormState(authSession, state));
+  }, [
+    authSession,
+    state.workspaceName,
+    state.workspacePhone,
+    state.workspaceRegistrationNumber,
+  ]);
 
   useEffect(() => {
     const handlePreferencesChange = () => {
@@ -712,12 +913,6 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
 
     window.addEventListener(ALERT_PREFERENCES_EVENT, handlePreferencesChange);
     return () => window.removeEventListener(ALERT_PREFERENCES_EVENT, handlePreferencesChange);
-  }, []);
-
-  useEffect(() => {
-    void getDeliveryPushStatus()
-      .then((result) => setDeliveryPushStatus(result.status))
-      .catch(() => setDeliveryPushStatus('error'));
   }, []);
 
   const handleLogout = () => {
@@ -752,6 +947,106 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
     navigate('/login', { replace: true });
   };
 
+  const handleAccountFormChange = <Key extends keyof AccountFormState>(
+    key: Key,
+    value: AccountFormState[Key],
+  ) => {
+    setAccountForm((current) => ({
+      ...current,
+      [key]: value,
+    }));
+  };
+
+  const handleSaveAccountSettings = () => {
+    const session = authSession ?? readAuthSession();
+    if (!session) {
+      toast.error('צריך להתחבר מחדש כדי לערוך פרטי פרופיל.');
+      return;
+    }
+
+    const userName = accountForm.userName.trim();
+    const userPhone = normalizePhoneValue(accountForm.userPhone);
+    const companyName = accountForm.companyName.trim();
+    const companyPhone = normalizePhoneValue(accountForm.companyPhone);
+    const companyRegistrationNumber = normalizeRegistrationNumber(
+      accountForm.companyRegistrationNumber,
+    );
+
+    if (userName.length < 2) {
+      toast.error('צריך להזין שם משתמש מלא.');
+      return;
+    }
+
+    if (userPhone.length < 9) {
+      toast.error('צריך להזין טלפון משתמש תקין.');
+      return;
+    }
+
+    if (companyName.length < 2) {
+      toast.error('צריך להזין שם חברת משלוחים.');
+      return;
+    }
+
+    if (companyPhone.length < 9) {
+      toast.error('צריך להזין טלפון עסק תקין.');
+      return;
+    }
+
+    if (companyRegistrationNumber && companyRegistrationNumber.length !== 9) {
+      toast.error('ח.פ צריך להיות בן 9 ספרות.');
+      return;
+    }
+
+    const nextUserSession = updateAuthSessionUser({
+      name: userName,
+      phone: userPhone,
+    });
+    if (!nextUserSession) {
+      toast.error('מספר הטלפון הזה כבר מחובר לחשבון אחר.');
+      return;
+    }
+
+    const nextMembers = nextUserSession.workspace
+      ? createCurrentUserWorkspaceMembers({
+          role: accountForm.userRole,
+          session: nextUserSession,
+          userName,
+          userPhone,
+        })
+      : undefined;
+
+    const nextWorkspaceSession = updateAuthSessionWorkspace({
+      members: nextMembers,
+      name: companyName,
+      ownerUserId:
+        accountForm.userRole === 'owner'
+          ? nextUserSession.user.id
+          : nextUserSession.workspace?.ownerUserId,
+      phone: companyPhone,
+      registrationNumber: companyRegistrationNumber || undefined,
+    });
+    const nextSession = nextWorkspaceSession ?? nextUserSession;
+
+    dispatch({
+      type: 'UPDATE_WORKSPACE_DETAILS',
+      payload: {
+        workspaceName: companyName,
+        workspacePhone: companyPhone,
+        workspaceRegistrationNumber: companyRegistrationNumber || undefined,
+      },
+    });
+    setAuthSession(nextSession);
+    setAccountForm(
+      createAccountFormState(nextSession, {
+        ...state,
+        workspaceName: companyName,
+        workspacePhone: companyPhone,
+        workspaceRegistrationNumber: companyRegistrationNumber || undefined,
+      }),
+    );
+    toast.success('פרטי המשתמש והחברה נשמרו.');
+  };
+
   const updateAlertPreference = <Key extends keyof AlertPreferences>(
     key: Key,
     value: AlertPreferences[Key],
@@ -777,59 +1072,6 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
     });
   };
 
-  const refreshDeliveryPushStatus = () => {
-    void getDeliveryPushStatus()
-      .then((result) => setDeliveryPushStatus(result.status))
-      .catch(() => setDeliveryPushStatus('error'));
-  };
-
-  const handleEnableDeliveryPush = () => {
-    setIsDeliveryPushBusy(true);
-    void subscribeToDeliveryPushNotifications()
-      .then((result) => {
-        setDeliveryPushStatus(result.status);
-        setNotificationPermission(getNotificationPermissionState());
-
-        if (result.ok) {
-          toast.success('פוש אמיתי חובר');
-          return;
-        }
-
-        toast.error(
-          result.status === 'not-configured'
-            ? 'צריך להגדיר VAPID בשרת'
-            : result.status === 'unsupported'
-              ? 'המכשיר לא תומך בפוש Web Push'
-              : 'לא הצלחנו לחבר פוש אמיתי',
-        );
-      })
-      .catch(() => {
-        setDeliveryPushStatus('error');
-        toast.error('לא הצלחנו לחבר פוש אמיתי');
-      })
-      .finally(() => setIsDeliveryPushBusy(false));
-  };
-
-  const handleTestDeliveryPush = () => {
-    setIsDeliveryPushBusy(true);
-    void sendTestDeliveryPushNotification()
-      .then((result) => {
-        if (result.ok) {
-          toast.success('פוש בדיקה נשלח');
-          refreshDeliveryPushStatus();
-          return;
-        }
-
-        toast.error(
-          result.message === 'no_subscriptions'
-            ? 'אין מכשירים רשומים לפוש'
-            : 'פוש הבדיקה לא נשלח',
-        );
-      })
-      .catch(() => toast.error('פוש הבדיקה לא נשלח'))
-      .finally(() => setIsDeliveryPushBusy(false));
-  };
-
   const handleTestSound = () => {
     unlockAlertSound();
     playNewDeliverySound({ force: true });
@@ -851,6 +1093,11 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
           <div className="flex flex-col gap-3">
             {!category ? (
               <main className="flex min-w-0 flex-col gap-3">
+                <AccountSettingsPanel
+                  form={accountForm}
+                  onChange={handleAccountFormChange}
+                  onSave={handleSaveAccountSettings}
+                />
                 <div
                   className="overflow-hidden rounded-none border border-[#e5e5e5] bg-white dark:border-app-border dark:bg-app-surface"
                   aria-label="מעברים להגדרות"
@@ -869,9 +1116,15 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
                   />
                   <SettingsLinkRow
                     icon={<Volume2 className="h-4 w-4" />}
-                    title="שמע"
-                    hint="צלילים, בחירת צליל ורטטים של הממשק."
+                    title="צלילים"
+                    hint={TEXT.soundsDescription}
                     onClick={() => navigate('/settings/audio')}
+                  />
+                  <SettingsLinkRow
+                    icon={<Zap className="h-4 w-4" />}
+                    title={TEXT.haptics}
+                    hint={TEXT.hapticsDescription}
+                    onClick={() => navigate('/settings/haptics')}
                   />
                   <SettingsLinkRow
                     icon={<BellRing className="h-4 w-4" />}
@@ -1004,7 +1257,6 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
           ) : null}
 
           {category === 'audio' ? (
-            <>
           <SectionCard
             icon={<Volume2 className="h-4 w-4 text-app-brand" />}
             title={TEXT.sounds}
@@ -1053,7 +1305,9 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
               }
             />
           </SectionCard>
+          ) : null}
 
+          {category === 'haptics' ? (
           <SectionCard
             icon={<Zap className="h-4 w-4 text-app-brand" />}
             title={TEXT.haptics}
@@ -1106,7 +1360,6 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
               }
             />
           </SectionCard>
-            </>
           ) : null}
 
           {category === 'notifications' ? (
@@ -1163,37 +1416,6 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
                     {getNotificationPermissionLabel(notificationPermission)}
                   </span>
                 )
-              }
-            />
-            <SettingRow
-              icon={<BellRing className="h-4 w-4" />}
-              title={TEXT.realPush}
-              hint={TEXT.realPushHint}
-              control={
-                <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-                  <span className="rounded-none bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#666d80] dark:bg-app-surface dark:text-app-text-secondary">
-                    {getDeliveryPushStatusLabel(deliveryPushStatus)}
-                  </span>
-                  <button
-                    type="button"
-                    data-haptic="selection"
-                    onClick={handleEnableDeliveryPush}
-                    disabled={isDeliveryPushBusy}
-                    className="inline-flex h-9 items-center gap-2 rounded-none bg-[#f5f5f5] px-3 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] disabled:cursor-wait disabled:opacity-60 dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
-                  >
-                    <BellRing className="h-4 w-4" />
-                    <span>{TEXT.enableRealPush}</span>
-                  </button>
-                  <button
-                    type="button"
-                    data-haptic="success"
-                    onClick={handleTestDeliveryPush}
-                    disabled={isDeliveryPushBusy || deliveryPushStatus !== 'subscribed'}
-                    className="inline-flex h-9 items-center rounded-none bg-[#f5f5f5] px-3 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
-                  >
-                    <span>{TEXT.testRealPush}</span>
-                  </button>
-                </div>
               }
             />
           </SectionCard>

@@ -54,6 +54,7 @@ const createDemoWorkspace = (createdAt: string): AuthWorkspace => ({
   createdAt,
   name: 'TLV RUNNERS',
   onboardingStatus: 'complete',
+  phone: TLV_RUNNERS_DEMO_PHONE,
   updatedAt: createdAt,
 });
 

@@ -2053,6 +2053,12 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
     user-select: none;
   }
 
+  body.deliveries-map-split-open .app-layout-root [data-deliveries-map-sheet-grip="true"] {
+    cursor: row-resize;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
   body.deliveries-map-split-open .deliveries-vercel-scroll,
   body.deliveries-map-split-open .resource-list-scroll,
   body.deliveries-map-split-open main {

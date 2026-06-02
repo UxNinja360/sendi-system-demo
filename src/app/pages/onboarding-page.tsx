@@ -724,6 +724,7 @@ const saveWorkspace = ({
     name: companyName.trim(),
     onboardingStatus: 'complete',
     ownerUserId: session.user.id,
+    phone: companyPhone.trim(),
     registrationNumber: companyRegistrationNumber.trim(),
   });
 };

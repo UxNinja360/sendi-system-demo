@@ -190,6 +190,7 @@ const clampMapSheetHeight = (value: number) =>
 
 const shouldIgnoreSheetDragTarget = (target: EventTarget | null) => {
   if (!(target instanceof Element)) return true;
+  if (target.closest('[data-deliveries-map-sheet-grip="true"]')) return false;
 
   return Boolean(
     target.closest(

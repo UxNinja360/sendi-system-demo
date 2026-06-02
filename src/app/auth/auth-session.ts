@@ -28,6 +28,7 @@ export type AuthWorkspace = {
   name: string;
   onboardingStatus: OnboardingStatus;
   ownerUserId?: string;
+  phone?: string;
   registrationNumber?: string;
   updatedAt: string;
 };
@@ -262,6 +263,9 @@ export const upsertAuthProfile = ({
           ownerUserId:
             workspace?.ownerUserId ??
             existing?.workspace?.ownerUserId,
+          phone:
+            workspace?.phone ??
+            existing?.workspace?.phone,
           registrationNumber:
             workspace?.registrationNumber ??
             existing?.workspace?.registrationNumber,
@@ -315,19 +319,37 @@ export const updateAuthSessionWorkspace = (updates: Partial<Omit<AuthWorkspace, 
   return nextSession;
 };
 
-export const updateAuthSessionUser = (updates: Partial<Omit<AuthUser, 'id' | 'accountType' | 'createdAt' | 'phone'>>) => {
+export const updateAuthSessionUser = (updates: Partial<Omit<AuthUser, 'id' | 'accountType' | 'createdAt'>>) => {
   const session = readAuthSession();
   if (!session) return null;
+
+  const currentProfileKey = getProfileKey(session.user.accountType, session.user.phone);
+  const nextPhone = updates.phone?.replace(/\D/g, '') ?? session.user.phone;
+  const nextProfileKey = getProfileKey(session.user.accountType, nextPhone);
+  const profiles = getProfiles();
+  const existingNextProfile = profiles[nextProfileKey];
+  if (
+    nextProfileKey !== currentProfileKey &&
+    existingNextProfile &&
+    existingNextProfile.user.id !== session.user.id
+  ) {
+    return null;
+  }
 
   const nextSession: AuthSession = {
     ...session,
     user: {
       ...session.user,
       ...updates,
+      phone: nextPhone,
     },
   };
-  const profiles = getProfiles();
-  profiles[getProfileKey(session.user.accountType, session.user.phone)] = {
+
+  if (nextProfileKey !== currentProfileKey) {
+    delete profiles[currentProfileKey];
+  }
+
+  profiles[nextProfileKey] = {
     user: nextSession.user,
     workspace: nextSession.workspace,
   };
