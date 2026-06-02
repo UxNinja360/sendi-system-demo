@@ -4,11 +4,13 @@ import { useLocation, useNavigate } from 'react-router';
 
 import {
   openDeliveriesMap,
+  toggleDeliveriesMapOpen,
   useDeliveriesMapOpen,
 } from '../../deliveries/use-deliveries-map-split';
 
 const MAP_LABEL = '\u05de\u05e4\u05d4';
 const OPEN_MAP_LABEL = '\u05e4\u05ea\u05d7 \u05de\u05e4\u05d4';
+const CLOSE_MAP_LABEL = '\u05e1\u05d2\u05d5\u05e8 \u05de\u05e4\u05d4';
 const OPEN_MENU_LABEL = '\u05e4\u05ea\u05d7 \u05ea\u05e4\u05e8\u05d9\u05d8';
 const QUICK_ACTIONS_LABEL = '\u05e4\u05e2\u05d5\u05dc\u05d5\u05ea \u05de\u05d4\u05d9\u05e8\u05d5\u05ea';
 const MAP_ENABLED_ROUTES = new Set(['/couriers', '/dashboard', '/deliveries', '/restaurants']);
@@ -25,11 +27,14 @@ export const MobileFloatingDock: FC<MobileFloatingDockProps> = ({ onOpenMenu }) 
   const mapButtonActive = isMapRoute && mapOpen;
 
   const handleOpenMap = useCallback(() => {
+    if (isMapRoute) {
+      toggleDeliveriesMapOpen();
+      return;
+    }
+
     openDeliveriesMap();
 
-    if (!isMapRoute) {
-      navigate('/dashboard');
-    }
+    navigate('/dashboard');
   }, [isMapRoute, navigate]);
 
   return (
@@ -47,7 +52,7 @@ export const MobileFloatingDock: FC<MobileFloatingDockProps> = ({ onOpenMenu }) 
             ? 'bg-[color-mix(in_srgb,var(--app-brand)_18%,transparent)] text-app-text'
             : 'text-app-text-secondary hover:bg-[color-mix(in_srgb,var(--app-text-secondary)_12%,transparent)] hover:text-app-text'
         }`}
-        aria-label={OPEN_MAP_LABEL}
+        aria-label={mapButtonActive ? CLOSE_MAP_LABEL : OPEN_MAP_LABEL}
         aria-pressed={mapButtonActive}
       >
         <MapIcon className="h-4 w-4" />
