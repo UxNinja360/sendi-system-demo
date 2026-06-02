@@ -37,6 +37,18 @@ const settingsBreadcrumbLabels: Record<string, string> = {
   '/settings/advanced': 'הגדרות מתקדמות',
 };
 
+const dashboardBreadcrumbPaths = new Set([
+  '/couriers',
+  '/couriers/shifts',
+  '/deliveries',
+  '/delivery-balance',
+  '/performance',
+  '/reports',
+  '/restaurants',
+  '/settings',
+  '/zones',
+]);
+
 type AppTopBarProps = {
   onOpenMobileMenu?: () => void;
 };
@@ -145,15 +157,7 @@ export const AppTopBar: React.FC<AppTopBarProps> = ({ onOpenMobileMenu }) => {
   const hasSecondaryTabs = Boolean(restaurantId);
 
   const topBarBreadcrumb: TopBarBreadcrumb | null = (() => {
-    if (['/deliveries', '/restaurants', '/couriers'].includes(location.pathname)) {
-      return {
-        parentLabel: 'דשבורד',
-        parentPath: '/dashboard',
-        currentLabel: pageTitle,
-      };
-    }
-
-    if (location.pathname === '/zones') {
+    if (dashboardBreadcrumbPaths.has(location.pathname)) {
       return {
         parentLabel: 'דשבורד',
         parentPath: '/dashboard',

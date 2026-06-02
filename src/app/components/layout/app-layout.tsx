@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate, useNavigation } from 'react-router';
 import { Sidebar } from './sidebar';
 import { MobileMenuNudge } from './mobile-menu-nudge';
 import { AppTopBar } from './app-top-bar';
+import { MobileFloatingDock } from './mobile-floating-dock';
 import { PageLoader } from '../ui/page-loader';
 import { LoadingBar } from '../ui/loading-bar';
 import { Toaster } from '../common/toaster';
@@ -94,6 +95,7 @@ export const AppLayout: React.FC = () => {
         </div>
 
         {isLivePage && <MobileMenuNudge onOpenMenu={openMobileMenu} />}
+        {!isLivePage && <MobileFloatingDock onOpenMenu={openMobileMenu} />}
       </div>
     </div>
   );

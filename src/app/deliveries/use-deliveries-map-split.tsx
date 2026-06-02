@@ -135,6 +135,14 @@ const setSharedMapOpen = (nextOpen: SetStateAction<boolean>) => {
   mapOpenListeners.forEach((listener) => listener());
 };
 
+export const openDeliveriesMap = () => {
+  setSharedMapOpen(true);
+};
+
+export const toggleDeliveriesMapOpen = () => {
+  setSharedMapOpen((current) => !current);
+};
+
 const getStoredSidebarWidth = () => {
   if (typeof localStorage === 'undefined') return DEFAULT_EXPANDED_SIDEBAR_WIDTH;
 
@@ -297,7 +305,7 @@ export const useDeliveriesMapSplit = ({
   useEffect(
     () =>
       addAppTopBarActionListener('toggle-deliveries-map', () => {
-        setMapOpen((current) => !current);
+        toggleDeliveriesMapOpen();
       }),
     [],
   );

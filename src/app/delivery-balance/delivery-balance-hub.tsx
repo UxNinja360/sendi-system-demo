@@ -3,8 +3,10 @@ import {
   ChevronDown,
   CreditCard,
   Minus,
+  MoreHorizontal,
   Pencil,
   Plus,
+  Receipt,
   X,
 } from 'lucide-react';
 import { useDelivery } from '../context/delivery-context-value';
@@ -65,6 +67,9 @@ const formatDateTime = (date: Date) =>
     minute: '2-digit',
     month: '2-digit',
   }).format(date);
+
+const invoiceGridClassName =
+  'grid grid-cols-2 gap-x-4 gap-y-3 md:grid-cols-[2.75rem_minmax(0,1.65fr)_minmax(6.5rem,0.85fr)_minmax(4.5rem,0.55fr)_minmax(6.5rem,0.8fr)_minmax(6.5rem,0.8fr)_2.5rem] md:items-center';
 
 const normalizeCustomAmount = (value: number) =>
   Math.min(customMaxAmount, Math.max(customMinAmount, Number.isFinite(value) ? value : customMinAmount));
@@ -275,7 +280,7 @@ export const DeliveryBalanceHub: React.FC = () => {
       frame = window.requestAnimationFrame(updateSelectLayout);
     };
 
-    scheduleSelectLayoutUpdate();
+    updateSelectLayout();
     window.addEventListener('resize', scheduleSelectLayoutUpdate);
     window.addEventListener('scroll', scheduleSelectLayoutUpdate, true);
     window.visualViewport?.addEventListener('resize', scheduleSelectLayoutUpdate);
@@ -456,9 +461,18 @@ export const DeliveryBalanceHub: React.FC = () => {
 
   return (
     <div className="mx-auto flex w-full max-w-[76rem] flex-col gap-5 text-right" dir="rtl">
-      <header>
-        <div className="flex items-center justify-between gap-3">
-          <div className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-[var(--app-radius-sm)] border border-app-border bg-app-background px-4 text-sm font-bold text-app-text">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold tracking-normal text-app-text">
+            יתרת משלוחים
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-app-text-secondary">
+            ניהול קרדיטים, רכישות וחשבוניות של חברת המשלוחים.
+          </p>
+        </div>
+
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+          <div className="inline-flex h-10 shrink-0 items-center justify-center gap-2 border border-app-border bg-app-background px-4 text-sm font-bold text-app-text">
             <span>קרדיטים</span>
             <span className={`tabular-nums ${deliveryBalanceTextClass}`}>
               {formatNumber(currentBalance)}
@@ -467,81 +481,52 @@ export const DeliveryBalanceHub: React.FC = () => {
           <button
             type="button"
             onClick={openPurchaseDialog}
-            className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface px-3 text-sm font-bold text-app-text transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/35 sm:px-4"
+            className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-[var(--app-radius-sm)] border border-[#d8d8d8] bg-white px-4 text-sm font-bold text-[#0d0d12] transition-colors hover:bg-[#f5f5f5] focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/35 dark:border-transparent dark:bg-[#ededed] dark:text-[#050505] dark:hover:bg-white"
           >
             <span>רכישת יתרה</span>
             <Plus className="h-4 w-4" />
           </button>
         </div>
-
       </header>
 
-      <section className="space-y-4" aria-labelledby="purchase-invoices-title">
-        <h2 id="purchase-invoices-title" className="text-sm font-bold text-app-text">
-          חשבוניות
-        </h2>
+      <section className="space-y-3" aria-labelledby="purchase-invoices-title">
+        <div className="flex items-center justify-between gap-3 border border-app-border bg-app-surface px-4 py-3 md:px-5">
+          <div className="min-w-0">
+            <h2 id="purchase-invoices-title" className="text-sm font-bold text-app-text">
+              חשבוניות רכישה
+            </h2>
+            <p className="mt-1 truncate text-xs font-semibold text-app-text-muted">
+              רכישות יתרה אחרונות ומסמכי חיוב.
+            </p>
+          </div>
+          <span className="shrink-0 text-xs font-bold tabular-nums text-app-text-secondary">
+            {purchaseInvoices.length > 0 ? `${formatNumber(purchaseInvoices.length)} רשומות` : 'אין רשומות'}
+          </span>
+        </div>
 
         {purchaseInvoices.length > 0 ? (
-          <>
-            <div className="space-y-3 md:hidden">
-              {purchaseInvoices.map((invoice) => (
-                <InvoiceMobileCard key={invoice.id} invoice={invoice} />
-              ))}
-            </div>
+          <div className="md:overflow-hidden md:rounded-none md:border md:border-app-border md:bg-app-surface">
+            <div role="table" aria-label="חשבוניות רכישה">
+              <div
+                role="row"
+                className={`${invoiceGridClassName} hidden border-b border-app-border bg-app-background/35 px-5 py-3 text-xs font-bold text-app-text-secondary md:grid`}
+              >
+                <div role="columnheader" aria-label="סוג חשבונית" />
+                <div role="columnheader">חשבונית</div>
+                <div role="columnheader">תאריך</div>
+                <div role="columnheader">כמות</div>
+                <div role="columnheader">מחיר למשלוח</div>
+                <div role="columnheader">סה״כ</div>
+                <div role="columnheader" aria-label="פעולות" />
+              </div>
 
-            <div className="hidden overflow-hidden rounded-none border border-app-border bg-app-surface md:block">
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[760px] table-fixed border-collapse text-right">
-                  <colgroup>
-                    <col className="w-[34%]" />
-                    <col className="w-[18%]" />
-                    <col className="w-[14%]" />
-                    <col className="w-[17%]" />
-                    <col className="w-[17%]" />
-                  </colgroup>
-                  <thead className="bg-app-background/35 text-xs font-bold text-app-text-secondary">
-                    <tr className="border-b border-app-border">
-                      <th scope="col" className="px-5 py-3 text-right">חשבונית</th>
-                      <th scope="col" className="px-5 py-3 text-right">תאריך</th>
-                      <th scope="col" className="px-5 py-3 text-right">כמות</th>
-                      <th scope="col" className="px-5 py-3 text-right">מחיר למשלוח</th>
-                      <th scope="col" className="px-5 py-3 text-right">סה״כ</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-app-border">
-                    {purchaseInvoices.map((invoice) => {
-                      const issuedAt = new Date(invoice.issuedAt);
-
-                      return (
-                        <tr key={invoice.id} className="h-[72px] transition-colors hover:bg-app-surface-raised/30">
-                          <td className="px-5 py-4 align-middle">
-                            <div className="truncate text-sm font-bold text-app-text" dir="ltr">
-                              {invoice.invoiceNumber}
-                            </div>
-                            <div className="mt-1 text-xs font-semibold text-app-text-muted">
-                              יתרה אחרי רכישה: {formatNumber(invoice.balanceAfter)}
-                            </div>
-                          </td>
-                          <td className="whitespace-nowrap px-5 py-4 align-middle text-sm font-semibold tabular-nums text-app-text-secondary">
-                            {formatDateTime(issuedAt)}
-                          </td>
-                          <td className="whitespace-nowrap px-5 py-4 align-middle text-sm font-bold tabular-nums text-app-text-secondary">
-                            {formatNumber(invoice.amount)}
-                          </td>
-                          <td className="whitespace-nowrap px-5 py-4 align-middle text-sm font-bold tabular-nums text-app-text-secondary" dir="ltr">
-                            {formatTableCurrency(invoice.unitPrice)}
-                          </td>
-                          <td className="whitespace-nowrap px-5 py-4 align-middle text-sm font-bold tabular-nums text-app-text" dir="ltr">
-                            {formatTableCurrency(invoice.total)}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+              <div role="rowgroup" className="space-y-3 md:space-y-0 md:divide-y md:divide-app-border">
+                {purchaseInvoices.map((invoice) => (
+                  <InvoiceLedgerRow key={invoice.id} invoice={invoice} />
+                ))}
               </div>
             </div>
-          </>
+          </div>
         ) : (
           <div className="flex min-h-44 items-center justify-center rounded-none border border-app-border bg-app-surface px-4 py-8 text-center text-sm text-app-text-secondary">
             עדיין אין חשבוניות רכישה.
@@ -630,6 +615,8 @@ export const DeliveryBalanceHub: React.FC = () => {
                       <div
                         ref={amountDropdownRef}
                         className={`z-50 overflow-y-auto overscroll-contain rounded-[var(--app-radius-md)] border border-app-border bg-app-surface shadow-2xl ${
+                          selectDropdownStyle === undefined ? 'invisible pointer-events-none' : ''
+                        } ${
                           selectDropdownFixed
                             ? 'fixed'
                             : `absolute right-0 w-full ${
@@ -847,30 +834,118 @@ export const DeliveryBalanceHub: React.FC = () => {
   );
 };
 
-const InvoiceMobileCard: React.FC<{
+const InvoiceLedgerRow: React.FC<{
   invoice: PurchaseInvoice;
 }> = ({ invoice }) => {
   const issuedAt = new Date(invoice.issuedAt);
+  const issuedAtText = formatDateTime(issuedAt);
+  const amountText = formatNumber(invoice.amount);
+  const unitPriceText = formatTableCurrency(invoice.unitPrice);
+  const totalText = formatTableCurrency(invoice.total);
 
   return (
-    <article className="rounded-none border border-app-border bg-app-surface px-4 py-3">
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0 truncate text-sm font-bold text-app-text">
-          {formatDateTime(issuedAt)}
+    <div role="row">
+      <div className={`${invoiceGridClassName} hidden px-5 py-4 transition-colors hover:bg-app-surface-raised/30 md:grid md:min-h-[72px]`}>
+        <div role="cell" className="flex items-center justify-start">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-app-border bg-app-background text-app-text-secondary">
+            <Receipt className="h-4 w-4" />
+          </span>
         </div>
-        <div className="shrink-0 text-left text-base font-bold tabular-nums text-app-text" dir="ltr">
-          {formatTableCurrency(invoice.total)}
+        <div role="cell" className="min-w-0">
+          <div className="truncate text-sm font-bold text-app-text" dir="ltr">
+            {invoice.invoiceNumber}
+          </div>
+          <div className="mt-1 truncate text-xs font-semibold text-app-text-muted">
+            יתרה אחרי רכישה: {formatNumber(invoice.balanceAfter)}
+          </div>
+        </div>
+        <InvoiceDesktopCell value={issuedAtText} />
+        <InvoiceDesktopCell value={amountText} />
+        <InvoiceDesktopCell dir="ltr" value={unitPriceText} />
+        <InvoiceDesktopCell dir="ltr" emphasis value={totalText} />
+        <div role="cell" className="flex items-center justify-end">
+          <button
+            type="button"
+            aria-label={`פעולות חשבונית ${invoice.invoiceNumber}`}
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--app-radius-sm)] text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </button>
         </div>
       </div>
 
-      <div className="mt-2 flex items-center justify-between gap-3 text-xs font-semibold text-app-text-muted">
-        <span className="min-w-0 truncate" dir="ltr">
-          {invoice.invoiceNumber}
-        </span>
-        <span className="shrink-0 tabular-nums">
-          {formatNumber(invoice.amount)} משלוחים
-        </span>
-      </div>
-    </article>
+      <article className="overflow-hidden rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface md:hidden">
+        <div className="flex min-h-[72px] items-center justify-between gap-3 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-app-border bg-app-background text-app-text-secondary">
+              <Receipt className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <div className="truncate text-sm font-bold text-app-text" dir="ltr">
+                {invoice.invoiceNumber}
+              </div>
+              <div className="mt-1 truncate text-xs font-semibold text-app-text-muted">
+                יתרה אחרי רכישה: {formatNumber(invoice.balanceAfter)}
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            aria-label={`פעולות חשבונית ${invoice.invoiceNumber}`}
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--app-radius-sm)] text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="border-t border-app-border px-4 py-3">
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
+            <InvoiceMobileMetric label="תאריך" value={issuedAtText} />
+            <InvoiceMobileMetric label="כמות" value={amountText} />
+            <InvoiceMobileMetric dir="ltr" label="מחיר למשלוח" value={unitPriceText} />
+            <InvoiceMobileMetric dir="ltr" emphasis label="סה״כ" value={totalText} />
+          </dl>
+        </div>
+      </article>
+    </div>
   );
 };
+
+const InvoiceDesktopCell: React.FC<{
+  dir?: 'auto' | 'ltr' | 'rtl';
+  emphasis?: boolean;
+  value: string;
+}> = ({ dir, emphasis = false, value }) => (
+  <div role="cell" className="min-w-0">
+    <div
+      className={`truncate text-sm font-bold tabular-nums ${
+        emphasis ? 'text-app-text' : 'text-app-text-secondary'
+      }`}
+      dir={dir}
+    >
+      {value}
+    </div>
+  </div>
+);
+
+const InvoiceMobileMetric: React.FC<{
+  dir?: 'auto' | 'ltr' | 'rtl';
+  emphasis?: boolean;
+  label: string;
+  value: string;
+}> = ({ dir, emphasis = false, label, value }) => (
+  <div className="min-w-0">
+    <dt className="text-[11px] font-bold text-app-text-muted">
+      {label}
+    </dt>
+    <dd
+      className={`mt-1 truncate text-sm font-bold tabular-nums ${
+        emphasis ? 'text-app-text' : 'text-app-text-secondary'
+      }`}
+      dir={dir}
+    >
+      {value}
+    </dd>
+  </div>
+);

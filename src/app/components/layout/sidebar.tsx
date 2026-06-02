@@ -398,8 +398,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
   );
   const walletItem = getNavItemById('wallet');
   const balanceItem = getNavItemById('delivery-balance');
-  const deliveryBalanceTone =
-    state.deliveryBalance <= 100 ? 'deliveryBalanceLow' : 'deliveryBalanceHigh';
   const deliveryBalanceTextClass =
     state.deliveryBalance <= 100
       ? 'text-[#dc2626] dark:text-[#f87171]'
@@ -852,13 +850,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
     closeMobileMenu();
   };
 
-  const handleHeaderDeliveryBalanceClick = (event: React.MouseEvent<HTMLSpanElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setIsBusinessPopupOpen(false);
-    handleNav(balanceItem?.path ?? '/delivery-balance');
-  };
-
   const handleMobileMenuClickCapture = (event: React.MouseEvent<HTMLDivElement>) => {
     if (isDesktop || !mobileMenuSwipeClickGuardRef.current) return;
 
@@ -1056,13 +1047,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                 <span className="min-w-0 flex-1 truncate text-sm font-semibold">
                   {selectedBusiness}
                 </span>
-                <BusinessPlanBadge
-                  ariaLabel={LABELS.deliveryBalance}
-                  appearance="plain"
-                  label={formatSidebarBadgeNumber(state.deliveryBalance)}
-                  onClick={handleHeaderDeliveryBalanceClick}
-                  tone={deliveryBalanceTone}
-                />
                 <button
                   type="button"
                   data-haptic="medium"
