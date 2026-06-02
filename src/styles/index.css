@@ -1160,6 +1160,19 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   min-width: 0;
 }
 
+.settings-screen__scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-padding-bottom: calc(6rem + var(--app-safe-bottom));
+  touch-action: pan-y;
+}
+
+@media (max-width: 767.98px) {
+  .settings-screen__content {
+    padding-bottom: calc(6rem + var(--app-safe-bottom)) !important;
+  }
+}
+
 .app-toolbar-actions > * {
   min-width: 0;
 }

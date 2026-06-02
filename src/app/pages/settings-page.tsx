@@ -843,9 +843,9 @@ export const SettingsPagesPage: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-app-background" dir="rtl">
-      <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto flex w-full max-w-5xl flex-col gap-2 px-2.5 py-3 sm:px-3 md:px-5 md:py-5">
+    <div className="settings-screen flex h-full min-h-0 flex-col overflow-hidden bg-app-background" dir="rtl">
+      <div className="settings-screen__scroll min-h-0 flex-1 overflow-y-auto">
+        <div className="settings-screen__content mx-auto flex w-full max-w-5xl flex-col gap-2 px-2.5 py-3 sm:px-3 md:px-5 md:py-5">
           {settingsNavGroups.map((group) => {
             const GroupIcon = settingsNavIconMap[group.icon];
             const groupItems = APP_NAV_ITEMS.filter((item) => item.section === group.section);
@@ -1098,9 +1098,9 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
     playNewDeliverySound({ force: true });
   };
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-app-background" dir="rtl">
-      <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-5xl px-2.5 py-3 sm:px-3 md:px-5 md:py-5">
+    <div className="settings-screen flex h-full min-h-0 flex-col overflow-hidden bg-app-background" dir="rtl">
+      <div className="settings-screen__scroll min-h-0 flex-1 overflow-y-auto">
+        <div className="settings-screen__content mx-auto w-full max-w-5xl px-2.5 py-3 sm:px-3 md:px-5 md:py-5">
           <div className="flex flex-col gap-3">
             {!category ? (
               <main className="flex min-w-0 flex-col gap-3">

@@ -61,8 +61,9 @@ export const AppLayout: React.FC = () => {
   }, [mobileMenuToggle]);
 
   const isLivePage = location.pathname === '/live';
+  const isSettingsPage = location.pathname.startsWith('/settings');
   const isManagedScrollPage =
-    isLivePage || APP_MANAGED_SCROLL_PATHS.has(location.pathname);
+    isLivePage || isSettingsPage || APP_MANAGED_SCROLL_PATHS.has(location.pathname);
   const isLoading = navigation.state === 'loading';
 
   return (
@@ -72,12 +73,12 @@ export const AppLayout: React.FC = () => {
 
       <Sidebar onLogout={handleLogout} onMobileMenuToggleReady={registerMobileMenuToggle} />
 
-      <div className="flex h-full w-full flex-1 flex-col overflow-hidden">
+      <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
         <LoadingBar isLoading={isLoading || isPageLoading} />
         {!isLivePage && <AppTopBar onOpenMobileMenu={openMobileMenu} />}
 
         <div
-          className={`relative flex-1 w-full bg-app-background ${
+          className={`relative min-h-0 flex-1 w-full bg-app-background ${
             isManagedScrollPage
               ? 'overflow-hidden flex flex-col'
               : 'overflow-y-auto scroll-smooth'
