@@ -8,7 +8,6 @@ import {
   Clock3,
   Loader2,
   Package,
-  PackageCheck,
   PackageOpen,
   Power,
   Plus,
@@ -17,8 +16,11 @@ import {
   Timer,
   UserCheck,
   UserPlus,
+  Users,
+  X,
   XCircle,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { AppTooltip } from '../components/common/app-tooltip';
 import { Toggle } from '../components/common/toggle';
 import { useDelivery } from '../context/delivery-context-value';
@@ -73,7 +75,6 @@ const formatRadiusKm = formatSendiPlusRadiusKm;
 const SENDI_PLUS_TERMS_TEXT =
   'מתחייב בזמני משלוח של 60 דקות מסירה';
 const SENDI_PLUS_DETAILS_OPEN_STORAGE_KEY = 'dashboard-sendi-plus-details-open';
-const WORKSPACE_START_DISMISSED_STORAGE_PREFIX = 'dashboard-workspace-start-dismissed:';
 const WORKSPACE_START_SENDI_PLUS_RADIUS_KM = 5;
 const DASHBOARD_PULL_REFRESH_START_DISTANCE = 22;
 const DASHBOARD_PULL_REFRESH_THRESHOLD = 64;
@@ -868,128 +869,523 @@ const SendiPlusCard: React.FC<{
   );
 };
 
-const WorkspaceStartSpotlight: React.FC<{
-  area?: string;
-  companyPhone?: string;
+type WorkspaceStartCarouselStep = {
+  actionLabel: string;
+  description: string;
+  disabled?: boolean;
+  done: boolean;
+  eyebrow: string;
+  heading: string;
+  icon: React.ReactNode;
+  id: string;
+  onClick: () => void;
+  title: string;
+};
+
+type InviteContact = {
+  id: string;
+  name: string;
+  phone: string;
+};
+
+type ContactPickerContact = {
+  name?: string[];
+  tel?: string[];
+};
+
+type ContactsManager = {
+  select: (
+    properties: Array<'name' | 'tel'>,
+    options?: { multiple?: boolean },
+  ) => Promise<ContactPickerContact[]>;
+};
+
+const INVITED_COURIER_NAME = 'ממתין להרשמה';
+
+const DEMO_INVITE_CONTACTS: InviteContact[] = [
+  { id: 'contact-daniel', name: 'דניאל לוי', phone: '0524182191' },
+  { id: 'contact-noam', name: 'נועם ביטון', phone: '0546631240' },
+  { id: 'contact-omer', name: 'עומר כהן', phone: '0507428851' },
+  { id: 'contact-maya', name: 'מיה אוחיון', phone: '0539004412' },
+  { id: 'contact-itay', name: 'איתי פרץ', phone: '0527721098' },
+  { id: 'contact-lior', name: 'ליאור שחר', phone: '0523349901' },
+  { id: 'contact-shira', name: 'שירה מלכה', phone: '0547718030' },
+  { id: 'contact-ron', name: 'רון גבע', phone: '0503314790' },
+  { id: 'contact-gal', name: 'גל אמסלם', phone: '0532267018' },
+];
+
+const normalizeCourierPhone = (value: string) => value.replace(/\D/g, '');
+
+const getContactsManager = () => {
+  if (typeof navigator === 'undefined') return null;
+
+  const candidate = navigator as Navigator & { contacts?: ContactsManager };
+  return typeof candidate.contacts?.select === 'function' ? candidate.contacts : null;
+};
+
+const createInvitedCourier = (phone: string, contactName?: string): Courier => {
+  const now = new Date();
+
+  return {
+    id: `c-invite-${phone}-${now.getTime()}`,
+    name: contactName?.trim() || INVITED_COURIER_NAME,
+    phone,
+    registrationStatus: 'invited',
+    invitedAt: now,
+    vehicleType: 'אופנוע',
+    employmentType: 'פר משלוח',
+    status: 'offline',
+    connectedAt: null,
+    disconnectedAt: now,
+    isOnShift: false,
+    shiftStartedAt: null,
+    shiftEndedAt: null,
+    currentShiftAssignmentId: null,
+    activeDeliveryIds: [],
+    rating: 5,
+    totalDeliveries: 0,
+  };
+};
+
+const CourierInviteDialog: React.FC<{
+  couriers: Courier[];
+  open: boolean;
+  onClose: () => void;
+  onInvite: (contacts: InviteContact[]) => void;
+}> = ({ couriers, open, onClose, onInvite }) => {
+  const [manualPhone, setManualPhone] = React.useState('');
+  const [contactsOpen, setContactsOpen] = React.useState(true);
+  const [contactPickerPending, setContactPickerPending] = React.useState(false);
+  const [selectedContacts, setSelectedContacts] = React.useState<InviteContact[]>([]);
+
+  React.useEffect(() => {
+    if (!open) return;
+
+    setManualPhone('');
+    setContactsOpen(true);
+    setContactPickerPending(false);
+    setSelectedContacts([]);
+  }, [open]);
+
+  if (!open) return null;
+
+  const existingPhones = new Set(couriers.map((courier) => normalizeCourierPhone(courier.phone)));
+  const selectedPhones = new Set(selectedContacts.map((contact) => normalizeCourierPhone(contact.phone)));
+  const normalizedManualPhone = normalizeCourierPhone(manualPhone);
+  const canAddManualPhone =
+    normalizedManualPhone.length >= 9 &&
+    !existingPhones.has(normalizedManualPhone) &&
+    !selectedPhones.has(normalizedManualPhone);
+
+  const addContacts = (contacts: InviteContact[]) => {
+    setSelectedContacts((current) => {
+      const seen = new Set(current.map((contact) => normalizeCourierPhone(contact.phone)));
+      const next = [...current];
+
+      contacts.forEach((contact) => {
+        const phone = normalizeCourierPhone(contact.phone);
+        if (phone.length < 9 || existingPhones.has(phone) || seen.has(phone)) return;
+
+        seen.add(phone);
+        next.push({
+          ...contact,
+          id: contact.id || `contact-${phone}`,
+          phone,
+        });
+      });
+
+      return next;
+    });
+  };
+
+  const toggleDemoContact = (contact: InviteContact) => {
+    const phone = normalizeCourierPhone(contact.phone);
+    if (existingPhones.has(phone)) return;
+
+    setSelectedContacts((current) => {
+      if (current.some((item) => normalizeCourierPhone(item.phone) === phone)) {
+        return current.filter((item) => normalizeCourierPhone(item.phone) !== phone);
+      }
+
+      return [...current, { ...contact, phone }];
+    });
+  };
+
+  const addManualPhone = () => {
+    if (!canAddManualPhone) return;
+
+    addContacts([{
+      id: `manual-${normalizedManualPhone}`,
+      name: '',
+      phone: normalizedManualPhone,
+    }]);
+    setManualPhone('');
+  };
+
+  const pickContacts = async () => {
+    const contactsManager = getContactsManager();
+
+    if (!contactsManager) {
+      setContactsOpen(true);
+      return;
+    }
+
+    try {
+      setContactPickerPending(true);
+      const contacts = await contactsManager.select(['name', 'tel'], { multiple: true });
+      const nextContacts = contacts.flatMap((contact, index) => {
+        const phone = contact.tel?.find((value) => normalizeCourierPhone(value).length >= 9);
+        if (!phone) return [];
+
+        const normalizedPhone = normalizeCourierPhone(phone);
+        return [{
+          id: `native-${normalizedPhone}-${index}`,
+          name: contact.name?.[0] ?? '',
+          phone: normalizedPhone,
+        }];
+      });
+
+      if (nextContacts.length === 0) {
+        toast.error('לא נמצא מספר טלפון באנשי הקשר שנבחרו.');
+        setContactsOpen(true);
+        return;
+      }
+
+      addContacts(nextContacts);
+    } catch (error) {
+      const errorName = error instanceof DOMException ? error.name : '';
+      if (errorName !== 'AbortError') {
+        toast.info('בחירת אנשי קשר לא זמינה כאן. אפשר לבחור מהרשימה בדמו.');
+        setContactsOpen(true);
+      }
+    } finally {
+      setContactPickerPending(false);
+    }
+  };
+
+  const submitInvites = () => {
+    if (selectedContacts.length === 0) return;
+
+    onInvite(selectedContacts);
+    onClose();
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto rounded-[8px] border border-app-border bg-app-surface p-4 text-right shadow-2xl dark:border-[#252525] dark:bg-[#0A0A0A]"
+        onClick={(event) => event.stopPropagation()}
+        dir="rtl"
+      >
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="text-lg font-black leading-6 text-app-text">הזמנת שליחים</h2>
+            <p className="mt-1 text-sm leading-6 text-app-text-secondary">
+              בחר כמה אנשי קשר או הוסף מספרים ידנית. כל שליח יקבל הזמנה וימלא את הפרטים באפליקציה שלו.
+            </p>
+          </div>
+          <button
+            type="button"
+            aria-label="סגור הזמנת שליחים"
+            onClick={onClose}
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[6px] border border-app-border text-app-text-secondary transition-colors hover:bg-app-surface-raised dark:border-[#252525] dark:hover:bg-[#111111]"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="grid gap-3">
+          <div className="rounded-[8px] border border-app-border p-3 dark:border-[#252525]">
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <span className="text-xs font-black text-app-text">אנשי קשר</span>
+              <button
+                type="button"
+                onClick={pickContacts}
+                disabled={contactPickerPending}
+                className="inline-flex h-8 items-center justify-center gap-2 rounded-[6px] border border-app-border px-3 text-xs font-black text-app-text transition-colors hover:bg-app-surface-raised disabled:cursor-wait disabled:opacity-60 dark:border-[#252525] dark:hover:bg-[#111111]"
+              >
+                <Users className="h-3.5 w-3.5" />
+                {contactPickerPending ? 'פותח אנשי קשר' : 'בחר מאנשי קשר'}
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setContactsOpen((value) => !value)}
+              className="mb-2 text-xs font-semibold text-app-brand"
+            >
+              {contactsOpen ? 'הסתר רשימת דמו' : 'הצג רשימת דמו'}
+            </button>
+
+            {contactsOpen ? (
+              <div className="grid gap-2 sm:grid-cols-2">
+                {DEMO_INVITE_CONTACTS.map((contact) => {
+                  const phone = normalizeCourierPhone(contact.phone);
+                  const alreadyExists = existingPhones.has(phone);
+                  const selected = selectedPhones.has(phone);
+
+                  return (
+                    <button
+                      key={contact.id}
+                      type="button"
+                      disabled={alreadyExists}
+                      onClick={() => toggleDemoContact(contact)}
+                      className={`flex min-w-0 items-center justify-between gap-3 rounded-[6px] border px-3 py-2 text-right transition-colors ${
+                        selected
+                          ? 'border-app-brand/50 bg-app-brand/10'
+                          : 'border-app-border hover:bg-app-surface-raised dark:border-[#252525] dark:hover:bg-[#111111]'
+                      } disabled:cursor-not-allowed disabled:opacity-45`}
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-black text-app-text">{contact.name}</span>
+                        <span className="block truncate text-xs text-app-text-secondary" dir="ltr">{contact.phone}</span>
+                      </span>
+                      <span className="shrink-0 text-[11px] font-bold text-app-text-secondary">
+                        {alreadyExists ? 'כבר במערכת' : selected ? 'נבחר' : 'בחר'}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
+          </div>
+
+          <div className="rounded-[8px] border border-app-border p-3 dark:border-[#252525]">
+            <label className="mb-2 block text-xs font-black text-app-text" htmlFor="dashboard-courier-invite-phone">
+              מספר נוסף
+            </label>
+            <div className="flex gap-2" dir="ltr">
+              <button
+                type="button"
+                onClick={addManualPhone}
+                disabled={!canAddManualPhone}
+                className="inline-flex h-9 shrink-0 items-center justify-center rounded-[6px] bg-app-brand-solid px-3 text-xs font-black text-app-background transition-colors hover:bg-app-brand-hover disabled:cursor-not-allowed disabled:bg-app-surface-raised disabled:text-app-text-secondary"
+              >
+                הוסף
+              </button>
+              <input
+                id="dashboard-courier-invite-phone"
+                type="tel"
+                value={manualPhone}
+                onChange={(event) => setManualPhone(normalizeCourierPhone(event.target.value))}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') addManualPhone();
+                }}
+                placeholder="0501234567"
+                inputMode="tel"
+                className="h-9 min-w-0 flex-1 rounded-[6px] border border-app-border bg-app-background px-3 text-sm text-app-text outline-none transition focus:border-app-brand dark:border-[#252525]"
+              />
+            </div>
+            {normalizedManualPhone.length >= 9 && existingPhones.has(normalizedManualPhone) ? (
+              <div className="mt-2 text-xs font-semibold text-[#f59e0b]">המספר הזה כבר קיים במערכת.</div>
+            ) : null}
+          </div>
+
+          <div className="rounded-[8px] border border-app-border bg-app-surface-raised p-3 dark:border-[#252525] dark:bg-[#111111]">
+            <div className="mb-2 text-xs font-black text-app-text">
+              נבחרו לשליחה ({selectedContacts.length})
+            </div>
+            {selectedContacts.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {selectedContacts.map((contact) => (
+                  <button
+                    key={`${contact.id}-${contact.phone}`}
+                    type="button"
+                    onClick={() => {
+                      const phone = normalizeCourierPhone(contact.phone);
+                      setSelectedContacts((current) =>
+                        current.filter((item) => normalizeCourierPhone(item.phone) !== phone)
+                      );
+                    }}
+                    className="inline-flex max-w-full items-center gap-2 rounded-[6px] bg-app-brand/10 px-2.5 py-1 text-xs font-bold text-app-brand"
+                  >
+                    <X className="h-3 w-3 shrink-0" />
+                    <span className="min-w-0 truncate">
+                      {contact.name?.trim() || contact.phone}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="text-xs leading-5 text-app-text-secondary">
+                עדיין לא נבחרו שליחים להזמנה.
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-9 items-center justify-center rounded-[6px] border border-app-border px-4 text-xs font-black text-app-text transition-colors hover:bg-app-surface-raised dark:border-[#252525] dark:hover:bg-[#111111]"
+          >
+            ביטול
+          </button>
+          <button
+            type="button"
+            disabled={selectedContacts.length === 0}
+            onClick={submitInvites}
+            className="inline-flex h-9 items-center justify-center gap-2 rounded-[6px] bg-app-brand-solid px-4 text-xs font-black text-app-background transition-colors hover:bg-app-brand-hover disabled:cursor-not-allowed disabled:bg-app-surface-raised disabled:text-app-text-secondary"
+          >
+            <UserPlus className="h-4 w-4" />
+            שלח {selectedContacts.length > 1 ? `${selectedContacts.length} הזמנות` : 'הזמנה'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const WorkspaceStartCarousel: React.FC<{
   invitedCourierCount: number;
+  isReceivingDeliveries: boolean;
   registeredCourierCount: number;
-  restaurantCount: number;
   sendiPlusActive: boolean;
-  workspaceName?: string;
   onActivateSendiPlus: () => void;
   onCreateCourier: () => void;
-  onDismiss: () => void;
-  onOpenRestaurants: () => void;
+  onOpenDeliveryIntake: () => void;
 }> = ({
   invitedCourierCount,
+  isReceivingDeliveries,
   registeredCourierCount,
   sendiPlusActive,
   onActivateSendiPlus,
   onCreateCourier,
-  onDismiss,
+  onOpenDeliveryIntake,
 }) => {
   const hasRegisteredCouriers = registeredCourierCount > 0;
   const hasPendingCourierInvites = invitedCourierCount > 0;
-  const registeredCourierStatusText = registeredCourierCount === 1
-    ? 'שליח אחד רשום'
-    : `${formatNumber(registeredCourierCount)} שליחים רשומים`;
-  const pendingCourierStatusText = invitedCourierCount === 1
-    ? 'הזמנה אחת ממתינה'
-    : `${formatNumber(invitedCourierCount)} הזמנות ממתינות`;
-  const courierStatusText = hasRegisteredCouriers
-    ? registeredCourierStatusText
-    : hasPendingCourierInvites
-      ? pendingCourierStatusText
-      : 'עדיין לא הוזמן שליח';
-
-  let nextStep: {
-    actionLabel: string;
-    description: string;
-    icon: React.ReactNode;
-    onClick: () => void;
-    stepLabel: string;
-    title: string;
-  };
-
-  if (!hasRegisteredCouriers) {
-    nextStep = {
-      actionLabel: hasPendingCourierInvites ? 'הזמן עוד שליח' : 'הזמן שליח',
-      description: hasPendingCourierInvites
-        ? 'מחכים שהשליח ישלים הרשמה באפליקציה שלו. אפשר להזמין עוד אחד בלי לפתוח טופס בדשבורד.'
-        : 'השליח נרשם באפליקציה שלו. מכאן רק שולחים הזמנה.',
+  const steps: WorkspaceStartCarouselStep[] = [
+    {
+      id: 'couriers',
+      title: 'שליחים',
+      eyebrow: 'שלב ראשון',
+      heading: 'הזמנת שליחים',
+      description: 'שלח הזמנה לכמה שליחים במקביל מאנשי קשר או ממספרי טלפון. השליח נרשם באפליקציה שלו, ושם יתמלאו הפרטים לדמו.',
+      actionLabel: hasRegisteredCouriers || hasPendingCourierInvites ? 'שלח עוד הזמנות' : 'הזמן שליחים',
+      done: hasRegisteredCouriers,
       icon: <UserPlus className="h-4 w-4" />,
       onClick: onCreateCourier,
-      stepLabel: 'שלב ראשון',
-      title: hasPendingCourierInvites ? 'הזמנת שליח נשלחה' : 'הוסף שליח ראשון',
-    };
-  } else if (!sendiPlusActive) {
-    nextStep = {
-      actionLabel: 'הפעל סנדי פלוס',
-      description: 'יש שליח רשום. עכשיו אפשר לפתוח קבלת משלוחים מהרשת.',
+    },
+    {
+      id: 'network',
+      title: 'מקור משלוחים',
+      eyebrow: 'שלב שני',
+      heading: 'מקור משלוחים לדמו',
+      description: hasRegisteredCouriers
+        ? 'אחרי שיש לפחות שליח רשום, סנדי פלוס מכניס משלוחים לדמו לפי אזורי הפעילות כדי שיהיה מה לשבץ.'
+        : 'השלב הזה נפתח אחרי ששליח אחד נרשם, כדי שלא ייכנסו משלוחים בלי מי שיבצע אותם.',
+      actionLabel: sendiPlusActive ? 'פעיל' : 'הפעל סנדי פלוס',
+      disabled: !hasRegisteredCouriers || sendiPlusActive,
+      done: sendiPlusActive,
       icon: <Sparkles className="h-4 w-4" />,
       onClick: onActivateSendiPlus,
-      stepLabel: 'השלב הבא',
-      title: 'הפעל קבלת משלוחים',
-    };
-  } else {
-    nextStep = {
-      actionLabel: 'סגור',
-      description: 'הבסיס מוכן. אפשר להמשיך לעבוד מהדשבורד.',
-      icon: <CheckCircle2 className="h-4 w-4" />,
-      onClick: onDismiss,
-      stepLabel: 'מוכן',
-      title: 'הדשבורד מוכן לעבודה',
-    };
-  }
+    },
+    {
+      id: 'intake',
+      title: 'קבלת משלוחים',
+      eyebrow: 'שלב שלישי',
+      heading: 'קבלת משלוחים',
+      description: sendiPlusActive
+        ? 'כאן פותחים את הכניסה של משלוחים חדשים לדשבורד. אפשר לסגור או לפתוח קבלה בכל רגע מהמתג למעלה.'
+        : 'השלב הזה נפתח אחרי שמקור המשלוחים פעיל, ואז הדמו מתחיל להזרים הזמנות למסך.',
+      actionLabel: isReceivingDeliveries ? 'פתוח' : 'פתח קבלת משלוחים',
+      disabled: !sendiPlusActive || isReceivingDeliveries,
+      done: isReceivingDeliveries,
+      icon: <Power className="h-4 w-4" />,
+      onClick: onOpenDeliveryIntake,
+    },
+  ];
+  const nextIncompleteIndex = steps.findIndex((step) => !step.done);
+  const activeSuggestedIndex =
+    nextIncompleteIndex === -1 ? steps.length - 1 : nextIncompleteIndex;
+  const [activeIndex, setActiveIndex] = React.useState(activeSuggestedIndex);
+
+  React.useEffect(() => {
+    setActiveIndex(activeSuggestedIndex);
+  }, [activeSuggestedIndex]);
+
+  const activeStep = steps[activeIndex] ?? steps[0];
 
   return (
-    <section className="rounded-none border border-app-brand/25 bg-app-surface text-right shadow-[0_10px_24px_rgba(0,0,0,0.06)] dark:border-app-brand/20 dark:bg-[#0A0A0A]">
-      <div className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between" dir="rtl">
+    <section
+      aria-label="התחלה מהירה"
+      className="rounded-none border border-app-border bg-app-surface text-right dark:border-[#252525] dark:bg-[#0A0A0A]"
+      dir="rtl"
+    >
+      <div className="flex items-center justify-between gap-3 border-b border-app-border px-3 py-2.5 dark:border-[#252525]">
+        <div className="min-w-0 text-right">
+          <h2 className="text-sm font-black leading-5 text-app-text">התחלה מהירה</h2>
+          <p className="mt-0.5 text-xs leading-5 text-app-text-secondary">
+            שלושה צעדים כדי להתחיל לקבל ולשבץ משלוחים בדמו.
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5" dir="ltr">
+          {steps.map((step, index) => {
+            const isActive = index === activeIndex;
+            return (
+              <button
+                key={step.id}
+                type="button"
+                aria-label={`עבור לשלב ${index + 1}: ${step.title}`}
+                onClick={() => setActiveIndex(index)}
+                className={`inline-flex h-6 min-w-6 items-center justify-center rounded-[6px] px-2 text-[11px] font-black transition-colors ${
+                  isActive
+                    ? 'bg-app-brand-solid text-app-background'
+                    : step.done
+                      ? 'bg-app-brand/10 text-app-brand'
+                      : 'bg-app-surface-raised text-app-text-secondary hover:text-app-text dark:bg-[#111111]'
+                }`}
+              >
+                {index + 1}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="grid min-h-[112px] gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] bg-app-brand/10 text-app-brand">
-            {nextStep.icon}
+          <span
+            className={`mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] ${
+              activeStep.done
+                ? 'bg-app-brand/10 text-app-brand'
+                : 'bg-app-surface-raised text-app-text-secondary dark:bg-[#111111]'
+            }`}
+          >
+            {activeStep.icon}
           </span>
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[11px] font-black text-app-brand">{nextStep.stepLabel}</span>
-              <span className="h-1 w-1 rounded-full bg-app-text-secondary/50" />
-              <span className="text-[11px] font-semibold text-app-text-secondary">{courierStatusText}</span>
-            </div>
-            <h2 className="mt-1 text-sm font-black leading-5 text-app-text">
-              {nextStep.title}
-            </h2>
-            <p className="mt-0.5 max-w-[46rem] text-xs leading-5 text-app-text-secondary">
-              {nextStep.description}
+            <div className="text-[11px] font-black text-app-brand">{activeStep.eyebrow}</div>
+            <h3 className="mt-1 text-base font-black leading-6 text-app-text">
+              {activeStep.heading}
+            </h3>
+            <p className="mt-1 max-w-[46rem] text-xs leading-5 text-app-text-secondary">
+              {activeStep.description}
             </p>
           </div>
         </div>
-        <div className="flex shrink-0 items-center justify-end gap-2">
-          <button
-            type="button"
-            onClick={nextStep.onClick}
-            className="inline-flex items-center gap-2 rounded-[6px] bg-app-brand-solid px-3 py-2 text-xs font-black text-app-background transition-colors hover:bg-app-brand-hover"
-          >
-            {nextStep.icon}
-            {nextStep.actionLabel}
-          </button>
-          {!sendiPlusActive ? (
-            <button
-              type="button"
-              onClick={onDismiss}
-              aria-label="סגור כרטיס אונבורדינג"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-[6px] border border-app-border text-app-text-secondary transition-colors hover:bg-app-surface-raised dark:border-[#252525] dark:hover:bg-[#111111]"
-            >
-              <XCircle className="h-4 w-4" />
-            </button>
-          ) : null}
-        </div>
+
+        <button
+          type="button"
+          disabled={activeStep.disabled}
+          onClick={activeStep.onClick}
+          className="inline-flex h-9 items-center justify-center gap-2 rounded-[6px] bg-app-brand-solid px-3 text-xs font-black text-app-background transition-colors hover:bg-app-brand-hover disabled:cursor-not-allowed disabled:bg-app-surface-raised disabled:text-app-text-secondary dark:disabled:bg-[#111111]"
+        >
+          {activeStep.icon}
+          {activeStep.actionLabel}
+        </button>
       </div>
     </section>
   );
 };
 
 export const Dashboard: React.FC = () => {
-  const { state, dispatch, toggleSystem } = useDelivery();
+  const { state, dispatch } = useDelivery();
   const navigate = useNavigate();
   const [authSession, setAuthSession] = React.useState(readAuthSession);
   const todayDateKey = React.useMemo(() => toDateInputValue(new Date()), []);
@@ -1000,6 +1396,7 @@ export const Dashboard: React.FC = () => {
   const [pullDistance, setPullDistance] = React.useState(0);
   const [isPullRefreshReady, setIsPullRefreshReady] = React.useState(false);
   const [isDashboardRefreshing, setIsDashboardRefreshing] = React.useState(false);
+  const [isCourierInviteDialogOpen, setIsCourierInviteDialogOpen] = React.useState(false);
   const mainScrollRef = React.useRef<HTMLElement | null>(null);
   const pullStartXRef = React.useRef<number | null>(null);
   const pullStartYRef = React.useRef<number | null>(null);
@@ -1012,11 +1409,6 @@ export const Dashboard: React.FC = () => {
   const pullRefreshResetTimeoutRef = React.useRef<number | null>(null);
   const dashboardRefreshTimeoutRef = React.useRef<number | null>(null);
   const pullRefreshHapticButtonRef = React.useRef<HTMLButtonElement | null>(null);
-  const workspaceStartStorageKey = React.useMemo(
-    () => `${WORKSPACE_START_DISMISSED_STORAGE_PREFIX}${state.workspaceId ?? state.workspaceName ?? 'default'}`,
-    [state.workspaceId, state.workspaceName],
-  );
-  const [isWorkspaceStartDismissed, setIsWorkspaceStartDismissed] = React.useState(false);
   const dashboardUserName = authSession?.user.name?.trim() || 'משתמש';
 
   const isMobilePullRefreshPointer = React.useCallback(() => {
@@ -1113,14 +1505,6 @@ export const Dashboard: React.FC = () => {
       window.removeEventListener('focus', refreshAuthSession);
     };
   }, []);
-
-  React.useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    setIsWorkspaceStartDismissed(
-      window.localStorage.getItem(workspaceStartStorageKey) === 'true',
-    );
-  }, [workspaceStartStorageKey]);
 
   const handlePullRefreshTouchStart = React.useCallback((event: React.TouchEvent<HTMLElement>) => {
     if (isDashboardRefreshingRef.current || !isMobilePullRefreshPointer()) return;
@@ -1307,29 +1691,43 @@ export const Dashboard: React.FC = () => {
     }
   }, []);
 
-  React.useEffect(() => {
-    if (state.isSystemOpen || !sendiPlusTermsAccepted) return;
-
-    setSendiPlusTermsAccepted(false);
-    setSendiPlusRadiusKm(DEFAULT_SENDI_PLUS_RADIUS_KM);
-  }, [sendiPlusTermsAccepted, state.isSystemOpen]);
-
   const handleActivateSendiPlusFromSpotlight = React.useCallback(() => {
-    if (!state.isSystemOpen) return;
-
     const nextRadiusKm =
       sendiPlusRadiusKm > 0 ? sendiPlusRadiusKm : WORKSPACE_START_SENDI_PLUS_RADIUS_KM;
     setSendiPlusRadiusKm(nextRadiusKm);
     writeStoredSendiPlusRadius(nextRadiusKm);
     handleSendiPlusTermsAcceptedChange(true);
-  }, [handleSendiPlusTermsAcceptedChange, sendiPlusRadiusKm, state.isSystemOpen]);
+  }, [handleSendiPlusTermsAcceptedChange, sendiPlusRadiusKm]);
 
-  const handleDismissWorkspaceStart = React.useCallback(() => {
-    setIsWorkspaceStartDismissed(true);
+  const handleInviteCouriersFromDashboard = React.useCallback((contacts: InviteContact[]) => {
+    const existingPhones = new Set(state.couriers.map((courier) => normalizeCourierPhone(courier.phone)));
+    const phonesInBatch = new Set<string>();
+    const uniqueContacts = contacts.filter((contact) => {
+      const phone = normalizeCourierPhone(contact.phone);
+      if (phone.length < 9 || existingPhones.has(phone) || phonesInBatch.has(phone)) return false;
 
-    if (typeof window === 'undefined') return;
-    window.localStorage.setItem(workspaceStartStorageKey, 'true');
-  }, [workspaceStartStorageKey]);
+      phonesInBatch.add(phone);
+      return true;
+    });
+
+    if (uniqueContacts.length === 0) {
+      toast.error('כל השליחים שנבחרו כבר קיימים במערכת.');
+      return;
+    }
+
+    uniqueContacts.forEach((contact) => {
+      dispatch({
+        type: 'ADD_COURIER',
+        payload: createInvitedCourier(normalizeCourierPhone(contact.phone), contact.name),
+      });
+    });
+
+    toast.success(
+      uniqueContacts.length === 1
+        ? 'נשלחה הזמנה לשליח'
+        : `נשלחו ${formatNumber(uniqueContacts.length)} הזמנות לשליחים`,
+    );
+  }, [dispatch, state.couriers]);
 
   const dateDeliveries = React.useMemo(
     () =>
@@ -1367,7 +1765,7 @@ export const Dashboard: React.FC = () => {
     () => sendiPlusDeliveryZones.filter(isDeliveryZoneActive).length,
     [dashboardRefreshVersion, sendiPlusDeliveryZones],
   );
-  const isSendiPlusOperational = state.isSystemOpen && sendiPlusTermsAccepted;
+  const isSendiPlusOperational = sendiPlusTermsAccepted;
   const sendiPlusActiveRestaurantCount = React.useMemo(
     () =>
       state.restaurants.filter(
@@ -1408,13 +1806,18 @@ export const Dashboard: React.FC = () => {
   const activeRestaurantsCount = baseActiveRestaurantsCount + (
     isSendiPlusOperational ? sendiPlusRestaurantsForDashboardCount : 0
   );
+  const registeredCourierCount = state.couriers.filter(
+    (courier) => courier.registrationStatus !== 'invited',
+  ).length;
+  const invitedCourierCount = state.couriers.filter(
+    (courier) => courier.registrationStatus === 'invited',
+  ).length;
   const shouldShowWorkspaceStart =
     state.dataMode === 'workspace' &&
-    !isWorkspaceStartDismissed &&
     (
-      state.couriers.length === 0 ||
-      activeRestaurantsCount === 0 ||
-      !sendiPlusTermsAccepted
+      registeredCourierCount === 0 ||
+      !isSendiPlusOperational ||
+      !state.isReceivingDeliveries
     );
   const freeCouriersCount = React.useMemo(() => {
     const busyCourierIds = new Set(
@@ -1468,20 +1871,13 @@ export const Dashboard: React.FC = () => {
   const pullRefreshLabel = isDashboardRefreshing || isPullRefreshReady
     ? 'מרענן'
     : 'משוך לרענון';
-  const systemPowerLabel = state.isSystemOpen ? 'מערכת דלוקה' : 'מערכת כבויה';
-  const deliveryIntakeLabel = state.isReceivingDeliveries ? 'מקבל משלוחים' : 'לא מקבל משלוחים';
-  const autoAssignLabel = state.autoAssignEnabled ? 'שיבוץ אוטומטי פעיל' : 'שיבוץ אוטומטי כבוי';
-  const registeredCourierCount = state.couriers.filter(
-    (courier) => courier.registrationStatus !== 'invited',
-  ).length;
-  const invitedCourierCount = state.couriers.filter(
-    (courier) => courier.registrationStatus === 'invited',
-  ).length;
+  const deliveryIntakeLabel = state.isReceivingDeliveries ? 'קבלת משלוחים פתוחה' : 'קבלת משלוחים סגורה';
+  const autoAssignLabel = state.autoAssignEnabled ? 'שיבוץ אוטומטי פעיל' : 'שיבוץ ידני';
   const hasCouriersForOperations = registeredCourierCount > 0;
-  const deliveryIntakeControlDisabled = !state.isSystemOpen || isDashboardRefreshing;
+  const deliveryIntakeControlDisabled = isDashboardRefreshing;
   const autoAssignControlDisabled =
-    !state.isSystemOpen || !hasCouriersForOperations || isDashboardRefreshing;
-  const dashboardCardsDisabled = !state.isSystemOpen;
+    !hasCouriersForOperations || isDashboardRefreshing;
+  const dashboardCardsDisabled = false;
   const dashboardCardDisabledClassName = dashboardCardsDisabled
     ? 'cursor-not-allowed opacity-45 grayscale'
     : '';
@@ -1536,6 +1932,12 @@ export const Dashboard: React.FC = () => {
   return (
     <>
       {mapSplitPortal}
+      <CourierInviteDialog
+        couriers={state.couriers}
+        open={isCourierInviteDialogOpen}
+        onClose={() => setIsCourierInviteDialogOpen(false)}
+        onInvite={handleInviteCouriersFromDashboard}
+      />
       <div className="flex h-full min-h-0 flex-col overflow-hidden bg-app-background text-app-text" dir="rtl">
       <button
         ref={pullRefreshHapticButtonRef}
@@ -1591,54 +1993,24 @@ export const Dashboard: React.FC = () => {
             <div className="flex max-w-full min-w-0 items-center gap-2 overflow-x-auto no-scrollbar" dir="ltr">
               <div className="flex shrink-0 items-center gap-1">
                 <DashboardToolbarToggle
-                  active={state.isSystemOpen}
-                  disabled={isDashboardRefreshing}
-                  label={systemPowerLabel}
-                  onClick={toggleSystem}
-                  icon={
-                    pullRefreshArmed ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <Power className="h-3.5 w-3.5" />
-                    )
-                  }
-                />
-                <DashboardToolbarToggle
                   active={state.isReceivingDeliveries}
                   disabled={deliveryIntakeControlDisabled}
                   label={deliveryIntakeLabel}
                   onClick={() => dispatch({ type: 'TOGGLE_DELIVERY_INTAKE' })}
-                  icon={
-                    state.isReceivingDeliveries ? (
-                      <PackageCheck className="h-3.5 w-3.5" />
-                    ) : (
-                      <PackageOpen className="h-3.5 w-3.5" />
-                    )
-                  }
-                />
-                <DashboardToolbarToggle
-                  active={state.autoAssignEnabled}
-                  disabled={autoAssignControlDisabled}
-                  label={autoAssignLabel}
-                  onClick={() => dispatch({ type: 'TOGGLE_AUTO_ASSIGN' })}
-                  icon={<Sparkles className="h-3.5 w-3.5" />}
+                  icon={<Power className="h-3.5 w-3.5" />}
                 />
               </div>
             </div>
           </section>
           {shouldShowWorkspaceStart ? (
-            <WorkspaceStartSpotlight
-              area={state.workspaceArea}
-              companyPhone={state.workspacePhone}
+            <WorkspaceStartCarousel
               invitedCourierCount={invitedCourierCount}
+              isReceivingDeliveries={state.isReceivingDeliveries}
               registeredCourierCount={registeredCourierCount}
-              restaurantCount={state.restaurants.length}
               sendiPlusActive={isSendiPlusOperational}
-              workspaceName={state.workspaceName}
               onActivateSendiPlus={handleActivateSendiPlusFromSpotlight}
-              onCreateCourier={() => navigate('/couriers?action=create-courier')}
-              onDismiss={handleDismissWorkspaceStart}
-              onOpenRestaurants={() => navigate('/restaurants')}
+              onCreateCourier={() => setIsCourierInviteDialogOpen(true)}
+              onOpenDeliveryIntake={() => dispatch({ type: 'TOGGLE_DELIVERY_INTAKE' })}
             />
           ) : null}
           <section>
@@ -1792,7 +2164,7 @@ export const Dashboard: React.FC = () => {
             activeRestaurantCount={sendiPlusActiveRestaurantCount}
             radiusKm={sendiPlusRadiusKm}
             termsAccepted={sendiPlusTermsAccepted}
-            isSystemOpen={state.isSystemOpen}
+            isSystemOpen={true}
             isRefreshing={isDashboardRefreshing}
             onRadiusKmChange={handleSendiPlusRadiusChange}
             onTermsAcceptedChange={handleSendiPlusTermsAcceptedChange}

@@ -821,9 +821,9 @@ export const createInitialDeliveryState = (): DeliveryState => ({
   dataMode: 'demo',
   workspaceId: 'wrk_legacy_tlv_runners',
   workspaceName: 'TLV RUNNERS',
-  isSystemOpen: false,
+  isSystemOpen: true,
   isReceivingDeliveries: false,
-  autoAssignEnabled: false, // Keep auto-assignment off while the system is closed.
+  autoAssignEnabled: false,
   timeMultiplier: 1, // Real-time simulation speed.
   deliveries: [],
   couriers: COURIERS_DATA.map((courier) => ({ ...courier, activeDeliveryIds: [...courier.activeDeliveryIds] })),

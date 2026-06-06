@@ -16,7 +16,6 @@ import {
   Package,
   Palette,
   Plus,
-  Power,
   Ruler,
   Search,
   Settings,
@@ -57,8 +56,6 @@ const LABELS = {
   receivingDeliveries: '\u05de\u05e7\u05d1\u05dc \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
   notReceivingDeliveries: '\u05dc\u05d0 \u05de\u05e7\u05d1\u05dc \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
   autoAssign: '\u05e9\u05d9\u05d1\u05d5\u05e5 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9',
-  systemOn: '\u05de\u05e2\u05e8\u05db\u05ea \u05d3\u05dc\u05d5\u05e7\u05d4',
-  systemOff: '\u05de\u05e2\u05e8\u05db\u05ea \u05db\u05d1\u05d5\u05d9\u05d4',
   settings: '\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea',
   wallet: '\u05d0\u05e8\u05e0\u05e7',
   deliveryBalance: '\u05d9\u05ea\u05e8\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
@@ -248,7 +245,7 @@ const NAV_ICON_MAP: Record<AppNavIconKey, React.FC<React.SVGProps<SVGSVGElement>
 export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileMenuToggleReady }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { state, dispatch, toggleSystem: toggleSystemPower } = useDelivery();
+  const { state, dispatch } = useDelivery();
   const workspaceBusinessName = state.workspaceName?.trim() || 'TLV RUNNERS';
   const workspaceAccounts = useMemo(() => readWorkspaceAccounts(), [
     state.workspaceId,
@@ -368,7 +365,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
     isRestaurantActiveForDisplay(restaurant),
   ).length;
   const activeCouriersCount = state.couriers.filter((courier) => courier.status !== 'offline').length;
-  const systemStatusLabel = state.isSystemOpen ? LABELS.systemOn : LABELS.systemOff;
   const deliveryIntakeStatusLabel = state.isReceivingDeliveries
     ? LABELS.receivingDeliveries
     : LABELS.notReceivingDeliveries;
@@ -855,11 +851,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
     return null;
   };
 
-  const toggleSystem = (event?: React.MouseEvent) => {
-    event?.stopPropagation();
-    toggleSystemPower();
-  };
-
   const toggleDeliveryIntake = (event?: React.MouseEvent) => {
     event?.stopPropagation();
     dispatch({ type: 'TOGGLE_DELIVERY_INTAKE' });
@@ -1253,8 +1244,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
             )}
           </button>
 
-          <div className="border-b border-app-nav-border px-4 py-3">
-            {isExpanded ? (
+          {isExpanded ? (
+            <div className="border-b border-app-nav-border px-4 py-3">
               <div className="space-y-3">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-xs text-app-text-secondary">
@@ -1262,7 +1253,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                   </span>
                   <Toggle
                     checked={state.autoAssignEnabled}
-                    disabled={!state.isSystemOpen || !hasCouriersForOperations}
+                    disabled={!hasCouriersForOperations}
                     onChange={() => dispatch({ type: 'TOGGLE_AUTO_ASSIGN' })}
                     ariaLabel={LABELS.autoAssign}
                   />
@@ -1274,43 +1265,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
                   </span>
                   <Toggle
                     checked={state.isReceivingDeliveries}
-                    disabled={!state.isSystemOpen}
                     onChange={() => toggleDeliveryIntake()}
                     ariaLabel={deliveryIntakeStatusLabel}
                   />
                 </div>
-
-                <div data-onboarding="system-toggle" className="flex items-center justify-between gap-3">
-                  <span className="text-xs text-app-text-secondary">
-                    {systemStatusLabel}
-                  </span>
-                  <Toggle
-                    checked={state.isSystemOpen}
-                    onChange={() => toggleSystem()}
-                    ariaLabel={systemStatusLabel}
-                  />
-                </div>
               </div>
-            ) : (
-              <SidebarIconTooltip
-                label={systemStatusLabel}
-                className="hidden justify-center md:flex"
-              >
-                <button
-                  type="button"
-                  data-haptic={state.isSystemOpen ? 'warning' : 'success'}
-                  onClick={toggleSystem}
-                  className="flex items-center justify-center"
-                >
-                  <Power
-                    className={`h-4 w-4 transition-colors ${
-                      state.isSystemOpen ? 'text-app-success-text' : 'text-[#dc2626]'
-                    }`}
-                  />
-                </button>
-              </SidebarIconTooltip>
-            )}
-          </div>
+            </div>
+          ) : null}
         </div>
       </div>
 

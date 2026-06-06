@@ -685,7 +685,7 @@ const createEmptyWorkspaceState = ({
     workspaceAreas: areas,
     workspacePhone: companyPhone.trim(),
     workspaceRegistrationNumber: companyRegistrationNumber.trim(),
-    isSystemOpen: false,
+    isSystemOpen: true,
     isReceivingDeliveries: false,
     autoAssignEnabled: false,
     deliveries: [],
@@ -791,6 +791,7 @@ export const OnboardingPage: React.FC = () => {
   }, [selectedWorkspaceAreas]);
 
   const canContinueActivityArea = selectedWorkspaceAreas.length > 0;
+  const onboardingGreetingName = userName.trim() || session?.user.name?.trim() || '';
 
   useEffect(() => {
     const currentSession = readAuthSession();
@@ -1139,7 +1140,12 @@ export const OnboardingPage: React.FC = () => {
         {step === 'companyChoice' ? (
           <section className="w-full max-w-[360px] text-center" dir="rtl" aria-label="בחירת סוג הצטרפות">
             <h1 className="mb-7 text-3xl font-extrabold text-[#0d0d12] dark:text-app-text sm:text-[32px]">
-              מה תרצה לעשות?
+              <span className="block">
+                {onboardingGreetingName ? `היי ${onboardingGreetingName}` : 'היי'}
+              </span>
+              <span className="mt-2 block text-2xl sm:text-3xl">
+                מה תרצה לעשות?
+              </span>
             </h1>
 
             <div className="space-y-3">

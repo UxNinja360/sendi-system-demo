@@ -17,7 +17,6 @@ import {
   Moon,
   Palette,
   Package,
-  Power,
   RotateCcw,
   Ruler,
   Store,
@@ -72,14 +71,12 @@ const TEXT = {
   open: '\u05e4\u05ea\u05d7',
   operations: '\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea \u05ea\u05e4\u05e2\u05d5\u05dc',
   operationsDescription: '\u05e8\u05d9\u05db\u05d5\u05d6 \u05db\u05dc \u05d4\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea \u05e9\u05e7\u05d5\u05d1\u05e2\u05d5\u05ea \u05d0\u05d9\u05da \u05d4\u05e2\u05e1\u05e7 \u05e2\u05d5\u05d1\u05d3 \u05d1\u05e9\u05d8\u05d7: \u05e9\u05e2\u05d5\u05ea, \u05d0\u05d6\u05d5\u05e8\u05d9\u05dd \u05d5\u05ea\u05de\u05d7\u05d5\u05e8.',
-  system: '\u05d4\u05de\u05e2\u05e8\u05db\u05ea',
-  systemDescription: '\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea \u05e9\u05de\u05db\u05ea\u05d9\u05d1\u05d5\u05ea \u05d0\u05d9\u05da \u05d4\u05de\u05e2\u05e8\u05db\u05ea \u05db\u05d5\u05dc\u05d4 \u05e2\u05d5\u05d1\u05d3\u05ea \u05d1\u05d6\u05de\u05df \u05d0\u05de\u05ea.',
-  systemOpen: '\u05de\u05e2\u05e8\u05db\u05ea \u05d3\u05dc\u05d5\u05e7\u05d4',
-  systemOpenHint: '\u05db\u05d9\u05d1\u05d5\u05d9 \u05d6\u05de\u05d9\u05df \u05e8\u05e7 \u05db\u05e9\u05d0\u05d9\u05df \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd \u05e4\u05e2\u05d9\u05dc\u05d9\u05dd, \u05d5\u05de\u05db\u05d1\u05d4 \u05d0\u05ea \u05db\u05dc \u05de\u05e6\u05d1\u05d9 \u05d4\u05ea\u05e4\u05e2\u05d5\u05dc.',
+  system: '\u05d1\u05e7\u05e8\u05ea \u05ea\u05e4\u05e2\u05d5\u05dc',
+  systemDescription: '\u05e9\u05dc\u05d9\u05d8\u05d4 \u05d1\u05de\u05d4 \u05e9\u05e0\u05db\u05e0\u05e1 \u05dc\u05e2\u05d1\u05d5\u05d3\u05d4: \u05e7\u05d1\u05dc\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd, \u05e9\u05d9\u05d1\u05d5\u05e5 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9 \u05d5\u05de\u05d4\u05d9\u05e8\u05d5\u05ea \u05d4\u05d3\u05de\u05d5.',
   deliveryIntake: '\u05e7\u05d1\u05dc\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
-  deliveryIntakeHint: '\u05e9\u05dc\u05d9\u05d8\u05d4 \u05d1\u05db\u05e0\u05d9\u05e1\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd \u05d7\u05d3\u05e9\u05d9\u05dd \u05db\u05e9\u05d4\u05de\u05e2\u05e8\u05db\u05ea \u05d3\u05dc\u05d5\u05e7\u05d4.',
+  deliveryIntakeHint: '\u05e9\u05dc\u05d9\u05d8\u05d4 \u05d1\u05db\u05e0\u05d9\u05e1\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd \u05d7\u05d3\u05e9\u05d9\u05dd \u05dc\u05dc\u05d9\u05d9\u05d1.',
   autoAssign: '\u05e9\u05d9\u05d1\u05d5\u05e5 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9',
-  autoAssignHint: '\u05e9\u05d9\u05d1\u05d5\u05e5 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9 \u05dc\u05e9\u05dc\u05d9\u05d7\u05d9\u05dd \u05db\u05e9\u05d4\u05de\u05e2\u05e8\u05db\u05ea \u05e2\u05d5\u05d1\u05d3\u05ea.',
+  autoAssignHint: '\u05e9\u05d9\u05d1\u05d5\u05e5 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9 \u05dc\u05e9\u05dc\u05d9\u05d7\u05d9\u05dd \u05e8\u05e9\u05d5\u05de\u05d9\u05dd.',
   timeMultiplier: '\u05de\u05db\u05e4\u05d9\u05dc \u05d6\u05de\u05df',
   business: '\u05e0\u05d9\u05d4\u05d5\u05dc \u05d4\u05e2\u05e1\u05e7',
   businessDescription: '\u05de\u05e1\u05db\u05d9 \u05e0\u05d9\u05d4\u05d5\u05dc \u05d9\u05d9\u05e2\u05d5\u05d3\u05d9\u05d9\u05dd \u05dc\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea \u05d4\u05e2\u05e1\u05e7, \u05d4\u05d9\u05ea\u05e8\u05d4 \u05d5\u05e9\u05e2\u05d5\u05ea \u05d4\u05e4\u05e2\u05d9\u05dc\u05d5\u05ea.',
@@ -885,7 +882,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
 }) => {
   const navigate = useNavigate();
   const { themeMode, setThemeMode } = useTheme();
-  const { state, dispatch, resetSystem, toggleSystem } = useDelivery();
+  const { state, dispatch, resetSystem } = useDelivery();
   const hasCouriersForOperations = state.couriers.length > 0;
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [isDeleteAccountDialogOpen, setIsDeleteAccountDialogOpen] = useState(false);
@@ -1109,8 +1106,8 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
                   aria-label="מעברים להגדרות"
                 >
                   <SettingsLinkRow
-                    icon={<Power className="h-4 w-4" />}
-                    title="הגדרות מערכת"
+                    icon={<SlidersHorizontal className="h-4 w-4" />}
+                    title={TEXT.system}
                     hint={TEXT.systemDescription}
                     onClick={() => navigate('/settings/system')}
                   />
@@ -1216,24 +1213,11 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
 
               {category === 'system' ? (
               <SectionCard
-                icon={<Power className="h-4 w-4 text-app-brand" />}
+                icon={<SlidersHorizontal className="h-4 w-4 text-app-brand" />}
                 title={TEXT.system}
                 description={TEXT.systemDescription}
                 hideHeader
               >
-                <SettingRow
-                  icon={<Power className="h-4 w-4" />}
-                  title={TEXT.systemOpen}
-                  hint={TEXT.systemOpenHint}
-                  control={
-                    <Toggle
-                      checked={state.isSystemOpen}
-                      onChange={toggleSystem}
-                      haptic={state.isSystemOpen ? 'warning' : 'success'}
-                      ariaLabel={TEXT.systemOpen}
-                    />
-                  }
-                />
                 <SettingRow
                   icon={<Package className="h-4 w-4" />}
                   title={TEXT.deliveryIntake}
@@ -1241,7 +1225,6 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
                   control={
                     <Toggle
                       checked={state.isReceivingDeliveries}
-                      disabled={!state.isSystemOpen}
                       onChange={() => dispatch({ type: 'TOGGLE_DELIVERY_INTAKE' })}
                       ariaLabel={TEXT.deliveryIntake}
                     />
@@ -1254,7 +1237,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
                   control={
                     <Toggle
                       checked={state.autoAssignEnabled}
-                      disabled={!state.isSystemOpen || !hasCouriersForOperations}
+                      disabled={!hasCouriersForOperations}
                       onChange={() => dispatch({ type: 'TOGGLE_AUTO_ASSIGN' })}
                       ariaLabel={TEXT.autoAssign}
                     />

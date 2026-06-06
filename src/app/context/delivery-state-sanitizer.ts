@@ -194,7 +194,7 @@ export const sanitizeLoadedDeliveryState = (
   now: Date = new Date()
 ): DeliveryState => {
   const activeByCourier = pickActiveAssignments(state, now);
-  const isSystemOpen = Boolean(state.isSystemOpen);
+  const isSystemOpen = true;
   const deliveries = state.deliveries.map((delivery) => {
     const restaurant = state.restaurants.find((item) =>
       item.id === delivery.restaurantId ||
@@ -288,8 +288,8 @@ export const sanitizeLoadedDeliveryState = (
   return {
     ...state,
     isSystemOpen,
-    isReceivingDeliveries: isSystemOpen && Boolean(state.isReceivingDeliveries),
-    autoAssignEnabled: isSystemOpen && hasRegisteredCouriers && Boolean(state.autoAssignEnabled),
+    isReceivingDeliveries: Boolean(state.isReceivingDeliveries),
+    autoAssignEnabled: hasRegisteredCouriers && Boolean(state.autoAssignEnabled),
     deliveries,
     shifts,
     couriers,

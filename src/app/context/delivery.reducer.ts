@@ -30,35 +30,18 @@ import {
 } from '../live/live-simulation-engine';
 import { reconcileCourierDeliveryInvariants } from './delivery-state-invariants';
 
-const SYSTEM_BLOCKING_DELIVERY_STATUSES: DeliveryStatus[] = [
-  'pending',
-  'assigned',
-  'delivering',
-];
-
-const hasSystemBlockingDeliveries = (state: DeliveryState) =>
-  state.deliveries.some((delivery) =>
-    SYSTEM_BLOCKING_DELIVERY_STATUSES.includes(delivery.status)
-  );
-
 const hasRegisteredCouriers = (state: DeliveryState) =>
   state.couriers.some((courier) => courier.registrationStatus !== 'invited');
 
 const enforceOperationalAvailabilityState = (state: DeliveryState): DeliveryState => {
-  if (!state.isSystemOpen) {
-    if (!state.isReceivingDeliveries && !state.autoAssignEnabled) return state;
+  const normalizedState = state.isSystemOpen ? state : { ...state, isSystemOpen: true };
 
-    return {
-      ...state,
-      isReceivingDeliveries: false,
-      autoAssignEnabled: false,
-    };
+  if (!normalizedState.autoAssignEnabled || hasRegisteredCouriers(normalizedState)) {
+    return normalizedState;
   }
 
-  if (!state.autoAssignEnabled || hasRegisteredCouriers(state)) return state;
-
   return {
-    ...state,
+    ...normalizedState,
     autoAssignEnabled: false,
   };
 };
@@ -1908,17 +1891,6 @@ const appendActivityLogEntry = (
 const reduceDeliveryState = (state: DeliveryState, action: DeliveryAction): DeliveryState => {
   switch (action.type) {
     case 'TOGGLE_SYSTEM': {
-      if (state.isSystemOpen) {
-        if (hasSystemBlockingDeliveries(state)) return state;
-
-        return {
-          ...state,
-          isSystemOpen: false,
-          isReceivingDeliveries: false,
-          autoAssignEnabled: false,
-        };
-      }
-
       return {
         ...state,
         isSystemOpen: true,
@@ -1926,15 +1898,12 @@ const reduceDeliveryState = (state: DeliveryState, action: DeliveryAction): Deli
     }
 
     case 'TOGGLE_DELIVERY_INTAKE':
-      if (!state.isSystemOpen) return state;
-
       return {
         ...state,
         isReceivingDeliveries: !state.isReceivingDeliveries,
       };
 
     case 'TOGGLE_AUTO_ASSIGN':
-      if (!state.isSystemOpen) return state;
       if (!hasRegisteredCouriers(state)) return state;
 
       return {

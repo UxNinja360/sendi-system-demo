@@ -20,10 +20,10 @@ export const OperatingHoursPage: React.FC = () => {
         statusTone={state.isReceivingDeliveries ? 'connected' : 'warning'}
         metrics={[
           {
-            label: 'מצב מערכת',
-            value: state.isSystemOpen ? 'דלוקה' : 'כבויה',
-            helper: 'לפי מתג מערכת דלוקה/כבויה',
-            tone: state.isSystemOpen ? 'success' : 'warning',
+            label: 'מצב תפעול',
+            value: 'זמין תמיד',
+            helper: 'קבלת משלוחים נקבעת בנפרד',
+            tone: 'success',
           },
           {
             label: 'קבלת משלוחים',

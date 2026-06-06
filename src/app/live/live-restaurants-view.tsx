@@ -36,10 +36,8 @@ export const LiveRestaurantsView: React.FC = () => {
       restaurant.address.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const emptyMessage = !state.isSystemOpen
-    ? 'המערכת כבויה - הדלק את המערכת כדי לראות מסעדות'
-    : !state.isReceivingDeliveries
-      ? 'קבלת משלוחים כבויה - הפעל קבלת משלוחים כדי לראות פעילות חדשה'
+  const emptyMessage = !state.isReceivingDeliveries
+    ? 'קבלת משלוחים כבויה - הפעל קבלת משלוחים כדי לראות פעילות חדשה'
     : restaurantsWithOrders.length === 0
       ? 'אין מסעדות פעילות - הפעל מסעדות דרך ניהול ישויות'
       : 'לא נמצאו מסעדות תואמות';

@@ -102,7 +102,7 @@ export const createEmptyWorkspaceState = ({
     workspaceName: companyName.trim(),
     workspaceArea: area?.trim(),
     workspacePhone: companyPhone?.trim(),
-    isSystemOpen: false,
+    isSystemOpen: true,
     isReceivingDeliveries: false,
     autoAssignEnabled: false,
     deliveries: [],
@@ -261,15 +261,12 @@ export const activateWorkspaceAccount = (account: WorkspaceAccount) => {
         }));
   const targetState = {
     ...rawTargetState,
+    isSystemOpen: true,
     isReceivingDeliveries:
-      rawTargetState.isSystemOpen &&
-      (
-        typeof rawTargetState.isReceivingDeliveries === 'boolean'
-          ? rawTargetState.isReceivingDeliveries
-          : rawTargetState.isSystemOpen
-      ),
+      typeof rawTargetState.isReceivingDeliveries === 'boolean'
+        ? rawTargetState.isReceivingDeliveries
+        : false,
     autoAssignEnabled:
-      rawTargetState.isSystemOpen &&
       ((rawTargetState.couriers ?? []).length > 0) &&
       rawTargetState.autoAssignEnabled,
     restaurants: mergeDefaultSendiPlusRestaurants(rawTargetState.restaurants ?? []),
