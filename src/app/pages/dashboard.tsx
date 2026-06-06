@@ -16,7 +16,6 @@ import {
   Timer,
   UserCheck,
   UserPlus,
-  Users,
   X,
   XCircle,
 } from 'lucide-react';
@@ -915,18 +914,6 @@ type InviteContact = {
   phone: string;
 };
 
-type ContactPickerContact = {
-  name?: string[];
-  tel?: string[];
-};
-
-type ContactsManager = {
-  select: (
-    properties: Array<'name' | 'tel'>,
-    options?: { multiple?: boolean },
-  ) => Promise<ContactPickerContact[]>;
-};
-
 const INVITED_COURIER_NAME = 'ממתין להרשמה';
 
 const DEMO_INVITE_CONTACTS: InviteContact[] = [
@@ -942,13 +929,6 @@ const DEMO_INVITE_CONTACTS: InviteContact[] = [
 ];
 
 const normalizeCourierPhone = (value: string) => value.replace(/\D/g, '');
-
-const getContactsManager = () => {
-  if (typeof navigator === 'undefined') return null;
-
-  const candidate = navigator as Navigator & { contacts?: ContactsManager };
-  return typeof candidate.contacts?.select === 'function' ? candidate.contacts : null;
-};
 
 const createInvitedCourier = (phone: string, contactName?: string): Courier => {
   const now = new Date();
@@ -981,16 +961,12 @@ const CourierInviteDialog: React.FC<{
   onInvite: (contacts: InviteContact[]) => void;
 }> = ({ couriers, open, onClose, onInvite }) => {
   const [manualPhone, setManualPhone] = React.useState('');
-  const [contactsOpen, setContactsOpen] = React.useState(true);
-  const [contactPickerPending, setContactPickerPending] = React.useState(false);
   const [selectedContacts, setSelectedContacts] = React.useState<InviteContact[]>([]);
 
   React.useEffect(() => {
     if (!open) return;
 
     setManualPhone('');
-    setContactsOpen(true);
-    setContactPickerPending(false);
     setSelectedContacts([]);
   }, [open]);
 
@@ -1049,47 +1025,6 @@ const CourierInviteDialog: React.FC<{
     setManualPhone('');
   };
 
-  const pickContacts = async () => {
-    const contactsManager = getContactsManager();
-
-    if (!contactsManager) {
-      setContactsOpen(true);
-      return;
-    }
-
-    try {
-      setContactPickerPending(true);
-      const contacts = await contactsManager.select(['name', 'tel'], { multiple: true });
-      const nextContacts = contacts.flatMap((contact, index) => {
-        const phone = contact.tel?.find((value) => normalizeCourierPhone(value).length >= 9);
-        if (!phone) return [];
-
-        const normalizedPhone = normalizeCourierPhone(phone);
-        return [{
-          id: `native-${normalizedPhone}-${index}`,
-          name: contact.name?.[0] ?? '',
-          phone: normalizedPhone,
-        }];
-      });
-
-      if (nextContacts.length === 0) {
-        toast.error('לא נמצא מספר טלפון באנשי הקשר שנבחרו.');
-        setContactsOpen(true);
-        return;
-      }
-
-      addContacts(nextContacts);
-    } catch (error) {
-      const errorName = error instanceof DOMException ? error.name : '';
-      if (errorName !== 'AbortError') {
-        toast.info('בחירת אנשי קשר לא זמינה כאן. אפשר לבחור מהרשימה בדמו.');
-        setContactsOpen(true);
-      }
-    } finally {
-      setContactPickerPending(false);
-    }
-  };
-
   const submitInvites = () => {
     if (selectedContacts.length === 0) return;
 
@@ -1126,61 +1061,6 @@ const CourierInviteDialog: React.FC<{
 
         <div className="grid gap-3">
           <div className="rounded-[8px] border border-app-border p-3 dark:border-[#252525]">
-            <div className="mb-2 flex items-center justify-between gap-3">
-              <span className="text-xs font-black text-app-text">אנשי קשר</span>
-              <button
-                type="button"
-                onClick={pickContacts}
-                disabled={contactPickerPending}
-                className="inline-flex h-8 items-center justify-center gap-2 rounded-[6px] border border-app-border px-3 text-xs font-black text-app-text transition-colors hover:bg-app-surface-raised disabled:cursor-wait disabled:opacity-60 dark:border-[#252525] dark:hover:bg-[#111111]"
-              >
-                <Users className="h-3.5 w-3.5" />
-                {contactPickerPending ? 'פותח אנשי קשר' : 'בחר מאנשי קשר'}
-              </button>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setContactsOpen((value) => !value)}
-              className="mb-2 text-xs font-semibold text-app-brand"
-            >
-              {contactsOpen ? 'הסתר רשימת דמו' : 'הצג רשימת דמו'}
-            </button>
-
-            {contactsOpen ? (
-              <div className="grid gap-2 sm:grid-cols-2">
-                {DEMO_INVITE_CONTACTS.map((contact) => {
-                  const phone = normalizeCourierPhone(contact.phone);
-                  const alreadyExists = existingPhones.has(phone);
-                  const selected = selectedPhones.has(phone);
-
-                  return (
-                    <button
-                      key={contact.id}
-                      type="button"
-                      disabled={alreadyExists}
-                      onClick={() => toggleDemoContact(contact)}
-                      className={`flex min-w-0 items-center justify-between gap-3 rounded-[6px] border px-3 py-2 text-right transition-colors ${
-                        selected
-                          ? 'border-app-brand/50 bg-app-brand/10'
-                          : 'border-app-border hover:bg-app-surface-raised dark:border-[#252525] dark:hover:bg-[#111111]'
-                      } disabled:cursor-not-allowed disabled:opacity-45`}
-                    >
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-black text-app-text">{contact.name}</span>
-                        <span className="block truncate text-xs text-app-text-secondary" dir="ltr">{contact.phone}</span>
-                      </span>
-                      <span className="shrink-0 text-[11px] font-bold text-app-text-secondary">
-                        {alreadyExists ? 'כבר במערכת' : selected ? 'נבחר' : 'בחר'}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            ) : null}
-          </div>
-
-          <div className="rounded-[8px] border border-app-border p-3 dark:border-[#252525]">
             <label className="mb-2 block text-xs font-black text-app-text" htmlFor="dashboard-courier-invite-phone">
               מספר נוסף
             </label>
@@ -1209,6 +1089,38 @@ const CourierInviteDialog: React.FC<{
             {normalizedManualPhone.length >= 9 && existingPhones.has(normalizedManualPhone) ? (
               <div className="mt-2 text-xs font-semibold text-[#f59e0b]">המספר הזה כבר קיים במערכת.</div>
             ) : null}
+          </div>
+
+          <div className="rounded-[8px] border border-app-border p-3 dark:border-[#252525]">
+            <div className="grid gap-2 sm:grid-cols-2">
+              {DEMO_INVITE_CONTACTS.map((contact) => {
+                const phone = normalizeCourierPhone(contact.phone);
+                const alreadyExists = existingPhones.has(phone);
+                const selected = selectedPhones.has(phone);
+
+                return (
+                  <button
+                    key={contact.id}
+                    type="button"
+                    disabled={alreadyExists}
+                    onClick={() => toggleDemoContact(contact)}
+                    className={`flex min-w-0 items-center justify-between gap-3 rounded-[6px] border px-3 py-2 text-right transition-colors ${
+                      selected
+                        ? 'border-app-brand/50 bg-app-brand/10'
+                        : 'border-app-border hover:bg-app-surface-raised dark:border-[#252525] dark:hover:bg-[#111111]'
+                    } disabled:cursor-not-allowed disabled:opacity-45`}
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-black text-app-text">{contact.name}</span>
+                      <span className="block truncate text-xs text-app-text-secondary" dir="ltr">{contact.phone}</span>
+                    </span>
+                    <span className="shrink-0 text-[11px] font-bold text-app-text-secondary">
+                      {alreadyExists ? 'כבר במערכת' : selected ? 'נבחר' : 'בחר'}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className="rounded-[8px] border border-app-border bg-app-surface-raised p-3 dark:border-[#252525] dark:bg-[#111111]">
