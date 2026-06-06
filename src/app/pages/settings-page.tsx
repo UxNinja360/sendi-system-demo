@@ -386,6 +386,11 @@ const themeModeOptions: Array<{ id: ThemeMode; label: string; icon: LucideIcon }
   { id: 'dark', label: TEXT.themeDark, icon: Moon },
 ];
 
+const THEME_PICKER_SHEET_BREAKPOINT = 640;
+const THEME_PICKER_PANEL_WIDTH = 280;
+const THEME_PICKER_PANEL_MARGIN = 12;
+const THEME_PICKER_PANEL_MIN_HEIGHT = 188;
+
 const settingsNavIconMap: Record<AppNavIconKey, LucideIcon> = {
   activity: Activity,
   alertTriangle: AlertTriangle,
@@ -437,32 +442,153 @@ const ThemeModePicker: React.FC<{
   value: ThemeMode;
   onChange: (mode: ThemeMode) => void;
 }> = ({ value, onChange }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [panelStyle, setPanelStyle] = useState<React.CSSProperties>({});
+  const [isSheetMode, setIsSheetMode] = useState(true);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
   const selectedOption = themeModeOptions.find((option) => option.id === value) ?? themeModeOptions[0];
   const SelectedIcon = selectedOption.icon;
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const updatePanelPosition = () => {
+      const trigger = triggerRef.current;
+      if (!trigger || window.innerWidth < THEME_PICKER_SHEET_BREAKPOINT) {
+        setIsSheetMode(true);
+        setPanelStyle({});
+        return;
+      }
+
+      const rect = trigger.getBoundingClientRect();
+      const width = Math.min(THEME_PICKER_PANEL_WIDTH, window.innerWidth - THEME_PICKER_PANEL_MARGIN * 2);
+      const maxLeft = window.innerWidth - width - THEME_PICKER_PANEL_MARGIN;
+      const left = Math.min(
+        maxLeft,
+        Math.max(THEME_PICKER_PANEL_MARGIN, rect.right - width),
+      );
+      const top = Math.min(
+        window.innerHeight - THEME_PICKER_PANEL_MIN_HEIGHT - THEME_PICKER_PANEL_MARGIN,
+        rect.bottom + 8,
+      );
+
+      setIsSheetMode(false);
+      setPanelStyle({
+        bottom: 'auto',
+        left,
+        maxHeight: THEME_PICKER_PANEL_MIN_HEIGHT,
+        right: 'auto',
+        top: Math.max(THEME_PICKER_PANEL_MARGIN, top),
+        width,
+      });
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsOpen(false);
+    };
+
+    updatePanelPosition();
+    document.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('resize', updatePanelPosition);
+    window.addEventListener('scroll', updatePanelPosition, true);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('resize', updatePanelPosition);
+      window.removeEventListener('scroll', updatePanelPosition, true);
+    };
+  }, [isOpen]);
+
+  const handleSelect = (mode: ThemeMode) => {
+    onChange(mode);
+    setIsOpen(false);
+    window.setTimeout(() => triggerRef.current?.focus(), 0);
+  };
+
   return (
-    <div className="relative w-[156px] max-w-[46vw] sm:w-[172px]" dir="rtl">
-      <select
-        value={value}
+    <div className="relative w-full sm:w-[180px] sm:max-w-[48vw]" dir="rtl">
+      <button
+        ref={triggerRef}
+        type="button"
         data-haptic="selection"
         aria-label={TEXT.themeMode}
-        onChange={(event) => onChange(event.currentTarget.value as ThemeMode)}
-        className="h-10 w-full appearance-none rounded-none border border-app-border bg-[#f5f5f5] pl-8 pr-9 text-right text-xs font-semibold text-[#0d0d12] outline-none transition-colors hover:bg-[#ececec] focus:border-app-brand focus:bg-white focus:ring-2 focus:ring-app-brand/20 dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised dark:focus:bg-app-surface"
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((current) => !current)}
+        className="inline-flex h-10 w-full items-center justify-between gap-2 rounded-none border border-app-border bg-[#f5f5f5] pl-3 pr-3 text-right text-xs font-semibold text-[#0d0d12] outline-none transition-colors hover:bg-[#ececec] focus:border-app-brand focus:bg-white focus:ring-2 focus:ring-app-brand/20 dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised dark:focus:bg-app-surface"
       >
-        {themeModeOptions.map(({ id, label }) => (
-          <option key={id} value={id}>
-            {label}
-          </option>
-        ))}
-      </select>
-      <SelectedIcon
-        aria-hidden="true"
-        className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-app-brand"
-      />
-      <ChevronDown
-        aria-hidden="true"
-        className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#666d80] dark:text-app-text-secondary"
-      />
+        <span className="inline-flex min-w-0 items-center gap-2">
+          <SelectedIcon aria-hidden="true" className="h-4 w-4 shrink-0 text-app-brand" />
+          <span className="min-w-0 truncate">{selectedOption.label}</span>
+        </span>
+        <ChevronDown
+          aria-hidden="true"
+          className={`h-4 w-4 shrink-0 text-[#666d80] transition-transform dark:text-app-text-secondary ${
+            isOpen ? 'rotate-180' : ''
+          }`}
+        />
+      </button>
+
+      {isOpen ? (
+        <div className="fixed inset-0 z-[180]" dir="rtl">
+          <button
+            type="button"
+            data-haptic="off"
+            aria-label="סגור בחירת ערכת נושא"
+            onClick={() => setIsOpen(false)}
+            className={`absolute inset-0 ${
+              isSheetMode ? 'bg-black/35 backdrop-blur-[2px]' : 'bg-transparent'
+            }`}
+          />
+          <div
+            role="listbox"
+            aria-label={TEXT.themeMode}
+            style={panelStyle}
+            className={`absolute overflow-hidden rounded-none border border-app-border bg-white text-right shadow-2xl dark:border-app-border dark:bg-app-surface ${
+              isSheetMode ? 'inset-x-3 bottom-3' : ''
+            }`}
+          >
+            <div className="border-b border-[#f1f1f1] px-4 py-3 dark:border-app-border">
+              <div className="text-sm font-bold text-[#0d0d12] dark:text-app-text">
+                {TEXT.themeMode}
+              </div>
+            </div>
+            <div className="p-1.5">
+              {themeModeOptions.map(({ id, label, icon: OptionIcon }) => {
+                const isSelected = id === value;
+
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    role="option"
+                    data-haptic={isSelected ? 'selection' : 'light'}
+                    aria-selected={isSelected}
+                    onClick={() => handleSelect(id)}
+                    className={`mb-1 flex h-11 w-full items-center justify-between gap-3 rounded-none px-3 text-right text-sm transition-colors last:mb-0 ${
+                      isSelected
+                        ? 'bg-app-brand-solid text-app-background'
+                        : 'text-[#0d0d12] hover:bg-[#f5f5f5] dark:text-app-text dark:hover:bg-app-surface-raised'
+                    }`}
+                  >
+                    <span className="inline-flex min-w-0 items-center gap-2">
+                      <OptionIcon
+                        className={`h-4 w-4 shrink-0 ${
+                          isSelected ? '' : 'text-app-brand'
+                        }`}
+                      />
+                      <span className="min-w-0 truncate font-semibold">{label}</span>
+                    </span>
+                    {isSelected ? (
+                      <Check className="h-4 w-4 shrink-0" />
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };
@@ -522,38 +648,80 @@ const SettingsLinkRow: React.FC<{
   hint?: string;
   tag?: string;
   onClick: () => void;
-}> = ({ icon, title, hint, tag, onClick }) => (
-  <button
-    type="button"
-    data-haptic="selection"
-    onClick={onClick}
-    className="grid w-full grid-cols-[1fr_auto] items-center gap-3 border-b border-[#f1f1f1] px-3 py-3 text-right transition-colors last:border-b-0 hover:bg-[#f7f7f7] dark:border-app-border dark:hover:bg-app-surface-raised sm:px-4"
-  >
-    <div className="flex min-w-0 items-start gap-3">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-none bg-[#f5f5f5] text-app-brand dark:bg-app-surface dark:text-app-brand sm:h-9 sm:w-9">
-        {icon}
-      </div>
-      <div className="min-w-0">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="min-w-0 truncate text-sm font-semibold text-[#0d0d12] dark:text-app-text">
-            {title}
-          </span>
-          {tag ? (
-            <span className="shrink-0 rounded-none bg-app-brand/10 px-1.5 py-0.5 text-[10px] font-bold text-app-brand">
-              {tag}
+}> = ({ icon, title, hint, tag, onClick }) => {
+  const pressStartRef = useRef<{ x: number; y: number } | null>(null);
+  const didDragRef = useRef(false);
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLButtonElement>) => {
+    if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
+
+    pressStartRef.current = { x: event.clientX, y: event.clientY };
+    didDragRef.current = false;
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLButtonElement>) => {
+    const pressStart = pressStartRef.current;
+    if (!pressStart) return;
+
+    const movedX = Math.abs(event.clientX - pressStart.x);
+    const movedY = Math.abs(event.clientY - pressStart.y);
+    if (movedX > 8 || movedY > 8) didDragRef.current = true;
+  };
+
+  const handlePointerCancel = () => {
+    pressStartRef.current = null;
+    didDragRef.current = false;
+  };
+
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    if (didDragRef.current) {
+      event.preventDefault();
+      event.stopPropagation();
+      pressStartRef.current = null;
+      didDragRef.current = false;
+      return;
+    }
+
+    pressStartRef.current = null;
+    onClick();
+  };
+
+  return (
+    <button
+      type="button"
+      data-haptic="selection"
+      onClick={handleClick}
+      onPointerCancel={handlePointerCancel}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      className="settings-link-row grid w-full grid-cols-[1fr_auto] items-center gap-3 border-b border-[#f1f1f1] px-3 py-3 text-right transition-colors last:border-b-0 hover:bg-[#f7f7f7] dark:border-app-border dark:hover:bg-app-surface-raised sm:px-4"
+    >
+      <div className="flex min-w-0 items-start gap-3">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-none bg-[#f5f5f5] text-app-brand dark:bg-app-surface dark:text-app-brand sm:h-9 sm:w-9">
+          {icon}
+        </div>
+        <div className="min-w-0">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="min-w-0 truncate text-sm font-semibold text-[#0d0d12] dark:text-app-text">
+              {title}
             </span>
+            {tag ? (
+              <span className="shrink-0 rounded-none bg-app-brand/10 px-1.5 py-0.5 text-[10px] font-bold text-app-brand">
+                {tag}
+              </span>
+            ) : null}
+          </div>
+          {hint ? (
+            <div className="mt-0.5 max-h-10 overflow-hidden text-xs leading-5 text-[#666d80] dark:text-app-text-secondary">
+              {hint}
+            </div>
           ) : null}
         </div>
-        {hint ? (
-          <div className="mt-0.5 max-h-10 overflow-hidden text-xs leading-5 text-[#666d80] dark:text-app-text-secondary">
-            {hint}
-          </div>
-        ) : null}
       </div>
-    </div>
-    <ChevronLeft className="h-4 w-4 shrink-0 text-[#666d80] dark:text-app-text-secondary" />
-  </button>
-);
+      <ChevronLeft className="h-4 w-4 shrink-0 text-[#666d80] dark:text-app-text-secondary" />
+    </button>
+  );
+};
 
 const SettingsActionCard: React.FC<{
   icon: React.ReactNode;

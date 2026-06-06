@@ -1167,6 +1167,12 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   touch-action: pan-y;
 }
 
+.settings-link-row {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: pan-y;
+  user-select: none;
+}
+
 @media (max-width: 767.98px) {
   .settings-screen__content {
     padding-bottom: calc(6rem + var(--app-safe-bottom)) !important;

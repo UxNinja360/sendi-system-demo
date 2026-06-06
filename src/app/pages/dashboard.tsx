@@ -75,6 +75,7 @@ const formatRadiusKm = formatSendiPlusRadiusKm;
 const SENDI_PLUS_TERMS_TEXT =
   'מתחייב בזמני משלוח של 60 דקות מסירה';
 const SENDI_PLUS_DETAILS_OPEN_STORAGE_KEY = 'dashboard-sendi-plus-details-open';
+const WORKSPACE_START_COMPLETED_STORAGE_KEY_PREFIX = 'dashboard-workspace-start-completed-v1:';
 const WORKSPACE_START_SENDI_PLUS_RADIUS_KM = 5;
 const DASHBOARD_PULL_REFRESH_START_DISTANCE = 22;
 const DASHBOARD_PULL_REFRESH_THRESHOLD = 64;
@@ -119,6 +120,33 @@ const writeStoredSendiPlusDetailsOpen = (value: boolean) => {
     );
   } catch {
     // If storage is unavailable, the in-memory state still reflects the choice.
+  }
+};
+
+const getWorkspaceStartCompletedStorageKey = (
+  session: ReturnType<typeof readAuthSession>,
+) => {
+  const workspaceKey = session?.workspace?.id || session?.user.phone;
+  return workspaceKey ? `${WORKSPACE_START_COMPLETED_STORAGE_KEY_PREFIX}${workspaceKey}` : null;
+};
+
+const readStoredWorkspaceStartCompleted = (storageKey: string | null) => {
+  if (!storageKey || typeof window === 'undefined') return false;
+
+  try {
+    return window.localStorage.getItem(storageKey) === 'true';
+  } catch {
+    return false;
+  }
+};
+
+const writeStoredWorkspaceStartCompleted = (storageKey: string | null) => {
+  if (!storageKey || typeof window === 'undefined') return;
+
+  try {
+    window.localStorage.setItem(storageKey, 'true');
+  } catch {
+    // Ignore storage failures; the live state still hides the card for this render.
   }
 };
 
@@ -1401,6 +1429,10 @@ export const Dashboard: React.FC = () => {
   const pullRefreshResetTimeoutRef = React.useRef<number | null>(null);
   const dashboardRefreshTimeoutRef = React.useRef<number | null>(null);
   const pullRefreshHapticButtonRef = React.useRef<HTMLButtonElement | null>(null);
+  const workspaceStartCompletedStorageKey = getWorkspaceStartCompletedStorageKey(authSession);
+  const [workspaceStartCompleted, setWorkspaceStartCompleted] = React.useState(() =>
+    readStoredWorkspaceStartCompleted(getWorkspaceStartCompletedStorageKey(readAuthSession())),
+  );
   const dashboardUserName = authSession?.user.name?.trim() || 'משתמש';
 
   const isMobilePullRefreshPointer = React.useCallback(() => {
@@ -1497,6 +1529,12 @@ export const Dashboard: React.FC = () => {
       window.removeEventListener('focus', refreshAuthSession);
     };
   }, []);
+
+  React.useEffect(() => {
+    setWorkspaceStartCompleted(
+      readStoredWorkspaceStartCompleted(workspaceStartCompletedStorageKey),
+    );
+  }, [workspaceStartCompletedStorageKey]);
 
   const handlePullRefreshTouchStart = React.useCallback((event: React.TouchEvent<HTMLElement>) => {
     if (isDashboardRefreshingRef.current || !isMobilePullRefreshPointer()) return;
@@ -1804,13 +1842,42 @@ export const Dashboard: React.FC = () => {
   const invitedCourierCount = state.couriers.filter(
     (courier) => courier.registrationStatus === 'invited',
   ).length;
+  const workspaceStartStepsComplete =
+    registeredCourierCount > 0 &&
+    isSendiPlusOperational &&
+    state.isReceivingDeliveries;
+  const workspaceStartCompletedByCurrentState =
+    workspaceStartStepsComplete ||
+    (registeredCourierCount > 0 && state.isReceivingDeliveries && !isSendiPlusOperational);
+  const hasCompletedWorkspaceStart =
+    workspaceStartCompleted || workspaceStartCompletedByCurrentState;
   const shouldShowWorkspaceStart =
     state.dataMode === 'workspace' &&
+    !hasCompletedWorkspaceStart &&
     (
       registeredCourierCount === 0 ||
       !isSendiPlusOperational ||
       !state.isReceivingDeliveries
     );
+
+  React.useEffect(() => {
+    if (
+      state.dataMode !== 'workspace' ||
+      workspaceStartCompleted ||
+      !workspaceStartCompletedByCurrentState
+    ) {
+      return;
+    }
+
+    writeStoredWorkspaceStartCompleted(workspaceStartCompletedStorageKey);
+    setWorkspaceStartCompleted(true);
+  }, [
+    state.dataMode,
+    workspaceStartCompleted,
+    workspaceStartCompletedByCurrentState,
+    workspaceStartCompletedStorageKey,
+  ]);
+
   const freeCouriersCount = React.useMemo(() => {
     const busyCourierIds = new Set(
       state.deliveries
