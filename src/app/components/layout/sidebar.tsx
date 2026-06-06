@@ -363,7 +363,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout: _onLogout, onMobileM
       : Math.max(0, Math.min(1, 1 - mobileMenuTranslateX / mobileSidebarWidth));
   const activeDeliveriesCount = state.deliveries.filter(isOperationalDelivery).length;
   const deliveredDeliveriesCount = state.deliveries.filter((delivery) => delivery.status === 'delivered').length;
-  const hasCouriersForOperations = state.couriers.length > 0;
+  const hasCouriersForOperations = state.couriers.some((courier) => courier.registrationStatus !== 'invited');
   const activeRestaurantsCount = state.restaurants.filter((restaurant) =>
     isRestaurantActiveForDisplay(restaurant),
   ).length;

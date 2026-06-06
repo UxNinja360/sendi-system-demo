@@ -11,6 +11,7 @@ export type DeliveryStatus =
 export type CourierStatus = 'available' | 'busy' | 'offline';
 export type CourierVehicleType = 'אופנוע' | 'רכב' | 'קורקינט';
 export type CourierEmploymentType = 'שעתי' | 'פר משלוח';
+export type CourierRegistrationStatus = 'invited' | 'registered';
 export type ShiftType = 'morning' | 'afternoon' | 'evening' | 'full';
 export type ShiftStatus = 'planned' | 'active' | 'completed';
 export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -319,6 +320,8 @@ export interface Courier {
   name: string;
   avatarUrl?: string;
   phone: string;
+  registrationStatus?: CourierRegistrationStatus;
+  invitedAt?: Date | null;
   vehicleType: CourierVehicleType;
   employmentType: CourierEmploymentType;
   status: CourierStatus;

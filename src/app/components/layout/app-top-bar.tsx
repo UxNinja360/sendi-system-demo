@@ -68,7 +68,7 @@ const getPageMenuAction = (pathname: string): PageMenuAction | null => {
   if (pathname === '/couriers') {
     return {
       action: 'create-courier',
-      label: 'הוספת שליח',
+      label: 'הזמן שליח',
       icon: <UserPlus className="h-4 w-4 text-app-text-secondary" />,
     };
   }

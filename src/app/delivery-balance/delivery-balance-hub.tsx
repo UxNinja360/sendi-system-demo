@@ -493,7 +493,7 @@ export const DeliveryBalanceHub: React.FC = () => {
         <div className="flex items-center justify-between gap-3 border border-app-border bg-app-surface px-4 py-3 md:px-5">
           <div className="min-w-0">
             <h2 id="purchase-invoices-title" className="text-sm font-bold text-app-text">
-              חשבוניות רכישה
+              רכישת יתרה
             </h2>
             <p className="mt-1 truncate text-xs font-semibold text-app-text-muted">
               רכישות יתרה אחרונות ומסמכי חיוב.
@@ -506,7 +506,7 @@ export const DeliveryBalanceHub: React.FC = () => {
 
         {purchaseInvoices.length > 0 ? (
           <div className="md:overflow-hidden md:rounded-none md:border md:border-app-border md:bg-app-surface">
-            <div role="table" aria-label="חשבוניות רכישה">
+            <div role="table" aria-label="רכישות יתרה">
               <div
                 role="row"
                 className={`${invoiceGridClassName} hidden border-b border-app-border bg-app-background/35 px-5 py-3 text-xs font-bold text-app-text-secondary md:grid`}
@@ -529,7 +529,7 @@ export const DeliveryBalanceHub: React.FC = () => {
           </div>
         ) : (
           <div className="flex min-h-44 items-center justify-center rounded-none border border-app-border bg-app-surface px-4 py-8 text-center text-sm text-app-text-secondary">
-            עדיין אין חשבוניות רכישה.
+            עדיין אין רכישות יתרה.
           </div>
         )}
       </section>

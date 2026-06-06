@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { format } from 'date-fns';
 import {
   Bike,
@@ -13,7 +13,7 @@ import {
   Search,
   Star,
   Trash2,
-  User,
+  UserPlus,
   X,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -50,14 +50,12 @@ import { useDeliveriesMapSplit } from '../deliveries/use-deliveries-map-split';
 const TEXT = {
   searchPlaceholder: 'חיפוש שליחים',
   pageTitle: 'שליחים',
-  addCourier: 'הוסף שליח',
-  addNewCourier: 'הוסף שליח חדש',
-  fullName: 'שם מלא',
-  enterFullName: 'הזן שם מלא',
+  addCourier: 'שלח הזמנה',
+  addNewCourier: 'הזמן שליח',
   phone: 'טלפון',
   enterPhone: 'הזן מספר טלפון',
-  vehicleType: 'סוג רכב',
   cancel: 'ביטול',
+  invited: 'ממתין להרשמה',
   available: 'זמין',
   busy: 'בתפוסה',
   offline: 'לא מחובר',
@@ -78,6 +76,7 @@ const TEXT = {
   cannotDelete: 'אי אפשר למחוק שליח עם משלוחים פעילים.',
   cannotDisableActive: 'אי אפשר להשבית שליח עם משלוח פעיל.',
   cannotStartOffline: 'אי אפשר להתחיל משמרת לשליח לא מחובר.',
+  cannotOperateInvited: 'השליח עדיין לא נרשם באפליקציית השליחים.',
   deliveriesSuffix: 'משלוחים',
   deliveryLabel: 'משלוח',
   more: 'עוד',
@@ -101,12 +100,12 @@ type SortableCourierColumnId = Exclude<CourierColumnId, 'actions'>;
 type CourierStats = {
   total: number;
   filtered: number;
+  invited: number;
   available: number;
   busy: number;
   offline: number;
 };
 
-const VEHICLE_TYPES: Courier['vehicleType'][] = ['אופנוע', 'רכב', 'קורקינט'];
 const COURIER_COLUMN_ORDER_KEY = `${DELIVERY_STORAGE_KEYS.couriersColumnOrder}:product-v1`;
 const COURIER_VISIBLE_COLUMNS_KEY = `${DELIVERY_STORAGE_KEYS.couriersVisibleColumns}:product-v3`;
 const DEFAULT_COURIER_VISIBLE_COLUMNS: CourierColumnId[] = [
@@ -196,9 +195,38 @@ const getStatusColor = (status: Courier['status']) => {
   return 'text-[#737373] dark:text-app-text-secondary';
 };
 
+const normalizeCourierPhone = (value: string) => value.replace(/\D/g, '');
+
+const isInvitedCourier = (courier: Courier) => courier.registrationStatus === 'invited';
+
+const createInvitedCourier = (phone: string): Courier => {
+  const now = new Date();
+
+  return {
+    id: `c-invite-${phone}-${now.getTime()}`,
+    name: TEXT.invited,
+    phone,
+    registrationStatus: 'invited',
+    invitedAt: now,
+    vehicleType: 'אופנוע',
+    employmentType: 'פר משלוח',
+    status: 'offline',
+    connectedAt: null,
+    disconnectedAt: now,
+    isOnShift: false,
+    shiftStartedAt: null,
+    shiftEndedAt: null,
+    currentShiftAssignmentId: null,
+    activeDeliveryIds: [],
+    rating: 5,
+    totalDeliveries: 0,
+  };
+};
+
 const CourierOverviewStrip: React.FC<{ stats: CourierStats; hasFilters: boolean }> = ({ stats, hasFilters }) => {
   const items: InfoBarItem[] = [
     { label: 'סה״כ שליחים', value: stats.total.toLocaleString('he-IL') },
+    { label: 'ממתינים להרשמה', value: stats.invited.toLocaleString('he-IL'), tone: 'orange' },
     { label: 'זמינים', value: stats.available.toLocaleString('he-IL'), tone: 'success' },
     { label: 'במשלוח', value: stats.busy.toLocaleString('he-IL'), tone: 'orange' },
     ...(hasFilters ? [{ label: 'תוצאות', value: stats.filtered.toLocaleString('he-IL') }] : []),
@@ -290,6 +318,7 @@ let courierListSessionState: CourierListSessionState = {
 export const CouriersListScreen: React.FC = () => {
   const { state, dispatch } = useDelivery();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(courierListSessionState.searchQuery);
   const [showActiveCouriersOnly, setShowActiveCouriersOnly] = useState(
     courierListSessionState.showActiveCouriersOnly,
@@ -308,11 +337,7 @@ export const CouriersListScreen: React.FC = () => {
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; courier: Courier } | null>(null);
   const [selectedCourierIds, setSelectedCourierIds] = useState<Set<string>>(new Set());
-  const [newCourier, setNewCourier] = useState<{ name: string; phone: string; vehicleType: Courier['vehicleType'] }>({
-    name: '',
-    phone: '',
-    vehicleType: 'אופנוע',
-  });
+  const [invitePhone, setInvitePhone] = useState('');
   const [periodMode] = useState<PeriodMode>('current_month');
   const [monthAnchor] = useState(() => new Date());
   const [customStartDate] = useState(() => {
@@ -352,6 +377,15 @@ export const CouriersListScreen: React.FC = () => {
   useEffect(() => (
     addAppTopBarActionListener('create-courier', () => setIsModalOpen(true))
   ), []);
+
+  useEffect(() => {
+    if (searchParams.get('action') !== 'create-courier') return;
+
+    setIsModalOpen(true);
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.delete('action');
+    setSearchParams(nextSearchParams, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   useEffect(() => (
     addAppTopBarActionListener('export-couriers', () => {
@@ -538,9 +572,10 @@ export const CouriersListScreen: React.FC = () => {
   const stats = useMemo<CourierStats>(() => ({
     total: state.couriers.length,
     filtered: filteredCouriers.length,
-    available: state.couriers.filter((courier) => courier.status === 'available').length,
+    invited: state.couriers.filter(isInvitedCourier).length,
+    available: state.couriers.filter((courier) => !isInvitedCourier(courier) && courier.status === 'available').length,
     busy: state.couriers.filter((courier) => courier.status === 'busy').length,
-    offline: state.couriers.filter((courier) => courier.status === 'offline').length,
+    offline: state.couriers.filter((courier) => !isInvitedCourier(courier) && courier.status === 'offline').length,
   }), [filteredCouriers.length, state.couriers]);
 
   const hasActiveFilters =
@@ -596,15 +631,19 @@ export const CouriersListScreen: React.FC = () => {
       case 'name':
         return courier.name;
       case 'connection':
-        return courier.status === 'offline' ? TEXT.notConnected : TEXT.connected;
+        return isInvitedCourier(courier)
+          ? TEXT.invited
+          : courier.status === 'offline' ? TEXT.notConnected : TEXT.connected;
       case 'shift':
         return courier.isOnShift ? TEXT.onShift : '';
       case 'availability':
-        return courier.status === 'busy' ? TEXT.inDelivery : courier.status === 'offline' || !courier.isOnShift ? '-' : TEXT.free;
+        return isInvitedCourier(courier)
+          ? TEXT.invited
+          : courier.status === 'busy' ? TEXT.inDelivery : courier.status === 'offline' || !courier.isOnShift ? '-' : TEXT.free;
       case 'vehicleType':
-        return courier.vehicleType;
+        return isInvitedCourier(courier) ? 'יגיע מהאפליקציה' : courier.vehicleType;
       case 'employmentType':
-        return courier.employmentType;
+        return isInvitedCourier(courier) ? 'יגיע מהאפליקציה' : courier.employmentType;
       case 'phone':
         return courier.phone;
       case 'rating':
@@ -654,6 +693,7 @@ export const CouriersListScreen: React.FC = () => {
     }
 
     const eligibleCouriers = selectedCouriers.filter((courier) => {
+      if (isInvitedCourier(courier)) return false;
       if (targetStatus === 'available') return courier.status === 'offline';
       return courier.status !== 'offline' && !activeDeliveriesByCourier.has(courier.id);
     });
@@ -677,7 +717,9 @@ export const CouriersListScreen: React.FC = () => {
       return;
     }
 
-    const eligibleCouriers = selectedCouriers.filter((courier) => courier.status !== 'offline' && !courier.isOnShift);
+    const eligibleCouriers = selectedCouriers.filter((courier) =>
+      !isInvitedCourier(courier) && courier.status !== 'offline' && !courier.isOnShift
+    );
     eligibleCouriers.forEach((courier) => dispatch({ type: 'START_COURIER_SHIFT', payload: { courierId: courier.id } }));
 
     if (eligibleCouriers.length > 0) {
@@ -695,7 +737,7 @@ export const CouriersListScreen: React.FC = () => {
       return;
     }
 
-    const eligibleCouriers = selectedCouriers.filter((courier) => courier.isOnShift);
+    const eligibleCouriers = selectedCouriers.filter((courier) => !isInvitedCourier(courier) && courier.isOnShift);
     eligibleCouriers.forEach((courier) => dispatch({ type: 'END_COURIER_SHIFT', payload: { courierId: courier.id } }));
 
     if (eligibleCouriers.length > 0) {
@@ -706,38 +748,35 @@ export const CouriersListScreen: React.FC = () => {
     toast.error('לא נמצאו שליחים שנמצאים במשמרת');
   };
 
-  const addCourier = () => {
-    if (!newCourier.name.trim() || !newCourier.phone.trim()) return;
+  const inviteCourier = () => {
+    const normalizedPhone = normalizeCourierPhone(invitePhone);
+    if (normalizedPhone.length < 9) return;
 
-    const courier: Courier = {
-      id: `c${Date.now()}`,
-      name: newCourier.name.trim(),
-      phone: newCourier.phone.trim(),
-      vehicleType: newCourier.vehicleType,
-      employmentType: 'פר משלוח',
-      status: 'available',
-      isOnShift: false,
-      shiftStartedAt: null,
-      shiftEndedAt: null,
-      currentShiftAssignmentId: null,
-      activeDeliveryIds: [],
-      rating: 5,
-      totalDeliveries: 0,
-    };
+    const alreadyExists = state.couriers.some((courier) => normalizeCourierPhone(courier.phone) === normalizedPhone);
+    if (alreadyExists) {
+      toast.error('כבר קיים שליח או הזמנה עם מספר הטלפון הזה.');
+      return;
+    }
 
-    dispatch({ type: 'ADD_COURIER', payload: courier });
+    dispatch({ type: 'ADD_COURIER', payload: createInvitedCourier(normalizedPhone) });
+    toast.success(`נשלחה הזמנה לשליח ${normalizedPhone}`);
     setIsModalOpen(false);
-    setNewCourier({ name: '', phone: '', vehicleType: 'אופנוע' });
+    setInvitePhone('');
   };
 
   const handleModalClose = () => {
     setIsModalOpen(false);
-    setNewCourier({ name: '', phone: '', vehicleType: 'אופנוע' });
+    setInvitePhone('');
   };
 
   const closeCourierActionsMenu = () => setContextMenu(null);
 
   const toggleCourierPower = (courier: Courier) => {
+    if (isInvitedCourier(courier)) {
+      toast.error(TEXT.cannotOperateInvited);
+      return;
+    }
+
     if (courier.status !== 'offline' && activeDeliveriesByCourier.has(courier.id)) {
       toast.error(TEXT.cannotDisableActive);
       return;
@@ -751,6 +790,11 @@ export const CouriersListScreen: React.FC = () => {
 
   const handleToggleShift = (courier: Courier) => {
     closeCourierActionsMenu();
+    if (isInvitedCourier(courier)) {
+      toast.error(TEXT.cannotOperateInvited);
+      return;
+    }
+
     if (!courier.isOnShift && courier.status === 'offline') {
       toast.error(TEXT.cannotStartOffline);
       return;
@@ -792,13 +836,22 @@ export const CouriersListScreen: React.FC = () => {
             <span className="block truncate whitespace-nowrap text-xs font-medium text-[#0d0d12] dark:text-app-text">
               {courier.name}
             </span>
+            {isInvitedCourier(courier) ? (
+              <span className="mt-1 block truncate whitespace-nowrap text-[11px] font-semibold text-[#f59e0b]">
+                יושלם באפליקציית השליחים
+              </span>
+            ) : null}
           </td>
         );
       case 'connection':
         return (
           <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
-            <span className={`whitespace-nowrap text-xs font-medium ${courier.status === 'offline' ? 'text-[#737373] dark:text-app-text-secondary' : 'text-app-success-text'}`}>
-              {courier.status === 'offline' ? TEXT.notConnected : TEXT.connected}
+            <span className={`whitespace-nowrap text-xs font-medium ${
+              isInvitedCourier(courier)
+                ? 'text-[#f59e0b]'
+                : courier.status === 'offline' ? 'text-[#737373] dark:text-app-text-secondary' : 'text-app-success-text'
+            }`}>
+              {isInvitedCourier(courier) ? TEXT.invited : courier.status === 'offline' ? TEXT.notConnected : TEXT.connected}
             </span>
           </td>
         );
@@ -816,26 +869,32 @@ export const CouriersListScreen: React.FC = () => {
         return (
           <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
             <span className={`whitespace-nowrap text-xs font-medium ${
-              courier.status === 'busy'
+              isInvitedCourier(courier)
+                ? 'text-[#f59e0b]'
+                : courier.status === 'busy'
                 ? 'text-[#f97316] dark:text-[#ffa94d]'
                 : courier.status === 'offline' || !courier.isOnShift
                   ? 'text-[#737373] dark:text-app-text-secondary'
                   : 'text-app-success-text'
             }`}>
-              {courier.status === 'busy' ? TEXT.inDelivery : courier.status === 'offline' || !courier.isOnShift ? '-' : TEXT.free}
+              {isInvitedCourier(courier) ? TEXT.invited : courier.status === 'busy' ? TEXT.inDelivery : courier.status === 'offline' || !courier.isOnShift ? '-' : TEXT.free}
             </span>
           </td>
         );
       case 'vehicleType':
         return (
           <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
-            <span className="whitespace-nowrap text-xs text-[#666d80] dark:text-app-text-secondary">{courier.vehicleType}</span>
+            <span className="whitespace-nowrap text-xs text-[#666d80] dark:text-app-text-secondary">
+              {isInvitedCourier(courier) ? 'יגיע מהאפליקציה' : courier.vehicleType}
+            </span>
           </td>
         );
       case 'employmentType':
         return (
           <td key={columnId} className={ENTITY_TABLE_DATA_CELL_CLASS}>
-            <span className="whitespace-nowrap text-xs text-[#666d80] dark:text-app-text-secondary">{courier.employmentType}</span>
+            <span className="whitespace-nowrap text-xs text-[#666d80] dark:text-app-text-secondary">
+              {isInvitedCourier(courier) ? 'יגיע מהאפליקציה' : courier.employmentType}
+            </span>
           </td>
         );
       case 'phone':
@@ -1208,7 +1267,12 @@ export const CouriersListScreen: React.FC = () => {
             dir="rtl"
           >
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-[#0d0d12] dark:text-app-text">{TEXT.addNewCourier}</h2>
+              <div>
+                <h2 className="text-xl font-bold text-[#0d0d12] dark:text-app-text">{TEXT.addNewCourier}</h2>
+                <p className="mt-1 text-sm leading-6 text-[#737373] dark:text-app-text-secondary">
+                  הכנס מספר טלפון. השליח ישלים שם, כלי רכב ומיקום באפליקציית השליחים.
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={handleModalClose}
@@ -1219,48 +1283,30 @@ export const CouriersListScreen: React.FC = () => {
             </div>
             <div className="space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-app-text-secondary">{TEXT.fullName}</label>
-                <input
-                  type="text"
-                  value={newCourier.name}
-                  onChange={(event) => setNewCourier({ ...newCourier, name: event.target.value })}
-                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-app-brand dark:border-app-border dark:bg-app-surface dark:text-app-text"
-                  placeholder={TEXT.enterFullName}
-                  autoFocus
-                />
-              </div>
-              <div>
                 <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-app-text-secondary">{TEXT.phone}</label>
                 <input
                   type="tel"
-                  value={newCourier.phone}
-                  onChange={(event) => setNewCourier({ ...newCourier, phone: event.target.value })}
+                  value={invitePhone}
+                  onChange={(event) => setInvitePhone(normalizeCourierPhone(event.target.value))}
                   className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-app-brand dark:border-app-border dark:bg-app-surface dark:text-app-text"
                   placeholder={TEXT.enterPhone}
+                  dir="ltr"
+                  inputMode="tel"
+                  autoFocus
                 />
               </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-[#666d80] dark:text-app-text-secondary">{TEXT.vehicleType}</label>
-                <select
-                  value={newCourier.vehicleType}
-                  onChange={(event) => setNewCourier({ ...newCourier, vehicleType: event.target.value as Courier['vehicleType'] })}
-                  className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-app-brand dark:border-app-border dark:bg-app-surface dark:text-app-text"
-                >
-                  {VEHICLE_TYPES.map((vehicleType) => (
-                    <option key={vehicleType} value={vehicleType}>
-                      {vehicleType}
-                    </option>
-                  ))}
-                </select>
+              <div className="rounded-lg border border-[#e5e5e5] bg-[#fafafa] p-3 text-sm leading-6 text-[#666d80] dark:border-app-border dark:bg-[#111] dark:text-app-text-secondary">
+                אחרי השליחה הוא יופיע ברשימה כ״ממתין להרשמה״. כשהוא נרשם באפליקציה שלו, הפרטים יגיעו משם.
               </div>
             </div>
             <div className="mt-6 flex gap-3">
               <button
                 type="button"
-                onClick={addCourier}
-                disabled={!newCourier.name.trim() || !newCourier.phone.trim()}
-                className="flex-1 rounded-lg bg-app-brand-solid px-4 py-2.5 font-medium text-app-background transition-colors hover:bg-app-brand-hover disabled:bg-[#e5e5e5] disabled:text-[#a3a3a3]"
+                onClick={inviteCourier}
+                disabled={normalizeCourierPhone(invitePhone).length < 9}
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-app-brand-solid px-4 py-2.5 font-medium text-app-background transition-colors hover:bg-app-brand-hover disabled:bg-[#e5e5e5] disabled:text-[#a3a3a3]"
               >
+                <UserPlus className="h-4 w-4" />
                 {TEXT.addCourier}
               </button>
               <button
@@ -1290,8 +1336,10 @@ export const CouriersListScreen: React.FC = () => {
               title={contextMenu.courier.name}
               subtitle={
                 <div className="flex items-center gap-1.5">
-                  <span className={`text-[11px] font-medium ${getStatusColor(contextMenu.courier.status)}`}>
-                    {getStatusLabel(contextMenu.courier.status)}
+                  <span className={`text-[11px] font-medium ${
+                    isInvitedCourier(contextMenu.courier) ? 'text-[#f59e0b]' : getStatusColor(contextMenu.courier.status)
+                  }`}>
+                    {isInvitedCourier(contextMenu.courier) ? TEXT.invited : getStatusLabel(contextMenu.courier.status)}
                   </span>
                   {contextMenu.courier.isOnShift ? (
                     <>
@@ -1320,6 +1368,7 @@ export const CouriersListScreen: React.FC = () => {
                 toggleCourierPower(contextMenu.courier);
                 closeCourierActionsMenu();
               }}
+              disabled={isInvitedCourier(contextMenu.courier)}
               icon={<Power className="w-3.5 h-3.5 text-app-success-text" />}
             >
               {contextMenu.courier.status === 'offline' ? TEXT.activate : TEXT.disable}
@@ -1327,7 +1376,7 @@ export const CouriersListScreen: React.FC = () => {
 
             <EntityActionMenuItem
               onClick={() => handleToggleShift(contextMenu.courier)}
-              disabled={!contextMenu.courier.isOnShift && contextMenu.courier.status === 'offline'}
+              disabled={isInvitedCourier(contextMenu.courier) || (!contextMenu.courier.isOnShift && contextMenu.courier.status === 'offline')}
               icon={
                 contextMenu.courier.isOnShift ? (
                   <LogOut className="w-3.5 h-3.5 text-[#f97316]" />

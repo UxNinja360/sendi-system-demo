@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Activity, Bike, Car, Clock, Package, Star } from 'lucide-react';
+import { Activity, Bike, Car, Clock, Package, Star, UserPlus } from 'lucide-react';
 
 import { EntityRowActionTrigger } from '../components/common/entity-row-action-trigger';
 import { Toggle } from '../components/common/toggle';
@@ -28,6 +28,7 @@ type CouriersVercelListProps = {
 
 const rowGridClass =
   'courier-vercel-row grid grid-cols-[minmax(0,1fr)_44px] md:grid-cols-[minmax(180px,260px)_minmax(104px,136px)_minmax(112px,150px)_minmax(96px,140px)_minmax(84px,116px)_minmax(96px,132px)_minmax(0,1fr)_minmax(64px,84px)_36px] xl:grid-cols-[minmax(200px,280px)_minmax(112px,144px)_minmax(124px,164px)_minmax(112px,150px)_minmax(96px,124px)_minmax(104px,140px)_minmax(0,1fr)_minmax(68px,88px)_36px] 2xl:grid-cols-[minmax(220px,300px)_minmax(120px,152px)_minmax(132px,176px)_minmax(124px,164px)_minmax(104px,132px)_minmax(112px,148px)_minmax(0,1fr)_minmax(72px,92px)_36px]';
+const INVITED_COURIER_LABEL = 'ממתין להרשמה';
 
 const joinClassNames = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(' ');
@@ -59,7 +60,17 @@ const formatElapsedDuration = (value: DateValue, now: number) => {
   return remainingHours > 0 ? `${days} ימ׳ ${remainingHours} שע׳` : `${days} ימ׳`;
 };
 
+const isInvitedCourier = (courier: Courier) => courier.registrationStatus === 'invited';
+
 const getConnectionMeta = (courier: Courier) => {
+  if (isInvitedCourier(courier)) {
+    return {
+      label: INVITED_COURIER_LABEL,
+      dot: 'bg-[#f59e0b]',
+      text: 'text-[#f59e0b]',
+    };
+  }
+
   const isConnected = courier.status !== 'offline';
 
   return {
@@ -70,6 +81,16 @@ const getConnectionMeta = (courier: Courier) => {
 };
 
 const getShiftMeta = (courier: Courier) => {
+  if (isInvitedCourier(courier)) {
+    return {
+      label: INVITED_COURIER_LABEL,
+      isActive: false,
+      startedAt: null,
+      dot: 'bg-[#f59e0b]',
+      text: 'text-[#f59e0b]',
+    };
+  }
+
   const isOnShift = courier.isOnShift;
 
   return {
@@ -194,6 +215,14 @@ const CourierCompactFooterMeta: React.FC<{
   shiftMeta: ReturnType<typeof getShiftMeta>;
   now: number;
 }> = ({ courier, shiftMeta, now }) => {
+  if (isInvitedCourier(courier)) {
+    return (
+      <div className="courier-row__compact-meta hidden min-w-0 items-center gap-3">
+        <CourierMetaChip icon={UserPlus} label={INVITED_COURIER_LABEL} className="text-[#f59e0b]" />
+      </div>
+    );
+  }
+
   const VehicleIcon = getVehicleIcon(courier.vehicleType);
   const EmploymentIcon = getEmploymentIcon(courier.employmentType);
   const shiftElapsed = shiftMeta.isActive ? formatElapsedDuration(shiftMeta.startedAt, now) : '';
@@ -231,6 +260,7 @@ const CourierVercelRow: React.FC<{
   const connectionMeta = getConnectionMeta(courier);
   const shiftMeta = getShiftMeta(courier);
   const isConnected = courier.status !== 'offline';
+  const isInvited = isInvitedCourier(courier);
 
   return (
     <div
@@ -244,6 +274,11 @@ const CourierVercelRow: React.FC<{
         <CourierAvatarMark name={courier.name} avatarUrl={courier.avatarUrl} size="sm" />
         <div className="min-w-0">
           <div className="min-w-0 truncate text-sm font-semibold text-app-text">{courier.name}</div>
+          {isInvited ? (
+            <div className="mt-1 truncate text-right text-xs font-semibold text-[#f59e0b]">
+              פרופיל יושלם באפליקציית השליחים
+            </div>
+          ) : null}
           <div className="mt-1 truncate text-right text-sm font-normal text-app-text-secondary" dir="ltr">
             {courier.phone || '-'}
           </div>
@@ -251,11 +286,15 @@ const CourierVercelRow: React.FC<{
       </div>
 
       <div className="courier-row__vehicle col-start-1 row-start-4 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
-        <div className="truncate text-sm font-normal text-app-text-secondary">{courier.vehicleType}</div>
+        <div className="truncate text-sm font-normal text-app-text-secondary">
+          {isInvited ? 'פרטים מהאפליקציה' : courier.vehicleType}
+        </div>
       </div>
 
       <div className="courier-row__employment col-start-1 row-start-5 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
-        <div className="truncate text-sm font-normal text-app-text-secondary">{courier.employmentType}</div>
+        <div className="truncate text-sm font-normal text-app-text-secondary">
+          {isInvited ? 'הזמנה נשלחה' : courier.employmentType}
+        </div>
       </div>
 
       <div
@@ -272,7 +311,11 @@ const CourierVercelRow: React.FC<{
       </div>
 
       <div className="courier-row__connection hidden min-h-0 min-w-0 items-center px-2 py-1 md:col-auto md:row-auto md:flex md:min-h-[72px] md:py-2">
-        <CourierRating rating={courier.rating} />
+        {isInvited ? (
+          <CourierMetaChip icon={UserPlus} label={INVITED_COURIER_LABEL} className="text-[#f59e0b]" />
+        ) : (
+          <CourierRating rating={courier.rating} />
+        )}
       </div>
 
       <div className="courier-row__shift col-start-1 row-start-3 flex min-h-0 min-w-0 flex-col justify-center px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:py-2">
@@ -289,16 +332,22 @@ const CourierVercelRow: React.FC<{
 
       <div className="courier-row__footer col-start-1 row-start-6 flex min-h-0 items-center justify-between px-2 py-1 md:col-auto md:row-auto md:min-h-[72px] md:justify-start md:py-2">
         <div className="courier-row__compact-stats flex min-w-0 items-center gap-3 md:hidden">
-          <CourierRating rating={courier.rating} />
-          <CourierDeliveryCount count={courier.totalDeliveries} className="courier-row__footer-total" />
+          {isInvited ? (
+            <CourierMetaChip icon={UserPlus} label={INVITED_COURIER_LABEL} className="text-[#f59e0b]" />
+          ) : (
+            <>
+              <CourierRating rating={courier.rating} />
+              <CourierDeliveryCount count={courier.totalDeliveries} className="courier-row__footer-total" />
+            </>
+          )}
         </div>
         <CourierCompactFooterMeta courier={courier} shiftMeta={shiftMeta} now={now} />
         <span className="courier-row__compact-toggle inline-flex md:hidden" onClick={(event) => event.stopPropagation()}>
-          <Toggle checked={isConnected} onChange={() => onTogglePower(courier)} ariaLabel={connectionMeta.label} />
+          <Toggle checked={isConnected && !isInvited} disabled={isInvited} onChange={() => onTogglePower(courier)} ariaLabel={connectionMeta.label} />
         </span>
         <div className="courier-row__desktop-toggle hidden min-w-0 md:flex md:w-full md:justify-start">
           <span className="inline-flex" onClick={(event) => event.stopPropagation()}>
-            <Toggle checked={isConnected} onChange={() => onTogglePower(courier)} ariaLabel={connectionMeta.label} />
+            <Toggle checked={isConnected && !isInvited} disabled={isInvited} onChange={() => onTogglePower(courier)} ariaLabel={connectionMeta.label} />
           </span>
         </div>
       </div>
@@ -331,6 +380,7 @@ const CourierVercelCard: React.FC<{
   const connectionMeta = getConnectionMeta(courier);
   const shiftMeta = getShiftMeta(courier);
   const isConnected = courier.status !== 'offline';
+  const isInvited = isInvitedCourier(courier);
 
   return (
     <div
@@ -346,9 +396,14 @@ const CourierVercelCard: React.FC<{
             <div className="flex min-w-0 items-center gap-2">
               <div className="min-w-0 truncate text-sm font-semibold text-app-text">{courier.name}</div>
               <span className="inline-flex" onClick={(event) => event.stopPropagation()}>
-                <Toggle checked={isConnected} onChange={() => onTogglePower(courier)} ariaLabel={connectionMeta.label} />
+                <Toggle checked={isConnected && !isInvited} disabled={isInvited} onChange={() => onTogglePower(courier)} ariaLabel={connectionMeta.label} />
               </span>
             </div>
+            {isInvited ? (
+              <div className="mt-1 truncate text-right text-xs font-semibold text-[#f59e0b]">
+                פרופיל יושלם באפליקציית השליחים
+              </div>
+            ) : null}
             <div className="mt-1 truncate text-right text-xs text-app-text-secondary" dir="ltr">
               {courier.phone || '-'}
             </div>
@@ -370,8 +425,14 @@ const CourierVercelCard: React.FC<{
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-app-nav-border pt-3 text-xs text-app-text-secondary">
         <div className="flex min-w-0 flex-wrap items-center gap-3">
-          <CourierMetaChip icon={getVehicleIcon(courier.vehicleType)} label={courier.vehicleType} />
-          <CourierMetaChip icon={getEmploymentIcon(courier.employmentType)} label={courier.employmentType} />
+          {isInvited ? (
+            <CourierMetaChip icon={UserPlus} label={INVITED_COURIER_LABEL} className="text-[#f59e0b]" />
+          ) : (
+            <>
+              <CourierMetaChip icon={getVehicleIcon(courier.vehicleType)} label={courier.vehicleType} />
+              <CourierMetaChip icon={getEmploymentIcon(courier.employmentType)} label={courier.employmentType} />
+            </>
+          )}
           {shiftMeta.label ? (
             <CourierMetaChip
               icon={Activity}
@@ -384,10 +445,12 @@ const CourierVercelCard: React.FC<{
             />
           ) : null}
         </div>
-        <div className="flex shrink-0 items-center gap-3">
-          <CourierRating rating={courier.rating} />
-          <CourierDeliveryCount count={courier.totalDeliveries} />
-        </div>
+        {!isInvited ? (
+          <div className="flex shrink-0 items-center gap-3">
+            <CourierRating rating={courier.rating} />
+            <CourierDeliveryCount count={courier.totalDeliveries} />
+          </div>
+        ) : null}
       </div>
     </div>
   );

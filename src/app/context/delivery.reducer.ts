@@ -41,7 +41,8 @@ const hasSystemBlockingDeliveries = (state: DeliveryState) =>
     SYSTEM_BLOCKING_DELIVERY_STATUSES.includes(delivery.status)
   );
 
-const hasRegisteredCouriers = (state: DeliveryState) => state.couriers.length > 0;
+const hasRegisteredCouriers = (state: DeliveryState) =>
+  state.couriers.some((courier) => courier.registrationStatus !== 'invited');
 
 const enforceOperationalAvailabilityState = (state: DeliveryState): DeliveryState => {
   if (!state.isSystemOpen) {

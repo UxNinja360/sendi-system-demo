@@ -271,7 +271,7 @@ export const CouriersShifts: React.FC = () => {
     endTime: '11:00',
     slots: [createSlot(0)],
   });
-  const [newCourier, setNewCourier] = useState({ name: '', phone: '' });
+  const [invitePhone, setInvitePhone] = useState('');
   const [cellContextMenu, setCellContextMenu] = useState<{
     x: number;
     y: number;
@@ -389,6 +389,7 @@ export const CouriersShifts: React.FC = () => {
   const popupCouriers = useMemo(() => {
     const query = popupSearch.trim().toLowerCase();
     return state.couriers
+      .filter((courier) => courier.registrationStatus !== 'invited')
       .filter((courier) => {
         if (!query) return true;
         return courier.name.toLowerCase().includes(query) || courier.phone.toLowerCase().includes(query);
@@ -442,7 +443,7 @@ export const CouriersShifts: React.FC = () => {
 
   const closeCourierModal = () => {
     setCourierModalOpen(false);
-    setNewCourier({ name: '', phone: '' });
+    setInvitePhone('');
   };
 
   const saveTemplate = () => {
@@ -486,14 +487,29 @@ export const CouriersShifts: React.FC = () => {
     closeTemplateModal();
   };
 
-  const addCourier = () => {
-    if (!newCourier.name.trim() || !newCourier.phone.trim()) return;
+  const inviteCourier = () => {
+    const normalizedPhone = invitePhone.replace(/\D/g, '');
+    if (normalizedPhone.length < 9) return;
+
+    const alreadyExists = state.couriers.some((courier) => courier.phone.replace(/\D/g, '') === normalizedPhone);
+    if (alreadyExists) {
+      toast.error('כבר קיים שליח או הזמנה עם מספר הטלפון הזה.');
+      return;
+    }
+
+    const now = new Date();
 
     const courier: Courier = {
-      id: `c${Date.now()}`,
-      name: newCourier.name.trim(),
-      phone: newCourier.phone.trim(),
-      status: 'available',
+      id: `c-invite-${normalizedPhone}-${now.getTime()}`,
+      name: 'ממתין להרשמה',
+      phone: normalizedPhone,
+      registrationStatus: 'invited',
+      invitedAt: now,
+      vehicleType: 'אופנוע',
+      employmentType: 'פר משלוח',
+      status: 'offline',
+      connectedAt: null,
+      disconnectedAt: now,
       isOnShift: false,
       shiftStartedAt: null,
       shiftEndedAt: null,
@@ -504,6 +520,7 @@ export const CouriersShifts: React.FC = () => {
     };
 
     dispatch({ type: 'ADD_COURIER', payload: courier });
+    toast.success(`נשלחה הזמנה לשליח ${normalizedPhone}`);
     closeCourierModal();
   };
 
@@ -590,7 +607,9 @@ export const CouriersShifts: React.FC = () => {
   };
 
   const handleAutoArrange = () => {
-    const availableCouriers = state.couriers;
+    const availableCouriers = state.couriers.filter(
+      (courier) => courier.registrationStatus !== 'invited' && courier.status !== 'offline',
+    );
     if (availableCouriers.length === 0) return;
 
     const weekShifts = state.shifts.filter(s => s.date >= weekStartKey && s.date <= weekEndKey && s.date >= todayKey);
@@ -976,8 +995,10 @@ export const CouriersShifts: React.FC = () => {
           >
             <div className="mb-5 flex items-center justify-between">
               <div>
-                <div className="text-lg font-semibold text-[#0d0d12] dark:text-app-text">{'\u05d4\u05d5\u05e1\u05e3 \u05e9\u05dc\u05d9\u05d7 \u05d7\u05d3\u05e9'}</div>
-                <div className="mt-1 text-sm text-[#737373] dark:text-app-text-secondary">{'\u05de\u05de\u05dc\u05d0\u05d9\u05dd \u05e4\u05e8\u05d8\u05d9\u05dd \u05d1\u05e1\u05d9\u05e1\u05d9\u05d9\u05dd \u05db\u05d3\u05d9 \u05dc\u05d4\u05d5\u05e1\u05d9\u05e3 \u05d0\u05d5\u05ea\u05d5 \u05dc\u05de\u05e2\u05e8\u05db\u05ea.'}</div>
+                <div className="text-lg font-semibold text-[#0d0d12] dark:text-app-text">הזמן שליח</div>
+                <div className="mt-1 text-sm leading-6 text-[#737373] dark:text-app-text-secondary">
+                  הכנס מספר טלפון. השליח ישלים שם, כלי רכב ומיקום באפליקציית השליחים.
+                </div>
               </div>
               <button
                 type="button"
@@ -990,23 +1011,18 @@ export const CouriersShifts: React.FC = () => {
 
             <div className="space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-medium text-[#0d0d12] dark:text-app-text">{'\u05e9\u05dd \u05de\u05dc\u05d0'}</label>
+                <label className="mb-2 block text-sm font-medium text-[#0d0d12] dark:text-app-text">{'\u05d8\u05dc\u05e4\u05d5\u05df'}</label>
                 <input
-                  value={newCourier.name}
-                  onChange={(event) => setNewCourier((prev) => ({ ...prev, name: event.target.value }))}
-                  placeholder={'\u05db\u05ea\u05d5\u05d1 \u05e9\u05dd \u05de\u05dc\u05d0'}
+                  value={invitePhone}
+                  onChange={(event) => setInvitePhone(event.target.value.replace(/\D/g, ''))}
+                  placeholder={'\u05db\u05ea\u05d5\u05d1 \u05de\u05e1\u05e4\u05e8 \u05d8\u05dc\u05e4\u05d5\u05df'}
+                  dir="ltr"
+                  inputMode="tel"
                   className="w-full rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] px-3 py-2.5 text-sm text-[#0d0d12] outline-none transition-colors focus:border-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-app-text"
                 />
               </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-[#0d0d12] dark:text-app-text">{'\u05d8\u05dc\u05e4\u05d5\u05df'}</label>
-                <input
-                  value={newCourier.phone}
-                  onChange={(event) => setNewCourier((prev) => ({ ...prev, phone: event.target.value }))}
-                  placeholder={'\u05db\u05ea\u05d5\u05d1 \u05de\u05e1\u05e4\u05e8 \u05d8\u05dc\u05e4\u05d5\u05df'}
-                  className="w-full rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] px-3 py-2.5 text-sm text-[#0d0d12] outline-none transition-colors focus:border-[#9fe870] dark:border-app-border dark:bg-app-surface dark:text-app-text"
-                />
+              <div className="rounded-[4px] border border-[#e5e5e5] bg-[#fafafa] p-3 text-sm leading-6 text-[#737373] dark:border-app-border dark:bg-[#111111] dark:text-app-text-secondary">
+                אחרי השליחה הוא יופיע כ״ממתין להרשמה״ ולא ישובץ למשמרות עד שיירשם באפליקציה שלו.
               </div>
             </div>
 
@@ -1020,11 +1036,11 @@ export const CouriersShifts: React.FC = () => {
               </button>
               <button
                 type="button"
-                onClick={addCourier}
-                disabled={!newCourier.name.trim() || !newCourier.phone.trim()}
+                onClick={inviteCourier}
+                disabled={invitePhone.replace(/\D/g, '').length < 9}
                 className="rounded-[4px] bg-[#9fe870] px-4 py-2.5 text-sm font-semibold text-[#0d0d12] transition-colors hover:bg-[#8dd960] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {'\u05d4\u05d5\u05e1\u05e3 \u05e9\u05dc\u05d9\u05d7'}
+                שלח הזמנה
               </button>
             </div>
           </div>

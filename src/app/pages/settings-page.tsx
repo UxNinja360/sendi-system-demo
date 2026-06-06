@@ -1109,18 +1109,6 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
                   aria-label="מעברים להגדרות"
                 >
                   <SettingsLinkRow
-                    icon={<Users className="h-4 w-4" />}
-                    title="פרטי משתמש"
-                    hint="שם המשתמש, טלפון המשתמש והתפקיד שלו במערכת."
-                    onClick={() => navigate('/settings/profile')}
-                  />
-                  <SettingsLinkRow
-                    icon={<Store className="h-4 w-4" />}
-                    title="חברת המשלוחים"
-                    hint="שם חברת המשלוחים, ח.פ וטלפון העסק."
-                    onClick={() => navigate('/settings/company')}
-                  />
-                  <SettingsLinkRow
                     icon={<Power className="h-4 w-4" />}
                     title="הגדרות מערכת"
                     hint={TEXT.systemDescription}
@@ -1131,6 +1119,17 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
                     title={TEXT.appearance}
                     hint={TEXT.appearanceDescription}
                     onClick={() => navigate('/settings/display')}
+                  />
+                </div>
+                <div
+                  className="overflow-hidden rounded-none border border-[#e5e5e5] bg-white dark:border-app-border dark:bg-app-surface"
+                  aria-label="התראות צלילים ורטטים"
+                >
+                  <SettingsLinkRow
+                    icon={<BellRing className="h-4 w-4" />}
+                    title="התראות"
+                    hint={TEXT.pushNotificationsDescription}
+                    onClick={() => navigate('/settings/notifications')}
                   />
                   <SettingsLinkRow
                     icon={<Volume2 className="h-4 w-4" />}
@@ -1144,24 +1143,50 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
                     hint={TEXT.hapticsDescription}
                     onClick={() => navigate('/settings/haptics')}
                   />
-                  <SettingsLinkRow
-                    icon={<BellRing className="h-4 w-4" />}
-                    title="התראות"
-                    hint={TEXT.pushNotificationsDescription}
-                    onClick={() => navigate('/settings/notifications')}
-                  />
+                </div>
+                <div
+                  className="overflow-hidden rounded-none border border-[#e5e5e5] bg-white dark:border-app-border dark:bg-app-surface"
+                  aria-label={TEXT.pagesHub}
+                >
                   <SettingsLinkRow
                     icon={<SlidersHorizontal className="h-4 w-4" />}
                     title={TEXT.pagesHub}
                     hint={TEXT.pagesHubHint}
                     onClick={() => navigate('/settings/pages')}
                   />
+                </div>
+                <div
+                  className="overflow-hidden rounded-none border border-[#e5e5e5] bg-white dark:border-app-border dark:bg-app-surface"
+                  aria-label="פרטי משתמש וחברת משלוחים"
+                >
+                  <SettingsLinkRow
+                    icon={<Users className="h-4 w-4" />}
+                    title="פרטי משתמש"
+                    hint="שם המשתמש, טלפון המשתמש והתפקיד שלו במערכת."
+                    onClick={() => navigate('/settings/profile')}
+                  />
+                  <SettingsLinkRow
+                    icon={<Store className="h-4 w-4" />}
+                    title="חברת המשלוחים"
+                    hint="שם חברת המשלוחים, ח.פ וטלפון העסק."
+                    onClick={() => navigate('/settings/company')}
+                  />
+                </div>
+                <div
+                  className="overflow-hidden rounded-none border border-[#e5e5e5] bg-white dark:border-app-border dark:bg-app-surface"
+                  aria-label="הגדרות מתקדמות"
+                >
                   <SettingsLinkRow
                     icon={<AlertTriangle className="h-4 w-4" />}
                     title="הגדרות מתקדמות"
                     hint="מחיקת חשבון ואיפוס חשבון."
                     onClick={() => navigate('/settings/advanced')}
                   />
+                </div>
+                <div
+                  className="overflow-hidden rounded-none border border-[#e5e5e5] bg-white dark:border-app-border dark:bg-app-surface"
+                  aria-label={TEXT.logout}
+                >
                   <SettingsLinkRow
                     icon={<LogOut className="h-4 w-4" />}
                     title={TEXT.logout}

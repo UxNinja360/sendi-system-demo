@@ -344,7 +344,7 @@ const getAuthErrorMessage = (error: unknown) => {
 export const LoginPage: React.FC = () => {
   const accountType: AccountType = 'delivery_company';
   const [authStep, setAuthStep] = useState<'phone' | 'otp'>('phone');
-  const [authMode, setAuthMode] = useState<LoginPhoneMode>('login');
+  const [authMode, setAuthMode] = useState<LoginPhoneMode>('signup');
   const [challengeId, setChallengeId] = useState('');
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);

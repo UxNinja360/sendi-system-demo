@@ -283,13 +283,13 @@ export const sanitizeLoadedDeliveryState = (
       activeDeliveryIds,
     };
   });
-  const hasCouriers = couriers.length > 0;
+  const hasRegisteredCouriers = couriers.some((courier) => courier.registrationStatus !== 'invited');
 
   return {
     ...state,
     isSystemOpen,
     isReceivingDeliveries: isSystemOpen && Boolean(state.isReceivingDeliveries),
-    autoAssignEnabled: isSystemOpen && hasCouriers && Boolean(state.autoAssignEnabled),
+    autoAssignEnabled: isSystemOpen && hasRegisteredCouriers && Boolean(state.autoAssignEnabled),
     deliveries,
     shifts,
     couriers,
