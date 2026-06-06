@@ -601,20 +601,20 @@ body {
 
   .dashboard-card-hover:not(:disabled):not([aria-disabled='true']):hover,
   .dashboard-status-card:not(:disabled):not([aria-disabled='true']):hover {
-    background: var(--app-surface-raised);
-    border-color: var(--app-border);
+    background: var(--app-surface-raised) !important;
+    border-color: var(--app-border) !important;
   }
 
   .dark .dashboard-card-hover:not(:disabled):not([aria-disabled='true']):hover,
   .dark .dashboard-status-card:not(:disabled):not([aria-disabled='true']):hover {
-    background: #111111;
-    border-color: #252525;
+    background: #111111 !important;
+    border-color: #252525 !important;
   }
 
   .twilight.dark .dashboard-card-hover:not(:disabled):not([aria-disabled='true']):hover,
   .twilight.dark .dashboard-status-card:not(:disabled):not([aria-disabled='true']):hover {
-    background: var(--app-surface-raised);
-    border-color: var(--app-border);
+    background: var(--app-surface-raised) !important;
+    border-color: var(--app-border) !important;
   }
 }
 

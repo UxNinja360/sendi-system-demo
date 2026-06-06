@@ -874,7 +874,6 @@ type WorkspaceStartCarouselStep = {
   description: string;
   disabled?: boolean;
   done: boolean;
-  eyebrow: string;
   heading: string;
   icon: React.ReactNode;
   id: string;
@@ -1263,7 +1262,6 @@ const WorkspaceStartCarousel: React.FC<{
     {
       id: 'couriers',
       title: 'שליחים',
-      eyebrow: 'שלב ראשון',
       heading: 'הזמנת שליחים',
       description: 'שלח הזמנה לכמה שליחים במקביל מאנשי קשר או ממספרי טלפון. השליח נרשם באפליקציה שלו, ושם יתמלאו הפרטים לדמו.',
       actionLabel: hasRegisteredCouriers || hasPendingCourierInvites ? 'שלח עוד הזמנות' : 'הזמן שליחים',
@@ -1274,7 +1272,6 @@ const WorkspaceStartCarousel: React.FC<{
     {
       id: 'network',
       title: 'מקור משלוחים',
-      eyebrow: 'שלב שני',
       heading: 'מקור משלוחים לדמו',
       description: hasRegisteredCouriers
         ? 'אחרי שיש לפחות שליח רשום, סנדי פלוס מכניס משלוחים לדמו לפי אזורי הפעילות כדי שיהיה מה לשבץ.'
@@ -1288,7 +1285,6 @@ const WorkspaceStartCarousel: React.FC<{
     {
       id: 'intake',
       title: 'קבלת משלוחים',
-      eyebrow: 'שלב שלישי',
       heading: 'קבלת משלוחים',
       description: sendiPlusActive
         ? 'כאן פותחים את הכניסה של משלוחים חדשים לדשבורד. אפשר לסגור או לפתוח קבלה בכל רגע מהמתג למעלה.'
@@ -1320,9 +1316,6 @@ const WorkspaceStartCarousel: React.FC<{
       <div className="flex items-center justify-between gap-3 border-b border-app-border px-3 py-2.5 dark:border-[#252525]">
         <div className="min-w-0 text-right">
           <h2 className="text-sm font-black leading-5 text-app-text">התחלה מהירה</h2>
-          <p className="mt-0.5 text-xs leading-5 text-app-text-secondary">
-            שלושה צעדים כדי להתחיל לקבל ולשבץ משלוחים בדמו.
-          </p>
         </div>
         <div className="flex shrink-0 items-center gap-1.5" dir="ltr">
           {steps.map((step, index) => {
@@ -1348,20 +1341,19 @@ const WorkspaceStartCarousel: React.FC<{
         </div>
       </div>
 
-      <div className="grid min-h-[112px] gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-        <div className="flex min-w-0 items-start gap-3">
+      <div className="grid min-h-[96px] gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+        <div className="flex min-w-0 items-center gap-3">
           <span
-            className={`mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] ${
+            className={`inline-flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-[8px] border border-app-border sm:h-16 sm:w-16 ${
               activeStep.done
-                ? 'bg-app-brand/10 text-app-brand'
-                : 'bg-app-surface-raised text-app-text-secondary dark:bg-[#111111]'
+                ? 'border-app-brand/25 bg-app-brand/10 text-app-brand'
+                : 'bg-app-surface-raised text-app-text-secondary dark:border-[#252525] dark:bg-[#111111]'
             }`}
           >
             {activeStep.icon}
           </span>
-          <div className="min-w-0">
-            <div className="text-[11px] font-black text-app-brand">{activeStep.eyebrow}</div>
-            <h3 className="mt-1 text-base font-black leading-6 text-app-text">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base font-black leading-6 text-app-text">
               {activeStep.heading}
             </h3>
             <p className="mt-1 max-w-[46rem] text-xs leading-5 text-app-text-secondary">
@@ -1374,7 +1366,7 @@ const WorkspaceStartCarousel: React.FC<{
           type="button"
           disabled={activeStep.disabled}
           onClick={activeStep.onClick}
-          className="inline-flex h-9 items-center justify-center gap-2 rounded-[6px] bg-app-brand-solid px-3 text-xs font-black text-app-background transition-colors hover:bg-app-brand-hover disabled:cursor-not-allowed disabled:bg-app-surface-raised disabled:text-app-text-secondary dark:disabled:bg-[#111111]"
+          className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-[6px] bg-app-brand-solid px-3 text-xs font-black text-app-background transition-colors hover:bg-app-brand-hover disabled:cursor-not-allowed disabled:bg-app-surface-raised disabled:text-app-text-secondary dark:disabled:bg-[#111111]"
         >
           {activeStep.icon}
           {activeStep.actionLabel}
