@@ -483,6 +483,15 @@ export type DeliveryAction =
         updates: Partial<Pick<Courier, 'name' | 'phone' | 'vehicleType' | 'employmentType' | 'rating'>>;
       };
     }
+  | {
+      type: 'COMPLETE_COURIER_REGISTRATION';
+      payload: {
+        courierId: string;
+        profile: Pick<Courier, 'name' | 'vehicleType' | 'employmentType' | 'rating' | 'totalDeliveries'> & {
+          avatarUrl?: string;
+        };
+      };
+    }
   | { type: 'REMOVE_COURIER'; payload: string } // courierId
   | { type: 'CREATE_SHIFT_TEMPLATE'; payload: ShiftTemplate }
   | { type: 'UPDATE_SHIFT_TEMPLATE'; payload: { templateId: string; updates: Partial<Omit<ShiftTemplate, 'id'>> } }

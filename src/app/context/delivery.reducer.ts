@@ -2313,6 +2313,40 @@ const reduceDeliveryState = (state: DeliveryState, action: DeliveryAction): Deli
       };
     }
 
+    case 'COMPLETE_COURIER_REGISTRATION': {
+      const { courierId, profile } = action.payload;
+      const now = new Date();
+      let didUpdate = false;
+      const couriers = state.couriers.map((courier) => {
+        if (courier.id !== courierId || courier.registrationStatus !== 'invited') {
+          return courier;
+        }
+
+        didUpdate = true;
+        return {
+          ...courier,
+          ...profile,
+          registrationStatus: 'registered' as const,
+          invitedAt: null,
+          status: 'available' as const,
+          connectedAt: now,
+          disconnectedAt: null,
+          isOnShift: false,
+          shiftStartedAt: null,
+          shiftEndedAt: null,
+          currentShiftAssignmentId: null,
+          activeDeliveryIds: [],
+        };
+      });
+
+      if (!didUpdate) return state;
+
+      return {
+        ...state,
+        couriers,
+      };
+    }
+
     case 'START_COURIER_SHIFT': {
       const { courierId } = action.payload;
       const nextShiftState = startCourierShiftState(state, courierId, new Date());

@@ -237,7 +237,7 @@ const createActivityLogEntry = (action: DeliveryAction, state: DeliveryState): A
       return {
         id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
         timestamp: now,
-        title: 'שליח חדש נוסף',
+        title: action.payload.registrationStatus === 'invited' ? 'הזמנת שליח נשלחה' : 'שליח חדש נוסף',
         description: action.payload.name,
         actionType: action.type,
         category: 'courier',
@@ -524,7 +524,9 @@ const createActionToast = (action: DeliveryAction, state: DeliveryState): Action
     case 'ADD_COURIER':
       return {
         actionType: action.type,
-        title: `השליח ${action.payload.name} נוסף`,
+        title: action.payload.registrationStatus === 'invited'
+          ? `נשלחה הזמנה ${action.payload.name === 'ממתין להרשמה' ? `לשליח ${action.payload.phone}` : `ל${action.payload.name}`}`
+          : `השליח ${action.payload.name} נוסף`,
       };
     case 'REMOVE_COURIER':
       if (!state.couriers.some((item) => item.id === action.payload)) return null;

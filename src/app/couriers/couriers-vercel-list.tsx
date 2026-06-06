@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Activity, Bike, Car, Clock, Package, Star, UserPlus } from 'lucide-react';
+import { Activity, Bike, Car, CheckCircle2, Clock, Package, Star, UserPlus } from 'lucide-react';
 
 import { EntityRowActionTrigger } from '../components/common/entity-row-action-trigger';
 import { Toggle } from '../components/common/toggle';
@@ -21,6 +21,7 @@ type CouriersVercelListProps = {
     courier: Courier,
     event: React.MouseEvent<HTMLDivElement>,
   ) => void;
+  onApproveRegistration: (courier: Courier) => void;
   onTogglePower: (courier: Courier) => void;
   emptyState: React.ReactNode;
   selectionBar?: React.ReactNode;
@@ -248,6 +249,7 @@ const CourierVercelRow: React.FC<{
   now: number;
   onOpenActionsMenu: CouriersVercelListProps['onOpenActionsMenu'];
   onOpenContextMenu: CouriersVercelListProps['onOpenContextMenu'];
+  onApproveRegistration: CouriersVercelListProps['onApproveRegistration'];
   onTogglePower: CouriersVercelListProps['onTogglePower'];
 }> = ({
   courier,
@@ -255,6 +257,7 @@ const CourierVercelRow: React.FC<{
   now,
   onOpenActionsMenu,
   onOpenContextMenu,
+  onApproveRegistration,
   onTogglePower,
 }) => {
   const connectionMeta = getConnectionMeta(courier);
@@ -343,11 +346,33 @@ const CourierVercelRow: React.FC<{
         </div>
         <CourierCompactFooterMeta courier={courier} shiftMeta={shiftMeta} now={now} />
         <span className="courier-row__compact-toggle inline-flex md:hidden" onClick={(event) => event.stopPropagation()}>
-          <Toggle checked={isConnected && !isInvited} disabled={isInvited} onChange={() => onTogglePower(courier)} ariaLabel={connectionMeta.label} />
+          {isInvited ? (
+            <button
+              type="button"
+              onClick={() => onApproveRegistration(courier)}
+              className="inline-flex items-center gap-1.5 rounded-[6px] bg-app-brand-solid px-2.5 py-1.5 text-[11px] font-black text-app-background transition-colors hover:bg-app-brand-hover"
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              אשר בדמו
+            </button>
+          ) : (
+            <Toggle checked={isConnected} onChange={() => onTogglePower(courier)} ariaLabel={connectionMeta.label} />
+          )}
         </span>
         <div className="courier-row__desktop-toggle hidden min-w-0 md:flex md:w-full md:justify-start">
           <span className="inline-flex" onClick={(event) => event.stopPropagation()}>
-            <Toggle checked={isConnected && !isInvited} disabled={isInvited} onChange={() => onTogglePower(courier)} ariaLabel={connectionMeta.label} />
+            {isInvited ? (
+              <button
+                type="button"
+                onClick={() => onApproveRegistration(courier)}
+                className="inline-flex items-center gap-1.5 rounded-[6px] bg-app-brand-solid px-2.5 py-1.5 text-[11px] font-black text-app-background transition-colors hover:bg-app-brand-hover"
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                אשר בדמו
+              </button>
+            ) : (
+              <Toggle checked={isConnected} onChange={() => onTogglePower(courier)} ariaLabel={connectionMeta.label} />
+            )}
           </span>
         </div>
       </div>
@@ -368,6 +393,7 @@ const CourierVercelCard: React.FC<{
   now: number;
   onOpenActionsMenu: CouriersVercelListProps['onOpenActionsMenu'];
   onOpenContextMenu: CouriersVercelListProps['onOpenContextMenu'];
+  onApproveRegistration: CouriersVercelListProps['onApproveRegistration'];
   onTogglePower: CouriersVercelListProps['onTogglePower'];
 }> = ({
   courier,
@@ -375,6 +401,7 @@ const CourierVercelCard: React.FC<{
   now,
   onOpenActionsMenu,
   onOpenContextMenu,
+  onApproveRegistration,
   onTogglePower,
 }) => {
   const connectionMeta = getConnectionMeta(courier);
@@ -410,6 +437,16 @@ const CourierVercelCard: React.FC<{
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1" onClick={(event) => event.stopPropagation()}>
+          {isInvited ? (
+            <button
+              type="button"
+              onClick={() => onApproveRegistration(courier)}
+              className="inline-flex items-center gap-1.5 rounded-[6px] bg-app-brand-solid px-2.5 py-1.5 text-[11px] font-black text-app-background transition-colors hover:bg-app-brand-hover"
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              אשר בדמו
+            </button>
+          ) : null}
           <EntityRowActionTrigger
             onClick={(event) => onOpenActionsMenu(courier, event)}
             title={`פעולות שליח ${courier.name}`}
@@ -462,6 +499,7 @@ export const CouriersVercelList: React.FC<CouriersVercelListProps> = ({
   activeDeliveriesByCourier,
   onOpenActionsMenu,
   onOpenContextMenu,
+  onApproveRegistration,
   onTogglePower,
   emptyState,
   selectionBar,
@@ -524,6 +562,7 @@ export const CouriersVercelList: React.FC<CouriersVercelListProps> = ({
                 now={now}
                 onOpenActionsMenu={onOpenActionsMenu}
                 onOpenContextMenu={onOpenContextMenu}
+                onApproveRegistration={onApproveRegistration}
                 onTogglePower={onTogglePower}
               />
             ))}
@@ -546,6 +585,7 @@ export const CouriersVercelList: React.FC<CouriersVercelListProps> = ({
               now={now}
               onOpenActionsMenu={onOpenActionsMenu}
               onOpenContextMenu={onOpenContextMenu}
+              onApproveRegistration={onApproveRegistration}
               onTogglePower={onTogglePower}
             />
           ))}

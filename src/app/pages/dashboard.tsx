@@ -879,7 +879,6 @@ const WorkspaceStartSpotlight: React.FC<{
   onActivateSendiPlus: () => void;
   onCreateCourier: () => void;
   onDismiss: () => void;
-  onOpenCouriers: () => void;
   onOpenRestaurants: () => void;
 }> = ({
   invitedCourierCount,
@@ -888,7 +887,6 @@ const WorkspaceStartSpotlight: React.FC<{
   onActivateSendiPlus,
   onCreateCourier,
   onDismiss,
-  onOpenCouriers,
 }) => {
   const hasRegisteredCouriers = registeredCourierCount > 0;
   const hasPendingCourierInvites = invitedCourierCount > 0;
@@ -966,15 +964,6 @@ const WorkspaceStartSpotlight: React.FC<{
           </div>
         </div>
         <div className="flex shrink-0 items-center justify-end gap-2">
-          {!sendiPlusActive ? (
-            <button
-              type="button"
-              onClick={onOpenCouriers}
-              className="rounded-[6px] border border-app-border px-3 py-2 text-xs font-black text-app-text transition-colors hover:bg-app-surface-raised dark:border-[#252525] dark:hover:bg-[#111111]"
-            >
-              שליחים
-            </button>
-          ) : null}
           <button
             type="button"
             onClick={nextStep.onClick}
@@ -1649,7 +1638,6 @@ export const Dashboard: React.FC = () => {
               onActivateSendiPlus={handleActivateSendiPlusFromSpotlight}
               onCreateCourier={() => navigate('/couriers?action=create-courier')}
               onDismiss={handleDismissWorkspaceStart}
-              onOpenCouriers={() => navigate('/couriers')}
               onOpenRestaurants={() => navigate('/restaurants')}
             />
           ) : null}

@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { format } from 'date-fns';
 import {
   Bike,
+  CheckCircle2,
   Clock,
   FileSpreadsheet,
   FileText,
@@ -199,12 +200,45 @@ const normalizeCourierPhone = (value: string) => value.replace(/\D/g, '');
 
 const isInvitedCourier = (courier: Courier) => courier.registrationStatus === 'invited';
 
-const createInvitedCourier = (phone: string): Courier => {
+type InviteContact = {
+  id: string;
+  name: string;
+  phone: string;
+};
+
+type ContactPickerContact = {
+  name?: string[];
+  tel?: string[];
+};
+
+type ContactsManager = {
+  select: (
+    properties: Array<'name' | 'tel'>,
+    options?: { multiple?: boolean },
+  ) => Promise<ContactPickerContact[]>;
+};
+
+const DEMO_INVITE_CONTACTS: InviteContact[] = [
+  { id: 'contact-daniel', name: 'דניאל לוי', phone: '0524182191' },
+  { id: 'contact-noam', name: 'נועם ביטון', phone: '0546631240' },
+  { id: 'contact-omer', name: 'עומר כהן', phone: '0507428851' },
+  { id: 'contact-maya', name: 'מיה אוחיון', phone: '0539004412' },
+  { id: 'contact-itay', name: 'איתי פרץ', phone: '0527721098' },
+];
+
+const getContactsManager = () => {
+  if (typeof navigator === 'undefined') return null;
+
+  const candidate = navigator as Navigator & { contacts?: ContactsManager };
+  return typeof candidate.contacts?.select === 'function' ? candidate.contacts : null;
+};
+
+const createInvitedCourier = (phone: string, contactName?: string): Courier => {
   const now = new Date();
 
   return {
     id: `c-invite-${phone}-${now.getTime()}`,
-    name: TEXT.invited,
+    name: contactName?.trim() || TEXT.invited,
     phone,
     registrationStatus: 'invited',
     invitedAt: now,
@@ -220,6 +254,35 @@ const createInvitedCourier = (phone: string): Courier => {
     activeDeliveryIds: [],
     rating: 5,
     totalDeliveries: 0,
+  };
+};
+
+type DemoRegisteredCourierProfile = Pick<Courier, 'name' | 'vehicleType' | 'employmentType' | 'rating' | 'totalDeliveries'>;
+
+const DEMO_REGISTERED_COURIER_PROFILES: DemoRegisteredCourierProfile[] = [
+  { name: 'דניאל לוי', vehicleType: 'אופנוע', employmentType: 'פר משלוח', rating: 4.9, totalDeliveries: 128 },
+  { name: 'נועם ביטון', vehicleType: 'קורקינט', employmentType: 'פר משלוח', rating: 4.8, totalDeliveries: 94 },
+  { name: 'עומר כהן', vehicleType: 'אופנוע', employmentType: 'שעתי', rating: 4.7, totalDeliveries: 211 },
+  { name: 'מיה אוחיון', vehicleType: 'רכב', employmentType: 'פר משלוח', rating: 4.9, totalDeliveries: 156 },
+  { name: 'איתי פרץ', vehicleType: 'אופנוע', employmentType: 'פר משלוח', rating: 4.6, totalDeliveries: 73 },
+];
+
+const createDemoRegisteredCourierProfile = (
+  courier: Courier,
+  couriers: Courier[],
+): DemoRegisteredCourierProfile => {
+  const phoneSeed = Number(normalizeCourierPhone(courier.phone).slice(-2));
+  const profileIndex = Number.isFinite(phoneSeed)
+    ? phoneSeed % DEMO_REGISTERED_COURIER_PROFILES.length
+    : couriers.length % DEMO_REGISTERED_COURIER_PROFILES.length;
+  const baseProfile = DEMO_REGISTERED_COURIER_PROFILES[profileIndex];
+  const nameExists = couriers.some(
+    (item) => item.id !== courier.id && item.name === baseProfile.name,
+  );
+
+  return {
+    ...baseProfile,
+    name: nameExists ? `${baseProfile.name} ${normalizeCourierPhone(courier.phone).slice(-2)}` : baseProfile.name,
   };
 };
 
@@ -338,6 +401,9 @@ export const CouriersListScreen: React.FC = () => {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; courier: Courier } | null>(null);
   const [selectedCourierIds, setSelectedCourierIds] = useState<Set<string>>(new Set());
   const [invitePhone, setInvitePhone] = useState('');
+  const [inviteContactName, setInviteContactName] = useState('');
+  const [contactsOpen, setContactsOpen] = useState(false);
+  const [contactPickerPending, setContactPickerPending] = useState(false);
   const [periodMode] = useState<PeriodMode>('current_month');
   const [monthAnchor] = useState(() => new Date());
   const [customStartDate] = useState(() => {
@@ -748,6 +814,48 @@ export const CouriersListScreen: React.FC = () => {
     toast.error('לא נמצאו שליחים שנמצאים במשמרת');
   };
 
+  const selectInviteContact = (contact: InviteContact) => {
+    setInvitePhone(normalizeCourierPhone(contact.phone));
+    setInviteContactName(contact.name);
+    setContactsOpen(false);
+  };
+
+  const pickInviteContact = async () => {
+    const contactsManager = getContactsManager();
+
+    if (!contactsManager) {
+      setContactsOpen((value) => !value);
+      return;
+    }
+
+    try {
+      setContactPickerPending(true);
+      const contacts = await contactsManager.select(['name', 'tel'], { multiple: false });
+      const contact = contacts[0];
+      const phone = contact?.tel?.find((value) => normalizeCourierPhone(value).length >= 9);
+
+      if (!phone) {
+        toast.error('לא נמצא מספר טלפון באיש הקשר.');
+        setContactsOpen(true);
+        return;
+      }
+
+      selectInviteContact({
+        id: `native-${normalizeCourierPhone(phone)}`,
+        name: contact.name?.[0] ?? '',
+        phone,
+      });
+    } catch (error) {
+      const errorName = error instanceof DOMException ? error.name : '';
+      if (errorName !== 'AbortError') {
+        toast.info('בחירת אנשי קשר לא זמינה כאן. אפשר לבחור מהרשימה בדמו.');
+        setContactsOpen(true);
+      }
+    } finally {
+      setContactPickerPending(false);
+    }
+  };
+
   const inviteCourier = () => {
     const normalizedPhone = normalizeCourierPhone(invitePhone);
     if (normalizedPhone.length < 9) return;
@@ -758,18 +866,42 @@ export const CouriersListScreen: React.FC = () => {
       return;
     }
 
-    dispatch({ type: 'ADD_COURIER', payload: createInvitedCourier(normalizedPhone) });
-    toast.success(`נשלחה הזמנה לשליח ${normalizedPhone}`);
+    dispatch({ type: 'ADD_COURIER', payload: createInvitedCourier(normalizedPhone, inviteContactName) });
     setIsModalOpen(false);
     setInvitePhone('');
+    setInviteContactName('');
+    setContactsOpen(false);
   };
 
   const handleModalClose = () => {
     setIsModalOpen(false);
     setInvitePhone('');
+    setInviteContactName('');
+    setContactsOpen(false);
   };
 
   const closeCourierActionsMenu = () => setContextMenu(null);
+
+  const completeCourierRegistrationDemo = (courier: Courier) => {
+    closeCourierActionsMenu();
+
+    if (!isInvitedCourier(courier)) return;
+
+    const profile = createDemoRegisteredCourierProfile(courier, state.couriers);
+    dispatch({
+      type: 'COMPLETE_COURIER_REGISTRATION',
+      payload: {
+        courierId: courier.id,
+        profile,
+      },
+    });
+    setSelectedCourierIds((current) => {
+      const next = new Set(current);
+      next.delete(courier.id);
+      return next;
+    });
+    toast.success(`השליח ${profile.name} אושר והפרטים מולאו בדמו`);
+  };
 
   const toggleCourierPower = (courier: Courier) => {
     if (isInvitedCourier(courier)) {
@@ -968,6 +1100,7 @@ export const CouriersListScreen: React.FC = () => {
     restaurants: state.restaurants,
     routeStopOrders: state.courierRoutePlans,
   });
+  const normalizedInvitePhone = normalizeCourierPhone(invitePhone);
 
   return (
     <>
@@ -1073,6 +1206,7 @@ export const CouriersListScreen: React.FC = () => {
                 event.preventDefault();
                 setContextMenu({ x: event.clientX, y: event.clientY, courier });
               }}
+              onApproveRegistration={completeCourierRegistrationDemo}
               onTogglePower={(courier) => toggleCourierPower(courier)}
               emptyState={
                 state.couriers.length === 0 ? (
@@ -1262,7 +1396,7 @@ export const CouriersListScreen: React.FC = () => {
           onClick={handleModalClose}
         >
           <div
-            className="w-full max-w-md rounded-2xl border border-[#e5e5e5] bg-white p-6 dark:border-app-border dark:bg-app-surface"
+            className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-[#e5e5e5] bg-white p-6 dark:border-app-border dark:bg-app-surface"
             onClick={(event) => event.stopPropagation()}
             dir="rtl"
           >
@@ -1287,13 +1421,69 @@ export const CouriersListScreen: React.FC = () => {
                 <input
                   type="tel"
                   value={invitePhone}
-                  onChange={(event) => setInvitePhone(normalizeCourierPhone(event.target.value))}
+                  onChange={(event) => {
+                    setInvitePhone(normalizeCourierPhone(event.target.value));
+                    setInviteContactName('');
+                  }}
                   className="w-full rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-2.5 text-[#0d0d12] focus:outline-none focus:ring-2 focus:ring-app-brand dark:border-app-border dark:bg-app-surface dark:text-app-text"
                   placeholder={TEXT.enterPhone}
                   dir="ltr"
                   inputMode="tel"
                   autoFocus
                 />
+                {inviteContactName ? (
+                  <div className="mt-2 inline-flex items-center gap-2 rounded-[6px] border border-app-brand/30 bg-app-brand/10 px-2.5 py-1 text-xs font-semibold text-app-brand">
+                    נבחר: {inviteContactName}
+                  </div>
+                ) : null}
+              </div>
+              <div>
+                <button
+                  type="button"
+                  onClick={pickInviteContact}
+                  disabled={contactPickerPending}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#e5e5e5] bg-white px-4 py-2.5 text-sm font-black text-[#0d0d12] transition-colors hover:bg-[#f5f5f5] disabled:cursor-wait disabled:opacity-60 dark:border-app-border dark:bg-app-surface dark:text-app-text dark:hover:bg-[#262626]"
+                >
+                  <UserPlus className="h-4 w-4" />
+                  {contactPickerPending ? 'פותח אנשי קשר' : 'בחר מאנשי קשר'}
+                </button>
+                {contactsOpen ? (
+                  <div className="mt-3 overflow-hidden rounded-lg border border-[#e5e5e5] dark:border-app-border">
+                    <div className="border-b border-[#e5e5e5] bg-[#fafafa] px-3 py-2 text-xs font-black text-[#666d80] dark:border-app-border dark:bg-[#111] dark:text-app-text-secondary">
+                      אנשי קשר לדמו
+                    </div>
+                    <div className="max-h-52 overflow-y-auto">
+                      {DEMO_INVITE_CONTACTS.map((contact) => {
+                        const normalizedContactPhone = normalizeCourierPhone(contact.phone);
+                        const alreadyExists = state.couriers.some(
+                          (courier) => normalizeCourierPhone(courier.phone) === normalizedContactPhone,
+                        );
+
+                        return (
+                          <button
+                            key={contact.id}
+                            type="button"
+                            onClick={() => selectInviteContact(contact)}
+                            disabled={alreadyExists}
+                            className="flex w-full items-center justify-between gap-3 border-b border-[#e5e5e5] px-3 py-2.5 text-right transition-colors last:border-b-0 hover:bg-[#f5f5f5] disabled:cursor-not-allowed disabled:opacity-45 dark:border-app-border dark:hover:bg-[#262626]"
+                          >
+                            <span className="min-w-0">
+                              <span className="block truncate text-sm font-black text-[#0d0d12] dark:text-app-text">
+                                {contact.name}
+                              </span>
+                              <span className="block truncate text-xs text-[#737373] dark:text-app-text-secondary" dir="ltr">
+                                {contact.phone}
+                              </span>
+                            </span>
+                            <span className="shrink-0 text-[11px] font-semibold text-app-text-secondary">
+                              {alreadyExists ? 'כבר במערכת' : 'בחר'}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null}
               </div>
               <div className="rounded-lg border border-[#e5e5e5] bg-[#fafafa] p-3 text-sm leading-6 text-[#666d80] dark:border-app-border dark:bg-[#111] dark:text-app-text-secondary">
                 אחרי השליחה הוא יופיע ברשימה כ״ממתין להרשמה״. כשהוא נרשם באפליקציה שלו, הפרטים יגיעו משם.
@@ -1303,7 +1493,7 @@ export const CouriersListScreen: React.FC = () => {
               <button
                 type="button"
                 onClick={inviteCourier}
-                disabled={normalizeCourierPhone(invitePhone).length < 9}
+                disabled={normalizedInvitePhone.length < 9}
                 className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-app-brand-solid px-4 py-2.5 font-medium text-app-background transition-colors hover:bg-app-brand-hover disabled:bg-[#e5e5e5] disabled:text-[#a3a3a3]"
               >
                 <UserPlus className="h-4 w-4" />
@@ -1362,6 +1552,15 @@ export const CouriersListScreen: React.FC = () => {
             >
               {TEXT.details}
             </EntityActionMenuItem>
+
+            {isInvitedCourier(contextMenu.courier) ? (
+              <EntityActionMenuItem
+                onClick={() => completeCourierRegistrationDemo(contextMenu.courier)}
+                icon={<CheckCircle2 className="w-3.5 h-3.5 text-app-success-text" />}
+              >
+                אשר הרשמה בדמו
+              </EntityActionMenuItem>
+            ) : null}
 
             <EntityActionMenuItem
               onClick={() => {
