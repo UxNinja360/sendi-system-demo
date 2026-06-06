@@ -1370,24 +1370,13 @@ const WorkspaceStartCarousel: React.FC<{
       </div>
 
       <div className="grid min-h-[96px] gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-        <div className="flex min-w-0 items-center gap-3">
-          <span
-            className={`inline-flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-[8px] border border-app-border sm:h-16 sm:w-16 ${
-              activeStep.done
-                ? 'border-app-brand/25 bg-app-brand/10 text-app-brand'
-                : 'bg-app-surface-raised text-app-text-secondary dark:border-[#252525] dark:bg-[#111111]'
-            }`}
-          >
-            {activeStep.icon}
-          </span>
-          <div className="min-w-0 flex-1">
-            <h3 className="text-base font-black leading-6 text-app-text">
-              {activeStep.heading}
-            </h3>
-            <p className="mt-1 max-w-[46rem] text-xs leading-5 text-app-text-secondary">
-              {activeStep.description}
-            </p>
-          </div>
+        <div className="min-w-0">
+          <h3 className="text-base font-black leading-6 text-app-text">
+            {activeStep.heading}
+          </h3>
+          <p className="mt-1 max-w-[46rem] text-xs leading-5 text-app-text-secondary">
+            {activeStep.description}
+          </p>
         </div>
 
         <button
