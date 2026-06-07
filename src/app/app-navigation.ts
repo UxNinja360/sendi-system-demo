@@ -325,7 +325,6 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
     section: 'data',
     icon: 'settings',
     showInSidebar: true,
-    managedScroll: true,
   },
 ];
 
