@@ -2,6 +2,7 @@ import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 're
 import {
   ChevronDown,
   CreditCard,
+  ExternalLink,
   Minus,
   MoreHorizontal,
   Pencil,
@@ -196,7 +197,7 @@ export const DeliveryBalanceHub: React.FC = () => {
   const [customAmount, setCustomAmount] = useState(defaultAmount);
   const [couponCode, setCouponCode] = useState('');
   const [appliedCouponCode, setAppliedCouponCode] = useState<string | null>(null);
-  const [couponMessage, setCouponMessage] = useState<string | null>(null);
+  const [couponFeedback, setCouponFeedback] = useState<'invalid' | 'missing' | null>(null);
   const invoicesStorageKey = useMemo(
     () => getPurchaseInvoicesStorageKey(state.workspaceId),
     [state.workspaceId],
@@ -355,6 +356,15 @@ export const DeliveryBalanceHub: React.FC = () => {
       : 'text-[#f59e0b] dark:text-[#fbbf24]';
   const selectedPrice = selectedAmount === null ? 0 : getPackagePrice(selectedAmount);
   const appliedCoupon = appliedCouponCode ? getCouponPromotion(appliedCouponCode) : undefined;
+  const couponFeedbackStatus = appliedCoupon ? 'applied' : couponFeedback;
+  const couponActionLabel =
+    couponFeedbackStatus === 'applied'
+      ? 'הוחל'
+      : couponFeedbackStatus === 'invalid'
+        ? 'לא תקף'
+        : couponFeedbackStatus === 'missing'
+          ? 'חסר'
+          : 'הפעל';
   const selectedDiscount = selectedAmount === null ? 0 : getCouponDiscount(selectedPrice, appliedCoupon);
   const selectedFinalPrice =
     selectedAmount === null ? 0 : roundPrice(Math.max(0, selectedPrice - selectedDiscount));
@@ -377,7 +387,7 @@ export const DeliveryBalanceHub: React.FC = () => {
     setInlineCustomPanelOpen(false);
     setCouponCode('');
     setAppliedCouponCode(null);
-    setCouponMessage(null);
+    setCouponFeedback(null);
   };
 
   const openPurchaseDialog = () => {
@@ -483,7 +493,7 @@ export const DeliveryBalanceHub: React.FC = () => {
   const handleCouponCodeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setCouponCode(event.target.value.toUpperCase());
     setAppliedCouponCode(null);
-    setCouponMessage(null);
+    setCouponFeedback(null);
   };
 
   const applyCouponCode = () => {
@@ -491,20 +501,20 @@ export const DeliveryBalanceHub: React.FC = () => {
 
     if (!normalizedCode) {
       setAppliedCouponCode(null);
-      setCouponMessage('הזן קוד קופון');
+      setCouponFeedback('missing');
       return;
     }
 
     const promotion = getCouponPromotion(normalizedCode);
     if (!promotion) {
       setAppliedCouponCode(null);
-      setCouponMessage('קוד הקופון לא תקף');
+      setCouponFeedback('invalid');
       return;
     }
 
     setCouponCode(normalizedCode);
     setAppliedCouponCode(normalizedCode);
-    setCouponMessage(`${promotion.label} הופעלה`);
+    setCouponFeedback(null);
   };
 
   const completePurchase = () => {
@@ -543,13 +553,23 @@ export const DeliveryBalanceHub: React.FC = () => {
             יתרת משלוחים
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-app-text-secondary">
-            ניהול קרדיטים, רכישות וחשבוניות של חברת המשלוחים.
+            יתרת משלוחים משמשת לחיוב משלוחים במערכת, עם חבילות שמוזילות את העלות לפי נפח.
+            <a
+              href="/delivery-balance/pricing"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="למד עוד על יתרת משלוחים"
+              className="ms-1 inline-flex items-center gap-1 text-inherit focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/35"
+            >
+              <span>למד עוד</span>
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
           </p>
         </div>
 
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
           <div className="inline-flex h-10 shrink-0 items-center justify-center gap-2 border border-app-border bg-app-background px-4 text-sm font-bold text-app-text">
-            <span>קרדיטים</span>
+            <span>יתרה נוכחית</span>
             <span className={`tabular-nums ${deliveryBalanceTextClass}`}>
               {formatNumber(currentBalance)}
             </span>
@@ -573,7 +593,7 @@ export const DeliveryBalanceHub: React.FC = () => {
               : 'text-app-text-secondary after:bg-transparent hover:text-app-text'
           }`}
         >
-          רכישת יתרת משלוחים
+          רכישה
         </button>
         <button
           type="button"
@@ -649,11 +669,9 @@ export const DeliveryBalanceHub: React.FC = () => {
                       <span className="truncate">כמות מותאמת אישית</span>
                     </span>
                     <span className="inline-flex shrink-0 items-center gap-2 text-xs font-bold text-app-text-secondary">
-                      <span>
-                        {customMode && selectedAmount !== null
-                          ? `${formatNumber(selectedAmount)} משלוחים`
-                          : 'פתיחה לבחירת כמות'}
-                      </span>
+                      {customMode && selectedAmount !== null ? (
+                        <span>{formatNumber(selectedAmount)} משלוחים</span>
+                      ) : null}
                       <ChevronDown
                         className={`h-4 w-4 transition-transform ${
                           inlineCustomPanelOpen ? 'rotate-180' : ''
@@ -742,7 +760,10 @@ export const DeliveryBalanceHub: React.FC = () => {
                         הזן קוד מבצע לפני שורת הסיכום.
                       </div>
                     </div>
-                    <div className="flex h-10 w-full min-w-0 overflow-hidden rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface focus-within:border-app-border-strong focus-within:ring-2 focus-within:ring-app-brand/20 sm:w-80" dir="rtl">
+                    <div
+                      className="flex h-10 w-full min-w-0 overflow-hidden rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface focus-within:border-app-border-strong focus-within:ring-2 focus-within:ring-app-brand/20 sm:w-80"
+                      dir="rtl"
+                    >
                       <input
                         type="text"
                         value={couponCode}
@@ -759,75 +780,54 @@ export const DeliveryBalanceHub: React.FC = () => {
                       <button
                         type="button"
                         onClick={applyCouponCode}
-                        className="h-full shrink-0 border-r border-app-border bg-app-text px-4 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+                        aria-live="polite"
+                        className="h-full shrink-0 border-r border-app-border bg-transparent px-4 text-sm font-semibold text-app-text-secondary transition-colors hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
                       >
-                        הפעל
+                        {couponActionLabel}
                       </button>
                     </div>
                   </div>
-                  {couponMessage ? (
-                    <div
-                      className={`mt-3 text-xs font-semibold ${
-                        appliedCoupon ? 'text-[#16a34a] dark:text-[#86efac]' : 'text-[#dc2626] dark:text-[#f87171]'
-                      }`}
-                    >
-                      {couponMessage}
-                    </div>
-                  ) : null}
                 </div>
 
-                <div className="border border-app-border bg-app-background px-4 py-4">
+                <div className="flex flex-col gap-3 border border-app-border bg-app-background px-4 py-3 md:flex-row md:items-center md:justify-between">
                   <div className="min-w-0">
                     <div className="text-sm font-bold text-app-text">סיכום רכישה</div>
-                    {selectedAmount === null ? (
-                      <div className="mt-1 text-xs font-semibold text-app-text-secondary">
-                        בחר חבילה או כמות מותאמת כדי לראות מחיר סופי.
-                      </div>
-                    ) : null}
-
-                    {selectedAmount !== null ? (
-                      <div className="mt-4 space-y-3">
-                        <dl className="divide-y divide-app-border text-sm font-semibold">
-                          <div className="flex items-center justify-between gap-4 py-2">
-                            <dt className="text-app-text-secondary">כמות משלוחים</dt>
-                            <dd className="shrink-0 tabular-nums text-app-text">{formatNumber(selectedAmount)}</dd>
-                          </div>
-                          <div className="flex items-center justify-between gap-4 py-2">
-                            <dt className="text-app-text-secondary">מחיר למשלוח</dt>
-                            <dd className="shrink-0 tabular-nums text-app-text">{formatCurrency(selectedUnitPrice)}</dd>
-                          </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-app-text-secondary">
+                      {selectedAmount === null ? (
+                        <span>בחר חבילה או כמות מותאמת כדי לראות מחיר סופי.</span>
+                      ) : (
+                        <>
+                          <span>{formatNumber(selectedAmount)} משלוחים</span>
+                          <span className="h-3 w-px bg-app-border" aria-hidden="true" />
+                          <span>{formatCurrency(selectedUnitPrice)} למשלוח</span>
                           {selectedDiscount > 0 ? (
                             <>
-                              <div className="flex items-center justify-between gap-4 py-2">
-                                <dt className="text-app-text-secondary">מחיר לפני הנחה</dt>
-                                <dd className="shrink-0 tabular-nums text-app-text">{formatCurrency(selectedPrice)}</dd>
-                              </div>
-                              <div className="flex items-center justify-between gap-4 py-2 text-[#16a34a] dark:text-[#86efac]">
-                                <dt>הנחת קופון</dt>
-                                <dd className="shrink-0 tabular-nums" dir="ltr">
-                                  -{formatCurrency(selectedDiscount)}
-                                </dd>
-                              </div>
+                              <span className="h-3 w-px bg-app-border" aria-hidden="true" />
+                              <span className="text-[#16a34a] dark:text-[#86efac]">
+                                קופון: -{formatCurrency(selectedDiscount)}
+                              </span>
                             </>
                           ) : null}
-                        </dl>
-
-                        <div className="flex items-end justify-between gap-4 border-t border-app-border pt-3">
-                          <div className="text-xs font-bold text-app-text-secondary">סה״כ לתשלום</div>
-                          <div className="shrink-0 text-xl font-bold tabular-nums text-app-text">
-                            {formatCurrency(selectedFinalPrice)}
-                          </div>
-                        </div>
-                      </div>
-                    ) : null}
+                        </>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="mt-4 flex flex-col-reverse gap-2 border-t border-app-border pt-4 sm:flex-row sm:justify-between">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+                    {selectedAmount !== null ? (
+                      <div className="flex items-baseline justify-between gap-2 sm:justify-end">
+                        <span className="text-xs font-bold text-app-text-secondary">סה״כ</span>
+                        <span className="shrink-0 text-base font-bold tabular-nums text-app-text">
+                          {formatCurrency(selectedFinalPrice)}
+                        </span>
+                      </div>
+                    ) : null}
+                    <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                     {selectedAmount !== null ? (
                       <button
                         type="button"
                         onClick={resetPurchaseSelection}
-                        className="h-10 rounded-full bg-app-surface px-4 text-sm font-bold text-app-text transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:w-auto"
+                        className="h-9 rounded-full bg-app-surface px-4 text-sm font-bold text-app-text transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:w-auto"
                       >
                         ניקוי בחירה
                       </button>
@@ -839,10 +839,11 @@ export const DeliveryBalanceHub: React.FC = () => {
                         setPurchaseStep('payment');
                       }}
                       disabled={!canContinuePurchase}
-                      className="h-10 rounded-full bg-app-text px-5 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:bg-app-surface-raised disabled:text-app-text-muted sm:w-auto"
+                      className="h-9 rounded-full bg-app-text px-5 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:bg-app-surface-raised disabled:text-app-text-muted sm:w-auto"
                     >
                       המשך לתשלום
                     </button>
+                    </div>
                   </div>
                 </div>
               </div>

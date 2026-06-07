@@ -315,6 +315,7 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
     icon: 'package',
     managedScroll: true,
     exact: true,
+    activePathPrefixes: ['/delivery-balance/'],
     badge: 'deliveryBalance',
   },
   {

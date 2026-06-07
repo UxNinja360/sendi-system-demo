@@ -15,6 +15,7 @@ import { ReportsPage } from './pages/reports-page';
 import { PerformancePage } from './pages/performance-page';
 import { LogPage } from './pages/log-page';
 import { DeliveryBalancePage } from './pages/delivery-balance-page';
+import { DeliveryBalancePricingPage } from './pages/delivery-balance-pricing-page';
 import { CouriersPage } from './pages/couriers-page';
 import { CouriersListPage } from './pages/couriers-list-page';
 import { CouriersListPageLegacy } from './pages/couriers-list-page-legacy';
@@ -129,6 +130,10 @@ export const router = createBrowserRouter([
       {
         path: routePath('delivery-balance'),
         element: <DeliveryBalancePage />,
+      },
+      {
+        path: 'delivery-balance/pricing',
+        element: <DeliveryBalancePricingPage />,
       },
       {
         path: routePath('wallet'),
