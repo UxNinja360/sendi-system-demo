@@ -13,10 +13,17 @@ import { useDelivery } from '../context/delivery-context-value';
 
 type PurchaseStep = 'amount' | 'payment';
 type SelectDirection = 'down' | 'up';
+type BalancePageTab = 'purchase' | 'invoices';
 
 type CreditPackage = {
   amount: number;
   price: number;
+};
+
+type CouponPromotion = {
+  code: string;
+  discountPercent: number;
+  label: string;
 };
 
 type PurchaseInvoice = {
@@ -40,6 +47,10 @@ const creditPackages: CreditPackage[] = [
   { amount: 10000, price: 6563.16 },
   { amount: 100000, price: 35854.3 },
   { amount: 300000, price: 100270.5 },
+];
+const couponPromotions: CouponPromotion[] = [
+  { code: 'SENDI10', discountPercent: 10, label: '10% הנחה' },
+  { code: 'PLUS20', discountPercent: 20, label: '20% הנחה' },
 ];
 const customMaxAmount = creditPackages[creditPackages.length - 1].amount;
 const purchaseInvoicesStoragePrefix = 'sendi:delivery-balance-invoices';
@@ -81,6 +92,14 @@ const clampCustomAmount = (value: number) =>
   normalizeCustomAmount(Math.round(value / customStep) * customStep);
 
 const roundPrice = (value: number) => Math.round(value * 100) / 100;
+
+const normalizeCouponCode = (value: string) => value.trim().toUpperCase();
+
+const getCouponPromotion = (code: string) =>
+  couponPromotions.find((promotion) => promotion.code === normalizeCouponCode(code));
+
+const getCouponDiscount = (price: number, promotion?: CouponPromotion) =>
+  promotion ? roundPrice(price * (promotion.discountPercent / 100)) : 0;
 
 const getPackagePrice = (amount: number) => {
   const packagePrice = creditPackages.find((item) => item.amount === amount)?.price;
@@ -162,7 +181,8 @@ export const DeliveryBalanceHub: React.FC = () => {
   const amountDropdownRef = useRef<HTMLDivElement>(null);
   const amountSelectRef = useRef<HTMLDivElement>(null);
   const purchaseCardRef = useRef<HTMLDivElement>(null);
-  const [purchaseOpen, setPurchaseOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<BalancePageTab>('purchase');
+  const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false);
   const [purchaseStep, setPurchaseStep] = useState<PurchaseStep>('amount');
   const [selectOpen, setSelectOpen] = useState(false);
   const [selectDirection, setSelectDirection] = useState<SelectDirection>('down');
@@ -172,7 +192,11 @@ export const DeliveryBalanceHub: React.FC = () => {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customMode, setCustomMode] = useState(false);
   const [customPanelOpen, setCustomPanelOpen] = useState(false);
+  const [inlineCustomPanelOpen, setInlineCustomPanelOpen] = useState(false);
   const [customAmount, setCustomAmount] = useState(defaultAmount);
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCouponCode, setAppliedCouponCode] = useState<string | null>(null);
+  const [couponMessage, setCouponMessage] = useState<string | null>(null);
   const invoicesStorageKey = useMemo(
     () => getPurchaseInvoicesStorageKey(state.workspaceId),
     [state.workspaceId],
@@ -330,12 +354,16 @@ export const DeliveryBalanceHub: React.FC = () => {
       ? 'text-[#dc2626] dark:text-[#f87171]'
       : 'text-[#f59e0b] dark:text-[#fbbf24]';
   const selectedPrice = selectedAmount === null ? 0 : getPackagePrice(selectedAmount);
-  const selectedUnitPrice = selectedAmount === null ? 0 : getPackageUnitPrice(selectedAmount);
+  const appliedCoupon = appliedCouponCode ? getCouponPromotion(appliedCouponCode) : undefined;
+  const selectedDiscount = selectedAmount === null ? 0 : getCouponDiscount(selectedPrice, appliedCoupon);
+  const selectedFinalPrice =
+    selectedAmount === null ? 0 : roundPrice(Math.max(0, selectedPrice - selectedDiscount));
+  const selectedUnitPrice = selectedAmount === null ? 0 : selectedFinalPrice / selectedAmount;
   const canContinuePurchase = selectedAmount !== null;
   const customDraftPrice = getPackagePrice(clampCustomAmount(customAmount));
   const customDraftUnitPrice = getPackageUnitPrice(clampCustomAmount(customAmount));
-  const openPurchaseDialog = () => {
-    setPurchaseOpen(true);
+
+  const resetPurchaseSelection = () => {
     setPurchaseStep('amount');
     setSelectOpen(false);
     setSelectDirection('down');
@@ -346,10 +374,20 @@ export const DeliveryBalanceHub: React.FC = () => {
     setCustomAmount(defaultAmount);
     setCustomMode(false);
     setCustomPanelOpen(false);
+    setInlineCustomPanelOpen(false);
+    setCouponCode('');
+    setAppliedCouponCode(null);
+    setCouponMessage(null);
+  };
+
+  const openPurchaseDialog = () => {
+    resetPurchaseSelection();
+    setActiveTab('purchase');
+    setPurchaseDialogOpen(true);
   };
 
   const closePurchaseDialog = () => {
-    setPurchaseOpen(false);
+    setPurchaseDialogOpen(false);
     setPurchaseStep('amount');
     setSelectOpen(false);
     setSelectDirection('down');
@@ -360,7 +398,7 @@ export const DeliveryBalanceHub: React.FC = () => {
   };
 
   useEffect(() => {
-    if (!purchaseOpen) return undefined;
+    if (!purchaseDialogOpen) return undefined;
 
     const closeOnOutsidePointerDown = (event: PointerEvent) => {
       const target = event.target;
@@ -374,7 +412,7 @@ export const DeliveryBalanceHub: React.FC = () => {
     document.addEventListener('pointerdown', closeOnOutsidePointerDown);
 
     return () => document.removeEventListener('pointerdown', closeOnOutsidePointerDown);
-  }, [purchaseOpen]);
+  }, [purchaseDialogOpen]);
 
   const handlePurchaseBackdropInteraction = (event: React.MouseEvent<HTMLElement>) => {
     if (event.target === event.currentTarget) {
@@ -397,11 +435,20 @@ export const DeliveryBalanceHub: React.FC = () => {
     setCustomPanelOpen(false);
   };
 
+  const toggleInlineCustomAmountPanel = () => {
+    if (!inlineCustomPanelOpen) {
+      setCustomAmount(selectedAmount ?? defaultAmount);
+    }
+
+    setInlineCustomPanelOpen((open) => !open);
+  };
+
   const selectPackage = (amount: number) => {
     setSelectedAmount(amount);
     setCustomAmount(amount);
     setCustomMode(false);
     setCustomPanelOpen(false);
+    setInlineCustomPanelOpen(false);
     setSelectOpen(false);
     setSelectDropdownFixed(false);
     setSelectDropdownStyle(undefined);
@@ -414,6 +461,7 @@ export const DeliveryBalanceHub: React.FC = () => {
     setCustomAmount(amount);
     setCustomMode(true);
     setCustomPanelOpen(false);
+    setInlineCustomPanelOpen(false);
     setSelectOpen(false);
     setSelectDropdownFixed(false);
     setSelectDropdownStyle(undefined);
@@ -432,12 +480,39 @@ export const DeliveryBalanceHub: React.FC = () => {
     setCustomPanelOpen((open) => !open);
   };
 
+  const handleCouponCodeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setCouponCode(event.target.value.toUpperCase());
+    setAppliedCouponCode(null);
+    setCouponMessage(null);
+  };
+
+  const applyCouponCode = () => {
+    const normalizedCode = normalizeCouponCode(couponCode);
+
+    if (!normalizedCode) {
+      setAppliedCouponCode(null);
+      setCouponMessage('הזן קוד קופון');
+      return;
+    }
+
+    const promotion = getCouponPromotion(normalizedCode);
+    if (!promotion) {
+      setAppliedCouponCode(null);
+      setCouponMessage('קוד הקופון לא תקף');
+      return;
+    }
+
+    setCouponCode(normalizedCode);
+    setAppliedCouponCode(normalizedCode);
+    setCouponMessage(`${promotion.label} הופעלה`);
+  };
+
   const completePurchase = () => {
     if (selectedAmount === null) return;
 
     const amount = selectedAmount;
-    const price = getPackagePrice(amount);
-    const unitPrice = getPackageUnitPrice(amount);
+    const price = selectedFinalPrice;
+    const unitPrice = selectedUnitPrice;
     const issuedAt = new Date();
     const invoice: PurchaseInvoice = {
       amount,
@@ -457,10 +532,11 @@ export const DeliveryBalanceHub: React.FC = () => {
       type: 'ADD_DELIVERY_BALANCE',
     });
     closePurchaseDialog();
+    setActiveTab('invoices');
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-[76rem] flex-col gap-5 text-right" dir="rtl">
+    <div className="mx-auto flex w-full max-w-[76rem] flex-col gap-3 text-right" dir="rtl">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-normal text-app-text">
@@ -478,63 +554,396 @@ export const DeliveryBalanceHub: React.FC = () => {
               {formatNumber(currentBalance)}
             </span>
           </div>
-          <button
-            type="button"
-            onClick={openPurchaseDialog}
-            className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-[var(--app-radius-sm)] border border-[#d8d8d8] bg-white px-4 text-sm font-bold text-[#0d0d12] transition-colors hover:bg-[#f5f5f5] focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/35 dark:border-transparent dark:bg-[#ededed] dark:text-[#050505] dark:hover:bg-white"
-          >
-            <span>רכישת יתרה</span>
-            <Plus className="h-4 w-4" />
-          </button>
         </div>
       </header>
 
-      <section className="space-y-3" aria-labelledby="purchase-invoices-title">
-        <div className="flex items-center justify-between gap-3 border border-app-border bg-app-surface px-4 py-3 md:px-5">
-          <div className="min-w-0">
-            <h2 id="purchase-invoices-title" className="text-sm font-bold text-app-text">
-              רכישת יתרה
-            </h2>
-            <p className="mt-1 truncate text-xs font-semibold text-app-text-muted">
-              רכישות יתרה אחרונות ומסמכי חיוב.
-            </p>
-          </div>
-          <span className="shrink-0 text-xs font-bold tabular-nums text-app-text-secondary">
-            {purchaseInvoices.length > 0 ? `${formatNumber(purchaseInvoices.length)} רשומות` : 'אין רשומות'}
-          </span>
-        </div>
+      <div
+        role="tablist"
+        aria-label="ניהול יתרת משלוחים"
+        className="flex w-full items-end gap-7 border-b border-app-border"
+      >
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'purchase'}
+          onClick={() => setActiveTab('purchase')}
+          className={`relative -mb-px h-10 px-0 text-sm font-bold transition-colors after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/35 ${
+            activeTab === 'purchase'
+              ? 'text-app-text after:bg-app-text'
+              : 'text-app-text-secondary after:bg-transparent hover:text-app-text'
+          }`}
+        >
+          רכישת יתרת משלוחים
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'invoices'}
+          onClick={() => setActiveTab('invoices')}
+          className={`relative -mb-px h-10 px-0 text-sm font-bold transition-colors after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/35 ${
+            activeTab === 'invoices'
+              ? 'text-app-text after:bg-app-text'
+              : 'text-app-text-secondary after:bg-transparent hover:text-app-text'
+          }`}
+        >
+          חשבוניות
+        </button>
+      </div>
 
-        {purchaseInvoices.length > 0 ? (
-          <div className="md:overflow-hidden md:rounded-none md:border md:border-app-border md:bg-app-surface">
-            <div role="table" aria-label="רכישות יתרה">
-              <div
-                role="row"
-                className={`${invoiceGridClassName} hidden border-b border-app-border bg-app-background/35 px-5 py-3 text-xs font-bold text-app-text-secondary md:grid`}
-              >
-                <div role="columnheader" aria-label="סוג חשבונית" />
-                <div role="columnheader">חשבונית</div>
-                <div role="columnheader">תאריך</div>
-                <div role="columnheader">כמות</div>
-                <div role="columnheader">מחיר למשלוח</div>
-                <div role="columnheader">סה״כ</div>
-                <div role="columnheader" aria-label="פעולות" />
+      {activeTab === 'purchase' ? (
+        <section className="mt-3" aria-label="רכישת יתרה">
+          <div className="p-0">
+            {purchaseStep === 'amount' ? (
+              <div className="space-y-5">
+                <div>
+                  <div className="flex flex-col overflow-hidden border border-app-border bg-app-background">
+                    {creditPackages.map((option) => {
+                      const selected = !customMode && selectedAmount === option.amount;
+                      const unitPrice = option.price / option.amount;
+
+                      return (
+                        <button
+                          key={option.amount}
+                          type="button"
+                          onClick={() => selectPackage(option.amount)}
+                          aria-pressed={selected}
+                          className={`grid min-h-16 w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-app-border px-4 py-3 text-right transition-colors last:border-b-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 ${
+                            selected
+                              ? 'bg-app-surface-raised text-app-text'
+                              : 'text-app-text-secondary hover:bg-app-surface-raised hover:text-app-text'
+                          }`}
+                        >
+                          <span className="min-w-0">
+                            <span className="block text-base font-bold text-app-text">
+                              {formatNumber(option.amount)} משלוחים
+                            </span>
+                            <span className="mt-1 block text-xs font-semibold text-app-text-muted">
+                              {formatCurrency(unitPrice)} למשלוח
+                            </span>
+                          </span>
+                          <span className="font-bold tabular-nums text-app-text">
+                            {formatCurrency(option.price)}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div
+                  className={`border transition-colors ${
+                    customMode
+                      ? 'border-app-border-strong bg-app-surface-raised'
+                      : 'border-app-border bg-app-background'
+                  }`}
+                >
+                  <button
+                    type="button"
+                    aria-controls="inline-custom-amount-panel"
+                    aria-expanded={inlineCustomPanelOpen}
+                    onClick={toggleInlineCustomAmountPanel}
+                    className="flex min-h-14 w-full items-center justify-between gap-3 px-4 py-3 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+                  >
+                    <span className="inline-flex min-w-0 items-center gap-2 text-sm font-bold text-app-text">
+                      <Pencil className="h-4 w-4 shrink-0 text-app-brand-text" />
+                      <span className="truncate">כמות מותאמת אישית</span>
+                    </span>
+                    <span className="inline-flex shrink-0 items-center gap-2 text-xs font-bold text-app-text-secondary">
+                      <span>
+                        {customMode && selectedAmount !== null
+                          ? `${formatNumber(selectedAmount)} משלוחים`
+                          : 'פתיחה לבחירת כמות'}
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 transition-transform ${
+                          inlineCustomPanelOpen ? 'rotate-180' : ''
+                        }`}
+                      />
+                    </span>
+                  </button>
+
+                  {inlineCustomPanelOpen ? (
+                    <div id="inline-custom-amount-panel" className="border-t border-app-border px-4 py-4">
+                      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                        <div className="min-w-0">
+                          <div className="text-sm font-bold text-app-text">בחירת כמות ידנית</div>
+                          <p className="mt-1 text-xs leading-5 text-app-text-muted">
+                            הזן משלוחים בקפיצות של 100. מינימום 100, מקסימום 300,000.
+                          </p>
+                        </div>
+
+                        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-end" dir="rtl">
+                          <label className="inline-flex h-10 w-full min-w-0 overflow-hidden rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface focus-within:border-app-border-strong focus-within:ring-2 focus-within:ring-app-brand/20 sm:w-28">
+                            <input
+                              type="number"
+                              inputMode="numeric"
+                              max={customMaxAmount}
+                              min={customMinAmount}
+                              step={customStep}
+                              value={customAmount}
+                              onBlur={() => setCustomAmount((amount) => clampCustomAmount(amount))}
+                              onChange={(event) =>
+                                setCustomAmount(limitCustomAmountInput(Number(event.target.value)))
+                              }
+                              onFocus={(event) => event.currentTarget.select()}
+                              className="h-full w-full min-w-0 border-0 bg-transparent px-3 text-left text-sm font-bold tabular-nums text-app-text outline-none focus:ring-0"
+                              dir="ltr"
+                            />
+                          </label>
+
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => stepCustomAmount(-1)}
+                              aria-label="הפחת כמות"
+                              className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:opacity-45"
+                              disabled={clampCustomAmount(customAmount) <= customMinAmount}
+                            >
+                              <Minus className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => stepCustomAmount(1)}
+                              aria-label="הוסף כמות"
+                              className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:opacity-45"
+                              disabled={clampCustomAmount(customAmount) >= customMaxAmount}
+                            >
+                              <Plus className="h-4 w-4" />
+                            </button>
+                          </div>
+
+                          <span className="min-w-[6.5rem] text-left text-sm font-bold text-app-text-secondary">
+                            <span className="block tabular-nums text-app-text">
+                              {formatCurrency(customDraftPrice)}
+                            </span>
+                            <span className="text-xs font-semibold text-app-text-muted">
+                              {formatCurrency(customDraftUnitPrice)} למשלוח
+                            </span>
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={applyCustomAmount}
+                            className="h-10 shrink-0 rounded-full bg-app-text px-5 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+                          >
+                            בחר ידנית
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="border border-app-border bg-app-background px-4 py-4">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div className="min-w-0">
+                      <div className="text-sm font-bold text-app-text">קוד קופון</div>
+                      <div className="mt-1 text-xs font-semibold text-app-text-secondary">
+                        הזן קוד מבצע לפני שורת הסיכום.
+                      </div>
+                    </div>
+                    <div className="flex h-10 w-full min-w-0 overflow-hidden rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface focus-within:border-app-border-strong focus-within:ring-2 focus-within:ring-app-brand/20 sm:w-80" dir="rtl">
+                      <input
+                        type="text"
+                        value={couponCode}
+                        onChange={handleCouponCodeChange}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') {
+                            applyCouponCode();
+                          }
+                        }}
+                        placeholder="SENDI10"
+                        className="h-full min-w-0 flex-1 border-0 bg-transparent px-3 text-left text-sm font-bold tracking-normal text-app-text outline-none focus:ring-0"
+                        dir="ltr"
+                      />
+                      <button
+                        type="button"
+                        onClick={applyCouponCode}
+                        className="h-full shrink-0 border-r border-app-border bg-app-text px-4 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+                      >
+                        הפעל
+                      </button>
+                    </div>
+                  </div>
+                  {couponMessage ? (
+                    <div
+                      className={`mt-3 text-xs font-semibold ${
+                        appliedCoupon ? 'text-[#16a34a] dark:text-[#86efac]' : 'text-[#dc2626] dark:text-[#f87171]'
+                      }`}
+                    >
+                      {couponMessage}
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="border border-app-border bg-app-background px-4 py-4">
+                  <div className="min-w-0">
+                    <div className="text-sm font-bold text-app-text">סיכום רכישה</div>
+                    {selectedAmount === null ? (
+                      <div className="mt-1 text-xs font-semibold text-app-text-secondary">
+                        בחר חבילה או כמות מותאמת כדי לראות מחיר סופי.
+                      </div>
+                    ) : null}
+
+                    {selectedAmount !== null ? (
+                      <div className="mt-4 space-y-3">
+                        <dl className="divide-y divide-app-border text-sm font-semibold">
+                          <div className="flex items-center justify-between gap-4 py-2">
+                            <dt className="text-app-text-secondary">כמות משלוחים</dt>
+                            <dd className="shrink-0 tabular-nums text-app-text">{formatNumber(selectedAmount)}</dd>
+                          </div>
+                          <div className="flex items-center justify-between gap-4 py-2">
+                            <dt className="text-app-text-secondary">מחיר למשלוח</dt>
+                            <dd className="shrink-0 tabular-nums text-app-text">{formatCurrency(selectedUnitPrice)}</dd>
+                          </div>
+                          {selectedDiscount > 0 ? (
+                            <>
+                              <div className="flex items-center justify-between gap-4 py-2">
+                                <dt className="text-app-text-secondary">מחיר לפני הנחה</dt>
+                                <dd className="shrink-0 tabular-nums text-app-text">{formatCurrency(selectedPrice)}</dd>
+                              </div>
+                              <div className="flex items-center justify-between gap-4 py-2 text-[#16a34a] dark:text-[#86efac]">
+                                <dt>הנחת קופון</dt>
+                                <dd className="shrink-0 tabular-nums" dir="ltr">
+                                  -{formatCurrency(selectedDiscount)}
+                                </dd>
+                              </div>
+                            </>
+                          ) : null}
+                        </dl>
+
+                        <div className="flex items-end justify-between gap-4 border-t border-app-border pt-3">
+                          <div className="text-xs font-bold text-app-text-secondary">סה״כ לתשלום</div>
+                          <div className="shrink-0 text-xl font-bold tabular-nums text-app-text">
+                            {formatCurrency(selectedFinalPrice)}
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className="mt-4 flex flex-col-reverse gap-2 border-t border-app-border pt-4 sm:flex-row sm:justify-between">
+                    {selectedAmount !== null ? (
+                      <button
+                        type="button"
+                        onClick={resetPurchaseSelection}
+                        className="h-10 rounded-full bg-app-surface px-4 text-sm font-bold text-app-text transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:w-auto"
+                      >
+                        ניקוי בחירה
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!canContinuePurchase) return;
+                        setPurchaseStep('payment');
+                      }}
+                      disabled={!canContinuePurchase}
+                      className="h-10 rounded-full bg-app-text px-5 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:bg-app-surface-raised disabled:text-app-text-muted sm:w-auto"
+                    >
+                      המשך לתשלום
+                    </button>
+                  </div>
+                </div>
               </div>
+            ) : (
+              <div className="mt-7 space-y-5">
+                <div className="rounded-[var(--app-radius-md)] border border-app-border bg-app-background p-4">
+                  <div className="flex items-center gap-2 text-sm font-bold text-app-text">
+                    <CreditCard className="h-4 w-4 text-app-brand-text" />
+                    כרטיס אשראי
+                  </div>
+                  <div className="mt-4 grid gap-3">
+                    <input
+                      inputMode="numeric"
+                      placeholder="מספר כרטיס"
+                      className="h-11 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface px-3 text-sm text-app-text outline-none focus:border-app-border-strong focus:ring-2 focus:ring-app-brand/20"
+                    />
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <input
+                        inputMode="numeric"
+                        placeholder="MM / YY"
+                        className="h-11 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface px-3 text-sm text-app-text outline-none focus:border-app-border-strong focus:ring-2 focus:ring-app-brand/20"
+                      />
+                      <input
+                        inputMode="numeric"
+                        placeholder="CVC"
+                        className="h-11 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface px-3 text-sm text-app-text outline-none focus:border-app-border-strong focus:ring-2 focus:ring-app-brand/20"
+                      />
+                    </div>
+                    <input
+                      placeholder="שם בעל הכרטיס"
+                      className="h-11 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface px-3 text-sm text-app-text outline-none focus:border-app-border-strong focus:ring-2 focus:ring-app-brand/20"
+                    />
+                  </div>
+                </div>
 
-              <div role="rowgroup" className="space-y-3 md:space-y-0 md:divide-y md:divide-app-border">
-                {purchaseInvoices.map((invoice) => (
-                  <InvoiceLedgerRow key={invoice.id} invoice={invoice} />
-                ))}
+                <div className="flex flex-col gap-2 rounded-[var(--app-radius-sm)] bg-app-background px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                  <span className="text-app-text-secondary">
+                    {selectedAmount === null
+                      ? 'בחר כמות משלוחים'
+                      : `${formatNumber(selectedAmount)} משלוחים · ${formatCurrency(selectedUnitPrice)} למשלוח`}
+                  </span>
+                  <span className="font-bold tabular-nums text-app-text">
+                    {selectedAmount === null ? '-' : formatCurrency(selectedFinalPrice)}
+                  </span>
+                </div>
+
+                <div className="flex justify-between gap-3 pt-1 max-sm:flex-col-reverse">
+                  <button
+                    type="button"
+                    onClick={() => setPurchaseStep('amount')}
+                    className="h-10 rounded-full bg-app-background px-4 text-sm font-bold text-app-text transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 max-sm:w-full"
+                  >
+                    חזרה
+                  </button>
+                  <button
+                    type="button"
+                    onClick={completePurchase}
+                    disabled={!canContinuePurchase}
+                    className="h-10 rounded-full bg-app-text px-5 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:bg-app-surface-raised disabled:text-app-text-muted max-sm:w-full"
+                  >
+                    אישור רכישה
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      ) : (
+        <section className="mt-3 space-y-3" aria-label="חשבוניות">
+          {purchaseInvoices.length > 0 ? (
+            <div className="md:overflow-hidden md:rounded-none md:border md:border-app-border md:bg-app-surface">
+              <div role="table" aria-label="חשבוניות רכישת יתרה">
+                <div
+                  role="row"
+                  className={`${invoiceGridClassName} hidden border-b border-app-border bg-app-background/35 px-5 py-3 text-xs font-bold text-app-text-secondary md:grid`}
+                >
+                  <div role="columnheader" aria-label="סוג חשבונית" />
+                  <div role="columnheader">חשבונית</div>
+                  <div role="columnheader">תאריך</div>
+                  <div role="columnheader">כמות</div>
+                  <div role="columnheader">מחיר למשלוח</div>
+                  <div role="columnheader">סה״כ</div>
+                  <div role="columnheader" aria-label="פעולות" />
+                </div>
+
+                <div role="rowgroup" className="space-y-3 md:space-y-0 md:divide-y md:divide-app-border">
+                  {purchaseInvoices.map((invoice) => (
+                    <InvoiceLedgerRow key={invoice.id} invoice={invoice} />
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        ) : (
-          <div className="flex min-h-44 items-center justify-center rounded-none border border-app-border bg-app-surface px-4 py-8 text-center text-sm text-app-text-secondary">
-            עדיין אין רכישות יתרה.
-          </div>
-        )}
-      </section>
+          ) : (
+            <div className="flex min-h-44 items-center justify-center rounded-none border border-app-border bg-app-surface px-4 py-8 text-center text-sm text-app-text-secondary">
+              עדיין אין חשבוניות רכישה.
+            </div>
+          )}
+        </section>
+      )}
 
-      {purchaseOpen ? (
+      {purchaseDialogOpen ? (
         <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto overscroll-contain bg-black/70 p-4 backdrop-blur-sm sm:p-6">
           <button
             type="button"
@@ -546,7 +955,10 @@ export const DeliveryBalanceHub: React.FC = () => {
           />
           <div
             ref={purchaseCardRef}
-            className="relative z-10 w-full max-w-[44rem] overflow-visible rounded-[var(--app-radius-lg)] border border-app-border bg-app-surface p-6 shadow-2xl sm:p-7"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="purchase-dialog-title"
+            className="relative z-10 w-full max-w-[44rem] overflow-visible rounded-[var(--app-radius-lg)] border border-app-border bg-app-surface p-6 text-right shadow-2xl sm:p-7"
             onMouseDown={handlePurchaseCardMouseDown}
           >
             <div className="flex justify-end">
@@ -561,7 +973,7 @@ export const DeliveryBalanceHub: React.FC = () => {
             </div>
 
             <div className="mt-5 min-w-0">
-              <h2 className="text-lg font-bold text-app-text">
+              <h2 id="purchase-dialog-title" className="text-lg font-bold text-app-text">
                 {purchaseStep === 'amount' ? 'רכישת משלוחים' : 'פרטי תשלום'}
               </h2>
               <p className="mt-3 text-sm leading-6 text-app-text-secondary">
@@ -572,7 +984,7 @@ export const DeliveryBalanceHub: React.FC = () => {
             </div>
 
             {purchaseStep === 'amount' ? (
-                <div className="mt-7 space-y-5">
+              <div className="mt-7 space-y-5">
                 <div className="space-y-2">
                   <label className="block text-sm font-bold text-app-text">כמות להוספה</label>
                   <div ref={amountSelectRef} className="relative z-20">
@@ -605,7 +1017,7 @@ export const DeliveryBalanceHub: React.FC = () => {
                       </span>
                       <span className="flex shrink-0 items-center gap-3 text-app-text-secondary">
                         {selectedAmount !== null ? (
-                          <span className="tabular-nums">{formatCurrency(selectedPrice)}</span>
+                          <span className="tabular-nums">{formatCurrency(selectedFinalPrice)}</span>
                         ) : null}
                         <ChevronDown className="h-4 w-4" />
                       </span>
@@ -766,7 +1178,7 @@ export const DeliveryBalanceHub: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="mt-7 space-y-5">
+              <div className="mt-5 space-y-5">
                 <div className="rounded-[var(--app-radius-md)] border border-app-border bg-app-background p-4">
                   <div className="flex items-center gap-2 text-sm font-bold text-app-text">
                     <CreditCard className="h-4 w-4 text-app-brand-text" />
@@ -804,7 +1216,7 @@ export const DeliveryBalanceHub: React.FC = () => {
                       : `${formatNumber(selectedAmount)} משלוחים · ${formatCurrency(selectedUnitPrice)} למשלוח`}
                   </span>
                   <span className="font-bold tabular-nums text-app-text">
-                    {selectedAmount === null ? '-' : formatCurrency(selectedPrice)}
+                    {selectedAmount === null ? '-' : formatCurrency(selectedFinalPrice)}
                   </span>
                 </div>
 
@@ -830,6 +1242,7 @@ export const DeliveryBalanceHub: React.FC = () => {
           </div>
         </div>
       ) : null}
+
     </div>
   );
 };
