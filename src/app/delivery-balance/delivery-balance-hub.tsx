@@ -655,9 +655,6 @@ export const DeliveryBalanceHub: React.FC = () => {
                     className="flex h-9 w-full min-w-0 overflow-hidden rounded-none border border-app-border bg-transparent focus-within:border-app-text focus-within:ring-0 md:w-96"
                     dir="rtl"
                   >
-                    <span className="inline-flex h-full shrink-0 items-center border-l border-app-border px-3 text-xs font-semibold text-app-text-secondary">
-                      קוד קופון
-                    </span>
                     <input
                       type="text"
                       value={couponCode}
