@@ -684,7 +684,6 @@ export const DeliveryBalanceHub: React.FC = () => {
                   </div>
                 </div>
 
-                {showPurchaseDock ? <div className="h-28 md:hidden" aria-hidden="true" /> : null}
                 {showPurchaseDock ? (
                   <div
                     className="delivery-balance-purchase-dock fixed inset-x-0 bottom-0 z-40 border-t border-app-border bg-app-background shadow-[0_18px_48px_rgba(0,0,0,0.36)] md:sticky md:bottom-4 md:left-auto md:right-auto md:z-10 md:mt-1 md:shadow-none"
