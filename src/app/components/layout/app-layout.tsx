@@ -10,6 +10,7 @@ import { Toaster } from '../common/toaster';
 import { OperationalAlerts } from '../../notifications/operational-alerts';
 import { APP_MANAGED_SCROLL_PATHS } from '../../app-navigation';
 import { clearAuthSession, readAuthSession } from '../../auth/auth-session';
+import { useAppFeaturePreferences } from '../../preferences/app-feature-preferences';
 
 export const AppLayout: React.FC = () => {
   const [isPageLoading, setIsPageLoading] = useState(false);
@@ -17,6 +18,7 @@ export const AppLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const navigation = useNavigation();
+  const { preferences: appFeaturePreferences } = useAppFeaturePreferences();
 
   useEffect(() => {
     const session = readAuthSession();
@@ -94,7 +96,9 @@ export const AppLayout: React.FC = () => {
         </div>
 
         {isLivePage && <MobileMenuNudge onOpenMenu={openMobileMenu} />}
-        {!isLivePage && <MobileFloatingDock onOpenMenu={openMobileMenu} />}
+        {!isLivePage && appFeaturePreferences.mobileFloatingDockEnabled ? (
+          <MobileFloatingDock onOpenMenu={openMobileMenu} />
+        ) : null}
       </div>
     </div>
   );

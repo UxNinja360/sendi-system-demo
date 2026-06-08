@@ -208,6 +208,10 @@ export const router = createBrowserRouter([
         element: <SettingsPage category="notifications" />,
       },
       {
+        path: 'settings/features',
+        element: <SettingsPage category="features" />,
+      },
+      {
         path: 'settings/pages',
         element: <SettingsPagesPage />,
       },

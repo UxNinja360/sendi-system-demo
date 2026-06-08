@@ -51,6 +51,7 @@ import {
   unlockAlertSound,
 } from '../notifications/operational-alerts';
 import { playHaptic } from '../utils/haptics';
+import { useAppFeaturePreferences } from '../preferences/app-feature-preferences';
 import {
   clearAuthSession,
   readAuthSession,
@@ -101,6 +102,10 @@ const TEXT = {
   restaurantsHint: '\u05de\u05e1\u05da \u05e0\u05e4\u05e8\u05d3 \u05dc\u05e8\u05e9\u05d9\u05de\u05ea \u05db\u05dc \u05d4\u05de\u05e1\u05e2\u05d3\u05d5\u05ea, \u05d7\u05d9\u05e4\u05d5\u05e9, \u05e1\u05d9\u05e0\u05d5\u05df \u05d5\u05e4\u05e2\u05d5\u05dc\u05d5\u05ea \u05e0\u05d9\u05d4\u05d5\u05dc.',
   personal: '\u05d4\u05e2\u05d3\u05e4\u05d5\u05ea \u05d0\u05d9\u05e9\u05d9\u05d5\u05ea',
   personalDescription: '\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea \u05ea\u05e6\u05d5\u05d2\u05d4 \u05e9\u05de\u05e9\u05e4\u05d9\u05e2\u05d5\u05ea \u05e2\u05dc \u05e1\u05d1\u05d9\u05d1\u05ea \u05d4\u05e2\u05d1\u05d5\u05d3\u05d4 \u05d4\u05d0\u05d9\u05e9\u05d9\u05ea \u05e9\u05dc\u05da.',
+  features: "פיצ'רים",
+  featuresDescription: "כיבוי והדלקה של פיצ'רים באפליקציה.",
+  mobileFloatingDock: 'פאב תחתון',
+  mobileFloatingDockHint: 'כפתורי מפה ותפריט במובייל.',
   darkMode: '\u05de\u05e6\u05d1 \u05db\u05d4\u05d4',
   darkModeHint: '\u05de\u05e2\u05d1\u05e8 \u05d9\u05d3\u05e0\u05d9 \u05d1\u05d9\u05df \u05d1\u05d4\u05d9\u05e8 \u05dc\u05db\u05d4\u05d4.',
   themeMode: '\u05e2\u05e8\u05db\u05ea \u05e0\u05d5\u05e9\u05d0',
@@ -1002,6 +1007,7 @@ type SettingsCategory =
   | 'audio'
   | 'haptics'
   | 'notifications'
+  | 'features'
   | 'advanced';
 
 export const SettingsPagesPage: React.FC = () => {
@@ -1049,6 +1055,8 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
   const navigate = useNavigate();
   const { themeMode, setThemeMode } = useTheme();
   const { state, dispatch, resetSystem } = useDelivery();
+  const { preferences: appFeaturePreferences, setPreference: setAppFeaturePreference } =
+    useAppFeaturePreferences();
   const hasCouriersForOperations = state.couriers.length > 0;
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [isDeleteAccountDialogOpen, setIsDeleteAccountDialogOpen] = useState(false);
@@ -1281,6 +1289,12 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
                     title={TEXT.appearance}
                     hint={TEXT.appearanceDescription}
                     onClick={() => navigate('/settings/display')}
+                  />
+                  <SettingsLinkRow
+                    icon={<Zap className="h-4 w-4" />}
+                    title={TEXT.features}
+                    hint={TEXT.featuresDescription}
+                    onClick={() => navigate('/settings/features')}
                   />
                 </div>
                 <div
@@ -1623,6 +1637,33 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
                     {getNotificationPermissionLabel(notificationPermission)}
                   </span>
                 )
+              }
+            />
+          </SectionCard>
+          ) : null}
+
+          {category === 'features' ? (
+          <SectionCard
+            icon={<Zap className="h-4 w-4 text-app-brand" />}
+            title={TEXT.features}
+            description={TEXT.featuresDescription}
+            hideHeader
+          >
+            <SettingRow
+              icon={<MapIcon className="h-4 w-4" />}
+              title={TEXT.mobileFloatingDock}
+              hint={TEXT.mobileFloatingDockHint}
+              control={
+                <Toggle
+                  checked={appFeaturePreferences.mobileFloatingDockEnabled}
+                  onChange={() =>
+                    setAppFeaturePreference(
+                      'mobileFloatingDockEnabled',
+                      !appFeaturePreferences.mobileFloatingDockEnabled,
+                    )
+                  }
+                  ariaLabel={TEXT.mobileFloatingDock}
+                />
               }
             />
           </SectionCard>

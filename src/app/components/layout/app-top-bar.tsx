@@ -36,6 +36,7 @@ const settingsBreadcrumbLabels: Record<string, string> = {
   '/settings/audio': 'צלילים',
   '/settings/haptics': 'רטט',
   '/settings/notifications': 'התראות',
+  '/settings/features': "פיצ'רים",
   '/settings/pages': 'תפעול עמודים',
   '/settings/advanced': 'הגדרות מתקדמות',
 };
