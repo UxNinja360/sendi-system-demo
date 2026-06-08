@@ -691,7 +691,7 @@ export const DeliveryBalanceHub: React.FC = () => {
                         </div>
 
                         <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-end" dir="rtl">
-                          <label className="inline-flex h-10 w-full min-w-0 overflow-hidden rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface focus-within:border-app-border-strong focus-within:ring-2 focus-within:ring-app-brand/20 sm:w-28">
+                          <label className="inline-flex h-10 w-full min-w-0 overflow-hidden rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface focus-within:border-app-text focus-within:ring-0 sm:w-28">
                             <input
                               type="number"
                               inputMode="numeric"
@@ -758,7 +758,7 @@ export const DeliveryBalanceHub: React.FC = () => {
                       <div className="text-sm font-bold text-app-text">קוד קופון</div>
                     </div>
                     <div
-                      className="flex h-10 w-full min-w-0 overflow-hidden rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface focus-within:border-app-border-strong focus-within:ring-2 focus-within:ring-app-brand/20 sm:w-80"
+                      className="flex h-10 w-full min-w-0 overflow-hidden rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface focus-within:border-app-text focus-within:ring-0 sm:w-80"
                       dir="rtl"
                     >
                       <input
@@ -778,7 +778,7 @@ export const DeliveryBalanceHub: React.FC = () => {
                         type="button"
                         onClick={applyCouponCode}
                         aria-live="polite"
-                        className="h-full shrink-0 border-r border-app-border bg-transparent px-4 text-sm font-semibold text-app-text-secondary transition-colors hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+                        className="h-full shrink-0 border-r border-app-border bg-transparent px-4 text-sm font-semibold text-app-text-secondary transition-colors hover:text-app-text focus:outline-none focus-visible:ring-1 focus-visible:ring-app-border-strong"
                       >
                         {couponActionLabel}
                       </button>
@@ -855,23 +855,23 @@ export const DeliveryBalanceHub: React.FC = () => {
                     <input
                       inputMode="numeric"
                       placeholder="מספר כרטיס"
-                      className="h-11 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface px-3 text-sm text-app-text outline-none focus:border-app-border-strong focus:ring-2 focus:ring-app-brand/20"
+                      className="h-11 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface px-3 text-sm text-app-text outline-none focus:border-app-text focus:ring-0"
                     />
                     <div className="grid gap-3 sm:grid-cols-2">
                       <input
                         inputMode="numeric"
                         placeholder="MM / YY"
-                        className="h-11 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface px-3 text-sm text-app-text outline-none focus:border-app-border-strong focus:ring-2 focus:ring-app-brand/20"
+                        className="h-11 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface px-3 text-sm text-app-text outline-none focus:border-app-text focus:ring-0"
                       />
                       <input
                         inputMode="numeric"
                         placeholder="CVC"
-                        className="h-11 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface px-3 text-sm text-app-text outline-none focus:border-app-border-strong focus:ring-2 focus:ring-app-brand/20"
+                        className="h-11 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface px-3 text-sm text-app-text outline-none focus:border-app-text focus:ring-0"
                       />
                     </div>
                     <input
                       placeholder="שם בעל הכרטיס"
-                      className="h-11 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface px-3 text-sm text-app-text outline-none focus:border-app-border-strong focus:ring-2 focus:ring-app-brand/20"
+                      className="h-11 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface px-3 text-sm text-app-text outline-none focus:border-app-text focus:ring-0"
                     />
                   </div>
                 </div>
@@ -1186,23 +1186,23 @@ export const DeliveryBalanceHub: React.FC = () => {
                     <input
                       inputMode="numeric"
                       placeholder="מספר כרטיס"
-                      className="h-11 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface px-3 text-sm text-app-text outline-none focus:border-app-border-strong focus:ring-2 focus:ring-app-brand/20"
+                      className="h-11 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface px-3 text-sm text-app-text outline-none focus:border-app-text focus:ring-0"
                     />
                     <div className="grid gap-3 sm:grid-cols-2">
                       <input
                         inputMode="numeric"
                         placeholder="MM / YY"
-                        className="h-11 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface px-3 text-sm text-app-text outline-none focus:border-app-border-strong focus:ring-2 focus:ring-app-brand/20"
+                        className="h-11 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface px-3 text-sm text-app-text outline-none focus:border-app-text focus:ring-0"
                       />
                       <input
                         inputMode="numeric"
                         placeholder="CVC"
-                        className="h-11 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface px-3 text-sm text-app-text outline-none focus:border-app-border-strong focus:ring-2 focus:ring-app-brand/20"
+                        className="h-11 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface px-3 text-sm text-app-text outline-none focus:border-app-text focus:ring-0"
                       />
                     </div>
                     <input
                       placeholder="שם בעל הכרטיס"
-                      className="h-11 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface px-3 text-sm text-app-text outline-none focus:border-app-border-strong focus:ring-2 focus:ring-app-brand/20"
+                      className="h-11 rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface px-3 text-sm text-app-text outline-none focus:border-app-text focus:ring-0"
                     />
                   </div>
                 </div>

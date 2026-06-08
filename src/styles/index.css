@@ -1168,12 +1168,9 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
 @media (max-width: 767.98px) {
   .settings-screen__scroll {
     -webkit-overflow-scrolling: touch;
+    padding-bottom: calc(6rem + var(--app-safe-bottom)) !important;
     scroll-padding-bottom: calc(6rem + var(--app-safe-bottom));
     touch-action: pan-y;
-  }
-
-  .settings-screen__content {
-    padding-bottom: calc(6rem + var(--app-safe-bottom)) !important;
   }
 
   .delivery-balance-scroll {
