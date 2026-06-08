@@ -664,9 +664,9 @@ export const DeliveryBalanceHub: React.FC = () => {
                           applyCouponCode();
                         }
                       }}
-                      placeholder="SENDI10"
-                      className="h-full min-w-0 flex-1 border-0 bg-transparent px-3 text-left text-xs font-bold tracking-normal text-app-text outline-none focus:ring-0"
-                      dir="ltr"
+                      placeholder="קוד קופון"
+                      className="h-full min-w-0 flex-1 border-0 bg-transparent px-3 text-right text-xs font-bold tracking-normal text-app-text outline-none focus:ring-0"
+                      dir="rtl"
                     />
                     <button
                       type="button"
