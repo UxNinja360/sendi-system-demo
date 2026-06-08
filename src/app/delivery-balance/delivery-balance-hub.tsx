@@ -456,6 +456,20 @@ export const DeliveryBalanceHub: React.FC = () => {
   };
 
   const selectPackage = (amount: number) => {
+    const shouldClearSelection = !customMode && selectedAmount === amount;
+
+    if (shouldClearSelection) {
+      setSelectedAmount(null);
+      setCustomMode(false);
+      setCustomPanelOpen(false);
+      setInlineCustomPanelOpen(false);
+      setSelectOpen(false);
+      setSelectDropdownFixed(false);
+      setSelectDropdownStyle(undefined);
+      setSelectMaxHeight(null);
+      return;
+    }
+
     setSelectedAmount(amount);
     setCustomAmount(amount);
     setCustomMode(false);
@@ -791,22 +805,22 @@ export const DeliveryBalanceHub: React.FC = () => {
                 {showPurchaseDock ? <div className="h-28 md:hidden" aria-hidden="true" /> : null}
                 {showPurchaseDock ? (
                   <div
-                    className="delivery-balance-purchase-dock fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] z-40 border border-app-border bg-app-background shadow-[0_18px_48px_rgba(0,0,0,0.36)] md:sticky md:bottom-4 md:left-auto md:right-auto md:z-10 md:mt-1 md:shadow-none"
+                    className="delivery-balance-purchase-dock fixed inset-x-0 bottom-0 z-40 border-t border-app-border bg-app-background shadow-[0_18px_48px_rgba(0,0,0,0.36)] md:sticky md:bottom-4 md:left-auto md:right-auto md:z-10 md:mt-1 md:shadow-none"
                     aria-label="שורת תשלום"
                   >
                     <div className="flex items-center justify-between gap-3 px-3 py-3 md:px-4">
-                      <div className="min-w-0 text-right">
+                      <div className="min-w-0 flex-1 text-right">
                         <span className="block text-base font-bold tabular-nums text-app-text">
                           {formatCurrency(selectedFinalPrice)}
                         </span>
-                        <div className="mt-1 flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-xs text-app-text-secondary">
-                          <span>{formatNumber(selectedAmount)} משלוחים</span>
-                          <span className="h-3 w-px bg-app-border" aria-hidden="true" />
-                          <span>{formatCurrency(selectedUnitPrice)} למשלוח</span>
+                        <div className="mt-1 flex flex-col items-start gap-0.5 text-xs text-app-text-secondary sm:flex-row sm:flex-wrap sm:items-center sm:justify-start sm:gap-x-3 sm:gap-y-1">
+                          <span className="whitespace-nowrap">{formatNumber(selectedAmount)} משלוחים</span>
+                          <span className="hidden h-3 w-px bg-app-border sm:block" aria-hidden="true" />
+                          <span className="whitespace-nowrap">{formatCurrency(selectedUnitPrice)} למשלוח</span>
                           {selectedDiscount > 0 ? (
                             <>
-                              <span className="h-3 w-px bg-app-border" aria-hidden="true" />
-                              <span className="text-[#16a34a] dark:text-[#86efac]">
+                              <span className="hidden h-3 w-px bg-app-border sm:block" aria-hidden="true" />
+                              <span className="whitespace-nowrap text-[#16a34a] dark:text-[#86efac]">
                                 -{formatCurrency(selectedDiscount)}
                               </span>
                             </>
