@@ -179,7 +179,6 @@ const createInvoiceNumber = (issuedAt: Date, sequence: number) =>
 
 export const DeliveryBalanceHub: React.FC = () => {
   const { state, dispatch } = useDelivery();
-  const customAmountPanelRef = useRef<HTMLDivElement>(null);
   const amountDropdownRef = useRef<HTMLDivElement>(null);
   const amountSelectRef = useRef<HTMLDivElement>(null);
   const purchaseCardRef = useRef<HTMLDivElement>(null);
@@ -193,8 +192,7 @@ export const DeliveryBalanceHub: React.FC = () => {
   const [selectMaxHeight, setSelectMaxHeight] = useState<number | null>(null);
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customMode, setCustomMode] = useState(false);
-  const [customPanelOpen, setCustomPanelOpen] = useState(false);
-  const [inlineCustomPanelOpen, setInlineCustomPanelOpen] = useState(false);
+  const [customAmountDialogOpen, setCustomAmountDialogOpen] = useState(false);
   const [customAmount, setCustomAmount] = useState(defaultAmount);
   const [couponCode, setCouponCode] = useState('');
   const [appliedCouponCode, setAppliedCouponCode] = useState<string | null>(null);
@@ -242,9 +240,9 @@ export const DeliveryBalanceHub: React.FC = () => {
       setSelectDropdownStyle(
         isSmallScreen
           ? (() => {
-              const minComfortableHeight = customPanelOpen ? 320 : 260;
+              const minComfortableHeight = 260;
               const bestSpace = Math.max(spaceAbove, spaceBelow);
-              const useFullScreenPanel = customPanelOpen || bestSpace - gap < minComfortableHeight;
+              const useFullScreenPanel = bestSpace - gap < minComfortableHeight;
               const horizontalInset = Math.max(14, viewportPadding);
               const left = Math.max(horizontalInset, Math.floor(selectRect.left));
               const right = Math.max(horizontalInset, Math.floor(window.innerWidth - selectRect.right));
@@ -319,36 +317,7 @@ export const DeliveryBalanceHub: React.FC = () => {
       window.visualViewport?.removeEventListener('resize', scheduleSelectLayoutUpdate);
       window.visualViewport?.removeEventListener('scroll', scheduleSelectLayoutUpdate);
     };
-  }, [customPanelOpen, selectOpen]);
-
-  useLayoutEffect(() => {
-    if (!selectOpen || !customPanelOpen) return undefined;
-
-    let secondFrame = 0;
-    const frame = window.requestAnimationFrame(() => {
-      secondFrame = window.requestAnimationFrame(() => {
-        const dropdown = amountDropdownRef.current;
-        const panel = customAmountPanelRef.current;
-        if (!dropdown || !panel) return;
-
-        const dropdownRect = dropdown.getBoundingClientRect();
-        const panelRect = panel.getBoundingClientRect();
-        const bottomOverflow = panelRect.bottom - dropdownRect.bottom;
-        const topOverflow = dropdownRect.top - panelRect.top;
-
-        if (bottomOverflow > 0) {
-          dropdown.scrollTop += bottomOverflow + 8;
-        } else if (topOverflow > 0) {
-          dropdown.scrollTop -= topOverflow + 8;
-        }
-      });
-    });
-
-    return () => {
-      window.cancelAnimationFrame(frame);
-      window.cancelAnimationFrame(secondFrame);
-    };
-  }, [customPanelOpen, selectDropdownStyle, selectOpen]);
+  }, [selectOpen]);
 
   const currentBalance = state.deliveryBalance;
   const deliveryBalanceTextClass =
@@ -372,7 +341,6 @@ export const DeliveryBalanceHub: React.FC = () => {
   const selectedUnitPrice = selectedAmount === null ? 0 : selectedFinalPrice / selectedAmount;
   const canContinuePurchase = selectedAmount !== null;
   const showPurchaseDock = activeTab === 'purchase' && purchaseStep === 'amount' && selectedAmount !== null;
-  const customDraftPrice = getPackagePrice(clampCustomAmount(customAmount));
   const customDraftUnitPrice = getPackageUnitPrice(clampCustomAmount(customAmount));
 
   const resetPurchaseSelection = () => {
@@ -385,8 +353,7 @@ export const DeliveryBalanceHub: React.FC = () => {
     setSelectedAmount(null);
     setCustomAmount(defaultAmount);
     setCustomMode(false);
-    setCustomPanelOpen(false);
-    setInlineCustomPanelOpen(false);
+    setCustomAmountDialogOpen(false);
     setCouponCode('');
     setAppliedCouponCode(null);
     setCouponFeedback(null);
@@ -406,7 +373,7 @@ export const DeliveryBalanceHub: React.FC = () => {
     setSelectDropdownFixed(false);
     setSelectDropdownStyle(undefined);
     setSelectMaxHeight(null);
-    setCustomPanelOpen(false);
+    setCustomAmountDialogOpen(false);
   };
 
   useEffect(() => {
@@ -444,15 +411,19 @@ export const DeliveryBalanceHub: React.FC = () => {
     setSelectDropdownFixed(false);
     setSelectDropdownStyle(undefined);
     setSelectMaxHeight(null);
-    setCustomPanelOpen(false);
   };
 
-  const toggleInlineCustomAmountPanel = () => {
-    if (!inlineCustomPanelOpen) {
-      setCustomAmount(selectedAmount ?? defaultAmount);
-    }
+  const openCustomAmountDialog = () => {
+    setCustomAmount(selectedAmount ?? defaultAmount);
+    setSelectOpen(false);
+    setSelectDropdownFixed(false);
+    setSelectDropdownStyle(undefined);
+    setSelectMaxHeight(null);
+    setCustomAmountDialogOpen(true);
+  };
 
-    setInlineCustomPanelOpen((open) => !open);
+  const closeCustomAmountDialog = () => {
+    setCustomAmountDialogOpen(false);
   };
 
   const selectPackage = (amount: number) => {
@@ -461,8 +432,6 @@ export const DeliveryBalanceHub: React.FC = () => {
     if (shouldClearSelection) {
       setSelectedAmount(null);
       setCustomMode(false);
-      setCustomPanelOpen(false);
-      setInlineCustomPanelOpen(false);
       setSelectOpen(false);
       setSelectDropdownFixed(false);
       setSelectDropdownStyle(undefined);
@@ -473,8 +442,6 @@ export const DeliveryBalanceHub: React.FC = () => {
     setSelectedAmount(amount);
     setCustomAmount(amount);
     setCustomMode(false);
-    setCustomPanelOpen(false);
-    setInlineCustomPanelOpen(false);
     setSelectOpen(false);
     setSelectDropdownFixed(false);
     setSelectDropdownStyle(undefined);
@@ -486,8 +453,7 @@ export const DeliveryBalanceHub: React.FC = () => {
     setSelectedAmount(amount);
     setCustomAmount(amount);
     setCustomMode(true);
-    setCustomPanelOpen(false);
-    setInlineCustomPanelOpen(false);
+    setCustomAmountDialogOpen(false);
     setSelectOpen(false);
     setSelectDropdownFixed(false);
     setSelectDropdownStyle(undefined);
@@ -496,14 +462,6 @@ export const DeliveryBalanceHub: React.FC = () => {
 
   const stepCustomAmount = (direction: -1 | 1) => {
     setCustomAmount((amount) => clampCustomAmount(amount + direction * customStep));
-  };
-
-  const toggleCustomAmountPanel = () => {
-    if (!customPanelOpen) {
-      setCustomAmount(selectedAmount ?? defaultAmount);
-    }
-
-    setCustomPanelOpen((open) => !open);
   };
 
   const handleCouponCodeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -675,97 +633,21 @@ export const DeliveryBalanceHub: React.FC = () => {
                 >
                   <button
                     type="button"
-                    aria-controls="inline-custom-amount-panel"
-                    aria-expanded={inlineCustomPanelOpen}
-                    onClick={toggleInlineCustomAmountPanel}
+                    aria-haspopup="dialog"
+                    aria-expanded={customAmountDialogOpen}
+                    onClick={openCustomAmountDialog}
                     className="flex min-h-14 w-full items-center justify-between gap-3 px-4 py-3 text-right transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
                   >
-                    <span className="inline-flex min-w-0 items-center gap-2 text-sm font-bold text-app-text">
-                      <Pencil className="h-4 w-4 shrink-0 text-app-brand-text" />
+                    <span className="inline-flex min-w-0 items-center text-sm font-bold text-app-text">
                       <span className="truncate">כמות מותאמת אישית</span>
                     </span>
                     <span className="inline-flex shrink-0 items-center gap-2 text-xs font-bold text-app-text-secondary">
                       {customMode && selectedAmount !== null ? (
                         <span>{formatNumber(selectedAmount)} משלוחים</span>
                       ) : null}
-                      <ChevronDown
-                        className={`h-4 w-4 transition-transform ${
-                          inlineCustomPanelOpen ? 'rotate-180' : ''
-                        }`}
-                      />
+                      <Pencil className="h-4 w-4 shrink-0 text-app-brand-text" />
                     </span>
                   </button>
-
-                  {inlineCustomPanelOpen ? (
-                    <div id="inline-custom-amount-panel" className="border-t border-app-border px-4 py-4">
-                      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                        <div className="min-w-0">
-                          <div className="text-sm font-bold text-app-text">בחירת כמות ידנית</div>
-                          <p className="mt-1 text-xs leading-5 text-app-text-muted">
-                            הזן משלוחים בקפיצות של 100. מינימום 100, מקסימום 300,000.
-                          </p>
-                        </div>
-
-                        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-end" dir="rtl">
-                          <label className="inline-flex h-10 w-full min-w-0 overflow-hidden rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface focus-within:border-app-text focus-within:ring-0 sm:w-28">
-                            <input
-                              type="number"
-                              inputMode="numeric"
-                              max={customMaxAmount}
-                              min={customMinAmount}
-                              step={customStep}
-                              value={customAmount}
-                              onBlur={() => setCustomAmount((amount) => clampCustomAmount(amount))}
-                              onChange={(event) =>
-                                setCustomAmount(limitCustomAmountInput(Number(event.target.value)))
-                              }
-                              onFocus={(event) => event.currentTarget.select()}
-                              className="h-full w-full min-w-0 border-0 bg-transparent px-3 text-left text-sm font-bold tabular-nums text-app-text outline-none focus:ring-0"
-                              dir="ltr"
-                            />
-                          </label>
-
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => stepCustomAmount(-1)}
-                              aria-label="הפחת כמות"
-                              className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:opacity-45"
-                              disabled={clampCustomAmount(customAmount) <= customMinAmount}
-                            >
-                              <Minus className="h-4 w-4" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => stepCustomAmount(1)}
-                              aria-label="הוסף כמות"
-                              className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:opacity-45"
-                              disabled={clampCustomAmount(customAmount) >= customMaxAmount}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </button>
-                          </div>
-
-                          <span className="min-w-[6.5rem] text-left text-sm font-bold text-app-text-secondary">
-                            <span className="block tabular-nums text-app-text">
-                              {formatCurrency(customDraftPrice)}
-                            </span>
-                            <span className="text-xs font-semibold text-app-text-muted">
-                              {formatCurrency(customDraftUnitPrice)} למשלוח
-                            </span>
-                          </span>
-
-                          <button
-                            type="button"
-                            onClick={applyCustomAmount}
-                            className="h-10 shrink-0 rounded-full bg-app-text px-5 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
-                          >
-                            בחר ידנית
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : null}
                 </div>
 
                 <div className="border border-app-border bg-app-background px-4 py-4">
@@ -936,6 +818,140 @@ export const DeliveryBalanceHub: React.FC = () => {
         </section>
       )}
 
+      {customAmountDialogOpen ? (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm sm:p-6"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              closeCustomAmountDialog();
+            }
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="custom-amount-dialog-title"
+            className="relative w-full max-w-[44rem] overflow-hidden rounded-[var(--app-radius-lg)] border border-app-border bg-app-background text-right shadow-2xl"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={closeCustomAmountDialog}
+              aria-label="סגירה"
+              className="absolute left-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-[var(--app-radius-sm)] text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div className="px-5 pb-6 pt-6 sm:px-7 sm:pt-7">
+              <h2 id="custom-amount-dialog-title" className="text-xl font-bold text-app-text">
+                כמות מותאמת אישית
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-app-text-secondary">
+                בחר כמות משלוחים בקפיצות של 100.
+              </p>
+
+              <div className="mt-6 grid grid-cols-2 border-y border-app-border py-5">
+                <div className="border-l border-app-border px-4 text-center">
+                  <div className="text-sm font-semibold text-app-text-secondary">כמות משלוחים</div>
+                  <div className="mt-3 text-2xl font-bold tabular-nums text-app-text">
+                    {formatNumber(clampCustomAmount(customAmount))}
+                  </div>
+                </div>
+                <div className="px-4 text-center">
+                  <div className="text-sm font-semibold text-app-text-secondary">מחיר למשלוח</div>
+                  <div className="mt-3 text-2xl font-bold tabular-nums text-app-text">
+                    {formatCurrency(customDraftUnitPrice)}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <label className="text-sm font-semibold text-app-text-secondary" htmlFor="custom-delivery-amount">
+                  כמות משלוחים
+                </label>
+                <div className="mt-2 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => stepCustomAmount(-1)}
+                    aria-label="הפחת כמות"
+                    className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-none border border-app-border bg-app-background text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:opacity-45"
+                    disabled={clampCustomAmount(customAmount) <= customMinAmount}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </button>
+                  <label className="flex h-12 min-w-0 flex-1 overflow-hidden rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface focus-within:border-app-text focus-within:ring-0">
+                    <input
+                      id="custom-delivery-amount"
+                      type="number"
+                      inputMode="numeric"
+                      max={customMaxAmount}
+                      min={customMinAmount}
+                      step={customStep}
+                      value={customAmount}
+                      onBlur={() => setCustomAmount((amount) => clampCustomAmount(amount))}
+                      onChange={(event) =>
+                        setCustomAmount(limitCustomAmountInput(Number(event.target.value)))
+                      }
+                      onFocus={(event) => event.currentTarget.select()}
+                      className="h-full min-w-0 flex-1 border-0 bg-transparent px-3 text-center text-base font-bold tabular-nums text-app-text outline-none focus:ring-0"
+                      dir="ltr"
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => stepCustomAmount(1)}
+                    aria-label="הוסף כמות"
+                    className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-none border border-app-border bg-app-background text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:opacity-45"
+                    disabled={clampCustomAmount(customAmount) >= customMaxAmount}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-5">
+                {creditPackages.map((option) => {
+                  const active = clampCustomAmount(customAmount) === option.amount;
+
+                  return (
+                    <button
+                      key={option.amount}
+                      type="button"
+                      onClick={() => setCustomAmount(option.amount)}
+                      className={`h-11 rounded-[var(--app-radius-sm)] border px-3 text-sm font-bold tabular-nums transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 ${
+                        active
+                          ? 'border-app-border-strong bg-app-surface-raised text-app-text'
+                          : 'border-app-border bg-app-background text-app-text-secondary hover:bg-app-surface-raised hover:text-app-text'
+                      }`}
+                    >
+                      {formatNumber(option.amount)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 border-t border-app-border px-5 py-4 sm:px-7">
+              <button
+                type="button"
+                onClick={closeCustomAmountDialog}
+                className="h-11 rounded-none border border-app-border bg-app-background px-5 text-sm font-bold text-app-text transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+              >
+                ביטול
+              </button>
+              <button
+                type="button"
+                onClick={applyCustomAmount}
+                className="h-11 rounded-none bg-app-text px-6 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+              >
+                בחר כמות
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {purchaseDialogOpen ? (
         <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto overscroll-contain bg-black/70 p-4 backdrop-blur-sm sm:p-6">
           <button
@@ -985,10 +1001,6 @@ export const DeliveryBalanceHub: React.FC = () => {
                       type="button"
                       aria-expanded={selectOpen}
                       onClick={() => {
-                        if (selectOpen) {
-                          setCustomPanelOpen(false);
-                        }
-
                         setSelectOpen((open) => !open);
                         setSelectDropdownFixed(false);
                         setSelectDropdownStyle(undefined);
@@ -1056,92 +1068,20 @@ export const DeliveryBalanceHub: React.FC = () => {
 
                         <button
                           type="button"
-                          aria-controls="custom-amount-panel"
-                          aria-expanded={customPanelOpen}
-                          onClick={toggleCustomAmountPanel}
+                          aria-haspopup="dialog"
+                          aria-expanded={customAmountDialogOpen}
+                          onClick={openCustomAmountDialog}
                           className={`flex h-12 w-full items-center justify-between gap-3 border-t border-app-border px-4 text-sm font-semibold transition-colors hover:bg-app-surface-raised hover:text-app-text ${
-                            customPanelOpen || customMode
+                            customMode
                               ? 'bg-app-surface-raised text-app-text'
                               : 'text-app-text-secondary'
                           }`}
                         >
-                          <span className="inline-flex min-w-0 items-center gap-2">
-                            <Pencil className="h-4 w-4 shrink-0" />
+                          <span className="inline-flex min-w-0 items-center">
                             <span className="truncate">כמות מותאמת</span>
                           </span>
-                          <ChevronDown
-                            className={`h-4 w-4 shrink-0 transition-transform ${
-                              customPanelOpen ? 'rotate-180' : ''
-                            }`}
-                          />
+                          <Pencil className="h-4 w-4 shrink-0" />
                         </button>
-
-                        {customPanelOpen ? (
-                          <div
-                            ref={customAmountPanelRef}
-                            id="custom-amount-panel"
-                            className="border-t border-app-border px-4 py-3"
-                          >
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
-                              <label className="flex min-w-0 items-center justify-between gap-2 text-sm font-bold text-app-text sm:justify-end sm:gap-1.5">
-                                <span className="shrink-0 text-sm font-bold text-app-text">משלוחים</span>
-                                <input
-                                  type="number"
-                                  inputMode="numeric"
-                                  max={customMaxAmount}
-                                  min={customMinAmount}
-                                  step={customStep}
-                                  value={customAmount}
-                                  onBlur={() => setCustomAmount((amount) => clampCustomAmount(amount))}
-                                  onChange={(event) =>
-                                    setCustomAmount(limitCustomAmountInput(Number(event.target.value)))
-                                  }
-                                  onFocus={(event) => event.currentTarget.select()}
-                                  className="h-8 w-20 border-0 bg-transparent px-0 text-left text-sm font-bold tabular-nums text-app-text outline-none transition-colors focus:ring-0 sm:h-9 sm:w-24"
-                                  dir="ltr"
-                                />
-                              </label>
-                              <div className="flex min-w-0 items-center justify-between gap-2 sm:shrink-0 sm:justify-end">
-                                <span className="min-w-0 shrink text-left text-xs font-bold text-app-text-secondary sm:max-w-none sm:shrink-0 sm:text-sm">
-                                  <span className="block tabular-nums">{formatCurrency(customDraftPrice)}</span>
-                                  <span className="hidden text-xs font-semibold text-app-text-muted sm:block">
-                                    {formatCurrency(customDraftUnitPrice)} למשלוח
-                                  </span>
-                                </span>
-                                <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => stepCustomAmount(-1)}
-                                    aria-label="הפחת כמות"
-                                    className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--app-radius-sm)] border border-app-border bg-app-background text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:opacity-45 sm:h-9 sm:w-9"
-                                    disabled={clampCustomAmount(customAmount) <= customMinAmount}
-                                  >
-                                    <Minus className="h-4 w-4" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => stepCustomAmount(1)}
-                                    aria-label="הוסף כמות"
-                                    className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--app-radius-sm)] border border-app-border bg-app-background text-app-text-secondary transition-colors hover:bg-app-surface-raised hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:opacity-45 sm:h-9 sm:w-9"
-                                    disabled={clampCustomAmount(customAmount) >= customMaxAmount}
-                                  >
-                                    <Plus className="h-4 w-4" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={applyCustomAmount}
-                                    className="h-8 rounded-full bg-app-text px-3 text-xs font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:h-9 sm:px-4 sm:text-sm"
-                                  >
-                                    החל
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                            <p className="mt-3 text-xs text-app-text-muted">
-                              הזן משלוחים בקפיצות של 100. מינימום רכישה: 100 משלוחים, מקסימום 300,000.
-                            </p>
-                          </div>
-                        ) : null}
                       </div>
                     ) : null}
                   </div>
@@ -1161,7 +1101,6 @@ export const DeliveryBalanceHub: React.FC = () => {
                       if (!canContinuePurchase) return;
                       setPurchaseStep('payment');
                       setSelectOpen(false);
-                      setCustomPanelOpen(false);
                     }}
                     disabled={!canContinuePurchase}
                     className="h-10 rounded-full bg-app-text px-5 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:bg-app-surface-raised disabled:text-app-text-muted max-sm:w-full"
