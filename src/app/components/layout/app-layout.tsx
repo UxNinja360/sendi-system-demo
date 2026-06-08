@@ -63,7 +63,9 @@ export const AppLayout: React.FC = () => {
   }, [mobileMenuToggle]);
 
   const isLivePage = location.pathname === '/live';
-  const isManagedScrollPage = isLivePage || APP_MANAGED_SCROLL_PATHS.has(location.pathname);
+  const isSettingsPage = location.pathname.startsWith('/settings');
+  const isManagedScrollPage =
+    isLivePage || isSettingsPage || APP_MANAGED_SCROLL_PATHS.has(location.pathname);
   const isLoading = navigation.state === 'loading';
 
   return (

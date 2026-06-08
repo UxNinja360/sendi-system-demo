@@ -6,11 +6,11 @@ export type AppFeaturePreferences = {
 
 export type AppFeaturePreferenceKey = keyof AppFeaturePreferences;
 
-const APP_FEATURE_PREFERENCES_STORAGE_KEY = 'sendi:app-feature-preferences-v1';
+const APP_FEATURE_PREFERENCES_STORAGE_KEY = 'sendi:app-feature-preferences-v2';
 const APP_FEATURE_PREFERENCES_EVENT = 'sendi:app-feature-preferences-change';
 
 const defaultAppFeaturePreferences: AppFeaturePreferences = {
-  mobileFloatingDockEnabled: true,
+  mobileFloatingDockEnabled: false,
 };
 
 const normalizeAppFeaturePreferences = (value: unknown): AppFeaturePreferences => {
