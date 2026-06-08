@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router';
 import {
   ArrowUp,
+  BadgeDollarSign,
   Bike,
   CheckCircle2,
   ChevronDown,
@@ -469,6 +470,36 @@ const DashboardToolbarToggle: React.FC<{
     </button>
   </AppTooltip>
 );
+
+const DashboardDeliveryBalanceChip: React.FC<{
+  balance: number;
+  onClick: () => void;
+  refreshing: boolean;
+}> = ({ balance, onClick, refreshing }) => {
+  const balanceTextClass =
+    balance <= 100
+      ? 'text-[#dc2626] dark:text-[#f87171]'
+      : 'text-[#f59e0b] dark:text-[#fbbf24]';
+
+  return (
+    <button
+      type="button"
+      data-haptic="selection"
+      onClick={onClick}
+      className="inline-flex h-10 shrink-0 items-center justify-center gap-2 border border-app-border bg-app-background px-4 text-sm font-bold text-app-text transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+      dir="rtl"
+      aria-label={`יתרת משלוחים ${formatNumber(balance)}`}
+    >
+      <span className={`tabular-nums ${balanceTextClass}`}>
+        <RefreshingMetricValue
+          refreshing={refreshing}
+          value={formatNumber(balance)}
+        />
+      </span>
+      <BadgeDollarSign aria-hidden="true" className={`h-3.5 w-3.5 shrink-0 ${balanceTextClass}`} />
+    </button>
+  );
+};
 
 const SendiPlusCard: React.FC<{
   deliveryZoneCount: number;
@@ -1958,6 +1989,11 @@ export const Dashboard: React.FC = () => {
                   label={deliveryIntakeLabel}
                   onClick={() => dispatch({ type: 'TOGGLE_DELIVERY_INTAKE' })}
                   icon={<Power className="h-3.5 w-3.5" />}
+                />
+                <DashboardDeliveryBalanceChip
+                  balance={state.deliveryBalance}
+                  onClick={() => navigate('/delivery-balance')}
+                  refreshing={isDashboardRefreshing}
                 />
               </div>
             </div>

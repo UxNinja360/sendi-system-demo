@@ -1,5 +1,6 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
+  BadgeDollarSign,
   ChevronDown,
   CreditCard,
   ExternalLink,
@@ -370,6 +371,7 @@ export const DeliveryBalanceHub: React.FC = () => {
     selectedAmount === null ? 0 : roundPrice(Math.max(0, selectedPrice - selectedDiscount));
   const selectedUnitPrice = selectedAmount === null ? 0 : selectedFinalPrice / selectedAmount;
   const canContinuePurchase = selectedAmount !== null;
+  const showPurchaseDock = activeTab === 'purchase' && purchaseStep === 'amount' && selectedAmount !== null;
   const customDraftPrice = getPackagePrice(clampCustomAmount(customAmount));
   const customDraftUnitPrice = getPackageUnitPrice(clampCustomAmount(customAmount));
 
@@ -569,10 +571,10 @@ export const DeliveryBalanceHub: React.FC = () => {
 
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
           <div className="inline-flex h-10 shrink-0 items-center justify-center gap-2 border border-app-border bg-app-background px-4 text-sm font-bold text-app-text">
-            <span>יתרה נוכחית</span>
             <span className={`tabular-nums ${deliveryBalanceTextClass}`}>
               {formatNumber(currentBalance)}
             </span>
+            <BadgeDollarSign aria-hidden="true" className={`h-3.5 w-3.5 shrink-0 ${deliveryBalanceTextClass}`} />
           </div>
         </div>
       </header>
@@ -786,63 +788,48 @@ export const DeliveryBalanceHub: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3 border border-app-border bg-app-background px-4 py-3 md:flex-row md:items-center md:justify-between">
-                  <div className="min-w-0">
-                    <div className="text-sm font-bold text-app-text">סיכום רכישה</div>
-                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-app-text-secondary">
-                      {selectedAmount === null ? (
-                        <span>בחר חבילה או כמות מותאמת כדי לראות מחיר סופי.</span>
-                      ) : (
-                        <>
+                {showPurchaseDock ? <div className="h-28 md:hidden" aria-hidden="true" /> : null}
+                {showPurchaseDock ? (
+                  <div
+                    className="delivery-balance-purchase-dock fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] z-40 border border-app-border bg-app-background shadow-[0_18px_48px_rgba(0,0,0,0.36)] md:sticky md:bottom-4 md:left-auto md:right-auto md:z-10 md:mt-1 md:shadow-none"
+                    aria-label="שורת תשלום"
+                  >
+                    <div className="flex flex-col gap-3 px-3 py-3 md:flex-row md:items-center md:justify-between md:px-4">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-bold text-app-text">
                           <span>{formatNumber(selectedAmount)} משלוחים</span>
                           <span className="h-3 w-px bg-app-border" aria-hidden="true" />
-                          <span>{formatCurrency(selectedUnitPrice)} למשלוח</span>
+                          <span className="text-xs text-app-text-secondary">
+                            {formatCurrency(selectedUnitPrice)} למשלוח
+                          </span>
                           {selectedDiscount > 0 ? (
                             <>
                               <span className="h-3 w-px bg-app-border" aria-hidden="true" />
-                              <span className="text-[#16a34a] dark:text-[#86efac]">
-                                קופון: -{formatCurrency(selectedDiscount)}
+                              <span className="text-xs text-[#16a34a] dark:text-[#86efac]">
+                                -{formatCurrency(selectedDiscount)}
                               </span>
                             </>
                           ) : null}
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
-                    {selectedAmount !== null ? (
-                      <div className="flex items-baseline justify-between gap-2 sm:justify-end">
-                        <span className="text-xs font-bold text-app-text-secondary">סה״כ</span>
-                        <span className="shrink-0 text-base font-bold tabular-nums text-app-text">
-                          {formatCurrency(selectedFinalPrice)}
-                        </span>
+                        </div>
                       </div>
-                    ) : null}
-                    <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                    {selectedAmount !== null ? (
-                      <button
-                        type="button"
-                        onClick={resetPurchaseSelection}
-                        className="h-9 rounded-full bg-app-surface px-4 text-sm font-bold text-app-text transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:w-auto"
-                      >
-                        ניקוי בחירה
-                      </button>
-                    ) : null}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!canContinuePurchase) return;
-                        setPurchaseStep('payment');
-                      }}
-                      disabled={!canContinuePurchase}
-                      className="h-9 rounded-full bg-app-text px-5 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 disabled:cursor-not-allowed disabled:bg-app-surface-raised disabled:text-app-text-muted sm:w-auto"
-                    >
-                      המשך לתשלום
-                    </button>
+
+                      <div className="flex min-w-0 items-center gap-2">
+                        <div className="min-w-0 flex-1 text-left md:flex-none">
+                          <span className="block text-base font-bold tabular-nums text-app-text">
+                            {formatCurrency(selectedFinalPrice)}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setPurchaseStep('payment')}
+                          className="h-10 shrink-0 rounded-none bg-app-text px-5 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+                        >
+                          המשך לתשלום
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : null}
               </div>
             ) : (
               <div className="mt-7 space-y-5">
