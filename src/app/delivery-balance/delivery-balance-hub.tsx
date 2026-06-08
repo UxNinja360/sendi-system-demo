@@ -755,12 +755,12 @@ export const DeliveryBalanceHub: React.FC = () => {
                 </div>
 
                 <div className="border border-app-border bg-app-background px-4 py-4">
-                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                    <div className="min-w-0">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0 shrink-0">
                       <div className="text-sm font-bold text-app-text">קוד קופון</div>
                     </div>
                     <div
-                      className="flex h-10 w-full min-w-0 overflow-hidden rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface focus-within:border-app-text focus-within:ring-0 sm:w-80"
+                      className="flex h-10 min-w-0 flex-1 overflow-hidden rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface focus-within:border-app-text focus-within:ring-0 sm:max-w-80 md:flex-none md:w-80"
                       dir="rtl"
                     >
                       <input
@@ -780,7 +780,7 @@ export const DeliveryBalanceHub: React.FC = () => {
                         type="button"
                         onClick={applyCouponCode}
                         aria-live="polite"
-                        className="h-full shrink-0 border-r border-app-border bg-transparent px-4 text-sm font-semibold text-app-text-secondary transition-colors hover:text-app-text focus:outline-none focus-visible:ring-1 focus-visible:ring-app-border-strong"
+                        className="h-full shrink-0 border-r border-app-border bg-transparent px-3 text-sm font-semibold text-app-text-secondary transition-colors hover:text-app-text focus:outline-none focus-visible:ring-1 focus-visible:ring-app-border-strong sm:px-4"
                       >
                         {couponActionLabel}
                       </button>
@@ -794,18 +794,19 @@ export const DeliveryBalanceHub: React.FC = () => {
                     className="delivery-balance-purchase-dock fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] z-40 border border-app-border bg-app-background shadow-[0_18px_48px_rgba(0,0,0,0.36)] md:sticky md:bottom-4 md:left-auto md:right-auto md:z-10 md:mt-1 md:shadow-none"
                     aria-label="שורת תשלום"
                   >
-                    <div className="flex flex-col gap-3 px-3 py-3 md:flex-row md:items-center md:justify-between md:px-4">
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-bold text-app-text">
+                    <div className="flex items-center justify-between gap-3 px-3 py-3 md:px-4">
+                      <div className="min-w-0 text-right">
+                        <span className="block text-base font-bold tabular-nums text-app-text">
+                          {formatCurrency(selectedFinalPrice)}
+                        </span>
+                        <div className="mt-1 flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-xs text-app-text-secondary">
                           <span>{formatNumber(selectedAmount)} משלוחים</span>
                           <span className="h-3 w-px bg-app-border" aria-hidden="true" />
-                          <span className="text-xs text-app-text-secondary">
-                            {formatCurrency(selectedUnitPrice)} למשלוח
-                          </span>
+                          <span>{formatCurrency(selectedUnitPrice)} למשלוח</span>
                           {selectedDiscount > 0 ? (
                             <>
                               <span className="h-3 w-px bg-app-border" aria-hidden="true" />
-                              <span className="text-xs text-[#16a34a] dark:text-[#86efac]">
+                              <span className="text-[#16a34a] dark:text-[#86efac]">
                                 -{formatCurrency(selectedDiscount)}
                               </span>
                             </>
@@ -813,20 +814,13 @@ export const DeliveryBalanceHub: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="flex min-w-0 items-center gap-2">
-                        <div className="min-w-0 flex-1 text-left md:flex-none">
-                          <span className="block text-base font-bold tabular-nums text-app-text">
-                            {formatCurrency(selectedFinalPrice)}
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setPurchaseStep('payment')}
-                          className="h-10 shrink-0 rounded-none bg-app-text px-5 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
-                        >
-                          המשך לתשלום
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setPurchaseStep('payment')}
+                        className="h-10 shrink-0 rounded-none bg-app-text px-5 text-sm font-bold text-app-background transition-colors hover:bg-app-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+                      >
+                        המשך לתשלום
+                      </button>
                     </div>
                   </div>
                 ) : null}
