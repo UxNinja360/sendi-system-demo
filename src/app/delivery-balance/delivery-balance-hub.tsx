@@ -813,13 +813,13 @@ export const DeliveryBalanceHub: React.FC = () => {
                         <span className="block text-base font-bold tabular-nums text-app-text">
                           {formatCurrency(selectedFinalPrice)}
                         </span>
-                        <div className="mt-1 flex flex-col items-start gap-0.5 text-xs text-app-text-secondary sm:flex-row sm:flex-wrap sm:items-center sm:justify-start sm:gap-x-3 sm:gap-y-1">
+                        <div className="mt-1 flex flex-row flex-wrap items-center justify-start gap-x-2 gap-y-0.5 text-xs text-app-text-secondary min-[380px]:gap-x-3">
                           <span className="whitespace-nowrap">{formatNumber(selectedAmount)} משלוחים</span>
-                          <span className="hidden h-3 w-px bg-app-border sm:block" aria-hidden="true" />
+                          <span className="hidden h-3 w-px bg-app-border min-[380px]:block" aria-hidden="true" />
                           <span className="whitespace-nowrap">{formatCurrency(selectedUnitPrice)} למשלוח</span>
                           {selectedDiscount > 0 ? (
                             <>
-                              <span className="hidden h-3 w-px bg-app-border sm:block" aria-hidden="true" />
+                              <span className="hidden h-3 w-px bg-app-border min-[380px]:block" aria-hidden="true" />
                               <span className="whitespace-nowrap text-[#16a34a] dark:text-[#86efac]">
                                 -{formatCurrency(selectedDiscount)}
                               </span>
