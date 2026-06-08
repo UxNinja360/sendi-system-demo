@@ -1169,6 +1169,13 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   .settings-screen__content {
     padding-bottom: calc(6rem + var(--app-safe-bottom)) !important;
   }
+
+  .delivery-balance-scroll {
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: calc(7rem + var(--app-safe-bottom)) !important;
+    scroll-padding-bottom: calc(7rem + var(--app-safe-bottom));
+    touch-action: pan-y;
+  }
 }
 
 .app-toolbar-actions > * {

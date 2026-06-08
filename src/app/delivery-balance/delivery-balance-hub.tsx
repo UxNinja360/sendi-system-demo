@@ -756,9 +756,6 @@ export const DeliveryBalanceHub: React.FC = () => {
                   <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div className="min-w-0">
                       <div className="text-sm font-bold text-app-text">קוד קופון</div>
-                      <div className="mt-1 text-xs font-semibold text-app-text-secondary">
-                        הזן קוד מבצע לפני שורת הסיכום.
-                      </div>
                     </div>
                     <div
                       className="flex h-10 w-full min-w-0 overflow-hidden rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface focus-within:border-app-border-strong focus-within:ring-2 focus-within:ring-app-brand/20 sm:w-80"
