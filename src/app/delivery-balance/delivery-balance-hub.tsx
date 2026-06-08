@@ -650,13 +650,13 @@ export const DeliveryBalanceHub: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="border border-app-border bg-app-background px-4 py-4">
+                <div className="px-1 py-0">
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0 shrink-0">
-                      <div className="text-sm font-bold text-app-text">קוד קופון</div>
+                      <div className="text-xs font-semibold text-app-text-secondary">קוד קופון</div>
                     </div>
                     <div
-                      className="flex h-10 min-w-0 flex-1 overflow-hidden rounded-[var(--app-radius-sm)] border border-app-border bg-app-surface focus-within:border-app-text focus-within:ring-0 sm:max-w-80 md:flex-none md:w-80"
+                      className="flex h-9 min-w-0 flex-1 overflow-hidden rounded-[var(--app-radius-sm)] border border-app-border bg-transparent focus-within:border-app-text focus-within:ring-0 sm:max-w-72 md:flex-none md:w-72"
                       dir="rtl"
                     >
                       <input
@@ -669,14 +669,14 @@ export const DeliveryBalanceHub: React.FC = () => {
                           }
                         }}
                         placeholder="SENDI10"
-                        className="h-full min-w-0 flex-1 border-0 bg-transparent px-3 text-left text-sm font-bold tracking-normal text-app-text outline-none focus:ring-0"
+                        className="h-full min-w-0 flex-1 border-0 bg-transparent px-3 text-left text-xs font-bold tracking-normal text-app-text outline-none focus:ring-0"
                         dir="ltr"
                       />
                       <button
                         type="button"
                         onClick={applyCouponCode}
                         aria-live="polite"
-                        className="h-full shrink-0 border-r border-app-border bg-transparent px-3 text-sm font-semibold text-app-text-secondary transition-colors hover:text-app-text focus:outline-none focus-visible:ring-1 focus-visible:ring-app-border-strong sm:px-4"
+                        className="h-full shrink-0 border-r border-app-border bg-transparent px-3 text-xs font-semibold text-app-text-secondary transition-colors hover:text-app-text focus:outline-none focus-visible:ring-1 focus-visible:ring-app-border-strong"
                       >
                         {couponActionLabel}
                       </button>
