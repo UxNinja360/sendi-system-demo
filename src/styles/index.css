@@ -1166,7 +1166,7 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
 }
 
 @media (max-width: 767.98px) {
-  .settings-screen__scroll {
+  .settings-screen {
     -webkit-overflow-scrolling: touch;
     padding-bottom: calc(6rem + var(--app-safe-bottom)) !important;
     scroll-padding-bottom: calc(6rem + var(--app-safe-bottom));

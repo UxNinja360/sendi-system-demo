@@ -190,7 +190,7 @@ const SettingRow: React.FC<{
   danger?: boolean;
 }> = ({ icon, title, hint, control, danger = false }) => (
   <div
-    className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b px-3 py-2.5 last:border-b-0 sm:px-4 ${
+    className={`flex flex-col gap-2 border-b px-3 py-3 last:border-b-0 sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-3 sm:px-4 ${
       danger
         ? 'border-red-100 bg-red-50/70 dark:border-red-500/10 dark:bg-red-500/5'
         : 'border-[#f1f1f1] dark:border-app-border'
@@ -217,7 +217,7 @@ const SettingRow: React.FC<{
         ) : null}
       </div>
     </div>
-    <div className="flex min-w-0 max-w-[46vw] items-center justify-end sm:max-w-none">{control}</div>
+    <div className="flex min-w-0 items-center justify-start sm:justify-end">{control}</div>
   </div>
 );
 
@@ -647,86 +647,54 @@ const SectionCard: React.FC<{
   </section>
 );
 
+const SettingsScreenShell: React.FC<{
+  children: React.ReactNode;
+  contentClassName?: string;
+}> = ({ children, contentClassName = 'flex flex-col gap-3' }) => (
+  <main
+    className="settings-screen h-full min-h-0 overflow-y-auto overscroll-contain bg-app-background px-2.5 py-3 sm:px-3 md:px-5 md:py-5"
+    dir="rtl"
+  >
+    <div className={`mx-auto w-full max-w-5xl ${contentClassName}`}>{children}</div>
+  </main>
+);
+
 const SettingsLinkRow: React.FC<{
   icon: React.ReactNode;
   title: string;
   hint?: string;
   tag?: string;
   onClick: () => void;
-}> = ({ icon, title, hint, tag, onClick }) => {
-  const pressStartRef = useRef<{ x: number; y: number } | null>(null);
-  const didDragRef = useRef(false);
-
-  const handlePointerDown = (event: React.PointerEvent<HTMLButtonElement>) => {
-    if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
-
-    pressStartRef.current = { x: event.clientX, y: event.clientY };
-    didDragRef.current = false;
-  };
-
-  const handlePointerMove = (event: React.PointerEvent<HTMLButtonElement>) => {
-    const pressStart = pressStartRef.current;
-    if (!pressStart) return;
-
-    const movedX = Math.abs(event.clientX - pressStart.x);
-    const movedY = Math.abs(event.clientY - pressStart.y);
-    if (movedX > 8 || movedY > 8) didDragRef.current = true;
-  };
-
-  const handlePointerCancel = () => {
-    pressStartRef.current = null;
-    didDragRef.current = false;
-  };
-
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    if (didDragRef.current) {
-      event.preventDefault();
-      event.stopPropagation();
-      pressStartRef.current = null;
-      didDragRef.current = false;
-      return;
-    }
-
-    pressStartRef.current = null;
-    onClick();
-  };
-
-  return (
-    <button
-      type="button"
-      data-haptic="selection"
-      onClick={handleClick}
-      onPointerCancel={handlePointerCancel}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      className="settings-link-row grid w-full grid-cols-[1fr_auto] items-center gap-3 border-b border-[#f1f1f1] px-3 py-3 text-right transition-colors last:border-b-0 hover:bg-[#f7f7f7] dark:border-app-border dark:hover:bg-app-surface-raised sm:px-4"
-    >
-      <div className="flex min-w-0 items-start gap-3">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-none bg-[#f5f5f5] text-app-brand dark:bg-app-surface dark:text-app-brand sm:h-9 sm:w-9">
-          {icon}
-        </div>
-        <div className="min-w-0">
-          <div className="flex min-w-0 items-center gap-2">
-            <span className="min-w-0 truncate text-sm font-semibold text-[#0d0d12] dark:text-app-text">
-              {title}
-            </span>
-            {tag ? (
-              <span className="shrink-0 rounded-none bg-app-brand/10 px-1.5 py-0.5 text-[10px] font-bold text-app-brand">
-                {tag}
-              </span>
-            ) : null}
-          </div>
-          {hint ? (
-            <div className="mt-0.5 max-h-10 overflow-hidden text-xs leading-5 text-[#666d80] dark:text-app-text-secondary">
-              {hint}
-            </div>
-          ) : null}
-        </div>
+}> = ({ icon, title, hint, tag, onClick }) => (
+  <button
+    type="button"
+    data-haptic="selection"
+    onClick={onClick}
+    className="settings-link-row flex w-full touch-manipulation items-center gap-3 border-b border-[#f1f1f1] px-3 py-3 text-right transition-colors last:border-b-0 hover:bg-[#f7f7f7] dark:border-app-border dark:hover:bg-app-surface-raised sm:px-4"
+  >
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-none bg-[#f5f5f5] text-app-brand dark:bg-app-surface dark:text-app-brand sm:h-9 sm:w-9">
+      {icon}
+    </div>
+    <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="min-w-0 truncate text-sm font-semibold text-[#0d0d12] dark:text-app-text">
+          {title}
+        </span>
+        {tag ? (
+          <span className="shrink-0 rounded-none bg-app-brand/10 px-1.5 py-0.5 text-[10px] font-bold text-app-brand">
+            {tag}
+          </span>
+        ) : null}
       </div>
-      <ChevronLeft className="h-4 w-4 shrink-0 text-[#666d80] dark:text-app-text-secondary" />
-    </button>
-  );
-};
+      {hint ? (
+        <div className="mt-0.5 max-h-10 overflow-hidden text-xs leading-5 text-[#666d80] dark:text-app-text-secondary">
+          {hint}
+        </div>
+      ) : null}
+    </div>
+    <ChevronLeft className="h-4 w-4 shrink-0 text-[#666d80] dark:text-app-text-secondary" />
+  </button>
+);
 
 const SettingsActionCard: React.FC<{
   icon: React.ReactNode;
@@ -1014,10 +982,8 @@ export const SettingsPagesPage: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="settings-screen flex h-full min-h-0 flex-col overflow-hidden bg-app-background" dir="rtl">
-      <div className="settings-screen__scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-2.5 py-3 sm:px-3 md:px-5 md:py-5">
-        <div className="settings-screen__content mx-auto flex w-full max-w-5xl flex-col gap-2">
-          {settingsNavGroups.map((group) => {
+    <SettingsScreenShell contentClassName="flex flex-col gap-2">
+      {settingsNavGroups.map((group) => {
             const GroupIcon = settingsNavIconMap[group.icon];
             const groupItems = APP_NAV_ITEMS.filter((item) => item.section === group.section);
 
@@ -1043,10 +1009,8 @@ export const SettingsPagesPage: React.FC = () => {
                 })}
               </SectionCard>
             );
-          })}
-        </div>
-      </div>
-    </div>
+      })}
+    </SettingsScreenShell>
   );
 };
 
@@ -1271,10 +1235,8 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
     playNewDeliverySound({ force: true });
   };
   return (
-    <div className="settings-screen flex h-full min-h-0 flex-col overflow-hidden bg-app-background" dir="rtl">
-      <div className="settings-screen__scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-2.5 py-3 sm:px-3 md:px-5 md:py-5">
-        <div className="settings-screen__content mx-auto w-full max-w-5xl">
-          <div className="flex flex-col gap-3">
+    <>
+      <SettingsScreenShell>
             {!category ? (
               <main className="flex min-w-0 flex-col gap-3">
                 <div
@@ -1721,9 +1683,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
           ) : null}
             </main>
             ) : null}
-          </div>
-        </div>
-      </div>
+      </SettingsScreenShell>
 
       {isDeleteAccountDialogOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 px-4">
@@ -1813,6 +1773,6 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
