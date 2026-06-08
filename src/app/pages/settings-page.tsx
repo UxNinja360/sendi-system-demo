@@ -666,12 +666,7 @@ const SettingsLinkRow: React.FC<{
   tag?: string;
   onClick: () => void;
 }> = ({ icon, title, hint, tag, onClick }) => (
-  <button
-    type="button"
-    data-haptic="selection"
-    onClick={onClick}
-    className="settings-link-row flex w-full touch-manipulation items-center gap-3 border-b border-[#f1f1f1] px-3 py-3 text-right transition-colors last:border-b-0 hover:bg-[#f7f7f7] dark:border-app-border dark:hover:bg-app-surface-raised sm:px-4"
-  >
+  <div className="settings-link-row flex w-full items-center gap-3 border-b border-[#f1f1f1] px-3 py-3 text-right last:border-b-0 dark:border-app-border sm:px-4">
     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-none bg-[#f5f5f5] text-app-brand dark:bg-app-surface dark:text-app-brand sm:h-9 sm:w-9">
       {icon}
     </div>
@@ -692,8 +687,16 @@ const SettingsLinkRow: React.FC<{
         </div>
       ) : null}
     </div>
-    <ChevronLeft className="h-4 w-4 shrink-0 text-[#666d80] dark:text-app-text-secondary" />
-  </button>
+    <button
+      type="button"
+      data-haptic="selection"
+      onClick={onClick}
+      className="flex h-9 w-9 shrink-0 touch-manipulation items-center justify-center rounded-none text-[#666d80] transition-colors hover:bg-[#f5f5f5] hover:text-[#0d0d12] focus:outline-none focus-visible:ring-2 focus-visible:ring-app-border-strong dark:text-app-text-secondary dark:hover:bg-app-surface-raised dark:hover:text-app-text"
+      aria-label={`${TEXT.open} ${title}`}
+    >
+      <ChevronLeft className="h-4 w-4" />
+    </button>
+  </div>
 );
 
 const SettingsActionCard: React.FC<{
