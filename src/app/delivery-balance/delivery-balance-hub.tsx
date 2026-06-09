@@ -1,11 +1,14 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
-  BadgeDollarSign,
+  Check,
   ChevronDown,
   CreditCard,
   ExternalLink,
+  Info,
+  LoaderCircle,
   Minus,
   MoreHorizontal,
+  Package,
   Pencil,
   Plus,
   Receipt,
@@ -191,6 +194,7 @@ export const DeliveryBalanceHub: React.FC = () => {
   const amountDropdownRef = useRef<HTMLDivElement>(null);
   const amountSelectRef = useRef<HTMLDivElement>(null);
   const purchaseCardRef = useRef<HTMLDivElement>(null);
+  const couponApplyTimerRef = useRef<number | null>(null);
   const [activeTab, setActiveTab] = useState<BalancePageTab>('purchase');
   const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false);
   const [purchaseStep, setPurchaseStep] = useState<PurchaseStep>('amount');
@@ -206,6 +210,7 @@ export const DeliveryBalanceHub: React.FC = () => {
   const [couponCode, setCouponCode] = useState('');
   const [appliedCouponCode, setAppliedCouponCode] = useState<string | null>(null);
   const [couponFeedback, setCouponFeedback] = useState<'invalid' | 'missing' | null>(null);
+  const [couponChecking, setCouponChecking] = useState(false);
   const invoicesStorageKey = useMemo(
     () => getPurchaseInvoicesStorageKey(state.workspaceId),
     [state.workspaceId],
@@ -217,6 +222,15 @@ export const DeliveryBalanceHub: React.FC = () => {
   useEffect(() => {
     setPurchaseInvoices(readStoredPurchaseInvoices(invoicesStorageKey));
   }, [invoicesStorageKey]);
+
+  useEffect(
+    () => () => {
+      if (couponApplyTimerRef.current !== null) {
+        window.clearTimeout(couponApplyTimerRef.current);
+      }
+    },
+    [],
+  );
 
   useLayoutEffect(() => {
     if (!selectOpen) return undefined;
@@ -335,23 +349,37 @@ export const DeliveryBalanceHub: React.FC = () => {
       : 'text-[#f59e0b] dark:text-[#fbbf24]';
   const selectedPrice = selectedAmount === null ? 0 : getPackagePrice(selectedAmount);
   const appliedCoupon = appliedCouponCode ? getCouponPromotion(appliedCouponCode) : undefined;
-  const couponFeedbackStatus = appliedCoupon ? 'applied' : couponFeedback;
-  const couponActionLabel =
-    couponFeedbackStatus === 'applied'
-      ? 'הוחל'
-      : couponFeedbackStatus === 'invalid'
-        ? 'לא תקף'
-        : couponFeedbackStatus === 'missing'
-          ? 'חסר'
-          : 'הפעל';
   const selectedDiscount =
     selectedAmount === null ? 0 : getCouponDiscount(selectedPrice, selectedAmount, appliedCoupon);
   const selectedFinalPrice =
     selectedAmount === null ? 0 : roundPrice(Math.max(0, selectedPrice - selectedDiscount));
   const selectedUnitPrice = selectedAmount === null ? 0 : selectedFinalPrice / selectedAmount;
+  const selectedOriginalUnitPrice = selectedAmount === null ? 0 : selectedPrice / selectedAmount;
+  const hasSelectedDiscount = selectedDiscount > 0;
+  const couponButtonAriaLabel = couponChecking
+    ? 'בודק קופון'
+    : appliedCoupon
+      ? 'הקופון הוחל'
+      : couponFeedback === 'invalid'
+        ? 'קוד הקופון לא תקף'
+        : couponFeedback === 'missing'
+          ? 'חסר קוד קופון'
+          : 'הפעל קופון';
+  const appliedCouponNoticeText = appliedCoupon
+    ? appliedCoupon.fixedUnitPrice !== undefined
+      ? `הקופון ${appliedCoupon.code} פעיל. מחיר מבצע ${formatCurrency(appliedCoupon.fixedUnitPrice)} למשלוח.`
+      : `הקופון ${appliedCoupon.code} פעיל. ${appliedCoupon.label}.`
+    : null;
   const canContinuePurchase = selectedAmount !== null;
   const showPurchaseDock = activeTab === 'purchase' && purchaseStep === 'amount' && selectedAmount !== null;
   const customDraftUnitPrice = getPackageUnitPrice(clampCustomAmount(customAmount));
+
+  const clearCouponApplyTimer = () => {
+    if (couponApplyTimerRef.current !== null) {
+      window.clearTimeout(couponApplyTimerRef.current);
+      couponApplyTimerRef.current = null;
+    }
+  };
 
   const resetPurchaseSelection = () => {
     setPurchaseStep('amount');
@@ -367,6 +395,8 @@ export const DeliveryBalanceHub: React.FC = () => {
     setCouponCode('');
     setAppliedCouponCode(null);
     setCouponFeedback(null);
+    setCouponChecking(false);
+    clearCouponApplyTimer();
   };
 
   const openPurchaseDialog = () => {
@@ -475,30 +505,45 @@ export const DeliveryBalanceHub: React.FC = () => {
   };
 
   const handleCouponCodeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    clearCouponApplyTimer();
     setCouponCode(event.target.value.toUpperCase());
     setAppliedCouponCode(null);
     setCouponFeedback(null);
+    setCouponChecking(false);
   };
 
   const applyCouponCode = () => {
     const normalizedCode = normalizeCouponCode(couponCode);
 
-    if (!normalizedCode) {
-      setAppliedCouponCode(null);
-      setCouponFeedback('missing');
-      return;
-    }
-
-    const promotion = getCouponPromotion(normalizedCode);
-    if (!promotion) {
-      setAppliedCouponCode(null);
-      setCouponFeedback('invalid');
-      return;
-    }
-
     setCouponCode(normalizedCode);
-    setAppliedCouponCode(normalizedCode);
+    setAppliedCouponCode(null);
     setCouponFeedback(null);
+    setCouponChecking(true);
+    clearCouponApplyTimer();
+
+    couponApplyTimerRef.current = window.setTimeout(() => {
+      if (!normalizedCode) {
+        setAppliedCouponCode(null);
+        setCouponFeedback('missing');
+        setCouponChecking(false);
+        couponApplyTimerRef.current = null;
+        return;
+      }
+
+      const promotion = getCouponPromotion(normalizedCode);
+      if (!promotion) {
+        setAppliedCouponCode(null);
+        setCouponFeedback('invalid');
+        setCouponChecking(false);
+        couponApplyTimerRef.current = null;
+        return;
+      }
+
+      setAppliedCouponCode(normalizedCode);
+      setCouponFeedback(null);
+      setCouponChecking(false);
+      couponApplyTimerRef.current = null;
+    }, 450);
   };
 
   const completePurchase = () => {
@@ -556,7 +601,7 @@ export const DeliveryBalanceHub: React.FC = () => {
             <span className={`tabular-nums ${deliveryBalanceTextClass}`}>
               {formatNumber(currentBalance)}
             </span>
-            <BadgeDollarSign aria-hidden="true" className={`h-3.5 w-3.5 shrink-0 ${deliveryBalanceTextClass}`} />
+            <Package aria-hidden="true" className={`h-3.5 w-3.5 shrink-0 ${deliveryBalanceTextClass}`} />
           </div>
         </div>
       </header>
@@ -599,11 +644,25 @@ export const DeliveryBalanceHub: React.FC = () => {
           <div className="p-0">
             {purchaseStep === 'amount' ? (
               <div className="space-y-5">
+                {appliedCouponNoticeText ? (
+                  <div
+                    role="status"
+                    className="flex min-h-10 items-center gap-2 rounded-[4px] bg-[#1F1F1F] px-3 py-2 text-xs font-medium leading-5 text-[#EDEDED] ring-1 ring-white/5"
+                  >
+                    <Info aria-hidden="true" className="h-4 w-4 shrink-0 text-[#A1A1A1]" />
+                    <span>{appliedCouponNoticeText}</span>
+                  </div>
+                ) : null}
+
                 <div>
                   <div className="flex flex-col overflow-hidden border border-app-border bg-app-background">
                     {creditPackages.map((option) => {
                       const selected = !customMode && selectedAmount === option.amount;
                       const unitPrice = option.price / option.amount;
+                      const optionDiscount = getCouponDiscount(option.price, option.amount, appliedCoupon);
+                      const optionFinalPrice = roundPrice(Math.max(0, option.price - optionDiscount));
+                      const optionFinalUnitPrice = optionFinalPrice / option.amount;
+                      const hasOptionDiscount = optionDiscount > 0;
 
                       return (
                         <button
@@ -621,12 +680,28 @@ export const DeliveryBalanceHub: React.FC = () => {
                             <span className="block text-base font-bold text-app-text">
                               {formatNumber(option.amount)} משלוחים
                             </span>
-                            <span className="mt-1 block text-xs font-semibold text-app-text-muted">
-                              {formatCurrency(unitPrice)} למשלוח
-                            </span>
+                            {hasOptionDiscount ? (
+                              <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-semibold">
+                                <span className="text-app-text-muted line-through decoration-app-text-muted/70">
+                                  {formatCurrency(unitPrice)}
+                                </span>
+                                <span className="text-app-text-secondary">
+                                  {formatCurrency(optionFinalUnitPrice)} למשלוח
+                                </span>
+                              </span>
+                            ) : (
+                              <span className="mt-1 block text-xs font-semibold text-app-text-muted">
+                                {formatCurrency(unitPrice)} למשלוח
+                              </span>
+                            )}
                           </span>
-                          <span className="font-bold tabular-nums text-app-text">
-                            {formatCurrency(option.price)}
+                          <span className="flex flex-col items-end gap-1 font-bold tabular-nums text-app-text">
+                            {hasOptionDiscount ? (
+                              <span className="text-xs font-semibold text-app-text-muted line-through decoration-app-text-muted/70">
+                                {formatCurrency(option.price)}
+                              </span>
+                            ) : null}
+                            <span>{formatCurrency(optionFinalPrice)}</span>
                           </span>
                         </button>
                       );
@@ -681,10 +756,26 @@ export const DeliveryBalanceHub: React.FC = () => {
                     <button
                       type="button"
                       onClick={applyCouponCode}
+                      disabled={couponChecking}
+                      aria-label={couponButtonAriaLabel}
                       aria-live="polite"
-                      className="h-full shrink-0 border-r border-app-border bg-transparent px-3 text-xs font-semibold text-app-text-secondary transition-colors hover:text-app-text focus:outline-none focus-visible:ring-1 focus-visible:ring-app-border-strong"
+                      className={`h-full min-w-[3.5rem] shrink-0 border-r border-app-border bg-transparent px-3 text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-app-border-strong ${
+                        couponFeedback === 'invalid'
+                          ? 'text-[#ef4444]'
+                          : 'text-app-text-secondary hover:text-app-text'
+                      } ${couponChecking ? 'cursor-wait' : ''}`}
                     >
-                      {couponActionLabel}
+                      {couponChecking ? (
+                        <LoaderCircle aria-hidden="true" className="mx-auto h-3.5 w-3.5 animate-spin" />
+                      ) : appliedCoupon ? (
+                        <Check aria-hidden="true" className="mx-auto h-3.5 w-3.5 text-app-text" />
+                      ) : couponFeedback === 'invalid' ? (
+                        'לא תקף'
+                      ) : couponFeedback === 'missing' ? (
+                        'חסר'
+                      ) : (
+                        'הפעל'
+                      )}
                     </button>
                   </div>
                 </div>
@@ -696,21 +787,26 @@ export const DeliveryBalanceHub: React.FC = () => {
                   >
                     <div className="flex items-center justify-between gap-3 px-3 py-3 md:px-4">
                       <div className="min-w-0 flex-1 text-right">
+                        {hasSelectedDiscount ? (
+                          <span className="mb-0.5 block text-xs font-semibold tabular-nums text-app-text-muted line-through decoration-app-text-muted/70">
+                            {formatCurrency(selectedPrice)}
+                          </span>
+                        ) : null}
                         <span className="block text-base font-bold tabular-nums text-app-text">
                           {formatCurrency(selectedFinalPrice)}
                         </span>
                         <div className="mt-1 flex flex-row flex-wrap items-center justify-start gap-x-2 gap-y-0.5 text-xs text-app-text-secondary min-[380px]:gap-x-3">
                           <span className="whitespace-nowrap">{formatNumber(selectedAmount)} משלוחים</span>
                           <span className="hidden h-3 w-px bg-app-border min-[380px]:block" aria-hidden="true" />
-                          <span className="whitespace-nowrap">{formatCurrency(selectedUnitPrice)} למשלוח</span>
-                          {selectedDiscount > 0 ? (
+                          {hasSelectedDiscount ? (
                             <>
-                              <span className="hidden h-3 w-px bg-app-border min-[380px]:block" aria-hidden="true" />
-                              <span className="whitespace-nowrap text-[#16a34a] dark:text-[#86efac]">
-                                -{formatCurrency(selectedDiscount)}
+                              <span className="whitespace-nowrap text-app-text-muted line-through decoration-app-text-muted/70">
+                                {formatCurrency(selectedOriginalUnitPrice)}
                               </span>
+                              <span className="hidden h-3 w-px bg-app-border min-[380px]:block" aria-hidden="true" />
                             </>
                           ) : null}
+                          <span className="whitespace-nowrap">{formatCurrency(selectedUnitPrice)} למשלוח</span>
                         </div>
                       </div>
 

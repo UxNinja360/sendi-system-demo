@@ -2,7 +2,6 @@ import React from 'react';
 import { useNavigate } from 'react-router';
 import {
   ArrowUp,
-  BadgeDollarSign,
   Bike,
   CheckCircle2,
   ChevronDown,
@@ -12,6 +11,7 @@ import {
   PackageOpen,
   Power,
   Plus,
+  Route,
   Sparkles,
   Store,
   Timer,
@@ -178,7 +178,7 @@ const STATUS_META: Array<{
     id: 'delivering',
     label: 'במסירה',
     hint: 'שליח בדרך ללקוח',
-    icon: Package,
+    icon: Route,
     accentClassName: 'text-green-400',
     barClassName: 'bg-green-500',
   },
@@ -496,7 +496,7 @@ const DashboardDeliveryBalanceChip: React.FC<{
           value={formatNumber(balance)}
         />
       </span>
-      <BadgeDollarSign aria-hidden="true" className={`h-3.5 w-3.5 shrink-0 ${balanceTextClass}`} />
+      <Package aria-hidden="true" className={`h-3.5 w-3.5 shrink-0 ${balanceTextClass}`} />
     </button>
   );
 };
