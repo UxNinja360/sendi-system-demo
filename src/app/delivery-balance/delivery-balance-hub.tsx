@@ -24,7 +24,8 @@ type CreditPackage = {
 
 type CouponPromotion = {
   code: string;
-  discountPercent: number;
+  discountPercent?: number;
+  fixedUnitPrice?: number;
   label: string;
 };
 
@@ -53,6 +54,7 @@ const creditPackages: CreditPackage[] = [
 const couponPromotions: CouponPromotion[] = [
   { code: 'SENDI10', discountPercent: 10, label: '10% הנחה' },
   { code: 'PLUS20', discountPercent: 20, label: '20% הנחה' },
+  { code: 'STARTER', fixedUnitPrice: 0.33, label: '0.33 ₪ למשלוח' },
 ];
 const customMaxAmount = creditPackages[creditPackages.length - 1].amount;
 const purchaseInvoicesStoragePrefix = 'sendi:delivery-balance-invoices';
@@ -100,8 +102,15 @@ const normalizeCouponCode = (value: string) => value.trim().toUpperCase();
 const getCouponPromotion = (code: string) =>
   couponPromotions.find((promotion) => promotion.code === normalizeCouponCode(code));
 
-const getCouponDiscount = (price: number, promotion?: CouponPromotion) =>
-  promotion ? roundPrice(price * (promotion.discountPercent / 100)) : 0;
+const getCouponDiscount = (price: number, amount: number, promotion?: CouponPromotion) => {
+  if (!promotion) return 0;
+
+  if (promotion.fixedUnitPrice !== undefined) {
+    return roundPrice(Math.max(0, price - amount * promotion.fixedUnitPrice));
+  }
+
+  return promotion.discountPercent ? roundPrice(price * (promotion.discountPercent / 100)) : 0;
+};
 
 const getPackagePrice = (amount: number) => {
   const packagePrice = creditPackages.find((item) => item.amount === amount)?.price;
@@ -335,7 +344,8 @@ export const DeliveryBalanceHub: React.FC = () => {
         : couponFeedbackStatus === 'missing'
           ? 'חסר'
           : 'הפעל';
-  const selectedDiscount = selectedAmount === null ? 0 : getCouponDiscount(selectedPrice, appliedCoupon);
+  const selectedDiscount =
+    selectedAmount === null ? 0 : getCouponDiscount(selectedPrice, selectedAmount, appliedCoupon);
   const selectedFinalPrice =
     selectedAmount === null ? 0 : roundPrice(Math.max(0, selectedPrice - selectedDiscount));
   const selectedUnitPrice = selectedAmount === null ? 0 : selectedFinalPrice / selectedAmount;
