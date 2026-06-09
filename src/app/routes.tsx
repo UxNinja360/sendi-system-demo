@@ -197,11 +197,11 @@ export const router = createBrowserRouter([
       },
       {
         path: 'settings/audio',
-        element: <SettingsPage category="audio" />,
+        element: <Navigate to="/settings/notifications" replace />,
       },
       {
         path: 'settings/haptics',
-        element: <SettingsPage category="haptics" />,
+        element: <Navigate to="/settings/notifications" replace />,
       },
       {
         path: 'settings/notifications',

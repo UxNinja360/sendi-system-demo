@@ -975,8 +975,6 @@ type SettingsCategory =
   | 'profile'
   | 'company'
   | 'display'
-  | 'audio'
-  | 'haptics'
   | 'notifications'
   | 'features'
   | 'advanced';
@@ -1244,7 +1242,7 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
               <main className="flex min-w-0 flex-col gap-3">
                 <div
                   className="overflow-hidden rounded-none border border-[#e5e5e5] bg-white dark:border-app-border dark:bg-app-surface"
-                  aria-label="מעברים להגדרות"
+                  aria-label={TEXT.system}
                 >
                   <SettingsLinkRow
                     icon={<SlidersHorizontal className="h-4 w-4" />}
@@ -1252,17 +1250,16 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
                     hint={TEXT.systemDescription}
                     onClick={() => navigate('/settings/system')}
                   />
+                </div>
+                <div
+                  className="overflow-hidden rounded-none border border-[#e5e5e5] bg-white dark:border-app-border dark:bg-app-surface"
+                  aria-label={TEXT.appearance}
+                >
                   <SettingsLinkRow
                     icon={<Palette className="h-4 w-4" />}
                     title={TEXT.appearance}
                     hint={TEXT.appearanceDescription}
                     onClick={() => navigate('/settings/display')}
-                  />
-                  <SettingsLinkRow
-                    icon={<Zap className="h-4 w-4" />}
-                    title={TEXT.features}
-                    hint={TEXT.featuresDescription}
-                    onClick={() => navigate('/settings/features')}
                   />
                 </div>
                 <div
@@ -1272,20 +1269,8 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
                   <SettingsLinkRow
                     icon={<BellRing className="h-4 w-4" />}
                     title="התראות"
-                    hint={TEXT.pushNotificationsDescription}
+                    hint={TEXT.alertsDescription}
                     onClick={() => navigate('/settings/notifications')}
-                  />
-                  <SettingsLinkRow
-                    icon={<Volume2 className="h-4 w-4" />}
-                    title="צלילים"
-                    hint={TEXT.soundsDescription}
-                    onClick={() => navigate('/settings/audio')}
-                  />
-                  <SettingsLinkRow
-                    icon={<Zap className="h-4 w-4" />}
-                    title={TEXT.haptics}
-                    hint={TEXT.hapticsDescription}
-                    onClick={() => navigate('/settings/haptics')}
                   />
                 </div>
                 <div
@@ -1297,6 +1282,12 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
                     title={TEXT.pagesHub}
                     hint={TEXT.pagesHubHint}
                     onClick={() => navigate('/settings/pages')}
+                  />
+                  <SettingsLinkRow
+                    icon={<Zap className="h-4 w-4" />}
+                    title={TEXT.features}
+                    hint={TEXT.featuresDescription}
+                    onClick={() => navigate('/settings/features')}
                   />
                 </div>
                 <div
@@ -1445,169 +1436,167 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
           </SectionCard>
           ) : null}
 
-          {category === 'audio' ? (
-          <SectionCard
-            icon={<Volume2 className="h-4 w-4 text-app-brand" />}
-            title={TEXT.sounds}
-            description={TEXT.soundsDescription}
-            hideHeader
-          >
-            <SettingRow
-              icon={<Volume2 className="h-4 w-4" />}
-              title={TEXT.newDeliverySound}
-              hint={TEXT.newDeliverySoundHint}
-              control={
-                <Toggle
-                  checked={alertPreferences.newDeliverySoundEnabled}
-                  onChange={() => {
-                    const nextValue = !alertPreferences.newDeliverySoundEnabled;
-                    updateAlertPreference('newDeliverySoundEnabled', nextValue);
-                    if (nextValue) handleTestSound();
-                  }}
-                />
-              }
-            />
-            <SettingRow
-              icon={<Volume2 className="h-4 w-4" />}
-              title={TEXT.soundChoice}
-              hint={TEXT.soundChoiceHint}
-              control={
-                <SoundPicker
-                  selectedSoundId={alertPreferences.newDeliverySoundId}
-                  onSelect={handleSelectDeliverySound}
-                />
-              }
-            />
-            <SettingRow
-              icon={<Volume2 className="h-4 w-4" />}
-              title={TEXT.testSound}
-              control={
-                <button
-                  type="button"
-                  data-haptic="light"
-                  onClick={handleTestSound}
-                  className="inline-flex h-9 items-center gap-2 rounded-none bg-[#f5f5f5] px-3 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
-                >
-                  <Volume2 className="h-4 w-4" />
-                  <span>{TEXT.playSound}</span>
-                </button>
-              }
-            />
-          </SectionCard>
-          ) : null}
-
-          {category === 'haptics' ? (
-          <SectionCard
-            icon={<Zap className="h-4 w-4 text-app-brand" />}
-            title={TEXT.haptics}
-            description={TEXT.hapticsDescription}
-            hideHeader
-          >
-            <SettingRow
-              icon={<Zap className="h-4 w-4" />}
-              title={TEXT.hapticFeedback}
-              hint={TEXT.hapticFeedbackHint}
-              control={
-                <Toggle
-                  checked={alertPreferences.hapticFeedbackEnabled}
-                  onChange={() => {
-                    const nextValue = !alertPreferences.hapticFeedbackEnabled;
-                    updateAlertPreference('hapticFeedbackEnabled', nextValue);
-                    if (nextValue) handleTestHaptic();
-                  }}
-                />
-              }
-            />
-            <SettingRow
-              icon={<Zap className="h-4 w-4" />}
-              title={TEXT.newDeliveryHaptic}
-              hint={TEXT.newDeliveryHapticHint}
-              control={
-                <Toggle
-                  checked={alertPreferences.newDeliveryHapticEnabled}
-                  onChange={() => {
-                    const nextValue = !alertPreferences.newDeliveryHapticEnabled;
-                    updateAlertPreference('newDeliveryHapticEnabled', nextValue);
-                    if (nextValue) handleTestHaptic();
-                  }}
-                />
-              }
-            />
-            <SettingRow
-              icon={<Zap className="h-4 w-4" />}
-              title={TEXT.testHaptic}
-              control={
-                <button
-                  type="button"
-                  data-haptic="success"
-                  onClick={handleTestHaptic}
-                  className="inline-flex h-9 items-center gap-2 rounded-none bg-[#f5f5f5] px-3 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
-                >
-                  <Zap className="h-4 w-4" />
-                  <span>{TEXT.playHaptic}</span>
-                </button>
-              }
-            />
-          </SectionCard>
-          ) : null}
-
           {category === 'notifications' ? (
-          <SectionCard
-            icon={<BellRing className="h-4 w-4 text-app-brand" />}
-            title={TEXT.pushNotifications}
-            description={TEXT.pushNotificationsDescription}
-            hideHeader
-          >
-            <SettingRow
-              icon={<BellRing className="h-4 w-4" />}
-              title={TEXT.newDeliveryBanner}
-              hint={TEXT.newDeliveryBannerHint}
-              control={
-                <Toggle
-                  checked={alertPreferences.newDeliveryBannerEnabled}
-                  onChange={() => {
-                    updateAlertPreference(
-                      'newDeliveryBannerEnabled',
-                      !alertPreferences.newDeliveryBannerEnabled,
-                    );
-                  }}
+            <>
+              <SectionCard
+                icon={<BellRing className="h-4 w-4 text-app-brand" />}
+                title={TEXT.pushNotifications}
+                description={TEXT.pushNotificationsDescription}
+                hideHeader
+              >
+                <SettingRow
+                  icon={<BellRing className="h-4 w-4" />}
+                  title={TEXT.newDeliveryBanner}
+                  hint={TEXT.newDeliveryBannerHint}
+                  control={
+                    <Toggle
+                      checked={alertPreferences.newDeliveryBannerEnabled}
+                      onChange={() => {
+                        updateAlertPreference(
+                          'newDeliveryBannerEnabled',
+                          !alertPreferences.newDeliveryBannerEnabled,
+                        );
+                      }}
+                    />
+                  }
                 />
-              }
-            />
-            <SettingRow
-              icon={<BellRing className="h-4 w-4" />}
-              title={TEXT.browserNotifications}
-              hint={TEXT.browserNotificationsHint}
-              control={
-                <Toggle
-                  checked={alertPreferences.browserNotificationsEnabled}
-                  onChange={handleBrowserNotificationsToggle}
+                <SettingRow
+                  icon={<BellRing className="h-4 w-4" />}
+                  title={TEXT.browserNotifications}
+                  hint={TEXT.browserNotificationsHint}
+                  control={
+                    <Toggle
+                      checked={alertPreferences.browserNotificationsEnabled}
+                      onChange={handleBrowserNotificationsToggle}
+                    />
+                  }
                 />
-              }
-            />
-            <SettingRow
-              icon={<BellRing className="h-4 w-4" />}
-              title={TEXT.notificationPermission}
-              hint={TEXT.notificationPermissionHint}
-              control={
-                notificationPermission === 'default' ? (
-                  <button
-                    type="button"
-                    data-haptic="selection"
-                    onClick={handleRequestNotificationPermission}
-                    className="inline-flex h-9 items-center gap-2 rounded-none bg-[#f5f5f5] px-3 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
-                  >
-                    <BellRing className="h-4 w-4" />
-                    <span>{TEXT.enableNotifications}</span>
-                  </button>
-                ) : (
-                  <span className="rounded-none bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#666d80] dark:bg-app-surface dark:text-app-text-secondary">
-                    {getNotificationPermissionLabel(notificationPermission)}
-                  </span>
-                )
-              }
-            />
-          </SectionCard>
+                <SettingRow
+                  icon={<BellRing className="h-4 w-4" />}
+                  title={TEXT.notificationPermission}
+                  hint={TEXT.notificationPermissionHint}
+                  control={
+                    notificationPermission === 'default' ? (
+                      <button
+                        type="button"
+                        data-haptic="selection"
+                        onClick={handleRequestNotificationPermission}
+                        className="inline-flex h-9 items-center gap-2 rounded-none bg-[#f5f5f5] px-3 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
+                      >
+                        <BellRing className="h-4 w-4" />
+                        <span>{TEXT.enableNotifications}</span>
+                      </button>
+                    ) : (
+                      <span className="rounded-none bg-[#f5f5f5] px-3 py-2 text-xs font-semibold text-[#666d80] dark:bg-app-surface dark:text-app-text-secondary">
+                        {getNotificationPermissionLabel(notificationPermission)}
+                      </span>
+                    )
+                  }
+                />
+              </SectionCard>
+
+              <SectionCard
+                icon={<Volume2 className="h-4 w-4 text-app-brand" />}
+                title={TEXT.sounds}
+                description={TEXT.soundsDescription}
+                hideHeader
+              >
+                <SettingRow
+                  icon={<Volume2 className="h-4 w-4" />}
+                  title={TEXT.newDeliverySound}
+                  hint={TEXT.newDeliverySoundHint}
+                  control={
+                    <Toggle
+                      checked={alertPreferences.newDeliverySoundEnabled}
+                      onChange={() => {
+                        const nextValue = !alertPreferences.newDeliverySoundEnabled;
+                        updateAlertPreference('newDeliverySoundEnabled', nextValue);
+                        if (nextValue) handleTestSound();
+                      }}
+                    />
+                  }
+                />
+                <SettingRow
+                  icon={<Volume2 className="h-4 w-4" />}
+                  title={TEXT.soundChoice}
+                  hint={TEXT.soundChoiceHint}
+                  control={
+                    <SoundPicker
+                      selectedSoundId={alertPreferences.newDeliverySoundId}
+                      onSelect={handleSelectDeliverySound}
+                    />
+                  }
+                />
+                <SettingRow
+                  icon={<Volume2 className="h-4 w-4" />}
+                  title={TEXT.testSound}
+                  control={
+                    <button
+                      type="button"
+                      data-haptic="light"
+                      onClick={handleTestSound}
+                      className="inline-flex h-9 items-center gap-2 rounded-none bg-[#f5f5f5] px-3 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
+                    >
+                      <Volume2 className="h-4 w-4" />
+                      <span>{TEXT.playSound}</span>
+                    </button>
+                  }
+                />
+              </SectionCard>
+
+              <SectionCard
+                icon={<Zap className="h-4 w-4 text-app-brand" />}
+                title={TEXT.haptics}
+                description={TEXT.hapticsDescription}
+                hideHeader
+              >
+                <SettingRow
+                  icon={<Zap className="h-4 w-4" />}
+                  title={TEXT.hapticFeedback}
+                  hint={TEXT.hapticFeedbackHint}
+                  control={
+                    <Toggle
+                      checked={alertPreferences.hapticFeedbackEnabled}
+                      onChange={() => {
+                        const nextValue = !alertPreferences.hapticFeedbackEnabled;
+                        updateAlertPreference('hapticFeedbackEnabled', nextValue);
+                        if (nextValue) handleTestHaptic();
+                      }}
+                    />
+                  }
+                />
+                <SettingRow
+                  icon={<Zap className="h-4 w-4" />}
+                  title={TEXT.newDeliveryHaptic}
+                  hint={TEXT.newDeliveryHapticHint}
+                  control={
+                    <Toggle
+                      checked={alertPreferences.newDeliveryHapticEnabled}
+                      onChange={() => {
+                        const nextValue = !alertPreferences.newDeliveryHapticEnabled;
+                        updateAlertPreference('newDeliveryHapticEnabled', nextValue);
+                        if (nextValue) handleTestHaptic();
+                      }}
+                    />
+                  }
+                />
+                <SettingRow
+                  icon={<Zap className="h-4 w-4" />}
+                  title={TEXT.testHaptic}
+                  control={
+                    <button
+                      type="button"
+                      data-haptic="success"
+                      onClick={handleTestHaptic}
+                      className="inline-flex h-9 items-center gap-2 rounded-none bg-[#f5f5f5] px-3 text-xs font-semibold text-[#0d0d12] transition-colors hover:bg-[#ececec] dark:bg-app-surface dark:text-app-text dark:hover:bg-app-surface-raised"
+                    >
+                      <Zap className="h-4 w-4" />
+                      <span>{TEXT.playHaptic}</span>
+                    </button>
+                  }
+                />
+              </SectionCard>
+            </>
           ) : null}
 
           {category === 'features' ? (

@@ -72,6 +72,20 @@ const formatCurrency = (value: number) =>
     style: 'currency',
   }).format(value);
 
+const formatUnitCurrencyWithPrecision = (value: number, fractionDigits: number) =>
+  new Intl.NumberFormat('he-IL', {
+    currency: 'ILS',
+    maximumFractionDigits: fractionDigits,
+    minimumFractionDigits: fractionDigits,
+    style: 'currency',
+  }).format(value);
+
+const formatOriginalUnitPriceForDiscount = (originalUnitPrice: number, finalUnitPrice: number) =>
+  formatCurrency(originalUnitPrice) === formatCurrency(finalUnitPrice) &&
+  Math.abs(originalUnitPrice - finalUnitPrice) > 0.0001
+    ? formatUnitCurrencyWithPrecision(originalUnitPrice, 3)
+    : formatCurrency(originalUnitPrice);
+
 const formatTableCurrency = (value: number) =>
   `${new Intl.NumberFormat('he-IL', {
     maximumFractionDigits: 2,
@@ -663,6 +677,10 @@ export const DeliveryBalanceHub: React.FC = () => {
                       const optionFinalPrice = roundPrice(Math.max(0, option.price - optionDiscount));
                       const optionFinalUnitPrice = optionFinalPrice / option.amount;
                       const hasOptionDiscount = optionDiscount > 0;
+                      const optionOriginalUnitPriceLabel = formatOriginalUnitPriceForDiscount(
+                        unitPrice,
+                        optionFinalUnitPrice,
+                      );
 
                       return (
                         <button
@@ -683,7 +701,7 @@ export const DeliveryBalanceHub: React.FC = () => {
                             {hasOptionDiscount ? (
                               <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-semibold">
                                 <span className="text-app-text-muted line-through decoration-app-text-muted/70">
-                                  {formatCurrency(unitPrice)}
+                                  {optionOriginalUnitPriceLabel}
                                 </span>
                                 <span className="text-app-text-secondary">
                                   {formatCurrency(optionFinalUnitPrice)} למשלוח
@@ -801,7 +819,7 @@ export const DeliveryBalanceHub: React.FC = () => {
                           {hasSelectedDiscount ? (
                             <>
                               <span className="whitespace-nowrap text-app-text-muted line-through decoration-app-text-muted/70">
-                                {formatCurrency(selectedOriginalUnitPrice)}
+                                {formatOriginalUnitPriceForDiscount(selectedOriginalUnitPrice, selectedUnitPrice)}
                               </span>
                               <span className="hidden h-3 w-px bg-app-border min-[380px]:block" aria-hidden="true" />
                             </>
