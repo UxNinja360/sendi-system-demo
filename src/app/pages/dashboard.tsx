@@ -480,24 +480,27 @@ const DashboardDeliveryBalanceChip: React.FC<{
     balance <= 100
       ? 'text-[#dc2626] dark:text-[#f87171]'
       : 'text-[#f59e0b] dark:text-[#fbbf24]';
+  const balanceLabel = `יתרת משלוחים ${formatNumber(balance)}`;
 
   return (
-    <button
-      type="button"
-      data-haptic="selection"
-      onClick={onClick}
-      className="inline-flex h-10 shrink-0 items-center justify-center gap-2 border border-app-border bg-app-background px-4 text-sm font-bold text-app-text transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
-      dir="rtl"
-      aria-label={`יתרת משלוחים ${formatNumber(balance)}`}
-    >
-      <span className={`tabular-nums ${balanceTextClass}`}>
-        <RefreshingMetricValue
-          refreshing={refreshing}
-          value={formatNumber(balance)}
-        />
-      </span>
-      <Package aria-hidden="true" className={`h-3.5 w-3.5 shrink-0 ${balanceTextClass}`} />
-    </button>
+    <AppTooltip label={balanceLabel} side="bottom" sideOffset={8} className="inline-flex shrink-0">
+      <button
+        type="button"
+        data-haptic="selection"
+        onClick={onClick}
+        className="inline-flex h-10 shrink-0 items-center justify-center gap-2 border border-app-border bg-app-background px-4 text-sm font-bold text-app-text transition-colors hover:bg-app-surface-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+        dir="rtl"
+        aria-label={balanceLabel}
+      >
+        <span className={`tabular-nums ${balanceTextClass}`}>
+          <RefreshingMetricValue
+            refreshing={refreshing}
+            value={formatNumber(balance)}
+          />
+        </span>
+        <Package aria-hidden="true" className={`h-3.5 w-3.5 shrink-0 ${balanceTextClass}`} />
+      </button>
+    </AppTooltip>
   );
 };
 
@@ -509,6 +512,7 @@ const SendiPlusCard: React.FC<{
   isSystemOpen: boolean;
   isRefreshing: boolean;
   onRadiusKmChange: (value: number) => void;
+  onDeliveryZonesClick: () => void;
   onTermsAcceptedChange: (value: boolean) => void;
 }> = ({
   deliveryZoneCount,
@@ -518,6 +522,7 @@ const SendiPlusCard: React.FC<{
   isSystemOpen,
   isRefreshing,
   onRadiusKmChange,
+  onDeliveryZonesClick,
   onTermsAcceptedChange,
 }) => {
   const isSendiPlusEnabled = termsAccepted && isSystemOpen;
@@ -568,6 +573,7 @@ const SendiPlusCard: React.FC<{
     : undefined;
   const selectedRadiusText = `${formatRadiusKm(radiusKm)} ק״מ`;
   const termsSummaryText = SENDI_PLUS_TERMS_TEXT;
+  const activeRestaurantsSummaryText = `מסעדות פעילות: ${formatNumber(activeRestaurantCount)}`;
   const radiusHelperText = !isSystemOpen
     ? 'כבוי'
     : !isSendiPlusEnabled
@@ -902,6 +908,22 @@ const SendiPlusCard: React.FC<{
             </div>
           </div>
 
+        </div>
+      </div>
+
+      <div className="border-t border-app-border px-3 py-2.5 sm:px-4 sm:py-3 dark:border-[#252525]" dir="rtl">
+        <div className="flex min-w-0 items-center justify-between gap-4">
+          <button
+            type="button"
+            aria-label="פתח אזורי משלוח"
+            onClick={onDeliveryZonesClick}
+            className="shrink-0 text-xs font-bold text-app-brand-text transition-colors hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+          >
+            אזורי משלוח
+          </button>
+          <span className={`min-w-0 truncate text-xs font-normal ${termsTextClassName}`}>
+            {activeRestaurantsSummaryText}
+          </span>
         </div>
       </div>
 
@@ -1281,7 +1303,7 @@ const WorkspaceStartCarousel: React.FC<{
   return (
     <section
       aria-label="התחלה מהירה"
-      className="rounded-none border border-app-border bg-app-surface text-right dark:border-[#252525] dark:bg-[#0A0A0A]"
+      className="dashboard-card-hover rounded-none border border-app-border bg-app-surface text-right transition-colors hover:bg-app-surface-raised dark:border-[#252525] dark:bg-[#0A0A0A] dark:hover:bg-[#111111]"
       dir="rtl"
     >
       <div className="flex items-center justify-between gap-3 border-b border-app-border px-3 py-2.5 dark:border-[#252525]">
@@ -1652,6 +1674,10 @@ export const Dashboard: React.FC = () => {
       setSendiPlusRadiusKm(DEFAULT_SENDI_PLUS_RADIUS_KM);
     }
   }, []);
+
+  const handleDeliveryZonesClick = React.useCallback(() => {
+    navigate('/zones');
+  }, [navigate]);
 
   const handleActivateSendiPlusFromSpotlight = React.useCallback(() => {
     const nextRadiusKm =
@@ -2033,11 +2059,10 @@ export const Dashboard: React.FC = () => {
               {STATUS_META.filter(
                 (status) => ACTIVE_DELIVERY_STATUSES.includes(status.id),
               ).map((status) => {
-                const Icon = status.icon;
                 const count = statusCounts.get(status.id) ?? 0;
                 const label = status.label;
                 const value = formatNumber(count);
-                const iconClassName = status.accentClassName;
+                const statusDotClassName = status.barClassName;
 
                 return (
                   <button
@@ -2051,7 +2076,10 @@ export const Dashboard: React.FC = () => {
                       <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
                         {label}
                       </span>
-                      <Icon className={`h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4 ${iconClassName}`} />
+                      <span
+                        aria-hidden="true"
+                        className={`h-2.5 w-2.5 shrink-0 rounded-full sm:h-3 sm:w-3 ${statusDotClassName}`}
+                      />
                     </div>
                     <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
                       <RefreshingMetricValue
@@ -2163,6 +2191,7 @@ export const Dashboard: React.FC = () => {
             isSystemOpen={true}
             isRefreshing={isDashboardRefreshing}
             onRadiusKmChange={handleSendiPlusRadiusChange}
+            onDeliveryZonesClick={handleDeliveryZonesClick}
             onTermsAcceptedChange={handleSendiPlusTermsAcceptedChange}
           />
 

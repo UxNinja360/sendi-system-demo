@@ -1093,9 +1093,10 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   border: 1px solid var(--app-nav-border);
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
   color: var(--app-text);
+  left: 12px;
   min-width: 184px;
   position: absolute;
-  right: 12px;
+  right: auto;
   top: 54px;
   width: min(220px, calc(100% - 24px));
   z-index: 960;

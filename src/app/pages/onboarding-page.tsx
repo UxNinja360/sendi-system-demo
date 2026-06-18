@@ -776,6 +776,13 @@ export const OnboardingPage: React.FC = () => {
   const activityAreaZoneLayersRef = useRef<Map<string, L.Polygon>>(new Map());
   const navigate = useNavigate();
 
+  const validWorkspaceAreaSet = useMemo(
+    () => new Set([
+      ALL_COUNTRY_AREA,
+      ...ONBOARDING_SERVICE_ZONES.map((zone) => zone.name),
+    ]),
+    [],
+  );
   const selectedWorkspaceAreaSet = useMemo(() => new Set(selectedWorkspaceAreas), [selectedWorkspaceAreas]);
   const selectedServiceZones = useMemo(
     () => ONBOARDING_SERVICE_ZONES.filter((zone) => selectedWorkspaceAreaSet.has(zone.name)),
@@ -806,6 +813,13 @@ export const OnboardingPage: React.FC = () => {
     setUserName(currentName);
     setStep(currentName ? 'companyChoice' : 'userName');
   }, [navigate]);
+
+  useEffect(() => {
+    setSelectedWorkspaceAreas((currentAreas) => {
+      const validAreas = currentAreas.filter((area) => validWorkspaceAreaSet.has(area));
+      return validAreas.length === currentAreas.length ? currentAreas : validAreas;
+    });
+  }, [validWorkspaceAreaSet]);
 
   const toggleWorkspaceArea = useCallback((rawArea: string) => {
     const area = normalizeWorkspaceArea(rawArea);
@@ -1268,9 +1282,12 @@ export const OnboardingPage: React.FC = () => {
                 color: #ededed;
               }
             `}</style>
-            <h1 className="mb-5 shrink-0 text-3xl font-extrabold text-[#0d0d12] dark:text-app-text sm:mb-7 sm:text-[32px]">
+            <h1 className="mb-2 shrink-0 text-3xl font-extrabold text-[#0d0d12] dark:text-app-text sm:text-[32px]">
               בחירת אזור פעילות
             </h1>
+            <p className="mx-auto mb-5 max-w-[520px] shrink-0 text-sm font-medium leading-6 text-[#666] dark:text-[#999] sm:mb-7">
+              הבחירה היא בקירוב ותעזור לנו להגדיר את אזור הפעילות הראשוני.
+            </p>
 
             <form onSubmit={handleActivityAreaSubmit} className="flex min-h-0 flex-1 flex-col gap-3">
               <div className="grid min-h-0 flex-1 gap-3 text-right lg:grid-cols-[minmax(300px,0.78fr)_minmax(0,1.22fr)]">

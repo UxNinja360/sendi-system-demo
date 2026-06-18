@@ -14,6 +14,8 @@ const DEFAULT_DELIVERY_STATUS_FILTERS: DeliveryStatus[] = [
 ];
 
 const createDefaultStatusFilters = () => new Set(DEFAULT_DELIVERY_STATUS_FILTERS);
+const getDefaultSortDirection = (column: string): 'asc' | 'desc' =>
+  column === 'creation_time' ? 'asc' : 'desc';
 
 type DeliveryDateRange = 'all' | 'today' | 'week' | 'month' | 'custom';
 const DEFAULT_CUSTOM_START_TIME = '00:00';
@@ -148,7 +150,9 @@ export function useDeliveriesFilters(state: DeliveryState) {
 
   // Table sorting
   const [sortColumn, setSortColumn] = useState<string>('creation_time');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(
+    () => getDefaultSortDirection('creation_time'),
+  );
 
   // Pagination
   const [itemsPerPage, setItemsPerPage] = useState<number>(50);
@@ -198,7 +202,7 @@ export function useDeliveriesFilters(state: DeliveryState) {
       setSortDirection(d => d === 'asc' ? 'desc' : 'asc');
     } else {
       setSortColumn(column);
-      setSortDirection('desc');
+      setSortDirection(getDefaultSortDirection(column));
     }
   }, [sortColumn]);
 
