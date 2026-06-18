@@ -10,6 +10,7 @@
   WorkShift,
 } from '../types/delivery.types';
 import { getDeliveryCustomerCharge } from '../utils/delivery-finance';
+import { hasConnectedCouriers } from '../utils/courier-connectivity';
 import { canCourierAcceptDelivery } from '../utils/courier-assignment';
 import {
   DELIVERY_CREDITS_PER_ASSIGNMENT,
@@ -1898,6 +1899,8 @@ const reduceDeliveryState = (state: DeliveryState, action: DeliveryAction): Deli
     }
 
     case 'TOGGLE_DELIVERY_INTAKE':
+      if (!state.isReceivingDeliveries && !hasConnectedCouriers(state.couriers)) return state;
+
       return {
         ...state,
         isReceivingDeliveries: !state.isReceivingDeliveries,

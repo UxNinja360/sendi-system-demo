@@ -72,7 +72,7 @@ const TEXT = {
   open: '\u05e4\u05ea\u05d7',
   operations: '\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea \u05ea\u05e4\u05e2\u05d5\u05dc',
   operationsDescription: '\u05e8\u05d9\u05db\u05d5\u05d6 \u05db\u05dc \u05d4\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea \u05e9\u05e7\u05d5\u05d1\u05e2\u05d5\u05ea \u05d0\u05d9\u05da \u05d4\u05e2\u05e1\u05e7 \u05e2\u05d5\u05d1\u05d3 \u05d1\u05e9\u05d8\u05d7: \u05e9\u05e2\u05d5\u05ea, \u05d0\u05d6\u05d5\u05e8\u05d9\u05dd \u05d5\u05ea\u05de\u05d7\u05d5\u05e8.',
-  system: '\u05d1\u05e7\u05e8\u05ea \u05ea\u05e4\u05e2\u05d5\u05dc',
+  system: 'בקרה',
   systemDescription: '\u05e9\u05dc\u05d9\u05d8\u05d4 \u05d1\u05de\u05d4 \u05e9\u05e0\u05db\u05e0\u05e1 \u05dc\u05e2\u05d1\u05d5\u05d3\u05d4: \u05e7\u05d1\u05dc\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd, \u05e9\u05d9\u05d1\u05d5\u05e5 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9 \u05d5\u05de\u05d4\u05d9\u05e8\u05d5\u05ea \u05d4\u05d3\u05de\u05d5.',
   deliveryIntake: '\u05e7\u05d1\u05dc\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd',
   deliveryIntakeHint: '\u05e9\u05dc\u05d9\u05d8\u05d4 \u05d1\u05db\u05e0\u05d9\u05e1\u05ea \u05de\u05e9\u05dc\u05d5\u05d7\u05d9\u05dd \u05d7\u05d3\u05e9\u05d9\u05dd \u05dc\u05dc\u05d9\u05d9\u05d1.',
@@ -106,6 +106,8 @@ const TEXT = {
   featuresDescription: "כיבוי והדלקה של פיצ'רים באפליקציה.",
   mobileFloatingDock: 'פאב תחתון',
   mobileFloatingDockHint: 'כפתורי מפה ותפריט במובייל.',
+  roundMapFab: 'פאב מפה עגול',
+  roundMapFabHint: 'כפתור מפה עגול בפינה השמאלית לפתיחת המפה בווב ובמובייל.',
   darkMode: '\u05de\u05e6\u05d1 \u05db\u05d4\u05d4',
   darkModeHint: '\u05de\u05e2\u05d1\u05e8 \u05d9\u05d3\u05e0\u05d9 \u05d1\u05d9\u05df \u05d1\u05d4\u05d9\u05e8 \u05dc\u05db\u05d4\u05d4.',
   themeMode: '\u05e2\u05e8\u05db\u05ea \u05e0\u05d5\u05e9\u05d0',
@@ -1620,6 +1622,23 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
                     )
                   }
                   ariaLabel={TEXT.mobileFloatingDock}
+                />
+              }
+            />
+            <SettingRow
+              icon={<MapIcon className="h-4 w-4" />}
+              title={TEXT.roundMapFab}
+              hint={TEXT.roundMapFabHint}
+              control={
+                <Toggle
+                  checked={appFeaturePreferences.roundMapFabEnabled}
+                  onChange={() =>
+                    setAppFeaturePreference(
+                      'roundMapFabEnabled',
+                      !appFeaturePreferences.roundMapFabEnabled,
+                    )
+                  }
+                  ariaLabel={TEXT.roundMapFab}
                 />
               }
             />

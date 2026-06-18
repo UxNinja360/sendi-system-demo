@@ -137,8 +137,17 @@ const allCouriersOfflineState = {
 const openedWithoutCouriers = deliveryReducer(allCouriersOfflineState, { type: 'TOGGLE_SYSTEM' });
 assert(openedWithoutCouriers.isSystemOpen, 'System did not open without active couriers');
 const intakeWithoutCouriers = deliveryReducer(openedWithoutCouriers, { type: 'TOGGLE_DELIVERY_INTAKE' });
-assert(intakeWithoutCouriers.isReceivingDeliveries, 'Delivery intake did not turn on without active couriers');
-const intakeAfterWaitingDelivery = deliveryReducer(intakeWithoutCouriers, {
+assert(!intakeWithoutCouriers.isReceivingDeliveries, 'Delivery intake turned on without connected couriers');
+const connectedCourierIntakeState = {
+  ...openedWithoutCouriers,
+  couriers: openedWithoutCouriers.couriers.map((item, index) => index === 0
+    ? { ...item, status: 'available', isOnShift: true, activeDeliveryIds: [] }
+    : item
+  ),
+};
+const intakeWithConnectedCourier = deliveryReducer(connectedCourierIntakeState, { type: 'TOGGLE_DELIVERY_INTAKE' });
+assert(intakeWithConnectedCourier.isReceivingDeliveries, 'Delivery intake did not turn on with a connected courier');
+const intakeAfterWaitingDelivery = deliveryReducer(intakeWithConnectedCourier, {
   type: 'ADD_DELIVERY',
   payload: makeDelivery('waiting-no-couriers', restaurant),
 });
@@ -291,7 +300,8 @@ assert(perDeliveryUnassigned.is_requires_approval === false, 'Unassigned deliver
 
 export const results = [
   'system can open without active couriers',
-  'delivery intake can stay open without active couriers',
+  'delivery intake is blocked without connected couriers',
+  'delivery intake can open with a connected courier',
   'waiting deliveries do not close delivery intake',
   'no credits hard-block regular delivery intake',
   'Sendi Plus assignment is blocked without credits',

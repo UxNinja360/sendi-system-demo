@@ -1065,7 +1065,8 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   outline: none;
 }
 
-.deliveries-map-split-settings-button {
+.deliveries-map-split-settings-button,
+.deliveries-map-split-close-button {
   align-items: center;
   background: color-mix(in srgb, var(--app-surface) 94%, transparent);
   border: 1px solid var(--app-nav-border);
@@ -1074,16 +1075,26 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   display: inline-flex;
   height: 34px;
   justify-content: center;
-  left: 12px;
   position: absolute;
-  right: auto;
   top: 12px;
   width: 34px;
   z-index: 960;
 }
 
+.deliveries-map-split-settings-button {
+  left: auto;
+  right: 12px;
+}
+
+.deliveries-map-split-close-button {
+  left: 12px;
+  right: auto;
+}
+
 .deliveries-map-split-settings-button:hover,
-.deliveries-map-split-settings-button:focus-visible {
+.deliveries-map-split-settings-button:focus-visible,
+.deliveries-map-split-close-button:hover,
+.deliveries-map-split-close-button:focus-visible {
   background: var(--app-surface-raised);
   outline: none;
 }
@@ -1093,10 +1104,10 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
   border: 1px solid var(--app-nav-border);
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
   color: var(--app-text);
-  left: 12px;
+  left: auto;
   min-width: 184px;
   position: absolute;
-  right: auto;
+  right: 12px;
   top: 54px;
   width: min(220px, calc(100% - 24px));
   z-index: 960;

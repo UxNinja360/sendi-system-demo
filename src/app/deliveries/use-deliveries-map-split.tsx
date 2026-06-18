@@ -8,7 +8,7 @@ import {
   type SetStateAction,
 } from 'react';
 import { createPortal } from 'react-dom';
-import { Layers } from 'lucide-react';
+import { Layers, X } from 'lucide-react';
 
 import { addAppTopBarActionListener } from '../components/layout/app-top-bar-actions';
 import { Toggle } from '../components/common/toggle';
@@ -556,6 +556,17 @@ export const useDeliveriesMapSplit = ({
               title="הגדרות מפה"
             >
               <Layers className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              className="deliveries-map-split-close-button"
+              data-haptic="selection"
+              data-no-sheet-drag="true"
+              onClick={() => setMapOpen(false)}
+              aria-label="סגור מפה"
+              title="סגור מפה"
+            >
+              <X className="h-4 w-4" />
             </button>
             {isMapSettingsOpen ? (
               <div className="deliveries-map-split-settings-panel" data-no-sheet-drag="true">

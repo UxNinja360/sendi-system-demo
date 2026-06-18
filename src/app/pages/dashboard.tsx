@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import {
   ArrowUp,
   Bike,
+  Check,
   CheckCircle2,
   ChevronDown,
   Clock3,
@@ -28,6 +29,7 @@ import { DeliveriesMapFab } from '../deliveries/deliveries-map-fab';
 import { useDeliveriesMapSplit } from '../deliveries/use-deliveries-map-split';
 import type { Courier, Delivery, DeliveryStatus } from '../types/delivery.types';
 import { canCourierAcceptDelivery } from '../utils/courier-assignment';
+import { isCourierConnected } from '../utils/courier-connectivity';
 import { playHaptic } from '../utils/haptics';
 import {
   DEFAULT_SENDI_PLUS_RADIUS_KM,
@@ -357,19 +359,23 @@ const RestaurantActivityValue: React.FC<{
 }> = ({ active, refreshing, total }) => {
   const animatedActive = useAnimatedMetricValue(active, refreshing);
   const animatedTotal = useAnimatedMetricValue(total, refreshing);
+  const tooltipLabel = 'מחוברות · סה״כ';
+  const accessibilityLabel = `${formatNumber(active)} מחוברות, ${formatNumber(total)} סה״כ`;
 
   return (
     <RefreshingMetricValue
       refreshing={refreshing}
       value={
-        <span
-          className="inline-flex items-baseline justify-end leading-none"
-          aria-label={`${formatNumber(active)} מסעדות פעילות, ${formatNumber(total)} מסעדות במערכת`}
-        >
-          <span>{formatNumber(animatedActive)}</span>
-          <span className="px-1 text-sm font-semibold text-app-text-muted sm:text-base">/</span>
-          <span className="text-sm font-semibold text-app-text-muted sm:text-base">{formatNumber(animatedTotal)}</span>
-        </span>
+        <AppTooltip label={tooltipLabel} side="bottom" sideOffset={8} className="inline-flex">
+          <span
+            className="inline-flex items-baseline justify-end leading-none"
+            aria-label={accessibilityLabel}
+          >
+            <span>{formatNumber(animatedActive)}</span>
+            <span className="px-1 text-sm font-semibold text-app-text-muted sm:text-base">/</span>
+            <span className="text-sm font-semibold text-app-text-muted sm:text-base">{formatNumber(animatedTotal)}</span>
+          </span>
+        </AppTooltip>
       }
     />
   );
@@ -1344,6 +1350,8 @@ const WorkspaceStartCarousel: React.FC<{
   }, [activeSuggestedIndex]);
 
   const activeStep = steps[activeIndex] ?? steps[0];
+  const shouldShowPendingCourierInvites =
+    activeStep.id === 'couriers' && hasPendingCourierInvites;
 
   return (
     <section
@@ -1372,7 +1380,7 @@ const WorkspaceStartCarousel: React.FC<{
                       : 'bg-app-surface-raised text-app-text-secondary hover:text-app-text dark:bg-[#111111]'
                 }`}
               >
-                {index + 1}
+                {step.done ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : index + 1}
               </button>
             );
           })}
@@ -1400,7 +1408,7 @@ const WorkspaceStartCarousel: React.FC<{
         </button>
       </div>
 
-      {hasPendingCourierInvites ? (
+      {shouldShowPendingCourierInvites ? (
         <div className="border-t border-app-border px-3 py-2.5 sm:px-4 sm:py-3 dark:border-[#252525]" dir="rtl">
           <div className="flex min-w-0 items-center justify-between gap-4">
             <span className="shrink-0 text-xs font-normal text-app-text-secondary">
@@ -1839,7 +1847,7 @@ export const Dashboard: React.FC = () => {
     [dashboardRefreshVersion, isSendiPlusOperational, sendiPlusDeliveryZones, state.restaurants],
   );
   const connectedCouriersCount = React.useMemo(
-    () => state.couriers.filter((courier) => courier.status !== 'offline').length,
+    () => state.couriers.filter(isCourierConnected).length,
     [dashboardRefreshVersion, state.couriers],
   );
   const baseActiveRestaurantsCount = React.useMemo(

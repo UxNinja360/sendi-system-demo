@@ -6,6 +6,7 @@ import type {
   WorkShift,
 } from '../types/delivery.types';
 import { getDeliveryOfferExpiresAt } from '../utils/delivery-offers';
+import { hasConnectedCouriers } from '../utils/courier-connectivity';
 
 const STALE_SHIFT_GRACE_MS = 10 * 60 * 1000;
 const EARLY_SHIFT_START_GRACE_MS = 4 * 60 * 60 * 1000;
@@ -284,11 +285,12 @@ export const sanitizeLoadedDeliveryState = (
     };
   });
   const hasRegisteredCouriers = couriers.some((courier) => courier.registrationStatus !== 'invited');
+  const canReceiveDeliveries = hasConnectedCouriers(couriers);
 
   return {
     ...state,
     isSystemOpen,
-    isReceivingDeliveries: Boolean(state.isReceivingDeliveries),
+    isReceivingDeliveries: canReceiveDeliveries && Boolean(state.isReceivingDeliveries),
     autoAssignEnabled: hasRegisteredCouriers && Boolean(state.autoAssignEnabled),
     deliveries,
     shifts,

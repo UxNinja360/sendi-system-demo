@@ -11,6 +11,7 @@ import { DeliveriesOverlays } from '../deliveries/deliveries-overlays';
 import { DeliveriesCommandSearch } from '../deliveries/deliveries-command-search';
 import { DeliveriesMapFab } from '../deliveries/deliveries-map-fab';
 import { useDeliveriesMapSplit } from '../deliveries/use-deliveries-map-split';
+import { useAppFeaturePreferences } from '../preferences/app-feature-preferences';
 import { ALL_COLUMNS, COLUMN_MAP } from '../deliveries/column-defs';
 import type { ColumnDef } from '../deliveries/column-defs';
 import { toast } from 'sonner';
@@ -242,6 +243,7 @@ const getDeliveryColumnWidth = (columnId: string) => {
 
 export const DeliveriesPage: React.FC = () => {
   const { state, updateDelivery, dispatch, unassignCourier, assignCourier } = useDelivery();
+  const { preferences: appFeaturePreferences } = useAppFeaturePreferences();
   const location = useLocation();
   const statusFiltersFromSearch = useMemo(
     () => parseDeliveryStatusFiltersFromSearch(location.search),
@@ -995,7 +997,7 @@ export const DeliveriesPage: React.FC = () => {
               selectedDeliveryIds={selectedIds}
               onToggleDeliverySelection={handleToggleSelect}
               onSearchRowHiddenChange={handleSearchRowHiddenChange}
-              mapFabVisible={!mapOpen}
+              mapFabVisible={!mapOpen && appFeaturePreferences.roundMapFabEnabled}
               selectionBar={
                 <SelectionActionBar
                   selectedCount={selectedIds.size}

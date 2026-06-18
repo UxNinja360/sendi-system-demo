@@ -15,6 +15,7 @@ export const Toaster = () => {
         top: 'calc(var(--app-safe-top) + 6px)',
         bottom: 'calc(var(--app-safe-bottom) + 18px)',
         left: 'calc(var(--app-safe-left) + 18px)',
+        right: 'calc(var(--app-safe-right) + 18px)',
       }}
       mobileOffset={{
         top: 'calc(var(--app-safe-top) + 6px)',

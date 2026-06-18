@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 export type AppFeaturePreferences = {
   mobileFloatingDockEnabled: boolean;
+  roundMapFabEnabled: boolean;
 };
 
 export type AppFeaturePreferenceKey = keyof AppFeaturePreferences;
@@ -11,6 +12,7 @@ const APP_FEATURE_PREFERENCES_EVENT = 'sendi:app-feature-preferences-change';
 
 const defaultAppFeaturePreferences: AppFeaturePreferences = {
   mobileFloatingDockEnabled: false,
+  roundMapFabEnabled: false,
 };
 
 const normalizeAppFeaturePreferences = (value: unknown): AppFeaturePreferences => {
@@ -23,6 +25,10 @@ const normalizeAppFeaturePreferences = (value: unknown): AppFeaturePreferences =
       typeof preferences.mobileFloatingDockEnabled === 'boolean'
         ? preferences.mobileFloatingDockEnabled
         : defaultAppFeaturePreferences.mobileFloatingDockEnabled,
+    roundMapFabEnabled:
+      typeof preferences.roundMapFabEnabled === 'boolean'
+        ? preferences.roundMapFabEnabled
+        : defaultAppFeaturePreferences.roundMapFabEnabled,
   };
 };
 

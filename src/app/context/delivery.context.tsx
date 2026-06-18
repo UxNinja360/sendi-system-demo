@@ -21,6 +21,7 @@ import {
 } from '../utils/delivery-credits';
 import { calculateSendiPlusDeliveryCharge } from '../utils/delivery-finance';
 import { isDeliveryOfferExpired } from '../utils/delivery-offers';
+import { hasConnectedCouriers } from '../utils/courier-connectivity';
 import { showActionInfoToast, showActionToast } from '../notifications/toast-helpers';
 import { getAlertPreferences } from '../notifications/alert-preferences';
 import {
@@ -1022,7 +1023,8 @@ const loadInitialState = (baseState: DeliveryState): DeliveryState => {
       sendiPlusTermsAccepted,
     );
     const isSystemOpen = true;
-    const canReceiveDeliveries = hasAvailableDeliveryIntakeRestaurant(syncedRestaurants);
+    const canReceiveDeliveries =
+      hasAvailableDeliveryIntakeRestaurant(syncedRestaurants) && hasConnectedCouriers(couriers);
     const isReceivingDeliveries =
       canReceiveDeliveries &&
       (
@@ -1190,11 +1192,25 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (
       action.type === 'TOGGLE_DELIVERY_INTAKE' &&
       !previousState.isReceivingDeliveries &&
+      !hasConnectedCouriers(previousState.couriers)
+    ) {
+      showActionInfoToast('אין שליחים מחוברים', {
+        description: 'ניתן לפתוח קבלת משלוחים רק כשיש לפחות שליח אחד מחובר.',
+        duration: ACTION_TOAST_DURATION_MS,
+        position: 'bottom-right',
+      });
+      return;
+    }
+
+    if (
+      action.type === 'TOGGLE_DELIVERY_INTAKE' &&
+      !previousState.isReceivingDeliveries &&
       !hasAvailableDeliveryIntakeRestaurant(previousState.restaurants)
     ) {
       showActionInfoToast('אין מסעדות זמינות במערכת', {
         description: 'לא ניתן להדליק קבלת משלוחים כי אין מסעדות זמינות. הוסף מסעדות או הדלק את סנדי פלוס.',
         duration: ACTION_TOAST_DURATION_MS,
+        position: 'bottom-right',
       });
       return;
     }

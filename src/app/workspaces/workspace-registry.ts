@@ -16,6 +16,7 @@ import {
   createStorageEpoch,
 } from '../context/delivery-storage';
 import type { DeliveryState } from '../types/delivery.types';
+import { hasConnectedCouriers } from '../utils/courier-connectivity';
 import {
   writeStoredSendiPlusRadius,
   writeStoredSendiPlusTermsAccepted,
@@ -266,7 +267,7 @@ export const activateWorkspaceAccount = (account: WorkspaceAccount) => {
     isSystemOpen: true,
     isReceivingDeliveries:
       typeof rawTargetState.isReceivingDeliveries === 'boolean'
-        ? rawTargetState.isReceivingDeliveries
+        ? hasConnectedCouriers(rawTargetState.couriers ?? []) && rawTargetState.isReceivingDeliveries
         : false,
     autoAssignEnabled:
       ((rawTargetState.couriers ?? []).length > 0) &&
