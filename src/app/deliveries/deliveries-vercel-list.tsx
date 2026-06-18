@@ -674,7 +674,7 @@ const formatOfferRemainingSeconds = (seconds: number) => {
   return `${minutes}:${String(rest).padStart(2, '0')}`;
 };
 
-const AssignedStatusDot: React.FC<{ className?: string }> = ({ className }) => (
+const DeliveryStatusDot: React.FC<{ className?: string }> = ({ className }) => (
   <span className={joinClassNames('delivery-status-line__dot', className)} aria-hidden="true" />
 );
 
@@ -711,11 +711,11 @@ const DELIVERY_STATUS_LINE_META: Record<
   },
   assigned: {
     label: 'שובץ',
-    icon: AssignedStatusDot,
+    icon: DeliveryStatusDot,
   },
   delivering: {
     label: 'במסירה',
-    icon: Package,
+    icon: DeliveryStatusDot,
   },
   delivered: {
     label: 'נמסר',

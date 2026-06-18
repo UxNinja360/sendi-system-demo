@@ -12,10 +12,20 @@ const DEFAULT_DELIVERY_STATUS_FILTERS: DeliveryStatus[] = [
   'delivered',
   'cancelled',
 ];
+const DELIVERY_STATUS_SORT_PRIORITY: Record<DeliveryStatus, number> = {
+  pending: 0,
+  assigned: 1,
+  delivering: 2,
+  delivered: 3,
+  cancelled: 4,
+  expired: 5,
+};
 
 const createDefaultStatusFilters = () => new Set(DEFAULT_DELIVERY_STATUS_FILTERS);
 const getDefaultSortDirection = (column: string): 'asc' | 'desc' =>
   column === 'creation_time' ? 'asc' : 'desc';
+const getDeliveryStatusSortPriority = (status: DeliveryStatus) =>
+  DELIVERY_STATUS_SORT_PRIORITY[status] ?? 99;
 
 type DeliveryDateRange = 'all' | 'today' | 'week' | 'month' | 'custom';
 const DEFAULT_CUSTOM_START_TIME = '00:00';
@@ -395,14 +405,17 @@ export function useDeliveriesFilters(state: DeliveryState) {
     }
 
     return [...filtered].sort((a, b) => {
+      const statusComparison =
+        getDeliveryStatusSortPriority(a.status) - getDeliveryStatusSortPriority(b.status);
+      if (statusComparison !== 0) return statusComparison;
+
       let comparison = 0;
       const colDef = COLUMN_MAP.get(sortColumn);
 
       if (!colDef) {
         comparison = a.createdAt.getTime() - b.createdAt.getTime();
       } else if (sortColumn === 'status') {
-        const so: Record<string, number> = { pending: 0, assigned: 1, delivering: 2, delivered: 3, cancelled: 4 };
-        comparison = (so[a.status] ?? 99) - (so[b.status] ?? 99);
+        comparison = a.createdAt.getTime() - b.createdAt.getTime();
       } else if (sortColumn === 'courier') {
         const cA = a.courierId ? state.couriers.find(c => c.id === a.courierId)?.name || '' : '';
         const cB = b.courierId ? state.couriers.find(c => c.id === b.courierId)?.name || '' : '';

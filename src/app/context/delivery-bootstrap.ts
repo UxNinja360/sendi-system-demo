@@ -841,6 +841,7 @@ export const createInitialDeliveryState = (): DeliveryState => ({
   courierRoutePlans: {},
   activityLogs: [],
   deliveryBalance: 100,
+  starterDeliveryGrantClaimed: true,
   stats: {
     hour: { total: 0, delivered: 0, cancelled: 0, revenue: 0 },
     today: { total: 0, delivered: 0, cancelled: 0, revenue: 0 },

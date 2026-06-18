@@ -286,6 +286,15 @@ const createActivityLogEntry = (action: DeliveryAction, state: DeliveryState): A
         actionType: action.type,
         category: 'settings',
       };
+    case 'CLAIM_STARTER_DELIVERY_BALANCE':
+      return {
+        id: `log-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: now,
+        title: 'הטבת הרשמה נוספה',
+        description: `+${action.payload} משלוחים ראשונים חינם`,
+        actionType: action.type,
+        category: 'settings',
+      };
     case 'CREATE_SHIFT_TEMPLATE':
     case 'UPDATE_SHIFT_TEMPLATE':
     case 'DELETE_SHIFT_TEMPLATE':
@@ -553,6 +562,11 @@ const createActionToast = (action: DeliveryAction, state: DeliveryState): Action
       return {
         actionType: action.type,
         title: `נוספו ${action.payload.toLocaleString('he-IL')} משלוחים ליתרה`,
+      };
+    case 'CLAIM_STARTER_DELIVERY_BALANCE':
+      return {
+        actionType: action.type,
+        title: `נוספו ${action.payload.toLocaleString('he-IL')} משלוחים ראשונים חינם`,
       };
     case 'CREATE_SHIFT_TEMPLATE':
       return {
@@ -1163,6 +1177,13 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const previousState = stateRef.current;
 
     if (action.type === 'TOGGLE_SYSTEM' && previousState.isSystemOpen) {
+      return;
+    }
+
+    if (
+      action.type === 'CLAIM_STARTER_DELIVERY_BALANCE' &&
+      (previousState.starterDeliveryGrantClaimed || previousState.deliveryBalance >= action.payload)
+    ) {
       return;
     }
 

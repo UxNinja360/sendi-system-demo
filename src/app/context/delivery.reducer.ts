@@ -2546,6 +2546,16 @@ const reduceDeliveryState = (state: DeliveryState, action: DeliveryAction): Deli
       };
     }
 
+    case 'CLAIM_STARTER_DELIVERY_BALANCE': {
+      if (state.starterDeliveryGrantClaimed) return state;
+
+      return {
+        ...state,
+        deliveryBalance: state.deliveryBalance + action.payload,
+        starterDeliveryGrantClaimed: true,
+      };
+    }
+
     case 'REORDER_DELIVERY': {
       const { deliveryId, newPriority } = action.payload;
 

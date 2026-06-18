@@ -417,6 +417,7 @@ export interface DeliveryState {
   courierRoutePlans: Record<string, string[]>;
   activityLogs: ActivityLogEntry[];
   deliveryBalance: number; // יתרת משלוחים זמינוים
+  starterDeliveryGrantClaimed?: boolean; // האם נוצלה הטבת 100 המשלוחים הראשונים
   stats: {
     hour: {
       total: number;
@@ -534,6 +535,7 @@ export type DeliveryAction =
   | { type: 'SET_RESTAURANTS'; payload: Restaurant[] } // עדכון מלא של רשימת המסעדות
   | { type: 'COMPLETE_DELIVERY'; payload: string | { deliveryId: string; completedAt?: Date } }
   | { type: 'ADD_DELIVERY_BALANCE'; payload: number } // הוספת יתרת משלוחים
+  | { type: 'CLAIM_STARTER_DELIVERY_BALANCE'; payload: number } // קבלת הטבת הרשמה חד פעמית
   | { type: 'REORDER_DELIVERY'; payload: { deliveryId: string; newPriority: number } } // שינוי סדר משלוח בתוך שליח
   | { type: 'SET_COURIER_ROUTE_PLANS'; payload: Record<string, string[]> }
   | { type: 'SET_COURIER_ROUTE_PLAN'; payload: { courierId: string; stopIds: string[] } }

@@ -77,6 +77,7 @@ const SENDI_PLUS_TERMS_TEXT =
 const SENDI_PLUS_DETAILS_OPEN_STORAGE_KEY = 'dashboard-sendi-plus-details-open';
 const WORKSPACE_START_COMPLETED_STORAGE_KEY_PREFIX = 'dashboard-workspace-start-completed-v1:';
 const WORKSPACE_START_SENDI_PLUS_RADIUS_KM = 5;
+const STARTER_DELIVERY_GRANT_AMOUNT = 100;
 const DASHBOARD_PULL_REFRESH_START_DISTANCE = 22;
 const DASHBOARD_PULL_REFRESH_THRESHOLD = 64;
 const DASHBOARD_PULL_REFRESH_MAX = 132;
@@ -325,21 +326,25 @@ const CourierAvailabilityValue: React.FC<{
   const animatedFree = useAnimatedMetricValue(free, refreshing);
   const animatedConnected = useAnimatedMetricValue(connected, refreshing);
   const animatedTotal = useAnimatedMetricValue(total, refreshing);
+  const tooltipLabel = 'זמינים · מחוברים · סה״כ';
+  const accessibilityLabel = `${formatNumber(free)} זמינים, ${formatNumber(connected)} מחוברים, ${formatNumber(total)} סה״כ`;
 
   return (
     <RefreshingMetricValue
       refreshing={refreshing}
       value={
-        <span
-          className="inline-flex items-baseline justify-end leading-none"
-          aria-label={`${formatNumber(free)} שליחים זמינים, ${formatNumber(connected)} שליחים מחוברים, ${formatNumber(total)} שליחים במערכת`}
-        >
-          <span>{formatNumber(animatedFree)}</span>
-          <span className="px-1 text-sm font-semibold text-app-text-muted sm:text-base">/</span>
-          <span className="text-sm font-semibold text-app-text-muted sm:text-base">{formatNumber(animatedConnected)}</span>
-          <span className="px-1 text-sm font-semibold text-app-text-muted sm:text-base">/</span>
-          <span className="text-sm font-semibold text-app-text-muted sm:text-base">{formatNumber(animatedTotal)}</span>
-        </span>
+        <AppTooltip label={tooltipLabel} side="bottom" sideOffset={8} className="inline-flex">
+          <span
+            className="inline-flex items-baseline justify-end leading-none"
+            aria-label={accessibilityLabel}
+          >
+            <span>{formatNumber(animatedFree)}</span>
+            <span className="px-1 text-sm font-semibold text-app-text-muted sm:text-base">/</span>
+            <span className="text-sm font-semibold text-app-text-muted sm:text-base">{formatNumber(animatedConnected)}</span>
+            <span className="px-1 text-sm font-semibold text-app-text-muted sm:text-base">/</span>
+            <span className="text-sm font-semibold text-app-text-muted sm:text-base">{formatNumber(animatedTotal)}</span>
+          </span>
+        </AppTooltip>
       }
     />
   );
@@ -917,7 +922,7 @@ const SendiPlusCard: React.FC<{
             type="button"
             aria-label="פתח אזורי משלוח"
             onClick={onDeliveryZonesClick}
-            className="shrink-0 text-xs font-bold text-app-brand-text transition-colors hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+            className="shrink-0 text-xs font-normal text-app-brand-text transition-colors hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
           >
             אזורי משלוח
           </button>
@@ -1233,24 +1238,38 @@ const CourierInviteDialog: React.FC<{
 };
 
 const WorkspaceStartCarousel: React.FC<{
+  deliveryBalance: number;
   invitedCourierCount: number;
   isReceivingDeliveries: boolean;
+  restaurantCount: number;
   registeredCourierCount: number;
   sendiPlusActive: boolean;
+  starterDeliveryGrantClaimed?: boolean;
+  onAddRestaurant: () => void;
   onActivateSendiPlus: () => void;
+  onClaimStarterDeliveryBalance: () => void;
   onCreateCourier: () => void;
   onOpenDeliveryIntake: () => void;
 }> = ({
+  deliveryBalance,
   invitedCourierCount,
   isReceivingDeliveries,
+  restaurantCount,
   registeredCourierCount,
   sendiPlusActive,
+  starterDeliveryGrantClaimed,
+  onAddRestaurant,
   onActivateSendiPlus,
+  onClaimStarterDeliveryBalance,
   onCreateCourier,
   onOpenDeliveryIntake,
 }) => {
   const hasRegisteredCouriers = registeredCourierCount > 0;
   const hasPendingCourierInvites = invitedCourierCount > 0;
+  const hasStartedCourierInvites = hasRegisteredCouriers || hasPendingCourierInvites;
+  const hasStarterDeliveryGrant =
+    Boolean(starterDeliveryGrantClaimed) || deliveryBalance >= STARTER_DELIVERY_GRANT_AMOUNT;
+  const hasRestaurants = restaurantCount > 0;
   const steps: WorkspaceStartCarouselStep[] = [
     {
       id: 'couriers',
@@ -1258,19 +1277,45 @@ const WorkspaceStartCarousel: React.FC<{
       heading: 'הזמנת שליחים',
       description: 'שלח הזמנה לכמה שליחים במקביל מאנשי קשר או ממספרי טלפון. השליח נרשם באפליקציה שלו, ושם יתמלאו הפרטים לדמו.',
       actionLabel: hasRegisteredCouriers || hasPendingCourierInvites ? 'שלח עוד הזמנות' : 'הזמן שליחים',
-      done: hasRegisteredCouriers,
+      done: hasStartedCourierInvites,
       icon: <UserPlus className="h-4 w-4" />,
       onClick: onCreateCourier,
     },
     {
-      id: 'network',
-      title: 'מקור משלוחים',
-      heading: 'מקור משלוחים',
-      description: hasRegisteredCouriers
-        ? 'אחרי שיש לפחות שליח רשום, סנדי פלוס מכניס משלוחים לדמו לפי אזורי הפעילות כדי שיהיה מה לשבץ.'
-        : 'השלב הזה נפתח אחרי ששליח אחד נרשם, כדי שלא ייכנסו משלוחים בלי מי שיבצע אותם.',
+      id: 'starter-balance',
+      title: '100 חינם',
+      heading: '100 משלוחים ראשונים חינם',
+      description: hasStartedCourierInvites
+        ? 'קבל 100 משלוחים ראשונים ללא עלות, כדי להתחיל לשבץ משלוחים בלי לרכוש יתרה מראש.'
+        : 'השלב הזה נפתח אחרי הזמנת שליחים ראשונה, כדי שהיתרה תתווסף רק כשמתחילים להפעיל את המערכת.',
+      actionLabel: hasStarterDeliveryGrant ? 'התקבל' : 'קבל 100 משלוחים',
+      disabled: !hasStartedCourierInvites || hasStarterDeliveryGrant,
+      done: hasStarterDeliveryGrant,
+      icon: <PackageOpen className="h-4 w-4" />,
+      onClick: onClaimStarterDeliveryBalance,
+    },
+    {
+      id: 'restaurants',
+      title: 'מסעדות',
+      heading: 'הוספת מסעדות',
+      description: hasStarterDeliveryGrant
+        ? 'הוסף לפחות מסעדה פעילה אחת כדי שיהיה מקור משלוחים לפני שמפעילים את סנדי פלוס.'
+        : 'השלב הזה נפתח אחרי קבלת 100 המשלוחים הראשונים חינם.',
+      actionLabel: hasRestaurants ? 'פתח מסעדות' : 'הוסף מסעדה',
+      disabled: !hasStarterDeliveryGrant,
+      done: hasRestaurants,
+      icon: <Store className="h-4 w-4" />,
+      onClick: onAddRestaurant,
+    },
+    {
+      id: 'sendi-plus',
+      title: 'סנדי פלוס',
+      heading: 'סנדי פלוס',
+      description: hasRestaurants
+        ? 'הפעל את סנדי פלוס כדי להכניס משלוחים לדמו לפי אזורי הפעילות והמסעדות הפעילות.'
+        : 'השלב הזה נפתח אחרי שיש לפחות מסעדה פעילה אחת.',
       actionLabel: sendiPlusActive ? 'פעיל' : 'הפעל סנדי פלוס',
-      disabled: !hasRegisteredCouriers || sendiPlusActive,
+      disabled: !hasRestaurants || sendiPlusActive,
       done: sendiPlusActive,
       icon: <Sparkles className="h-4 w-4" />,
       onClick: onActivateSendiPlus,
@@ -1280,8 +1325,8 @@ const WorkspaceStartCarousel: React.FC<{
       title: 'קבלת משלוחים',
       heading: 'קבלת משלוחים',
       description: sendiPlusActive
-        ? 'כאן פותחים את הכניסה של משלוחים חדשים לדשבורד. אפשר לסגור או לפתוח קבלה בכל רגע מהמתג למעלה.'
-        : 'השלב הזה נפתח אחרי שמקור המשלוחים פעיל, ואז הדמו מתחיל להזרים הזמנות למסך.',
+        ? 'פתח את קבלת המשלוחים כדי שמשלוחים חדשים ייכנסו לדשבורד ויהיה אפשר להתחיל לעבוד.'
+        : 'השלב הזה נפתח אחרי שסנדי פלוס פעיל.',
       actionLabel: isReceivingDeliveries ? 'פתוח' : 'פתח קבלת משלוחים',
       disabled: !sendiPlusActive || isReceivingDeliveries,
       done: isReceivingDeliveries,
@@ -1354,6 +1399,19 @@ const WorkspaceStartCarousel: React.FC<{
           {activeStep.actionLabel}
         </button>
       </div>
+
+      {hasPendingCourierInvites ? (
+        <div className="border-t border-app-border px-3 py-2.5 sm:px-4 sm:py-3 dark:border-[#252525]" dir="rtl">
+          <div className="flex min-w-0 items-center justify-between gap-4">
+            <span className="shrink-0 text-xs font-normal text-app-text-secondary">
+              שליחים שהוזמנו: {formatNumber(invitedCourierCount)}
+            </span>
+            <span className="min-w-0 truncate text-xs font-normal text-app-text-secondary">
+              מחכים לאישור
+            </span>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 };
@@ -1679,6 +1737,10 @@ export const Dashboard: React.FC = () => {
     navigate('/zones');
   }, [navigate]);
 
+  const handleAddRestaurantFromWorkspaceStart = React.useCallback(() => {
+    navigate('/restaurants?create=1');
+  }, [navigate]);
+
   const handleActivateSendiPlusFromSpotlight = React.useCallback(() => {
     const nextRadiusKm =
       sendiPlusRadiusKm > 0 ? sendiPlusRadiusKm : WORKSPACE_START_SENDI_PLUS_RADIUS_KM;
@@ -1686,6 +1748,13 @@ export const Dashboard: React.FC = () => {
     writeStoredSendiPlusRadius(nextRadiusKm);
     handleSendiPlusTermsAcceptedChange(true);
   }, [handleSendiPlusTermsAcceptedChange, sendiPlusRadiusKm]);
+
+  const handleClaimStarterDeliveryBalance = React.useCallback(() => {
+    dispatch({
+      type: 'CLAIM_STARTER_DELIVERY_BALANCE',
+      payload: STARTER_DELIVERY_GRANT_AMOUNT,
+    });
+  }, [dispatch]);
 
   const handleInviteCouriersFromDashboard = React.useCallback((contacts: InviteContact[]) => {
     const existingPhones = new Set(state.couriers.map((courier) => normalizeCourierPhone(courier.phone)));
@@ -1800,20 +1869,27 @@ export const Dashboard: React.FC = () => {
   const invitedCourierCount = state.couriers.filter(
     (courier) => courier.registrationStatus === 'invited',
   ).length;
+  const hasStarterDeliveryGrant =
+    Boolean(state.starterDeliveryGrantClaimed) ||
+    state.deliveryBalance >= STARTER_DELIVERY_GRANT_AMOUNT;
+  const hasWorkspaceStartRestaurants = baseActiveRestaurantsCount > 0;
   const workspaceStartStepsComplete =
-    registeredCourierCount > 0 &&
+    (registeredCourierCount > 0 || invitedCourierCount > 0) &&
+    hasStarterDeliveryGrant &&
+    hasWorkspaceStartRestaurants &&
     isSendiPlusOperational &&
     state.isReceivingDeliveries;
   const workspaceStartCompletedByCurrentState =
-    workspaceStartStepsComplete ||
-    (registeredCourierCount > 0 && state.isReceivingDeliveries && !isSendiPlusOperational);
+    workspaceStartStepsComplete;
   const hasCompletedWorkspaceStart =
     workspaceStartCompleted || workspaceStartCompletedByCurrentState;
   const shouldShowWorkspaceStart =
     state.dataMode === 'workspace' &&
     !hasCompletedWorkspaceStart &&
     (
-      registeredCourierCount === 0 ||
+      (registeredCourierCount === 0 && invitedCourierCount === 0) ||
+      !hasStarterDeliveryGrant ||
+      !hasWorkspaceStartRestaurants ||
       !isSendiPlusOperational ||
       !state.isReceivingDeliveries
     );
@@ -1889,11 +1965,7 @@ export const Dashboard: React.FC = () => {
     ? 'מרענן'
     : 'משוך לרענון';
   const deliveryIntakeLabel = state.isReceivingDeliveries ? 'קבלת משלוחים פתוחה' : 'קבלת משלוחים סגורה';
-  const autoAssignLabel = state.autoAssignEnabled ? 'שיבוץ אוטומטי פעיל' : 'שיבוץ ידני';
-  const hasCouriersForOperations = registeredCourierCount > 0;
   const deliveryIntakeControlDisabled = isDashboardRefreshing;
-  const autoAssignControlDisabled =
-    !hasCouriersForOperations || isDashboardRefreshing;
   const dashboardCardsDisabled = false;
   const dashboardCardDisabledClassName = dashboardCardsDisabled
     ? 'cursor-not-allowed opacity-45 grayscale'
@@ -2026,11 +2098,16 @@ export const Dashboard: React.FC = () => {
           </section>
           {shouldShowWorkspaceStart ? (
             <WorkspaceStartCarousel
+              deliveryBalance={state.deliveryBalance}
               invitedCourierCount={invitedCourierCount}
               isReceivingDeliveries={state.isReceivingDeliveries}
+              restaurantCount={baseActiveRestaurantsCount}
               registeredCourierCount={registeredCourierCount}
               sendiPlusActive={isSendiPlusOperational}
+              starterDeliveryGrantClaimed={state.starterDeliveryGrantClaimed}
+              onAddRestaurant={handleAddRestaurantFromWorkspaceStart}
               onActivateSendiPlus={handleActivateSendiPlusFromSpotlight}
+              onClaimStarterDeliveryBalance={handleClaimStarterDeliveryBalance}
               onCreateCourier={() => setIsCourierInviteDialogOpen(true)}
               onOpenDeliveryIntake={() => dispatch({ type: 'TOGGLE_DELIVERY_INTAKE' })}
             />
@@ -2096,7 +2173,7 @@ export const Dashboard: React.FC = () => {
               <section
                 aria-label="שליחים"
                 aria-disabled={dashboardCardsDisabled}
-                className={`dashboard-status-card relative col-span-2 min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] min-[520px]:col-span-6 ${dashboardCardHoverClassName} ${dashboardCardDisabledClassName}`}
+                className={`dashboard-status-card relative col-span-2 min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] min-[520px]:col-span-3 ${dashboardCardHoverClassName} ${dashboardCardDisabledClassName}`}
               >
                 <div className="flex min-h-[52px] items-stretch gap-3">
                   <button
@@ -2120,23 +2197,6 @@ export const Dashboard: React.FC = () => {
                       />
                     </div>
                   </button>
-                  <div
-                    className="flex shrink-0 items-center border-r border-app-border pr-3 dark:border-[#252525]"
-                    data-pull-refresh-ignore="true"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="hidden whitespace-nowrap text-[11px] font-semibold text-app-text-secondary min-[420px]:inline">
-                        שיבוץ אוטומטי
-                      </span>
-                      <Toggle
-                        checked={state.autoAssignEnabled}
-                        disabled={autoAssignControlDisabled}
-                        onChange={() => dispatch({ type: 'TOGGLE_AUTO_ASSIGN' })}
-                        ariaLabel={autoAssignLabel}
-                        size="sm"
-                      />
-                    </div>
-                  </div>
                 </div>
               </section>
               <button
@@ -2144,7 +2204,7 @@ export const Dashboard: React.FC = () => {
                 aria-label="מסעדות"
                 disabled={dashboardCardsDisabled}
                 onClick={() => navigate('/restaurants')}
-                className={`dashboard-status-card col-span-1 min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] min-[520px]:col-span-3 ${dashboardCardHoverClassName} ${dashboardCardDisabledClassName}`}
+                className={`dashboard-status-card col-span-2 min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] min-[520px]:col-span-3 ${dashboardCardHoverClassName} ${dashboardCardDisabledClassName}`}
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
@@ -2157,26 +2217,6 @@ export const Dashboard: React.FC = () => {
                     active={activeRestaurantsCount}
                     refreshing={isDashboardRefreshing}
                     total={state.restaurants.length}
-                  />
-                </div>
-              </button>
-              <button
-                type="button"
-                aria-label="זמן ממוצע למשלוח"
-                disabled={dashboardCardsDisabled}
-                onClick={() => navigate('/deliveries')}
-                className={`dashboard-status-card col-span-1 min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] min-[520px]:col-span-3 ${dashboardCardHoverClassName} ${dashboardCardDisabledClassName}`}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
-                    זמן ממוצע למשלוח
-                  </span>
-                  <Timer className="h-3.5 w-3.5 shrink-0 text-cyan-400 sm:h-4 sm:w-4" />
-                </div>
-                <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
-                  <RefreshingMetricValue
-                    refreshing={isDashboardRefreshing}
-                    value={formatAverageDeliveryTime(averageDeliveryMinutes)}
                   />
                 </div>
               </button>
@@ -2194,6 +2234,27 @@ export const Dashboard: React.FC = () => {
             onDeliveryZonesClick={handleDeliveryZonesClick}
             onTermsAcceptedChange={handleSendiPlusTermsAcceptedChange}
           />
+
+          <button
+            type="button"
+            aria-label="זמן ממוצע למשלוח"
+            disabled={dashboardCardsDisabled}
+            onClick={() => navigate('/deliveries')}
+            className={`dashboard-status-card min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] ${dashboardCardHoverClassName} ${dashboardCardDisabledClassName}`}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
+                זמן ממוצע למשלוח
+              </span>
+              <Timer className="h-3.5 w-3.5 shrink-0 text-cyan-400 sm:h-4 sm:w-4" />
+            </div>
+            <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
+              <RefreshingMetricValue
+                refreshing={isDashboardRefreshing}
+                value={formatAverageDeliveryTime(averageDeliveryMinutes)}
+              />
+            </div>
+          </button>
 
           {deliveredCancelledSummary}
 

@@ -34,7 +34,7 @@ export const TLV_RUNNERS_WORKSPACE_ID = 'wrk_legacy_tlv_runners';
 export const TLV_RUNNERS_DEMO_PHONE = '0500000000';
 
 const WORKSPACE_STATE_STORAGE_PREFIX = 'sendi-delivery-state-workspace:';
-const DEFAULT_DELIVERY_BALANCE = 100;
+const DEFAULT_DELIVERY_BALANCE = 0;
 const DEFAULT_WORKSPACE_NAMES = new Set(['חברת משלוחים חדשה']);
 
 const normalizePhone = (value: string) => value.replace(/\D/g, '');
@@ -94,10 +94,11 @@ export const createEmptyWorkspaceState = ({
 }): DeliveryState => {
   const baseState = createInitialDeliveryState();
   const now = new Date();
+  const isDemoWorkspace = workspaceId === TLV_RUNNERS_WORKSPACE_ID;
 
   return {
     ...baseState,
-    dataMode: workspaceId === TLV_RUNNERS_WORKSPACE_ID ? 'demo' : 'workspace',
+    dataMode: isDemoWorkspace ? 'demo' : 'workspace',
     workspaceId,
     workspaceName: companyName.trim(),
     workspaceArea: area?.trim(),
@@ -121,7 +122,8 @@ export const createEmptyWorkspaceState = ({
         category: 'settings',
       },
     ],
-    deliveryBalance: DEFAULT_DELIVERY_BALANCE,
+    deliveryBalance: isDemoWorkspace ? 100 : DEFAULT_DELIVERY_BALANCE,
+    starterDeliveryGrantClaimed: isDemoWorkspace,
     stats: zeroStats(),
   };
 };

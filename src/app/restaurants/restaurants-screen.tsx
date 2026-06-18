@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Power, Download, Link2, Plus, Search, Store as StoreIcon, Trash2, X, FileText, FileSpreadsheet, Utensils } from 'lucide-react';
 import { useDelivery } from '../context/delivery-context-value';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { Delivery, Restaurant } from '../types/delivery.types';
 import { format } from 'date-fns';
 import JSZip from 'jszip';
@@ -294,6 +294,7 @@ let restaurantListSessionState: RestaurantListSessionState = {
 export const RestaurantsScreen: React.FC = () => {
   const { state, dispatch } = useDelivery();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // ── Basic state ──
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -374,6 +375,23 @@ export const RestaurantsScreen: React.FC = () => {
   useEffect(() => (
     addAppTopBarActionListener('create-restaurant', () => setIsAddModalOpen(true))
   ), []);
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get('create') !== '1') return;
+
+    setIsAddModalOpen(true);
+    searchParams.delete('create');
+    const nextSearch = searchParams.toString();
+
+    navigate(
+      {
+        pathname: location.pathname,
+        search: nextSearch ? `?${nextSearch}` : '',
+      },
+      { replace: true },
+    );
+  }, [location.pathname, location.search, navigate]);
 
   useEffect(() => (
     addAppTopBarActionListener('export-restaurants', () => {
@@ -1095,6 +1113,8 @@ export const RestaurantsScreen: React.FC = () => {
                         ? `אין מסעדות שתואמות לחיפוש "${searchQuery}".`
                         : 'אין מסעדות שתואמות לסינון הנוכחי.'
                     }
+                    leadingActionLabel="הוסף מסעדה"
+                    onLeadingAction={() => setIsAddModalOpen(true)}
                     actionLabel="נקה סינון"
                     onAction={handleClearAll}
                   />
