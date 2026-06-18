@@ -554,6 +554,7 @@ const SendiPlusCard: React.FC<{
   const cardTouchMovedRef = React.useRef(false);
   const radiusPercent = (radiusKm / MAX_SENDI_PLUS_RADIUS_KM) * 100;
   const isAccordionOpen = isSystemOpen && isDetailsOpen;
+  const canOpenDetailsFromCard = canToggleDetailsFromCard && !isAccordionOpen;
   const termsTextClassName = isSendiPlusEnabled
     ? 'text-app-text-secondary'
     : isSystemDisabled
@@ -586,19 +587,12 @@ const SendiPlusCard: React.FC<{
     ? 'sendi-plus-card__toggle'
     : undefined;
   const selectedRadiusText = `${formatRadiusKm(radiusKm)} ק״מ`;
-  const deliveryZonesSummaryText = `${formatNumber(deliveryZoneCount)} ${
-    deliveryZoneCount === 1 ? 'אזור משלוח' : 'אזורי משלוח'
-  }`;
-  const activeRestaurantsIndicatorText = `${formatNumber(activeRestaurantCount)} ${
-    activeRestaurantCount === 1 ? 'מסעדה פעילה' : 'מסעדות פעילות'
-  }`;
-  const shouldShowCollapsedIndicators = isSendiPlusEnabled && !isAccordionOpen;
-  const collapsedIndicatorsLabel = `${deliveryZonesSummaryText}, רדיוס ${selectedRadiusText}, ${activeRestaurantsIndicatorText}`;
+  const shouldShowCollapsedStatus = isSendiPlusEnabled && !isAccordionOpen;
   const sendiPlusStatusLabel = isSendiPlusEnabled ? 'סנדי פלוס פעיל' : 'סנדי פלוס כבוי';
   const shouldUseStandardHover = isSendiPlusEnabled && isAccordionOpen;
   const cardHoverClassName = canToggleDetailsFromCard
     ? shouldUseStandardHover
-      ? 'dashboard-card-hover cursor-pointer'
+      ? 'dashboard-card-hover'
       : 'sendi-plus-card--teaser cursor-pointer'
     : '';
   const termsSummaryText = SENDI_PLUS_TERMS_TEXT;
@@ -740,7 +734,7 @@ const SendiPlusCard: React.FC<{
       return;
     }
 
-    if (!canToggleDetailsFromCard) return;
+    if (!canOpenDetailsFromCard) return;
 
     const target = event.target;
     if (
@@ -751,9 +745,9 @@ const SendiPlusCard: React.FC<{
     }
 
     toggleDetailsOpen();
-  }, [canToggleDetailsFromCard, toggleDetailsOpen]);
+  }, [canOpenDetailsFromCard, toggleDetailsOpen]);
   const handleCardKeyDown = React.useCallback((event: React.KeyboardEvent<HTMLElement>) => {
-    if (!canToggleDetailsFromCard) return;
+    if (!canOpenDetailsFromCard) return;
     if (event.key !== 'Enter' && event.key !== ' ') return;
 
     const target = event.target;
@@ -766,7 +760,7 @@ const SendiPlusCard: React.FC<{
 
     event.preventDefault();
     toggleDetailsOpen();
-  }, [canToggleDetailsFromCard, toggleDetailsOpen]);
+  }, [canOpenDetailsFromCard, toggleDetailsOpen]);
 
   React.useEffect(() => {
     if (isSystemOpen) return;
@@ -796,14 +790,12 @@ const SendiPlusCard: React.FC<{
       onPointerCancel={handleCardPointerCancel}
       onPointerDown={handleCardPointerDown}
       onPointerMove={handleCardPointerMove}
-      role={canToggleDetailsFromCard ? 'button' : undefined}
-      tabIndex={canToggleDetailsFromCard ? 0 : undefined}
+      role={canOpenDetailsFromCard ? 'button' : undefined}
+      tabIndex={canOpenDetailsFromCard ? 0 : undefined}
       aria-disabled={isSystemDisabled}
       aria-label={
-        canToggleDetailsFromCard
-          ? isAccordionOpen
-            ? `סגור פרטי ${SENDI_PLUS_LABEL}`
-            : `פתח פרטי ${SENDI_PLUS_LABEL}`
+        canOpenDetailsFromCard
+          ? `פתח פרטי ${SENDI_PLUS_LABEL}`
           : undefined
       }
     >
@@ -836,38 +828,15 @@ const SendiPlusCard: React.FC<{
           />
         </button>
 
-        {shouldShowCollapsedIndicators ? (
-          <div
-            data-sendi-plus-collapsed-indicators="true"
-            className="flex min-w-0 items-center gap-2 overflow-hidden text-[11px] font-semibold leading-none text-app-text-secondary"
+        {shouldShowCollapsedStatus ? (
+          <span
+            data-sendi-plus-status="active"
+            className="shrink-0 text-xs font-semibold leading-none text-app-text-secondary"
             dir="rtl"
-            aria-label={collapsedIndicatorsLabel}
+            aria-label={sendiPlusStatusLabel}
           >
-            <span className="inline-flex min-w-0 items-baseline gap-1">
-              <span className="tabular-nums text-xs font-black text-app-text">
-                {formatNumber(deliveryZoneCount)}
-              </span>
-              <span className="min-w-0 truncate">
-                {deliveryZoneCount === 1 ? 'אזור משלוח' : 'אזורי משלוח'}
-              </span>
-            </span>
-            <span className="shrink-0 text-app-text-muted" aria-hidden="true">·</span>
-            <span className="inline-flex shrink-0 items-baseline gap-1">
-              <span className="tabular-nums text-xs font-black text-app-text">
-                {formatRadiusKm(radiusKm)}
-              </span>
-              <span>ק״מ</span>
-            </span>
-            <span className="shrink-0 text-app-text-muted" aria-hidden="true">·</span>
-            <span className="inline-flex min-w-0 items-baseline gap-1">
-              <span className="tabular-nums text-xs font-black text-app-text">
-                {formatNumber(activeRestaurantCount)}
-              </span>
-              <span className="min-w-0 truncate">
-                {activeRestaurantCount === 1 ? 'מסעדה פעילה' : 'מסעדות פעילות'}
-              </span>
-            </span>
-          </div>
+            פעיל
+          </span>
         ) : null}
 
         <div className="ml-auto flex min-w-0 items-center gap-3 text-right" dir="rtl">
@@ -2102,6 +2071,28 @@ export const Dashboard: React.FC = () => {
       })}
     </section>
   );
+  const averageDeliveryTimeCard = (
+    <button
+      type="button"
+      aria-label="זמן ממוצע למשלוח"
+      disabled={dashboardCardsDisabled}
+      onClick={() => navigate('/deliveries')}
+      className={`dashboard-status-card min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] ${dashboardCardHoverClassName} ${dashboardCardDisabledClassName}`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
+          זמן ממוצע למשלוח
+        </span>
+        <Timer className="h-3.5 w-3.5 shrink-0 text-cyan-400 sm:h-4 sm:w-4" />
+      </div>
+      <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
+        <RefreshingMetricValue
+          refreshing={isDashboardRefreshing}
+          value={formatAverageDeliveryTime(averageDeliveryMinutes)}
+        />
+      </div>
+    </button>
+  );
 
   return (
     <>
@@ -2255,6 +2246,12 @@ export const Dashboard: React.FC = () => {
               })}
               </div>
             </div>
+            <div className="mt-[10px]">
+              {deliveredCancelledSummary}
+            </div>
+            <div className="mt-[10px]">
+              {averageDeliveryTimeCard}
+            </div>
             <div className="mt-[10px] grid grid-cols-2 gap-[10px] min-[520px]:grid-cols-6">
               <section
                 aria-label="שליחים"
@@ -2308,29 +2305,6 @@ export const Dashboard: React.FC = () => {
               </button>
             </div>
           </section>
-
-          <button
-            type="button"
-            aria-label="זמן ממוצע למשלוח"
-            disabled={dashboardCardsDisabled}
-            onClick={() => navigate('/deliveries')}
-            className={`dashboard-status-card min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] ${dashboardCardHoverClassName} ${dashboardCardDisabledClassName}`}
-          >
-            <div className="flex items-center justify-between gap-2">
-              <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
-                זמן ממוצע למשלוח
-              </span>
-              <Timer className="h-3.5 w-3.5 shrink-0 text-cyan-400 sm:h-4 sm:w-4" />
-            </div>
-            <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
-              <RefreshingMetricValue
-                refreshing={isDashboardRefreshing}
-                value={formatAverageDeliveryTime(averageDeliveryMinutes)}
-              />
-            </div>
-          </button>
-
-          {deliveredCancelledSummary}
 
           <SendiPlusCard
             deliveryZoneCount={sendiPlusDeliveryZoneCount}
