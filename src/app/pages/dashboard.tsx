@@ -523,6 +523,7 @@ const SendiPlusCard: React.FC<{
   isSystemOpen: boolean;
   isRefreshing: boolean;
   onRadiusKmChange: (value: number) => void;
+  onActiveRestaurantsClick: () => void;
   onDeliveryZonesClick: () => void;
   onTermsAcceptedChange: (value: boolean) => void;
 }> = ({
@@ -533,15 +534,17 @@ const SendiPlusCard: React.FC<{
   isSystemOpen,
   isRefreshing,
   onRadiusKmChange,
+  onActiveRestaurantsClick,
   onDeliveryZonesClick,
   onTermsAcceptedChange,
 }) => {
   const isSendiPlusEnabled = termsAccepted && isSystemOpen;
   const isSystemDisabled = !isSystemOpen;
   const receivesDeliveries = canReceiveSendiPlusDeliveries(radiusKm, isSendiPlusEnabled);
-  const canActivateFromCard = isSystemOpen && !isRefreshing && !isSendiPlusEnabled;
+  const canToggleDetailsFromCard = isSystemOpen && !isRefreshing;
+  const canActivateFromControl = isSystemOpen && !isRefreshing && !isSendiPlusEnabled;
   const [isDetailsOpen, setIsDetailsOpen] = React.useState(
-    () => isSendiPlusEnabled && readStoredSendiPlusDetailsOpen(),
+    () => isSystemOpen && readStoredSendiPlusDetailsOpen(),
   );
   const [isRadiusBubbleVisible, setIsRadiusBubbleVisible] = React.useState(false);
   const [isActivationPulseVisible, setIsActivationPulseVisible] = React.useState(false);
@@ -550,7 +553,7 @@ const SendiPlusCard: React.FC<{
   const cardTouchStartRef = React.useRef<{ x: number; y: number } | null>(null);
   const cardTouchMovedRef = React.useRef(false);
   const radiusPercent = (radiusKm / MAX_SENDI_PLUS_RADIUS_KM) * 100;
-  const isAccordionOpen = isSendiPlusEnabled && isDetailsOpen;
+  const isAccordionOpen = isSystemOpen && isDetailsOpen;
   const termsTextClassName = isSendiPlusEnabled
     ? 'text-app-text-secondary'
     : isSystemDisabled
@@ -579,11 +582,29 @@ const SendiPlusCard: React.FC<{
     : 'sendi-plus-mark--off';
   const toggleClassName = isSystemDisabled
     ? 'sendi-plus-card__system-off-toggle'
-    : canActivateFromCard
+    : canActivateFromControl
     ? 'sendi-plus-card__toggle'
     : undefined;
   const selectedRadiusText = `${formatRadiusKm(radiusKm)} ק״מ`;
+  const deliveryZonesSummaryText = `${formatNumber(deliveryZoneCount)} ${
+    deliveryZoneCount === 1 ? 'אזור משלוח' : 'אזורי משלוח'
+  }`;
+  const activeRestaurantsIndicatorText = `${formatNumber(activeRestaurantCount)} ${
+    activeRestaurantCount === 1 ? 'מסעדה פעילה' : 'מסעדות פעילות'
+  }`;
+  const shouldShowCollapsedIndicators = isSendiPlusEnabled && !isAccordionOpen;
+  const collapsedIndicatorsLabel = `${deliveryZonesSummaryText}, רדיוס ${selectedRadiusText}, ${activeRestaurantsIndicatorText}`;
+  const sendiPlusStatusLabel = isSendiPlusEnabled ? 'סנדי פלוס פעיל' : 'סנדי פלוס כבוי';
+  const shouldUseStandardHover = isSendiPlusEnabled && isAccordionOpen;
+  const cardHoverClassName = canToggleDetailsFromCard
+    ? shouldUseStandardHover
+      ? 'dashboard-card-hover cursor-pointer'
+      : 'sendi-plus-card--teaser cursor-pointer'
+    : '';
   const termsSummaryText = SENDI_PLUS_TERMS_TEXT;
+  const activeDeliveryZonesSummaryText = `${
+    deliveryZoneCount === 1 ? 'אזור משלוח פעיל' : 'אזורי משלוח פעילים'
+  }: ${formatNumber(deliveryZoneCount)}`;
   const activeRestaurantsSummaryText = `מסעדות פעילות: ${formatNumber(activeRestaurantCount)}`;
   const radiusHelperText = !isSystemOpen
     ? 'כבוי'
@@ -646,7 +667,7 @@ const SendiPlusCard: React.FC<{
     hideRadiusBubble(900);
   };
   const toggleDetailsOpen = React.useCallback(() => {
-    if (!isSendiPlusEnabled) {
+    if (!canToggleDetailsFromCard) {
       writeStoredSendiPlusDetailsOpen(false);
       setIsDetailsOpen(false);
       return;
@@ -659,7 +680,7 @@ const SendiPlusCard: React.FC<{
 
       return nextValue;
     });
-  }, [isSendiPlusEnabled]);
+  }, [canToggleDetailsFromCard]);
   const setTermsAcceptedFromControl = React.useCallback((nextTermsAccepted: boolean) => {
     if (!isSystemOpen || isRefreshing) return;
 
@@ -670,8 +691,6 @@ const SendiPlusCard: React.FC<{
     onTermsAcceptedChange(nextTermsAccepted);
 
     if (!nextTermsAccepted) {
-      writeStoredSendiPlusDetailsOpen(false);
-      setIsDetailsOpen(false);
       hideRadiusBubble();
       return;
     }
@@ -689,11 +708,6 @@ const SendiPlusCard: React.FC<{
     onTermsAcceptedChange,
     triggerActivationPulse,
   ]);
-  const activateFromCard = React.useCallback(() => {
-    if (!canActivateFromCard) return;
-
-    setTermsAcceptedFromControl(true);
-  }, [canActivateFromCard, setTermsAcceptedFromControl]);
   const handleCardPointerDown = React.useCallback((event: React.PointerEvent<HTMLElement>) => {
     if (event.pointerType !== 'touch') {
       cardTouchStartRef.current = null;
@@ -726,7 +740,7 @@ const SendiPlusCard: React.FC<{
       return;
     }
 
-    if (!canActivateFromCard) return;
+    if (!canToggleDetailsFromCard) return;
 
     const target = event.target;
     if (
@@ -736,10 +750,10 @@ const SendiPlusCard: React.FC<{
       return;
     }
 
-    activateFromCard();
-  }, [activateFromCard, canActivateFromCard]);
+    toggleDetailsOpen();
+  }, [canToggleDetailsFromCard, toggleDetailsOpen]);
   const handleCardKeyDown = React.useCallback((event: React.KeyboardEvent<HTMLElement>) => {
-    if (!canActivateFromCard) return;
+    if (!canToggleDetailsFromCard) return;
     if (event.key !== 'Enter' && event.key !== ' ') return;
 
     const target = event.target;
@@ -751,8 +765,8 @@ const SendiPlusCard: React.FC<{
     }
 
     event.preventDefault();
-    activateFromCard();
-  }, [activateFromCard, canActivateFromCard]);
+    toggleDetailsOpen();
+  }, [canToggleDetailsFromCard, toggleDetailsOpen]);
 
   React.useEffect(() => {
     if (isSystemOpen) return;
@@ -776,18 +790,22 @@ const SendiPlusCard: React.FC<{
     <section
       className={`sendi-plus-card rounded-none border border-app-border bg-app-surface dark:border-[#252525] dark:bg-[#0A0A0A] ${
         isSendiPlusEnabled ? 'sendi-plus-card--active' : 'sendi-plus-card--off'
-      } ${canActivateFromCard ? 'sendi-plus-card--teaser cursor-pointer' : ''} ${
-        isActivationPulseVisible ? 'sendi-plus-card--igniting' : ''
-      } ${systemDisabledCardClassName}`}
+      } ${cardHoverClassName} ${isActivationPulseVisible ? 'sendi-plus-card--igniting' : ''} ${systemDisabledCardClassName}`}
       onClick={handleCardClick}
       onKeyDown={handleCardKeyDown}
       onPointerCancel={handleCardPointerCancel}
       onPointerDown={handleCardPointerDown}
       onPointerMove={handleCardPointerMove}
-      role={canActivateFromCard ? 'button' : undefined}
-      tabIndex={canActivateFromCard ? 0 : undefined}
+      role={canToggleDetailsFromCard ? 'button' : undefined}
+      tabIndex={canToggleDetailsFromCard ? 0 : undefined}
       aria-disabled={isSystemDisabled}
-      aria-label={canActivateFromCard ? `הפעל ${SENDI_PLUS_LABEL}` : undefined}
+      aria-label={
+        canToggleDetailsFromCard
+          ? isAccordionOpen
+            ? `סגור פרטי ${SENDI_PLUS_LABEL}`
+            : `פתח פרטי ${SENDI_PLUS_LABEL}`
+          : undefined
+      }
     >
       <div className="flex items-center gap-3 px-3 py-2.5 sm:px-4 sm:py-3" dir="ltr">
         <button
@@ -795,14 +813,14 @@ const SendiPlusCard: React.FC<{
           data-sendi-plus-control="true"
           data-haptic="selection"
           onClick={toggleDetailsOpen}
-          disabled={!isSendiPlusEnabled}
+          disabled={!canToggleDetailsFromCard}
           className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] text-app-text-secondary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0a84ff]/30 ${
-            isSendiPlusEnabled
+            canToggleDetailsFromCard
               ? 'hover:bg-app-surface-raised hover:text-app-text dark:hover:bg-[#1f1f1f]'
               : disabledControlClassName
           }`}
           aria-label={
-            isSendiPlusEnabled
+            canToggleDetailsFromCard
               ? isAccordionOpen
                 ? 'סגור פרטי סנדי פלוס'
                 : 'פתח פרטי סנדי פלוס'
@@ -818,10 +836,44 @@ const SendiPlusCard: React.FC<{
           />
         </button>
 
-        <div className="ml-auto min-w-0 text-right" dir="rtl">
+        {shouldShowCollapsedIndicators ? (
           <div
-            className="ml-auto flex w-fit max-w-full items-center gap-2"
-            aria-label={isSendiPlusEnabled ? 'סנדי פלוס פעיל' : 'סנדי פלוס כבוי'}
+            data-sendi-plus-collapsed-indicators="true"
+            className="flex min-w-0 items-center gap-2 overflow-hidden text-[11px] font-semibold leading-none text-app-text-secondary"
+            dir="rtl"
+            aria-label={collapsedIndicatorsLabel}
+          >
+            <span className="inline-flex min-w-0 items-baseline gap-1">
+              <span className="tabular-nums text-xs font-black text-app-text">
+                {formatNumber(deliveryZoneCount)}
+              </span>
+              <span className="min-w-0 truncate">
+                {deliveryZoneCount === 1 ? 'אזור משלוח' : 'אזורי משלוח'}
+              </span>
+            </span>
+            <span className="shrink-0 text-app-text-muted" aria-hidden="true">·</span>
+            <span className="inline-flex shrink-0 items-baseline gap-1">
+              <span className="tabular-nums text-xs font-black text-app-text">
+                {formatRadiusKm(radiusKm)}
+              </span>
+              <span>ק״מ</span>
+            </span>
+            <span className="shrink-0 text-app-text-muted" aria-hidden="true">·</span>
+            <span className="inline-flex min-w-0 items-baseline gap-1">
+              <span className="tabular-nums text-xs font-black text-app-text">
+                {formatNumber(activeRestaurantCount)}
+              </span>
+              <span className="min-w-0 truncate">
+                {activeRestaurantCount === 1 ? 'מסעדה פעילה' : 'מסעדות פעילות'}
+              </span>
+            </span>
+          </div>
+        ) : null}
+
+        <div className="ml-auto flex min-w-0 items-center gap-3 text-right" dir="rtl">
+          <div
+            className="flex w-fit max-w-full shrink-0 items-center gap-2"
+            aria-label={sendiPlusStatusLabel}
           >
             <span className="flex min-w-0 items-center gap-1.5">
               <span className="sendi-plus-label truncate text-sm font-semibold text-app-text">
@@ -860,6 +912,7 @@ const SendiPlusCard: React.FC<{
 
       <div
         id="sendi-plus-details"
+        data-sendi-plus-control="true"
         className={`sendi-plus-accordion ${
           isAccordionOpen ? 'sendi-plus-accordion--open' : ''
         }`}
@@ -922,40 +975,53 @@ const SendiPlusCard: React.FC<{
         </div>
       </div>
 
-      <div className="border-t border-app-border px-3 py-2.5 sm:px-4 sm:py-3 dark:border-[#252525]" dir="rtl">
-        <div className="flex min-w-0 items-center justify-between gap-4">
-          <button
-            type="button"
-            aria-label="פתח אזורי משלוח"
-            onClick={onDeliveryZonesClick}
-            className="shrink-0 text-xs font-normal text-app-brand-text transition-colors hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
-          >
-            אזורי משלוח
-          </button>
-          <span className={`min-w-0 truncate text-xs font-normal ${termsTextClassName}`}>
-            {activeRestaurantsSummaryText}
-          </span>
-        </div>
-      </div>
+      {isAccordionOpen ? (
+        <>
+          <div className="border-t border-app-border px-3 py-2.5 sm:px-4 sm:py-3 dark:border-[#252525]" dir="rtl">
+            <div className="flex min-w-0 items-center justify-between gap-4">
+              <button
+                type="button"
+                data-sendi-plus-control="true"
+                aria-label={`פתח ${activeDeliveryZonesSummaryText}`}
+                onClick={onDeliveryZonesClick}
+                className="shrink-0 text-xs font-normal text-app-brand-text transition-colors hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+              >
+                {activeDeliveryZonesSummaryText}
+              </button>
+              <button
+                type="button"
+                data-sendi-plus-control="true"
+                onClick={onActiveRestaurantsClick}
+                className="min-w-0 truncate text-xs font-normal text-app-brand-text transition-colors hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+                aria-label="פתח מסעדות סנדי פלוס פעילות"
+              >
+                {activeRestaurantsSummaryText}
+              </button>
+            </div>
+          </div>
 
-      <div className="border-t border-app-border px-3 py-2.5 sm:px-4 sm:py-3 dark:border-[#252525]" dir="rtl">
-        <div
-          data-pull-refresh-ignore="true"
-          data-sidebar-swipe-ignore="true"
-          className="flex min-w-0 items-center justify-between gap-4"
-        >
-          <span className={`sendi-plus-terms-text min-w-0 truncate text-xs font-normal ${termsTextClassName}`}>
-            {termsSummaryText}
-          </span>
-          <Toggle
-            checked={isSendiPlusEnabled}
-            onChange={() => setTermsAcceptedFromControl(!isSendiPlusEnabled)}
-            disabled={!isSystemOpen || isRefreshing}
-            className={toggleClassName}
-            ariaLabel="אישור תנאי סנדי פלוס"
-          />
-        </div>
-      </div>
+          <div className="border-t border-app-border px-3 py-2.5 sm:px-4 sm:py-3 dark:border-[#252525]" dir="rtl">
+            <div
+              data-pull-refresh-ignore="true"
+              data-sidebar-swipe-ignore="true"
+              className="flex min-w-0 items-center justify-between gap-4"
+            >
+              <span className={`sendi-plus-terms-text min-w-0 truncate text-xs font-normal ${termsTextClassName}`}>
+                {termsSummaryText}
+              </span>
+              <span data-sendi-plus-control="true" className="inline-flex shrink-0">
+                <Toggle
+                  checked={isSendiPlusEnabled}
+                  onChange={() => setTermsAcceptedFromControl(!isSendiPlusEnabled)}
+                  disabled={!isSystemOpen || isRefreshing}
+                  className={toggleClassName}
+                  ariaLabel="אישור תנאי סנדי פלוס"
+                />
+              </span>
+            </div>
+          </div>
+        </>
+      ) : null}
     </section>
   );
 };
@@ -1255,6 +1321,7 @@ const WorkspaceStartCarousel: React.FC<{
   onActivateSendiPlus: () => void;
   onClaimStarterDeliveryBalance: () => void;
   onCreateCourier: () => void;
+  onOpenCouriers: () => void;
   onOpenDeliveryIntake: () => void;
 }> = ({
   deliveryBalance,
@@ -1268,22 +1335,27 @@ const WorkspaceStartCarousel: React.FC<{
   onActivateSendiPlus,
   onClaimStarterDeliveryBalance,
   onCreateCourier,
+  onOpenCouriers,
   onOpenDeliveryIntake,
 }) => {
   const hasRegisteredCouriers = registeredCourierCount > 0;
   const hasPendingCourierInvites = invitedCourierCount > 0;
-  const hasStartedCourierInvites = hasRegisteredCouriers || hasPendingCourierInvites;
   const hasStarterDeliveryGrant =
     Boolean(starterDeliveryGrantClaimed) || deliveryBalance >= STARTER_DELIVERY_GRANT_AMOUNT;
   const hasRestaurants = restaurantCount > 0;
+  const courierStepDescription = hasPendingCourierInvites
+    ? 'הוספנו שליחים למערכת, אבל יש עדיין שליחים שמחכים לאישור.'
+    : hasRegisteredCouriers
+      ? 'הוספנו שליחים למערכת. אפשר לשלוח עוד הזמנות או להמשיך לשלב הבא.'
+      : 'שלח הזמנה לכמה שליחים במקביל מאנשי קשר או ממספרי טלפון. השליח נרשם באפליקציה שלו, ושם יתמלאו הפרטים לדמו.';
   const steps: WorkspaceStartCarouselStep[] = [
     {
       id: 'couriers',
       title: 'שליחים',
       heading: 'הזמנת שליחים',
-      description: 'שלח הזמנה לכמה שליחים במקביל מאנשי קשר או ממספרי טלפון. השליח נרשם באפליקציה שלו, ושם יתמלאו הפרטים לדמו.',
+      description: courierStepDescription,
       actionLabel: hasRegisteredCouriers || hasPendingCourierInvites ? 'שלח עוד הזמנות' : 'הזמן שליחים',
-      done: hasStartedCourierInvites,
+      done: hasRegisteredCouriers,
       icon: <UserPlus className="h-4 w-4" />,
       onClick: onCreateCourier,
     },
@@ -1291,11 +1363,11 @@ const WorkspaceStartCarousel: React.FC<{
       id: 'starter-balance',
       title: '100 חינם',
       heading: '100 משלוחים ראשונים חינם',
-      description: hasStartedCourierInvites
+      description: hasRegisteredCouriers
         ? 'קבל 100 משלוחים ראשונים ללא עלות, כדי להתחיל לשבץ משלוחים בלי לרכוש יתרה מראש.'
-        : 'השלב הזה נפתח אחרי הזמנת שליחים ראשונה, כדי שהיתרה תתווסף רק כשמתחילים להפעיל את המערכת.',
+        : 'השלב הזה נפתח אחרי שיש לפחות שליח אחד שאושר במערכת.',
       actionLabel: hasStarterDeliveryGrant ? 'התקבל' : 'קבל 100 משלוחים',
-      disabled: !hasStartedCourierInvites || hasStarterDeliveryGrant,
+      disabled: !hasRegisteredCouriers || hasStarterDeliveryGrant,
       done: hasStarterDeliveryGrant,
       icon: <PackageOpen className="h-4 w-4" />,
       onClick: onClaimStarterDeliveryBalance,
@@ -1414,9 +1486,14 @@ const WorkspaceStartCarousel: React.FC<{
             <span className="shrink-0 text-xs font-normal text-app-text-secondary">
               שליחים שהוזמנו: {formatNumber(invitedCourierCount)}
             </span>
-            <span className="min-w-0 truncate text-xs font-normal text-app-text-secondary">
+            <button
+              type="button"
+              onClick={onOpenCouriers}
+              className="min-w-0 truncate text-xs font-normal text-app-brand-text underline-offset-4 transition-colors hover:text-app-text hover:underline focus:outline-none focus-visible:underline focus-visible:ring-2 focus-visible:ring-app-brand/30"
+              aria-label="פתח שליחים שמחכים לאישור"
+            >
               מחכים לאישור
-            </span>
+            </button>
           </div>
         </div>
       ) : null}
@@ -1746,7 +1823,7 @@ export const Dashboard: React.FC = () => {
   }, [navigate]);
 
   const handleAddRestaurantFromWorkspaceStart = React.useCallback(() => {
-    navigate('/restaurants?create=1');
+    navigate(`/restaurants?create=1&returnTo=${encodeURIComponent('/dashboard')}`);
   }, [navigate]);
 
   const handleActivateSendiPlusFromSpotlight = React.useCallback(() => {
@@ -1882,7 +1959,7 @@ export const Dashboard: React.FC = () => {
     state.deliveryBalance >= STARTER_DELIVERY_GRANT_AMOUNT;
   const hasWorkspaceStartRestaurants = baseActiveRestaurantsCount > 0;
   const workspaceStartStepsComplete =
-    (registeredCourierCount > 0 || invitedCourierCount > 0) &&
+    registeredCourierCount > 0 &&
     hasStarterDeliveryGrant &&
     hasWorkspaceStartRestaurants &&
     isSendiPlusOperational &&
@@ -1895,7 +1972,7 @@ export const Dashboard: React.FC = () => {
     state.dataMode === 'workspace' &&
     !hasCompletedWorkspaceStart &&
     (
-      (registeredCourierCount === 0 && invitedCourierCount === 0) ||
+      registeredCourierCount === 0 ||
       !hasStarterDeliveryGrant ||
       !hasWorkspaceStartRestaurants ||
       !isSendiPlusOperational ||
@@ -2117,6 +2194,7 @@ export const Dashboard: React.FC = () => {
               onActivateSendiPlus={handleActivateSendiPlusFromSpotlight}
               onClaimStarterDeliveryBalance={handleClaimStarterDeliveryBalance}
               onCreateCourier={() => setIsCourierInviteDialogOpen(true)}
+              onOpenCouriers={() => navigate('/couriers')}
               onOpenDeliveryIntake={() => dispatch({ type: 'TOGGLE_DELIVERY_INTAKE' })}
             />
           ) : null}
@@ -2231,18 +2309,6 @@ export const Dashboard: React.FC = () => {
             </div>
           </section>
 
-          <SendiPlusCard
-            deliveryZoneCount={sendiPlusDeliveryZoneCount}
-            activeRestaurantCount={sendiPlusActiveRestaurantCount}
-            radiusKm={sendiPlusRadiusKm}
-            termsAccepted={sendiPlusTermsAccepted}
-            isSystemOpen={true}
-            isRefreshing={isDashboardRefreshing}
-            onRadiusKmChange={handleSendiPlusRadiusChange}
-            onDeliveryZonesClick={handleDeliveryZonesClick}
-            onTermsAcceptedChange={handleSendiPlusTermsAcceptedChange}
-          />
-
           <button
             type="button"
             aria-label="זמן ממוצע למשלוח"
@@ -2265,6 +2331,19 @@ export const Dashboard: React.FC = () => {
           </button>
 
           {deliveredCancelledSummary}
+
+          <SendiPlusCard
+            deliveryZoneCount={sendiPlusDeliveryZoneCount}
+            activeRestaurantCount={sendiPlusActiveRestaurantCount}
+            radiusKm={sendiPlusRadiusKm}
+            termsAccepted={sendiPlusTermsAccepted}
+            isSystemOpen={true}
+            isRefreshing={isDashboardRefreshing}
+            onRadiusKmChange={handleSendiPlusRadiusChange}
+            onActiveRestaurantsClick={() => navigate('/restaurants?source=sendi-plus')}
+            onDeliveryZonesClick={handleDeliveryZonesClick}
+            onTermsAcceptedChange={handleSendiPlusTermsAcceptedChange}
+          />
 
         </div>
       </main>

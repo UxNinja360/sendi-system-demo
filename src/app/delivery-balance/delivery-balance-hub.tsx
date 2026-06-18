@@ -14,6 +14,7 @@ import {
   Receipt,
   X,
 } from 'lucide-react';
+import { readAuthSession } from '../auth/auth-session';
 import { useDelivery } from '../context/delivery-context-value';
 
 type PurchaseStep = 'amount' | 'payment';
@@ -46,6 +47,8 @@ type PurchaseInvoice = {
 const customMinAmount = 100;
 const customStep = 100;
 const defaultAmount = 100;
+const starterCouponCode = 'STARTER';
+const starterCouponWindowMs = 72 * 60 * 60 * 1000;
 
 const creditPackages: CreditPackage[] = [
   { amount: 100, price: 221.2 },
@@ -161,6 +164,48 @@ const getPackageUnitPrice = (amount: number) => {
 const getPurchaseInvoicesStorageKey = (workspaceId?: string) =>
   `${purchaseInvoicesStoragePrefix}:${workspaceId || 'default'}`;
 
+const toTimestamp = (value: unknown) => {
+  if (value instanceof Date) {
+    const timestamp = value.getTime();
+    return Number.isFinite(timestamp) ? timestamp : null;
+  }
+
+  if (typeof value === 'string' || typeof value === 'number') {
+    const timestamp = new Date(value).getTime();
+    return Number.isFinite(timestamp) ? timestamp : null;
+  }
+
+  return null;
+};
+
+const getStarterCouponEndsAt = (state: ReturnType<typeof useDelivery>['state']) => {
+  if (state.dataMode !== 'workspace') return null;
+
+  const session = readAuthSession();
+  const sessionWorkspaceCreatedAt =
+    session?.workspace?.id === state.workspaceId
+      ? toTimestamp(session.workspace.createdAt)
+      : null;
+  const workspaceCreatedAt =
+    sessionWorkspaceCreatedAt ??
+    toTimestamp(
+      state.activityLogs.find((log) =>
+        log.actionType === 'WORKSPACE_CREATED' || log.actionType === 'ONBOARDING_COMPLETE'
+      )?.timestamp,
+    );
+
+  return workspaceCreatedAt === null ? null : workspaceCreatedAt + starterCouponWindowMs;
+};
+
+const formatCouponCountdown = (remainingMs: number) => {
+  const totalSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+};
+
 const isPurchaseInvoice = (value: unknown): value is PurchaseInvoice => {
   if (!value || typeof value !== 'object') return false;
   const invoice = value as Partial<PurchaseInvoice>;
@@ -221,8 +266,20 @@ export const DeliveryBalanceHub: React.FC = () => {
   const [customMode, setCustomMode] = useState(false);
   const [customAmountDialogOpen, setCustomAmountDialogOpen] = useState(false);
   const [customAmount, setCustomAmount] = useState(defaultAmount);
-  const [couponCode, setCouponCode] = useState('');
-  const [appliedCouponCode, setAppliedCouponCode] = useState<string | null>(null);
+  const starterCouponEndsAt = useMemo(() => getStarterCouponEndsAt(state), [
+    state.activityLogs,
+    state.dataMode,
+    state.workspaceId,
+  ]);
+  const [couponCountdownNow, setCouponCountdownNow] = useState(() => Date.now());
+  const starterCouponRemainingMs =
+    starterCouponEndsAt === null ? 0 : Math.max(0, starterCouponEndsAt - couponCountdownNow);
+  const starterCouponActive = starterCouponRemainingMs > 0;
+  const defaultCouponCode = starterCouponActive ? starterCouponCode : '';
+  const [couponCode, setCouponCode] = useState(defaultCouponCode);
+  const [appliedCouponCode, setAppliedCouponCode] = useState<string | null>(
+    defaultCouponCode || null,
+  );
   const [couponFeedback, setCouponFeedback] = useState<'invalid' | 'missing' | null>(null);
   const [couponChecking, setCouponChecking] = useState(false);
   const invoicesStorageKey = useMemo(
@@ -362,7 +419,14 @@ export const DeliveryBalanceHub: React.FC = () => {
       ? 'text-[#dc2626] dark:text-[#f87171]'
       : 'text-[#f59e0b] dark:text-[#fbbf24]';
   const selectedPrice = selectedAmount === null ? 0 : getPackagePrice(selectedAmount);
-  const appliedCoupon = appliedCouponCode ? getCouponPromotion(appliedCouponCode) : undefined;
+  const isAppliedStarterCouponExpired = appliedCouponCode === starterCouponCode && !starterCouponActive;
+  const appliedCoupon =
+    appliedCouponCode && !isAppliedStarterCouponExpired
+      ? getCouponPromotion(appliedCouponCode)
+      : undefined;
+  const starterCouponCountdownText = starterCouponActive
+    ? formatCouponCountdown(starterCouponRemainingMs)
+    : null;
   const selectedDiscount =
     selectedAmount === null ? 0 : getCouponDiscount(selectedPrice, selectedAmount, appliedCoupon);
   const selectedFinalPrice =
@@ -406,12 +470,47 @@ export const DeliveryBalanceHub: React.FC = () => {
     setCustomAmount(defaultAmount);
     setCustomMode(false);
     setCustomAmountDialogOpen(false);
-    setCouponCode('');
-    setAppliedCouponCode(null);
+    setCouponCode(defaultCouponCode);
+    setAppliedCouponCode(defaultCouponCode || null);
     setCouponFeedback(null);
     setCouponChecking(false);
     clearCouponApplyTimer();
   };
+
+  useEffect(() => {
+    if (starterCouponEndsAt === null) return undefined;
+
+    const updateCountdown = () => setCouponCountdownNow(Date.now());
+    updateCountdown();
+
+    const interval = window.setInterval(updateCountdown, 1000);
+
+    return () => window.clearInterval(interval);
+  }, [starterCouponEndsAt]);
+
+  useEffect(() => {
+    clearCouponApplyTimer();
+    setCouponFeedback(null);
+    setCouponChecking(false);
+
+    if (starterCouponActive) {
+      setCouponCode((current) => {
+        const normalizedCurrent = normalizeCouponCode(current);
+        return !normalizedCurrent || normalizedCurrent === starterCouponCode
+          ? starterCouponCode
+          : current;
+      });
+      setAppliedCouponCode((current) =>
+        !current || current === starterCouponCode ? starterCouponCode : current,
+      );
+      return;
+    }
+
+    setCouponCode((current) =>
+      normalizeCouponCode(current) === starterCouponCode ? '' : current,
+    );
+    setAppliedCouponCode((current) => (current === starterCouponCode ? null : current));
+  }, [starterCouponActive, state.workspaceId]);
 
   const openPurchaseDialog = () => {
     resetPurchaseSelection();
@@ -545,7 +644,7 @@ export const DeliveryBalanceHub: React.FC = () => {
       }
 
       const promotion = getCouponPromotion(normalizedCode);
-      if (!promotion) {
+      if (!promotion || (normalizedCode === starterCouponCode && !starterCouponActive)) {
         setAppliedCouponCode(null);
         setCouponFeedback('invalid');
         setCouponChecking(false);
@@ -754,47 +853,57 @@ export const DeliveryBalanceHub: React.FC = () => {
                 </div>
 
                 <div className="px-1 py-0">
-                  <div
-                    className="flex h-9 w-full min-w-0 overflow-hidden rounded-none border border-app-border bg-transparent focus-within:border-app-text focus-within:ring-0 md:w-96"
-                    dir="rtl"
-                  >
-                    <input
-                      type="text"
-                      value={couponCode}
-                      onChange={handleCouponCodeChange}
-                      onKeyDown={(event) => {
-                        if (event.key === 'Enter') {
-                          applyCouponCode();
-                        }
-                      }}
-                      placeholder="קוד קופון"
-                      className="h-full min-w-0 flex-1 border-0 bg-transparent px-3 text-right text-xs font-bold tracking-normal text-app-text outline-none focus:ring-0"
+                  <div className="flex flex-col gap-2 md:w-96">
+                    <div
+                      className="flex h-9 w-full min-w-0 overflow-hidden rounded-none border border-app-border bg-transparent focus-within:border-app-text focus-within:ring-0"
                       dir="rtl"
-                    />
-                    <button
-                      type="button"
-                      onClick={applyCouponCode}
-                      disabled={couponChecking}
-                      aria-label={couponButtonAriaLabel}
-                      aria-live="polite"
-                      className={`h-full min-w-[3.5rem] shrink-0 border-r border-app-border bg-transparent px-3 text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-app-border-strong ${
-                        couponFeedback === 'invalid'
-                          ? 'text-[#ef4444]'
-                          : 'text-app-text-secondary hover:text-app-text'
-                      } ${couponChecking ? 'cursor-wait' : ''}`}
                     >
-                      {couponChecking ? (
-                        <LoaderCircle aria-hidden="true" className="mx-auto h-3.5 w-3.5 animate-spin" />
-                      ) : appliedCoupon ? (
-                        <Check aria-hidden="true" className="mx-auto h-3.5 w-3.5 text-app-text" />
-                      ) : couponFeedback === 'invalid' ? (
-                        'לא תקף'
-                      ) : couponFeedback === 'missing' ? (
-                        'חסר'
-                      ) : (
-                        'הפעל'
-                      )}
-                    </button>
+                      <input
+                        type="text"
+                        value={couponCode}
+                        onChange={handleCouponCodeChange}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') {
+                            applyCouponCode();
+                          }
+                        }}
+                        placeholder="קוד קופון"
+                        className="h-full min-w-0 flex-1 border-0 bg-transparent px-3 text-right text-xs font-bold tracking-normal text-app-text outline-none focus:ring-0"
+                        dir="rtl"
+                      />
+                      <button
+                        type="button"
+                        onClick={applyCouponCode}
+                        disabled={couponChecking}
+                        aria-label={couponButtonAriaLabel}
+                        aria-live="polite"
+                        className={`h-full min-w-[3.5rem] shrink-0 border-r border-app-border bg-transparent px-3 text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-app-border-strong ${
+                          couponFeedback === 'invalid'
+                            ? 'text-[#ef4444]'
+                            : 'text-app-text-secondary hover:text-app-text'
+                        } ${couponChecking ? 'cursor-wait' : ''}`}
+                      >
+                        {couponChecking ? (
+                          <LoaderCircle aria-hidden="true" className="mx-auto h-3.5 w-3.5 animate-spin" />
+                        ) : appliedCoupon ? (
+                          <Check aria-hidden="true" className="mx-auto h-3.5 w-3.5 text-app-text" />
+                        ) : couponFeedback === 'invalid' ? (
+                          'לא תקף'
+                        ) : couponFeedback === 'missing' ? (
+                          'חסר'
+                        ) : (
+                          'הפעל'
+                        )}
+                      </button>
+                    </div>
+
+                    {starterCouponCountdownText ? (
+                      <div className="flex min-w-0 items-center justify-end gap-2 text-[11px] font-semibold leading-none text-app-text-secondary">
+                        <span className="shrink-0 tabular-nums">
+                          נותרו {starterCouponCountdownText} שעות
+                        </span>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
 

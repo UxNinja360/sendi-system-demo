@@ -284,11 +284,22 @@ const DEFAULT_RESTAURANT_LIST_SESSION_STATE: RestaurantListSessionState = {
   sortDirection: 'asc',
 };
 
+const RESTAURANT_SOURCE_FILTER_PARAM = 'source';
+const RESTAURANT_SOURCE_FILTER_SENDI_PLUS = 'sendi-plus';
+
 let restaurantListSessionState: RestaurantListSessionState = {
   ...DEFAULT_RESTAURANT_LIST_SESSION_STATE,
   restaurantSourceVisibility: {
     ...DEFAULT_RESTAURANT_LIST_SESSION_STATE.restaurantSourceVisibility,
   },
+};
+
+const getSafeInternalReturnPath = (value: string | null) => {
+  const path = value?.trim();
+
+  if (!path || !path.startsWith('/') || path.startsWith('//')) return null;
+
+  return path;
 };
 
 export const RestaurantsScreen: React.FC = () => {
@@ -298,6 +309,7 @@ export const RestaurantsScreen: React.FC = () => {
 
   // ── Basic state ──
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [addRestaurantReturnTo, setAddRestaurantReturnTo] = useState<string | null>(null);
   const [newRestaurant, setNewRestaurant] = useState({
     name: '',
     phone: '',
@@ -381,7 +393,9 @@ export const RestaurantsScreen: React.FC = () => {
     if (searchParams.get('create') !== '1') return;
 
     setIsAddModalOpen(true);
+    setAddRestaurantReturnTo(getSafeInternalReturnPath(searchParams.get('returnTo')));
     searchParams.delete('create');
+    searchParams.delete('returnTo');
     const nextSearch = searchParams.toString();
 
     navigate(
@@ -392,6 +406,41 @@ export const RestaurantsScreen: React.FC = () => {
       { replace: true },
     );
   }, [location.pathname, location.search, navigate]);
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get(RESTAURANT_SOURCE_FILTER_PARAM) !== RESTAURANT_SOURCE_FILTER_SENDI_PLUS) {
+      return;
+    }
+
+    setSearchQuery('');
+    setRestaurantConnectionFilter(null);
+    setRestaurantSourceVisibility({
+      regular: false,
+      sendiGo: true,
+    });
+
+    searchParams.delete(RESTAURANT_SOURCE_FILTER_PARAM);
+    const nextSearch = searchParams.toString();
+
+    navigate(
+      {
+        pathname: location.pathname,
+        search: nextSearch ? `?${nextSearch}` : '',
+      },
+      { replace: true },
+    );
+  }, [location.pathname, location.search, navigate]);
+
+  const closeAddRestaurantModal = useCallback(() => {
+    setIsAddModalOpen(false);
+
+    if (!addRestaurantReturnTo) return;
+
+    const returnTo = addRestaurantReturnTo;
+    setAddRestaurantReturnTo(null);
+    navigate(returnTo, { replace: true });
+  }, [addRestaurantReturnTo, navigate]);
 
   useEffect(() => (
     addAppTopBarActionListener('export-restaurants', () => {
@@ -755,7 +804,6 @@ export const RestaurantsScreen: React.FC = () => {
       courierEtaDisplayMode: 'arrival',
     };
     dispatch({ type: 'ADD_RESTAURANT', payload: restaurant });
-    setIsAddModalOpen(false);
     setNewRestaurant({
       name: '',
       phone: '',
@@ -765,6 +813,7 @@ export const RestaurantsScreen: React.FC = () => {
       type: 'מסעדה',
       linkedHubIds: [TLV_RUNNERS_HUB_ID],
     });
+    closeAddRestaurantModal();
   };
 
   // ── Handlers ──
@@ -1424,7 +1473,7 @@ export const RestaurantsScreen: React.FC = () => {
       {isAddModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
-          onClick={() => setIsAddModalOpen(false)}
+          onClick={closeAddRestaurantModal}
         >
           <div
             className="w-full max-w-md rounded-2xl border border-[#e5e5e5] bg-white p-6 dark:border-app-border dark:bg-app-surface"
@@ -1432,7 +1481,7 @@ export const RestaurantsScreen: React.FC = () => {
           >
             <div className="mb-6 flex items-center justify-between">
               <h2 className="text-xl font-bold text-[#0d0d12] dark:text-app-text">הוסף מסעדה חדשה</h2>
-              <button onClick={() => setIsAddModalOpen(false)} className="rounded-lg p-2 hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors">
+              <button onClick={closeAddRestaurantModal} className="rounded-lg p-2 hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors">
                 <X className="h-5 w-5 text-[#737373] dark:text-app-text-secondary" />
               </button>
             </div>
@@ -1538,7 +1587,7 @@ export const RestaurantsScreen: React.FC = () => {
                 הוסף מסעדה
               </button>
               <button
-                onClick={() => setIsAddModalOpen(false)}
+                onClick={closeAddRestaurantModal}
                 className="rounded-lg bg-[#f5f5f5] px-4 py-2.5 font-medium text-[#0d0d12] transition-colors hover:bg-[#e5e5e5] dark:bg-[#262626] dark:text-app-text dark:hover:bg-[#404040]"
               >
                 ביטול
