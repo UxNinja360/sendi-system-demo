@@ -2077,7 +2077,7 @@ export const Dashboard: React.FC = () => {
       aria-label="זמן ממוצע למשלוח"
       disabled={dashboardCardsDisabled}
       onClick={() => navigate('/deliveries')}
-      className={`dashboard-status-card min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] ${dashboardCardHoverClassName} ${dashboardCardDisabledClassName}`}
+      className={`dashboard-status-card w-full min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] ${dashboardCardHoverClassName} ${dashboardCardDisabledClassName}`}
     >
       <div className="flex items-center justify-between gap-2">
         <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
