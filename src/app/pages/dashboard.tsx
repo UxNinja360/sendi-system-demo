@@ -78,7 +78,6 @@ const SENDI_PLUS_TERMS_TEXT =
   'מתחייב בזמני משלוח של 60 דקות מסירה';
 const SENDI_PLUS_DETAILS_OPEN_STORAGE_KEY = 'dashboard-sendi-plus-details-open';
 const WORKSPACE_START_COMPLETED_STORAGE_KEY_PREFIX = 'dashboard-workspace-start-completed-v1:';
-const WORKSPACE_START_SENDI_PLUS_RADIUS_KM = 5;
 const STARTER_DELIVERY_GRANT_AMOUNT = 100;
 const DASHBOARD_PULL_REFRESH_START_DISTANCE = 22;
 const DASHBOARD_PULL_REFRESH_THRESHOLD = 64;
@@ -1777,7 +1776,10 @@ export const Dashboard: React.FC = () => {
     writeStoredSendiPlusTermsAccepted(value);
     setSendiPlusTermsAccepted(value);
 
-    if (!value) {
+    if (value) {
+      setSendiPlusRadiusKm(MAX_SENDI_PLUS_RADIUS_KM);
+      writeStoredSendiPlusRadius(MAX_SENDI_PLUS_RADIUS_KM);
+    } else {
       setSendiPlusRadiusKm(DEFAULT_SENDI_PLUS_RADIUS_KM);
     }
   }, []);
@@ -1791,12 +1793,8 @@ export const Dashboard: React.FC = () => {
   }, [navigate]);
 
   const handleActivateSendiPlusFromSpotlight = React.useCallback(() => {
-    const nextRadiusKm =
-      sendiPlusRadiusKm > 0 ? sendiPlusRadiusKm : WORKSPACE_START_SENDI_PLUS_RADIUS_KM;
-    setSendiPlusRadiusKm(nextRadiusKm);
-    writeStoredSendiPlusRadius(nextRadiusKm);
     handleSendiPlusTermsAcceptedChange(true);
-  }, [handleSendiPlusTermsAcceptedChange, sendiPlusRadiusKm]);
+  }, [handleSendiPlusTermsAcceptedChange]);
 
   const handleClaimStarterDeliveryBalance = React.useCallback(() => {
     dispatch({
@@ -2149,13 +2147,6 @@ export const Dashboard: React.FC = () => {
             </div>
             <div className="flex max-w-full min-w-0 items-center gap-2 overflow-x-auto no-scrollbar" dir="ltr">
               <div className="flex shrink-0 items-center gap-1">
-                <DashboardToolbarToggle
-                  active={state.isReceivingDeliveries}
-                  disabled={deliveryIntakeControlDisabled}
-                  label={deliveryIntakeLabel}
-                  onClick={() => dispatch({ type: 'TOGGLE_DELIVERY_INTAKE' })}
-                  icon={<Power className="h-3.5 w-3.5" />}
-                />
                 <DashboardDeliveryBalanceChip
                   balance={state.deliveryBalance}
                   onClick={() => navigate('/delivery-balance')}
@@ -2181,27 +2172,31 @@ export const Dashboard: React.FC = () => {
               onOpenDeliveryIntake={() => dispatch({ type: 'TOGGLE_DELIVERY_INTAKE' })}
             />
           ) : null}
-          <section aria-label="סיכום משלוחים פעילים" className="grid gap-[10px]">
-              <button
-                type="button"
-                aria-label="משלוחים פעילים"
-                disabled={dashboardCardsDisabled}
-                onClick={() => navigate(getDeliveriesStatusFilterPath(ACTIVE_DELIVERY_STATUSES))}
-                className={`dashboard-status-card w-full min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] ${dashboardCardHoverClassName} ${dashboardCardDisabledClassName}`}
+          <section aria-label="סיכום קבלת משלוחים ומשלוחים פעילים" className="grid gap-[10px]">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-[10px]" dir="rtl">
+              <div
+                role="status"
+                aria-label={deliveryIntakeLabel}
+                className="dashboard-status-card w-full min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A]"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
-                    משלוחים פעילים
+                  <span
+                    className={`min-w-0 truncate text-[11px] font-semibold sm:text-xs ${
+                      state.isReceivingDeliveries ? 'text-app-success-text' : 'text-app-text-muted'
+                    }`}
+                  >
+                    {deliveryIntakeLabel}
                   </span>
-                  <PackageOpen className="h-3.5 w-3.5 shrink-0 text-app-brand sm:h-4 sm:w-4" />
                 </div>
-                <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
-                  <RefreshingMetricValue
-                    refreshing={isDashboardRefreshing}
-                    value={formatNumber(activeDeliveriesCount)}
-                  />
-                </div>
-              </button>
+              </div>
+              <DashboardToolbarToggle
+                active={state.isReceivingDeliveries}
+                disabled={deliveryIntakeControlDisabled}
+                label={deliveryIntakeLabel}
+                onClick={() => dispatch({ type: 'TOGGLE_DELIVERY_INTAKE' })}
+                icon={<Power className="h-3.5 w-3.5" />}
+              />
+            </div>
             <div className="grid grid-cols-3 gap-[10px]" dir="rtl">
               {STATUS_META.filter(
                 (status) => ACTIVE_DELIVERY_STATUSES.includes(status.id),

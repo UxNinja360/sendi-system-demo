@@ -1,5 +1,6 @@
 @custom-variant dark (&:is(.dark *));
 @custom-variant twilight (&:is(.twilight *));
+@custom-variant windows95 (&:is(.windows95 *));
 
 :root {
   /* ─── App Semantic Tokens ─────────────────────────────────────────────────
@@ -727,6 +728,135 @@
   --ds-focus-color: var(--app-brand-solid);
   --ds-focus-border: 0 0 0 1px rgba(242, 176, 94, 0.62), 0 0 0 4px rgba(242, 176, 94, 0.22);
   --ds-shadow-border-inset: inset 0 0 0 1px rgba(245, 239, 230, 0.12);
+}
+
+.windows95 {
+  --win95-desktop: #008080;
+  --win95-face: #c0c0c0;
+  --win95-raised: #dfdfdf;
+  --win95-highlight: #ffffff;
+  --win95-shadow: #808080;
+  --win95-dark-shadow: #000000;
+  --win95-window: #ffffff;
+  --win95-active-caption: #000080;
+  --win95-active-caption-text: #ffffff;
+  --win95-inactive-caption: #808080;
+  --win95-text: #000000;
+  --win95-muted-text: #404040;
+  --win95-disabled-text: #808080;
+  --win95-selection: #000080;
+  --win95-selection-text: #ffffff;
+
+  --app-background:         var(--win95-desktop);
+  --app-surface:            var(--win95-face);
+  --app-surface-raised:     var(--win95-raised);
+  --app-surface-inset:      var(--win95-window);
+  --app-interactive:        var(--win95-face);
+  --app-interactive-hover:  var(--win95-raised);
+  --app-border:             var(--win95-shadow);
+  --app-border-strong:      var(--win95-dark-shadow);
+  --app-text:               var(--win95-text);
+  --app-text-secondary:     var(--win95-muted-text);
+  --app-text-muted:         var(--win95-disabled-text);
+  --app-nav-bg:             var(--win95-face);
+  --app-nav-border:         var(--win95-shadow);
+  --app-nav-active-bg:      var(--win95-active-caption);
+  --app-nav-active-text:    var(--win95-active-caption-text);
+  --app-nav-indicator:      var(--win95-active-caption);
+  --app-nav-hover-bg:       var(--win95-raised);
+  --app-nav-badge-bg:       var(--win95-window);
+  --app-nav-badge-text:     var(--win95-text);
+  --app-brand:              var(--win95-active-caption);
+  --app-brand-solid:        var(--win95-active-caption);
+  --app-brand-hover:        #0000a0;
+  --app-brand-subtle:       var(--win95-window);
+  --app-brand-text:         var(--win95-active-caption);
+  --app-success-subtle:     var(--win95-window);
+  --app-success-text:       #008000;
+  --app-warning-subtle:     var(--win95-window);
+  --app-warning-text:       #808000;
+  --app-error-subtle:       var(--win95-window);
+  --app-error-text:         #800000;
+  --app-info-subtle:        var(--win95-window);
+  --app-info-text:          var(--win95-active-caption);
+  --app-radius-xs:          0px;
+  --app-radius-sm:          0px;
+  --app-radius-md:          0px;
+  --app-shadow-panel:       2px 2px 0 var(--win95-dark-shadow);
+
+  --background: var(--app-background);
+  --foreground: var(--app-text);
+  --card: var(--app-surface);
+  --card-foreground: var(--app-text);
+  --popover: var(--app-surface);
+  --popover-foreground: var(--app-text);
+  --primary: var(--app-brand-solid);
+  --primary-foreground: var(--win95-active-caption-text);
+  --secondary: var(--app-interactive);
+  --secondary-foreground: var(--app-text);
+  --muted: var(--app-surface-raised);
+  --muted-foreground: var(--app-text-secondary);
+  --accent: var(--app-nav-active-bg);
+  --accent-foreground: var(--app-nav-active-text);
+  --destructive: #800000;
+  --destructive-foreground: var(--win95-active-caption-text);
+  --border: var(--app-border);
+  --input: var(--app-border);
+  --input-background: var(--win95-window);
+  --switch-background: var(--win95-shadow);
+  --ring: var(--win95-active-caption);
+  --chart-1: #000080;
+  --chart-2: #008080;
+  --chart-3: #008000;
+  --chart-4: #800000;
+  --chart-5: #808000;
+  --radius: 0px;
+  --sidebar: var(--app-nav-bg);
+  --sidebar-foreground: var(--app-text);
+  --sidebar-primary: var(--app-brand-solid);
+  --sidebar-primary-foreground: var(--win95-active-caption-text);
+  --sidebar-accent: var(--app-nav-active-bg);
+  --sidebar-accent-foreground: var(--app-nav-active-text);
+  --sidebar-border: var(--app-nav-border);
+  --sidebar-ring: var(--win95-active-caption);
+
+  --geist-background: var(--win95-face);
+  --geist-foreground: var(--win95-text);
+  --geist-radius: 0px;
+  --geist-marketing-radius: 0px;
+  --accents-1: #ffffff;
+  --accents-2: #dfdfdf;
+  --accents-3: #c0c0c0;
+  --accents-4: #808080;
+  --accents-5: #606060;
+  --accents-6: #404040;
+  --accents-7: #202020;
+  --accents-8: #000000;
+  --ds-gray-100-value: 0, 0%, 75%;
+  --ds-gray-200-value: 0, 0%, 87%;
+  --ds-gray-300-value: 0, 0%, 100%;
+  --ds-gray-400-value: 0, 0%, 50%;
+  --ds-gray-500-value: 0, 0%, 50%;
+  --ds-gray-600-value: 0, 0%, 38%;
+  --ds-gray-700-value: 0, 0%, 25%;
+  --ds-gray-800-value: 0, 0%, 13%;
+  --ds-gray-900-value: 0, 0%, 0%;
+  --ds-gray-1000-value: 0, 0%, 0%;
+  --ds-blue-100-value: 240, 100%, 98%;
+  --ds-blue-200-value: 240, 100%, 96%;
+  --ds-blue-300-value: 240, 100%, 92%;
+  --ds-blue-400-value: 240, 100%, 82%;
+  --ds-blue-500-value: 240, 100%, 64%;
+  --ds-blue-600-value: 240, 100%, 45%;
+  --ds-blue-700-value: 240, 100%, 25%;
+  --ds-blue-800-value: 240, 100%, 25%;
+  --ds-blue-900-value: 240, 100%, 25%;
+  --ds-blue-1000-value: 240, 100%, 16%;
+  --ds-background-100-value: 0, 0%, 75%;
+  --ds-background-200-value: 180, 100%, 25%;
+  --ds-focus-color: var(--win95-active-caption);
+  --ds-focus-border: 0 0 0 1px var(--win95-dark-shadow), 0 0 0 3px var(--win95-active-caption);
+  --ds-shadow-border-inset: inset 1px 1px var(--win95-highlight), inset -1px -1px var(--win95-shadow);
 }
 
 @theme inline {

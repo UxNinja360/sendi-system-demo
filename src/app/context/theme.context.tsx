@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 export type ThemeColor = 'green' | 'blue' | 'purple' | 'orange' | 'pink' | 'red';
-export type ThemeMode = 'light' | 'twilight' | 'dark';
+export type ThemeMode = 'light' | 'twilight' | 'dark' | 'windows95';
 
 type ThemeClasses = {
   primary: string;
@@ -129,7 +129,7 @@ const readStoredDarkMode = (): boolean => {
 
 const readStoredThemeMode = (): ThemeMode => {
   const stored = safeLocalStorageGet('theme');
-  if (stored === 'light' || stored === 'twilight' || stored === 'dark') return stored;
+  if (stored === 'light' || stored === 'twilight' || stored === 'dark' || stored === 'windows95') return stored;
   return readStoredDarkMode() ? 'dark' : 'light';
 };
 
@@ -146,7 +146,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [themeMode, setThemeMode] = useState<ThemeMode>(readStoredThemeMode);
 
   const themeClasses = useMemo(() => themeColors[themeColor], [themeColor]);
-  const isDark = themeMode !== 'light';
+  const isDark = themeMode === 'dark' || themeMode === 'twilight';
   const isTwilight = themeMode === 'twilight';
 
   useEffect(() => {
@@ -162,6 +162,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     safeLocalStorageRemove('seasonalMode');
     document.documentElement.classList.toggle('dark', isDark);
     document.documentElement.classList.toggle('twilight', isTwilight);
+    document.documentElement.classList.toggle('windows95', themeMode === 'windows95');
     document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
   }, [isDark, isTwilight, themeMode]);
 

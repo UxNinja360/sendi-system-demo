@@ -2603,3 +2603,202 @@ body.deliveries-map-sheet-resizing .deliveries-map-sheet-resizer::before {
     animation-name: delivery-panel-enter-desktop;
   }
 }
+
+html.windows95,
+html.windows95 body {
+  background: var(--win95-desktop);
+}
+
+html.windows95 body,
+html.windows95 .app-layout-root,
+html.windows95 button,
+html.windows95 input,
+html.windows95 select,
+html.windows95 textarea,
+html.windows95 [data-sonner-toaster] {
+  font-family: 'MS Sans Serif', Tahoma, Arial, sans-serif;
+  letter-spacing: 0;
+}
+
+html.windows95 ::selection {
+  background: var(--win95-selection);
+  color: var(--win95-selection-text);
+}
+
+html.windows95 .app-layout-root {
+  background: var(--win95-desktop);
+  color: var(--win95-text);
+}
+
+html.windows95 .app-layout-root *,
+html.windows95 .app-layout-root *::before,
+html.windows95 .app-layout-root *::after {
+  border-radius: 0 !important;
+}
+
+html.windows95 :is(
+  .bg-white,
+  .bg-\[\#ffffff\],
+  .bg-\[\#fafafa\],
+  .bg-\[\#f7f7f7\],
+  .bg-\[\#f5f5f5\],
+  .bg-\[\#ececec\]
+) {
+  background-color: var(--win95-face) !important;
+}
+
+html.windows95 :is(
+  .hover\:bg-\[\#f7f7f7\]:hover,
+  .hover\:bg-\[\#f5f5f5\]:hover,
+  .hover\:bg-\[\#ececec\]:hover
+) {
+  background-color: var(--win95-raised) !important;
+}
+
+html.windows95 :is(
+  .text-\[\#0d0d12\],
+  .text-\[\#111827\]
+) {
+  color: var(--win95-text) !important;
+}
+
+html.windows95 :is(
+  .text-\[\#666d80\],
+  .text-\[\#717182\],
+  .text-\[\#8a8f98\]
+) {
+  color: var(--win95-muted-text) !important;
+}
+
+html.windows95 :is(
+  .border-\[\#e5e5e5\],
+  .border-\[\#f1f1f1\],
+  .border-app-border
+) {
+  border-color: var(--win95-shadow) !important;
+}
+
+html.windows95 :is(
+  .rounded-none.border,
+  .dashboard-status-card,
+  .sendi-plus-card,
+  [data-toolbar-icon-button],
+  .status-filter-text-zone,
+  .status-filter-action-slot,
+  [role='listbox'],
+  [role='dialog'],
+  .sonner-toast
+) {
+  border-color: var(--win95-highlight) var(--win95-shadow) var(--win95-shadow) var(--win95-highlight) !important;
+  border-style: solid !important;
+  border-width: 2px !important;
+  box-shadow:
+    inset 1px 1px var(--win95-raised),
+    inset -1px -1px var(--win95-dark-shadow) !important;
+}
+
+html.windows95 .app-layout-root :is(button, [role='button']) {
+  border-color: var(--win95-highlight) var(--win95-shadow) var(--win95-shadow) var(--win95-highlight);
+  border-style: solid;
+  border-width: 2px;
+  box-shadow:
+    inset 1px 1px var(--win95-raised),
+    inset -1px -1px var(--win95-dark-shadow);
+}
+
+html.windows95 .app-layout-root :is(button, [role='button']):active {
+  border-color: var(--win95-shadow) var(--win95-highlight) var(--win95-highlight) var(--win95-shadow) !important;
+  box-shadow:
+    inset 1px 1px var(--win95-dark-shadow),
+    inset -1px -1px var(--win95-raised) !important;
+  transform: translate(1px, 1px);
+}
+
+html.windows95 :is([aria-selected='true'], [data-active='true'], .bg-app-brand-solid) {
+  background-color: var(--win95-active-caption) !important;
+  color: var(--win95-active-caption-text) !important;
+}
+
+html.windows95 :is([aria-selected='true'], [data-active='true']) svg {
+  color: currentColor !important;
+}
+
+html.windows95 .app-layout-root :is(input:not([type='range']), textarea, select) {
+  background: var(--win95-window) !important;
+  border-color: var(--win95-shadow) var(--win95-highlight) var(--win95-highlight) var(--win95-shadow) !important;
+  border-style: solid !important;
+  border-width: 2px !important;
+  box-shadow:
+    inset 1px 1px var(--win95-dark-shadow),
+    inset -1px -1px var(--win95-raised) !important;
+  color: var(--win95-text) !important;
+}
+
+html.windows95 input[type='range']::-webkit-slider-runnable-track {
+  background: var(--win95-shadow);
+  border: 2px solid;
+  border-color: var(--win95-shadow) var(--win95-highlight) var(--win95-highlight) var(--win95-shadow);
+  border-radius: 0;
+  height: 8px;
+}
+
+html.windows95 input[type='range']::-webkit-slider-thumb {
+  background: var(--win95-face);
+  border: 2px solid;
+  border-color: var(--win95-highlight) var(--win95-shadow) var(--win95-shadow) var(--win95-highlight);
+  border-radius: 0;
+  box-shadow: 1px 1px 0 var(--win95-dark-shadow);
+  height: 22px;
+  margin-top: -9px;
+  transform: none;
+  width: 16px;
+}
+
+html.windows95 input[type='range']::-moz-range-track {
+  background: var(--win95-shadow);
+  border: 2px solid;
+  border-color: var(--win95-shadow) var(--win95-highlight) var(--win95-highlight) var(--win95-shadow);
+  border-radius: 0;
+  height: 8px;
+}
+
+html.windows95 input[type='range']::-moz-range-thumb {
+  background: var(--win95-face);
+  border: 2px solid;
+  border-color: var(--win95-highlight) var(--win95-shadow) var(--win95-shadow) var(--win95-highlight);
+  border-radius: 0;
+  box-shadow: 1px 1px 0 var(--win95-dark-shadow);
+  height: 22px;
+  width: 16px;
+}
+
+html.windows95 ::-webkit-scrollbar {
+  height: 16px;
+  width: 16px;
+}
+
+html.windows95 ::-webkit-scrollbar-track {
+  background: var(--win95-face);
+}
+
+html.windows95 ::-webkit-scrollbar-thumb {
+  background: var(--win95-face);
+  border: 2px solid;
+  border-color: var(--win95-highlight) var(--win95-shadow) var(--win95-shadow) var(--win95-highlight);
+  border-radius: 0;
+  box-shadow:
+    inset 1px 1px var(--win95-raised),
+    inset -1px -1px var(--win95-dark-shadow);
+}
+
+html.windows95 .sendi-plus-card::before,
+html.windows95 .sendi-plus-card::after {
+  display: none;
+}
+
+html.windows95 .sendi-plus-mark--active {
+  background: var(--win95-active-caption);
+  box-shadow:
+    inset 1px 1px var(--win95-highlight),
+    inset -1px -1px var(--win95-dark-shadow);
+}

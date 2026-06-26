@@ -14,6 +14,7 @@ import {
   LayoutDashboard,
   LogOut,
   Map as MapIcon,
+  Monitor,
   Moon,
   Palette,
   Package,
@@ -111,10 +112,11 @@ const TEXT = {
   darkMode: '\u05de\u05e6\u05d1 \u05db\u05d4\u05d4',
   darkModeHint: '\u05de\u05e2\u05d1\u05e8 \u05d9\u05d3\u05e0\u05d9 \u05d1\u05d9\u05df \u05d1\u05d4\u05d9\u05e8 \u05dc\u05db\u05d4\u05d4.',
   themeMode: '\u05e2\u05e8\u05db\u05ea \u05e0\u05d5\u05e9\u05d0',
-  themeModeHint: '\u05d1\u05d7\u05d9\u05e8\u05d4 \u05d1\u05d9\u05df \u05d1\u05d4\u05d9\u05e8, \u05d3\u05de\u05d3\u05d5\u05de\u05d9\u05dd \u05d0\u05d5 \u05db\u05d4\u05d4.',
+  themeModeHint: '\u05d1\u05d7\u05d9\u05e8\u05d4 \u05d1\u05d9\u05df \u05d1\u05d4\u05d9\u05e8, \u05d3\u05de\u05d3\u05d5\u05de\u05d9\u05dd, \u05db\u05d4\u05d4 \u05d0\u05d5 Windows 95.',
   themeLight: '\u05d1\u05d4\u05d9\u05e8',
   themeTwilight: '\u05d3\u05de\u05d3\u05d5\u05de\u05d9\u05dd',
   themeDark: '\u05db\u05d4\u05d4',
+  themeWindows95: 'Windows 95',
   autoTheme: '\u05ea\u05d1\u05e0\u05d9\u05ea \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9\u05ea',
   autoThemeHint: '\u05d4\u05ea\u05d0\u05de\u05d4 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9\u05ea \u05e9\u05dc \u05d4\u05de\u05de\u05e9\u05e7.',
   alerts: 'צלילים והתראות',
@@ -391,12 +393,13 @@ const themeModeOptions: Array<{ id: ThemeMode; label: string; icon: LucideIcon }
   { id: 'light', label: TEXT.themeLight, icon: Sun },
   { id: 'twilight', label: TEXT.themeTwilight, icon: Sunset },
   { id: 'dark', label: TEXT.themeDark, icon: Moon },
+  { id: 'windows95', label: TEXT.themeWindows95, icon: Monitor },
 ];
 
 const THEME_PICKER_SHEET_BREAKPOINT = 640;
 const THEME_PICKER_PANEL_WIDTH = 280;
 const THEME_PICKER_PANEL_MARGIN = 12;
-const THEME_PICKER_PANEL_MIN_HEIGHT = 188;
+const THEME_PICKER_PANEL_MIN_HEIGHT = 244;
 
 const settingsNavIconMap: Record<AppNavIconKey, LucideIcon> = {
   activity: Activity,
@@ -1427,6 +1430,8 @@ export const SettingsPage: React.FC<{ onLogout?: () => void; category?: Settings
                   <Moon className="h-4 w-4" />
                 ) : themeMode === 'twilight' ? (
                   <Sunset className="h-4 w-4" />
+                ) : themeMode === 'windows95' ? (
+                  <Monitor className="h-4 w-4" />
                 ) : (
                   <Sun className="h-4 w-4" />
                 )
