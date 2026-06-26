@@ -493,6 +493,19 @@ body {
     opacity 180ms ease;
 }
 
+.sendi-plus-summary-link {
+  border-bottom: 1px solid transparent;
+  text-decoration: none;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.sendi-plus-summary-link:hover,
+.sendi-plus-summary-link:focus-visible {
+  border-bottom-color: currentColor;
+  text-decoration: none !important;
+}
+
 .sendi-plus-card--igniting {
   animation: sendi-plus-card-ignite 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }

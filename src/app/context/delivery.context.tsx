@@ -53,6 +53,7 @@ import {
   isSendiPlusRestaurant,
   readStoredSendiPlusRadius,
   readStoredSendiPlusTermsAccepted,
+  writeStoredSendiPlusTermsAccepted,
 } from '../utils/sendi-plus';
 import {
   findDeliveryZoneForPoint,
@@ -72,6 +73,9 @@ const LIVE_MANAGER_COURIER_POSITIONS_STORAGE_KEY = DELIVERY_STORAGE_KEYS.liveCou
 const LIVE_MANAGER_COURIER_POSITIONS_TS_STORAGE_KEY = DELIVERY_STORAGE_KEYS.liveCourierPositionTimestamps;
 const SENDI_PLUS_DISABLED_RESTAURANT_IDS_STORAGE_KEY =
   DELIVERY_STORAGE_KEYS.sendiPlusDisabledRestaurantIds;
+const SENDI_PLUS_EXPIRED_SHUTDOWN_COUNT_STORAGE_KEY =
+  DELIVERY_STORAGE_KEYS.sendiPlusExpiredShutdownCount;
+const SENDI_PLUS_MISSED_DELIVERY_LIMIT = 5;
 const SIMULATION_TICK_MS = 5000;
 const MIN_GLOBAL_DELIVERY_GAP_MS = 12000;
 const MIN_ACTIVE_SIMULATED_DELIVERIES = 8;
@@ -84,6 +88,9 @@ const MAX_PROGRESS_CATCH_UP_PASSES = 12;
 const DELIVERY_DISTANCE_ROUTE_FACTOR = 1.28;
 
 type CompleteDeliveryPayload = Extract<DeliveryAction, { type: 'COMPLETE_DELIVERY' }>['payload'];
+type SendiPlusShutdownNotice = {
+  missedCount: number;
+};
 
 const getCompleteDeliveryId = (payload: CompleteDeliveryPayload) =>
   typeof payload === 'string' ? payload : payload.deliveryId;
@@ -761,6 +768,13 @@ const getDeliveryCreatedAtMs = (delivery: Delivery) => {
 const isLiveActiveDelivery = (delivery: Delivery) =>
   delivery.status === 'pending' || delivery.status === 'assigned' || delivery.status === 'delivering';
 
+const isSendiPlusDelivery = (delivery: Delivery) =>
+  isSendiPlusRestaurant(delivery.restaurantName) ||
+  isSendiPlusRestaurant(delivery.rest_name);
+
+const countExpiredSendiPlusDeliveries = (deliveries: Delivery[]) =>
+  deliveries.filter((delivery) => delivery.status === 'expired' && isSendiPlusDelivery(delivery)).length;
+
 const getRestaurantServiceAreaPoint = (restaurant: Restaurant) => {
   if (!Number.isFinite(restaurant.lat) || !Number.isFinite(restaurant.lng)) return null;
   return { lat: restaurant.lat, lng: restaurant.lng };
@@ -930,6 +944,27 @@ const writeStoredSendiPlusDisabledRestaurantIds = (restaurantIds: Set<string>) =
   }
 };
 
+const readStoredSendiPlusExpiredShutdownCount = () => {
+  if (typeof window === 'undefined') return 0;
+
+  try {
+    const parsed = Number(window.localStorage.getItem(SENDI_PLUS_EXPIRED_SHUTDOWN_COUNT_STORAGE_KEY));
+    return Number.isFinite(parsed) ? parsed : 0;
+  } catch {
+    return 0;
+  }
+};
+
+const writeStoredSendiPlusExpiredShutdownCount = (count: number) => {
+  if (typeof window === 'undefined') return;
+
+  try {
+    window.localStorage.setItem(SENDI_PLUS_EXPIRED_SHUTDOWN_COUNT_STORAGE_KEY, String(count));
+  } catch {
+    // The in-memory notice still prevents silent failure for this session.
+  }
+};
+
 const setStoredSendiPlusRestaurantDisabled = (restaurantId: string, disabled: boolean) => {
   const restaurantIds = readStoredSendiPlusDisabledRestaurantIds();
 
@@ -1073,6 +1108,8 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     typeof window === 'undefined' ? null : ensureStorageEpoch(window.localStorage)
   );
   const pendingActionToastsRef = useRef<Map<string, PendingActionToast>>(new Map());
+  const [sendiPlusShutdownNotice, setSendiPlusShutdownNotice] =
+    useState<SendiPlusShutdownNotice | null>(null);
 
   useEffect(() => {
     stateRef.current = state;
@@ -1921,6 +1958,19 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
   }, [rawDispatch]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const expiredSendiPlusCount = countExpiredSendiPlusDeliveries(state.deliveries);
+    if (expiredSendiPlusCount < SENDI_PLUS_MISSED_DELIVERY_LIMIT) return;
+    if (!readStoredSendiPlusTermsAccepted()) return;
+    if (expiredSendiPlusCount <= readStoredSendiPlusExpiredShutdownCount()) return;
+
+    writeStoredSendiPlusExpiredShutdownCount(expiredSendiPlusCount);
+    writeStoredSendiPlusTermsAccepted(false);
+    setSendiPlusShutdownNotice({ missedCount: SENDI_PLUS_MISSED_DELIVERY_LIMIT });
+  }, [state.deliveries]);
+
   // Auto-assign pending deliveries while the feature is enabled.
   useEffect(() => {
     if (!state.autoAssignEnabled) return;
@@ -2209,6 +2259,40 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }}
     >
       {children}
+      {sendiPlusShutdownNotice ? (
+        <div
+          className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/65 px-4 py-6 backdrop-blur-sm"
+          dir="rtl"
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="sendi-plus-shutdown-title"
+            aria-describedby="sendi-plus-shutdown-description"
+            className="w-full max-w-md rounded-[8px] border border-app-border bg-app-surface p-5 text-right shadow-2xl dark:border-[#252525] dark:bg-[#0A0A0A]"
+          >
+            <h2
+              id="sendi-plus-shutdown-title"
+              className="text-lg font-black leading-7 text-app-text"
+            >
+              סנדי פלוס נכבה
+            </h2>
+            <p
+              id="sendi-plus-shutdown-description"
+              className="mt-3 text-sm font-semibold leading-6 text-app-text-secondary"
+            >
+              פוספסו {sendiPlusShutdownNotice.missedCount} משלוחי סנדי פלוס. קבלת משלוחים מסנדי פלוס נסגרה.
+            </p>
+            <button
+              type="button"
+              onClick={() => setSendiPlusShutdownNotice(null)}
+              className="mt-5 inline-flex h-10 w-full items-center justify-center rounded-[6px] bg-app-brand-solid px-4 text-sm font-black text-app-background transition hover:bg-app-brand-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-brand"
+            >
+              הבנתי
+            </button>
+          </div>
+        </div>
+      ) : null}
     </DeliveryContext.Provider>
   );
 };

@@ -1152,22 +1152,6 @@ export const CouriersListScreen: React.FC = () => {
                 <div className="flex min-w-0 flex-1 items-center justify-between gap-1.5">
                   <div className="flex shrink-0 items-center gap-1">
                     <CourierToolbarToggle
-                      active={showActiveCouriersOnly}
-                      label="הצג רק שליחים מחוברים"
-                      onClick={() => setShowActiveCouriersOnly((value) => !value)}
-                      icon={<Link2 className="h-3.5 w-3.5" />}
-                    />
-                  </div>
-                  <ListToolbarActions
-                    searchQuery={searchQuery}
-                    onSearchQueryChange={setSearchQuery}
-                    searchPlaceholder={TEXT.searchPlaceholder}
-                    searchWidthClass="w-48"
-                    showColumnsToggle={false}
-                    showExportButton={false}
-                  />
-                  <div className="flex shrink-0 items-center gap-1">
-                    <CourierToolbarToggle
                       active={courierEmploymentVisibility.hourly}
                       label="הצג שליחים שעתיים"
                       onClick={() =>
@@ -1188,6 +1172,22 @@ export const CouriersListScreen: React.FC = () => {
                         }))
                       }
                       icon={<Package className="h-3.5 w-3.5" />}
+                    />
+                  </div>
+                  <ListToolbarActions
+                    searchQuery={searchQuery}
+                    onSearchQueryChange={setSearchQuery}
+                    searchPlaceholder={TEXT.searchPlaceholder}
+                    searchWidthClass="w-48"
+                    showColumnsToggle={false}
+                    showExportButton={false}
+                  />
+                  <div className="flex shrink-0 items-center gap-1">
+                    <CourierToolbarToggle
+                      active={showActiveCouriersOnly}
+                      label="הצג רק שליחים מחוברים"
+                      onClick={() => setShowActiveCouriersOnly((value) => !value)}
+                      icon={<Link2 className="h-3.5 w-3.5" />}
                     />
                   </div>
                 </div>

@@ -55,7 +55,7 @@ import {
   DELIVERY_ZONES_CHANGE_EVENT,
   isDeliveryZoneActive,
   isPointCoveredByActiveDeliveryZones,
-  loadStoredDeliveryServiceAreas,
+  loadStoredDeliveryZones,
 } from '../utils/delivery-zones';
 import { readAuthSession } from '../auth/auth-session';
 
@@ -179,7 +179,7 @@ const STATUS_META: Array<{
   },
   {
     id: 'delivering',
-    label: 'במסירה',
+    label: 'נאספו',
     hint: 'שליח בדרך ללקוח',
     icon: Route,
     accentClassName: 'text-green-400',
@@ -889,6 +889,26 @@ const SendiPlusCard: React.FC<{
       >
         <div className="sendi-plus-accordion__inner">
           <div className="border-t border-app-border px-3 pb-3 pt-3 sm:px-4 dark:border-[#252525]">
+            <div className="mb-2.5 flex min-w-0 items-center justify-between gap-4 border-b border-app-border pb-2.5 dark:border-[#252525]" dir="rtl">
+              <button
+                type="button"
+                data-sendi-plus-control="true"
+                onClick={onActiveRestaurantsClick}
+                className="sendi-plus-summary-link shrink-0 cursor-pointer text-xs font-normal text-app-brand-text transition-colors hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+                aria-label="פתח מסעדות סנדי פלוס פעילות"
+              >
+                {activeRestaurantsSummaryText}
+              </button>
+              <button
+                type="button"
+                data-sendi-plus-control="true"
+                aria-label={`פתח ${activeDeliveryZonesSummaryText}`}
+                onClick={onDeliveryZonesClick}
+                className="sendi-plus-summary-link min-w-0 cursor-pointer truncate text-xs font-normal text-app-brand-text transition-colors hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
+              >
+                {activeDeliveryZonesSummaryText}
+              </button>
+            </div>
             <p className={`mb-2.5 text-right text-xs font-normal leading-5 ${helperTextClassName}`} dir="rtl">
               {radiusHelperText}
             </p>
@@ -945,30 +965,6 @@ const SendiPlusCard: React.FC<{
       </div>
 
       {isAccordionOpen ? (
-        <>
-          <div className="border-t border-app-border px-3 py-2.5 sm:px-4 sm:py-3 dark:border-[#252525]" dir="rtl">
-            <div className="flex min-w-0 items-center justify-between gap-4">
-              <button
-                type="button"
-                data-sendi-plus-control="true"
-                aria-label={`פתח ${activeDeliveryZonesSummaryText}`}
-                onClick={onDeliveryZonesClick}
-                className="shrink-0 text-xs font-normal text-app-brand-text transition-colors hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
-              >
-                {activeDeliveryZonesSummaryText}
-              </button>
-              <button
-                type="button"
-                data-sendi-plus-control="true"
-                onClick={onActiveRestaurantsClick}
-                className="min-w-0 truncate text-xs font-normal text-app-brand-text transition-colors hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30"
-                aria-label="פתח מסעדות סנדי פלוס פעילות"
-              >
-                {activeRestaurantsSummaryText}
-              </button>
-            </div>
-          </div>
-
           <div className="border-t border-app-border px-3 py-2.5 sm:px-4 sm:py-3 dark:border-[#252525]" dir="rtl">
             <div
               data-pull-refresh-ignore="true"
@@ -989,7 +985,6 @@ const SendiPlusCard: React.FC<{
               </span>
             </div>
           </div>
-        </>
       ) : null}
     </section>
   );
@@ -1869,7 +1864,7 @@ export const Dashboard: React.FC = () => {
   );
 
   const sendiPlusDeliveryZones = React.useMemo(
-    () => loadStoredDeliveryServiceAreas(),
+    () => loadStoredDeliveryZones(),
     [dashboardRefreshVersion, deliveryZoneConfigVersion],
   );
   const sendiPlusDeliveryZoneCount = React.useMemo(
@@ -2023,9 +2018,6 @@ export const Dashboard: React.FC = () => {
   const dashboardCardsDisabled = false;
   const dashboardCardDisabledClassName = dashboardCardsDisabled
     ? 'cursor-not-allowed opacity-45 grayscale'
-    : '';
-  const dashboardCardInnerDisabledClassName = dashboardCardsDisabled
-    ? 'cursor-not-allowed'
     : '';
   const dashboardCardHoverClassName = dashboardCardsDisabled
     ? ''
@@ -2189,27 +2181,28 @@ export const Dashboard: React.FC = () => {
               onOpenDeliveryIntake={() => dispatch({ type: 'TOGGLE_DELIVERY_INTAKE' })}
             />
           ) : null}
-          <section>
-            <div className={`dashboard-delivery-summary overflow-hidden rounded-none border border-app-border bg-app-surface text-right dark:border-[#252525] dark:bg-[#0A0A0A] ${dashboardCardDisabledClassName}`}>
+          <section aria-label="סיכום משלוחים פעילים" className="grid gap-[10px]">
               <button
                 type="button"
+                aria-label="משלוחים פעילים"
                 disabled={dashboardCardsDisabled}
                 onClick={() => navigate(getDeliveriesStatusFilterPath(ACTIVE_DELIVERY_STATUSES))}
-                className={`flex w-full min-w-0 items-center justify-between gap-3 border-b border-app-border p-2.5 text-right transition-colors sm:p-3 dark:border-[#252525] ${dashboardCardHoverClassName} ${dashboardCardInnerDisabledClassName}`}
+                className={`dashboard-status-card w-full min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] ${dashboardCardHoverClassName} ${dashboardCardDisabledClassName}`}
               >
-                <div className="flex min-w-0 items-center gap-2">
-                  <span className="min-w-0 truncate text-xs font-semibold text-app-text-secondary">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
                     משלוחים פעילים
                   </span>
+                  <PackageOpen className="h-3.5 w-3.5 shrink-0 text-app-brand sm:h-4 sm:w-4" />
                 </div>
-                <div className="text-xl font-bold leading-none text-app-text sm:text-2xl">
+                <div className="mt-2 text-xl font-bold leading-none text-app-text sm:text-2xl">
                   <RefreshingMetricValue
                     refreshing={isDashboardRefreshing}
                     value={formatNumber(activeDeliveriesCount)}
                   />
                 </div>
               </button>
-              <div className="dashboard-delivery-summary__row grid grid-cols-3" dir="rtl">
+            <div className="grid grid-cols-3 gap-[10px]" dir="rtl">
               {STATUS_META.filter(
                 (status) => ACTIVE_DELIVERY_STATUSES.includes(status.id),
               ).map((status) => {
@@ -2222,9 +2215,10 @@ export const Dashboard: React.FC = () => {
                   <button
                     key={status.id}
                     type="button"
+                    aria-label={label}
                     disabled={dashboardCardsDisabled}
                     onClick={() => navigate(getDeliveriesStatusFilterPath([status.id]))}
-                    className={`min-w-0 p-2.5 text-right transition-colors sm:p-3 ${dashboardCardHoverClassName} ${dashboardCardInnerDisabledClassName}`}
+                    className={`dashboard-status-card min-w-0 rounded-none border border-app-border bg-app-surface p-2.5 text-right transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-app-brand/30 sm:p-3 dark:border-[#252525] dark:bg-[#0A0A0A] ${dashboardCardHoverClassName} ${dashboardCardDisabledClassName}`}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="min-w-0 truncate text-[11px] font-semibold text-app-text-secondary sm:text-xs">
@@ -2244,15 +2238,10 @@ export const Dashboard: React.FC = () => {
                   </button>
                 );
               })}
-              </div>
             </div>
-            <div className="mt-[10px]">
-              {deliveredCancelledSummary}
-            </div>
-            <div className="mt-[10px]">
-              {averageDeliveryTimeCard}
-            </div>
-            <div className="mt-[10px] grid grid-cols-2 gap-[10px] min-[520px]:grid-cols-6">
+            {deliveredCancelledSummary}
+            {averageDeliveryTimeCard}
+            <div className="grid grid-cols-2 gap-[10px] min-[520px]:grid-cols-6">
               <section
                 aria-label="שליחים"
                 aria-disabled={dashboardCardsDisabled}

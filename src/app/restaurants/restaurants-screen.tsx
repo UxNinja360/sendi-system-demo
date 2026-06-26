@@ -1075,26 +1075,6 @@ export const RestaurantsScreen: React.FC = () => {
                 <div className="flex min-w-0 flex-1 items-center justify-between gap-1.5">
                   <div className="flex shrink-0 items-center gap-1">
                     <RestaurantToolbarToggle
-                      active={restaurantConnectionFilter === 'connected'}
-                      label={'\u05d4\u05e6\u05d2 \u05e8\u05e7 \u05de\u05e1\u05e2\u05d3\u05d5\u05ea \u05e4\u05e2\u05d9\u05dc\u05d5\u05ea'}
-                      onClick={() =>
-                        setRestaurantConnectionFilter((value) =>
-                          value === 'connected' ? null : 'connected',
-                        )
-                      }
-                      icon={<Link2 className="h-3.5 w-3.5" />}
-                    />
-                  </div>
-                  <ListToolbarActions
-                    searchQuery={searchQuery}
-                    onSearchQueryChange={setSearchQuery}
-                    searchPlaceholder="חיפוש מסעדות"
-                    searchWidthClass="w-52"
-                    showColumnsToggle={false}
-                    showExportButton={false}
-                  />
-                  <div className="flex shrink-0 items-center gap-1">
-                    <RestaurantToolbarToggle
                       active={restaurantSourceVisibility.regular}
                       label={'\u05d4\u05e6\u05d2 \u05de\u05e1\u05e2\u05d3\u05d5\u05ea \u05e8\u05d2\u05d9\u05dc\u05d5\u05ea'}
                       onClick={() =>
@@ -1121,6 +1101,26 @@ export const RestaurantsScreen: React.FC = () => {
                           </span>
                         </span>
                       }
+                    />
+                  </div>
+                  <ListToolbarActions
+                    searchQuery={searchQuery}
+                    onSearchQueryChange={setSearchQuery}
+                    searchPlaceholder="חיפוש מסעדות"
+                    searchWidthClass="w-52"
+                    showColumnsToggle={false}
+                    showExportButton={false}
+                  />
+                  <div className="flex shrink-0 items-center gap-1">
+                    <RestaurantToolbarToggle
+                      active={restaurantConnectionFilter === 'connected'}
+                      label={'\u05d4\u05e6\u05d2 \u05e8\u05e7 \u05de\u05e1\u05e2\u05d3\u05d5\u05ea \u05e4\u05e2\u05d9\u05dc\u05d5\u05ea'}
+                      onClick={() =>
+                        setRestaurantConnectionFilter((value) =>
+                          value === 'connected' ? null : 'connected',
+                        )
+                      }
+                      icon={<Link2 className="h-3.5 w-3.5" />}
                     />
                   </div>
                 </div>

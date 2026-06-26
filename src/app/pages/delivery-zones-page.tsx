@@ -390,6 +390,53 @@ export const DeliveryZonesPage: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!mapElRef.current || !mapRef.current || typeof ResizeObserver === 'undefined') {
+      return undefined;
+    }
+
+    const map = mapRef.current;
+    const container = mapElRef.current;
+    let frameId: number | null = null;
+    let disposed = false;
+
+    const invalidateMapSize = () => {
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+      }
+
+      frameId = window.requestAnimationFrame(() => {
+        frameId = null;
+        if (
+          disposed ||
+          mapRef.current !== map ||
+          !container.isConnected ||
+          !map.getPane('mapPane')
+        ) {
+          return;
+        }
+
+        try {
+          map.invalidateSize({ animate: false });
+        } catch {
+          // Leaflet can throw if a resize frame runs after the map was removed.
+        }
+      });
+    };
+
+    const observer = new ResizeObserver(invalidateMapSize);
+    observer.observe(container);
+    invalidateMapSize();
+
+    return () => {
+      disposed = true;
+      observer.disconnect();
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+      }
+    };
+  }, []);
+
   // drawing click handler
   const handleMapClick = useCallback((e: L.LeafletMouseEvent) => {
     const map = mapRef.current;

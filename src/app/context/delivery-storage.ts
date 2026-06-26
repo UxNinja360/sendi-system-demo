@@ -18,6 +18,7 @@ export const DELIVERY_STORAGE_KEYS = {
   legacySendiGoRadius: 'sendi-go-radius-km',
   sendiPlusTermsAccepted: 'sendi-plus-terms-accepted',
   sendiPlusDisabledRestaurantIds: 'sendi-plus-disabled-restaurant-ids-v1',
+  sendiPlusExpiredShutdownCount: 'sendi-plus-expired-shutdown-count-v1',
   deliveryZones: 'delivery_zones_v1',
   sendiPlusZonePermissions: 'sendi-plus-zone-permissions-v1',
 } as const;
@@ -41,6 +42,7 @@ const RESET_STORAGE_KEYS = [
   DELIVERY_STORAGE_KEYS.legacySendiGoRadius,
   DELIVERY_STORAGE_KEYS.sendiPlusTermsAccepted,
   DELIVERY_STORAGE_KEYS.sendiPlusDisabledRestaurantIds,
+  DELIVERY_STORAGE_KEYS.sendiPlusExpiredShutdownCount,
   DELIVERY_STORAGE_KEYS.deliveryZones,
   DELIVERY_STORAGE_KEYS.sendiPlusZonePermissions,
 ] as const;
